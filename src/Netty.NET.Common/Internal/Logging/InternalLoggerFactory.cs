@@ -36,100 +36,18 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 public abstract class InternalLoggerFactory
 {
-    private static InternalLoggerFactory defaultFactory;
+    private static ILoggerFactory defaultFactory;
 
-    private static InternalLoggerFactory newDefaultFactory(string name)
+    private static ILoggerFactory newDefaultFactory(string name)
     {
-        InternalLoggerFactory f = useSlf4JLoggerFactory(name);
-        if (f != null)
-        {
-            return f;
-        }
-
-        f = useLog4J2LoggerFactory(name);
-        if (f != null)
-        {
-            return f;
-        }
-
-        f = useLog4JLoggerFactory(name);
-        if (f != null)
-        {
-            return f;
-        }
-
-        return useJdkLoggerFactory(name);
-    }
-
-    private static InternalLoggerFactory useSlf4JLoggerFactory(string name)
-    {
-        try
-        {
-            InternalLoggerFactory f = Slf4JLoggerFactory.getInstanceWithNopCheck();
-            f.newInstance(name).debug("Using SLF4J as the default logging framework");
-            return f;
-        }
-        catch (DllNotFoundException ignore)
-        {
-            return null;
-        }
-        catch (Exception ignore)
-        {
-            // We catch Exception and not ReflectiveOperationException as we still support java 6
-            return null;
-        }
-    }
-
-    private static InternalLoggerFactory useLog4J2LoggerFactory(string name)
-    {
-        try
-        {
-            InternalLoggerFactory f = Log4J2LoggerFactory.INSTANCE;
-            f.newInstance(name).debug("Using Log4J2 as the default logging framework");
-            return f;
-        }
-        catch (DllNotFoundException ignore)
-        {
-            return null;
-        }
-        catch (Exception ignore)
-        {
-            // We catch Exception and not ReflectiveOperationException as we still support java 6
-            return null;
-        }
-    }
-
-    private static InternalLoggerFactory useLog4JLoggerFactory(string name)
-    {
-        try
-        {
-            InternalLoggerFactory f = Log4JLoggerFactory.INSTANCE;
-            f.newInstance(name).debug("Using Log4J as the default logging framework");
-            return f;
-        }
-        catch (DllNotFoundException ignore)
-        {
-            return null;
-        }
-        catch (Exception ignore)
-        {
-            // We catch Exception and not ReflectiveOperationException as we still support java 6
-            return null;
-        }
-    }
-
-    private static InternalLoggerFactory useJdkLoggerFactory(string name)
-    {
-        InternalLoggerFactory f = JdkLoggerFactory.INSTANCE;
-        f.newInstance(name).debug("Using java.util.logging as the default logging framework");
-        return f;
+        return new LoggerFactory();
     }
 
     /**
      * Returns the default factory.  The initial default factory is
      * {@link JdkLoggerFactory}.
      */
-    public static InternalLoggerFactory getDefaultFactory()
+    public static ILoggerFactory getDefaultFactory()
     {
         if (defaultFactory == null)
         {
@@ -152,7 +70,7 @@ public abstract class InternalLoggerFactory
     /**
      * Changes the default factory.
      */
-    public static void setDefaultFactory(InternalLoggerFactory factory)
+    public static void setDefaultFactory(ILoggerFactory factory)
     {
         ObjectUtil.checkNotNull(factory, "defaultFactory");
         Volatile.Write(ref defaultFactory, factory);

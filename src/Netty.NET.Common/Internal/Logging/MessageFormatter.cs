@@ -37,11 +37,12 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+
 namespace Netty.NET.Common.Internal.Logging;
-
-
-
-
 
 // contributors: lizongbo: proposed special treatment of array parameter values
 // Joern Huxhorn: pointed out double[] omission, suggested deep array copy
@@ -108,7 +109,9 @@ namespace Netty.NET.Common.Internal.Logging;
  * {@link #format(string, object, object)} and
  * {@link #arrayFormat(string, object[])} methods for more details.
  */
-public final class MessageFormatter {
+public static class MessageFormatter
+{
+    private static readonly char DELIM_START = '{';
     private static readonly string DELIM_STR = "{}";
     private static readonly char ESCAPE_CHAR = '\\';
 
@@ -129,8 +132,9 @@ public final class MessageFormatter {
      * @param arg            The argument to be substituted in place of the formatting anchor
      * @return The formatted message
      */
-    public static FormattingTuple format(string messagePattern, object arg) {
-        return arrayFormat(messagePattern, new object[]{arg});
+    public static FormattingTuple format(string messagePattern, object arg)
+    {
+        return arrayFormat(messagePattern, new object[] { arg });
     }
 
     /**
@@ -152,9 +156,10 @@ public final class MessageFormatter {
      *                       anchor
      * @return The formatted message
      */
-    public static FormattingTuple format(final string messagePattern,
-                                  object argA, object argB) {
-        return arrayFormat(messagePattern, new object[]{argA, argB});
+    public static FormattingTuple format(string messagePattern,
+        object argA, object argB)
+    {
+        return arrayFormat(messagePattern, new object[] { argA, argB });
     }
 
     /**
@@ -167,231 +172,296 @@ public final class MessageFormatter {
      *                       anchors
      * @return The formatted message
      */
-    public static FormattingTuple arrayFormat(final string messagePattern,
-                                       final object[] argArray) {
-        if (argArray == null || argArray.length == 0) {
+    public static FormattingTuple arrayFormat(string messagePattern, object[] argArray)
+    {
+        if (argArray == null || argArray.Length == 0)
+        {
             return new FormattingTuple(messagePattern, null);
         }
 
-        int lastArrIdx = argArray.length - 1;
+        int lastArrIdx = argArray.Length - 1;
         object lastEntry = argArray[lastArrIdx];
-        Exception throwable = lastEntry instanceof Exception? (Exception) lastEntry : null;
+        Exception throwable = lastEntry as Exception;
 
-        if (messagePattern == null) {
+        if (messagePattern == null)
+        {
             return new FormattingTuple(null, throwable);
         }
 
-        int j = messagePattern.indexOf(DELIM_STR);
-        if (j == -1) {
+        int j = messagePattern.IndexOf(DELIM_STR, StringComparison.InvariantCulture);
+        if (j == -1)
+        {
             // this is a simple string
             return new FormattingTuple(messagePattern, throwable);
         }
 
-        StringBuilder sbuf = new StringBuilder(messagePattern.length() + 50);
+        StringBuilder sbuf = new StringBuilder(messagePattern.Length + 50);
         int i = 0;
         int L = 0;
-        do {
-            bool notEscaped = j == 0 || messagePattern.charAt(j - 1) != ESCAPE_CHAR;
-            if (notEscaped) {
+        do
+        {
+            bool notEscaped = j == 0 || messagePattern[j - 1] != ESCAPE_CHAR;
+            if (notEscaped)
+            {
                 // normal case
-                sbuf.append(messagePattern, i, j);
-            } else {
-                sbuf.append(messagePattern, i, j - 1);
+                sbuf.Append(messagePattern, i, j);
+            }
+            else
+            {
+                sbuf.Append(messagePattern, i, j - 1);
                 // check that escape char is not is escaped: "abc x:\\{}"
-                notEscaped = j >= 2 && messagePattern.charAt(j - 2) == ESCAPE_CHAR;
+                notEscaped = j >= 2 && messagePattern[j - 2] == ESCAPE_CHAR;
             }
 
             i = j + 2;
-            if (notEscaped) {
+            if (notEscaped)
+            {
                 deeplyAppendParameter(sbuf, argArray[L], null);
                 L++;
-                if (L > lastArrIdx) {
+                if (L > lastArrIdx)
+                {
                     break;
                 }
-            } else {
-                sbuf.append(DELIM_STR);
             }
-            j = messagePattern.indexOf(DELIM_STR, i);
+            else
+            {
+                sbuf.Append(DELIM_STR);
+            }
+
+            j = messagePattern.IndexOf(DELIM_STR, i);
         } while (j != -1);
 
         // append the characters following the last {} pair.
-        sbuf.append(messagePattern, i, messagePattern.length());
-        return new FormattingTuple(sbuf.toString(), L <= lastArrIdx? throwable : null);
+        sbuf.Append(messagePattern, i, messagePattern.Length);
+        return new FormattingTuple(sbuf.ToString(), L <= lastArrIdx ? throwable : null);
     }
 
     // special treatment of array values was suggested by 'lizongbo'
-    private static void deeplyAppendParameter(StringBuilder sbuf, object o,
-                                              Set<object[]> seenSet) {
-        if (o == null) {
-            sbuf.append("null");
+    private static void deeplyAppendParameter(StringBuilder sbuf, object o, ISet<object[]> seenSet)
+    {
+        if (o == null)
+        {
+            sbuf.Append("null");
             return;
         }
-        Class<?> objClass = o.getClass();
-        if (!objClass.isArray()) {
-            if (Number.class.isAssignableFrom(objClass)) {
-                // Prevent string instantiation for some number types
-                if (objClass == long.class) {
-                    sbuf.append(((long) o).longValue());
-                } else if (objClass == int.class || objClass == Short.class || objClass == Byte.class) {
-                    sbuf.append(((Number) o).intValue());
-                } else if (objClass == Double.class) {
-                    sbuf.append(((Double) o).doubleValue());
-                } else if (objClass == Float.class) {
-                    sbuf.append(((Float) o).floatValue());
-                } else {
-                    safeObjectAppend(sbuf, o);
-                }
-            } else {
-                safeObjectAppend(sbuf, o);
-            }
-        } else {
+
+        if (!o.GetType().IsArray)
+        {
+            safeObjectAppend(sbuf, o);
+        }
+        else
+        {
             // check for primitive array types because they
             // unfortunately cannot be cast to object[]
-            sbuf.append('[');
-            if (objClass == bool[].class) {
-                booleanArrayAppend(sbuf, (bool[]) o);
-            } else if (objClass == byte[].class) {
-                byteArrayAppend(sbuf, (byte[]) o);
-            } else if (objClass == char[].class) {
-                charArrayAppend(sbuf, (char[]) o);
-            } else if (objClass == short[].class) {
-                shortArrayAppend(sbuf, (short[]) o);
-            } else if (objClass == int[].class) {
-                intArrayAppend(sbuf, (int[]) o);
-            } else if (objClass == long[].class) {
-                longArrayAppend(sbuf, (long[]) o);
-            } else if (objClass == float[].class) {
-                floatArrayAppend(sbuf, (float[]) o);
-            } else if (objClass == double[].class) {
-                doubleArrayAppend(sbuf, (double[]) o);
-            } else {
-                objectArrayAppend(sbuf, (object[]) o, seenSet);
+            sbuf.Append('[');
+            if (o is bool[] boolArray)
+            {
+                booleanArrayAppend(sbuf, boolArray);
             }
-            sbuf.append(']');
+            else if (o is byte[] byteArray)
+            {
+                byteArrayAppend(sbuf, byteArray);
+            }
+            else if (o is char[] charArray)
+            {
+                charArrayAppend(sbuf, charArray);
+            }
+            else if (o is short[] shortArray)
+            {
+                shortArrayAppend(sbuf, shortArray);
+            }
+            else if (o is int[] intArray)
+            {
+                intArrayAppend(sbuf, intArray);
+            }
+            else if (o is long[] longArray)
+            {
+                longArrayAppend(sbuf, longArray);
+            }
+            else if (o is float[] floatArray)
+            {
+                floatArrayAppend(sbuf, floatArray);
+            }
+            else if (o is double[] doubleArray)
+            {
+                doubleArrayAppend(sbuf, doubleArray);
+            }
+            else
+            {
+                objectArrayAppend(sbuf, (object[])o, seenSet);
+            }
+
+            sbuf.Append(']');
         }
     }
 
-    private static void safeObjectAppend(StringBuilder sbuf, object o) {
-        try {
-            string oAsString = o.toString();
-            sbuf.append(oAsString);
-        } catch (Exception t) {
-            System.err
-                    .println("SLF4J: Failed toString() invocation on an object of type ["
-                            + o.getClass().getName() + ']');
-            t.printStackTrace();
-            sbuf.append("[FAILED toString()]");
+    private static void safeObjectAppend(StringBuilder sbuf, object o)
+    {
+        try
+        {
+            string oAsString = o.ToString();
+            sbuf.Append(oAsString);
+        }
+        catch (Exception t)
+        {
+            Console.Error.WriteLine("SLF4J: Failed toString() invocation on an object of type ["
+                                    + o.GetType().Name + ']');
+            if (null != t.StackTrace)
+            {
+                Console.Error.WriteLine(t.StackTrace);
+            }
+
+            sbuf.Append("[FAILED toString()]");
         }
     }
 
-    private static void objectArrayAppend(StringBuilder sbuf, object[] a, Set<object[]> seenSet) {
-        if (a.length == 0) {
+    private static void objectArrayAppend(StringBuilder sbuf, object[] a, ISet<object[]> seenSet)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        if (seenSet == null) {
-            seenSet = new HashSet<object[]>(a.length);
+
+        if (seenSet == null)
+        {
+            seenSet = new HashSet<object[]>(a.Length);
         }
-        if (seenSet.add(a)) {
+
+        if (seenSet.Add(a))
+        {
             deeplyAppendParameter(sbuf, a[0], seenSet);
-            for (int i = 1; i < a.length; i++) {
-                sbuf.append(", ");
+            for (int i = 1; i < a.Length; i++)
+            {
+                sbuf.Append(", ");
                 deeplyAppendParameter(sbuf, a[i], seenSet);
             }
+
             // allow repeats in siblings
-            seenSet.remove(a);
-        } else {
-            sbuf.append("...");
+            seenSet.Remove(a);
+        }
+        else
+        {
+            sbuf.Append("...");
         }
     }
 
-    private static void booleanArrayAppend(StringBuilder sbuf, bool[] a) {
-        if (a.length == 0) {
+    private static void booleanArrayAppend(StringBuilder sbuf, bool[] a)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        sbuf.append(a[0]);
-        for (int i = 1; i < a.length; i++) {
-            sbuf.append(", ");
-            sbuf.append(a[i]);
+
+        sbuf.Append(a[0]);
+        for (int i = 1; i < a.Length; i++)
+        {
+            sbuf.Append(", ");
+            sbuf.Append(a[i]);
         }
     }
 
-    private static void byteArrayAppend(StringBuilder sbuf, byte[] a) {
-        if (a.length == 0) {
+    private static void byteArrayAppend(StringBuilder sbuf, byte[] a)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        sbuf.append(a[0]);
-        for (int i = 1; i < a.length; i++) {
-            sbuf.append(", ");
-            sbuf.append(a[i]);
+
+        sbuf.Append(a[0]);
+        for (int i = 1; i < a.Length; i++)
+        {
+            sbuf.Append(", ");
+            sbuf.Append(a[i]);
         }
     }
 
-    private static void charArrayAppend(StringBuilder sbuf, char[] a) {
-        if (a.length == 0) {
+    private static void charArrayAppend(StringBuilder sbuf, char[] a)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        sbuf.append(a[0]);
-        for (int i = 1; i < a.length; i++) {
-            sbuf.append(", ");
-            sbuf.append(a[i]);
+
+        sbuf.Append(a[0]);
+        for (int i = 1; i < a.Length; i++)
+        {
+            sbuf.Append(", ");
+            sbuf.Append(a[i]);
         }
     }
 
-    private static void shortArrayAppend(StringBuilder sbuf, short[] a) {
-        if (a.length == 0) {
+    private static void shortArrayAppend(StringBuilder sbuf, short[] a)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        sbuf.append(a[0]);
-        for (int i = 1; i < a.length; i++) {
-            sbuf.append(", ");
-            sbuf.append(a[i]);
+
+        sbuf.Append(a[0]);
+        for (int i = 1; i < a.Length; i++)
+        {
+            sbuf.Append(", ");
+            sbuf.Append(a[i]);
         }
     }
 
-    private static void intArrayAppend(StringBuilder sbuf, int[] a) {
-        if (a.length == 0) {
+    private static void intArrayAppend(StringBuilder sbuf, int[] a)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        sbuf.append(a[0]);
-        for (int i = 1; i < a.length; i++) {
-            sbuf.append(", ");
-            sbuf.append(a[i]);
+
+        sbuf.Append(a[0]);
+        for (int i = 1; i < a.Length; i++)
+        {
+            sbuf.Append(", ");
+            sbuf.Append(a[i]);
         }
     }
 
-    private static void longArrayAppend(StringBuilder sbuf, long[] a) {
-        if (a.length == 0) {
+    private static void longArrayAppend(StringBuilder sbuf, long[] a)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        sbuf.append(a[0]);
-        for (int i = 1; i < a.length; i++) {
-            sbuf.append(", ");
-            sbuf.append(a[i]);
+
+        sbuf.Append(a[0]);
+        for (int i = 1; i < a.Length; i++)
+        {
+            sbuf.Append(", ");
+            sbuf.Append(a[i]);
         }
     }
 
-    private static void floatArrayAppend(StringBuilder sbuf, float[] a) {
-        if (a.length == 0) {
+    private static void floatArrayAppend(StringBuilder sbuf, float[] a)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        sbuf.append(a[0]);
-        for (int i = 1; i < a.length; i++) {
-            sbuf.append(", ");
-            sbuf.append(a[i]);
+
+        sbuf.Append(a[0]);
+        for (int i = 1; i < a.Length; i++)
+        {
+            sbuf.Append(", ");
+            sbuf.Append(a[i]);
         }
     }
 
-    private static void doubleArrayAppend(StringBuilder sbuf, double[] a) {
-        if (a.length == 0) {
+    private static void doubleArrayAppend(StringBuilder sbuf, double[] a)
+    {
+        if (a.Length == 0)
+        {
             return;
         }
-        sbuf.append(a[0]);
-        for (int i = 1; i < a.length; i++) {
-            sbuf.append(", ");
-            sbuf.append(a[i]);
-        }
-    }
 
-    private MessageFormatter() {
+        sbuf.Append(a[0]);
+        for (int i = 1; i < a.Length; i++)
+        {
+            sbuf.Append(", ");
+            sbuf.Append(a[i]);
+        }
     }
 }

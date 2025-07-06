@@ -13,28 +13,34 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Internal.Logging;
 
 /**
  * The log level that {@link InternalLogger} can log at.
  */
-public enum InternalLogLevel {
+public enum InternalLogLevel
+{
     /**
      * 'TRACE' log level.
      */
     TRACE,
+
     /**
      * 'DEBUG' log level.
      */
     DEBUG,
+
     /**
      * 'INFO' log level.
      */
     INFO,
+
     /**
      * 'WARN' log level.
      */
     WARN,
+
     /**
      * 'ERROR' log level.
      */
