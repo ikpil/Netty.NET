@@ -13,14 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.PromiseNotificationUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
-import static io.netty.util.internal.ObjectUtil.checkNotNullWithIAE;
+
+
+
+
+
 
 /**
  * {@link GenericFutureListener} implementation which takes other {@link Promise}s

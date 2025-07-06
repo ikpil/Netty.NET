@@ -13,25 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.EmptyArrays;
-import io.netty.util.internal.InternalThreadLocalMap;
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.PlatformDependent;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
-import static io.netty.util.internal.MathUtil.isOutOfBounds;
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * A string which has been encoded into a character encoding whose character always takes a single byte, similarly to

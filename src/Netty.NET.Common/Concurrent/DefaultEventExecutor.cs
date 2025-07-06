@@ -13,10 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadFactory;
+
+
 
 /**
  * Default {@link SingleThreadEventExecutor} implementation which just execute all submitted task in a

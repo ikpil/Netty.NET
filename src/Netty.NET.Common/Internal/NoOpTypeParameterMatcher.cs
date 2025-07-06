@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
 public final class NoOpTypeParameterMatcher extends TypeParameterMatcher {
     @Override

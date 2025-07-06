@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.FastThreadLocal;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadFactory;
+
+
+
+
 
 /**
  * Allow to retrieve the {@link EventExecutor} for the calling {@link Thread}.

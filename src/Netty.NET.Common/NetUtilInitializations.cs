@@ -13,23 +13,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.SocketUtils;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 final class NetUtilInitializations {
     /**

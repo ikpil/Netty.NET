@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.ObjectUtil;
 
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+
+
+
 
 /**
  * Default {@link AttributeMap} implementation which not exibit any blocking behaviour on attribute lookup while using a

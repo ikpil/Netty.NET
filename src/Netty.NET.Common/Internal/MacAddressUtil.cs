@@ -14,23 +14,23 @@
  * under the License.
  */
 
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.NetUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ThreadLocalRandom;
 
-import static io.netty.util.internal.EmptyArrays.EMPTY_BYTES;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 public final class MacAddressUtil {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(MacAddressUtil.class);

@@ -13,10 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+
+
 
 final class SystemTicker implements Ticker {
     static final SystemTicker INSTANCE = new SystemTicker();

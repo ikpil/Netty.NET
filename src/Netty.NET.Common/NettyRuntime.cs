@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.SystemPropertyUtil;
 
-import java.util.Locale;
+
+
+
 
 /**
  * A utility class for wrapping calls to {@link Runtime}.

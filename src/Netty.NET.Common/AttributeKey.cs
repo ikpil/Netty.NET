@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
 /**
  * Key which can be used to access {@link Attribute} out of the {@link AttributeMap}. Be aware that it is not be

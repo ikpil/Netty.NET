@@ -14,15 +14,15 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.SystemPropertyUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.lang.reflect.Constructor;
+
+
+
+
+
+
 
 /**
  * This static factory should be used to load {@link ResourceLeakDetector}s as needed

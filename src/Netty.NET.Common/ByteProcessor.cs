@@ -12,12 +12,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import static io.netty.util.ByteProcessorUtils.CARRIAGE_RETURN;
-import static io.netty.util.ByteProcessorUtils.HTAB;
-import static io.netty.util.ByteProcessorUtils.LINE_FEED;
-import static io.netty.util.ByteProcessorUtils.SPACE;
+
+
+
+
 
 /**
  * Provides a mechanism to iterate over a collection of bytes.

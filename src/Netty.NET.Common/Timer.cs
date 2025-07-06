@@ -13,11 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import java.util.Set;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
+
+
+
 
 /**
  * Schedules {@link TimerTask}s for one-time future execution in a background

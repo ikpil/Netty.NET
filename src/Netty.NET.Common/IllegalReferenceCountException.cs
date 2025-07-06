@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
 /**
  * An {@link IllegalStateException} which is raised when a user attempts to access a {@link ReferenceCounted} whose

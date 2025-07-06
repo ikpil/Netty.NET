@@ -14,14 +14,14 @@
  * under the License.
  */
 
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.StringUtil;
 
-import java.util.Locale;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
+
+
+
+
+
 
 /**
  * A {@link ThreadFactory} implementation with a simple naming rule.

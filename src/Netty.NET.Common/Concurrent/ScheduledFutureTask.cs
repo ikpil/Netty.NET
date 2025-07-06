@@ -14,14 +14,14 @@
  * under the License.
  */
 
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.DefaultPriorityQueue;
-import io.netty.util.internal.PriorityQueueNode;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.TimeUnit;
+
+
+
+
+
 
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
 final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFuture<V>, PriorityQueueNode {

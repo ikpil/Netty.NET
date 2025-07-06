@@ -12,11 +12,11 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+
+
+
 
 /**
  * A utility class that provides various common operations and constants

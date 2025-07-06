@@ -13,10 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.Promise;
+
+
 
 public interface AsyncMapping<IN, OUT> {
 

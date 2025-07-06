@@ -14,14 +14,14 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
+
+
+
+
+
 
 /**
  * Builder for immutable {@link DomainNameMapping} instances.

@@ -13,12 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import static io.netty.util.internal.ObjectUtil.checkPositive;
-import static io.netty.util.internal.ObjectUtil.checkNonEmpty;
 
-import java.util.Arrays;
+
+
+
 
 public final class AppendableCharSequence implements CharSequence, Appendable {
     private char[] chars;

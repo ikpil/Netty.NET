@@ -13,20 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.concurrent.FastThreadLocalThread;
 
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static io.netty.util.internal.SystemPropertyUtil.getInt;
-import static java.lang.Math.max;
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Allows a way to register some {@link Runnable} that will executed once there are no references to an {@link Object}

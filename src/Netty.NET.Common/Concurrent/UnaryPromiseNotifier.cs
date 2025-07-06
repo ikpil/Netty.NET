@@ -13,11 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
+
+
+
 
 /**
  *

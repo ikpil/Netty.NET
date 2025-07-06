@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import java.util.Iterator;
+
 
 public final class ReadOnlyIterator<T> implements Iterator<T> {
     private final Iterator<? extends T> iterator;

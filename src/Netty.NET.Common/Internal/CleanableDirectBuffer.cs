@@ -13,9 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import java.nio.ByteBuffer;
+
 
 /**
  * Encapsulates a direct {@link ByteBuffer} and its mechanism for immediate deallocation, if any.

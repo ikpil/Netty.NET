@@ -13,17 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.DefaultPriorityQueue;
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.PriorityQueue;
 
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Queue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
+
+
+
+
+
+
+
+
 
 /**
  * Abstract base class for {@link EventExecutor}s that want to support scheduling.

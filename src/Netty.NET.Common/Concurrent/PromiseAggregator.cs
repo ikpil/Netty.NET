@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.ObjectUtil;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+
+
+
 
 /**
  * @deprecated Use {@link PromiseCombiner#PromiseCombiner(EventExecutor)}.

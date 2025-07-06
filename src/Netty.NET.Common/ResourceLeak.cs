@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
 /**
  * @deprecated please use {@link ResourceLeakTracker} as it may lead to false-positives.

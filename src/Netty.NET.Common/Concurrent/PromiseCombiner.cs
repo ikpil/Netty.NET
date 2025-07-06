@@ -13,9 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.ObjectUtil;
+
 
 /**
  * <p>A promise combiner monitors the outcome of a number of discrete futures, then notifies a final, aggregate promise

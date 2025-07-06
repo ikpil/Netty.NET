@@ -37,10 +37,10 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+
+
 
 /**
  * <a href="https://logging.apache.org/log4j/1.2/index.html">Apache Log4J</a>

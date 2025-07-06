@@ -14,18 +14,18 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.StringUtil;
 
-import java.net.IDN;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
-import static io.netty.util.internal.StringUtil.commonSuffixOfLength;
+
+
+
+
+
+
+
+
 
 /**
  * Maps a domain name to its associated value object.

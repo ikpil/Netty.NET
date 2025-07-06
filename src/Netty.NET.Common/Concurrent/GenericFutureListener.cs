@@ -13,9 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import java.util.EventListener;
+
 
 /**
  * Listens to the result of a {@link Future}.  The result of the asynchronous operation is notified once this listener

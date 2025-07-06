@@ -13,15 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import java.util.AbstractQueue;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
-import static io.netty.util.internal.PriorityQueueNode.INDEX_NOT_IN_QUEUE;
+
+
+
+
+
+
 
 /**
  * A priority queue which uses natural ordering of elements. Elements are also required to be of type

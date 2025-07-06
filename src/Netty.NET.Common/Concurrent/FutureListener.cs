@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
 /**
  * A subtype of {@link GenericFutureListener} that hides type parameter for convenience.

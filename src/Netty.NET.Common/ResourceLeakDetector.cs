@@ -14,30 +14,30 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.EmptyArrays;
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.SystemPropertyUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import static io.netty.util.internal.StringUtil.EMPTY_STRING;
-import static io.netty.util.internal.StringUtil.NEWLINE;
-import static io.netty.util.internal.StringUtil.simpleClassName;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 public class ResourceLeakDetector<T> {
 

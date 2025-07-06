@@ -13,11 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal.svm;
+namespace Netty.NET.Common.Internal.Svm;
 
-import com.oracle.svm.core.annotate.Alias;
-import com.oracle.svm.core.annotate.RecomputeFieldValue;
-import com.oracle.svm.core.annotate.TargetClass;
+
+
+
 
 @TargetClass(className = "io.netty.util.internal.PlatformDependent")
 final class PlatformDependentSubstitution {

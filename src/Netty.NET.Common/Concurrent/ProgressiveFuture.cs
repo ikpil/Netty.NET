@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
 /**
  * A {@link Future} which is used to indicate the progress of an operation.

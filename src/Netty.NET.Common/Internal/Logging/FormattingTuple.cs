@@ -37,7 +37,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
 /**
  * Holds the results of formatting done by {@link MessageFormatter}.

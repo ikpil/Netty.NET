@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import java.util.Arrays;
+
 
 /**
  * @deprecated This class will be removed in the future version.

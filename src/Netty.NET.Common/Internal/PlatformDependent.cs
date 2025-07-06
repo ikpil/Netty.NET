@@ -13,67 +13,67 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
-import jdk.jfr.FlightRecorder;
-import org.jctools.queues.MpmcArrayQueue;
-import org.jctools.queues.MpscArrayQueue;
-import org.jctools.queues.MpscChunkedArrayQueue;
-import org.jctools.queues.MpscUnboundedArrayQueue;
-import org.jctools.queues.SpscLinkedQueue;
-import org.jctools.queues.atomic.MpmcAtomicArrayQueue;
-import org.jctools.queues.atomic.MpscAtomicArrayQueue;
-import org.jctools.queues.atomic.MpscChunkedAtomicArrayQueue;
-import org.jctools.queues.atomic.MpscUnboundedAtomicArrayQueue;
-import org.jctools.queues.atomic.SpscLinkedAtomicQueue;
-import org.jctools.queues.atomic.unpadded.MpscAtomicUnpaddedArrayQueue;
-import org.jctools.queues.unpadded.MpscUnpaddedArrayQueue;
-import org.jctools.util.Pow2;
-import org.jctools.util.UnsafeAccess;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static io.netty.util.internal.PlatformDependent0.HASH_CODE_ASCII_SEED;
-import static io.netty.util.internal.PlatformDependent0.HASH_CODE_C1;
-import static io.netty.util.internal.PlatformDependent0.HASH_CODE_C2;
-import static io.netty.util.internal.PlatformDependent0.hashCodeAsciiSanitize;
-import static io.netty.util.internal.PlatformDependent0.unalignedAccess;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.invoke.MethodType.methodType;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Utility that detects various properties specific to the current runtime

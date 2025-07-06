@@ -13,17 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.InternalThreadLocalMap;
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
+
+
+
+
+
+
+
+
 
 /**
  * A utility class that provides various common operations and constants

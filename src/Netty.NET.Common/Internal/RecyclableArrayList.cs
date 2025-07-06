@@ -14,15 +14,15 @@
  * under the License.
  */
 
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.internal.ObjectPool.Handle;
-import io.netty.util.internal.ObjectPool.ObjectCreator;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.RandomAccess;
+
+
+
+
+
+
 
 /**
  * A simple list which is recyclable. This implementation does not allow {@code null} elements to be added.

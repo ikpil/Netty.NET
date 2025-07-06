@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
 /**
  * Represents a supplier of {@code boolean}-valued results which doesn't throw any checked exceptions.

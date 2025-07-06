@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
 /**
  * Builder for immutable {@link DomainNameMapping} instances.

@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import static io.netty.util.internal.ObjectUtil.checkPositiveOrZero;
+
 
 public class DefaultProgressivePromise<V> extends DefaultPromise<V> implements ProgressivePromise<V> {
 

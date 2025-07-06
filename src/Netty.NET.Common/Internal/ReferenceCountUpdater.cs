@@ -13,14 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import static io.netty.util.internal.ObjectUtil.checkPositive;
 
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import io.netty.util.IllegalReferenceCountException;
-import io.netty.util.ReferenceCounted;
+
+
+
+
 
 /**
  * Common logic for {@link ReferenceCounted} implementations

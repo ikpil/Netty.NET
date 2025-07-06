@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
 /**
  * A Utility to Call the {@link System#load(String)} or {@link System#loadLibrary(String)}.

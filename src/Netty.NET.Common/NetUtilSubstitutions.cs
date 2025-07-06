@@ -13,17 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import com.oracle.svm.core.annotate.Alias;
-import com.oracle.svm.core.annotate.InjectAccessors;
-import com.oracle.svm.core.annotate.TargetClass;
 
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.Collection;
+
+
+
+
+
+
+
+
 
 @TargetClass(NetUtil.class)
 final class NetUtilSubstitutions {

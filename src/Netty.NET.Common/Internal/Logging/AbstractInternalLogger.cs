@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.StringUtil;
 
-import java.io.ObjectStreamException;
-import java.io.Serializable;
+
+
+
+
 
 /**
  * A skeletal implementation of {@link InternalLogger}.  This class implements

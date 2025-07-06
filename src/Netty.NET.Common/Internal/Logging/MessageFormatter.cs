@@ -37,11 +37,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
-import java.text.MessageFormat;
-import java.util.HashSet;
-import java.util.Set;
+
+
+
 
 // contributors: lizongbo: proposed special treatment of array parameter values
 // Joern Huxhorn: pointed out double[] omission, suggested deep array copy

@@ -13,10 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
 
-import org.apache.commons.logging.LogFactory;
+
 
 /**
  * Logger factory which creates an

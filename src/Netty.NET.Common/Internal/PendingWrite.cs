@@ -13,12 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.ReferenceCountUtil;
-import io.netty.util.concurrent.Promise;
-import io.netty.util.internal.ObjectPool.Handle;
-import io.netty.util.internal.ObjectPool.ObjectCreator;
+
+
+
+
 
 /**
  * Some pending write which should be picked up later.

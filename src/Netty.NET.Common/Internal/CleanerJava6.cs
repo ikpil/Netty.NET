@@ -13,19 +13,19 @@
 * License for the specific language governing permissions and limitations
 * under the License.
 */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.nio.ByteBuffer;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Objects;
 
-import static java.lang.invoke.MethodType.methodType;
+
+
+
+
+
+
+
+
+
 
 /**
  * Allows to free direct {@link ByteBuffer} by using Cleaner. This is encapsulated in an extra class to be able

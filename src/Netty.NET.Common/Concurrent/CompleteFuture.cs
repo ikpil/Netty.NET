@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.ObjectUtil;
 
-import java.util.concurrent.TimeUnit;
+
+
 
 /**
  * A skeletal {@link Future} implementation which represents a {@link Future} which has been completed already.

@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
-import io.netty.util.internal.ObjectUtil;
+
 
 /**
  * Creates an {@link InternalLogger} or changes the default factory

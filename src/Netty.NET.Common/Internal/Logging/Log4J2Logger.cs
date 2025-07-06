@@ -13,18 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.spi.ExtendedLogger;
-import org.apache.logging.log4j.spi.ExtendedLoggerWrapper;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
-import static io.netty.util.internal.logging.AbstractInternalLogger.EXCEPTION_MESSAGE;
+
+
+
+
+
+
+
 
 class Log4J2Logger extends ExtendedLoggerWrapper implements InternalLogger {
 

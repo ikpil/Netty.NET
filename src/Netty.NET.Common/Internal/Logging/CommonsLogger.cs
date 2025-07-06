@@ -37,10 +37,10 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
-import io.netty.util.internal.ObjectUtil;
-import org.apache.commons.logging.Log;
+
+
 
 /**
  * <a href="https://commons.apache.org/logging/">Apache Commons Logging</a>

@@ -20,20 +20,20 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.lang.Thread.UncaughtExceptionHandler;
-import java.security.SecureRandom;
-import java.util.Random;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
-import static io.netty.util.internal.ObjectUtil.checkPositive;
+
+
+
+
+
+
+
+
+
+
 
 /**
  * A random number generator isolated to the current thread.  Like the

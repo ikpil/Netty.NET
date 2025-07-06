@@ -13,25 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.InternalThreadLocalMap;
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.StringUtil;
-import io.netty.util.internal.SystemPropertyUtil;
-import io.netty.util.internal.ThrowableUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     /**

@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
 /**
  * An attribute which allows to store a value reference. It may be updated atomically and so is thread-safe.

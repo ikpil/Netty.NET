@@ -13,15 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import static io.netty.util.internal.ObjectUtil.checkNonEmpty;
 
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+
+
+
+
+
 
 /**
  * A collection of utility methods to retrieve and parse the values of the Java system properties.

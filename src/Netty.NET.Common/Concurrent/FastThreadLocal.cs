@@ -13,17 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.InternalThreadLocalMap;
-import io.netty.util.internal.PlatformDependent;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
 
-import static io.netty.util.internal.InternalThreadLocalMap.UNSET;
-import static io.netty.util.internal.InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX;
+
+
+
+
+
+
+
 
 /**
  * A special variant of {@link ThreadLocal} that yields higher access performance when accessed from a

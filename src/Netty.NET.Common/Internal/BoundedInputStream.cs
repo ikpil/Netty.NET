@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import org.jetbrains.annotations.NotNull;
 
-import java.io.FilterInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+
+
+
+
 
 public final class BoundedInputStream extends FilterInputStream {
 

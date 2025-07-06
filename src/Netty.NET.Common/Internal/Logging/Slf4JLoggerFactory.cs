@@ -13,13 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal.logging;
+namespace Netty.NET.Common.Internal.Logging;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.NOPLoggerFactory;
-import org.slf4j.spi.LocationAwareLogger;
+
+
+
+
 
 /**
  * Logger factory which creates a <a href="https://www.slf4j.org/">SLF4J</a>

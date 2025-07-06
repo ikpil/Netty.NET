@@ -13,12 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-import static io.netty.util.internal.ObjectUtil.checkNotNull;
+
+
+
 
 /**
  * Builder that allows to build {@link Mapping}s that support

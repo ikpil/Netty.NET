@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
 /**
  * @deprecated For removal in netty 4.2

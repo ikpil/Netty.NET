@@ -13,27 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-import io.netty.util.internal.ObjectUtil;
-import io.netty.util.internal.SystemPropertyUtil;
-import io.netty.util.internal.ThreadExecutorMap;
-import io.netty.util.internal.ThrowableUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import org.jetbrains.annotations.Async.Schedule;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Single-thread singleton {@link EventExecutor}.  It starts the thread automatically and stops it when there is no

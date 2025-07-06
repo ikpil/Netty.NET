@@ -13,14 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import java.util.ArrayList;
-import java.util.List;
 
-import static io.netty.util.internal.ObjectUtil.checkPositive;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+
+
+
+
+
 
 /**
  * Calculate sizes in a adaptive way.

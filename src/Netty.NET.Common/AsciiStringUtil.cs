@@ -13,10 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.SWARUtil;
+
+
 
 /**
  * A collection of utility methods that is related with handling {@link AsciiString}.

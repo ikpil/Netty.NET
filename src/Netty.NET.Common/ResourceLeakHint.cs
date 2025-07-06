@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
 /**
  * A hint object that provides human-readable message for easier resource leak tracking.

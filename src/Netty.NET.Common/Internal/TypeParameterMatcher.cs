@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import java.util.HashMap;
-import java.util.Map;
+
+
 
 public abstract class TypeParameterMatcher {
 

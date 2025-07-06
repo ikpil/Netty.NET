@@ -13,26 +13,26 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.concurrent.FastThreadLocal;
-import io.netty.util.concurrent.FastThreadLocalThread;
-import io.netty.util.internal.ObjectPool;
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.SystemPropertyUtil;
-import io.netty.util.internal.UnstableApi;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
-import org.jctools.queues.MessagePassingQueue;
-import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import static io.netty.util.internal.PlatformDependent.newMpscQueue;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Light-weight object pool based on a thread-local stack.

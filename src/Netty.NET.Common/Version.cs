@@ -14,20 +14,20 @@
  * under the License.
  */
 
-package io.netty.util;
+namespace Netty.NET.Common;
 
-import io.netty.util.internal.PlatformDependent;
 
-import java.io.InputStream;
-import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Retrieves the version information of available Netty artifacts.

@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
-import io.netty.util.AsciiString;
 
-import java.nio.ByteBuffer;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
+
+
+
+
 
 public final class EmptyArrays {
 

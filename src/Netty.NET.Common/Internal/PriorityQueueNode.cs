@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.util.internal;
+namespace Netty.NET.Common.Internal;
 
 /**
  * Provides methods for {@link DefaultPriorityQueue} to maintain internal state. These methods should generally not be
