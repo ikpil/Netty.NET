@@ -315,7 +315,7 @@ public final class StringUtil {
     /**
      * The shortcut to {@link #simpleClassName(Class) simpleClassName(o.getClass())}.
      */
-    public static string simpleClassName(Object o) {
+    public static string simpleClassName(object o) {
         if (o == null) {
             return "null_object";
         } else {

@@ -410,9 +410,9 @@ public final class NativeLibraryLoader {
 
     private static void loadLibraryByHelper(final Class<?> helper, final string name, final bool absolute)
             throws UnsatisfiedLinkError {
-        Object ret = AccessController.doPrivileged(new PrivilegedAction<Object>() {
+        object ret = AccessController.doPrivileged(new PrivilegedAction<object>() {
             @Override
-            public Object run() {
+            public object run() {
                 try {
                     // Invoke the helper to load the native library, if it succeeds, then the native
                     // library belong to the specified ClassLoader.

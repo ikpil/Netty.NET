@@ -90,7 +90,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : 
 
         UnsupportedOperationException terminationFailure = new UnsupportedOperationException();
         ThrowableUtil.unknownStackTrace(terminationFailure, GlobalEventExecutor.class, "terminationFuture");
-        terminationFuture = new FailedFuture<Object>(this, terminationFailure);
+        terminationFuture = new FailedFuture<object>(this, terminationFailure);
     }
 
     /**

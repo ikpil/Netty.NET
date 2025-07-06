@@ -244,7 +244,7 @@ public final class ThreadDeathWatcher {
         }
 
         @Override
-        public bool equals(Object obj) {
+        public bool equals(object obj) {
             if (obj == this) {
                 return true;
             }

@@ -1128,7 +1128,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
     }
 
     @Override
-    public bool equals(Object obj) {
+    public bool equals(object obj) {
         if (obj == null || obj.getClass() != AsciiString.class) {
             return false;
         }

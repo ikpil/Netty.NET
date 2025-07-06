@@ -128,8 +128,8 @@ public class CleanerJava24Linker : Cleaner {
                         defaultLookupStatic);
 
                 // Constructing the malloc (long)long handle
-                Object longLayout = lookup.findStaticGetter(valueLayoutCls, "JAVA_LONG", ofLongValueLayoutCls).invoke();
-                Object layoutArray = Array.newInstance(memoryLayoutCls, 1);
+                object longLayout = lookup.findStaticGetter(valueLayoutCls, "JAVA_LONG", ofLongValueLayoutCls).invoke();
+                object layoutArray = Array.newInstance(memoryLayoutCls, 1);
                 Array.set(layoutArray, 0, longLayout);
                 MethodHandle mallocFuncDesc = MethodHandles.insertArguments(
                         lookup.findStatic(funcDescCls, "of",

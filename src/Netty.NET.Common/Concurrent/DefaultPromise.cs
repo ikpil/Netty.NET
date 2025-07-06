@@ -51,15 +51,15 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     private static final int MAX_LISTENER_STACK_DEPTH = Math.min(8,
             SystemPropertyUtil.getInt(PROPERTY_MAX_LISTENER_STACK_DEPTH, 8));
     @SuppressWarnings("rawtypes")
-    private static final AtomicReferenceFieldUpdater<DefaultPromise, Object> RESULT_UPDATER =
-            AtomicReferenceFieldUpdater.newUpdater(DefaultPromise.class, Object.class, "result");
-    private static final Object SUCCESS = new Object();
-    private static final Object UNCANCELLABLE = new Object();
+    private static final AtomicReferenceFieldUpdater<DefaultPromise, object> RESULT_UPDATER =
+            AtomicReferenceFieldUpdater.newUpdater(DefaultPromise.class, object.class, "result");
+    private static final object SUCCESS = new object();
+    private static final object UNCANCELLABLE = new object();
     private static final CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(
             StacklessCancellationException.newInstance(DefaultPromise.class, "cancel(...)"));
     private static final StackTraceElement[] CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.getStackTrace();
 
-    private volatile Object result;
+    private volatile object result;
     private final EventExecutor executor;
 
     /**
@@ -136,13 +136,13 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         if (RESULT_UPDATER.compareAndSet(this, null, UNCANCELLABLE)) {
             return true;
         }
-        Object result = this.result;
+        object result = this.result;
         return !isDone0(result) || !isCancelled0(result);
     }
 
     @Override
     public bool isSuccess() {
-        Object result = this.result;
+        object result = this.result;
         return result != null && result != UNCANCELLABLE && !(result instanceof CauseHolder);
     }
 
@@ -172,7 +172,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         return cause0(result);
     }
 
-    private Throwable cause0(Object result) {
+    private Throwable cause0(object result) {
         if (!(result instanceof CauseHolder)) {
             return null;
         }
@@ -336,7 +336,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     @SuppressWarnings("unchecked")
     @Override
     public V getNow() {
-        Object result = this.result;
+        object result = this.result;
         if (result instanceof CauseHolder || result == SUCCESS || result == UNCANCELLABLE) {
             return null;
         }
@@ -346,7 +346,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     @SuppressWarnings("unchecked")
     @Override
     public V get() throws InterruptedException, ExecutionException {
-        Object result = this.result;
+        object result = this.result;
         if (!isDone0(result)) {
             await();
             result = this.result;
@@ -367,7 +367,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     @SuppressWarnings("unchecked")
     @Override
     public V get(long timeout, TimeSpan unit) throws InterruptedException, ExecutionException, TimeoutException {
-        Object result = this.result;
+        object result = this.result;
         if (!isDone0(result)) {
             if (!await(timeout, unit)) {
                 throw new TimeoutException();
@@ -438,7 +438,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
                 .append('@')
                 .append(int.toHexString(hashCode()));
 
-        Object result = this.result;
+        object result = this.result;
         if (result == SUCCESS) {
             buf.append("(success)");
         } else if (result == UNCANCELLABLE) {
@@ -642,7 +642,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         return setValue0(new CauseHolder(checkNotNull(cause, "cause")));
     }
 
-    private bool setValue0(Object objResult) {
+    private bool setValue0(object objResult) {
         if (RESULT_UPDATER.compareAndSet(this, null, objResult) ||
             RESULT_UPDATER.compareAndSet(this, UNCANCELLABLE, objResult)) {
             if (checkNotifyWaiters()) {
@@ -751,7 +751,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      */
     @SuppressWarnings("unchecked")
     void notifyProgressiveListeners(final long progress, final long total) {
-        final Object listeners = progressiveListeners();
+        final object listeners = progressiveListeners();
         if (listeners == null) {
             return;
         }
@@ -794,7 +794,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      * Returns a {@link GenericProgressiveFutureListener}, an array of {@link GenericProgressiveFutureListener}, or
      * {@code null}.
      */
-    private synchronized Object progressiveListeners() {
+    private synchronized object progressiveListeners() {
         final GenericFutureListener listener = this.listener;
         final DefaultFutureListeners listeners = this.listeners;
         if (listener == null && listeners == null) {
@@ -858,11 +858,11 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         }
     }
 
-    private static bool isCancelled0(Object result) {
+    private static bool isCancelled0(object result) {
         return result instanceof CauseHolder && ((CauseHolder) result).cause instanceof CancellationException;
     }
 
-    private static bool isDone0(Object result) {
+    private static bool isDone0(object result) {
         return result != null && result != UNCANCELLABLE;
     }
 

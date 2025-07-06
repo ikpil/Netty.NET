@@ -33,7 +33,7 @@ public class DomainWildcardMappingBuilder<V> {
     /**
      * Constructor with default initial capacity of the map holding the mappings
      *
-     * @param defaultValue the default value for {@link Mapping#map(Object)} )} to return
+     * @param defaultValue the default value for {@link Mapping#map(object)} )} to return
      *                     when nothing matches the input
      */
     public DomainWildcardMappingBuilder(V defaultValue) {
@@ -44,7 +44,7 @@ public class DomainWildcardMappingBuilder<V> {
      * Constructor with initial capacity of the map holding the mappings
      *
      * @param initialCapacity initial capacity for the internal map
-     * @param defaultValue    the default value for {@link Mapping#map(Object)} to return
+     * @param defaultValue    the default value for {@link Mapping#map(object)} to return
      *                        when nothing matches the input
      */
     public DomainWildcardMappingBuilder(int initialCapacity, V defaultValue) {
@@ -66,7 +66,7 @@ public class DomainWildcardMappingBuilder<V> {
      * </p>
      *
      * @param hostname the host name (optionally wildcard)
-     * @param output   the output value that will be returned by {@link Mapping#map(Object)}
+     * @param output   the output value that will be returned by {@link Mapping#map(object)}
      *                 when the specified host name matches the specified input host name
      */
     public DomainWildcardMappingBuilder<V> add(string hostname, V output) {

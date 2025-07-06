@@ -29,7 +29,7 @@ public final class Log4J2LoggerFactory extends InternalLoggerFactory {
     }
 
     @Override
-    public InternalLogger newInstance(string name) {
+    public IInternalLogger newInstance(string name) {
         return new Log4J2Logger(LogManager.getLogger(name));
     }
 }

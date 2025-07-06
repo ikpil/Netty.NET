@@ -163,7 +163,7 @@ public class ResourceLeakDetector<T> {
     /** the collection of active resources */
     private final Set<DefaultResourceLeak<?>> allLeaks = ConcurrentHashMap.newKeySet();
 
-    private final ReferenceQueue<Object> refQueue = new ReferenceQueue<>();
+    private final ReferenceQueue<object> refQueue = new ReferenceQueue<>();
     private final Set<string> reportedLeaks = ConcurrentHashMap.newKeySet();
 
     private final string resourceType;
@@ -230,7 +230,7 @@ public class ResourceLeakDetector<T> {
      * related resource is deallocated.
      *
      * @return the {@link ResourceLeak} or {@code null}
-     * @deprecated use {@link #track(Object)}
+     * @deprecated use {@link #track(object)}
      */
     @Deprecated
     public final ResourceLeak open(T obj) {
@@ -239,7 +239,7 @@ public class ResourceLeakDetector<T> {
 
     /**
      * Creates a new {@link ResourceLeakTracker} which is expected to be closed via
-     * {@link ResourceLeakTracker#close(Object)} when the related resource is deallocated.
+     * {@link ResourceLeakTracker#close(object)} when the related resource is deallocated.
      *
      * @return the {@link ResourceLeakTracker} or {@code null}
      */
@@ -250,9 +250,9 @@ public class ResourceLeakDetector<T> {
 
     /**
      * Creates a new {@link ResourceLeakTracker} which is expected to be closed via
-     * {@link ResourceLeakTracker#close(Object)} when the related resource is deallocated.
+     * {@link ResourceLeakTracker#close(object)} when the related resource is deallocated.
      *
-     * Unlike {@link #track(Object)}, this method always returns a tracker, regardless
+     * Unlike {@link #track(object)}, this method always returns a tracker, regardless
      * of the detection settings.
      *
      * @return the {@link ResourceLeakTracker}
@@ -360,10 +360,10 @@ public class ResourceLeakDetector<T> {
 
     /**
      * Create a hint object to be attached to an object tracked by this record. Similar to the additional information
-     * supplied to {@link ResourceLeakTracker#record(Object)}, will be printed alongside the stack trace of the
+     * supplied to {@link ResourceLeakTracker#record(object)}, will be printed alongside the stack trace of the
      * creation of the resource.
      */
-    protected Object getInitialHint(string resourceType) {
+    protected object getInitialHint(string resourceType) {
         return null;
     }
 
@@ -384,7 +384,7 @@ public class ResourceLeakDetector<T> {
 
     @SuppressWarnings("deprecation")
     private static final class DefaultResourceLeak<T>
-            extends WeakReference<Object> : ResourceLeakTracker<T>, ResourceLeak {
+            extends WeakReference<object> : ResourceLeakTracker<T>, ResourceLeak {
 
         @SuppressWarnings("unchecked") // generics and updaters do not mix.
         private static final AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater =
@@ -405,10 +405,10 @@ public class ResourceLeakDetector<T> {
         private final int trackedHash;
 
         DefaultResourceLeak(
-                Object referent,
-                ReferenceQueue<Object> refQueue,
+                object referent,
+                ReferenceQueue<object> refQueue,
                 Set<DefaultResourceLeak<?>> allLeaks,
-                Object initialHint) {
+                object initialHint) {
             super(referent, refQueue);
 
             assert referent != null;
@@ -431,7 +431,7 @@ public class ResourceLeakDetector<T> {
         }
 
         @Override
-        public void record(Object hint) {
+        public void record(object hint) {
             record0(hint);
         }
 
@@ -461,7 +461,7 @@ public class ResourceLeakDetector<T> {
          * object isn't shared! If this is a problem, the loop can be aborted and the record dropped, because another
          * thread won the race.
          */
-        private void record0(Object hint) {
+        private void record0(object hint) {
             // Check TARGET_RECORDS > 0 here to avoid similar check before remove from and add to lastRecords
             if (TARGET_RECORDS > 0) {
                 TraceRecord oldHead;
@@ -542,7 +542,7 @@ public class ResourceLeakDetector<T> {
          * @param ref the reference. If {@code null}, this method has no effect.
          * @see java.lang.ref.Reference#reachabilityFence
          */
-        private static void reachabilityFence0(Object ref) {
+        private static void reachabilityFence0(object ref) {
             if (ref != null) {
                 synchronized (ref) {
                     // Empty synchronized is ok: https://stackoverflow.com/a/31933260/1151521
@@ -659,7 +659,7 @@ public class ResourceLeakDetector<T> {
         private final TraceRecord next;
         private final int pos;
 
-        TraceRecord(TraceRecord next, Object hint) {
+        TraceRecord(TraceRecord next, object hint) {
             // This needs to be generated even if toString() is never called as it may change later on.
             hintString = hint instanceof ResourceLeakHint ? ((ResourceLeakHint) hint).toHintString() : hint.toString();
             this.next = next;

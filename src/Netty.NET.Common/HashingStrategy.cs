@@ -22,13 +22,13 @@ public interface HashingStrategy<T> {
     /**
      * Generate a hash code for {@code obj}.
      * <p>
-     * This method must obey the same relationship that {@link java.lang.Object#hashCode()} has with
-     * {@link java.lang.Object#equals(Object)}:
+     * This method must obey the same relationship that {@link java.lang.object#hashCode()} has with
+     * {@link java.lang.object#equals(object)}:
      * <ul>
      * <li>Calling this method multiple times with the same {@code obj} should return the same result</li>
-     * <li>If {@link #equals(Object, Object)} with parameters {@code a} and {@code b} returns {@code true}
+     * <li>If {@link #equals(object, object)} with parameters {@code a} and {@code b} returns {@code true}
      * then the return value for this method for parameters {@code a} and {@code b} must return the same result</li>
-     * <li>If {@link #equals(Object, Object)} with parameters {@code a} and {@code b} returns {@code false}
+     * <li>If {@link #equals(object, object)} with parameters {@code a} and {@code b} returns {@code false}
      * then the return value for this method for parameters {@code a} and {@code b} does <strong>not</strong> have to
      * return different results results. However this property is desirable.</li>
      * <li>if {@code obj} is {@code null} then this method return {@code 0}</li>
@@ -55,18 +55,18 @@ public interface HashingStrategy<T> {
     bool equals(T a, T b);
 
     /**
-     * A {@link HashingStrategy} which delegates to java's {@link Object#hashCode()}
-     * and {@link Object#equals(Object)}.
+     * A {@link HashingStrategy} which delegates to java's {@link object#hashCode()}
+     * and {@link object#equals(object)}.
      */
     @SuppressWarnings("rawtypes")
     HashingStrategy JAVA_HASHER = new HashingStrategy() {
         @Override
-        public int hashCode(Object obj) {
+        public int hashCode(object obj) {
             return obj != null ? obj.hashCode() : 0;
         }
 
         @Override
-        public bool equals(Object a, Object b) {
+        public bool equals(object a, object b) {
             return (a == b) || (a != null && a.equals(b));
         }
     };

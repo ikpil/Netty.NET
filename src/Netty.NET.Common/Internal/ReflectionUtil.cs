@@ -68,7 +68,7 @@ public final class ReflectionUtil {
      * @return The resolved type parameter
      * @throws IllegalStateException if the type parameter could not be resolved
      * */
-    public static Class<?> resolveTypeParameter(final Object object,
+    public static Class<?> resolveTypeParameter(final object object,
                                                 Class<?> parametrizedSuperclass,
                                                 string typeParamName) {
         final Class<?> thisClass = object.getClass();
@@ -91,7 +91,7 @@ public final class ReflectionUtil {
 
                 Type genericSuperType = currentClass.getGenericSuperclass();
                 if (!(genericSuperType instanceof ParameterizedType)) {
-                    return Object.class;
+                    return object.class;
                 }
 
                 Type[] actualTypeParams = ((ParameterizedType) genericSuperType).getActualTypeArguments();
@@ -116,7 +116,7 @@ public final class ReflectionUtil {
                     // Resolved type parameter points to another type parameter.
                     TypeVariable<?> v = (TypeVariable<?>) actualTypeParam;
                     if (!(v.getGenericDeclaration() instanceof Class)) {
-                        return Object.class;
+                        return object.class;
                     }
 
                     currentClass = thisClass;
@@ -125,7 +125,7 @@ public final class ReflectionUtil {
                     if (parametrizedSuperclass.isAssignableFrom(thisClass)) {
                         continue;
                     }
-                    return Object.class;
+                    return object.class;
                 }
 
                 return fail(thisClass, typeParamName);

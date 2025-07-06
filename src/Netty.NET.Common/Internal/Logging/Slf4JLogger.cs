@@ -42,17 +42,17 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void trace(string format, Object arg) {
+    public void trace(string format, object arg) {
         logger.trace(format, arg);
     }
 
     @Override
-    public void trace(string format, Object argA, Object argB) {
+    public void trace(string format, object argA, object argB) {
         logger.trace(format, argA, argB);
     }
 
     @Override
-    public void trace(string format, Object... argArray) {
+    public void trace(string format, object... argArray) {
         logger.trace(format, argArray);
     }
 
@@ -72,17 +72,17 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void debug(string format, Object arg) {
+    public void debug(string format, object arg) {
         logger.debug(format, arg);
     }
 
     @Override
-    public void debug(string format, Object argA, Object argB) {
+    public void debug(string format, object argA, object argB) {
         logger.debug(format, argA, argB);
     }
 
     @Override
-    public void debug(string format, Object... argArray) {
+    public void debug(string format, object... argArray) {
         logger.debug(format, argArray);
     }
 
@@ -102,17 +102,17 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void info(string format, Object arg) {
+    public void info(string format, object arg) {
         logger.info(format, arg);
     }
 
     @Override
-    public void info(string format, Object argA, Object argB) {
+    public void info(string format, object argA, object argB) {
         logger.info(format, argA, argB);
     }
 
     @Override
-    public void info(string format, Object... argArray) {
+    public void info(string format, object... argArray) {
         logger.info(format, argArray);
     }
 
@@ -132,17 +132,17 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void warn(string format, Object arg) {
+    public void warn(string format, object arg) {
         logger.warn(format, arg);
     }
 
     @Override
-    public void warn(string format, Object... argArray) {
+    public void warn(string format, object... argArray) {
         logger.warn(format, argArray);
     }
 
     @Override
-    public void warn(string format, Object argA, Object argB) {
+    public void warn(string format, object argA, object argB) {
         logger.warn(format, argA, argB);
     }
 
@@ -162,17 +162,17 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void error(string format, Object arg) {
+    public void error(string format, object arg) {
         logger.error(format, arg);
     }
 
     @Override
-    public void error(string format, Object argA, Object argB) {
+    public void error(string format, object argA, object argB) {
         logger.error(format, argA, argB);
     }
 
     @Override
-    public void error(string format, Object... argArray) {
+    public void error(string format, object... argArray) {
         logger.error(format, argArray);
     }
 

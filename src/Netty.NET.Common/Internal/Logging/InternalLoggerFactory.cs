@@ -123,20 +123,20 @@ public abstract class InternalLoggerFactory {
     /**
      * Creates a new logger instance with the name of the specified class.
      */
-    public static InternalLogger getInstance(Class<?> clazz) {
+    public static IInternalLogger getInstance(Class<?> clazz) {
         return getInstance(clazz.getName());
     }
 
     /**
      * Creates a new logger instance with the specified name.
      */
-    public static InternalLogger getInstance(string name) {
+    public static IInternalLogger getInstance(string name) {
         return getDefaultFactory().newInstance(name);
     }
 
     /**
      * Creates a new logger instance with the specified name.
      */
-    protected abstract InternalLogger newInstance(string name);
+    protected abstract IInternalLogger newInstance(string name);
 
 }

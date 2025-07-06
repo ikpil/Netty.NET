@@ -43,9 +43,9 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      *
      * @param nThreads          the number of threads that will be used by this instance.
      * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
-     * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
+     * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, ThreadFactory threadFactory, Object... args) {
+    protected MultithreadEventExecutorGroup(int nThreads, ThreadFactory threadFactory, object... args) {
         this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args);
     }
 
@@ -54,9 +54,9 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      *
      * @param nThreads          the number of threads that will be used by this instance.
      * @param executor          the Executor to use, or {@code null} if the default should be used.
-     * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
+     * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, Executor executor, Object... args) {
+    protected MultithreadEventExecutorGroup(int nThreads, Executor executor, object... args) {
         this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);
     }
 
@@ -66,10 +66,10 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param nThreads          the number of threads that will be used by this instance.
      * @param executor          the Executor to use, or {@code null} if the default should be used.
      * @param chooserFactory    the {@link EventExecutorChooserFactory} to use.
-     * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
+     * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor,
-                                            EventExecutorChooserFactory chooserFactory, Object... args) {
+                                            EventExecutorChooserFactory chooserFactory, object... args) {
         checkPositive(nThreads, "nThreads");
 
         if (executor == null) {
@@ -110,9 +110,9 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
         chooser = chooserFactory.newChooser(children);
 
-        final FutureListener<Object> terminationListener = new FutureListener<Object>() {
+        final FutureListener<object> terminationListener = new FutureListener<object>() {
             @Override
-            public void operationComplete(Future<Object> future) throws Exception {
+            public void operationComplete(Future<object> future) throws Exception {
                 if (terminatedChildren.incrementAndGet() == children.length) {
                     terminationFuture.setSuccess(null);
                 }
@@ -155,7 +155,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
      */
-    protected abstract EventExecutor newChild(Executor executor, Object... args) throws Exception;
+    protected abstract EventExecutor newChild(Executor executor, object... args) throws Exception;
 
     @Override
     public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {

@@ -57,7 +57,7 @@ public abstract class AbstractConstant<T extends AbstractConstant<T>> : IConstan
     }
 
     @Override
-    public final bool equals(Object obj) {
+    public final bool equals(object obj) {
         return super.equals(obj);
     }
 

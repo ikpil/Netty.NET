@@ -40,9 +40,9 @@ final class CleanerJava9 : Cleaner {
         final Throwable error;
         if (PlatformDependent0.hasUnsafe()) {
             final ByteBuffer buffer = ByteBuffer.allocateDirect(1);
-            Object maybeInvokeMethod = AccessController.doPrivileged(new PrivilegedAction<Object>() {
+            object maybeInvokeMethod = AccessController.doPrivileged(new PrivilegedAction<object>() {
                 @Override
-                public Object run() {
+                public object run() {
                     try {
                         // See https://bugs.openjdk.java.net/browse/JDK-8171377
                         Class<? extends Unsafe> unsafeClass = PlatformDependent0.UNSAFE.getClass();

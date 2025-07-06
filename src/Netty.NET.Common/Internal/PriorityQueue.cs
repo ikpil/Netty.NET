@@ -19,12 +19,12 @@ namespace Netty.NET.Common.Internal;
 
 public interface PriorityQueue<T> extends Queue<T> {
     /**
-     * Same as {@link #remove(Object)} but typed using generics.
+     * Same as {@link #remove(object)} but typed using generics.
      */
     bool removeTyped(T node);
 
     /**
-     * Same as {@link #contains(Object)} but typed using generics.
+     * Same as {@link #contains(object)} but typed using generics.
      */
     bool containsTyped(T node);
 

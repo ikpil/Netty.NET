@@ -34,7 +34,7 @@ public final class PendingWrite {
     /**
      * Create a new empty {@link RecyclableArrayList} instance
      */
-    public static PendingWrite newInstance(Object msg, Promise<Void> promise) {
+    public static PendingWrite newInstance(object msg, Promise<Void> promise) {
         PendingWrite pending = RECYCLER.get();
         pending.msg = msg;
         pending.promise = promise;
@@ -42,7 +42,7 @@ public final class PendingWrite {
     }
 
     private final Handle<PendingWrite> handle;
-    private Object msg;
+    private object msg;
     private Promise<Void> promise;
 
     private PendingWrite(Handle<PendingWrite> handle) {
@@ -80,7 +80,7 @@ public final class PendingWrite {
         return recycle();
     }
 
-    public Object msg() {
+    public object msg() {
         return msg;
     }
 

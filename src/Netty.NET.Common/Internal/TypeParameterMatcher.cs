@@ -23,7 +23,7 @@ public abstract class TypeParameterMatcher {
 
     private static final TypeParameterMatcher NOOP = new TypeParameterMatcher() {
         @Override
-        public bool match(Object msg) {
+        public bool match(object msg) {
             return true;
         }
     };
@@ -34,7 +34,7 @@ public abstract class TypeParameterMatcher {
 
         TypeParameterMatcher matcher = getCache.get(parameterType);
         if (matcher == null) {
-            if (parameterType == Object.class) {
+            if (parameterType == object.class) {
                 matcher = NOOP;
             } else {
                 matcher = new ReflectiveMatcher(parameterType);
@@ -46,7 +46,7 @@ public abstract class TypeParameterMatcher {
     }
 
     public static TypeParameterMatcher find(
-            final Object object, final Class<?> parametrizedSuperclass, final string typeParamName) {
+            final object object, final Class<?> parametrizedSuperclass, final string typeParamName) {
 
         final Map<Class<?>, Map<string, TypeParameterMatcher>> findCache =
                 InternalThreadLocalMap.get().typeParameterMatcherFindCache();
@@ -67,7 +67,7 @@ public abstract class TypeParameterMatcher {
         return matcher;
     }
 
-    public abstract bool match(Object msg);
+    public abstract bool match(object msg);
 
     private static final class ReflectiveMatcher extends TypeParameterMatcher {
         private final Class<?> type;
@@ -77,7 +77,7 @@ public abstract class TypeParameterMatcher {
         }
 
         @Override
-        public bool match(Object msg) {
+        public bool match(object msg) {
             return type.isInstance(msg);
         }
     }

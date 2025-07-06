@@ -39,7 +39,7 @@ class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
             @Override
             public Boolean run() {
                 try {
-                    Logger.class.getMethod("debug", string.class, Object.class);
+                    Logger.class.getMethod("debug", string.class, object.class);
                     return false;
                 } catch (NoSuchMethodException ignore) {
                     // Log4J2 version too old.
@@ -100,17 +100,17 @@ class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
     }
 
     @Override
-    public void log(InternalLogLevel level, string format, Object arg) {
+    public void log(InternalLogLevel level, string format, object arg) {
         log(toLevel(level), format, arg);
     }
 
     @Override
-    public void log(InternalLogLevel level, string format, Object argA, Object argB) {
+    public void log(InternalLogLevel level, string format, object argA, object argB) {
         log(toLevel(level), format, argA, argB);
     }
 
     @Override
-    public void log(InternalLogLevel level, string format, Object... arguments) {
+    public void log(InternalLogLevel level, string format, object... arguments) {
         log(toLevel(level), format, arguments);
     }
 

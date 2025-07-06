@@ -391,7 +391,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     /**
-     * @see Queue#remove(Object)
+     * @see Queue#remove(object)
      */
     protected bool removeTask(Runnable task) {
         return taskQueue.remove(ObjectUtil.checkNotNull(task, "task"));

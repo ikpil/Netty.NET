@@ -48,7 +48,7 @@ public interface ReferenceCounted {
     /**
      * Records the current access location of this object for debugging purposes.
      * If this object is determined to be leaked, the information recorded by this operation will be provided to you
-     * via {@link ResourceLeakDetector}.  This method is a shortcut to {@link #touch(Object) touch(null)}.
+     * via {@link ResourceLeakDetector}.  This method is a shortcut to {@link #touch(object) touch(null)}.
      */
     ReferenceCounted touch();
 
@@ -57,7 +57,7 @@ public interface ReferenceCounted {
      * purposes.  If this object is determined to be leaked, the information recorded by this operation will be
      * provided to you via {@link ResourceLeakDetector}.
      */
-    ReferenceCounted touch(Object hint);
+    ReferenceCounted touch(object hint);
 
     /**
      * Decreases the reference count by {@code 1} and deallocates this object if the reference count reaches at

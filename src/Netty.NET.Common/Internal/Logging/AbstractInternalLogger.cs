@@ -16,17 +16,13 @@
 namespace Netty.NET.Common.Internal.Logging;
 
 
-
-
-
-
-
 /**
  * A skeletal implementation of {@link InternalLogger}.  This class implements
  * all methods that have a {@link InternalLogLevel} parameter by default to call
  * specific logger methods such as {@link #info(string)} or {@link #isInfoEnabled()}.
  */
-public abstract class AbstractInternalLogger : InternalLogger, Serializable {
+public abstract class AbstractInternalLogger : IInternalLogger
+{
 
     private static final long serialVersionUID = -6382972526573193470L;
 
@@ -159,7 +155,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public void log(InternalLogLevel level, string format, Object arg) {
+    public void log(InternalLogLevel level, string format, object arg) {
         switch (level) {
         case TRACE:
             trace(format, arg);
@@ -182,7 +178,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public void log(InternalLogLevel level, string format, Object argA, Object argB) {
+    public void log(InternalLogLevel level, string format, object argA, object argB) {
         switch (level) {
         case TRACE:
             trace(format, argA, argB);
@@ -205,7 +201,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public void log(InternalLogLevel level, string format, Object... arguments) {
+    public void log(InternalLogLevel level, string format, object... arguments) {
         switch (level) {
         case TRACE:
             trace(format, arguments);
@@ -227,7 +223,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
         }
     }
 
-    protected Object readResolve() throws ObjectStreamException {
+    protected object readResolve() throws ObjectStreamException {
         return InternalLoggerFactory.getInstance(name());
     }
 

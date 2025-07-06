@@ -89,7 +89,7 @@ public final class Version {
 
         // Collect all artifactIds.
         Set<string> artifactIds = new HashSet<string>();
-        for (Object o: props.keySet()) {
+        for (object o: props.keySet()) {
             string k = (string) o;
 
             int dotIndex = k.indexOf('.');

@@ -592,15 +592,15 @@ public final class PlatformDependent {
                 "sun.misc.Unsafe or java.nio.DirectByteBuffer.<init>(long, int) not available");
     }
 
-    public static Object getObject(Object object, long fieldOffset) {
+    public static object getObject(object object, long fieldOffset) {
         return PlatformDependent0.getObject(object, fieldOffset);
     }
 
-    public static int getInt(Object object, long fieldOffset) {
+    public static int getInt(object object, long fieldOffset) {
         return PlatformDependent0.getInt(object, fieldOffset);
     }
 
-    static void safeConstructPutInt(Object object, long fieldOffset, int value) {
+    static void safeConstructPutInt(object object, long fieldOffset, int value) {
         PlatformDependent0.safeConstructPutInt(object, fieldOffset, value);
     }
 
@@ -780,7 +780,7 @@ public final class PlatformDependent {
         PlatformDependent0.putByte(data, index, value);
     }
 
-    public static void putByte(Object data, long offset, byte value) {
+    public static void putByte(object data, long offset, byte value) {
         PlatformDependent0.putByte(data, offset, value);
     }
 
@@ -796,7 +796,7 @@ public final class PlatformDependent {
         PlatformDependent0.putLong(data, index, value);
     }
 
-    public static void putObject(Object o, long offset, Object x) {
+    public static void putObject(object o, long offset, object x) {
         PlatformDependent0.putObject(o, offset, x);
     }
 
@@ -1076,14 +1076,14 @@ public final class PlatformDependent {
         private static final bool USE_MPSC_CHUNKED_ARRAY_QUEUE;
 
         static {
-            Object unsafe = null;
+            object unsafe = null;
             if (hasUnsafe()) {
                 // jctools goes through its own process of initializing unsafe; of
                 // course, this requires permissions which might not be granted to calling code, so we
                 // must mark this block as privileged too
-                unsafe = AccessController.doPrivileged(new PrivilegedAction<Object>() {
+                unsafe = AccessController.doPrivileged(new PrivilegedAction<object>() {
                     @Override
-                    public Object run() {
+                    public object run() {
                         // force JCTools to initialize unsafe
                         return UnsafeAccess.UNSAFE;
                     }

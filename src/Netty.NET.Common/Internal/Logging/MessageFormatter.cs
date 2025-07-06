@@ -104,9 +104,9 @@ namespace Netty.NET.Common.Internal.Logging;
  * larger context of the complete logging processing chain.
  * <p/>
  * <p/>
- * See also {@link #format(string, Object)},
- * {@link #format(string, Object, Object)} and
- * {@link #arrayFormat(string, Object[])} methods for more details.
+ * See also {@link #format(string, object)},
+ * {@link #format(string, object, object)} and
+ * {@link #arrayFormat(string, object[])} methods for more details.
  */
 public final class MessageFormatter {
     private static final string DELIM_STR = "{}";
@@ -129,8 +129,8 @@ public final class MessageFormatter {
      * @param arg            The argument to be substituted in place of the formatting anchor
      * @return The formatted message
      */
-    public static FormattingTuple format(string messagePattern, Object arg) {
-        return arrayFormat(messagePattern, new Object[]{arg});
+    public static FormattingTuple format(string messagePattern, object arg) {
+        return arrayFormat(messagePattern, new object[]{arg});
     }
 
     /**
@@ -153,13 +153,13 @@ public final class MessageFormatter {
      * @return The formatted message
      */
     public static FormattingTuple format(final string messagePattern,
-                                  Object argA, Object argB) {
-        return arrayFormat(messagePattern, new Object[]{argA, argB});
+                                  object argA, object argB) {
+        return arrayFormat(messagePattern, new object[]{argA, argB});
     }
 
     /**
-     * Same principle as the {@link #format(string, Object)} and
-     * {@link #format(string, Object, Object)} methods except that any number of
+     * Same principle as the {@link #format(string, object)} and
+     * {@link #format(string, object, object)} methods except that any number of
      * arguments can be passed in an array.
      *
      * @param messagePattern The message pattern which will be parsed and formatted
@@ -168,13 +168,13 @@ public final class MessageFormatter {
      * @return The formatted message
      */
     public static FormattingTuple arrayFormat(final string messagePattern,
-                                       final Object[] argArray) {
+                                       final object[] argArray) {
         if (argArray == null || argArray.length == 0) {
             return new FormattingTuple(messagePattern, null);
         }
 
         int lastArrIdx = argArray.length - 1;
-        Object lastEntry = argArray[lastArrIdx];
+        object lastEntry = argArray[lastArrIdx];
         Throwable throwable = lastEntry instanceof Throwable? (Throwable) lastEntry : null;
 
         if (messagePattern == null) {
@@ -220,8 +220,8 @@ public final class MessageFormatter {
     }
 
     // special treatment of array values was suggested by 'lizongbo'
-    private static void deeplyAppendParameter(StringBuilder sbuf, Object o,
-                                              Set<Object[]> seenSet) {
+    private static void deeplyAppendParameter(StringBuilder sbuf, object o,
+                                              Set<object[]> seenSet) {
         if (o == null) {
             sbuf.append("null");
             return;
@@ -246,7 +246,7 @@ public final class MessageFormatter {
             }
         } else {
             // check for primitive array types because they
-            // unfortunately cannot be cast to Object[]
+            // unfortunately cannot be cast to object[]
             sbuf.append('[');
             if (objClass == bool[].class) {
                 booleanArrayAppend(sbuf, (bool[]) o);
@@ -265,13 +265,13 @@ public final class MessageFormatter {
             } else if (objClass == double[].class) {
                 doubleArrayAppend(sbuf, (double[]) o);
             } else {
-                objectArrayAppend(sbuf, (Object[]) o, seenSet);
+                objectArrayAppend(sbuf, (object[]) o, seenSet);
             }
             sbuf.append(']');
         }
     }
 
-    private static void safeObjectAppend(StringBuilder sbuf, Object o) {
+    private static void safeObjectAppend(StringBuilder sbuf, object o) {
         try {
             string oAsString = o.toString();
             sbuf.append(oAsString);
@@ -284,12 +284,12 @@ public final class MessageFormatter {
         }
     }
 
-    private static void objectArrayAppend(StringBuilder sbuf, Object[] a, Set<Object[]> seenSet) {
+    private static void objectArrayAppend(StringBuilder sbuf, object[] a, Set<object[]> seenSet) {
         if (a.length == 0) {
             return;
         }
         if (seenSet == null) {
-            seenSet = new HashSet<Object[]>(a.length);
+            seenSet = new HashSet<object[]>(a.length);
         }
         if (seenSet.add(a)) {
             deeplyAppendParameter(sbuf, a[0], seenSet);

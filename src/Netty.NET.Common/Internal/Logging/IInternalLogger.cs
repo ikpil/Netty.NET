@@ -43,7 +43,7 @@ namespace Netty.NET.Common.Internal.Logging;
  * <em>Internal-use-only</em> logger used by Netty.  <strong>DO NOT</strong>
  * access this class outside of Netty.
  */
-public interface InternalLogger {
+public interface IInternalLogger {
 
     /**
      * Return the name of this {@link InternalLogger} instance.
@@ -77,7 +77,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void trace(string format, Object arg);
+    void trace(string format, object arg);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -90,7 +90,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void trace(string format, Object argA, Object argB);
+    void trace(string format, object argA, object argB);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -98,14 +98,14 @@ public interface InternalLogger {
      * <p/>
      * <p>This form avoids superfluous string concatenation when the logger
      * is disabled for the TRACE level. However, this variant incurs the hidden
-     * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
-     * even if this logger is disabled for TRACE. The variants taking {@link #trace(string, Object) one} and
-     * {@link #trace(string, Object, Object) two} arguments exist solely in order to avoid this hidden cost.</p>
+     * (and relatively small) cost of creating an {@code object[]} before invoking the method,
+     * even if this logger is disabled for TRACE. The variants taking {@link #trace(string, object) one} and
+     * {@link #trace(string, object, object) two} arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void trace(string format, Object... arguments);
+    void trace(string format, object... arguments);
 
     /**
      * Log an exception (throwable) at the TRACE level with an
@@ -148,7 +148,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void debug(string format, Object arg);
+    void debug(string format, object arg);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -161,7 +161,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void debug(string format, Object argA, Object argB);
+    void debug(string format, object argA, object argB);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -169,15 +169,15 @@ public interface InternalLogger {
      * <p/>
      * <p>This form avoids superfluous string concatenation when the logger
      * is disabled for the DEBUG level. However, this variant incurs the hidden
-     * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
+     * (and relatively small) cost of creating an {@code object[]} before invoking the method,
      * even if this logger is disabled for DEBUG. The variants taking
-     * {@link #debug(string, Object) one} and {@link #debug(string, Object, Object) two}
+     * {@link #debug(string, object) one} and {@link #debug(string, object, object) two}
      * arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void debug(string format, Object... arguments);
+    void debug(string format, object... arguments);
 
     /**
      * Log an exception (throwable) at the DEBUG level with an
@@ -220,7 +220,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void info(string format, Object arg);
+    void info(string format, object arg);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -233,7 +233,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void info(string format, Object argA, Object argB);
+    void info(string format, object argA, object argB);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -241,15 +241,15 @@ public interface InternalLogger {
      * <p/>
      * <p>This form avoids superfluous string concatenation when the logger
      * is disabled for the INFO level. However, this variant incurs the hidden
-     * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
+     * (and relatively small) cost of creating an {@code object[]} before invoking the method,
      * even if this logger is disabled for INFO. The variants taking
-     * {@link #info(string, Object) one} and {@link #info(string, Object, Object) two}
+     * {@link #info(string, object) one} and {@link #info(string, object, object) two}
      * arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void info(string format, Object... arguments);
+    void info(string format, object... arguments);
 
     /**
      * Log an exception (throwable) at the INFO level with an
@@ -292,7 +292,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void warn(string format, Object arg);
+    void warn(string format, object arg);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -300,15 +300,15 @@ public interface InternalLogger {
      * <p/>
      * <p>This form avoids superfluous string concatenation when the logger
      * is disabled for the WARN level. However, this variant incurs the hidden
-     * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
+     * (and relatively small) cost of creating an {@code object[]} before invoking the method,
      * even if this logger is disabled for WARN. The variants taking
-     * {@link #warn(string, Object) one} and {@link #warn(string, Object, Object) two}
+     * {@link #warn(string, object) one} and {@link #warn(string, object, object) two}
      * arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void warn(string format, Object... arguments);
+    void warn(string format, object... arguments);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -321,7 +321,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void warn(string format, Object argA, Object argB);
+    void warn(string format, object argA, object argB);
 
     /**
      * Log an exception (throwable) at the WARN level with an
@@ -364,7 +364,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void error(string format, Object arg);
+    void error(string format, object arg);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -377,7 +377,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void error(string format, Object argA, Object argB);
+    void error(string format, object argA, object argB);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -385,15 +385,15 @@ public interface InternalLogger {
      * <p/>
      * <p>This form avoids superfluous string concatenation when the logger
      * is disabled for the ERROR level. However, this variant incurs the hidden
-     * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
+     * (and relatively small) cost of creating an {@code object[]} before invoking the method,
      * even if this logger is disabled for ERROR. The variants taking
-     * {@link #error(string, Object) one} and {@link #error(string, Object, Object) two}
+     * {@link #error(string, object) one} and {@link #error(string, object, object) two}
      * arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void error(string format, Object... arguments);
+    void error(string format, object... arguments);
 
     /**
      * Log an exception (throwable) at the ERROR level with an
@@ -436,7 +436,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void log(InternalLogLevel level, string format, Object arg);
+    void log(InternalLogLevel level, string format, object arg);
 
     /**
      * Log a message at the specified {@code level} according to the specified format
@@ -449,7 +449,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void log(InternalLogLevel level, string format, Object argA, Object argB);
+    void log(InternalLogLevel level, string format, object argA, object argB);
 
     /**
      * Log a message at the specified {@code level} according to the specified format
@@ -457,16 +457,16 @@ public interface InternalLogger {
      * <p/>
      * <p>This form avoids superfluous string concatenation when the logger
      * is disabled for the specified {@code level}. However, this variant incurs the hidden
-     * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
+     * (and relatively small) cost of creating an {@code object[]} before invoking the method,
      * even if this logger is disabled for the specified {@code level}. The variants taking
-     * {@link #log(InternalLogLevel, string, Object) one} and
-     * {@link #log(InternalLogLevel, string, Object, Object) two} arguments exist solely
+     * {@link #log(InternalLogLevel, string, object) one} and
+     * {@link #log(InternalLogLevel, string, object, object) two} arguments exist solely
      * in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void log(InternalLogLevel level, string format, Object... arguments);
+    void log(InternalLogLevel level, string format, object... arguments);
 
     /**
      * Log an exception (throwable) at the specified {@code level} with an

@@ -45,12 +45,12 @@ public class Slf4JLoggerFactory extends InternalLoggerFactory {
     }
 
     @Override
-    public InternalLogger newInstance(string name) {
+    public IInternalLogger newInstance(string name) {
         return wrapLogger(LoggerFactory.getLogger(name));
     }
 
     // package-private for testing.
-    static InternalLogger wrapLogger(Logger logger) {
+    static IInternalLogger wrapLogger(Logger logger) {
         return logger instanceof LocationAwareLogger ?
                 new LocationAwareSlf4JLogger((LocationAwareLogger) logger) : new Slf4JLogger(logger);
     }

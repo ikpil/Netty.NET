@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Internal;
 
 
 /**
- * Allows a way to register some {@link Runnable} that will executed once there are no references to an {@link Object}
+ * Allows a way to register some {@link Runnable} that will executed once there are no references to an {@link object}
  * anymore.
  */
 public final class ObjectCleaner {
@@ -40,7 +40,7 @@ public final class ObjectCleaner {
     static final string CLEANER_THREAD_NAME = ObjectCleaner.class.getSimpleName() + "Thread";
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
     private static final Set<AutomaticCleanerReference> LIVE_SET = ConcurrentHashMap.newKeySet();
-    private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
+    private static final ReferenceQueue<object> REFERENCE_QUEUE = new ReferenceQueue<>();
     private static final AtomicBoolean CLEANER_RUNNING = new AtomicBoolean(false);
     private static final Runnable CLEANER_TASK = new Runnable() {
         @Override
@@ -86,13 +86,13 @@ public final class ObjectCleaner {
     };
 
     /**
-     * Register the given {@link Object} for which the {@link Runnable} will be executed once there are no references
+     * Register the given {@link object} for which the {@link Runnable} will be executed once there are no references
      * to the object anymore.
      *
-     * This should only be used if there are no other ways to execute some cleanup once the Object is not reachable
+     * This should only be used if there are no other ways to execute some cleanup once the object is not reachable
      * anymore because it is not a cheap way to handle the cleanup.
      */
-    public static void register(Object object, Runnable cleanupTask) {
+    public static void register(object object, Runnable cleanupTask) {
         AutomaticCleanerReference reference = new AutomaticCleanerReference(object,
                 ObjectUtil.checkNotNull(cleanupTask, "cleanupTask"));
         // Its important to add the reference to the LIVE_SET before we access CLEANER_RUNNING to ensure correct
@@ -132,10 +132,10 @@ public final class ObjectCleaner {
         // Only contains a static method.
     }
 
-    private static final class AutomaticCleanerReference extends WeakReference<Object> {
+    private static final class AutomaticCleanerReference extends WeakReference<object> {
         private final Runnable cleanupTask;
 
-        AutomaticCleanerReference(Object referent, Runnable cleanupTask) {
+        AutomaticCleanerReference(object referent, Runnable cleanupTask) {
             super(referent, REFERENCE_QUEUE);
             this.cleanupTask = cleanupTask;
         }

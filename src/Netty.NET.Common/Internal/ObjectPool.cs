@@ -27,25 +27,25 @@ public abstract class ObjectPool<T> {
     ObjectPool() { }
 
     /**
-     * Get a {@link Object} from the {@link ObjectPool}. The returned {@link Object} may be created via
-     * {@link ObjectCreator#newObject(Handle)} if no pooled {@link Object} is ready to be reused.
+     * Get a {@link object} from the {@link ObjectPool}. The returned {@link object} may be created via
+     * {@link ObjectCreator#newObject(Handle)} if no pooled {@link object} is ready to be reused.
      */
     public abstract T get();
 
     /**
-     * Handle for an pooled {@link Object} that will be used to notify the {@link ObjectPool} once it can
-     * reuse the pooled {@link Object} again.
+     * Handle for an pooled {@link object} that will be used to notify the {@link ObjectPool} once it can
+     * reuse the pooled {@link object} again.
      * @param <T>
      */
     public interface Handle<T> {
         /**
-         * Recycle the {@link Object} if possible and so make it ready to be reused.
+         * Recycle the {@link object} if possible and so make it ready to be reused.
          */
         void recycle(T self);
     }
 
     /**
-     * Creates a new Object which references the given {@link Handle} and calls {@link Handle#recycle(Object)} once
+     * Creates a new object which references the given {@link Handle} and calls {@link Handle#recycle(object)} once
      * it can be re-used.
      *
      * @param <T> the type of the pooled object
@@ -53,8 +53,8 @@ public abstract class ObjectPool<T> {
     public interface ObjectCreator<T> {
 
         /**
-         * Creates an returns a new {@link Object} that can be used and later recycled via
-         * {@link Handle#recycle(Object)}.
+         * Creates an returns a new {@link object} that can be used and later recycled via
+         * {@link Handle#recycle(object)}.
          *
          * @param handle can NOT be null.
          */
@@ -62,7 +62,7 @@ public abstract class ObjectPool<T> {
     }
 
     /**
-     * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link Object}
+     * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link object}
      * that should be pooled.
      */
     public static <T> ObjectPool<T> newPool(final ObjectCreator<T> creator) {

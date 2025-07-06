@@ -115,7 +115,7 @@ final class CleanerJava25 : Cleaner {
                 // With the second MemorySegment argument ignored, we can statically bind it to 'null' to effectively
                 // drop it from our parameter list.
                 MethodHandle ctorArenaMemseg = MethodHandles.insertArguments(
-                        ctorArenaMemsegNull, 2, new Object[]{null});
+                        ctorArenaMemsegNull, 2, new object[]{null});
                 // Use the 'allocateInt' method to transform the last MemorySegment argument of the constructor,
                 // into an (Arena,int) argument pair.
                 // ctorArenaArenaInt.type() = (Arena,Arena,int)CleanableDirectBufferImpl
@@ -130,7 +130,7 @@ final class CleanerJava25 : Cleaner {
                 // With the second Arena parameter value ignored, we can statically bind it to 'null' to effectively
                 // drop it from our parameter list.
                 // ctorArenaInt.type() = (Arena,int)CleanableDirectBufferImpl
-                MethodHandle ctorArenaInt = MethodHandles.insertArguments(ctorArenaNullInt, 1, new Object[]{null});
+                MethodHandle ctorArenaInt = MethodHandles.insertArguments(ctorArenaNullInt, 1, new object[]{null});
                 // Now we just need to create our Arena instance. We fold the Arena parameter into the 'ofShared'
                 // static method, so we effectively bind the argument to the result of calling that method.
                 // Since 'ofShared' takes no further parameters, we effectively eliminate the first parameter.

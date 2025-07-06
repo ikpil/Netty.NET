@@ -52,7 +52,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
     }
 
     @Override
-    public bool contains(Object o) {
+    public bool contains(object o) {
         if (!(o instanceof PriorityQueueNode)) {
             return false;
         }
@@ -126,7 +126,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
 
     @SuppressWarnings("unchecked")
     @Override
-    public bool remove(Object o) {
+    public bool remove(object o) {
         final T node;
         try {
             node = (T) o;
@@ -187,7 +187,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
     }
 
     @Override
-    public Object[] toArray() {
+    public object[] toArray() {
         return Arrays.copyOf(queue, size);
     }
 

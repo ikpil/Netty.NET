@@ -58,10 +58,10 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
 
     private static final InternalLogger logger;
     /** Internal use only. */
-    public static final Object UNSET = new Object();
+    public static final object UNSET = new object();
 
     /** Used by {@link FastThreadLocal} */
-    private Object[] indexedVariables;
+    private object[] indexedVariables;
 
     // Core thread-locals
     private int futureListenerStackDepth;
@@ -76,7 +76,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     private Map<Charset, CharsetDecoder> charsetDecoderCache;
 
     // ArrayList-related thread-locals
-    private ArrayList<Object> arrayList;
+    private ArrayList<object> arrayList;
 
     private BitSet cleanerFlags;
 
@@ -163,8 +163,8 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         indexedVariables = newIndexedVariableTable();
     }
 
-    private static Object[] newIndexedVariableTable() {
-        Object[] array = new Object[INDEXED_VARIABLE_TABLE_INITIAL_SIZE];
+    private static object[] newIndexedVariableTable() {
+        object[] array = new object[INDEXED_VARIABLE_TABLE_INITIAL_SIZE];
         Arrays.fill(array, UNSET);
         return array;
     }
@@ -200,7 +200,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
             count ++;
         }
 
-        Object v = indexedVariable(VARIABLES_TO_REMOVE_INDEX);
+        object v = indexedVariable(VARIABLES_TO_REMOVE_INDEX);
         if (v != null && v != InternalThreadLocalMap.UNSET) {
             @SuppressWarnings("unchecked")
             Set<FastThreadLocal<?>> variablesToRemove = (Set<FastThreadLocal<?>>) v;
@@ -314,25 +314,25 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         this.localChannelReaderStackDepth = localChannelReaderStackDepth;
     }
 
-    public Object indexedVariable(int index) {
-        Object[] lookup = indexedVariables;
+    public object indexedVariable(int index) {
+        object[] lookup = indexedVariables;
         return index < lookup.length? lookup[index] : UNSET;
     }
 
     /**
      * @return {@code true} if and only if a new thread-local variable has been created
      */
-    public bool setIndexedVariable(int index, Object value) {
+    public bool setIndexedVariable(int index, object value) {
         return getAndSetIndexedVariable(index, value) == UNSET;
     }
 
     /**
      * @return {@link InternalThreadLocalMap#UNSET} if and only if a new thread-local variable has been created.
      */
-    public Object getAndSetIndexedVariable(int index, Object value) {
-        Object[] lookup = indexedVariables;
+    public object getAndSetIndexedVariable(int index, object value) {
+        object[] lookup = indexedVariables;
         if (index < lookup.length) {
-            Object oldValue = lookup[index];
+            object oldValue = lookup[index];
             lookup[index] = value;
             return oldValue;
         }
@@ -340,8 +340,8 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return UNSET;
     }
 
-    private void expandIndexedVariableTableAndSet(int index, Object value) {
-        Object[] oldArray = indexedVariables;
+    private void expandIndexedVariableTableAndSet(int index, object value) {
+        object[] oldArray = indexedVariables;
         final int oldCapacity = oldArray.length;
         int newCapacity;
         if (index < ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD) {
@@ -356,16 +356,16 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
             newCapacity = ARRAY_LIST_CAPACITY_MAX_SIZE;
         }
 
-        Object[] newArray = Arrays.copyOf(oldArray, newCapacity);
+        object[] newArray = Arrays.copyOf(oldArray, newCapacity);
         Arrays.fill(newArray, oldCapacity, newArray.length, UNSET);
         newArray[index] = value;
         indexedVariables = newArray;
     }
 
-    public Object removeIndexedVariable(int index) {
-        Object[] lookup = indexedVariables;
+    public object removeIndexedVariable(int index) {
+        object[] lookup = indexedVariables;
         if (index < lookup.length) {
-            Object v = lookup[index];
+            object v = lookup[index];
             lookup[index] = UNSET;
             return v;
         } else {
@@ -374,7 +374,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     }
 
     public bool isIndexedVariableSet(int index) {
-        Object[] lookup = indexedVariables;
+        object[] lookup = indexedVariables;
         return index < lookup.length && lookup[index] != UNSET;
     }
 

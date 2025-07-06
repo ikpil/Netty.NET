@@ -71,7 +71,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#trace(Object)} method of the underlying
+     * Delegates to the {@link Log#trace(object)} method of the underlying
      * {@link Log} instance.
      *
      * @param msg - the message object to be logged
@@ -82,7 +82,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#trace(Object)} method of the underlying
+     * Delegates to the {@link Log#trace(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -96,7 +96,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void trace(string format, Object arg) {
+    public void trace(string format, object arg) {
         if (logger.isTraceEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.trace(ft.getMessage(), ft.getThrowable());
@@ -104,7 +104,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#trace(Object)} method of the underlying
+     * Delegates to the {@link Log#trace(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -120,7 +120,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void trace(string format, Object argA, Object argB) {
+    public void trace(string format, object argA, object argB) {
         if (logger.isTraceEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.trace(ft.getMessage(), ft.getThrowable());
@@ -128,7 +128,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#trace(Object)} method of the underlying
+     * Delegates to the {@link Log#trace(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -140,7 +140,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void trace(string format, Object... arguments) {
+    public void trace(string format, object... arguments) {
         if (logger.isTraceEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.trace(ft.getMessage(), ft.getThrowable());
@@ -148,7 +148,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#trace(Object, Throwable)} method of
+     * Delegates to the {@link Log#trace(object, Throwable)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -173,7 +173,7 @@ class CommonsLogger extends AbstractInternalLogger {
     //
 
     /**
-     * Delegates to the {@link Log#debug(Object)} method of the underlying
+     * Delegates to the {@link Log#debug(object)} method of the underlying
      * {@link Log} instance.
      *
      * @param msg - the message object to be logged
@@ -184,7 +184,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#debug(Object)} method of the underlying
+     * Delegates to the {@link Log#debug(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -198,7 +198,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void debug(string format, Object arg) {
+    public void debug(string format, object arg) {
         if (logger.isDebugEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.debug(ft.getMessage(), ft.getThrowable());
@@ -206,7 +206,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#debug(Object)} method of the underlying
+     * Delegates to the {@link Log#debug(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -222,7 +222,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void debug(string format, Object argA, Object argB) {
+    public void debug(string format, object argA, object argB) {
         if (logger.isDebugEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.debug(ft.getMessage(), ft.getThrowable());
@@ -230,7 +230,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#debug(Object)} method of the underlying
+     * Delegates to the {@link Log#debug(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -242,7 +242,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void debug(string format, Object... arguments) {
+    public void debug(string format, object... arguments) {
         if (logger.isDebugEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.debug(ft.getMessage(), ft.getThrowable());
@@ -250,7 +250,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#debug(Object, Throwable)} method of
+     * Delegates to the {@link Log#debug(object, Throwable)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -273,7 +273,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#debug(Object)} method of the underlying
+     * Delegates to the {@link Log#debug(object)} method of the underlying
      * {@link Log} instance.
      *
      * @param msg - the message object to be logged
@@ -284,7 +284,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#info(Object)} method of the underlying
+     * Delegates to the {@link Log#info(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -299,14 +299,14 @@ class CommonsLogger extends AbstractInternalLogger {
      */
 
     @Override
-    public void info(string format, Object arg) {
+    public void info(string format, object arg) {
         if (logger.isInfoEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.info(ft.getMessage(), ft.getThrowable());
         }
     }
     /**
-     * Delegates to the {@link Log#info(Object)} method of the underlying
+     * Delegates to the {@link Log#info(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -322,7 +322,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void info(string format, Object argA, Object argB) {
+    public void info(string format, object argA, object argB) {
         if (logger.isInfoEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.info(ft.getMessage(), ft.getThrowable());
@@ -330,7 +330,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#info(Object)} method of the underlying
+     * Delegates to the {@link Log#info(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -342,7 +342,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void info(string format, Object... arguments) {
+    public void info(string format, object... arguments) {
         if (logger.isInfoEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.info(ft.getMessage(), ft.getThrowable());
@@ -350,7 +350,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#info(Object, Throwable)} method of
+     * Delegates to the {@link Log#info(object, Throwable)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -373,7 +373,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#warn(Object)} method of the underlying
+     * Delegates to the {@link Log#warn(object)} method of the underlying
      * {@link Log} instance.
      *
      * @param msg - the message object to be logged
@@ -384,7 +384,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#warn(Object)} method of the underlying
+     * Delegates to the {@link Log#warn(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -398,7 +398,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void warn(string format, Object arg) {
+    public void warn(string format, object arg) {
         if (logger.isWarnEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.warn(ft.getMessage(), ft.getThrowable());
@@ -406,7 +406,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#warn(Object)} method of the underlying
+     * Delegates to the {@link Log#warn(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -422,7 +422,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void warn(string format, Object argA, Object argB) {
+    public void warn(string format, object argA, object argB) {
         if (logger.isWarnEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.warn(ft.getMessage(), ft.getThrowable());
@@ -430,7 +430,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#warn(Object)} method of the underlying
+     * Delegates to the {@link Log#warn(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -442,7 +442,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void warn(string format, Object... arguments) {
+    public void warn(string format, object... arguments) {
         if (logger.isWarnEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.warn(ft.getMessage(), ft.getThrowable());
@@ -450,7 +450,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#warn(Object, Throwable)} method of
+     * Delegates to the {@link Log#warn(object, Throwable)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -474,7 +474,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#error(Object)} method of the underlying
+     * Delegates to the {@link Log#error(object)} method of the underlying
      * {@link Log} instance.
      *
      * @param msg - the message object to be logged
@@ -485,7 +485,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#error(Object)} method of the underlying
+     * Delegates to the {@link Log#error(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -499,7 +499,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void error(string format, Object arg) {
+    public void error(string format, object arg) {
         if (logger.isErrorEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.error(ft.getMessage(), ft.getThrowable());
@@ -507,7 +507,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#error(Object)} method of the underlying
+     * Delegates to the {@link Log#error(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -523,7 +523,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void error(string format, Object argA, Object argB) {
+    public void error(string format, object argA, object argB) {
         if (logger.isErrorEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.error(ft.getMessage(), ft.getThrowable());
@@ -531,7 +531,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#error(Object)} method of the underlying
+     * Delegates to the {@link Log#error(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>
@@ -543,7 +543,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void error(string format, Object... arguments) {
+    public void error(string format, object... arguments) {
         if (logger.isErrorEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.error(ft.getMessage(), ft.getThrowable());
@@ -551,7 +551,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#error(Object, Throwable)} method of
+     * Delegates to the {@link Log#error(object, Throwable)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg

@@ -108,7 +108,7 @@ public final class DomainNameMappingBuilder<V> {
             Set<Map.Entry<string, V>> mappings = map.entrySet();
             int numberOfMappings = mappings.size();
             domainNamePatterns = new string[numberOfMappings];
-            values = (V[]) new Object[numberOfMappings];
+            values = (V[]) new object[numberOfMappings];
 
             final Map<string, V> mapCopy = new LinkedHashMap<string, V>(map.size());
             int index = 0;

@@ -41,14 +41,14 @@ namespace Netty.NET.Common;
  */
 public abstract class Recycler<T> {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(Recycler.class);
-    private static final EnhancedHandle<?> NOOP_HANDLE = new EnhancedHandle<Object>() {
+    private static final EnhancedHandle<?> NOOP_HANDLE = new EnhancedHandle<object>() {
         @Override
-        public void recycle(Object object) {
+        public void recycle(object object) {
             // NOOP
         }
 
         @Override
-        public void unguardedRecycle(final Object object) {
+        public void unguardedRecycle(final object object) {
             // NOOP
         }
 
@@ -198,7 +198,7 @@ public abstract class Recycler<T> {
     }
 
     /**
-     * @deprecated use {@link Handle#recycle(Object)}.
+     * @deprecated use {@link Handle#recycle(object)}.
      */
     @Deprecated
     public final bool recycle(T o, Handle<T> handle) {
@@ -231,7 +231,7 @@ public abstract class Recycler<T> {
     @UnstableApi
     public abstract static class EnhancedHandle<T> : Handle<T> {
 
-        public abstract void unguardedRecycle(Object object);
+        public abstract void unguardedRecycle(object object);
 
         private EnhancedHandle() {
         }
@@ -256,7 +256,7 @@ public abstract class Recycler<T> {
         }
 
         @Override
-        public void recycle(Object object) {
+        public void recycle(object object) {
             if (object != value) {
                 throw new IllegalArgumentException("object does not belong to handle");
             }
@@ -264,7 +264,7 @@ public abstract class Recycler<T> {
         }
 
         @Override
-        public void unguardedRecycle(Object object) {
+        public void unguardedRecycle(object object) {
             if (object != value) {
                 throw new IllegalArgumentException("object does not belong to handle");
             }
@@ -287,14 +287,14 @@ public abstract class Recycler<T> {
         void toAvailable() {
             int prev = STATE_UPDATER.getAndSet(this, STATE_AVAILABLE);
             if (prev == STATE_AVAILABLE) {
-                throw new IllegalStateException("Object has been recycled already.");
+                throw new IllegalStateException("object has been recycled already.");
             }
         }
 
         void unguardedToAvailable() {
             int prev = state;
             if (prev == STATE_AVAILABLE) {
-                throw new IllegalStateException("Object has been recycled already.");
+                throw new IllegalStateException("object has been recycled already.");
             }
             STATE_UPDATER.lazySet(this, STATE_AVAILABLE);
         }

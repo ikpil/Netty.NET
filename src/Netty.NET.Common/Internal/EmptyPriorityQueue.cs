@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Internal;
 
 
 public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
-    private static final PriorityQueue<Object> INSTANCE = new EmptyPriorityQueue<Object>();
+    private static final PriorityQueue<object> INSTANCE = new EmptyPriorityQueue<object>();
 
     private EmptyPriorityQueue() {
     }
@@ -59,7 +59,7 @@ public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
     }
 
     @Override
-    public bool contains(Object o) {
+    public bool contains(object o) {
         return false;
     }
 
@@ -69,7 +69,7 @@ public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
     }
 
     @Override
-    public Object[] toArray() {
+    public object[] toArray() {
         return EmptyArrays.EMPTY_OBJECTS;
     }
 
@@ -87,7 +87,7 @@ public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
     }
 
     @Override
-    public bool remove(Object o) {
+    public bool remove(object o) {
         return false;
     }
 
@@ -120,7 +120,7 @@ public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
     }
 
     @Override
-    public bool equals(Object o) {
+    public bool equals(object o) {
         return o instanceof PriorityQueue && ((PriorityQueue) o).isEmpty();
     }
 

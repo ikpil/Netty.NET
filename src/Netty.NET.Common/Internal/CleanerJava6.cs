@@ -43,9 +43,9 @@ final class CleanerJava6 : Cleaner {
         Throwable error = null;
         final ByteBuffer direct = ByteBuffer.allocateDirect(1);
         try {
-            Object mayBeCleanerField = AccessController.doPrivileged(new PrivilegedAction<Object>() {
+            object mayBeCleanerField = AccessController.doPrivileged(new PrivilegedAction<object>() {
                 @Override
-                public Object run() {
+                public object run() {
                     try {
                         Class<?> cleanerClass = Class.forName("sun.misc.Cleaner");
                         Class<?> directBufClass = Class.forName("sun.nio.ch.DirectBuffer");
@@ -56,7 +56,7 @@ final class CleanerJava6 : Cleaner {
                                 cleanerClass, "clean", methodType(void.class));
                         // But only if the cleaner is non-null
                         MethodHandle nullTest = lookup.findStatic(
-                                Objects.class, "nonNull", methodType(bool.class, Object.class));
+                                Objects.class, "nonNull", methodType(bool.class, object.class));
                         clean = MethodHandles.guardWithTest(
                                 nullTest.asType(methodType(bool.class, cleanerClass)),
                                 clean,

@@ -44,7 +44,7 @@ public final class ConcurrentSet<E> extends AbstractSet<E> : Serializable {
     }
 
     @Override
-    public bool contains(Object o) {
+    public bool contains(object o) {
         return map.containsKey(o);
     }
 
@@ -54,7 +54,7 @@ public final class ConcurrentSet<E> extends AbstractSet<E> : Serializable {
     }
 
     @Override
-    public bool remove(Object o) {
+    public bool remove(object o) {
         return map.remove(o) != null;
     }
 

@@ -62,7 +62,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
     }
 
     // Strictly of type Callable<V> or Runnable
-    private Object task;
+    private object task;
 
     PromiseTask(EventExecutor executor, Runnable runnable, V result) {
         super(executor);
@@ -85,13 +85,13 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
     }
 
     @Override
-    public final bool equals(Object obj) {
+    public final bool equals(object obj) {
         return this == obj;
     }
 
     @SuppressWarnings("unchecked")
     V runTask() throws Throwable {
-        final Object task = this.task;
+        final object task = this.task;
         if (task instanceof Callable) {
             return ((Callable<V>) task).call();
         }

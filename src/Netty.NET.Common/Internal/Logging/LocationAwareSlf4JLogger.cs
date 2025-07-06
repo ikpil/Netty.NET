@@ -63,21 +63,21 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void trace(string format, Object arg) {
+    public void trace(string format, object arg) {
         if (isTraceEnabled()) {
             log(TRACE_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void trace(string format, Object argA, Object argB) {
+    public void trace(string format, object argA, object argB) {
         if (isTraceEnabled()) {
             log(TRACE_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void trace(string format, Object... argArray) {
+    public void trace(string format, object... argArray) {
         if (isTraceEnabled()) {
             log(TRACE_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
@@ -103,21 +103,21 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void debug(string format, Object arg) {
+    public void debug(string format, object arg) {
         if (isDebugEnabled()) {
             log(DEBUG_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void debug(string format, Object argA, Object argB) {
+    public void debug(string format, object argA, object argB) {
         if (isDebugEnabled()) {
             log(DEBUG_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void debug(string format, Object... argArray) {
+    public void debug(string format, object... argArray) {
         if (isDebugEnabled()) {
             log(DEBUG_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
@@ -143,21 +143,21 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void info(string format, Object arg) {
+    public void info(string format, object arg) {
         if (isInfoEnabled()) {
             log(INFO_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void info(string format, Object argA, Object argB) {
+    public void info(string format, object argA, object argB) {
         if (isInfoEnabled()) {
             log(INFO_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void info(string format, Object... argArray) {
+    public void info(string format, object... argArray) {
         if (isInfoEnabled()) {
             log(INFO_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
@@ -183,21 +183,21 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void warn(string format, Object arg) {
+    public void warn(string format, object arg) {
         if (isWarnEnabled()) {
             log(WARN_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void warn(string format, Object... argArray) {
+    public void warn(string format, object... argArray) {
         if (isWarnEnabled()) {
             log(WARN_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
     @Override
-    public void warn(string format, Object argA, Object argB) {
+    public void warn(string format, object argA, object argB) {
         if (isWarnEnabled()) {
             log(WARN_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
@@ -223,21 +223,21 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void error(string format, Object arg) {
+    public void error(string format, object arg) {
         if (isErrorEnabled()) {
             log(ERROR_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void error(string format, Object argA, Object argB) {
+    public void error(string format, object argA, object argB) {
         if (isErrorEnabled()) {
             log(ERROR_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void error(string format, Object... argArray) {
+    public void error(string format, object... argArray) {
         if (isErrorEnabled()) {
             log(ERROR_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
