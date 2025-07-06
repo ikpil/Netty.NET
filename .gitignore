@@ -6,6 +6,7 @@
 ## has more thorough IDE-specific entries.
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
+.idea
 
 # Build results
 [Dd]ebug/
@@ -36,10 +37,13 @@ ScaffoldingReadMe.txt
 # NuGet Symbol Packages
 *.snupkg
 
+
 # Others
 ~$*
 *~
 CodeCoverage/
+.DS_Store
+*.DotSettings.user
 
 # MSBuild Binary and Structured Log
 *.binlog
