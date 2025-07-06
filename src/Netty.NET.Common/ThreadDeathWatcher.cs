@@ -46,7 +46,7 @@ namespace Netty.NET.Common;
 @Deprecated
 public final class ThreadDeathWatcher {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ThreadDeathWatcher.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ThreadDeathWatcher));
     // visible for testing
     static readonly ThreadFactory threadFactory;
 

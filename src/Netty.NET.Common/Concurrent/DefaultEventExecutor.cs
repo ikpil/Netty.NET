@@ -37,7 +37,7 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
     }
 
     public DefaultEventExecutor(EventExecutorGroup parent) {
-        this(parent, new DefaultThreadFactory(DefaultEventExecutor.class));
+        this(parent, new DefaultThreadFactory(typeof(DefaultEventExecutor)));
     }
 
     public DefaultEventExecutor(EventExecutorGroup parent, ThreadFactory threadFactory) {

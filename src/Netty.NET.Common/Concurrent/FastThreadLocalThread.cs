@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public class FastThreadLocalThread extends Thread {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(FastThreadLocalThread.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(FastThreadLocalThread));
 
     /**
      * Sorted array of thread IDs that are treated like {@link FastThreadLocalThread}.

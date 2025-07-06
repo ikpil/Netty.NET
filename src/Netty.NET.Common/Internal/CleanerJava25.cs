@@ -51,7 +51,7 @@ final class CleanerJava25 : Cleaner {
             // - https://bugs.openjdk.org/browse/JDK-8357145
             // - https://bugs.openjdk.org/browse/JDK-8357268
             suitableJavaVersion = PlatformDependent0.javaVersion() >= 25;
-            logger = InternalLoggerFactory.getInstance(CleanerJava25.class);
+            logger = InternalLoggerFactory.getInstance(typeof(CleanerJava25));
         }
 
         MethodHandle method;
@@ -77,7 +77,7 @@ final class CleanerJava25 : Cleaner {
                 // First, we need the types we'll use to set this all up.
                 Class<?> arenaCls = Class.forName("java.lang.foreign.Arena");
                 Class<?> memsegCls = Class.forName("java.lang.foreign.MemorySegment");
-                Class<CleanableDirectBufferImpl> bufCls = CleanableDirectBufferImpl.class;
+                Class<CleanableDirectBufferImpl> bufCls = typeof(CleanableDirectBufferImpl);
                 // Acquire the private look up, so we can access the package-private 'CleanableDirectBufferImpl'
                 // constructor.
                 MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -85,19 +85,19 @@ final class CleanerJava25 : Cleaner {
                 // ofShared.type() = ()Arena
                 MethodHandle ofShared = lookup.findStatic(arenaCls, "ofShared", methodType(arenaCls));
                 // allocate.type() = (Arena,long)MemorySegment
-                MethodHandle allocate = lookup.findVirtual(arenaCls, "allocate", methodType(memsegCls, long.class));
+                MethodHandle allocate = lookup.findVirtual(arenaCls, "allocate", methodType(memsegCls, typeof(long)));
                 // asByteBuffer.type() = (MemorySegment)ByteBuffer
-                MethodHandle asByteBuffer = lookup.findVirtual(memsegCls, "asByteBuffer", methodType(ByteBuffer.class));
+                MethodHandle asByteBuffer = lookup.findVirtual(memsegCls, "asByteBuffer", methodType(typeof(ByteBuffer)));
                 // address.type() = (MemorySegment)long
-                MethodHandle address = lookup.findVirtual(memsegCls, "address", methodType(long.class));
+                MethodHandle address = lookup.findVirtual(memsegCls, "address", methodType(typeof(long)));
                 // bufClsCtor.type() = (AutoCloseable,ByteBuffer,long)CleanableDirectBufferImpl
                 MethodHandle bufClsCtor = lookup.findConstructor(bufCls,
-                        methodType(void.class, AutoCloseable.class, ByteBuffer.class, long.class));
+                        methodType(typeof(void), typeof(AutoCloseable), typeof(ByteBuffer), typeof(long)));
                 // The 'allocate' method takes a 'long' capacity, but we'll be providing an 'int'.
                 // Explicitly cast the 'long' to 'int' so we can use 'invokeExact'.
                 // allocateInt.type() = (Arena,int)MemorySegment
                 MethodHandle allocateInt = MethodHandles.explicitCastArguments(allocate,
-                        methodType(memsegCls, arenaCls, int.class));
+                        methodType(memsegCls, arenaCls, typeof(int)));
                 // Use the 'asByteBuffer' and 'address' methods as a filter, to transform the constructor into a method
                 // that takes two MemorySegment arguments instead of a ByteBuffer and a long argument.
                 // ctorArenaMemsegMemseg.type() = (Arena,MemorySegment,MemorySegment)CleanableDirectBufferImpl
@@ -126,7 +126,7 @@ final class CleanerJava25 : Cleaner {
                 // and the second parameter value gets ignored.
                 // ctorArenaNullInt.type() = (Arena,Arena,int)CleanableDirectBufferImpl
                 MethodHandle ctorArenaNullInt = MethodHandles.permuteArguments(ctorArenaArenaInt,
-                        methodType(bufCls, arenaCls, arenaCls, int.class), 0, 0, 2);
+                        methodType(bufCls, arenaCls, arenaCls, typeof(int)), 0, 0, 2);
                 // With the second Arena parameter value ignored, we can statically bind it to 'null' to effectively
                 // drop it from our parameter list.
                 // ctorArenaInt.type() = (Arena,int)CleanableDirectBufferImpl

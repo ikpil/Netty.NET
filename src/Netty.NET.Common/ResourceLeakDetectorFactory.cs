@@ -28,7 +28,7 @@ namespace Netty.NET.Common;
  * This static factory should be used to load {@link ResourceLeakDetector}s as needed
  */
 public abstract class ResourceLeakDetectorFactory {
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ResourceLeakDetectorFactory.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetectorFactory));
 
     private static volatile ResourceLeakDetectorFactory factoryInstance = new DefaultResourceLeakDetectorFactory();
 
@@ -120,8 +120,8 @@ public abstract class ResourceLeakDetectorFactory {
                 final Class<?> detectorClass = Class.forName(customLeakDetector, true,
                         PlatformDependent.getSystemClassLoader());
 
-                if (ResourceLeakDetector.class.isAssignableFrom(detectorClass)) {
-                    return detectorClass.getConstructor(Class.class, int.class, long.class);
+                if (typeof(ResourceLeakDetector).isAssignableFrom(detectorClass)) {
+                    return detectorClass.getConstructor(typeof(Class), typeof(int), typeof(long));
                 } else {
                     logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);
                 }
@@ -137,8 +137,8 @@ public abstract class ResourceLeakDetectorFactory {
                 final Class<?> detectorClass = Class.forName(customLeakDetector, true,
                         PlatformDependent.getSystemClassLoader());
 
-                if (ResourceLeakDetector.class.isAssignableFrom(detectorClass)) {
-                    return detectorClass.getConstructor(Class.class, int.class);
+                if (typeof(ResourceLeakDetector).isAssignableFrom(detectorClass)) {
+                    return detectorClass.getConstructor(typeof(Class), typeof(int));
                 } else {
                     logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);
                 }

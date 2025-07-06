@@ -31,7 +31,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public class PromiseNotifier<V, F extends Future<V>> : GenericFutureListener<F> {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(PromiseNotifier.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(PromiseNotifier));
     private readonly Promise<? super V>[] promises;
     private readonly bool logNotifyFailure;
 

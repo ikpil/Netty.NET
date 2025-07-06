@@ -38,7 +38,7 @@ namespace Netty.NET.Common.Internal;
  */
 final class PlatformDependent0 {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(PlatformDependent0.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent0));
     private static readonly long ADDRESS_FIELD_OFFSET;
     private static readonly long BYTE_ARRAY_BASE_OFFSET;
     private static readonly long INT_ARRAY_BASE_OFFSET;
@@ -100,7 +100,7 @@ final class PlatformDependent0 {
                 @Override
                 public object run() {
                     try {
-                        final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+                        final Field unsafeField = typeof(Unsafe).getDeclaredField("theUnsafe");
                         // We always want to try using Unsafe as the access still works on java9 as well and
                         // we need it for out native-transports and many optimizations.
                         Exception cause = ReflectionUtil.trySetAccessible(unsafeField, false);
@@ -150,31 +150,31 @@ final class PlatformDependent0 {
                             // Other methods like storeFence() and invokeCleaner() are tested for elsewhere.
                             Class<? extends Unsafe> cls = finalUnsafe.getClass();
                             cls.getDeclaredMethod(
-                                    "copyMemory", object.class, long.class, object.class, long.class, long.class);
+                                    "copyMemory", typeof(object), typeof(long), typeof(object), typeof(long), typeof(long));
                             if (javaVersion() > 23) {
-                                cls.getDeclaredMethod("objectFieldOffset", Field.class);
-                                cls.getDeclaredMethod("staticFieldOffset", Field.class);
-                                cls.getDeclaredMethod("staticFieldBase", Field.class);
-                                cls.getDeclaredMethod("arrayBaseOffset", Class.class);
-                                cls.getDeclaredMethod("arrayIndexScale", Class.class);
-                                cls.getDeclaredMethod("allocateMemory", long.class);
-                                cls.getDeclaredMethod("reallocateMemory", long.class, long.class);
-                                cls.getDeclaredMethod("freeMemory", long.class);
-                                cls.getDeclaredMethod("setMemory", long.class, long.class, byte.class);
-                                cls.getDeclaredMethod("setMemory", object.class, long.class, long.class, byte.class);
-                                cls.getDeclaredMethod("getBoolean", object.class, long.class);
-                                cls.getDeclaredMethod("getByte", long.class);
-                                cls.getDeclaredMethod("getByte", object.class, long.class);
-                                cls.getDeclaredMethod("getInt", long.class);
-                                cls.getDeclaredMethod("getInt", object.class, long.class);
-                                cls.getDeclaredMethod("getLong", long.class);
-                                cls.getDeclaredMethod("getLong", object.class, long.class);
-                                cls.getDeclaredMethod("putByte", long.class, byte.class);
-                                cls.getDeclaredMethod("putByte", object.class, long.class, byte.class);
-                                cls.getDeclaredMethod("putInt", long.class, int.class);
-                                cls.getDeclaredMethod("putInt", object.class, long.class, int.class);
-                                cls.getDeclaredMethod("putLong", long.class, long.class);
-                                cls.getDeclaredMethod("putLong", object.class, long.class, long.class);
+                                cls.getDeclaredMethod("objectFieldOffset", typeof(Field));
+                                cls.getDeclaredMethod("staticFieldOffset", typeof(Field));
+                                cls.getDeclaredMethod("staticFieldBase", typeof(Field));
+                                cls.getDeclaredMethod("arrayBaseOffset", typeof(Class));
+                                cls.getDeclaredMethod("arrayIndexScale", typeof(Class));
+                                cls.getDeclaredMethod("allocateMemory", typeof(long));
+                                cls.getDeclaredMethod("reallocateMemory", typeof(long), typeof(long));
+                                cls.getDeclaredMethod("freeMemory", typeof(long));
+                                cls.getDeclaredMethod("setMemory", typeof(long), typeof(long), typeof(byte));
+                                cls.getDeclaredMethod("setMemory", typeof(object), typeof(long), typeof(long), typeof(byte));
+                                cls.getDeclaredMethod("getBoolean", typeof(object), typeof(long));
+                                cls.getDeclaredMethod("getByte", typeof(long));
+                                cls.getDeclaredMethod("getByte", typeof(object), typeof(long));
+                                cls.getDeclaredMethod("getInt", typeof(long));
+                                cls.getDeclaredMethod("getInt", typeof(object), typeof(long));
+                                cls.getDeclaredMethod("getLong", typeof(long));
+                                cls.getDeclaredMethod("getLong", typeof(object), typeof(long));
+                                cls.getDeclaredMethod("putByte", typeof(long), typeof(byte));
+                                cls.getDeclaredMethod("putByte", typeof(object), typeof(long), typeof(byte));
+                                cls.getDeclaredMethod("putInt", typeof(long), typeof(int));
+                                cls.getDeclaredMethod("putInt", typeof(object), typeof(long), typeof(int));
+                                cls.getDeclaredMethod("putLong", typeof(long), typeof(long));
+                                cls.getDeclaredMethod("putLong", typeof(object), typeof(long), typeof(long));
                                 cls.getDeclaredMethod("addressSize");
                             }
                             if (javaVersion() >= 23) {
@@ -213,7 +213,7 @@ final class PlatformDependent0 {
                     @Override
                     public object run() {
                         try {
-                            final Field field = Buffer.class.getDeclaredField("address");
+                            final Field field = typeof(Buffer).getDeclaredField("address");
                             // Use Unsafe to read value of the address field. This way it will not fail on JDK9+ which
                             // will forbid changing the access level via reflection.
                             final long offset = finalUnsafe.objectFieldOffset(field);
@@ -284,14 +284,14 @@ final class PlatformDependent0 {
                                 try {
                                     Class<? extends ByteBuffer> directClass = direct.getClass();
                                     final Constructor<?> constructor = javaVersion() >= 21 ?
-                                            directClass.getDeclaredConstructor(long.class, long.class) :
-                                            directClass.getDeclaredConstructor(long.class, int.class);
+                                            directClass.getDeclaredConstructor(typeof(long), typeof(long)) :
+                                            directClass.getDeclaredConstructor(typeof(long), typeof(int));
                                     Exception cause = ReflectionUtil.trySetAccessible(constructor, true);
                                     if (cause != null) {
                                         return cause;
                                     }
                                     return lookup.unreflectConstructor(constructor)
-                                            .asType(methodType(ByteBuffer.class, long.class, int.class));
+                                            .asType(methodType(typeof(ByteBuffer), typeof(long), typeof(int)));
                                 } catch (Exception e) {
                                     return e;
                                 }
@@ -348,7 +348,7 @@ final class PlatformDependent0 {
                             // adjust the accessible levels.
                             try {
                                 Field maxMemoryField = bitsClass.getDeclaredField(fieldName);
-                                if (maxMemoryField.getType() == long.class) {
+                                if (maxMemoryField.getType() == typeof(long)) {
                                     long offset = UNSAFE.staticFieldOffset(maxMemoryField);
                                     object object = UNSAFE.staticFieldBase(maxMemoryField);
                                     maybeMaxMemory.lazySet(UNSAFE.getLong(object, offset));
@@ -359,7 +359,7 @@ final class PlatformDependent0 {
                             fieldName = version >= 11? "UNALIGNED" : "unaligned";
                             try {
                                 Field unalignedField = bitsClass.getDeclaredField(fieldName);
-                                if (unalignedField.getType() == bool.class) {
+                                if (unalignedField.getType() == typeof(bool)) {
                                     long offset = UNSAFE.staticFieldOffset(unalignedField);
                                     object object = UNSAFE.staticFieldBase(unalignedField);
                                     return UNSAFE.getBoolean(object, offset);
@@ -408,7 +408,7 @@ final class PlatformDependent0 {
                         try {
                             // Java9 has jdk.internal.misc.Unsafe and not all methods are propagated to
                             // sun.misc.Unsafe
-                            Class<?> cls = getClassLoader(PlatformDependent0.class)
+                            Class<?> cls = getClassLoader(typeof(PlatformDependent0))
                                     .loadClass("jdk.internal.misc.Unsafe");
                             return lookup.findStatic(cls, "getUnsafe", methodType(cls)).invoke();
                         } catch (Exception e) {
@@ -426,7 +426,7 @@ final class PlatformDependent0 {
                                 return lookup.findVirtual(
                                         finalInternalUnsafeClass,
                                         "allocateUninitializedArray",
-                                        methodType(object.class, Class.class, int.class));
+                                        methodType(typeof(object), typeof(Class), typeof(int)));
                             } catch (Exception e) {
                                 return e;
                             }
@@ -437,7 +437,7 @@ final class PlatformDependent0 {
                         try {
                             MethodHandle m = (MethodHandle) maybeException;
                             m = m.bindTo(finalInternalUnsafe);
-                            byte[] bytes = (byte[]) (object) m.invokeExact(byte.class, 8);
+                            byte[] bytes = (byte[]) (object) m.invokeExact(typeof(byte), 8);
                             assert bytes.length == 8;
                             allocateArrayMethod = m;
                         } catch (Exception e) {
@@ -469,7 +469,7 @@ final class PlatformDependent0 {
                 public object run() {
                     try {
                         return MethodHandles.publicLookup().findVirtual(
-                                ByteBuffer.class, "alignedSlice", methodType(ByteBuffer.class, int.class));
+                                typeof(ByteBuffer), "alignedSlice", methodType(typeof(ByteBuffer), typeof(int)));
                     } catch (Exception e) {
                         return null;
                     }
@@ -485,8 +485,8 @@ final class PlatformDependent0 {
 
     private static MethodHandle getIsVirtualThreadMethodHandle() {
         try {
-            MethodHandle methodHandle = MethodHandles.publicLookup().findVirtual(Thread.class, "isVirtual",
-                    methodType(bool.class));
+            MethodHandle methodHandle = MethodHandles.publicLookup().findVirtual(typeof(Thread), "isVirtual",
+                    methodType(typeof(bool)));
             // Call once to make sure the invocation works.
             bool isVirtual = (bool) methodHandle.invokeExact(Thread.currentThread());
             return methodHandle;
@@ -636,7 +636,7 @@ final class PlatformDependent0 {
 
     static byte[] allocateUninitializedArray(int size) {
         try {
-            return (byte[]) (object) ALLOCATE_ARRAY_METHOD.invokeExact(byte.class, size);
+            return (byte[]) (object) ALLOCATE_ARRAY_METHOD.invokeExact(typeof(byte), size);
         } catch (Exception e) {
             rethrowIfPossible(e);
             throw new LinkageError("Unsafe.allocateUninitializedArray not available", e);

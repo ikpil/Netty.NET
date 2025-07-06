@@ -28,7 +28,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class SystemPropertyUtil {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(SystemPropertyUtil.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(SystemPropertyUtil));
 
     /**
      * Returns {@code true} if and only if the system property with the specified {@code key}

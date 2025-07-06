@@ -24,9 +24,9 @@ namespace Netty.NET.Common;
  */
 public abstract class AbstractReferenceCounted : ReferenceCounted {
     private static readonly long REFCNT_FIELD_OFFSET =
-            ReferenceCountUpdater.getUnsafeOffset(AbstractReferenceCounted.class, "refCnt");
+            ReferenceCountUpdater.getUnsafeOffset(typeof(AbstractReferenceCounted), "refCnt");
     private static readonly AtomicIntegerFieldUpdater<AbstractReferenceCounted> AIF_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(AbstractReferenceCounted.class, "refCnt");
+            AtomicIntegerFieldUpdater.newUpdater(typeof(AbstractReferenceCounted), "refCnt");
 
     private static readonly ReferenceCountUpdater<AbstractReferenceCounted> updater =
             new ReferenceCountUpdater<AbstractReferenceCounted>() {

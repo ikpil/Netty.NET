@@ -36,7 +36,7 @@ namespace Netty.NET.Common.Internal;
 final class CleanerJava6 : Cleaner {
     private static readonly MethodHandle CLEAN_METHOD;
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(CleanerJava6.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(CleanerJava6));
 
     static {
         MethodHandle clean;
@@ -53,14 +53,14 @@ final class CleanerJava6 : Cleaner {
 
                         // Call clean() on the cleaner
                         MethodHandle clean = lookup.findVirtual(
-                                cleanerClass, "clean", methodType(void.class));
+                                cleanerClass, "clean", methodType(typeof(void)));
                         // But only if the cleaner is non-null
                         MethodHandle nullTest = lookup.findStatic(
-                                Objects.class, "nonNull", methodType(bool.class, object.class));
+                                typeof(Objects), "nonNull", methodType(typeof(bool), typeof(object)));
                         clean = MethodHandles.guardWithTest(
-                                nullTest.asType(methodType(bool.class, cleanerClass)),
+                                nullTest.asType(methodType(typeof(bool), cleanerClass)),
                                 clean,
-                                nullTest.asType(methodType(void.class, cleanerClass)));
+                                nullTest.asType(methodType(typeof(void), cleanerClass)));
                         // Change receiver to DirectBuffer, convert DirectBuffer to Cleaner by calling cleaner()
                         clean = MethodHandles.filterArguments(clean, 0, lookup.findVirtual(
                                 directBufClass,
@@ -68,7 +68,7 @@ final class CleanerJava6 : Cleaner {
                                 methodType(cleanerClass)));
                         // Change receiver to ByteBuffer, convert using explicit cast to DirectBuffer
                         clean = MethodHandles.explicitCastArguments(clean,
-                                methodType(void.class, ByteBuffer.class));
+                                methodType(typeof(void), typeof(ByteBuffer)));
                         return clean;
                     } catch (Exception cause) {
                         return cause;

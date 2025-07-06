@@ -63,7 +63,7 @@ namespace Netty.NET.Common.Internal;
 @SuppressWarnings("all")
 public final class ThreadLocalRandom extends Random {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ThreadLocalRandom.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ThreadLocalRandom));
 
     private static readonly AtomicLong seedUniquifier = new AtomicLong();
 
@@ -133,7 +133,7 @@ public final class ThreadLocalRandom extends Random {
             return initialSeedUniquifier;
         }
 
-        synchronized (ThreadLocalRandom.class) {
+        synchronized (typeof(ThreadLocalRandom)) {
             initialSeedUniquifier = ThreadLocalRandom.initialSeedUniquifier;
             if (initialSeedUniquifier != 0) {
                 return initialSeedUniquifier;

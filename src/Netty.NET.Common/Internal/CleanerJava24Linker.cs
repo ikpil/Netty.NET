@@ -53,7 +53,7 @@ public class CleanerJava24Linker : Cleaner {
             // - https://bugs.openjdk.org/browse/JDK-8357145
             // - https://bugs.openjdk.org/browse/JDK-8357268
             suitableJavaVersion = PlatformDependent0.javaVersion() >= 24;
-            logger = InternalLoggerFactory.getInstance(CleanerJava24Linker.class);
+            logger = InternalLoggerFactory.getInstance(typeof(CleanerJava24Linker));
         }
 
         MethodHandle mallocMethod;
@@ -67,13 +67,13 @@ public class CleanerJava24Linker : Cleaner {
                 MethodHandles.Lookup lookup = MethodHandles.lookup();
                 Class<?> moduleCls = Class.forName("java.lang.Module");
                 MethodHandle getModule = lookup.findVirtual(
-                        Class.class, "getModule", methodType(moduleCls));
+                        typeof(Class), "getModule", methodType(moduleCls));
                 MethodHandle isNativeAccessEnabledModule = lookup.findVirtual(
-                        moduleCls, "isNativeAccessEnabled", methodType(bool.class));
+                        moduleCls, "isNativeAccessEnabled", methodType(typeof(bool)));
                 MethodHandle isNativeAccessEnabledForClass = MethodHandles.filterArguments(
                         isNativeAccessEnabledModule, 0, getModule);
                 bool isNativeAccessEnabled =
-                        (bool) isNativeAccessEnabledForClass.invokeExact(CleanerJava24Linker.class);
+                        (bool) isNativeAccessEnabledForClass.invokeExact(typeof(CleanerJava24Linker));
                 if (!isNativeAccessEnabled) {
                     throw new UnsupportedOperationException(
                             "Native access (restricted methods) is not enabled for the io.netty.common module.");
@@ -87,7 +87,7 @@ public class CleanerJava24Linker : Cleaner {
                 Class<?> valueLayoutAddressCls = Class.forName("java.lang.foreign.AddressLayout");
                 MethodHandle addressLayoutGetter = lookup.findStaticGetter(
                         valueLayoutCls, "ADDRESS", valueLayoutAddressCls);
-                MethodHandle byteSize = lookup.findVirtual(valueLayoutAddressCls, "byteSize", methodType(long.class));
+                MethodHandle byteSize = lookup.findVirtual(valueLayoutAddressCls, "byteSize", methodType(typeof(long)));
                 MethodHandle byteSizeOfAddress = MethodHandles.foldArguments(byteSize, addressLayoutGetter);
                 long addressSize = (long) byteSizeOfAddress.invokeExact();
                 if (addressSize != long.BYTES) {
@@ -121,10 +121,10 @@ public class CleanerJava24Linker : Cleaner {
                         nativeLinker);
                 MethodHandle downcallHandleStatic = MethodHandles.foldArguments(
                         lookup.findVirtual(linkerCls, "downcallHandle",
-                                methodType(MethodHandle.class, memSegCls, funcDescCls, linkerOptionArrayCls)),
+                                methodType(typeof(MethodHandle), memSegCls, funcDescCls, linkerOptionArrayCls)),
                         nativeLinker);
                 MethodHandle findSymbol = MethodHandles.foldArguments(
-                        lookup.findVirtual(symbolLookupCls, "findOrThrow", methodType(memSegCls, string.class)),
+                        lookup.findVirtual(symbolLookupCls, "findOrThrow", methodType(memSegCls, typeof(string))),
                         defaultLookupStatic);
 
                 // Constructing the malloc (long)long handle
@@ -138,7 +138,7 @@ public class CleanerJava24Linker : Cleaner {
                 MethodHandle mallocLinker = MethodHandles.foldArguments(
                         MethodHandles.foldArguments(downcallHandleStatic,
                                 MethodHandles.foldArguments(findSymbol,
-                                        MethodHandles.constant(string.class, "malloc"))),
+                                        MethodHandles.constant(typeof(string), "malloc"))),
                         mallocFuncDesc);
                 mallocMethod = (MethodHandle) mallocLinker.invoke(Array.newInstance(linkerOptionCls, 0));
 
@@ -150,15 +150,15 @@ public class CleanerJava24Linker : Cleaner {
                 MethodHandle freeLinker = MethodHandles.foldArguments(
                         MethodHandles.foldArguments(downcallHandleStatic,
                                 MethodHandles.foldArguments(findSymbol,
-                                        MethodHandles.constant(string.class, "free"))),
+                                        MethodHandles.constant(typeof(string), "free"))),
                         freeFuncDesc);
                 freeMethod = (MethodHandle) freeLinker.invoke(Array.newInstance(linkerOptionCls, 0));
 
                 // Constructing the wrapper (long, long)ByteBuffer handle
-                MethodHandle ofAddress = lookup.findStatic(memSegCls, "ofAddress", methodType(memSegCls, long.class));
+                MethodHandle ofAddress = lookup.findStatic(memSegCls, "ofAddress", methodType(memSegCls, typeof(long)));
                 MethodHandle reinterpret = lookup.findVirtual(memSegCls, "reinterpret",
-                        methodType(memSegCls, long.class));
-                MethodHandle asByteBuffer = lookup.findVirtual(memSegCls, "asByteBuffer", methodType(ByteBuffer.class));
+                        methodType(memSegCls, typeof(long)));
+                MethodHandle asByteBuffer = lookup.findVirtual(memSegCls, "asByteBuffer", methodType(typeof(ByteBuffer)));
                 wrapMethod = MethodHandles.filterReturnValue(
                         MethodHandles.filterArguments(reinterpret, 0, ofAddress),
                         asByteBuffer);

@@ -55,7 +55,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MAX_VALUE));
 
     private static readonly InternalLogger logger =
-            InternalLoggerFactory.getInstance(SingleThreadEventExecutor.class);
+            InternalLoggerFactory.getInstance(typeof(SingleThreadEventExecutor));
 
     private static readonly int ST_NOT_STARTED = 1;
     private static readonly int ST_SUSPENDING = 2;
@@ -73,10 +73,10 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     };
 
     private static readonly AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
+            AtomicIntegerFieldUpdater.newUpdater(typeof(SingleThreadEventExecutor), "state");
     private static readonly AtomicReferenceFieldUpdater<SingleThreadEventExecutor, ThreadProperties> PROPERTIES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(
-                    SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
+                    typeof(SingleThreadEventExecutor), typeof(ThreadProperties), "threadProperties");
     private readonly Queue<Runnable> taskQueue;
 
     private volatile Thread thread;
@@ -1108,8 +1108,8 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                         if (success && gracefulShutdownStartTime == 0) {
                             // Check if confirmShutdown() was called at the end of the loop.
                             if (logger.isErrorEnabled()) {
-                                logger.error("Buggy " + EventExecutor.class.getSimpleName() + " implementation; " +
-                                        SingleThreadEventExecutor.class.getSimpleName() + ".confirmShutdown() must " +
+                                logger.error("Buggy " + typeof(EventExecutor).getSimpleName() + " implementation; " +
+                                        typeof(SingleThreadEventExecutor).getSimpleName() + ".confirmShutdown() must " +
                                         "be called before run() implementation terminates.");
                             }
                         }

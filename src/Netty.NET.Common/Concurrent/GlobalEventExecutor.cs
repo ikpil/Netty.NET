@@ -42,7 +42,7 @@ namespace Netty.NET.Common.Concurrent;
  * use a dedicated executor.
  */
 public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : OrderedEventExecutor {
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(GlobalEventExecutor.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(GlobalEventExecutor));
 
     private static readonly long SCHEDULE_QUIET_PERIOD_INTERVAL;
 
@@ -89,7 +89,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : 
                 DefaultThreadFactory.toPoolName(getClass()), false, Thread.NORM_PRIORITY, null), this);
 
         UnsupportedOperationException terminationFailure = new UnsupportedOperationException();
-        ThrowableUtil.unknownStackTrace(terminationFailure, GlobalEventExecutor.class, "terminationFuture");
+        ThrowableUtil.unknownStackTrace(terminationFailure, typeof(GlobalEventExecutor), "terminationFuture");
         terminationFuture = new FailedFuture<object>(this, terminationFailure);
     }
 

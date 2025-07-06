@@ -29,7 +29,7 @@ namespace Netty.NET.Common;
 public class DefaultAttributeMap : AttributeMap {
 
     private static readonly AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
-            AtomicReferenceFieldUpdater.newUpdater(DefaultAttributeMap.class, DefaultAttribute[].class, "attributes");
+            AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultAttributeMap), DefaultAttribute[].class, "attributes");
     private static readonly DefaultAttribute[] EMPTY_ATTRIBUTES = new DefaultAttribute[0];
 
     /**
@@ -157,8 +157,8 @@ public class DefaultAttributeMap : AttributeMap {
     private static readonly class DefaultAttribute<T> extends AtomicReference<T> : Attribute<T> {
 
         private static readonly AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
-                AtomicReferenceFieldUpdater.newUpdater(DefaultAttribute.class,
-                                                       DefaultAttributeMap.class, "attributeMap");
+                AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultAttribute),
+                                                       typeof(DefaultAttributeMap), "attributeMap");
         private static readonly long serialVersionUID = -2661411462200283011L;
 
         private volatile DefaultAttributeMap attributeMap;

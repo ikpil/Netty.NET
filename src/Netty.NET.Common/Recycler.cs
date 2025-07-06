@@ -40,7 +40,7 @@ namespace Netty.NET.Common;
  * @param <T> the type of the pooled object
  */
 public abstract class Recycler<T> {
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(Recycler.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(Recycler));
     private static readonly EnhancedHandle<?> NOOP_HANDLE = new EnhancedHandle<object>() {
         @Override
         public void recycle(object object) {
@@ -242,7 +242,7 @@ public abstract class Recycler<T> {
         private static readonly int STATE_AVAILABLE = 1;
         private static readonly AtomicIntegerFieldUpdater<DefaultHandle<?>> STATE_UPDATER;
         static {
-            AtomicIntegerFieldUpdater<?> updater = AtomicIntegerFieldUpdater.newUpdater(DefaultHandle.class, "state");
+            AtomicIntegerFieldUpdater<?> updater = AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultHandle), "state");
             //noinspection unchecked
             STATE_UPDATER = (AtomicIntegerFieldUpdater<DefaultHandle<?>>) updater;
         }

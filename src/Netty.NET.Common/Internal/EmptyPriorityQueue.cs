@@ -156,6 +156,6 @@ public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
 
     @Override
     public string toString() {
-        return EmptyPriorityQueue.class.getSimpleName();
+        return typeof(EmptyPriorityQueue).getSimpleName();
     }
 }

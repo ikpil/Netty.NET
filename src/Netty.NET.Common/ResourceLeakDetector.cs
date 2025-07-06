@@ -14,30 +14,9 @@
  * under the License.
  */
 
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 public class ResourceLeakDetector<T> {
 
@@ -98,7 +77,7 @@ public class ResourceLeakDetector<T> {
 
     private static Level level;
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ResourceLeakDetector.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetector));
 
     static {
         final bool disabled;
@@ -389,12 +368,12 @@ public class ResourceLeakDetector<T> {
         @SuppressWarnings("unchecked") // generics and updaters do not mix.
         private static readonly AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater =
                 (AtomicReferenceFieldUpdater)
-                        AtomicReferenceFieldUpdater.newUpdater(DefaultResourceLeak.class, TraceRecord.class, "head");
+                        AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultResourceLeak), typeof(TraceRecord), "head");
 
         @SuppressWarnings("unchecked") // generics and updaters do not mix.
         private static readonly AtomicIntegerFieldUpdater<DefaultResourceLeak<?>> droppedRecordsUpdater =
                 (AtomicIntegerFieldUpdater)
-                        AtomicIntegerFieldUpdater.newUpdater(DefaultResourceLeak.class, "droppedRecords");
+                        AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultResourceLeak), "droppedRecords");
 
         @SuppressWarnings("unused")
         private volatile TraceRecord head;

@@ -25,10 +25,10 @@ namespace Netty.NET.Common;
  */
 public final class ReferenceCountUtil {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ReferenceCountUtil.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ReferenceCountUtil));
 
     static {
-        ResourceLeakDetector.addExclusions(ReferenceCountUtil.class, "touch");
+        ResourceLeakDetector.addExclusions(typeof(ReferenceCountUtil), "touch");
     }
 
     /**

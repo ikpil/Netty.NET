@@ -37,7 +37,7 @@ public final class ObjectCleaner {
             max(500, getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
 
     // Package-private for testing
-    static readonly string CLEANER_THREAD_NAME = ObjectCleaner.class.getSimpleName() + "Thread";
+    static readonly string CLEANER_THREAD_NAME = typeof(ObjectCleaner).getSimpleName() + "Thread";
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
     private static readonly Set<AutomaticCleanerReference> LIVE_SET = ConcurrentHashMap.newKeySet();
     private static readonly ReferenceQueue<object> REFERENCE_QUEUE = new ReferenceQueue<>();

@@ -25,25 +25,25 @@ namespace Netty.NET.Common;
 
 
 
-@TargetClass(NetUtil.class)
+@TargetClass(typeof(NetUtil))
 final class NetUtilSubstitutions {
     private NetUtilSubstitutions() {
     }
 
     @Alias
-    @InjectAccessors(NetUtilLocalhost4Accessor.class)
+    @InjectAccessors(typeof(NetUtilLocalhost4Accessor))
     public static Inet4Address LOCALHOST4;
 
     @Alias
-    @InjectAccessors(NetUtilLocalhost6Accessor.class)
+    @InjectAccessors(typeof(NetUtilLocalhost6Accessor))
     public static Inet6Address LOCALHOST6;
 
     @Alias
-    @InjectAccessors(NetUtilLocalhostAccessor.class)
+    @InjectAccessors(typeof(NetUtilLocalhostAccessor))
     public static InetAddress LOCALHOST;
 
     @Alias
-    @InjectAccessors(NetUtilNetworkInterfacesAccessor.class)
+    @InjectAccessors(typeof(NetUtilNetworkInterfacesAccessor))
     public static Collection<NetworkInterface> NETWORK_INTERFACES;
 
     private static readonly class NetUtilLocalhost4Accessor {

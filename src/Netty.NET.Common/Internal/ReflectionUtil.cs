@@ -91,7 +91,7 @@ public final class ReflectionUtil {
 
                 Type genericSuperType = currentClass.getGenericSuperclass();
                 if (!(genericSuperType instanceof ParameterizedType)) {
-                    return object.class;
+                    return typeof(object);
                 }
 
                 Type[] actualTypeParams = ((ParameterizedType) genericSuperType).getActualTypeArguments();
@@ -116,7 +116,7 @@ public final class ReflectionUtil {
                     // Resolved type parameter points to another type parameter.
                     TypeVariable<?> v = (TypeVariable<?>) actualTypeParam;
                     if (!(v.getGenericDeclaration() instanceof Class)) {
-                        return object.class;
+                        return typeof(object);
                     }
 
                     currentClass = thisClass;
@@ -125,7 +125,7 @@ public final class ReflectionUtil {
                     if (parametrizedSuperclass.isAssignableFrom(thisClass)) {
                         continue;
                     }
-                    return object.class;
+                    return typeof(object);
                 }
 
                 return fail(thisClass, typeParamName);

@@ -31,7 +31,7 @@ namespace Netty.NET.Common.Concurrent;
  * that all queued {@link Runnable} objects have the chance to be run.
  */
 public final class ImmediateEventExecutor extends AbstractEventExecutor {
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ImmediateEventExecutor.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ImmediateEventExecutor));
     public static readonly ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
     /**
      * A Runnable will be queued if we are executing a Runnable. This is to prevent a {@link StackOverflowError}.

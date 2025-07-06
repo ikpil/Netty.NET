@@ -85,17 +85,17 @@ namespace Netty.NET.Common;
 public class HashedWheelTimer : Timer {
 
     static readonly InternalLogger logger =
-            InternalLoggerFactory.getInstance(HashedWheelTimer.class);
+            InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
     private static readonly AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
     private static readonly AtomicBoolean WARNED_TOO_MANY_INSTANCES = new AtomicBoolean();
     private static readonly int INSTANCE_COUNT_LIMIT = 64;
     private static readonly long MILLISECOND_NANOS = TimeSpan.MILLISECONDS.toNanos(1);
     private static readonly ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.instance()
-            .newResourceLeakDetector(HashedWheelTimer.class, 1);
+            .newResourceLeakDetector(typeof(HashedWheelTimer), 1);
 
     private static readonly AtomicIntegerFieldUpdater<HashedWheelTimer> WORKER_STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(HashedWheelTimer.class, "workerState");
+            AtomicIntegerFieldUpdater.newUpdater(typeof(HashedWheelTimer), "workerState");
 
     private readonly ResourceLeakTracker<HashedWheelTimer> leak;
     private readonly Worker worker = new Worker();
@@ -378,9 +378,9 @@ public class HashedWheelTimer : Timer {
     public Set<Timeout> stop() {
         if (Thread.currentThread() == workerThread) {
             throw new IllegalStateException(
-                    HashedWheelTimer.class.getSimpleName() +
+                    typeof(HashedWheelTimer).getSimpleName() +
                             ".stop() cannot be called from " +
-                            TimerTask.class.getSimpleName());
+                            typeof(TimerTask).getSimpleName());
         }
 
         if (!WORKER_STATE_UPDATER.compareAndSet(this, WORKER_STATE_STARTED, WORKER_STATE_SHUTDOWN)) {
@@ -465,7 +465,7 @@ public class HashedWheelTimer : Timer {
 
     private static void reportTooManyInstances() {
         if (logger.isErrorEnabled()) {
-            string resourceType = simpleClassName(HashedWheelTimer.class);
+            string resourceType = simpleClassName(typeof(HashedWheelTimer));
             logger.error("You are creating too many " + resourceType + " instances. " +
                     resourceType + " is a shared resource that must be reused across the JVM, " +
                     "so that only a few instances are created.");
@@ -614,7 +614,7 @@ public class HashedWheelTimer : Timer {
         private static readonly int ST_CANCELLED = 1;
         private static readonly int ST_EXPIRED = 2;
         private static readonly AtomicIntegerFieldUpdater<HashedWheelTimeout> STATE_UPDATER =
-                AtomicIntegerFieldUpdater.newUpdater(HashedWheelTimeout.class, "state");
+                AtomicIntegerFieldUpdater.newUpdater(typeof(HashedWheelTimeout), "state");
 
         private readonly HashedWheelTimer timer;
         private readonly TimerTask task;
@@ -704,7 +704,7 @@ public class HashedWheelTimer : Timer {
                 timer.taskExecutor.execute(this);
             } catch (Exception t) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn("An exception was thrown while submit " + TimerTask.class.getSimpleName()
+                    logger.warn("An exception was thrown while submit " + typeof(TimerTask).getSimpleName()
                             + " for execution.", t);
                 }
             }
@@ -716,7 +716,7 @@ public class HashedWheelTimer : Timer {
                 task.run(this);
             } catch (Exception t) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn("An exception was thrown by " + TimerTask.class.getSimpleName() + '.', t);
+                    logger.warn("An exception was thrown by " + typeof(TimerTask).getSimpleName() + '.', t);
                 }
             }
         }

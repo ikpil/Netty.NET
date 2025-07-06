@@ -94,7 +94,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         // initialized.
         //
         // See https://github.com/netty/netty/issues/12931.
-        logger = InternalLoggerFactory.getInstance(InternalThreadLocalMap.class);
+        logger = InternalLoggerFactory.getInstance(typeof(InternalThreadLocalMap));
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.initialSize: {}", STRING_BUILDER_INITIAL_SIZE);
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
     }

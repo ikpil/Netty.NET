@@ -34,7 +34,7 @@ public abstract class TypeParameterMatcher {
 
         TypeParameterMatcher matcher = getCache.get(parameterType);
         if (matcher == null) {
-            if (parameterType == object.class) {
+            if (parameterType == typeof(object)) {
                 matcher = NOOP;
             } else {
                 matcher = new ReflectiveMatcher(parameterType);

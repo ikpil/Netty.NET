@@ -85,7 +85,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class PlatformDependent {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(PlatformDependent.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent));
 
     private static Pattern MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
     private static readonly bool MAYBE_SUPER_USER;
@@ -1330,7 +1330,7 @@ public final class PlatformDependent {
             MethodHandle getRuntime = lookup.findStatic(
                     mgmtFactoryClass, "getRuntimeMXBean", methodType(runtimeClass));
             MethodHandle getInputArguments = lookup.findVirtual(
-                    runtimeClass, "getInputArguments", methodType(List.class));
+                    runtimeClass, "getInputArguments", methodType(typeof(List)));
             List<string> vmArgs = (List<string>) getInputArguments.invoke(getRuntime.invoke());
 
             Pattern maxDirectMemorySizeArgPattern = getMaxDirectMemorySizeArgPattern();

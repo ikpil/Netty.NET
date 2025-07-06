@@ -96,11 +96,11 @@ public interface MpscIntQueue {
     final class MpscAtomicIntegerArrayQueue extends AtomicIntegerArray : MpscIntQueue {
         private static readonly long serialVersionUID = 8740338425124821455L;
         private static readonly AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> PRODUCER_INDEX =
-                AtomicLongFieldUpdater.newUpdater(MpscAtomicIntegerArrayQueue.class, "producerIndex");
+                AtomicLongFieldUpdater.newUpdater(typeof(MpscAtomicIntegerArrayQueue), "producerIndex");
         private static readonly AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> PRODUCER_LIMIT =
-                AtomicLongFieldUpdater.newUpdater(MpscAtomicIntegerArrayQueue.class, "producerLimit");
+                AtomicLongFieldUpdater.newUpdater(typeof(MpscAtomicIntegerArrayQueue), "producerLimit");
         private static readonly AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> CONSUMER_INDEX =
-                AtomicLongFieldUpdater.newUpdater(MpscAtomicIntegerArrayQueue.class, "consumerIndex");
+                AtomicLongFieldUpdater.newUpdater(typeof(MpscAtomicIntegerArrayQueue), "consumerIndex");
         private readonly int mask;
         private readonly int emptyValue;
         private volatile long producerIndex;

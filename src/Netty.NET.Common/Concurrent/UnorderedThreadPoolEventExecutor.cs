@@ -50,7 +50,7 @@ namespace Netty.NET.Common.Concurrent;
 @Deprecated
 public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor : EventExecutor {
     private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(
-            UnorderedThreadPoolEventExecutor.class);
+            typeof(UnorderedThreadPoolEventExecutor));
 
     private readonly Promise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
     private readonly Set<EventExecutor> executorSet = Collections.singleton(this);
@@ -61,7 +61,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
      * using {@link DefaultThreadFactory}.
      */
     public UnorderedThreadPoolEventExecutor(int corePoolSize) {
-        this(corePoolSize, new DefaultThreadFactory(UnorderedThreadPoolEventExecutor.class));
+        this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)));
     }
 
     /**
@@ -77,7 +77,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
      * ThreadFactory, java.util.concurrent.RejectedExecutionHandler)} using {@link DefaultThreadFactory}.
      */
     public UnorderedThreadPoolEventExecutor(int corePoolSize, RejectedExecutionHandler handler) {
-        this(corePoolSize, new DefaultThreadFactory(UnorderedThreadPoolEventExecutor.class), handler);
+        this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler);
     }
 
     /**

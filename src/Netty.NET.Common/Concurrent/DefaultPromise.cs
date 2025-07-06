@@ -45,18 +45,18 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      */
     public static readonly string PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultPromise));
     private static readonly InternalLogger rejectedExecutionLogger =
-            InternalLoggerFactory.getInstance(DefaultPromise.class.getName() + ".rejectedExecution");
+            InternalLoggerFactory.getInstance(typeof(DefaultPromise).getName() + ".rejectedExecution");
     private static readonly int MAX_LISTENER_STACK_DEPTH = Math.min(8,
             SystemPropertyUtil.getInt(PROPERTY_MAX_LISTENER_STACK_DEPTH, 8));
     @SuppressWarnings("rawtypes")
     private static readonly AtomicReferenceFieldUpdater<DefaultPromise, object> RESULT_UPDATER =
-            AtomicReferenceFieldUpdater.newUpdater(DefaultPromise.class, object.class, "result");
+            AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultPromise), typeof(object), "result");
     private static readonly object SUCCESS = new object();
     private static readonly object UNCANCELLABLE = new object();
     private static readonly CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(
-            StacklessCancellationException.newInstance(DefaultPromise.class, "cancel(...)"));
+            StacklessCancellationException.newInstance(typeof(DefaultPromise), "cancel(...)"));
     private static readonly StackTraceElement[] CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.getStackTrace();
 
     private volatile object result;
@@ -163,7 +163,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
 
         @Override
         public string toString() {
-            return CancellationException.class.getName();
+            return typeof(CancellationException).getName();
         }
     }
 

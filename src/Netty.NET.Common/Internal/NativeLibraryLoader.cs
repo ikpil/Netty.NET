@@ -49,7 +49,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class NativeLibraryLoader {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(NativeLibraryLoader.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(NativeLibraryLoader));
 
     private static readonly string NATIVE_RESOURCE_HOME = "META-INF/native/";
     private static readonly File WORKDIR;
@@ -141,7 +141,7 @@ public final class NativeLibraryLoader {
      * @throws UnsatisfiedLinkError if the shader used something other than a prefix
      */
     private static string calculateMangledPackagePrefix() {
-        string maybeShaded = NativeLibraryLoader.class.getName();
+        string maybeShaded = typeof(NativeLibraryLoader).getName();
         // Use ! instead of . to avoid shading utilities from modifying the string
         string expected = "io!netty!util!internal!NativeLibraryLoader".replace('!', '.');
         if (!maybeShaded.endsWith(expected)) {
@@ -231,7 +231,7 @@ public final class NativeLibraryLoader {
                             tmpFile.getPath(), "io.netty.native.workdir");
                     logger.info(message);
                     suppressed.add(ThrowableUtil.unknownStackTrace(
-                            new UnsatisfiedLinkError(message), NativeLibraryLoader.class, "load"));
+                            new UnsatisfiedLinkError(message), typeof(NativeLibraryLoader), "load"));
                 }
             } catch (Exception t) {
                 suppressed.add(t);
@@ -383,7 +383,7 @@ public final class NativeLibraryLoader {
         try {
             try {
                 // Make sure the helper belongs to the target ClassLoader.
-                final Class<?> newHelper = tryToLoadClass(loader, NativeLibraryUtil.class);
+                final Class<?> newHelper = tryToLoadClass(loader, typeof(NativeLibraryUtil));
                 loadLibraryByHelper(newHelper, name, absolute);
                 logger.debug("Successfully loaded the library {}", name);
                 return;
@@ -416,7 +416,7 @@ public final class NativeLibraryLoader {
                 try {
                     // Invoke the helper to load the native library, if it succeeds, then the native
                     // library belong to the specified ClassLoader.
-                    Method method = helper.getMethod("loadLibrary", string.class, bool.class);
+                    Method method = helper.getMethod("loadLibrary", typeof(string), typeof(bool));
                     method.setAccessible(true);
                     return method.invoke(null, name, absolute);
                 } catch (Exception e) {
@@ -462,8 +462,8 @@ public final class NativeLibraryLoader {
                         try {
                             // Define the helper class in the target ClassLoader,
                             //  then we can call the helper to load the native library.
-                            Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", string.class,
-                                    byte[].class, int.class, int.class);
+                            Method defineClass = typeof(ClassLoader).getDeclaredMethod("defineClass", typeof(string),
+                                    byte[].class, typeof(int), typeof(int));
                             defineClass.setAccessible(true);
                             return (Class<?>) defineClass.invoke(loader, helper.getName(), classBinary, 0,
                                     classBinary.length);
