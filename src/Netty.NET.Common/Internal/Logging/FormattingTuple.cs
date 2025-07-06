@@ -37,26 +37,32 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
+
+using System;
+
 namespace Netty.NET.Common.Internal.Logging;
 
 /**
  * Holds the results of formatting done by {@link MessageFormatter}.
  */
-public final class FormattingTuple {
-
+public readonly struct FormattingTuple
+{
     private readonly string message;
     private readonly Exception throwable;
 
-    public FormattingTuple(string message, Exception throwable) {
+    public FormattingTuple(string message, Exception throwable)
+    {
         this.message = message;
         this.throwable = throwable;
     }
 
-    public string getMessage() {
+    public string getMessage()
+    {
         return message;
     }
 
-    public Exception getThrowable() {
+    public Exception getThrowable()
+    {
         return throwable;
     }
 }
