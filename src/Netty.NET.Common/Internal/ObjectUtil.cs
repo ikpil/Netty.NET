@@ -12,29 +12,34 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+
+using System;
+using System.Collections.Generic;
+
 namespace Netty.NET.Common.Internal;
 
 /**
  * A grab-bag of useful utility methods.
  */
-public static class ObjectUtil 
+public static class ObjectUtil
 {
-
     private static readonly float FLOAT_ZERO = 0.0F;
     private static readonly double DOUBLE_ZERO = 0.0D;
     private static readonly long LONG_ZERO = 0L;
     private static readonly int INT_ZERO = 0;
     private static readonly short SHORT_ZERO = 0;
 
-
     /**
-     * Checks that the given argument is not null. If it is, throws {@link NullPointerException}.
+     * Checks that the given argument is not null. If it is, throws {@link ArgumentNullException}.
      * Otherwise, returns the argument.
      */
-    public static T checkNotNull<T>(T arg, string text) {
-        if (arg == null) {
-            throw new NullPointerException(text);
+    public static T checkNotNull<T>(T arg, string text)
+    {
+        if (arg == null)
+        {
+            throw new ArgumentNullException(text);
         }
+
         return arg;
     }
 
@@ -42,35 +47,43 @@ public static class ObjectUtil
      * Check that the given varargs is not null and does not contain elements
      * null elements.
      *
-     * If it is, throws {@link NullPointerException}.
+     * If it is, throws {@link ArgumentNullException}.
      * Otherwise, returns the argument.
      */
-    public static T[] deepCheckNotNull<T>(string text, params T[] varargs) {
-        if (varargs == null) {
-            throw new NullPointerException(text);
+    public static T[] deepCheckNotNull<T>(string text, params T[] varargs)
+    {
+        if (varargs == null)
+        {
+            throw new ArgumentNullException(text);
         }
 
-        foreach (T element in varargs) {
-            if (element == null) {
-                throw new NullPointerException(text);
+        foreach (T element in varargs)
+        {
+            if (element == null)
+            {
+                throw new ArgumentNullException(text);
             }
         }
+
         return varargs;
     }
 
     /**
-     * Checks that the given argument is not null. If it is, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is not null. If it is, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static T checkNotNullWithIAE<T>(T arg, string paramName) {
-        if (arg == null) {
-            throw new IllegalArgumentException("Param '" + paramName + "' must not be null");
+    public static T checkNotNullWithIAE<T>(T arg, string paramName)
+    {
+        if (arg == null)
+        {
+            throw new ArgumentException("Param '" + paramName + "' must not be null");
         }
+
         return arg;
     }
 
     /**
-     * Checks that the given argument is not null. If it is, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is not null. If it is, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      *
      * @param <T> type of the given argument value.
@@ -78,238 +91,296 @@ public static class ObjectUtil
      * @param index of the array, belongs to the exception message.
      * @param value to check.
      * @return the given argument value.
-     * @throws IllegalArgumentException if value is null.
+     * @throws ArgumentException if value is null.
      */
-    public static T checkNotNullArrayParam<T>(T value, int index, string name) {
-        if (value == null) {
-            throw new IllegalArgumentException(
-                    "Array index " + index + " of parameter '" + name + "' must not be null");
+    public static T checkNotNullArrayParam<T>(T value, int index, string name)
+    {
+        if (value == null)
+        {
+            throw new ArgumentException(
+                "Array index " + index + " of parameter '" + name + "' must not be null");
         }
+
         return value;
     }
 
     /**
-     * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is strictly positive. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkPositive(int i, string name) {
-        if (i <= INT_ZERO) {
-            throw new IllegalArgumentException(name + " : " + i + " (expected: > 0)");
+    public static int checkPositive(int i, string name)
+    {
+        if (i <= INT_ZERO)
+        {
+            throw new ArgumentException(name + " : " + i + " (expected: > 0)");
         }
+
         return i;
     }
 
     /**
-     * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is strictly positive. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkPositive(long l, string name) {
-        if (l <= LONG_ZERO) {
-            throw new IllegalArgumentException(name + " : " + l + " (expected: > 0)");
+    public static long checkPositive(long l, string name)
+    {
+        if (l <= LONG_ZERO)
+        {
+            throw new ArgumentException(name + " : " + l + " (expected: > 0)");
         }
+
         return l;
     }
 
     /**
-     * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is strictly positive. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static double checkPositive(final double d, final string name) {
-        if (d <= DOUBLE_ZERO) {
-            throw new IllegalArgumentException(name + " : " + d + " (expected: > 0)");
+    public static double checkPositive(double d, string name)
+    {
+        if (d <= DOUBLE_ZERO)
+        {
+            throw new ArgumentException(name + " : " + d + " (expected: > 0)");
         }
+
         return d;
     }
 
     /**
-     * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is strictly positive. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static float checkPositive(final float f, final string name) {
-        if (f <= FLOAT_ZERO) {
-            throw new IllegalArgumentException(name + " : " + f + " (expected: > 0)");
+    public static float checkPositive(float f, string name)
+    {
+        if (f <= FLOAT_ZERO)
+        {
+            throw new ArgumentException(name + " : " + f + " (expected: > 0)");
         }
+
         return f;
     }
 
     /**
-     * Checks that the given argument is positive or zero. If it is not , throws {@link IllegalArgumentException}.
+     * Checks that the given argument is positive or zero. If it is not , throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static short checkPositive(short s, string name) {
-        if (s <= SHORT_ZERO) {
-            throw new IllegalArgumentException(name + " : " + s + " (expected: > 0)");
+    public static short checkPositive(short s, string name)
+    {
+        if (s <= SHORT_ZERO)
+        {
+            throw new ArgumentException(name + " : " + s + " (expected: > 0)");
         }
+
         return s;
     }
 
     /**
-     * Checks that the given argument is positive or zero. If it is not , throws {@link IllegalArgumentException}.
+     * Checks that the given argument is positive or zero. If it is not , throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkPositiveOrZero(int i, string name) {
-        if (i < INT_ZERO) {
-            throw new IllegalArgumentException(name + " : " + i + " (expected: >= 0)");
+    public static int checkPositiveOrZero(int i, string name)
+    {
+        if (i < INT_ZERO)
+        {
+            throw new ArgumentException(name + " : " + i + " (expected: >= 0)");
         }
+
         return i;
     }
 
     /**
-     * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is positive or zero. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkPositiveOrZero(long l, string name) {
-        if (l < LONG_ZERO) {
-            throw new IllegalArgumentException(name + " : " + l + " (expected: >= 0)");
+    public static long checkPositiveOrZero(long l, string name)
+    {
+        if (l < LONG_ZERO)
+        {
+            throw new ArgumentException(name + " : " + l + " (expected: >= 0)");
         }
+
         return l;
     }
 
     /**
-     * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is positive or zero. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static double checkPositiveOrZero(final double d, final string name) {
-        if (d < DOUBLE_ZERO) {
-            throw new IllegalArgumentException(name + " : " + d + " (expected: >= 0)");
+    public static double checkPositiveOrZero(double d, string name)
+    {
+        if (d < DOUBLE_ZERO)
+        {
+            throw new ArgumentException(name + " : " + d + " (expected: >= 0)");
         }
+
         return d;
     }
 
     /**
-     * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is positive or zero. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static float checkPositiveOrZero(final float f, final string name) {
-        if (f < FLOAT_ZERO) {
-            throw new IllegalArgumentException(name + " : " + f + " (expected: >= 0)");
+    public static float checkPositiveOrZero(float f, string name)
+    {
+        if (f < FLOAT_ZERO)
+        {
+            throw new ArgumentException(name + " : " + f + " (expected: >= 0)");
         }
+
         return f;
     }
 
     /**
-     * Checks that the given argument is in range. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is in range. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkInRange(int i, int start, int end, string name) {
-        if (i < start || i > end) {
-            throw new IllegalArgumentException(name + ": " + i + " (expected: " + start + "-" + end + ")");
+    public static int checkInRange(int i, int start, int end, string name)
+    {
+        if (i < start || i > end)
+        {
+            throw new ArgumentException(name + ": " + i + " (expected: " + start + "-" + end + ")");
         }
+
         return i;
     }
 
     /**
-     * Checks that the given argument is in range. If it is not, throws {@link IllegalArgumentException}.
+     * Checks that the given argument is in range. If it is not, throws {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkInRange(long l, long start, long end, string name) {
-        if (l < start || l > end) {
-            throw new IllegalArgumentException(name + ": " + l + " (expected: " + start + "-" + end + ")");
+    public static long checkInRange(long l, long start, long end, string name)
+    {
+        if (l < start || l > end)
+        {
+            throw new ArgumentException(name + ": " + l + " (expected: " + start + "-" + end + ")");
         }
+
         return l;
     }
 
     /**
      * Checks that the given argument is neither null nor empty.
-     * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
+     * If it is, throws {@link ArgumentNullException} or {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static <T> T[] checkNonEmpty(T[] array, string name) {
+    public static T[] checkNonEmpty<T>(T[] array, string name)
+    {
         //No string concatenation for check
-        if (checkNotNull(array, name).length == 0) {
-            throw new IllegalArgumentException("Param '" + name + "' must not be empty");
+        if (checkNotNull(array, name).Length == 0)
+        {
+            throw new ArgumentException("Param '" + name + "' must not be empty");
         }
+
         return array;
     }
 
     /**
      * Checks that the given argument is neither null nor empty.
-     * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
+     * If it is, throws {@link ArgumentNullException} or {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static byte[] checkNonEmpty(byte[] array, string name) {
+    public static byte[] checkNonEmpty(byte[] array, string name)
+    {
         //No string concatenation for check
-        if (checkNotNull(array, name).length == 0) {
-            throw new IllegalArgumentException("Param '" + name + "' must not be empty");
+        if (checkNotNull(array, name).Length == 0)
+        {
+            throw new ArgumentException("Param '" + name + "' must not be empty");
         }
+
         return array;
     }
 
     /**
      * Checks that the given argument is neither null nor empty.
-     * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
+     * If it is, throws {@link ArgumentNullException} or {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static char[] checkNonEmpty(char[] array, string name) {
+    public static char[] checkNonEmpty(char[] array, string name)
+    {
         //No string concatenation for check
-        if (checkNotNull(array, name).length == 0) {
-            throw new IllegalArgumentException("Param '" + name + "' must not be empty");
+        if (checkNotNull(array, name).Length == 0)
+        {
+            throw new ArgumentException("Param '" + name + "' must not be empty");
         }
+
         return array;
     }
 
     /**
      * Checks that the given argument is neither null nor empty.
-     * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
+     * If it is, throws {@link ArgumentNullException} or {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static <T extends Collection<?>> T checkNonEmpty(T collection, string name) {
+    public static T checkNonEmpty<T>(T collection, string name) where T : ICollection<T>
+    {
         //No string concatenation for check
-        if (checkNotNull(collection, name).isEmpty()) {
-            throw new IllegalArgumentException("Param '" + name + "' must not be empty");
+        if (checkNotNull(collection, name).Count == 0)
+        {
+            throw new ArgumentException("Param '" + name + "' must not be empty");
         }
+
         return collection;
     }
 
     /**
      * Checks that the given argument is neither null nor empty.
-     * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
+     * If it is, throws {@link ArgumentNullException} or {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static string checkNonEmpty(final string value, final string name) {
-        if (checkNotNull(value, name).isEmpty()) {
-            throw new IllegalArgumentException("Param '" + name + "' must not be empty");
+    public static string checkNonEmpty(string value, string name)
+    {
+        if (string.IsNullOrEmpty(checkNotNull(value, name)))
+        {
+            throw new ArgumentException("Param '" + name + "' must not be empty");
         }
+
         return value;
     }
 
     /**
      * Checks that the given argument is neither null nor empty.
-     * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
+     * If it is, throws {@link ArgumentNullException} or {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static <K, V, T extends Map<K, V>> T checkNonEmpty(T value, string name) {
-        if (checkNotNull(value, name).isEmpty()) {
-            throw new IllegalArgumentException("Param '" + name + "' must not be empty");
+    public static IDictionary<K, V> checkNonEmpty<K, V>(IDictionary<K, V> value, string name)
+    {
+        if (checkNotNull(value, name).Count == 0)
+        {
+            throw new ArgumentException("Param '" + name + "' must not be empty");
         }
+
         return value;
     }
 
     /**
      * Checks that the given argument is neither null nor empty.
-     * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
+     * If it is, throws {@link ArgumentNullException} or {@link ArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static CharSequence checkNonEmpty(final CharSequence value, final string name) {
-        if (checkNotNull(value, name).length() == 0) {
-            throw new IllegalArgumentException("Param '" + name + "' must not be empty");
+    public static ICharSequence checkNonEmpty(ICharSequence value, string name)
+    {
+        if (checkNotNull(value, name).Count == 0)
+        {
+            throw new ArgumentException("Param '" + name + "' must not be empty");
         }
+
         return value;
     }
 
     /**
      * Trims the given argument and checks whether it is neither null nor empty.
-     * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
+     * If it is, throws {@link ArgumentNullException} or {@link ArgumentException}.
      * Otherwise, returns the trimmed argument.
      *
      * @param value to trim and check.
      * @param name of the parameter.
      * @return the trimmed (not the original) value.
-     * @throws NullPointerException if value is null.
-     * @throws IllegalArgumentException if the trimmed value is empty.
+     * @throws ArgumentNullException if value is null.
+     * @throws ArgumentException if the trimmed value is empty.
      */
-    public static string checkNonEmptyAfterTrim(final string value, final string name) {
-        string trimmed = checkNotNull(value, name).trim();
+    public static string checkNonEmptyAfterTrim(string value, string name)
+    {
+        string trimmed = checkNotNull(value, name).Trim();
         return checkNonEmpty(trimmed, name);
     }
 
@@ -319,7 +390,8 @@ public static class ObjectUtil
      * @param defaultValue the default value
      * @return the primitive value
      */
-    public static int intValue(int wrapper, int defaultValue) {
+    public static int intValue(int wrapper, int defaultValue)
+    {
         return wrapper != null ? wrapper : defaultValue;
     }
 
@@ -329,7 +401,8 @@ public static class ObjectUtil
      * @param defaultValue the default value
      * @return the primitive value
      */
-    public static long longValue(long wrapper, long defaultValue) {
+    public static long longValue(long wrapper, long defaultValue)
+    {
         return wrapper != null ? wrapper : defaultValue;
     }
 }
