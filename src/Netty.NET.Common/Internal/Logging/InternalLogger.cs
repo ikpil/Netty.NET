@@ -50,7 +50,7 @@ public interface InternalLogger {
      *
      * @return name of this logger instance
      */
-    String name();
+    string name();
 
     /**
      * Is the logger instance enabled for the TRACE level?
@@ -65,7 +65,7 @@ public interface InternalLogger {
      *
      * @param msg the message string to be logged
      */
-    void trace(String msg);
+    void trace(string msg);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -77,7 +77,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void trace(String format, Object arg);
+    void trace(string format, Object arg);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -90,7 +90,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void trace(String format, Object argA, Object argB);
+    void trace(string format, Object argA, Object argB);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -99,13 +99,13 @@ public interface InternalLogger {
      * <p>This form avoids superfluous string concatenation when the logger
      * is disabled for the TRACE level. However, this variant incurs the hidden
      * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
-     * even if this logger is disabled for TRACE. The variants taking {@link #trace(String, Object) one} and
-     * {@link #trace(String, Object, Object) two} arguments exist solely in order to avoid this hidden cost.</p>
+     * even if this logger is disabled for TRACE. The variants taking {@link #trace(string, Object) one} and
+     * {@link #trace(string, Object, Object) two} arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void trace(String format, Object... arguments);
+    void trace(string format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the TRACE level with an
@@ -114,7 +114,7 @@ public interface InternalLogger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void trace(String msg, Throwable t);
+    void trace(string msg, Throwable t);
 
     /**
      * Log an exception (throwable) at the TRACE level.
@@ -136,7 +136,7 @@ public interface InternalLogger {
      *
      * @param msg the message string to be logged
      */
-    void debug(String msg);
+    void debug(string msg);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -148,7 +148,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void debug(String format, Object arg);
+    void debug(string format, Object arg);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -161,7 +161,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void debug(String format, Object argA, Object argB);
+    void debug(string format, Object argA, Object argB);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -171,13 +171,13 @@ public interface InternalLogger {
      * is disabled for the DEBUG level. However, this variant incurs the hidden
      * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
      * even if this logger is disabled for DEBUG. The variants taking
-     * {@link #debug(String, Object) one} and {@link #debug(String, Object, Object) two}
+     * {@link #debug(string, Object) one} and {@link #debug(string, Object, Object) two}
      * arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void debug(String format, Object... arguments);
+    void debug(string format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the DEBUG level with an
@@ -186,7 +186,7 @@ public interface InternalLogger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void debug(String msg, Throwable t);
+    void debug(string msg, Throwable t);
 
     /**
      * Log an exception (throwable) at the DEBUG level.
@@ -208,7 +208,7 @@ public interface InternalLogger {
      *
      * @param msg the message string to be logged
      */
-    void info(String msg);
+    void info(string msg);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -220,7 +220,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void info(String format, Object arg);
+    void info(string format, Object arg);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -233,7 +233,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void info(String format, Object argA, Object argB);
+    void info(string format, Object argA, Object argB);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -243,13 +243,13 @@ public interface InternalLogger {
      * is disabled for the INFO level. However, this variant incurs the hidden
      * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
      * even if this logger is disabled for INFO. The variants taking
-     * {@link #info(String, Object) one} and {@link #info(String, Object, Object) two}
+     * {@link #info(string, Object) one} and {@link #info(string, Object, Object) two}
      * arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void info(String format, Object... arguments);
+    void info(string format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the INFO level with an
@@ -258,7 +258,7 @@ public interface InternalLogger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void info(String msg, Throwable t);
+    void info(string msg, Throwable t);
 
     /**
      * Log an exception (throwable) at the INFO level.
@@ -280,7 +280,7 @@ public interface InternalLogger {
      *
      * @param msg the message string to be logged
      */
-    void warn(String msg);
+    void warn(string msg);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -292,7 +292,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void warn(String format, Object arg);
+    void warn(string format, Object arg);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -302,13 +302,13 @@ public interface InternalLogger {
      * is disabled for the WARN level. However, this variant incurs the hidden
      * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
      * even if this logger is disabled for WARN. The variants taking
-     * {@link #warn(String, Object) one} and {@link #warn(String, Object, Object) two}
+     * {@link #warn(string, Object) one} and {@link #warn(string, Object, Object) two}
      * arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void warn(String format, Object... arguments);
+    void warn(string format, Object... arguments);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -321,7 +321,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void warn(String format, Object argA, Object argB);
+    void warn(string format, Object argA, Object argB);
 
     /**
      * Log an exception (throwable) at the WARN level with an
@@ -330,7 +330,7 @@ public interface InternalLogger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void warn(String msg, Throwable t);
+    void warn(string msg, Throwable t);
 
     /**
      * Log an exception (throwable) at the WARN level.
@@ -352,7 +352,7 @@ public interface InternalLogger {
      *
      * @param msg the message string to be logged
      */
-    void error(String msg);
+    void error(string msg);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -364,7 +364,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void error(String format, Object arg);
+    void error(string format, Object arg);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -377,7 +377,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void error(String format, Object argA, Object argB);
+    void error(string format, Object argA, Object argB);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -387,13 +387,13 @@ public interface InternalLogger {
      * is disabled for the ERROR level. However, this variant incurs the hidden
      * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
      * even if this logger is disabled for ERROR. The variants taking
-     * {@link #error(String, Object) one} and {@link #error(String, Object, Object) two}
+     * {@link #error(string, Object) one} and {@link #error(string, Object, Object) two}
      * arguments exist solely in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void error(String format, Object... arguments);
+    void error(string format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the ERROR level with an
@@ -402,7 +402,7 @@ public interface InternalLogger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void error(String msg, Throwable t);
+    void error(string msg, Throwable t);
 
     /**
      * Log an exception (throwable) at the ERROR level.
@@ -424,7 +424,7 @@ public interface InternalLogger {
      *
      * @param msg the message string to be logged
      */
-    void log(InternalLogLevel level, String msg);
+    void log(InternalLogLevel level, string msg);
 
     /**
      * Log a message at the specified {@code level} according to the specified format
@@ -436,7 +436,7 @@ public interface InternalLogger {
      * @param format the format string
      * @param arg    the argument
      */
-    void log(InternalLogLevel level, String format, Object arg);
+    void log(InternalLogLevel level, string format, Object arg);
 
     /**
      * Log a message at the specified {@code level} according to the specified format
@@ -449,7 +449,7 @@ public interface InternalLogger {
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void log(InternalLogLevel level, String format, Object argA, Object argB);
+    void log(InternalLogLevel level, string format, Object argA, Object argB);
 
     /**
      * Log a message at the specified {@code level} according to the specified format
@@ -459,14 +459,14 @@ public interface InternalLogger {
      * is disabled for the specified {@code level}. However, this variant incurs the hidden
      * (and relatively small) cost of creating an {@code Object[]} before invoking the method,
      * even if this logger is disabled for the specified {@code level}. The variants taking
-     * {@link #log(InternalLogLevel, String, Object) one} and
-     * {@link #log(InternalLogLevel, String, Object, Object) two} arguments exist solely
+     * {@link #log(InternalLogLevel, string, Object) one} and
+     * {@link #log(InternalLogLevel, string, Object, Object) two} arguments exist solely
      * in order to avoid this hidden cost.</p>
      *
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void log(InternalLogLevel level, String format, Object... arguments);
+    void log(InternalLogLevel level, string format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the specified {@code level} with an
@@ -475,7 +475,7 @@ public interface InternalLogger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void log(InternalLogLevel level, String msg, Throwable t);
+    void log(InternalLogLevel level, string msg, Throwable t);
 
     /**
      * Log an exception (throwable) at the specified {@code level}.

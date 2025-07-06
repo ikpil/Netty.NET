@@ -26,7 +26,7 @@ public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
 
     private static final ConstantPool<AttributeKey<Object>> pool = new ConstantPool<AttributeKey<Object>>() {
         @Override
-        protected AttributeKey<Object> newConstant(int id, String name) {
+        protected AttributeKey<Object> newConstant(int id, string name) {
             return new AttributeKey<Object>(id, name);
         }
     };
@@ -35,14 +35,14 @@ public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
      * Returns the singleton instance of the {@link AttributeKey} which has the specified {@code name}.
      */
     @SuppressWarnings("unchecked")
-    public static <T> AttributeKey<T> valueOf(String name) {
+    public static <T> AttributeKey<T> valueOf(string name) {
         return (AttributeKey<T>) pool.valueOf(name);
     }
 
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
      */
-    public static bool exists(String name) {
+    public static bool exists(string name) {
         return pool.exists(name);
     }
 
@@ -51,16 +51,16 @@ public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
      * {@link IllegalArgumentException} if a {@link AttributeKey} for the given {@code name} exists.
      */
     @SuppressWarnings("unchecked")
-    public static <T> AttributeKey<T> newInstance(String name) {
+    public static <T> AttributeKey<T> newInstance(string name) {
         return (AttributeKey<T>) pool.newInstance(name);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> AttributeKey<T> valueOf(Class<?> firstNameComponent, String secondNameComponent) {
+    public static <T> AttributeKey<T> valueOf(Class<?> firstNameComponent, string secondNameComponent) {
         return (AttributeKey<T>) pool.valueOf(firstNameComponent, secondNameComponent);
     }
 
-    private AttributeKey(int id, String name) {
+    private AttributeKey(int id, string name) {
         super(id, name);
     }
 }

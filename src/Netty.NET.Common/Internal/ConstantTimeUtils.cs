@@ -106,10 +106,10 @@ public final class ConstantTimeUtils {
      * <p>
      * The {@code int} return type is intentional and is designed to allow cascading of constant time operations:
      * <pre>
-     *     String s1 = "foo";
-     *     String s2 = "foo";
-     *     String s3 = "foo";
-     *     String s4 = "goo";
+     *     string s1 = "foo";
+     *     string s2 = "foo";
+     *     string s3 = "foo";
+     *     string s4 = "goo";
      *     bool equals = (equalsConstantTime(s1, s2) & equalsConstantTime(s3, s4)) != 0;
      * </pre>
      * @param s1 the first value.

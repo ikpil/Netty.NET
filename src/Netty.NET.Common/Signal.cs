@@ -26,7 +26,7 @@ public final class Signal extends Error : Constant<Signal> {
 
     private static final ConstantPool<Signal> pool = new ConstantPool<Signal>() {
         @Override
-        protected Signal newConstant(int id, String name) {
+        protected Signal newConstant(int id, string name) {
             return new Signal(id, name);
         }
     };
@@ -34,14 +34,14 @@ public final class Signal extends Error : Constant<Signal> {
     /**
      * Returns the {@link Signal} of the specified name.
      */
-    public static Signal valueOf(String name) {
+    public static Signal valueOf(string name) {
         return pool.valueOf(name);
     }
 
     /**
-     * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
+     * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
-    public static Signal valueOf(Class<?> firstNameComponent, String secondNameComponent) {
+    public static Signal valueOf(Class<?> firstNameComponent, string secondNameComponent) {
         return pool.valueOf(firstNameComponent, secondNameComponent);
     }
 
@@ -50,7 +50,7 @@ public final class Signal extends Error : Constant<Signal> {
     /**
      * Creates a new {@link Signal} with the specified {@code name}.
      */
-    private Signal(int id, String name) {
+    private Signal(int id, string name) {
         constant = new SignalConstant(id, name);
     }
 
@@ -82,7 +82,7 @@ public final class Signal extends Error : Constant<Signal> {
     }
 
     @Override
-    public String name() {
+    public string name() {
         return constant.name();
     }
 
@@ -106,12 +106,12 @@ public final class Signal extends Error : Constant<Signal> {
     }
 
     @Override
-    public String toString() {
+    public string toString() {
         return name();
     }
 
     private static final class SignalConstant extends AbstractConstant<SignalConstant> {
-        SignalConstant(int id, String name) {
+        SignalConstant(int id, string name) {
             super(id, name);
         }
     }

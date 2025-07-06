@@ -125,29 +125,29 @@ public final class AppendableCharSequence : CharSequence, Appendable {
     }
 
     @Override
-    public String toString() {
-        return new String(chars, 0, pos);
+    public string toString() {
+        return new string(chars, 0, pos);
     }
 
     /**
-     * Create a new {@link String} from the given start to end.
+     * Create a new {@link string} from the given start to end.
      */
-    public String substring(int start, int end) {
+    public string substring(int start, int end) {
         int length = end - start;
         if (start > pos || length > pos) {
             throw new IndexOutOfBoundsException("expected: start and length <= ("
                     + pos + ")");
         }
-        return new String(chars, start, length);
+        return new string(chars, start, length);
     }
 
     /**
-     * Create a new {@link String} from the given start to end.
+     * Create a new {@link string} from the given start to end.
      * This method is considered unsafe as index values are assumed to be legitimate.
      * Only underlying array bounds checking is done.
      */
-    public String subStringUnsafe(int start, int end) {
-        return new String(chars, start, end - start);
+    public string subStringUnsafe(int start, int end) {
+        return new string(chars, start, end - start);
     }
 
     private static char[] expand(char[] array, int neededSpace, int size) {

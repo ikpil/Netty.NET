@@ -36,17 +36,17 @@ namespace Netty.NET.Common;
  * @deprecated Use {@link DomainWildcardMappingBuilder}}
  */
 @Deprecated
-public class DomainNameMapping<V> : Mapping<String, V> {
+public class DomainNameMapping<V> : Mapping<string, V> {
 
     final V defaultValue;
-    private final Map<String, V> map;
-    private final Map<String, V> unmodifiableMap;
+    private final Map<string, V> map;
+    private final Map<string, V> unmodifiableMap;
 
     /**
      * Creates a default, order-sensitive mapping. If your hostnames are in conflict, the mapping
      * will choose the one you add first.
      *
-     * @param defaultValue the default value for {@link #map(String)} to return when nothing matches the input
+     * @param defaultValue the default value for {@link #map(string)} to return when nothing matches the input
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
     @Deprecated
@@ -59,15 +59,15 @@ public class DomainNameMapping<V> : Mapping<String, V> {
      * will choose the one you add first.
      *
      * @param initialCapacity initial capacity for the internal map
-     * @param defaultValue    the default value for {@link #map(String)} to return when nothing matches the input
+     * @param defaultValue    the default value for {@link #map(string)} to return when nothing matches the input
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
     @Deprecated
     public DomainNameMapping(int initialCapacity, V defaultValue) {
-        this(new LinkedHashMap<String, V>(initialCapacity), defaultValue);
+        this(new LinkedHashMap<string, V>(initialCapacity), defaultValue);
     }
 
-    DomainNameMapping(Map<String, V> map, V defaultValue) {
+    DomainNameMapping(Map<string, V> map, V defaultValue) {
         this.defaultValue = checkNotNull(defaultValue, "defaultValue");
         this.map = map;
         unmodifiableMap = map != null ? Collections.unmodifiableMap(map)
@@ -82,12 +82,12 @@ public class DomainNameMapping<V> : Mapping<String, V> {
      * </p>
      *
      * @param hostname the host name (optionally wildcard)
-     * @param output   the output value that will be returned by {@link #map(String)} when the specified host name
+     * @param output   the output value that will be returned by {@link #map(string)} when the specified host name
      *                 matches the specified input host name
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
     @Deprecated
-    public DomainNameMapping<V> add(String hostname, V output) {
+    public DomainNameMapping<V> add(string hostname, V output) {
         map.put(normalizeHostname(checkNotNull(hostname, "hostname")), checkNotNull(output, "output"));
         return this;
     }
@@ -95,7 +95,7 @@ public class DomainNameMapping<V> : Mapping<String, V> {
     /**
      * Simple function to match <a href="https://en.wikipedia.org/wiki/Wildcard_DNS_record">DNS wildcard</a>.
      */
-    static bool matches(String template, String hostName) {
+    static bool matches(string template, string hostName) {
         if (template.startsWith("*.")) {
             return template.regionMatches(2, hostName, 0, hostName.length())
                 || commonSuffixOfLength(hostName, template, template.length() - 1);
@@ -106,14 +106,14 @@ public class DomainNameMapping<V> : Mapping<String, V> {
     /**
      * IDNA ASCII conversion and case normalization
      */
-    static String normalizeHostname(String hostname) {
+    static string normalizeHostname(string hostname) {
         if (needsNormalization(hostname)) {
             hostname = IDN.toASCII(hostname, IDN.ALLOW_UNASSIGNED);
         }
         return hostname.toLowerCase(Locale.US);
     }
 
-    private static bool needsNormalization(String hostname) {
+    private static bool needsNormalization(string hostname) {
         final int length = hostname.length();
         for (int i = 0; i < length; i++) {
             int c = hostname.charAt(i);
@@ -125,11 +125,11 @@ public class DomainNameMapping<V> : Mapping<String, V> {
     }
 
     @Override
-    public V map(String hostname) {
+    public V map(string hostname) {
         if (hostname != null) {
             hostname = normalizeHostname(hostname);
 
-            for (Map.Entry<String, V> entry : map.entrySet()) {
+            for (Map.Entry<string, V> entry : map.entrySet()) {
                 if (matches(entry.getKey(), hostname)) {
                     return entry.getValue();
                 }
@@ -141,12 +141,12 @@ public class DomainNameMapping<V> : Mapping<String, V> {
     /**
      * Returns a read-only {@link Map} of the domain mapping patterns and their associated value objects.
      */
-    public Map<String, V> asMap() {
+    public Map<string, V> asMap() {
         return unmodifiableMap;
     }
 
     @Override
-    public String toString() {
+    public string toString() {
         return StringUtil.simpleClassName(this) + "(default: " + defaultValue + ", map: " + map + ')';
     }
 }

@@ -20,24 +20,24 @@ namespace Netty.NET.Common;
 /**
  * Base implementation of {@link Constant}.
  */
-public abstract class AbstractConstant<T extends AbstractConstant<T>> : Constant<T> {
+public abstract class AbstractConstant<T extends AbstractConstant<T>> : IConstant<> <T> {
 
     private static final AtomicLong uniqueIdGenerator = new AtomicLong();
     private final int id;
-    private final String name;
+    private final string name;
     private final long uniquifier;
 
     /**
      * Creates a new instance.
      */
-    protected AbstractConstant(int id, String name) {
+    protected AbstractConstant(int id, string name) {
         this.id = id;
         this.name = name;
         this.uniquifier = uniqueIdGenerator.getAndIncrement();
     }
 
     @Override
-    public final String name() {
+    public final string name() {
         return name;
     }
 
@@ -47,7 +47,7 @@ public abstract class AbstractConstant<T extends AbstractConstant<T>> : Constant
     }
 
     @Override
-    public final String toString() {
+    public final string toString() {
         return name();
     }
 

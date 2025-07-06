@@ -31,7 +31,7 @@ public final class ResourcesUtil {
      * @param fileName The file name
      * @return The file named {@code fileName} associated with {@link Class} {@code resourceClass} .
      */
-    public static File getFile(Class resourceClass, String fileName) {
+    public static File getFile(Class resourceClass, string fileName) {
         try {
             return new File(URLDecoder.decode(resourceClass.getResource(fileName).getFile(), "UTF-8"));
         } catch (UnsupportedEncodingException e) {

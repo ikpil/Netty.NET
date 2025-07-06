@@ -200,7 +200,7 @@ public final class ReferenceCountUtil {
         }
 
         @Override
-        public String toString() {
+        public string toString() {
             return StringUtil.simpleClassName(obj) + ".release(" + decrement + ") refCnt: " + obj.refCnt();
         }
     }

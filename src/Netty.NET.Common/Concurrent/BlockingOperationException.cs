@@ -27,7 +27,7 @@ public class BlockingOperationException extends IllegalStateException {
 
     public BlockingOperationException() { }
 
-    public BlockingOperationException(String s) {
+    public BlockingOperationException(string s) {
         super(s);
     }
 
@@ -35,7 +35,7 @@ public class BlockingOperationException extends IllegalStateException {
         super(cause);
     }
 
-    public BlockingOperationException(String message, Throwable cause) {
+    public BlockingOperationException(string message, Throwable cause) {
         super(message, cause);
     }
 }

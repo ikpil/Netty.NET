@@ -35,7 +35,7 @@ public final class ObjectUtil {
      * Checks that the given argument is not null. If it is, throws {@link NullPointerException}.
      * Otherwise, returns the argument.
      */
-    public static <T> T checkNotNull(T arg, String text) {
+    public static <T> T checkNotNull(T arg, string text) {
         if (arg == null) {
             throw new NullPointerException(text);
         }
@@ -49,7 +49,7 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException}.
      * Otherwise, returns the argument.
      */
-    public static <T> T[] deepCheckNotNull(String text, T... varargs) {
+    public static <T> T[] deepCheckNotNull(string text, T... varargs) {
         if (varargs == null) {
             throw new NullPointerException(text);
         }
@@ -66,7 +66,7 @@ public final class ObjectUtil {
      * Checks that the given argument is not null. If it is, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static <T> T checkNotNullWithIAE(final T arg, final String paramName) throws IllegalArgumentException {
+    public static <T> T checkNotNullWithIAE(final T arg, final string paramName) throws IllegalArgumentException {
         if (arg == null) {
             throw new IllegalArgumentException("Param '" + paramName + "' must not be null");
         }
@@ -84,7 +84,7 @@ public final class ObjectUtil {
      * @return the given argument value.
      * @throws IllegalArgumentException if value is null.
      */
-    public static <T> T checkNotNullArrayParam(T value, int index, String name) throws IllegalArgumentException {
+    public static <T> T checkNotNullArrayParam(T value, int index, string name) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException(
                     "Array index " + index + " of parameter '" + name + "' must not be null");
@@ -96,7 +96,7 @@ public final class ObjectUtil {
      * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkPositive(int i, String name) {
+    public static int checkPositive(int i, string name) {
         if (i <= INT_ZERO) {
             throw new IllegalArgumentException(name + " : " + i + " (expected: > 0)");
         }
@@ -107,7 +107,7 @@ public final class ObjectUtil {
      * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkPositive(long l, String name) {
+    public static long checkPositive(long l, string name) {
         if (l <= LONG_ZERO) {
             throw new IllegalArgumentException(name + " : " + l + " (expected: > 0)");
         }
@@ -118,7 +118,7 @@ public final class ObjectUtil {
      * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static double checkPositive(final double d, final String name) {
+    public static double checkPositive(final double d, final string name) {
         if (d <= DOUBLE_ZERO) {
             throw new IllegalArgumentException(name + " : " + d + " (expected: > 0)");
         }
@@ -129,7 +129,7 @@ public final class ObjectUtil {
      * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static float checkPositive(final float f, final String name) {
+    public static float checkPositive(final float f, final string name) {
         if (f <= FLOAT_ZERO) {
             throw new IllegalArgumentException(name + " : " + f + " (expected: > 0)");
         }
@@ -140,7 +140,7 @@ public final class ObjectUtil {
      * Checks that the given argument is positive or zero. If it is not , throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static short checkPositive(short s, String name) {
+    public static short checkPositive(short s, string name) {
         if (s <= SHORT_ZERO) {
             throw new IllegalArgumentException(name + " : " + s + " (expected: > 0)");
         }
@@ -151,7 +151,7 @@ public final class ObjectUtil {
      * Checks that the given argument is positive or zero. If it is not , throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkPositiveOrZero(int i, String name) {
+    public static int checkPositiveOrZero(int i, string name) {
         if (i < INT_ZERO) {
             throw new IllegalArgumentException(name + " : " + i + " (expected: >= 0)");
         }
@@ -162,7 +162,7 @@ public final class ObjectUtil {
      * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkPositiveOrZero(long l, String name) {
+    public static long checkPositiveOrZero(long l, string name) {
         if (l < LONG_ZERO) {
             throw new IllegalArgumentException(name + " : " + l + " (expected: >= 0)");
         }
@@ -173,7 +173,7 @@ public final class ObjectUtil {
      * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static double checkPositiveOrZero(final double d, final String name) {
+    public static double checkPositiveOrZero(final double d, final string name) {
         if (d < DOUBLE_ZERO) {
             throw new IllegalArgumentException(name + " : " + d + " (expected: >= 0)");
         }
@@ -184,7 +184,7 @@ public final class ObjectUtil {
      * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static float checkPositiveOrZero(final float f, final String name) {
+    public static float checkPositiveOrZero(final float f, final string name) {
         if (f < FLOAT_ZERO) {
             throw new IllegalArgumentException(name + " : " + f + " (expected: >= 0)");
         }
@@ -195,7 +195,7 @@ public final class ObjectUtil {
      * Checks that the given argument is in range. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkInRange(int i, int start, int end, String name) {
+    public static int checkInRange(int i, int start, int end, string name) {
         if (i < start || i > end) {
             throw new IllegalArgumentException(name + ": " + i + " (expected: " + start + "-" + end + ")");
         }
@@ -206,7 +206,7 @@ public final class ObjectUtil {
      * Checks that the given argument is in range. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkInRange(long l, long start, long end, String name) {
+    public static long checkInRange(long l, long start, long end, string name) {
         if (l < start || l > end) {
             throw new IllegalArgumentException(name + ": " + l + " (expected: " + start + "-" + end + ")");
         }
@@ -218,8 +218,8 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static <T> T[] checkNonEmpty(T[] array, String name) {
-        //No String concatenation for check
+    public static <T> T[] checkNonEmpty(T[] array, string name) {
+        //No string concatenation for check
         if (checkNotNull(array, name).length == 0) {
             throw new IllegalArgumentException("Param '" + name + "' must not be empty");
         }
@@ -231,8 +231,8 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static byte[] checkNonEmpty(byte[] array, String name) {
-        //No String concatenation for check
+    public static byte[] checkNonEmpty(byte[] array, string name) {
+        //No string concatenation for check
         if (checkNotNull(array, name).length == 0) {
             throw new IllegalArgumentException("Param '" + name + "' must not be empty");
         }
@@ -244,8 +244,8 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static char[] checkNonEmpty(char[] array, String name) {
-        //No String concatenation for check
+    public static char[] checkNonEmpty(char[] array, string name) {
+        //No string concatenation for check
         if (checkNotNull(array, name).length == 0) {
             throw new IllegalArgumentException("Param '" + name + "' must not be empty");
         }
@@ -257,8 +257,8 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static <T extends Collection<?>> T checkNonEmpty(T collection, String name) {
-        //No String concatenation for check
+    public static <T extends Collection<?>> T checkNonEmpty(T collection, string name) {
+        //No string concatenation for check
         if (checkNotNull(collection, name).isEmpty()) {
             throw new IllegalArgumentException("Param '" + name + "' must not be empty");
         }
@@ -270,7 +270,7 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static String checkNonEmpty(final String value, final String name) {
+    public static string checkNonEmpty(final string value, final string name) {
         if (checkNotNull(value, name).isEmpty()) {
             throw new IllegalArgumentException("Param '" + name + "' must not be empty");
         }
@@ -282,7 +282,7 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static <K, V, T extends Map<K, V>> T checkNonEmpty(T value, String name) {
+    public static <K, V, T extends Map<K, V>> T checkNonEmpty(T value, string name) {
         if (checkNotNull(value, name).isEmpty()) {
             throw new IllegalArgumentException("Param '" + name + "' must not be empty");
         }
@@ -294,7 +294,7 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static CharSequence checkNonEmpty(final CharSequence value, final String name) {
+    public static CharSequence checkNonEmpty(final CharSequence value, final string name) {
         if (checkNotNull(value, name).length() == 0) {
             throw new IllegalArgumentException("Param '" + name + "' must not be empty");
         }
@@ -312,8 +312,8 @@ public final class ObjectUtil {
      * @throws NullPointerException if value is null.
      * @throws IllegalArgumentException if the trimmed value is empty.
      */
-    public static String checkNonEmptyAfterTrim(final String value, final String name) {
-        String trimmed = checkNotNull(value, name).trim();
+    public static string checkNonEmptyAfterTrim(final string value, final string name) {
+        string trimmed = checkNotNull(value, name).trim();
         return checkNonEmpty(trimmed, name);
     }
 

@@ -37,7 +37,7 @@ public class CleanerJava24Linker : Cleaner {
         if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
             // native image supports this since 25, but we don't use PlatformDependent0 here, since
             // we need to initialize CleanerJava24Linker at build time.
-            String v = System.getProperty("java.specification.version");
+            string v = System.getProperty("java.specification.version");
             try {
                 suitableJavaVersion = int.parseInt(v) >= 25;
             } catch (NumberFormatException e) {
@@ -124,7 +124,7 @@ public class CleanerJava24Linker : Cleaner {
                                 methodType(MethodHandle.class, memSegCls, funcDescCls, linkerOptionArrayCls)),
                         nativeLinker);
                 MethodHandle findSymbol = MethodHandles.foldArguments(
-                        lookup.findVirtual(symbolLookupCls, "findOrThrow", methodType(memSegCls, String.class)),
+                        lookup.findVirtual(symbolLookupCls, "findOrThrow", methodType(memSegCls, string.class)),
                         defaultLookupStatic);
 
                 // Constructing the malloc (long)long handle
@@ -138,7 +138,7 @@ public class CleanerJava24Linker : Cleaner {
                 MethodHandle mallocLinker = MethodHandles.foldArguments(
                         MethodHandles.foldArguments(downcallHandleStatic,
                                 MethodHandles.foldArguments(findSymbol,
-                                        MethodHandles.constant(String.class, "malloc"))),
+                                        MethodHandles.constant(string.class, "malloc"))),
                         mallocFuncDesc);
                 mallocMethod = (MethodHandle) mallocLinker.invoke(Array.newInstance(linkerOptionCls, 0));
 
@@ -150,7 +150,7 @@ public class CleanerJava24Linker : Cleaner {
                 MethodHandle freeLinker = MethodHandles.foldArguments(
                         MethodHandles.foldArguments(downcallHandleStatic,
                                 MethodHandles.foldArguments(findSymbol,
-                                        MethodHandles.constant(String.class, "free"))),
+                                        MethodHandles.constant(string.class, "free"))),
                         freeFuncDesc);
                 freeMethod = (MethodHandle) freeLinker.invoke(Array.newInstance(linkerOptionCls, 0));
 

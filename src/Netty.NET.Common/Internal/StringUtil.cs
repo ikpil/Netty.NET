@@ -24,12 +24,12 @@ namespace Netty.NET.Common.Internal;
 
 
 /**
- * String utility class.
+ * string utility class.
  */
 public final class StringUtil {
 
-    public static final String EMPTY_STRING = "";
-    public static final String NEWLINE = SystemPropertyUtil.get("line.separator", "\n");
+    public static final string EMPTY_STRING = "";
+    public static final string NEWLINE = SystemPropertyUtil.get("line.separator", "\n");
 
     public static final char DOUBLE_QUOTE = '\"';
     public static final char COMMA = ',';
@@ -38,8 +38,8 @@ public final class StringUtil {
     public static final char TAB = '\t';
     public static final char SPACE = 0x20;
 
-    private static final String[] BYTE2HEX_PAD = new String[256];
-    private static final String[] BYTE2HEX_NOPAD = new String[256];
+    private static final string[] BYTE2HEX_PAD = new string[256];
+    private static final string[] BYTE2HEX_NOPAD = new string[256];
     private static final byte[] HEX2B;
 
     /**
@@ -52,7 +52,7 @@ public final class StringUtil {
     static {
         // Generate the lookup table that converts a byte into a 2-digit hexadecimal integer.
         for (int i = 0; i < BYTE2HEX_PAD.length; i++) {
-            String str = int.toHexString(i);
+            string str = int.toHexString(i);
             BYTE2HEX_PAD[i] = i > 0xf ? str : ('0' + str);
             BYTE2HEX_NOPAD[i] = str;
         }
@@ -92,9 +92,9 @@ public final class StringUtil {
     /**
      * Get the item after one char delim if the delim is found (else null).
      * This operation is a simplified and optimized
-     * version of {@link String#split(String, int)}.
+     * version of {@link string#split(string, int)}.
      */
-    public static String substringAfter(String value, char delim) {
+    public static string substringAfter(string value, char delim) {
         int pos = value.indexOf(delim);
         if (pos >= 0) {
             return value.substring(pos + 1);
@@ -105,9 +105,9 @@ public final class StringUtil {
     /**
      * Get the item before one char delim if the delim is found (else null).
      * This operation is a simplified and optimized
-     * version of {@link String#split(String, int)}.
+     * version of {@link string#split(string, int)}.
      */
-    public static String substringBefore(String value, char delim) {
+    public static string substringBefore(string value, char delim) {
         int pos = value.indexOf(delim);
         if (pos >= 0) {
             return value.substring(0, pos);
@@ -123,14 +123,14 @@ public final class StringUtil {
      * @param len length of the common suffix
      * @return true if both s and p are not null and both have the same suffix. Otherwise - false
      */
-    public static bool commonSuffixOfLength(String s, String p, int len) {
+    public static bool commonSuffixOfLength(string s, string p, int len) {
         return s != null && p != null && len >= 0 && s.regionMatches(s.length() - len, p, p.length() - len, len);
     }
 
     /**
      * Converts the specified byte value into a 2-digit hexadecimal integer.
      */
-    public static String byteToHexStringPadded(int value) {
+    public static string byteToHexStringPadded(int value) {
         return BYTE2HEX_PAD[value & 0xff];
     }
 
@@ -149,14 +149,14 @@ public final class StringUtil {
     /**
      * Converts the specified byte array into a hexadecimal value.
      */
-    public static String toHexStringPadded(byte[] src) {
+    public static string toHexStringPadded(byte[] src) {
         return toHexStringPadded(src, 0, src.length);
     }
 
     /**
      * Converts the specified byte array into a hexadecimal value.
      */
-    public static String toHexStringPadded(byte[] src, int offset, int length) {
+    public static string toHexStringPadded(byte[] src, int offset, int length) {
         return toHexStringPadded(new StringBuilder(length << 1), src, offset, length).toString();
     }
 
@@ -181,7 +181,7 @@ public final class StringUtil {
     /**
      * Converts the specified byte value into a hexadecimal integer.
      */
-    public static String byteToHexString(int value) {
+    public static string byteToHexString(int value) {
         return BYTE2HEX_NOPAD[value & 0xff];
     }
 
@@ -200,14 +200,14 @@ public final class StringUtil {
     /**
      * Converts the specified byte array into a hexadecimal value.
      */
-    public static String toHexString(byte[] src) {
+    public static string toHexString(byte[] src) {
         return toHexString(src, 0, src.length);
     }
 
     /**
      * Converts the specified byte array into a hexadecimal value.
      */
-    public static String toHexString(byte[] src, int offset, int length) {
+    public static string toHexString(byte[] src, int offset, int length) {
         return toHexString(new StringBuilder(length << 1), src, offset, length).toString();
     }
 
@@ -278,7 +278,7 @@ public final class StringUtil {
         int hi = decodeHexNibble(s.charAt(pos));
         int lo = decodeHexNibble(s.charAt(pos + 1));
         if (hi == -1 || lo == -1) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(string.format(
                     "invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
         }
         return (byte) ((hi << 4) + lo);
@@ -315,7 +315,7 @@ public final class StringUtil {
     /**
      * The shortcut to {@link #simpleClassName(Class) simpleClassName(o.getClass())}.
      */
-    public static String simpleClassName(Object o) {
+    public static string simpleClassName(Object o) {
         if (o == null) {
             return "null_object";
         } else {
@@ -327,8 +327,8 @@ public final class StringUtil {
      * Generates a simplified name from a {@link Class}.  Similar to {@link Class#getSimpleName()}, but it works fine
      * with anonymous classes.
      */
-    public static String simpleClassName(Class<?> clazz) {
-        String className = checkNotNull(clazz, "clazz").getName();
+    public static string simpleClassName(Class<?> clazz) {
+        string className = checkNotNull(clazz, "clazz").getName();
         final int lastDotIdx = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
         if (lastDotIdx > -1) {
             return className.substring(lastDotIdx + 1);
@@ -572,14 +572,14 @@ public final class StringUtil {
     /**
      * Get the length of a string, {@code null} input is considered {@code 0} length.
      */
-    public static int length(String s) {
+    public static int length(string s) {
         return s == null ? 0 : s.length();
     }
 
     /**
-     * Determine if a string is {@code null} or {@link String#isEmpty()} returns {@code true}.
+     * Determine if a string is {@code null} or {@link string#isEmpty()} returns {@code true}.
      */
-    public static bool isNullOrEmpty(String s) {
+    public static bool isNullOrEmpty(string s) {
         return s == null || s.isEmpty();
     }
 

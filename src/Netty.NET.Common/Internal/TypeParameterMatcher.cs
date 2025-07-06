@@ -46,15 +46,15 @@ public abstract class TypeParameterMatcher {
     }
 
     public static TypeParameterMatcher find(
-            final Object object, final Class<?> parametrizedSuperclass, final String typeParamName) {
+            final Object object, final Class<?> parametrizedSuperclass, final string typeParamName) {
 
-        final Map<Class<?>, Map<String, TypeParameterMatcher>> findCache =
+        final Map<Class<?>, Map<string, TypeParameterMatcher>> findCache =
                 InternalThreadLocalMap.get().typeParameterMatcherFindCache();
         final Class<?> thisClass = object.getClass();
 
-        Map<String, TypeParameterMatcher> map = findCache.get(thisClass);
+        Map<string, TypeParameterMatcher> map = findCache.get(thisClass);
         if (map == null) {
-            map = new HashMap<String, TypeParameterMatcher>();
+            map = new HashMap<string, TypeParameterMatcher>();
             findCache.put(thisClass, map);
         }
 

@@ -31,7 +31,7 @@ public class DefaultThreadFactory : ThreadFactory {
     private static final AtomicInteger poolId = new AtomicInteger();
 
     private final AtomicInteger nextId = new AtomicInteger();
-    private final String prefix;
+    private final string prefix;
     private final bool daemon;
     private final int priority;
     protected final ThreadGroup threadGroup;
@@ -40,7 +40,7 @@ public class DefaultThreadFactory : ThreadFactory {
         this(poolType, false, Thread.NORM_PRIORITY);
     }
 
-    public DefaultThreadFactory(String poolName) {
+    public DefaultThreadFactory(string poolName) {
         this(poolName, false, Thread.NORM_PRIORITY);
     }
 
@@ -48,7 +48,7 @@ public class DefaultThreadFactory : ThreadFactory {
         this(poolType, daemon, Thread.NORM_PRIORITY);
     }
 
-    public DefaultThreadFactory(String poolName, bool daemon) {
+    public DefaultThreadFactory(string poolName, bool daemon) {
         this(poolName, daemon, Thread.NORM_PRIORITY);
     }
 
@@ -56,7 +56,7 @@ public class DefaultThreadFactory : ThreadFactory {
         this(poolType, false, priority);
     }
 
-    public DefaultThreadFactory(String poolName, int priority) {
+    public DefaultThreadFactory(string poolName, int priority) {
         this(poolName, false, priority);
     }
 
@@ -64,10 +64,10 @@ public class DefaultThreadFactory : ThreadFactory {
         this(toPoolName(poolType), daemon, priority);
     }
 
-    public static String toPoolName(Class<?> poolType) {
+    public static string toPoolName(Class<?> poolType) {
         ObjectUtil.checkNotNull(poolType, "poolType");
 
-        String poolName = StringUtil.simpleClassName(poolType);
+        string poolName = StringUtil.simpleClassName(poolType);
         switch (poolName.length()) {
             case 0:
                 return "unknown";
@@ -82,7 +82,7 @@ public class DefaultThreadFactory : ThreadFactory {
         }
     }
 
-    public DefaultThreadFactory(String poolName, bool daemon, int priority, ThreadGroup threadGroup) {
+    public DefaultThreadFactory(string poolName, bool daemon, int priority, ThreadGroup threadGroup) {
         ObjectUtil.checkNotNull(poolName, "poolName");
 
         if (priority < Thread.MIN_PRIORITY || priority > Thread.MAX_PRIORITY) {
@@ -96,7 +96,7 @@ public class DefaultThreadFactory : ThreadFactory {
         this.threadGroup = threadGroup;
     }
 
-    public DefaultThreadFactory(String poolName, bool daemon, int priority) {
+    public DefaultThreadFactory(string poolName, bool daemon, int priority) {
         this(poolName, daemon, priority, null);
     }
 
@@ -117,7 +117,7 @@ public class DefaultThreadFactory : ThreadFactory {
         return t;
     }
 
-    protected Thread newThread(Runnable r, String name) {
+    protected Thread newThread(Runnable r, string name) {
         return new FastThreadLocalThread(threadGroup, r, name);
     }
 }

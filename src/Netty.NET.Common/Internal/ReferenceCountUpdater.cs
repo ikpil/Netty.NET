@@ -40,7 +40,7 @@ public abstract class ReferenceCountUpdater<T extends ReferenceCounted> {
 
     protected ReferenceCountUpdater() { }
 
-    public static long getUnsafeOffset(Class<? extends ReferenceCounted> clz, String fieldName) {
+    public static long getUnsafeOffset(Class<? extends ReferenceCounted> clz, string fieldName) {
         try {
             if (PlatformDependent.hasUnsafe()) {
                 return PlatformDependent.objectFieldOffset(clz.getDeclaredField(fieldName));

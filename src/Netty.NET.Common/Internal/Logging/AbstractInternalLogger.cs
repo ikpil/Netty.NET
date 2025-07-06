@@ -24,25 +24,25 @@ namespace Netty.NET.Common.Internal.Logging;
 /**
  * A skeletal implementation of {@link InternalLogger}.  This class implements
  * all methods that have a {@link InternalLogLevel} parameter by default to call
- * specific logger methods such as {@link #info(String)} or {@link #isInfoEnabled()}.
+ * specific logger methods such as {@link #info(string)} or {@link #isInfoEnabled()}.
  */
 public abstract class AbstractInternalLogger : InternalLogger, Serializable {
 
     private static final long serialVersionUID = -6382972526573193470L;
 
-    static final String EXCEPTION_MESSAGE = "Unexpected exception:";
+    static final string EXCEPTION_MESSAGE = "Unexpected exception:";
 
-    private final String name;
+    private final string name;
 
     /**
      * Creates a new instance.
      */
-    protected AbstractInternalLogger(String name) {
+    protected AbstractInternalLogger(string name) {
         this.name = ObjectUtil.checkNotNull(name, "name");
     }
 
     @Override
-    public String name() {
+    public string name() {
         return name;
     }
 
@@ -90,7 +90,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public void log(InternalLogLevel level, String msg, Throwable cause) {
+    public void log(InternalLogLevel level, string msg, Throwable cause) {
         switch (level) {
         case TRACE:
             trace(msg, cause);
@@ -136,7 +136,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public void log(InternalLogLevel level, String msg) {
+    public void log(InternalLogLevel level, string msg) {
         switch (level) {
         case TRACE:
             trace(msg);
@@ -159,7 +159,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public void log(InternalLogLevel level, String format, Object arg) {
+    public void log(InternalLogLevel level, string format, Object arg) {
         switch (level) {
         case TRACE:
             trace(format, arg);
@@ -182,7 +182,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public void log(InternalLogLevel level, String format, Object argA, Object argB) {
+    public void log(InternalLogLevel level, string format, Object argA, Object argB) {
         switch (level) {
         case TRACE:
             trace(format, argA, argB);
@@ -205,7 +205,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public void log(InternalLogLevel level, String format, Object... arguments) {
+    public void log(InternalLogLevel level, string format, Object... arguments) {
         switch (level) {
         case TRACE:
             trace(format, arguments);
@@ -232,7 +232,7 @@ public abstract class AbstractInternalLogger : InternalLogger, Serializable {
     }
 
     @Override
-    public String toString() {
+    public string toString() {
         return StringUtil.simpleClassName(this) + '(' + name() + ')';
     }
 }

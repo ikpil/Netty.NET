@@ -28,7 +28,7 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     // IMPORTANT: All our log methods first check if the log level is enabled before call the wrapped
     // LocationAwareLogger.log(...) method. This is done to reduce GC creation that is caused by varargs.
 
-    static final String FQCN = LocationAwareSlf4JLogger.class.getName();
+    static final string FQCN = LocationAwareSlf4JLogger.class.getName();
     private static final long serialVersionUID = -8292030083201538180L;
 
     private final transient LocationAwareLogger logger;
@@ -38,11 +38,11 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
         this.logger = logger;
     }
 
-    private void log(final int level, final String message) {
+    private void log(final int level, final string message) {
         logger.log(null, FQCN, level, message, null, null);
     }
 
-    private void log(final int level, final String message, Throwable cause) {
+    private void log(final int level, final string message, Throwable cause) {
         logger.log(null, FQCN, level, message, null, cause);
     }
 
@@ -56,35 +56,35 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void trace(String msg) {
+    public void trace(string msg) {
         if (isTraceEnabled()) {
             log(TRACE_INT, msg);
         }
     }
 
     @Override
-    public void trace(String format, Object arg) {
+    public void trace(string format, Object arg) {
         if (isTraceEnabled()) {
             log(TRACE_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void trace(String format, Object argA, Object argB) {
+    public void trace(string format, Object argA, Object argB) {
         if (isTraceEnabled()) {
             log(TRACE_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void trace(String format, Object... argArray) {
+    public void trace(string format, Object... argArray) {
         if (isTraceEnabled()) {
             log(TRACE_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
     @Override
-    public void trace(String msg, Throwable t) {
+    public void trace(string msg, Throwable t) {
         if (isTraceEnabled()) {
             log(TRACE_INT, msg, t);
         }
@@ -96,35 +96,35 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void debug(String msg) {
+    public void debug(string msg) {
         if (isDebugEnabled()) {
             log(DEBUG_INT, msg);
         }
     }
 
     @Override
-    public void debug(String format, Object arg) {
+    public void debug(string format, Object arg) {
         if (isDebugEnabled()) {
             log(DEBUG_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void debug(String format, Object argA, Object argB) {
+    public void debug(string format, Object argA, Object argB) {
         if (isDebugEnabled()) {
             log(DEBUG_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void debug(String format, Object... argArray) {
+    public void debug(string format, Object... argArray) {
         if (isDebugEnabled()) {
             log(DEBUG_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
     @Override
-    public void debug(String msg, Throwable t) {
+    public void debug(string msg, Throwable t) {
         if (isDebugEnabled()) {
             log(DEBUG_INT, msg, t);
         }
@@ -136,35 +136,35 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void info(String msg) {
+    public void info(string msg) {
         if (isInfoEnabled()) {
             log(INFO_INT, msg);
         }
     }
 
     @Override
-    public void info(String format, Object arg) {
+    public void info(string format, Object arg) {
         if (isInfoEnabled()) {
             log(INFO_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void info(String format, Object argA, Object argB) {
+    public void info(string format, Object argA, Object argB) {
         if (isInfoEnabled()) {
             log(INFO_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void info(String format, Object... argArray) {
+    public void info(string format, Object... argArray) {
         if (isInfoEnabled()) {
             log(INFO_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
     @Override
-    public void info(String msg, Throwable t) {
+    public void info(string msg, Throwable t) {
         if (isInfoEnabled()) {
             log(INFO_INT, msg, t);
         }
@@ -176,35 +176,35 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void warn(String msg) {
+    public void warn(string msg) {
         if (isWarnEnabled()) {
             log(WARN_INT, msg);
         }
     }
 
     @Override
-    public void warn(String format, Object arg) {
+    public void warn(string format, Object arg) {
         if (isWarnEnabled()) {
             log(WARN_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void warn(String format, Object... argArray) {
+    public void warn(string format, Object... argArray) {
         if (isWarnEnabled()) {
             log(WARN_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
     @Override
-    public void warn(String format, Object argA, Object argB) {
+    public void warn(string format, Object argA, Object argB) {
         if (isWarnEnabled()) {
             log(WARN_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void warn(String msg, Throwable t) {
+    public void warn(string msg, Throwable t) {
         if (isWarnEnabled()) {
             log(WARN_INT, msg, t);
         }
@@ -216,35 +216,35 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void error(String msg) {
+    public void error(string msg) {
         if (isErrorEnabled()) {
             log(ERROR_INT, msg);
         }
     }
 
     @Override
-    public void error(String format, Object arg) {
+    public void error(string format, Object arg) {
         if (isErrorEnabled()) {
             log(ERROR_INT, org.slf4j.helpers.MessageFormatter.format(format, arg));
         }
     }
 
     @Override
-    public void error(String format, Object argA, Object argB) {
+    public void error(string format, Object argA, Object argB) {
         if (isErrorEnabled()) {
             log(ERROR_INT, org.slf4j.helpers.MessageFormatter.format(format, argA, argB));
         }
     }
 
     @Override
-    public void error(String format, Object... argArray) {
+    public void error(string format, Object... argArray) {
         if (isErrorEnabled()) {
             log(ERROR_INT, org.slf4j.helpers.MessageFormatter.arrayFormat(format, argArray));
         }
     }
 
     @Override
-    public void error(String msg, Throwable t) {
+    public void error(string msg, Throwable t) {
         if (isErrorEnabled()) {
             log(ERROR_INT, msg, t);
         }

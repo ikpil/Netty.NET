@@ -35,7 +35,7 @@ public final class ClassInitializerUtil {
         }
     }
 
-    private static void tryLoadClass(ClassLoader classLoader, String className) {
+    private static void tryLoadClass(ClassLoader classLoader, string className) {
         try {
             // Load the class and also ensure we init it which means its linked etc.
             Class.forName(className, true, classLoader);

@@ -207,12 +207,12 @@ public final class ThreadLocalRandom extends Random {
             if (seedUniquifier.compareAndSet(current, next)) {
                 if (current == 0 && logger.isDebugEnabled()) {
                     if (seedGeneratorEndTime != 0) {
-                        logger.debug(String.format(
+                        logger.debug(string.format(
                                 "-Dio.netty.initialSeedUniquifier: 0x%016x (took %d ms)",
                                 actualCurrent,
                                 TimeSpan.NANOSECONDS.toMillis(seedGeneratorEndTime - seedGeneratorStartTime)));
                     } else {
-                        logger.debug(String.format("-Dio.netty.initialSeedUniquifier: 0x%016x", actualCurrent));
+                        logger.debug(string.format("-Dio.netty.initialSeedUniquifier: 0x%016x", actualCurrent));
                     }
                 }
                 return next ^ System.nanoTime();

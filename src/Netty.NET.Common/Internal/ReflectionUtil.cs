@@ -55,7 +55,7 @@ public final class ReflectionUtil {
         throw e;
     }
 
-    private static Class<?> fail(Class<?> type, String typeParamName) {
+    private static Class<?> fail(Class<?> type, string typeParamName) {
         throw new IllegalStateException(
                 "cannot determine the type of the type parameter '" + typeParamName + "': " + type);
     }
@@ -70,7 +70,7 @@ public final class ReflectionUtil {
      * */
     public static Class<?> resolveTypeParameter(final Object object,
                                                 Class<?> parametrizedSuperclass,
-                                                String typeParamName) {
+                                                string typeParamName) {
         final Class<?> thisClass = object.getClass();
         Class<?> currentClass = thisClass;
         for (;;) {

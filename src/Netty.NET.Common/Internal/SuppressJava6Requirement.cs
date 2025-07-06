@@ -29,5 +29,5 @@ namespace Netty.NET.Common.Internal;
 @Target({ ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE })
 public @interface SuppressJava6Requirement {
 
-    String reason();
+    string reason();
 }

@@ -44,15 +44,15 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 public final class FormattingTuple {
 
-    private final String message;
+    private final string message;
     private final Throwable throwable;
 
-    public FormattingTuple(String message, Throwable throwable) {
+    public FormattingTuple(string message, Throwable throwable) {
         this.message = message;
         this.throwable = throwable;
     }
 
-    public String getMessage() {
+    public string getMessage() {
         return message;
     }
 

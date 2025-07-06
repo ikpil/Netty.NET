@@ -35,7 +35,7 @@ public class JdkLoggerFactory extends InternalLoggerFactory {
     }
 
     @Override
-    public InternalLogger newInstance(String name) {
+    public InternalLogger newInstance(string name) {
         return new JdkLogger(Logger.getLogger(name));
     }
 }

@@ -139,7 +139,7 @@ public final class NetUtil {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NetUtil.class);
 
     static {
-        String prefer = SystemPropertyUtil.get("java.net.preferIPv6Addresses", "false");
+        string prefer = SystemPropertyUtil.get("java.net.preferIPv6Addresses", "false");
         if ("true".equalsIgnoreCase(prefer.trim())) {
             IPV6_ADDRESSES_PREFERRED = true;
         } else {
@@ -232,14 +232,14 @@ public final class NetUtil {
      * @param sysctlKey The key which the return value corresponds to.
      * @return The <a href ="https://www.freebsd.org/cgi/man.cgi?sysctl(8)">sysctl</a> value for {@code sysctlKey}.
      */
-    private static int sysctlGetInt(String sysctlKey) throws IOException {
+    private static int sysctlGetInt(string sysctlKey) throws IOException {
         Process process = new ProcessBuilder("sysctl", sysctlKey).start();
         try {
             // Suppress warnings about resource leaks since the buffered reader is closed below
             InputStream is = process.getInputStream();
             InputStreamReader isr = new InputStreamReader(new BoundedInputStream(is));
             try (BufferedReader br = new BufferedReader(isr)) {
-                String line = br.readLine();
+                string line = br.readLine();
                 if (line != null && line.startsWith(sysctlKey)) {
                     for (int i = line.length() - 1; i > sysctlKey.length(); --i) {
                         if (!Character.isDigit(line.charAt(i))) {
@@ -282,7 +282,7 @@ public final class NetUtil {
     /**
      * Creates an byte[] based on an ipAddressString. No error handling is performed here.
      */
-    public static byte[] createByteArrayFromIpAddressString(String ipAddressString) {
+    public static byte[] createByteArrayFromIpAddressString(string ipAddressString) {
 
         if (isValidIpV4Address(ipAddressString)) {
             return validIpV4ToBytes(ipAddressString);
@@ -307,7 +307,7 @@ public final class NetUtil {
      * Creates an {@link InetAddress} based on an ipAddressString or might return null if it can't be parsed.
      * No error handling is performed here.
      */
-    public static InetAddress createInetAddressFromIpAddressString(String ipAddressString) {
+    public static InetAddress createInetAddressFromIpAddressString(string ipAddressString) {
         if (isValidIpV4Address(ipAddressString)) {
             byte[] bytes = validIpV4ToBytes(ipAddressString);
             try {
@@ -356,11 +356,11 @@ public final class NetUtil {
         return null;
     }
 
-    private static int decimalDigit(String str, int pos) {
+    private static int decimalDigit(string str, int pos) {
         return str.charAt(pos) - '0';
     }
 
-    private static byte ipv4WordToByte(String ip, int from, int toExclusive) {
+    private static byte ipv4WordToByte(string ip, int from, int toExclusive) {
         int ret = decimalDigit(ip, from);
         from++;
         if (from == toExclusive) {
@@ -375,7 +375,7 @@ public final class NetUtil {
     }
 
     // visible for tests
-    static byte[] validIpV4ToBytes(String ip) {
+    static byte[] validIpV4ToBytes(string ip) {
         int i;
         return new byte[] {
                 ipv4WordToByte(ip, 0, i = ip.indexOf('.', 1)),
@@ -400,7 +400,7 @@ public final class NetUtil {
     /**
      * Converts a 32-bit integer into an IPv4 address.
      */
-    public static String intToIpAddress(int i) {
+    public static string intToIpAddress(int i) {
         StringBuilder buf = new StringBuilder(15);
         buf.append(i >> 24 & 0xff);
         buf.append('.');
@@ -418,7 +418,7 @@ public final class NetUtil {
      * @throws IllegalArgumentException
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
-    public static String bytesToIpAddress(byte[] bytes) {
+    public static string bytesToIpAddress(byte[] bytes) {
         return bytesToIpAddress(bytes, 0, bytes.length);
     }
 
@@ -428,7 +428,7 @@ public final class NetUtil {
      * @throws IllegalArgumentException
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
-    public static String bytesToIpAddress(byte[] bytes, int offset, int length) {
+    public static string bytesToIpAddress(byte[] bytes, int offset, int length) {
         switch (length) {
             case 4: {
                 return new StringBuilder(15)
@@ -447,7 +447,7 @@ public final class NetUtil {
         }
     }
 
-    public static bool isValidIpV6Address(String ip) {
+    public static bool isValidIpV6Address(string ip) {
         return isValidIpV6Address((CharSequence) ip);
     }
 
@@ -623,23 +623,23 @@ public final class NetUtil {
     }
 
     /**
-     * Takes a {@link String} and parses it to see if it is a valid IPV4 address.
+     * Takes a {@link string} and parses it to see if it is a valid IPV4 address.
      *
      * @return true, if the string represents an IPV4 address in dotted
      *         notation, false otherwise
      */
-    public static bool isValidIpV4Address(String ip) {
+    public static bool isValidIpV4Address(string ip) {
         return isValidIpV4Address(ip, 0, ip.length());
     }
 
     private static bool isValidIpV4Address(CharSequence ip, int from, int toExcluded) {
-        return ip instanceof String ? isValidIpV4Address((String) ip, from, toExcluded) :
+        return ip instanceof string ? isValidIpV4Address((string) ip, from, toExcluded) :
                 ip instanceof AsciiString ? isValidIpV4Address((AsciiString) ip, from, toExcluded) :
                         isValidIpV4Address0(ip, from, toExcluded);
     }
 
     @SuppressWarnings("DuplicateBooleanBranch")
-    private static bool isValidIpV4Address(String ip, int from, int toExcluded) {
+    private static bool isValidIpV4Address(string ip, int from, int toExcluded) {
         int len = toExcluded - from;
         int i;
         return len <= 15 && len >= 7 &&
@@ -890,37 +890,37 @@ public final class NetUtil {
     }
 
     /**
-     * Returns the {@link String} representation of an {@link InetSocketAddress}.
+     * Returns the {@link string} representation of an {@link InetSocketAddress}.
      * <p>
      * The output does not include Scope ID.
      * @param addr {@link InetSocketAddress} to be converted to an address string
-     * @return {@code String} containing the text-formatted IP address
+     * @return {@code string} containing the text-formatted IP address
      */
-    public static String toSocketAddressString(InetSocketAddress addr) {
-        String port = String.valueOf(addr.getPort());
+    public static string toSocketAddressString(InetSocketAddress addr) {
+        string port = string.valueOf(addr.getPort());
         final StringBuilder sb;
 
         if (addr.isUnresolved()) {
-            String hostname = getHostname(addr);
+            string hostname = getHostname(addr);
             sb = newSocketAddressStringBuilder(hostname, port, !isValidIpV6Address(hostname));
         } else {
             InetAddress address = addr.getAddress();
-            String hostString = toAddressString(address);
+            string hostString = toAddressString(address);
             sb = newSocketAddressStringBuilder(hostString, port, address instanceof Inet4Address);
         }
         return sb.append(':').append(port).toString();
     }
 
     /**
-     * Returns the {@link String} representation of a host port combo.
+     * Returns the {@link string} representation of a host port combo.
      */
-    public static String toSocketAddressString(String host, int port) {
-        String portStr = String.valueOf(port);
+    public static string toSocketAddressString(string host, int port) {
+        string portStr = string.valueOf(port);
         return newSocketAddressStringBuilder(
                 host, portStr, !isValidIpV6Address(host)).append(':').append(portStr).toString();
     }
 
-    private static StringBuilder newSocketAddressStringBuilder(String host, String port, bool ipv4) {
+    private static StringBuilder newSocketAddressStringBuilder(string host, string port, bool ipv4) {
         int hostLen = host.length();
         if (ipv4) {
             // Need to include enough space for hostString:port.
@@ -935,7 +935,7 @@ public final class NetUtil {
     }
 
     /**
-     * Returns the {@link String} representation of an {@link InetAddress}.
+     * Returns the {@link string} representation of an {@link InetAddress}.
      * <ul>
      * <li>Inet4Address results are identical to {@link InetAddress#getHostAddress()}</li>
      * <li>Inet6Address results adhere to
@@ -944,14 +944,14 @@ public final class NetUtil {
      * <p>
      * The output does not include Scope ID.
      * @param ip {@link InetAddress} to be converted to an address string
-     * @return {@code String} containing the text-formatted IP address
+     * @return {@code string} containing the text-formatted IP address
      */
-    public static String toAddressString(InetAddress ip) {
+    public static string toAddressString(InetAddress ip) {
         return toAddressString(ip, false);
     }
 
     /**
-     * Returns the {@link String} representation of an {@link InetAddress}.
+     * Returns the {@link string} representation of an {@link InetAddress}.
      * <ul>
      * <li>Inet4Address results are identical to {@link InetAddress#getHostAddress()}</li>
      * <li>Inet6Address results adhere to
@@ -972,9 +972,9 @@ public final class NetUtil {
      * <a href="https://tools.ietf.org/html/rfc5952#section-4">rfc 5952 section 4</a></li>
      * <li>{@code false} to strictly follow rfc 5952</li>
      * </ul>
-     * @return {@code String} containing the text-formatted IP address
+     * @return {@code string} containing the text-formatted IP address
      */
-    public static String toAddressString(InetAddress ip, bool ipv4Mapped) {
+    public static string toAddressString(InetAddress ip, bool ipv4Mapped) {
         if (ip instanceof Inet4Address) {
             return ip.getHostAddress();
         }
@@ -985,7 +985,7 @@ public final class NetUtil {
         return toAddressString(ip.getAddress(), 0, ipv4Mapped);
     }
 
-    private static String toAddressString(byte[] bytes, int offset, bool ipv4Mapped) {
+    private static string toAddressString(byte[] bytes, int offset, bool ipv4Mapped) {
         final int[] words = new int[IPV6_WORD_COUNT];
         for (int i = 0; i < words.length; ++i) {
             int idx = (i << 1) + offset;
@@ -1076,7 +1076,7 @@ public final class NetUtil {
      * @param addr The address
      * @return the host string
      */
-    public static String getHostname(InetSocketAddress addr) {
+    public static string getHostname(InetSocketAddress addr) {
         return addr.getHostString();
     }
 

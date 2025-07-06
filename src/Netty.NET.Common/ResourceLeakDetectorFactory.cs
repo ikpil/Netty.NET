@@ -100,7 +100,7 @@ public abstract class ResourceLeakDetectorFactory {
         private final Constructor<?> customClassConstructor;
 
         DefaultResourceLeakDetectorFactory() {
-            String customLeakDetector;
+            string customLeakDetector;
             try {
                 customLeakDetector = SystemPropertyUtil.get("io.netty.customResourceLeakDetector");
             } catch (Throwable cause) {
@@ -115,7 +115,7 @@ public abstract class ResourceLeakDetectorFactory {
             }
         }
 
-        private static Constructor<?> obsoleteCustomClassConstructor(String customLeakDetector) {
+        private static Constructor<?> obsoleteCustomClassConstructor(string customLeakDetector) {
             try {
                 final Class<?> detectorClass = Class.forName(customLeakDetector, true,
                         PlatformDependent.getSystemClassLoader());
@@ -132,7 +132,7 @@ public abstract class ResourceLeakDetectorFactory {
             return null;
         }
 
-        private static Constructor<?> customClassConstructor(String customLeakDetector) {
+        private static Constructor<?> customClassConstructor(string customLeakDetector) {
             try {
                 final Class<?> detectorClass = Class.forName(customLeakDetector, true,
                         PlatformDependent.getSystemClassLoader());

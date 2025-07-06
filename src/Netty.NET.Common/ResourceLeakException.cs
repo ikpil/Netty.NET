@@ -32,12 +32,12 @@ public class ResourceLeakException extends RuntimeException {
         cachedStackTrace = getStackTrace();
     }
 
-    public ResourceLeakException(String message) {
+    public ResourceLeakException(string message) {
         super(message);
         cachedStackTrace = getStackTrace();
     }
 
-    public ResourceLeakException(String message, Throwable cause) {
+    public ResourceLeakException(string message, Throwable cause) {
         super(message, cause);
         cachedStackTrace = getStackTrace();
     }

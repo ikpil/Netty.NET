@@ -39,12 +39,12 @@ namespace Netty.NET.Common;
  */
 public final class Version {
 
-    private static final String PROP_VERSION = ".version";
-    private static final String PROP_BUILD_DATE = ".buildDate";
-    private static final String PROP_COMMIT_DATE = ".commitDate";
-    private static final String PROP_SHORT_COMMIT_HASH = ".shortCommitHash";
-    private static final String PROP_LONG_COMMIT_HASH = ".longCommitHash";
-    private static final String PROP_REPO_STATUS = ".repoStatus";
+    private static final string PROP_VERSION = ".version";
+    private static final string PROP_BUILD_DATE = ".buildDate";
+    private static final string PROP_COMMIT_DATE = ".commitDate";
+    private static final string PROP_SHORT_COMMIT_HASH = ".shortCommitHash";
+    private static final string PROP_LONG_COMMIT_HASH = ".longCommitHash";
+    private static final string PROP_REPO_STATUS = ".repoStatus";
 
     /**
      * Retrieves the version information of Netty artifacts using the current
@@ -52,7 +52,7 @@ public final class Version {
      *
      * @return A {@link Map} whose keys are Maven artifact IDs and whose values are {@link Version}s
      */
-    public static Map<String, Version> identify() {
+    public static Map<string, Version> identify() {
         return identify(null);
     }
 
@@ -61,7 +61,7 @@ public final class Version {
      *
      * @return A {@link Map} whose keys are Maven artifact IDs and whose values are {@link Version}s
      */
-    public static Map<String, Version> identify(ClassLoader classLoader) {
+    public static Map<string, Version> identify(ClassLoader classLoader) {
         if (classLoader == null) {
             classLoader = PlatformDependent.getContextClassLoader();
         }
@@ -88,16 +88,16 @@ public final class Version {
         }
 
         // Collect all artifactIds.
-        Set<String> artifactIds = new HashSet<String>();
+        Set<string> artifactIds = new HashSet<string>();
         for (Object o: props.keySet()) {
-            String k = (String) o;
+            string k = (string) o;
 
             int dotIndex = k.indexOf('.');
             if (dotIndex <= 0) {
                 continue;
             }
 
-            String artifactId = k.substring(0, dotIndex);
+            string artifactId = k.substring(0, dotIndex);
 
             // Skip the entries without required information.
             if (!props.containsKey(artifactId + PROP_VERSION) ||
@@ -112,8 +112,8 @@ public final class Version {
             artifactIds.add(artifactId);
         }
 
-        Map<String, Version> versions = new TreeMap<String, Version>();
-        for (String artifactId: artifactIds) {
+        Map<string, Version> versions = new TreeMap<string, Version>();
+        for (string artifactId: artifactIds) {
             versions.put(
                     artifactId,
                     new Version(
@@ -129,7 +129,7 @@ public final class Version {
         return versions;
     }
 
-    private static long parseIso8601(String value) {
+    private static long parseIso8601(string value) {
         try {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").parse(value).getTime();
         } catch (ParseException ignored) {
@@ -140,24 +140,24 @@ public final class Version {
     /**
      * Prints the version information to {@link System#err}.
      */
-    public static void main(String[] args) {
+    public static void main(string[] args) {
         for (Version v: identify().values()) {
             System.err.println(v);
         }
     }
 
-    private final String artifactId;
-    private final String artifactVersion;
+    private final string artifactId;
+    private final string artifactVersion;
     private final long buildTimeMillis;
     private final long commitTimeMillis;
-    private final String shortCommitHash;
-    private final String longCommitHash;
-    private final String repositoryStatus;
+    private final string shortCommitHash;
+    private final string longCommitHash;
+    private final string repositoryStatus;
 
     private Version(
-            String artifactId, String artifactVersion,
+            string artifactId, string artifactVersion,
             long buildTimeMillis, long commitTimeMillis,
-            String shortCommitHash, String longCommitHash, String repositoryStatus) {
+            string shortCommitHash, string longCommitHash, string repositoryStatus) {
         this.artifactId = artifactId;
         this.artifactVersion = artifactVersion;
         this.buildTimeMillis = buildTimeMillis;
@@ -167,11 +167,11 @@ public final class Version {
         this.repositoryStatus = repositoryStatus;
     }
 
-    public String artifactId() {
+    public string artifactId() {
         return artifactId;
     }
 
-    public String artifactVersion() {
+    public string artifactVersion() {
         return artifactVersion;
     }
 
@@ -183,20 +183,20 @@ public final class Version {
         return commitTimeMillis;
     }
 
-    public String shortCommitHash() {
+    public string shortCommitHash() {
         return shortCommitHash;
     }
 
-    public String longCommitHash() {
+    public string longCommitHash() {
         return longCommitHash;
     }
 
-    public String repositoryStatus() {
+    public string repositoryStatus() {
         return repositoryStatus;
     }
 
     @Override
-    public String toString() {
+    public string toString() {
         return artifactId + '-' + artifactVersion + '.' + shortCommitHash +
                ("clean".equals(repositoryStatus)? "" : " (repository: " + repositoryStatus + ')');
     }

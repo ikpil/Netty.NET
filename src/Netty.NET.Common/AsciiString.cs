@@ -35,7 +35,7 @@ namespace Netty.NET.Common;
 
 /**
  * A string which has been encoded into a character encoding whose character always takes a single byte, similarly to
- * ASCII. It internally keeps its content in a byte array unlike {@link String}, which uses a character array, for
+ * ASCII. It internally keeps its content in a byte array unlike {@link string}, which uses a character array, for
  * reduced memory footprint and faster data transfer from/to byte-based data structures such as a byte array and
  * {@link ByteBuffer}. It is often used in conjunction with {@code Headers} that require a {@link CharSequence}.
  * <p>
@@ -70,7 +70,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
     /**
      * Used to cache the {@link #toString()} value.
      */
-    private String string;
+    private string string;
 
     /**
      * Initialize this byte string based upon a byte array. A copy will be made.
@@ -425,7 +425,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
     }
 
     /**
-     * Determines if this {@code String} contains the sequence of characters in the {@code CharSequence} passed.
+     * Determines if this {@code string} contains the sequence of characters in the {@code CharSequence} passed.
      *
      * @param cs the character sequence to search for.
      * @return {@code true} if the sequence of characters are contained in this string, otherwise {@code false}.
@@ -981,8 +981,8 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
         if (c instanceof AsciiString) {
             return ((AsciiString) c).trim();
         }
-        if (c instanceof String) {
-            return ((String) c).trim();
+        if (c instanceof string) {
+            return ((string) c).trim();
         }
         int start = 0, last = c.length() - 1;
         int end = last;
@@ -1020,7 +1020,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
     }
 
     /**
-     * Compares a {@code CharSequence} to this {@code String} to determine if their contents are equal.
+     * Compares a {@code CharSequence} to this {@code string} to determine if their contents are equal.
      *
      * @param a the character sequence to compare to.
      * @return {@code true} if equal, otherwise {@code false}
@@ -1053,7 +1053,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
      * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
      * @throws NullPointerException if {@code expr} is {@code null}.
      */
-    public bool matches(String expr) {
+    public bool matches(string expr) {
         return Pattern.matches(expr, this);
     }
 
@@ -1068,12 +1068,12 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
      * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
      * @see Pattern#split(CharSequence, int)
      */
-    public AsciiString[] split(String expr, int max) {
+    public AsciiString[] split(string expr, int max) {
         return toAsciiStringArray(Pattern.compile(expr).split(this, max));
     }
 
     /**
-     * Splits the specified {@link String} with the specified delimiter..
+     * Splits the specified {@link string} with the specified delimiter..
      */
     public AsciiString[] split(char delim) {
         final List<AsciiString> res = InternalThreadLocalMap.get().arrayList();
@@ -1143,12 +1143,12 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
     }
 
     /**
-     * Translates the entire byte string to a {@link String}.
+     * Translates the entire byte string to a {@link string}.
      * @see #toString(int)
      */
     @Override
-    public String toString() {
-        String cache = string;
+    public string toString() {
+        string cache = string;
         if (cache == null) {
             cache = toString(0);
             string = cache;
@@ -1157,17 +1157,17 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
     }
 
     /**
-     * Translates the entire byte string to a {@link String} using the {@code charset} encoding.
+     * Translates the entire byte string to a {@link string} using the {@code charset} encoding.
      * @see #toString(int, int)
      */
-    public String toString(int start) {
+    public string toString(int start) {
         return toString(start, length());
     }
 
     /**
-     * Translates the [{@code start}, {@code end}) range of this byte string to a {@link String}.
+     * Translates the [{@code start}, {@code end}) range of this byte string to a {@link string}.
      */
-    public String toString(int start, int end) {
+    public string toString(int start, int end) {
         int length = end - start;
         if (length == 0) {
             return "";
@@ -1179,7 +1179,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
         }
 
         @SuppressWarnings("deprecation")
-        final String str = new String(value, 0, start + offset, length);
+        final string str = new string(value, 0, start + offset, length);
         return str;
     }
 
@@ -1391,7 +1391,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
      * Used for the constants (which already stored in the JVM's string table) and in cases
      * where the guaranteed use of the {@link #toString()} method.
      */
-    public static AsciiString cached(String string) {
+    public static AsciiString cached(string string) {
         AsciiString asciiString = new AsciiString(string);
         asciiString.string = string;
         return asciiString;
@@ -1517,7 +1517,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
         return true;
     }
 
-    private static AsciiString[] toAsciiStringArray(String[] jdkResult) {
+    private static AsciiString[] toAsciiStringArray(string[] jdkResult) {
         AsciiString[] res = new AsciiString[jdkResult.length];
         for (int i = 0; i < jdkResult.length; i++) {
             res[i] = new AsciiString(jdkResult[i]);
@@ -1557,7 +1557,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
 
         @Override
         public bool equals(char a, char b) {
-            //For motivation, why we need two checks, see comment in String#regionMatches
+            //For motivation, why we need two checks, see comment in string#regionMatches
             return Character.toUpperCase(a) == Character.toUpperCase(b) ||
                 Character.toLowerCase(a) == Character.toLowerCase(b);
         }
@@ -1629,8 +1629,8 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
             return false;
         }
 
-        if (cs instanceof String && string instanceof String) {
-            return ((String) cs).regionMatches(ignoreCase, csStart, (String) string, start, length);
+        if (cs instanceof string && string instanceof string) {
+            return ((string) cs).regionMatches(ignoreCase, csStart, (string) string, start, length);
         }
 
         if (cs instanceof AsciiString) {
@@ -1658,11 +1658,11 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
             return false;
         }
 
-        if (!ignoreCase && cs instanceof String && string instanceof String) {
-            //we don't call regionMatches from String for ignoreCase==true. It's a general purpose method,
+        if (!ignoreCase && cs instanceof string && string instanceof string) {
+            //we don't call regionMatches from string for ignoreCase==true. It's a general purpose method,
             //which make complex comparison in case of ignoreCase==true, which is useless for ASCII-only strings.
             //To avoid applying this complex ignore-case comparison, we will use regionMatchesCharSequences
-            return ((String) cs).regionMatches(false, csStart, (String) string, start, length);
+            return ((string) cs).regionMatches(false, csStart, (string) string, start, length);
         }
 
         if (cs instanceof AsciiString) {
@@ -1792,8 +1792,8 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
      */
     //-----------------------------------------------------------------------
     public static int indexOf(final CharSequence cs, final char searchChar, int start) {
-        if (cs instanceof String) {
-            return ((String) cs).indexOf(searchChar, start);
+        if (cs instanceof string) {
+            return ((string) cs).indexOf(searchChar, start);
         } else if (cs instanceof AsciiString) {
             return ((AsciiString) cs).indexOf(searchChar, start);
         }

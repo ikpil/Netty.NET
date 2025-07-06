@@ -38,7 +38,7 @@ public abstract class InternalLoggerFactory {
     private static volatile InternalLoggerFactory defaultFactory;
 
     @SuppressWarnings("UnusedCatchParameter")
-    private static InternalLoggerFactory newDefaultFactory(String name) {
+    private static InternalLoggerFactory newDefaultFactory(string name) {
         InternalLoggerFactory f = useSlf4JLoggerFactory(name);
         if (f != null) {
             return f;
@@ -57,7 +57,7 @@ public abstract class InternalLoggerFactory {
         return useJdkLoggerFactory(name);
     }
 
-    private static InternalLoggerFactory useSlf4JLoggerFactory(String name) {
+    private static InternalLoggerFactory useSlf4JLoggerFactory(string name) {
         try {
             InternalLoggerFactory f = Slf4JLoggerFactory.getInstanceWithNopCheck();
             f.newInstance(name).debug("Using SLF4J as the default logging framework");
@@ -70,7 +70,7 @@ public abstract class InternalLoggerFactory {
         }
     }
 
-    private static InternalLoggerFactory useLog4J2LoggerFactory(String name) {
+    private static InternalLoggerFactory useLog4J2LoggerFactory(string name) {
         try {
             InternalLoggerFactory f = Log4J2LoggerFactory.INSTANCE;
             f.newInstance(name).debug("Using Log4J2 as the default logging framework");
@@ -83,7 +83,7 @@ public abstract class InternalLoggerFactory {
         }
     }
 
-    private static InternalLoggerFactory useLog4JLoggerFactory(String name) {
+    private static InternalLoggerFactory useLog4JLoggerFactory(string name) {
         try {
             InternalLoggerFactory f = Log4JLoggerFactory.INSTANCE;
             f.newInstance(name).debug("Using Log4J as the default logging framework");
@@ -96,7 +96,7 @@ public abstract class InternalLoggerFactory {
         }
     }
 
-    private static InternalLoggerFactory useJdkLoggerFactory(String name) {
+    private static InternalLoggerFactory useJdkLoggerFactory(string name) {
         InternalLoggerFactory f = JdkLoggerFactory.INSTANCE;
         f.newInstance(name).debug("Using java.util.logging as the default logging framework");
         return f;
@@ -130,13 +130,13 @@ public abstract class InternalLoggerFactory {
     /**
      * Creates a new logger instance with the specified name.
      */
-    public static InternalLogger getInstance(String name) {
+    public static InternalLogger getInstance(string name) {
         return getDefaultFactory().newInstance(name);
     }
 
     /**
      * Creates a new logger instance with the specified name.
      */
-    protected abstract InternalLogger newInstance(String name);
+    protected abstract InternalLogger newInstance(string name);
 
 }

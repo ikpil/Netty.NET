@@ -294,7 +294,7 @@ public class HashedWheelTimer : Timer {
 
         // Prevent overflow.
         if (duration >= long.MAX_VALUE / wheel.length) {
-            throw new IllegalArgumentException(String.format(
+            throw new IllegalArgumentException(string.format(
                     "tickDuration: %d (expected: 0 < tickDuration in nanos < %d",
                     tickDuration, long.MAX_VALUE / wheel.length));
         }
@@ -465,7 +465,7 @@ public class HashedWheelTimer : Timer {
 
     private static void reportTooManyInstances() {
         if (logger.isErrorEnabled()) {
-            String resourceType = simpleClassName(HashedWheelTimer.class);
+            string resourceType = simpleClassName(HashedWheelTimer.class);
             logger.error("You are creating too many " + resourceType + " instances. " +
                     resourceType + " is a shared resource that must be reused across the JVM, " +
                     "so that only a few instances are created.");
@@ -722,7 +722,7 @@ public class HashedWheelTimer : Timer {
         }
 
         @Override
-        public String toString() {
+        public string toString() {
             final long currentTime = System.nanoTime();
             long remaining = deadline - currentTime + timer.startTime;
 
@@ -790,7 +790,7 @@ public class HashedWheelTimer : Timer {
                         timeout.expire();
                     } else {
                         // The timeout was placed into a wrong slot. This should never happen.
-                        throw new IllegalStateException(String.format(
+                        throw new IllegalStateException(string.format(
                                 "timeout.deadline (%d) > deadline (%d)", timeout.deadline, deadline));
                     }
                 } else if (!timeout.isCancelled()) {

@@ -43,7 +43,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      * <p>
      * The default value is {@code 8}.
      */
-    public static final String PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
+    public static final string PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
     private static final InternalLogger rejectedExecutionLogger =
@@ -162,7 +162,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         }
 
         @Override
-        public String toString() {
+        public string toString() {
             return CancellationException.class.getName();
         }
     }
@@ -428,7 +428,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public String toString() {
+    public string toString() {
         return toStringBuilder().toString();
     }
 
@@ -894,7 +894,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
             return this;
         }
 
-        static StacklessCancellationException newInstance(Class<?> clazz, String method) {
+        static StacklessCancellationException newInstance(Class<?> clazz, string method) {
             return ThrowableUtil.unknownStackTrace(new StacklessCancellationException(), clazz, method);
         }
     }

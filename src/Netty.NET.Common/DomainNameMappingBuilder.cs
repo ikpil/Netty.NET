@@ -33,12 +33,12 @@ namespace Netty.NET.Common;
 public final class DomainNameMappingBuilder<V> {
 
     private final V defaultValue;
-    private final Map<String, V> map;
+    private final Map<string, V> map;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
      *
-     * @param defaultValue the default value for {@link DomainNameMapping#map(String)} to return
+     * @param defaultValue the default value for {@link DomainNameMapping#map(string)} to return
      *                     when nothing matches the input
      */
     public DomainNameMappingBuilder(V defaultValue) {
@@ -49,12 +49,12 @@ public final class DomainNameMappingBuilder<V> {
      * Constructor with initial capacity of the map holding the mappings
      *
      * @param initialCapacity initial capacity for the internal map
-     * @param defaultValue    the default value for {@link DomainNameMapping#map(String)} to return
+     * @param defaultValue    the default value for {@link DomainNameMapping#map(string)} to return
      *                        when nothing matches the input
      */
     public DomainNameMappingBuilder(int initialCapacity, V defaultValue) {
         this.defaultValue = checkNotNull(defaultValue, "defaultValue");
-        map = new LinkedHashMap<String, V>(initialCapacity);
+        map = new LinkedHashMap<string, V>(initialCapacity);
     }
 
     /**
@@ -66,10 +66,10 @@ public final class DomainNameMappingBuilder<V> {
      * </p>
      *
      * @param hostname the host name (optionally wildcard)
-     * @param output   the output value that will be returned by {@link DomainNameMapping#map(String)}
+     * @param output   the output value that will be returned by {@link DomainNameMapping#map(string)}
      *                 when the specified host name matches the specified input host name
      */
-    public DomainNameMappingBuilder<V> add(String hostname, V output) {
+    public DomainNameMappingBuilder<V> add(string hostname, V output) {
         map.put(checkNotNull(hostname, "hostname"), checkNotNull(output, "output"));
         return this;
     }
@@ -91,29 +91,29 @@ public final class DomainNameMappingBuilder<V> {
      * @param <V> concrete type of value objects
      */
     private static final class ImmutableDomainNameMapping<V> extends DomainNameMapping<V> {
-        private static final String REPR_HEADER = "ImmutableDomainNameMapping(default: ";
-        private static final String REPR_MAP_OPENING = ", map: {";
-        private static final String REPR_MAP_CLOSING = "})";
+        private static final string REPR_HEADER = "ImmutableDomainNameMapping(default: ";
+        private static final string REPR_MAP_OPENING = ", map: {";
+        private static final string REPR_MAP_CLOSING = "})";
         private static final int REPR_CONST_PART_LENGTH =
             REPR_HEADER.length() + REPR_MAP_OPENING.length() + REPR_MAP_CLOSING.length();
 
-        private final String[] domainNamePatterns;
+        private final string[] domainNamePatterns;
         private final V[] values;
-        private final Map<String, V> map;
+        private final Map<string, V> map;
 
         @SuppressWarnings("unchecked")
-        private ImmutableDomainNameMapping(V defaultValue, Map<String, V> map) {
+        private ImmutableDomainNameMapping(V defaultValue, Map<string, V> map) {
             super(null, defaultValue);
 
-            Set<Map.Entry<String, V>> mappings = map.entrySet();
+            Set<Map.Entry<string, V>> mappings = map.entrySet();
             int numberOfMappings = mappings.size();
-            domainNamePatterns = new String[numberOfMappings];
+            domainNamePatterns = new string[numberOfMappings];
             values = (V[]) new Object[numberOfMappings];
 
-            final Map<String, V> mapCopy = new LinkedHashMap<String, V>(map.size());
+            final Map<string, V> mapCopy = new LinkedHashMap<string, V>(map.size());
             int index = 0;
-            for (Map.Entry<String, V> mapping : mappings) {
-                final String hostname = normalizeHostname(mapping.getKey());
+            for (Map.Entry<string, V> mapping : mappings) {
+                final string hostname = normalizeHostname(mapping.getKey());
                 final V value = mapping.getValue();
                 domainNamePatterns[index] = hostname;
                 values[index] = value;
@@ -126,13 +126,13 @@ public final class DomainNameMappingBuilder<V> {
 
         @Override
         @Deprecated
-        public DomainNameMapping<V> add(String hostname, V output) {
+        public DomainNameMapping<V> add(string hostname, V output) {
             throw new UnsupportedOperationException(
                 "Immutable DomainNameMapping does not support modification after initial creation");
         }
 
         @Override
-        public V map(String hostname) {
+        public V map(string hostname) {
             if (hostname != null) {
                 hostname = normalizeHostname(hostname);
 
@@ -148,21 +148,21 @@ public final class DomainNameMappingBuilder<V> {
         }
 
         @Override
-        public Map<String, V> asMap() {
+        public Map<string, V> asMap() {
             return map;
         }
 
         @Override
-        public String toString() {
-            String defaultValueStr = defaultValue.toString();
+        public string toString() {
+            string defaultValueStr = defaultValue.toString();
 
             int numberOfMappings = domainNamePatterns.length;
             if (numberOfMappings == 0) {
                 return REPR_HEADER + defaultValueStr + REPR_MAP_OPENING + REPR_MAP_CLOSING;
             }
 
-            String pattern0 = domainNamePatterns[0];
-            String value0 = values[0].toString();
+            string pattern0 = domainNamePatterns[0];
+            string value0 = values[0].toString();
             int oneMappingLength = pattern0.length() + value0.length() + 3; // 2 for separator ", " and 1 for '='
             int estimatedBufferSize = estimateBufferSize(defaultValueStr.length(), numberOfMappings, oneMappingLength);
 
@@ -199,7 +199,7 @@ public final class DomainNameMappingBuilder<V> {
             return appendMapping(sb, domainNamePatterns[mappingIndex], values[mappingIndex].toString());
         }
 
-        private static StringBuilder appendMapping(StringBuilder sb, String domainNamePattern, String value) {
+        private static StringBuilder appendMapping(StringBuilder sb, string domainNamePattern, string value) {
             return sb.append(domainNamePattern).append('=').append(value);
         }
     }

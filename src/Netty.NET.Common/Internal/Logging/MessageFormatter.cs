@@ -104,12 +104,12 @@ namespace Netty.NET.Common.Internal.Logging;
  * larger context of the complete logging processing chain.
  * <p/>
  * <p/>
- * See also {@link #format(String, Object)},
- * {@link #format(String, Object, Object)} and
- * {@link #arrayFormat(String, Object[])} methods for more details.
+ * See also {@link #format(string, Object)},
+ * {@link #format(string, Object, Object)} and
+ * {@link #arrayFormat(string, Object[])} methods for more details.
  */
 public final class MessageFormatter {
-    private static final String DELIM_STR = "{}";
+    private static final string DELIM_STR = "{}";
     private static final char ESCAPE_CHAR = '\\';
 
     /**
@@ -129,7 +129,7 @@ public final class MessageFormatter {
      * @param arg            The argument to be substituted in place of the formatting anchor
      * @return The formatted message
      */
-    public static FormattingTuple format(String messagePattern, Object arg) {
+    public static FormattingTuple format(string messagePattern, Object arg) {
         return arrayFormat(messagePattern, new Object[]{arg});
     }
 
@@ -152,14 +152,14 @@ public final class MessageFormatter {
      *                       anchor
      * @return The formatted message
      */
-    public static FormattingTuple format(final String messagePattern,
+    public static FormattingTuple format(final string messagePattern,
                                   Object argA, Object argB) {
         return arrayFormat(messagePattern, new Object[]{argA, argB});
     }
 
     /**
-     * Same principle as the {@link #format(String, Object)} and
-     * {@link #format(String, Object, Object)} methods except that any number of
+     * Same principle as the {@link #format(string, Object)} and
+     * {@link #format(string, Object, Object)} methods except that any number of
      * arguments can be passed in an array.
      *
      * @param messagePattern The message pattern which will be parsed and formatted
@@ -167,7 +167,7 @@ public final class MessageFormatter {
      *                       anchors
      * @return The formatted message
      */
-    public static FormattingTuple arrayFormat(final String messagePattern,
+    public static FormattingTuple arrayFormat(final string messagePattern,
                                        final Object[] argArray) {
         if (argArray == null || argArray.length == 0) {
             return new FormattingTuple(messagePattern, null);
@@ -229,7 +229,7 @@ public final class MessageFormatter {
         Class<?> objClass = o.getClass();
         if (!objClass.isArray()) {
             if (Number.class.isAssignableFrom(objClass)) {
-                // Prevent String instantiation for some number types
+                // Prevent string instantiation for some number types
                 if (objClass == long.class) {
                     sbuf.append(((long) o).longValue());
                 } else if (objClass == int.class || objClass == Short.class || objClass == Byte.class) {
@@ -273,7 +273,7 @@ public final class MessageFormatter {
 
     private static void safeObjectAppend(StringBuilder sbuf, Object o) {
         try {
-            String oAsString = o.toString();
+            string oAsString = o.toString();
             sbuf.append(oAsString);
         } catch (Throwable t) {
             System.err

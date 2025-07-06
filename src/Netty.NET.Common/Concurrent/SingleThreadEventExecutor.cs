@@ -956,7 +956,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         return super.invokeAll(tasks, timeout, unit);
     }
 
-    private void throwIfInEventLoop(String method) {
+    private void throwIfInEventLoop(string method) {
         if (inEventLoop()) {
             throw new RejectedExecutionException("Calling " + method + " from within the EventLoop is not allowed");
         }
@@ -1227,7 +1227,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
 
         @Override
-        public String name() {
+        public string name() {
             return t.getName();
         }
 

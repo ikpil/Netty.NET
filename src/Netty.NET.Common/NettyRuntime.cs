@@ -43,7 +43,7 @@ public final class NettyRuntime {
         synchronized void setAvailableProcessors(final int availableProcessors) {
             ObjectUtil.checkPositive(availableProcessors, "availableProcessors");
             if (this.availableProcessors != 0) {
-                final String message = String.format(
+                final string message = string.format(
                         Locale.ROOT,
                         "availableProcessors is already set to [%d], rejecting [%d]",
                         this.availableProcessors,

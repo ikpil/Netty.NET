@@ -30,7 +30,7 @@ public final class DomainMappingBuilder<V> {
     /**
      * Constructor with default initial capacity of the map holding the mappings
      *
-     * @param defaultValue the default value for {@link DomainNameMapping#map(String)} to return
+     * @param defaultValue the default value for {@link DomainNameMapping#map(string)} to return
      *                     when nothing matches the input
      */
     public DomainMappingBuilder(V defaultValue) {
@@ -41,7 +41,7 @@ public final class DomainMappingBuilder<V> {
      * Constructor with initial capacity of the map holding the mappings
      *
      * @param initialCapacity initial capacity for the internal map
-     * @param defaultValue    the default value for {@link DomainNameMapping#map(String)} to return
+     * @param defaultValue    the default value for {@link DomainNameMapping#map(string)} to return
      *                        when nothing matches the input
      */
     public DomainMappingBuilder(int initialCapacity, V defaultValue) {
@@ -57,10 +57,10 @@ public final class DomainMappingBuilder<V> {
      * </p>
      *
      * @param hostname the host name (optionally wildcard)
-     * @param output   the output value that will be returned by {@link DomainNameMapping#map(String)}
+     * @param output   the output value that will be returned by {@link DomainNameMapping#map(string)}
      *                 when the specified host name matches the specified input host name
      */
-    public DomainMappingBuilder<V> add(String hostname, V output) {
+    public DomainMappingBuilder<V> add(string hostname, V output) {
         builder.add(hostname, output);
         return this;
     }

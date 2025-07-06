@@ -60,7 +60,7 @@ public final class SWARUtil {
      * Returns a word where each ASCII uppercase byte has the highest bit set.
      */
     private static long applyUpperCasePattern(final long word) {
-        // Inspired by https://github.com/facebook/folly/blob/add4049dd6c2371eac05b92b6fd120fd6dd74df5/folly/String.cpp
+        // Inspired by https://github.com/facebook/folly/blob/add4049dd6c2371eac05b92b6fd120fd6dd74df5/folly/string.cpp
         long rotated = word & 0x7F7F7F7F7F7F7F7FL;
         rotated += 0x2525252525252525L;
         rotated &= 0x7F7F7F7F7F7F7F7FL;

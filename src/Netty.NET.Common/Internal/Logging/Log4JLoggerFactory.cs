@@ -34,7 +34,7 @@ public class Log4JLoggerFactory extends InternalLoggerFactory {
     }
 
     @Override
-    public InternalLogger newInstance(String name) {
+    public InternalLogger newInstance(string name) {
         return new Log4JLogger(Logger.getLogger(name));
     }
 }

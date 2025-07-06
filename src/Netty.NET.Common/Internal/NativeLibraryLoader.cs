@@ -51,7 +51,7 @@ public final class NativeLibraryLoader {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NativeLibraryLoader.class);
 
-    private static final String NATIVE_RESOURCE_HOME = "META-INF/native/";
+    private static final string NATIVE_RESOURCE_HOME = "META-INF/native/";
     private static final File WORKDIR;
     private static final bool DELETE_NATIVE_LIB_AFTER_LOADING;
     private static final bool TRY_TO_PATCH_SHADED_ID;
@@ -62,7 +62,7 @@ public final class NativeLibraryLoader {
             "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(CharsetUtil.US_ASCII);
 
     static {
-        String workdir = SystemPropertyUtil.get("io.netty.native.workdir");
+        string workdir = SystemPropertyUtil.get("io.netty.native.workdir");
         if (workdir != null) {
             File f = new File(workdir);
             if (!f.exists() && !f.mkdirs()) {
@@ -103,9 +103,9 @@ public final class NativeLibraryLoader {
      * @throws IllegalArgumentException
      *         if none of the given libraries load successfully.
      */
-    public static void loadFirstAvailable(ClassLoader loader, String... names) {
+    public static void loadFirstAvailable(ClassLoader loader, string... names) {
         List<Throwable> suppressed = new ArrayList<Throwable>();
-        for (String name : names) {
+        for (string name : names) {
             try {
                 load(name, loader);
                 logger.debug("Loaded library with name '{}'", name);
@@ -140,12 +140,12 @@ public final class NativeLibraryLoader {
      *
      * @throws UnsatisfiedLinkError if the shader used something other than a prefix
      */
-    private static String calculateMangledPackagePrefix() {
-        String maybeShaded = NativeLibraryLoader.class.getName();
+    private static string calculateMangledPackagePrefix() {
+        string maybeShaded = NativeLibraryLoader.class.getName();
         // Use ! instead of . to avoid shading utilities from modifying the string
-        String expected = "io!netty!util!internal!NativeLibraryLoader".replace('!', '.');
+        string expected = "io!netty!util!internal!NativeLibraryLoader".replace('!', '.');
         if (!maybeShaded.endsWith(expected)) {
-            throw new UnsatisfiedLinkError(String.format(
+            throw new UnsatisfiedLinkError(string.format(
                     "Could not find prefix added to %s to get %s. When shading, only adding a "
                     + "package prefix is supported", expected, maybeShaded));
         }
@@ -157,9 +157,9 @@ public final class NativeLibraryLoader {
     /**
      * Load the given library with the specified {@link ClassLoader}
      */
-    public static void load(String originalName, ClassLoader loader) {
-        String mangledPackagePrefix = calculateMangledPackagePrefix();
-        String name = mangledPackagePrefix + originalName;
+    public static void load(string originalName, ClassLoader loader) {
+        string mangledPackagePrefix = calculateMangledPackagePrefix();
+        string name = mangledPackagePrefix + originalName;
         List<Throwable> suppressed = new ArrayList<>();
         try {
             // first try to load from java.library.path
@@ -169,15 +169,15 @@ public final class NativeLibraryLoader {
             suppressed.add(ex);
         }
 
-        String libname = System.mapLibraryName(name);
-        String path = NATIVE_RESOURCE_HOME + libname;
+        string libname = System.mapLibraryName(name);
+        string path = NATIVE_RESOURCE_HOME + libname;
 
         File tmpFile = null;
         URL url = getResource(path, loader);
         try {
             if (url == null) {
                 if (PlatformDependent.isOsx()) {
-                    String fileName = path.endsWith(".jnilib") ? NATIVE_RESOURCE_HOME + "lib" + name + ".dynlib" :
+                    string fileName = path.endsWith(".jnilib") ? NATIVE_RESOURCE_HOME + "lib" + name + ".dynlib" :
                             NATIVE_RESOURCE_HOME + "lib" + name + ".jnilib";
                     url = getResource(fileName, loader);
                     if (url == null) {
@@ -193,8 +193,8 @@ public final class NativeLibraryLoader {
             }
 
             int index = libname.lastIndexOf('.');
-            String prefix = libname.substring(0, index);
-            String suffix = libname.substring(index);
+            string prefix = libname.substring(0, index);
+            string suffix = libname.substring(index);
 
             tmpFile = PlatformDependent.createTempFile(prefix, suffix, WORKDIR);
             try (InputStream in = url.openStream();
@@ -224,7 +224,7 @@ public final class NativeLibraryLoader {
                     // Pass "io.netty.native.workdir" as an argument to allow shading tools to see
                     // the string. Since this is printed out to users to tell them what to do next,
                     // we want the value to be correct even when shading.
-                    String message = String.format(
+                    string message = string.format(
                             "%s exists but cannot be executed even when execute permissions set; " +
                                     "check volume for \"noexec\" flag; use -D%s=[path] " +
                                     "to set native working directory separately.",
@@ -255,7 +255,7 @@ public final class NativeLibraryLoader {
         }
     }
 
-    private static URL getResource(String path, ClassLoader loader) {
+    private static URL getResource(string path, ClassLoader loader) {
         final Enumeration<URL> urls;
         try {
             if (loader == null) {
@@ -325,13 +325,13 @@ public final class NativeLibraryLoader {
         }
     }
 
-    static void tryPatchShadedLibraryIdAndSign(File libraryFile, String originalName) {
+    static void tryPatchShadedLibraryIdAndSign(File libraryFile, string originalName) {
         if (!new File("/Library/Developer/CommandLineTools").exists()) {
             logger.debug("Can't patch shaded library id as CommandLineTools are not installed." +
                     " Consider installing CommandLineTools with 'xcode-select --install'");
             return;
         }
-        String newId = new String(generateUniqueId(originalName.length()), CharsetUtil.UTF_8);
+        string newId = new string(generateUniqueId(originalName.length()), CharsetUtil.UTF_8);
         if (!tryExec("install_name_tool -id " + newId + " " + libraryFile.getAbsolutePath())) {
             return;
         }
@@ -339,7 +339,7 @@ public final class NativeLibraryLoader {
         tryExec("codesign -s - " + libraryFile.getAbsolutePath());
     }
 
-    private static bool tryExec(String cmd) {
+    private static bool tryExec(string cmd) {
         try {
             int exitValue = Runtime.getRuntime().exec(cmd).waitFor();
             if (exitValue != 0) {
@@ -358,7 +358,7 @@ public final class NativeLibraryLoader {
         return false;
     }
 
-    private static bool shouldShadedLibraryIdBePatched(String packagePrefix) {
+    private static bool shouldShadedLibraryIdBePatched(string packagePrefix) {
         return TRY_TO_PATCH_SHADED_ID && PlatformDependent.isOsx() && !packagePrefix.isEmpty();
     }
 
@@ -378,7 +378,7 @@ public final class NativeLibraryLoader {
      * @param name - The native library path or name
      * @param absolute - Whether the native library will be loaded by path or by name
      */
-    private static void loadLibrary(final ClassLoader loader, final String name, final bool absolute) {
+    private static void loadLibrary(final ClassLoader loader, final string name, final bool absolute) {
         Throwable suppressed = null;
         try {
             try {
@@ -408,7 +408,7 @@ public final class NativeLibraryLoader {
         }
     }
 
-    private static void loadLibraryByHelper(final Class<?> helper, final String name, final bool absolute)
+    private static void loadLibraryByHelper(final Class<?> helper, final string name, final bool absolute)
             throws UnsatisfiedLinkError {
         Object ret = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
@@ -416,7 +416,7 @@ public final class NativeLibraryLoader {
                 try {
                     // Invoke the helper to load the native library, if it succeeds, then the native
                     // library belong to the specified ClassLoader.
-                    Method method = helper.getMethod("loadLibrary", String.class, bool.class);
+                    Method method = helper.getMethod("loadLibrary", string.class, bool.class);
                     method.setAccessible(true);
                     return method.invoke(null, name, absolute);
                 } catch (Exception e) {
@@ -462,7 +462,7 @@ public final class NativeLibraryLoader {
                         try {
                             // Define the helper class in the target ClassLoader,
                             //  then we can call the helper to load the native library.
-                            Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", String.class,
+                            Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", string.class,
                                     byte[].class, int.class, int.class);
                             defineClass.setAccessible(true);
                             return (Class<?>) defineClass.invoke(loader, helper.getName(), classBinary, 0,
@@ -486,7 +486,7 @@ public final class NativeLibraryLoader {
      * @throws ClassNotFoundException Helper class not found or loading failed
      */
     private static byte[] classToByteArray(Class<?> clazz) throws ClassNotFoundException {
-        String fileName = clazz.getName();
+        string fileName = clazz.getName();
         int lastDot = fileName.lastIndexOf('.');
         if (lastDot > 0) {
             fileName = fileName.substring(lastDot + 1);

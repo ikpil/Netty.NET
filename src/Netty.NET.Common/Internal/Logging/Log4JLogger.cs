@@ -56,7 +56,7 @@ class Log4JLogger extends AbstractInternalLogger {
      * Following the pattern discussed in pages 162 through 168 of "The complete
      * log4j manual".
      */
-    static final String FQCN = Log4JLogger.class.getName();
+    static final string FQCN = Log4JLogger.class.getName();
 
     // Does the log4j version in use recognize the TRACE level?
     // The trace level was introduced in log4j 1.2.12.
@@ -98,7 +98,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          - the message object to be logged
      */
     @Override
-    public void trace(String msg) {
+    public void trace(string msg) {
         logger.log(FQCN, traceCapable ? Level.TRACE : Level.DEBUG, msg, null);
     }
 
@@ -117,7 +117,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void trace(String format, Object arg) {
+    public void trace(string format, Object arg) {
         if (isTraceEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.log(FQCN, traceCapable ? Level.TRACE : Level.DEBUG, ft
@@ -142,7 +142,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void trace(String format, Object argA, Object argB) {
+    public void trace(string format, Object argA, Object argB) {
         if (isTraceEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.log(FQCN, traceCapable ? Level.TRACE : Level.DEBUG, ft
@@ -165,7 +165,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          an array of arguments
      */
     @Override
-    public void trace(String format, Object... arguments) {
+    public void trace(string format, Object... arguments) {
         if (isTraceEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.log(FQCN, traceCapable ? Level.TRACE : Level.DEBUG, ft
@@ -182,7 +182,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void trace(String msg, Throwable t) {
+    public void trace(string msg, Throwable t) {
         logger.log(FQCN, traceCapable ? Level.TRACE : Level.DEBUG, msg, t);
     }
 
@@ -203,7 +203,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          - the message object to be logged
      */
     @Override
-    public void debug(String msg) {
+    public void debug(string msg) {
         logger.log(FQCN, Level.DEBUG, msg, null);
     }
 
@@ -222,7 +222,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void debug(String format, Object arg) {
+    public void debug(string format, Object arg) {
         if (logger.isDebugEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.log(FQCN, Level.DEBUG, ft.getMessage(), ft.getThrowable());
@@ -246,7 +246,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void debug(String format, Object argA, Object argB) {
+    public void debug(string format, Object argA, Object argB) {
         if (logger.isDebugEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.log(FQCN, Level.DEBUG, ft.getMessage(), ft.getThrowable());
@@ -267,7 +267,7 @@ class Log4JLogger extends AbstractInternalLogger {
      * @param arguments an array of arguments
      */
     @Override
-    public void debug(String format, Object... arguments) {
+    public void debug(string format, Object... arguments) {
         if (logger.isDebugEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.log(FQCN, Level.DEBUG, ft.getMessage(), ft.getThrowable());
@@ -283,7 +283,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void debug(String msg, Throwable t) {
+    public void debug(string msg, Throwable t) {
         logger.log(FQCN, Level.DEBUG, msg, t);
     }
 
@@ -304,7 +304,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          - the message object to be logged
      */
     @Override
-    public void info(String msg) {
+    public void info(string msg) {
         logger.log(FQCN, Level.INFO, msg, null);
     }
 
@@ -322,7 +322,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void info(String format, Object arg) {
+    public void info(string format, Object arg) {
         if (logger.isInfoEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.log(FQCN, Level.INFO, ft.getMessage(), ft.getThrowable());
@@ -346,7 +346,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void info(String format, Object argA, Object argB) {
+    public void info(string format, Object argA, Object argB) {
         if (logger.isInfoEnabled()) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.log(FQCN, Level.INFO, ft.getMessage(), ft.getThrowable());
@@ -368,7 +368,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          an array of arguments
      */
     @Override
-    public void info(String format, Object... argArray) {
+    public void info(string format, Object... argArray) {
         if (logger.isInfoEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, argArray);
             logger.log(FQCN, Level.INFO, ft.getMessage(), ft.getThrowable());
@@ -385,7 +385,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void info(String msg, Throwable t) {
+    public void info(string msg, Throwable t) {
         logger.log(FQCN, Level.INFO, msg, t);
     }
 
@@ -406,7 +406,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          - the message object to be logged
      */
     @Override
-    public void warn(String msg) {
+    public void warn(string msg) {
         logger.log(FQCN, Level.WARN, msg, null);
     }
 
@@ -425,7 +425,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void warn(String format, Object arg) {
+    public void warn(string format, Object arg) {
         if (logger.isEnabledFor(Level.WARN)) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.log(FQCN, Level.WARN, ft.getMessage(), ft.getThrowable());
@@ -449,7 +449,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void warn(String format, Object argA, Object argB) {
+    public void warn(string format, Object argA, Object argB) {
         if (logger.isEnabledFor(Level.WARN)) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.log(FQCN, Level.WARN, ft.getMessage(), ft.getThrowable());
@@ -471,7 +471,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          an array of arguments
      */
     @Override
-    public void warn(String format, Object... argArray) {
+    public void warn(string format, Object... argArray) {
         if (logger.isEnabledFor(Level.WARN)) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, argArray);
             logger.log(FQCN, Level.WARN, ft.getMessage(), ft.getThrowable());
@@ -488,7 +488,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void warn(String msg, Throwable t) {
+    public void warn(string msg, Throwable t) {
         logger.log(FQCN, Level.WARN, msg, t);
     }
 
@@ -509,7 +509,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          - the message object to be logged
      */
     @Override
-    public void error(String msg) {
+    public void error(string msg) {
         logger.log(FQCN, Level.ERROR, msg, null);
     }
 
@@ -528,7 +528,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the argument
      */
     @Override
-    public void error(String format, Object arg) {
+    public void error(string format, Object arg) {
         if (logger.isEnabledFor(Level.ERROR)) {
             FormattingTuple ft = MessageFormatter.format(format, arg);
             logger.log(FQCN, Level.ERROR, ft.getMessage(), ft.getThrowable());
@@ -552,7 +552,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the second argument
      */
     @Override
-    public void error(String format, Object argA, Object argB) {
+    public void error(string format, Object argA, Object argB) {
         if (logger.isEnabledFor(Level.ERROR)) {
             FormattingTuple ft = MessageFormatter.format(format, argA, argB);
             logger.log(FQCN, Level.ERROR, ft.getMessage(), ft.getThrowable());
@@ -574,7 +574,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          an array of arguments
      */
     @Override
-    public void error(String format, Object... argArray) {
+    public void error(string format, Object... argArray) {
         if (logger.isEnabledFor(Level.ERROR)) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, argArray);
             logger.log(FQCN, Level.ERROR, ft.getMessage(), ft.getThrowable());
@@ -591,7 +591,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void error(String msg, Throwable t) {
+    public void error(string msg, Throwable t) {
         logger.log(FQCN, Level.ERROR, msg, t);
     }
 }

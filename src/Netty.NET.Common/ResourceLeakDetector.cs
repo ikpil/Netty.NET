@@ -41,14 +41,14 @@ namespace Netty.NET.Common;
 
 public class ResourceLeakDetector<T> {
 
-    private static final String PROP_LEVEL_OLD = "io.netty.leakDetectionLevel";
-    private static final String PROP_LEVEL = "io.netty.leakDetection.level";
+    private static final string PROP_LEVEL_OLD = "io.netty.leakDetectionLevel";
+    private static final string PROP_LEVEL = "io.netty.leakDetection.level";
     private static final Level DEFAULT_LEVEL = Level.SIMPLE;
 
-    private static final String PROP_TARGET_RECORDS = "io.netty.leakDetection.targetRecords";
+    private static final string PROP_TARGET_RECORDS = "io.netty.leakDetection.targetRecords";
     private static final int DEFAULT_TARGET_RECORDS = 4;
 
-    private static final String PROP_SAMPLING_INTERVAL = "io.netty.leakDetection.samplingInterval";
+    private static final string PROP_SAMPLING_INTERVAL = "io.netty.leakDetection.samplingInterval";
     // There is a minor performance benefit in TLR if this is a power of 2.
     private static final int DEFAULT_SAMPLING_INTERVAL = 128;
 
@@ -85,10 +85,10 @@ public class ResourceLeakDetector<T> {
          * @param levelStr - level string : DISABLED, SIMPLE, ADVANCED, PARANOID. Ignores case.
          * @return corresponding level or SIMPLE level in case of no match.
          */
-        static Level parseLevel(String levelStr) {
-            String trimmedLevelStr = levelStr.trim();
+        static Level parseLevel(string levelStr) {
+            string trimmedLevelStr = levelStr.trim();
             for (Level l : values()) {
-                if (trimmedLevelStr.equalsIgnoreCase(l.name()) || trimmedLevelStr.equals(String.valueOf(l.ordinal()))) {
+                if (trimmedLevelStr.equalsIgnoreCase(l.name()) || trimmedLevelStr.equals(string.valueOf(l.ordinal()))) {
                     return l;
                 }
             }
@@ -115,7 +115,7 @@ public class ResourceLeakDetector<T> {
         Level defaultLevel = disabled? Level.DISABLED : DEFAULT_LEVEL;
 
         // First read old property name
-        String levelStr = SystemPropertyUtil.get(PROP_LEVEL_OLD, defaultLevel.name());
+        string levelStr = SystemPropertyUtil.get(PROP_LEVEL_OLD, defaultLevel.name());
 
         // If new property name is present, use it
         levelStr = SystemPropertyUtil.get(PROP_LEVEL, levelStr);
@@ -164,9 +164,9 @@ public class ResourceLeakDetector<T> {
     private final Set<DefaultResourceLeak<?>> allLeaks = ConcurrentHashMap.newKeySet();
 
     private final ReferenceQueue<Object> refQueue = new ReferenceQueue<>();
-    private final Set<String> reportedLeaks = ConcurrentHashMap.newKeySet();
+    private final Set<string> reportedLeaks = ConcurrentHashMap.newKeySet();
 
-    private final String resourceType;
+    private final string resourceType;
     private final int samplingInterval;
 
     /**
@@ -186,7 +186,7 @@ public class ResourceLeakDetector<T> {
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
     @Deprecated
-    public ResourceLeakDetector(String resourceType) {
+    public ResourceLeakDetector(string resourceType) {
         this(resourceType, DEFAULT_SAMPLING_INTERVAL, long.MAX_VALUE);
     }
 
@@ -220,7 +220,7 @@ public class ResourceLeakDetector<T> {
      * @param maxActive This is deprecated and will be ignored.
      */
     @Deprecated
-    public ResourceLeakDetector(String resourceType, int samplingInterval, long maxActive) {
+    public ResourceLeakDetector(string resourceType, int samplingInterval, long maxActive) {
         this.resourceType = ObjectUtil.checkNotNull(resourceType, "resourceType");
         this.samplingInterval = samplingInterval;
     }
@@ -311,7 +311,7 @@ public class ResourceLeakDetector<T> {
                 continue;
             }
 
-            String records = ref.getReportAndClearRecords();
+            string records = ref.getReportAndClearRecords();
             if (reportedLeaks.add(records)) {
                 if (records.isEmpty()) {
                     reportUntracedLeak(resourceType);
@@ -331,7 +331,7 @@ public class ResourceLeakDetector<T> {
      * This method is called when a traced leak is detected. It can be overridden for tracking how many times leaks
      * have been detected.
      */
-    protected void reportTracedLeak(String resourceType, String records) {
+    protected void reportTracedLeak(string resourceType, string records) {
         logger.error(
                 "LEAK: {}.release() was not called before it's garbage-collected. " +
                 "See https://netty.io/wiki/reference-counted-objects.html for more information.{}",
@@ -342,7 +342,7 @@ public class ResourceLeakDetector<T> {
      * This method is called when an untraced leak is detected. It can be overridden for tracking how many times leaks
      * have been detected.
      */
-    protected void reportUntracedLeak(String resourceType) {
+    protected void reportUntracedLeak(string resourceType) {
         logger.error("LEAK: {}.release() was not called before it's garbage-collected. " +
                 "Enable advanced leak reporting to find out where the leak occurred. " +
                 "To enable advanced leak reporting, " +
@@ -355,7 +355,7 @@ public class ResourceLeakDetector<T> {
      * @deprecated This method will no longer be invoked by {@link ResourceLeakDetector}.
      */
     @Deprecated
-    protected void reportInstancesLeak(String resourceType) {
+    protected void reportInstancesLeak(string resourceType) {
     }
 
     /**
@@ -363,7 +363,7 @@ public class ResourceLeakDetector<T> {
      * supplied to {@link ResourceLeakTracker#record(Object)}, will be printed alongside the stack trace of the
      * creation of the resource.
      */
-    protected Object getInitialHint(String resourceType) {
+    protected Object getInitialHint(string resourceType) {
         return null;
     }
 
@@ -379,7 +379,7 @@ public class ResourceLeakDetector<T> {
         /**
          * Will be called once a leak is detected.
          */
-        void onLeak(String resourceType, String records);
+        void onLeak(string resourceType, string records);
     }
 
     @SuppressWarnings("deprecation")
@@ -551,17 +551,17 @@ public class ResourceLeakDetector<T> {
         }
 
         @Override
-        public String toString() {
+        public string toString() {
             TraceRecord oldHead = headUpdater.get(this);
             return generateReport(oldHead);
         }
 
-        String getReportAndClearRecords() {
+        string getReportAndClearRecords() {
             TraceRecord oldHead = headUpdater.getAndSet(this, null);
             return generateReport(oldHead);
         }
 
-        private String generateReport(TraceRecord oldHead) {
+        private string generateReport(TraceRecord oldHead) {
             if (oldHead == null) {
                 // Already closed
                 return EMPTY_STRING;
@@ -576,9 +576,9 @@ public class ResourceLeakDetector<T> {
             buf.append("Recent access records: ").append(NEWLINE);
 
             int i = 1;
-            Set<String> seen = new HashSet<String>(present);
+            Set<string> seen = new HashSet<string>(present);
             for (; oldHead != TraceRecord.BOTTOM; oldHead = oldHead.next) {
-                String s = oldHead.toString();
+                string s = oldHead.toString();
                 if (seen.add(s)) {
                     if (oldHead.next == TraceRecord.BOTTOM) {
                         buf.append("Created at:").append(NEWLINE).append(s);
@@ -613,11 +613,11 @@ public class ResourceLeakDetector<T> {
         }
     }
 
-    private static final AtomicReference<String[]> excludedMethods =
-            new AtomicReference<String[]>(EmptyArrays.EMPTY_STRINGS);
+    private static final AtomicReference<string[]> excludedMethods =
+            new AtomicReference<string[]>(EmptyArrays.EMPTY_STRINGS);
 
-    public static void addExclusions(Class clz, String ... methodNames) {
-        Set<String> nameSet = new HashSet<String>(Arrays.asList(methodNames));
+    public static void addExclusions(Class clz, string ... methodNames) {
+        Set<string> nameSet = new HashSet<string>(Arrays.asList(methodNames));
         // Use loop rather than lookup. This avoids knowing the parameters, and doesn't have to handle
         // NoSuchMethodException.
         for (Method method : clz.getDeclaredMethods()) {
@@ -628,8 +628,8 @@ public class ResourceLeakDetector<T> {
         if (!nameSet.isEmpty()) {
             throw new IllegalArgumentException("Can't find '" + nameSet + "' in " + clz.getName());
         }
-        String[] oldMethods;
-        String[] newMethods;
+        string[] oldMethods;
+        string[] newMethods;
         do {
             oldMethods = excludedMethods.get();
             newMethods = Arrays.copyOf(oldMethods, oldMethods.length + 2 * methodNames.length);
@@ -655,7 +655,7 @@ public class ResourceLeakDetector<T> {
             }
         };
 
-        private final String hintString;
+        private final string hintString;
         private final TraceRecord next;
         private final int pos;
 
@@ -680,7 +680,7 @@ public class ResourceLeakDetector<T> {
         }
 
         @Override
-        public String toString() {
+        public string toString() {
             StringBuilder buf = new StringBuilder(2048);
             if (hintString != null) {
                 buf.append("\tHint: ").append(hintString).append(NEWLINE);
@@ -692,7 +692,7 @@ public class ResourceLeakDetector<T> {
             out: for (int i = 3; i < array.length; i++) {
                 StackTraceElement element = array[i];
                 // Strip the noisy stack trace elements.
-                String[] exclusions = excludedMethods.get();
+                string[] exclusions = excludedMethods.get();
                 for (int k = 0; k < exclusions.length; k += 2) {
                     // Suppress a warning about out of bounds access
                     // since the length of excludedMethods is always even, see addExclusions()

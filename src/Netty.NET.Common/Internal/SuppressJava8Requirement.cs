@@ -28,5 +28,5 @@ namespace Netty.NET.Common.Internal;
 @Target({ ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE })
 public @interface SuppressJava8Requirement {
 
-    String reason();
+    string reason();
 }

@@ -42,7 +42,7 @@ public interface ThreadProperties {
     /**
      * @see Thread#getName()
      */
-    String name();
+    string name();
 
     /**
      * @see Thread#getId()

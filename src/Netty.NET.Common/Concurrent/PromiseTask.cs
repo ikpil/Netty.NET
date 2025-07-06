@@ -36,7 +36,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
         }
 
         @Override
-        public String toString() {
+        public string toString() {
             return "Callable(task: " + task + ", result: " + result + ')';
         }
     }
@@ -46,9 +46,9 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
     private static final Runnable FAILED = new SentinelRunnable("FAILED");
 
     private static class SentinelRunnable : Runnable {
-        private final String name;
+        private final string name;
 
-        SentinelRunnable(String name) {
+        SentinelRunnable(string name) {
             this.name = name;
         }
 
@@ -56,7 +56,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
         public void run() { } // no-op
 
         @Override
-        public String toString() {
+        public string toString() {
             return name;
         }
     }

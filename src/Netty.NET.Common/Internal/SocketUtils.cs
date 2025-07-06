@@ -146,7 +146,7 @@ public final class SocketUtils {
         });
     }
 
-    public static InetAddress addressByName(final String hostname) throws UnknownHostException {
+    public static InetAddress addressByName(final string hostname) throws UnknownHostException {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<InetAddress>() {
                 @Override
@@ -159,7 +159,7 @@ public final class SocketUtils {
         }
     }
 
-    public static InetAddress[] allAddressesByName(final String hostname) throws UnknownHostException {
+    public static InetAddress[] allAddressesByName(final string hostname) throws UnknownHostException {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<InetAddress[]>() {
                 @Override
@@ -172,7 +172,7 @@ public final class SocketUtils {
         }
     }
 
-    public static InetSocketAddress socketAddress(final String hostname, final int port) {
+    public static InetSocketAddress socketAddress(final string hostname, final int port) {
         return AccessController.doPrivileged(new PrivilegedAction<InetSocketAddress>() {
             @Override
             public InetSocketAddress run() {

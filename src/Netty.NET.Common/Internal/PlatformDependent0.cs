@@ -343,7 +343,7 @@ final class PlatformDependent0 {
                         int version = javaVersion();
                         if (unsafeStaticFieldOffsetSupported() && version >= 9) {
                             // Java9/10 use all lowercase and later versions all uppercase.
-                            String fieldName = version >= 11? "MAX_MEMORY" : "maxMemory";
+                            string fieldName = version >= 11? "MAX_MEMORY" : "maxMemory";
                             // On Java9 and later we try to directly access the field as we can do this without
                             // adjust the accessible levels.
                             try {
@@ -387,7 +387,7 @@ final class PlatformDependent0 {
                 unaligned = (Boolean) maybeUnaligned;
                 logger.debug("java.nio.Bits.unaligned: available, {}", unaligned);
             } else {
-                String arch = SystemPropertyUtil.get("os.arch", "");
+                string arch = SystemPropertyUtil.get("os.arch", "");
                 //noinspection DynamicRegexReplaceableByCompiledPattern
                 unaligned = arch.matches("^(i[3-6]86|x86(_64)?|x64|amd64)$");
                 Throwable t = (Throwable) maybeUnaligned;
@@ -536,9 +536,9 @@ final class PlatformDependent0 {
         // And JDK 24 JEP 498 https://openjdk.org/jeps/498, that enable warnings by default.
         // Due to JDK bugs, we only actually disable Unsafe by default on Java 25+, where we have memory segment APIs
         // available, and working.
-        String reason = "io.netty.noUnsafe";
-        String unspecified = "<unspecified>";
-        String unsafeMemoryAccess = SystemPropertyUtil.get("sun.misc.unsafe.memory.access", unspecified);
+        string reason = "io.netty.noUnsafe";
+        string unspecified = "<unspecified>";
+        string unsafeMemoryAccess = SystemPropertyUtil.get("sun.misc.unsafe.memory.access", unspecified);
         if (!explicitProperty && unspecified.equals(unsafeMemoryAccess) && javaVersion() >= 25) {
             reason = "io.netty.noUnsafe=true by default on Java 25+";
             noUnsafe = true;
@@ -548,13 +548,13 @@ final class PlatformDependent0 {
         }
 
         if (noUnsafe) {
-            String msg = "sun.misc.Unsafe: unavailable (" + reason + ')';
+            string msg = "sun.misc.Unsafe: unavailable (" + reason + ')';
             logger.debug(msg);
             return new UnsupportedOperationException(msg);
         }
 
         // Legacy properties
-        String unsafePropName;
+        string unsafePropName;
         if (SystemPropertyUtil.contains("io.netty.tryUnsafe")) {
             unsafePropName = "io.netty.tryUnsafe";
         } else {
@@ -562,7 +562,7 @@ final class PlatformDependent0 {
         }
 
         if (!SystemPropertyUtil.getBoolean(unsafePropName, true)) {
-            String msg = "sun.misc.Unsafe: unavailable (" + unsafePropName + ')';
+            string msg = "sun.misc.Unsafe: unavailable (" + unsafePropName + ')';
             logger.debug(msg);
             return new UnsupportedOperationException(msg);
         }
@@ -1035,7 +1035,7 @@ final class PlatformDependent0 {
         // OpenJDK is used, which means `Unsafe` will actually work as expected.
 
         // Android sets this property to Dalvik, regardless of whether it actually is.
-        String vmName = SystemPropertyUtil.get("java.vm.name");
+        string vmName = SystemPropertyUtil.get("java.vm.name");
         bool isAndroid = "Dalvik".equals(vmName);
         if (isAndroid) {
             logger.debug("Platform: Android");
@@ -1077,8 +1077,8 @@ final class PlatformDependent0 {
     }
 
     // Package-private for testing only
-    static int majorVersion(final String javaSpecVersion) {
-        final String[] components = javaSpecVersion.split("\\.");
+    static int majorVersion(final string javaSpecVersion) {
+        final string[] components = javaSpecVersion.split("\\.");
         final int[] version = new int[components.length];
         for (int i = 0; i < components.length; i++) {
             version[i] = int.parseInt(components[i]);

@@ -284,11 +284,11 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
             throw new IllegalArgumentException(
-                    String.format("initialDelay: %d (expected: >= 0)", initialDelay));
+                    string.format("initialDelay: %d (expected: >= 0)", initialDelay));
         }
         if (period <= 0) {
             throw new IllegalArgumentException(
-                    String.format("period: %d (expected: > 0)", period));
+                    string.format("period: %d (expected: > 0)", period));
         }
         validateScheduled0(initialDelay, unit);
         validateScheduled0(period, unit);
@@ -303,11 +303,11 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
             throw new IllegalArgumentException(
-                    String.format("initialDelay: %d (expected: >= 0)", initialDelay));
+                    string.format("initialDelay: %d (expected: >= 0)", initialDelay));
         }
         if (delay <= 0) {
             throw new IllegalArgumentException(
-                    String.format("delay: %d (expected: > 0)", delay));
+                    string.format("delay: %d (expected: > 0)", delay));
         }
 
         validateScheduled0(initialDelay, unit);

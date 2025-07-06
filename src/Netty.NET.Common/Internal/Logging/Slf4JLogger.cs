@@ -37,27 +37,27 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void trace(String msg) {
+    public void trace(string msg) {
         logger.trace(msg);
     }
 
     @Override
-    public void trace(String format, Object arg) {
+    public void trace(string format, Object arg) {
         logger.trace(format, arg);
     }
 
     @Override
-    public void trace(String format, Object argA, Object argB) {
+    public void trace(string format, Object argA, Object argB) {
         logger.trace(format, argA, argB);
     }
 
     @Override
-    public void trace(String format, Object... argArray) {
+    public void trace(string format, Object... argArray) {
         logger.trace(format, argArray);
     }
 
     @Override
-    public void trace(String msg, Throwable t) {
+    public void trace(string msg, Throwable t) {
         logger.trace(msg, t);
     }
 
@@ -67,27 +67,27 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void debug(String msg) {
+    public void debug(string msg) {
         logger.debug(msg);
     }
 
     @Override
-    public void debug(String format, Object arg) {
+    public void debug(string format, Object arg) {
         logger.debug(format, arg);
     }
 
     @Override
-    public void debug(String format, Object argA, Object argB) {
+    public void debug(string format, Object argA, Object argB) {
         logger.debug(format, argA, argB);
     }
 
     @Override
-    public void debug(String format, Object... argArray) {
+    public void debug(string format, Object... argArray) {
         logger.debug(format, argArray);
     }
 
     @Override
-    public void debug(String msg, Throwable t) {
+    public void debug(string msg, Throwable t) {
         logger.debug(msg, t);
     }
 
@@ -97,27 +97,27 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void info(String msg) {
+    public void info(string msg) {
         logger.info(msg);
     }
 
     @Override
-    public void info(String format, Object arg) {
+    public void info(string format, Object arg) {
         logger.info(format, arg);
     }
 
     @Override
-    public void info(String format, Object argA, Object argB) {
+    public void info(string format, Object argA, Object argB) {
         logger.info(format, argA, argB);
     }
 
     @Override
-    public void info(String format, Object... argArray) {
+    public void info(string format, Object... argArray) {
         logger.info(format, argArray);
     }
 
     @Override
-    public void info(String msg, Throwable t) {
+    public void info(string msg, Throwable t) {
         logger.info(msg, t);
     }
 
@@ -127,27 +127,27 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void warn(String msg) {
+    public void warn(string msg) {
         logger.warn(msg);
     }
 
     @Override
-    public void warn(String format, Object arg) {
+    public void warn(string format, Object arg) {
         logger.warn(format, arg);
     }
 
     @Override
-    public void warn(String format, Object... argArray) {
+    public void warn(string format, Object... argArray) {
         logger.warn(format, argArray);
     }
 
     @Override
-    public void warn(String format, Object argA, Object argB) {
+    public void warn(string format, Object argA, Object argB) {
         logger.warn(format, argA, argB);
     }
 
     @Override
-    public void warn(String msg, Throwable t) {
+    public void warn(string msg, Throwable t) {
         logger.warn(msg, t);
     }
 
@@ -157,27 +157,27 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void error(String msg) {
+    public void error(string msg) {
         logger.error(msg);
     }
 
     @Override
-    public void error(String format, Object arg) {
+    public void error(string format, Object arg) {
         logger.error(format, arg);
     }
 
     @Override
-    public void error(String format, Object argA, Object argB) {
+    public void error(string format, Object argA, Object argB) {
         logger.error(format, argA, argB);
     }
 
     @Override
-    public void error(String format, Object... argArray) {
+    public void error(string format, Object... argArray) {
         logger.error(format, argArray);
     }
 
     @Override
-    public void error(String msg, Throwable t) {
+    public void error(string msg, Throwable t) {
         logger.error(msg, t);
     }
 }

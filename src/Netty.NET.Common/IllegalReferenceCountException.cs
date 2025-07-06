@@ -34,11 +34,11 @@ public class IllegalReferenceCountException extends IllegalStateException {
         this("refCnt: " + refCnt + ", " + (increment > 0? "increment: " + increment : "decrement: " + -increment));
     }
 
-    public IllegalReferenceCountException(String message) {
+    public IllegalReferenceCountException(string message) {
         super(message);
     }
 
-    public IllegalReferenceCountException(String message, Throwable cause) {
+    public IllegalReferenceCountException(string message, Throwable cause) {
         super(message, cause);
     }
 

@@ -58,8 +58,8 @@ public final class ThreadDeathWatcher {
     private static volatile Thread watcherThread;
 
     static {
-        String poolName = "threadDeathWatcher";
-        String serviceThreadPrefix = SystemPropertyUtil.get("io.netty.serviceThreadPrefix");
+        string poolName = "threadDeathWatcher";
+        string serviceThreadPrefix = SystemPropertyUtil.get("io.netty.serviceThreadPrefix");
         if (!StringUtil.isNullOrEmpty(serviceThreadPrefix)) {
             poolName = serviceThreadPrefix + poolName;
         }

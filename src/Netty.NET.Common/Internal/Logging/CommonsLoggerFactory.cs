@@ -39,7 +39,7 @@ public class CommonsLoggerFactory extends InternalLoggerFactory {
     }
 
     @Override
-    public InternalLogger newInstance(String name) {
+    public InternalLogger newInstance(string name) {
         return new CommonsLogger(LogFactory.getLog(name), name);
     }
 }

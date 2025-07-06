@@ -53,27 +53,27 @@ public class FastThreadLocalThread extends Thread {
         cleanupFastThreadLocals = true;
     }
 
-    public FastThreadLocalThread(String name) {
+    public FastThreadLocalThread(string name) {
         super(name);
         cleanupFastThreadLocals = false;
     }
 
-    public FastThreadLocalThread(ThreadGroup group, String name) {
+    public FastThreadLocalThread(ThreadGroup group, string name) {
         super(group, name);
         cleanupFastThreadLocals = false;
     }
 
-    public FastThreadLocalThread(Runnable target, String name) {
+    public FastThreadLocalThread(Runnable target, string name) {
         super(FastThreadLocalRunnable.wrap(target), name);
         cleanupFastThreadLocals = true;
     }
 
-    public FastThreadLocalThread(ThreadGroup group, Runnable target, String name) {
+    public FastThreadLocalThread(ThreadGroup group, Runnable target, string name) {
         super(group, FastThreadLocalRunnable.wrap(target), name);
         cleanupFastThreadLocals = true;
     }
 
-    public FastThreadLocalThread(ThreadGroup group, Runnable target, String name, long stackSize) {
+    public FastThreadLocalThread(ThreadGroup group, Runnable target, string name, long stackSize) {
         super(group, FastThreadLocalRunnable.wrap(target), name, stackSize);
         cleanupFastThreadLocals = true;
     }

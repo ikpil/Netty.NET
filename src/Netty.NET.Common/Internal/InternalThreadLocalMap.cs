@@ -68,9 +68,9 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     private int localChannelReaderStackDepth;
     private Map<Class<?>, Boolean> handlerSharableCache;
     private Map<Class<?>, TypeParameterMatcher> typeParameterMatcherGetCache;
-    private Map<Class<?>, Map<String, TypeParameterMatcher>> typeParameterMatcherFindCache;
+    private Map<Class<?>, Map<string, TypeParameterMatcher>> typeParameterMatcherFindCache;
 
-    // String-related thread-locals
+    // string-related thread-locals
     private StringBuilder stringBuilder;
     private Map<Charset, CharsetEncoder> charsetEncoderCache;
     private Map<Charset, CharsetDecoder> charsetDecoderCache;
@@ -279,8 +279,8 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return cache;
     }
 
-    public Map<Class<?>, Map<String, TypeParameterMatcher>> typeParameterMatcherFindCache() {
-        Map<Class<?>, Map<String, TypeParameterMatcher>> cache = typeParameterMatcherFindCache;
+    public Map<Class<?>, Map<string, TypeParameterMatcher>> typeParameterMatcherFindCache() {
+        Map<Class<?>, Map<string, TypeParameterMatcher>> cache = typeParameterMatcherFindCache;
         if (cache == null) {
             typeParameterMatcherFindCache = cache = new IdentityHashMap<>();
         }

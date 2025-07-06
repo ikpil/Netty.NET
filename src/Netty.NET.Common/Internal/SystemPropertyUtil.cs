@@ -34,7 +34,7 @@ public final class SystemPropertyUtil {
      * Returns {@code true} if and only if the system property with the specified {@code key}
      * exists.
      */
-    public static bool contains(String key) {
+    public static bool contains(string key) {
         return get(key) != null;
     }
 
@@ -44,7 +44,7 @@ public final class SystemPropertyUtil {
      *
      * @return the property value or {@code null}
      */
-    public static String get(String key) {
+    public static string get(string key) {
         return get(key, null);
     }
 
@@ -57,17 +57,17 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static String get(final String key, String def) {
+    public static string get(final string key, string def) {
         checkNonEmpty(key, "key");
 
-        String value = null;
+        string value = null;
         try {
             if (System.getSecurityManager() == null) {
                 value = System.getProperty(key);
             } else {
-                value = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                value = AccessController.doPrivileged(new PrivilegedAction<string>() {
                     @Override
-                    public String run() {
+                    public string run() {
                         return System.getProperty(key);
                     }
                 });
@@ -92,8 +92,8 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static bool getBoolean(String key, bool def) {
-        String value = get(key);
+    public static bool getBoolean(string key, bool def) {
+        string value = get(key);
         if (value == null) {
             return def;
         }
@@ -128,8 +128,8 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static int getInt(String key, int def) {
-        String value = get(key);
+    public static int getInt(string key, int def) {
+        string value = get(key);
         if (value == null) {
             return def;
         }
@@ -158,8 +158,8 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static long getLong(String key, long def) {
-        String value = get(key);
+    public static long getLong(string key, long def) {
+        string value = get(key);
         if (value == null) {
             return def;
         }

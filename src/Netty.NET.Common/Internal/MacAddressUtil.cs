@@ -139,11 +139,11 @@ public final class MacAddressUtil {
     }
 
     /**
-     * Parse a EUI-48, MAC-48, or EUI-64 MAC address from a {@link String} and return it as a {@code byte[]}.
+     * Parse a EUI-48, MAC-48, or EUI-64 MAC address from a {@link string} and return it as a {@code byte[]}.
      * @param value The string representation of the MAC address.
      * @return The byte representation of the MAC address.
      */
-    public static byte[] parseMAC(String value) {
+    public static byte[] parseMAC(string value) {
         final byte[] machineId;
         final char separator;
         switch (value.length()) {
@@ -187,10 +187,10 @@ public final class MacAddressUtil {
      * @param addr byte array of a MAC address.
      * @return hex formatted MAC address.
      */
-    public static String formatAddress(byte[] addr) {
+    public static string formatAddress(byte[] addr) {
         StringBuilder buf = new StringBuilder(24);
         for (byte b: addr) {
-            buf.append(String.format("%02x:", b & 0xff));
+            buf.append(string.format("%02x:", b & 0xff));
         }
         return buf.substring(0, buf.length() - 1);
     }

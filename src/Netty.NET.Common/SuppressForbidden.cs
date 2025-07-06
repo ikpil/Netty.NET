@@ -28,5 +28,5 @@ namespace Netty.NET.Common;
 @Target({ ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.METHOD, ElementType.TYPE })
 public @interface SuppressForbidden {
 
-    String reason();
+    string reason();
 }

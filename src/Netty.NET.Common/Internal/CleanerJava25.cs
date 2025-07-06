@@ -38,7 +38,7 @@ final class CleanerJava25 : Cleaner {
         if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
             // native image supports this since 25, but we don't use PlatformDependent0 here, since
             // we need to initialize CleanerJava25 at build time.
-            String v = System.getProperty("java.specification.version");
+            string v = System.getProperty("java.specification.version");
             try {
                 suitableJavaVersion = int.parseInt(v) >= 25;
             } catch (NumberFormatException e) {

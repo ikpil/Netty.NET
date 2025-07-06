@@ -28,7 +28,7 @@ namespace Netty.NET.Common;
 public class DomainWildcardMappingBuilder<V> {
 
     private final V defaultValue;
-    private final Map<String, V> map;
+    private final Map<string, V> map;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
@@ -49,7 +49,7 @@ public class DomainWildcardMappingBuilder<V> {
      */
     public DomainWildcardMappingBuilder(int initialCapacity, V defaultValue) {
         this.defaultValue = checkNotNull(defaultValue, "defaultValue");
-        map = new LinkedHashMap<String, V>(initialCapacity);
+        map = new LinkedHashMap<string, V>(initialCapacity);
     }
 
     /**
@@ -69,13 +69,13 @@ public class DomainWildcardMappingBuilder<V> {
      * @param output   the output value that will be returned by {@link Mapping#map(Object)}
      *                 when the specified host name matches the specified input host name
      */
-    public DomainWildcardMappingBuilder<V> add(String hostname, V output) {
+    public DomainWildcardMappingBuilder<V> add(string hostname, V output) {
         map.put(normalizeHostName(hostname),
                 checkNotNull(output, "output"));
         return this;
     }
 
-    private String normalizeHostName(String hostname) {
+    private string normalizeHostName(string hostname) {
         checkNotNull(hostname, "hostname");
         if (hostname.isEmpty() || hostname.charAt(0) == '.') {
             throw new IllegalArgumentException("Hostname '" + hostname + "' not valid");
@@ -94,25 +94,25 @@ public class DomainWildcardMappingBuilder<V> {
      *
      * @return new {@link Mapping} instance
      */
-    public Mapping<String, V> build() {
+    public Mapping<string, V> build() {
         return new ImmutableDomainWildcardMapping<V>(defaultValue, map);
     }
 
-    private static final class ImmutableDomainWildcardMapping<V> : Mapping<String, V> {
-        private static final String REPR_HEADER = "ImmutableDomainWildcardMapping(default: ";
-        private static final String REPR_MAP_OPENING = ", map: ";
-        private static final String REPR_MAP_CLOSING = ")";
+    private static final class ImmutableDomainWildcardMapping<V> : Mapping<string, V> {
+        private static final string REPR_HEADER = "ImmutableDomainWildcardMapping(default: ";
+        private static final string REPR_MAP_OPENING = ", map: ";
+        private static final string REPR_MAP_CLOSING = ")";
 
         private final V defaultValue;
-        private final Map<String, V> map;
+        private final Map<string, V> map;
 
-        ImmutableDomainWildcardMapping(V defaultValue, Map<String, V> map) {
+        ImmutableDomainWildcardMapping(V defaultValue, Map<string, V> map) {
             this.defaultValue = defaultValue;
-            this.map = new LinkedHashMap<String, V>(map);
+            this.map = new LinkedHashMap<string, V>(map);
         }
 
         @Override
-        public V map(String hostname) {
+        public V map(string hostname) {
             if (hostname != null) {
                 hostname = normalize(hostname);
 
@@ -136,17 +136,17 @@ public class DomainWildcardMappingBuilder<V> {
         }
 
         @SuppressWarnings("deprecation")
-        static String normalize(String hostname) {
+        static string normalize(string hostname) {
             return DomainNameMapping.normalizeHostname(hostname);
         }
 
         @Override
-        public String toString() {
+        public string toString() {
             StringBuilder sb = new StringBuilder();
             sb.append(REPR_HEADER).append(defaultValue).append(REPR_MAP_OPENING).append('{');
 
-            for (Map.Entry<String, V> entry : map.entrySet()) {
-                String hostname = entry.getKey();
+            for (Map.Entry<string, V> entry : map.entrySet()) {
+                string hostname = entry.getKey();
                 if (hostname.charAt(0) == '.') {
                     hostname = '*' + hostname;
                 }

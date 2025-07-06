@@ -30,14 +30,14 @@ namespace Netty.NET.Common;
  */
 public abstract class ConstantPool<T extends Constant<T>> {
 
-    private final ConcurrentMap<String, T> constants = new ConcurrentHashMap<>();
+    private final ConcurrentMap<string, T> constants = new ConcurrentHashMap<>();
 
     private final AtomicInteger nextId = new AtomicInteger(1);
 
     /**
-     * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
+     * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
-    public T valueOf(Class<?> firstNameComponent, String secondNameComponent) {
+    public T valueOf(Class<?> firstNameComponent, string secondNameComponent) {
         return valueOf(
                 checkNotNull(firstNameComponent, "firstNameComponent").getName() +
                 '#' +
@@ -52,7 +52,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
      *
      * @param name the name of the {@link Constant}
      */
-    public T valueOf(String name) {
+    public T valueOf(string name) {
         return getOrCreate(checkNonEmpty(name, "name"));
     }
 
@@ -61,7 +61,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
      *
      * @param name the name of the {@link Constant}
      */
-    private T getOrCreate(String name) {
+    private T getOrCreate(string name) {
         T constant = constants.get(name);
         if (constant == null) {
             final T tempConstant = newConstant(nextId(), name);
@@ -77,7 +77,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
      */
-    public bool exists(String name) {
+    public bool exists(string name) {
         return constants.containsKey(checkNonEmpty(name, "name"));
     }
 
@@ -85,7 +85,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
      * Creates a new {@link Constant} for the given {@code name} or fail with an
      * {@link IllegalArgumentException} if a {@link Constant} for the given {@code name} exists.
      */
-    public T newInstance(String name) {
+    public T newInstance(string name) {
         return createOrThrow(checkNonEmpty(name, "name"));
     }
 
@@ -94,7 +94,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
      *
      * @param name the name of the {@link Constant}
      */
-    private T createOrThrow(String name) {
+    private T createOrThrow(string name) {
         T constant = constants.get(name);
         if (constant == null) {
             final T tempConstant = newConstant(nextId(), name);
@@ -104,10 +104,10 @@ public abstract class ConstantPool<T extends Constant<T>> {
             }
         }
 
-        throw new IllegalArgumentException(String.format("'%s' is already in use", name));
+        throw new IllegalArgumentException(string.format("'%s' is already in use", name));
     }
 
-    protected abstract T newConstant(int id, String name);
+    protected abstract T newConstant(int id, string name);
 
     @Deprecated
     public final int nextId() {

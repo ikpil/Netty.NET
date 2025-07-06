@@ -106,10 +106,10 @@ public final class PlatformDependent {
     private static final File TMPDIR = tmpdir0();
 
     private static final int BIT_MODE = bitMode0();
-    private static final String NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", ""));
-    private static final String NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name", ""));
+    private static final string NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", ""));
+    private static final string NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name", ""));
 
-    private static final Set<String> LINUX_OS_CLASSIFIERS;
+    private static final Set<string> LINUX_OS_CLASSIFIERS;
 
     private static final bool IS_WINDOWS = isWindows0();
     private static final bool IS_OSX = isOsx0();
@@ -124,8 +124,8 @@ public final class PlatformDependent {
     private static final Cleaner DIRECT_CLEANER;
     private static final Cleaner LEGACY_CLEANER;
     private static final bool HAS_ALLOCATE_UNINIT_ARRAY;
-    private static final String LINUX_ID_PREFIX = "ID=";
-    private static final String LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
+    private static final string LINUX_ID_PREFIX = "ID=";
+    private static final string LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
     public static final bool BIG_ENDIAN_NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
 
     private static final bool JFR;
@@ -236,7 +236,7 @@ public final class PlatformDependent {
                     "instability.");
         }
 
-        final Set<String> availableClassifiers = new LinkedHashSet<>();
+        final Set<string> availableClassifiers = new LinkedHashSet<>();
 
         if (!addPropertyOsClassifiers(availableClassifiers)) {
             addFilesystemOsClassifiers(availableClassifiers);
@@ -261,24 +261,24 @@ public final class PlatformDependent {
     }
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
-    static void addFilesystemOsClassifiers(final Set<String> availableClassifiers) {
+    static void addFilesystemOsClassifiers(final Set<string> availableClassifiers) {
         if (processOsReleaseFile("/etc/os-release", availableClassifiers)) {
             return;
         }
         processOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
-    private static bool processOsReleaseFile(String osReleaseFileName, Set<String> availableClassifiers) {
+    private static bool processOsReleaseFile(string osReleaseFileName, Set<string> availableClassifiers) {
         Path file = Paths.get(osReleaseFileName);
         return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> {
             try {
                 if (Files.exists(file)) {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                             new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8))) {
-                        String line;
+                        string line;
                         while ((line = reader.readLine()) != null) {
                             if (line.startsWith(LINUX_ID_PREFIX)) {
-                                String id = normalizeOsReleaseVariableValue(
+                                string id = normalizeOsReleaseVariableValue(
                                         line.substring(LINUX_ID_PREFIX.length()));
                                 addClassifier(availableClassifiers, id);
                             } else if (line.startsWith(LINUX_ID_LIKE_PREFIX)) {
@@ -302,13 +302,13 @@ public final class PlatformDependent {
         });
     }
 
-    static bool addPropertyOsClassifiers(Set<String> availableClassifiers) {
+    static bool addPropertyOsClassifiers(Set<string> availableClassifiers) {
         // empty: -Dio.netty.osClassifiers (no distro specific classifiers for native libs)
         // single ID: -Dio.netty.osClassifiers=ubuntu
         // pair ID, ID_LIKE: -Dio.netty.osClassifiers=ubuntu,debian
         // illegal otherwise
-        String osClassifiersPropertyName = "io.netty.osClassifiers";
-        String osClassifiers = SystemPropertyUtil.get(osClassifiersPropertyName);
+        string osClassifiersPropertyName = "io.netty.osClassifiers";
+        string osClassifiers = SystemPropertyUtil.get(osClassifiersPropertyName);
         if (osClassifiers == null) {
             return false;
         }
@@ -316,7 +316,7 @@ public final class PlatformDependent {
             // let users omit classifiers with just -Dio.netty.osClassifiers
             return true;
         }
-        String[] classifiers = osClassifiers.split(",");
+        string[] classifiers = osClassifiers.split(",");
         if (classifiers.length == 0) {
             throw new IllegalArgumentException(
                     osClassifiersPropertyName + " property is not empty, but contains no classifiers: "
@@ -327,7 +327,7 @@ public final class PlatformDependent {
             throw new IllegalArgumentException(
                     osClassifiersPropertyName + " property contains more than 2 classifiers: " + osClassifiers);
         }
-        for (String classifier : classifiers) {
+        for (string classifier : classifiers) {
             addClassifier(availableClassifiers, classifier);
         }
         return true;
@@ -1231,7 +1231,7 @@ public final class PlatformDependent {
     }
 
     private static bool maybeSuperUser0() {
-        String username = SystemPropertyUtil.get("user.name");
+        string username = SystemPropertyUtil.get("user.name");
         if (isWindows()) {
             return "Administrator".equals(username);
         }
@@ -1275,7 +1275,7 @@ public final class PlatformDependent {
     }
 
     private static bool isJ9Jvm0() {
-        String vmName = SystemPropertyUtil.get("java.vm.name", "").toLowerCase();
+        string vmName = SystemPropertyUtil.get("java.vm.name", "").toLowerCase();
         return vmName.startsWith("ibm j9") || vmName.startsWith("eclipse openj9");
     }
 
@@ -1287,7 +1287,7 @@ public final class PlatformDependent {
     }
 
     private static bool isIkvmDotNet0() {
-        String vmName = SystemPropertyUtil.get("java.vm.name", "").toUpperCase(Locale.US);
+        string vmName = SystemPropertyUtil.get("java.vm.name", "").toUpperCase(Locale.US);
         return vmName.equals("IKVM.NET");
     }
 
@@ -1331,7 +1331,7 @@ public final class PlatformDependent {
                     mgmtFactoryClass, "getRuntimeMXBean", methodType(runtimeClass));
             MethodHandle getInputArguments = lookup.findVirtual(
                     runtimeClass, "getInputArguments", methodType(List.class));
-            List<String> vmArgs = (List<String>) getInputArguments.invoke(getRuntime.invoke());
+            List<string> vmArgs = (List<string>) getInputArguments.invoke(getRuntime.invoke());
 
             Pattern maxDirectMemorySizeArgPattern = getMaxDirectMemorySizeArgPattern();
 
@@ -1394,7 +1394,7 @@ public final class PlatformDependent {
                     return f;
                 }
 
-                String userprofile = System.getenv("USERPROFILE");
+                string userprofile = System.getenv("USERPROFILE");
                 if (userprofile != null) {
                     f = toDirectory(userprofile + "\\AppData\\Local\\Temp");
                     if (f != null) {
@@ -1431,7 +1431,7 @@ public final class PlatformDependent {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static File toDirectory(String path) {
+    private static File toDirectory(string path) {
         if (path == null) {
             return null;
         }
@@ -1471,7 +1471,7 @@ public final class PlatformDependent {
         }
 
         // os.arch also gives us a good hint.
-        String arch = SystemPropertyUtil.get("os.arch", "").toLowerCase(Locale.US).trim();
+        string arch = SystemPropertyUtil.get("os.arch", "").toLowerCase(Locale.US).trim();
         if ("amd64".equals(arch) || "x86_64".equals(arch)) {
             bitMode = 64;
         } else if ("i386".equals(arch) || "i486".equals(arch) || "i586".equals(arch) || "i686".equals(arch)) {
@@ -1483,7 +1483,7 @@ public final class PlatformDependent {
         }
 
         // Last resort: guess from VM name and then fall back to most common 64-bit mode.
-        String vm = SystemPropertyUtil.get("java.vm.name", "").toLowerCase(Locale.US);
+        string vm = SystemPropertyUtil.get("java.vm.name", "").toLowerCase(Locale.US);
         Pattern bitPattern = Pattern.compile("([1-9][0-9]+)-?bit");
         Matcher m = bitPattern.matcher(vm);
         if (m.find()) {
@@ -1562,19 +1562,19 @@ public final class PlatformDependent {
         }
     }
 
-    public static String normalizedArch() {
+    public static string normalizedArch() {
         return NORMALIZED_ARCH;
     }
 
-    public static String normalizedOs() {
+    public static string normalizedOs() {
         return NORMALIZED_OS;
     }
 
-    public static Set<String> normalizedLinuxClassifiers() {
+    public static Set<string> normalizedLinuxClassifiers() {
         return LINUX_OS_CLASSIFIERS;
     }
 
-    public static File createTempFile(String prefix, String suffix, File directory) throws IOException {
+    public static File createTempFile(string prefix, string suffix, File directory) throws IOException {
         if (directory == null) {
             return Files.createTempFile(prefix, suffix).toFile();
         }
@@ -1587,15 +1587,15 @@ public final class PlatformDependent {
      * @param dest             destination set
      * @param maybeClassifiers potential classifiers to add
      */
-    private static void addClassifier(Set<String> dest, String... maybeClassifiers) {
-        for (String id : maybeClassifiers) {
+    private static void addClassifier(Set<string> dest, string... maybeClassifiers) {
+        for (string id : maybeClassifiers) {
             if (isAllowedClassifier(id)) {
                 dest.add(id);
             }
         }
     }
     // keep in sync with maven's pom.xml via os.detection.classifierWithLikes!
-    private static bool isAllowedClassifier(String classifier) {
+    private static bool isAllowedClassifier(string classifier) {
         switch (classifier) {
             case "fedora":
             case "suse":
@@ -1607,8 +1607,8 @@ public final class PlatformDependent {
     }
 
     //replaces value.trim().replaceAll("[\"']", "") to avoid regexp overhead
-    private static String normalizeOsReleaseVariableValue(String value) {
-        String trimmed = value.trim();
+    private static string normalizeOsReleaseVariableValue(string value) {
+        string trimmed = value.trim();
         StringBuilder sb = new StringBuilder(trimmed.length());
         for (int i = 0; i < trimmed.length(); i++) {
             char c = trimmed.charAt(i);
@@ -1620,7 +1620,7 @@ public final class PlatformDependent {
     }
 
     //replaces value.toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
-    private static String normalize(String value) {
+    private static string normalize(string value) {
         StringBuilder sb = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) {
             char c = Character.toLowerCase(value.charAt(i));
@@ -1631,7 +1631,7 @@ public final class PlatformDependent {
         return sb.toString();
     }
 
-    private static String normalizeArch(String value) {
+    private static string normalizeArch(string value) {
         value = normalize(value);
         switch (value) {
             case "x8664":
@@ -1697,7 +1697,7 @@ public final class PlatformDependent {
         }
     }
 
-    private static String normalizeOs(String value) {
+    private static string normalizeOs(string value) {
         value = normalize(value);
         if (value.startsWith("aix")) {
             return "aix";
