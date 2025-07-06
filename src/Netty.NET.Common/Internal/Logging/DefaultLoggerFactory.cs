@@ -4,16 +4,16 @@ using System.Collections.Generic;
 
 namespace Netty.NET.Common.Internal.Logging
 {
-    internal class LoggerFactory : ILoggerFactory
+    internal class DefaultLoggerFactory : IInternalLoggerFactory
     {
         private readonly object _sync = new object();
-        private readonly ConcurrentDictionary<string, Logger> _loggers;
+        private readonly ConcurrentDictionary<string, InternalLogger> _loggers;
         private readonly List<ProviderRegistration> _providerRegistrations;
         private volatile bool _disposed;
 
-        public LoggerFactory()
+        public DefaultLoggerFactory()
         {
-            _loggers = new ConcurrentDictionary<string, Logger>();
+            _loggers = new ConcurrentDictionary<string, InternalLogger>();
             _providerRegistrations = new List<ProviderRegistration>();
         }
 
@@ -42,20 +42,20 @@ namespace Netty.NET.Common.Internal.Logging
             }
         }
 
-        public ILogger CreateLogger(string categoryName)
+        public IInternalLogger CreateLogger(string categoryName)
         {
             if (CheckDisposed())
             {
-                throw new ObjectDisposedException(nameof(LoggerFactory));
+                throw new ObjectDisposedException(nameof(DefaultLoggerFactory));
             }
 
-            if (!_loggers.TryGetValue(categoryName, out Logger logger))
+            if (!_loggers.TryGetValue(categoryName, out InternalLogger logger))
             {
                 lock (_sync)
                 {
                     if (!_loggers.TryGetValue(categoryName, out logger))
                     {
-                        logger = new Logger(categoryName, CreateLoggers(categoryName));
+                        logger = new InternalLogger(categoryName, CreateLoggers(categoryName));
                         logger.MessageLoggers = ApplyFilters(logger.Loggers);
                         _loggers[categoryName] = logger;
                     }
@@ -66,16 +66,16 @@ namespace Netty.NET.Common.Internal.Logging
         }
 
 
-        public void AddProvider(ILoggerProvider provider)
+        public void AddProvider(IInternalLoggerProvider provider)
         {
             AddProvider(provider, LogLevel.Trace, null);
         }
 
-        public void AddProvider(ILoggerProvider provider, LogLevel minLevel, Func<string, string, LogLevel, bool> filter)
+        public void AddProvider(IInternalLoggerProvider provider, LogLevel minLevel, Func<string, string, LogLevel, bool> filter)
         {
             if (CheckDisposed())
             {
-                throw new ObjectDisposedException(nameof(LoggerFactory));
+                throw new ObjectDisposedException(nameof(DefaultLoggerFactory));
             }
 
             if (provider == null)
@@ -88,9 +88,9 @@ namespace Netty.NET.Common.Internal.Logging
                 var providerRegistration = new ProviderRegistration(provider, true, minLevel, filter);
                 _providerRegistrations.Add(providerRegistration);
 
-                foreach (KeyValuePair<string, Logger> existingLogger in _loggers)
+                foreach (KeyValuePair<string, InternalLogger> existingLogger in _loggers)
                 {
-                    Logger logger = existingLogger.Value;
+                    InternalLogger logger = existingLogger.Value;
 
                     // 
                     LoggerInformation[] loggerInformation = logger.Loggers;

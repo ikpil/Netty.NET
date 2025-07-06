@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 public abstract class AbstractInternalLogger : IInternalLogger
 {
-    private static readonly string EXCEPTION_MESSAGE = "Unexpected exception:";
+    protected static readonly string EXCEPTION_MESSAGE = "Unexpected exception:";
 
     private readonly string _name;
 

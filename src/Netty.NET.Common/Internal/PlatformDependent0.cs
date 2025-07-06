@@ -16,23 +16,6 @@
 namespace Netty.NET.Common.Internal;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * The {@link PlatformDependent} operations which requires access to {@code sun.misc.*}.
  */

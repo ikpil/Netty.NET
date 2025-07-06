@@ -36,18 +36,18 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 public abstract class InternalLoggerFactory
 {
-    private static ILoggerFactory defaultFactory;
+    private static IInternalLoggerFactory defaultFactory;
 
-    private static ILoggerFactory newDefaultFactory(string name)
+    private static IInternalLoggerFactory newDefaultFactory(string name)
     {
-        return new LoggerFactory();
+        return new DefaultLoggerFactory();
     }
 
     /**
      * Returns the default factory.  The initial default factory is
      * {@link JdkLoggerFactory}.
      */
-    public static ILoggerFactory getDefaultFactory()
+    public static IInternalLoggerFactory getDefaultFactory()
     {
         if (defaultFactory == null)
         {
@@ -70,7 +70,7 @@ public abstract class InternalLoggerFactory
     /**
      * Changes the default factory.
      */
-    public static void setDefaultFactory(ILoggerFactory factory)
+    public static void setDefaultFactory(IInternalLoggerFactory factory)
     {
         ObjectUtil.checkNotNull(factory, "defaultFactory");
         Volatile.Write(ref defaultFactory, factory);
@@ -79,12 +79,12 @@ public abstract class InternalLoggerFactory
     /**
      * Creates a new logger instance with the name of the specified class.
      */
-    public static IInternalLogger getInstance<T>()
+    public static InternalLogger getInstance<T>()
     {
         return getInstance(typeof(T));
     }
 
-    public static IInternalLogger getInstance(Type type)
+    public static InternalLogger getInstance(Type type)
     {
         return getInstance(type.FullName);
     }
@@ -93,7 +93,7 @@ public abstract class InternalLoggerFactory
     /**
      * Creates a new logger instance with the specified name.
      */
-    public static IInternalLogger getInstance(string name)
+    public static InternalLogger getInstance(string name)
     {
         return getDefaultFactory().newInstance(name);
     }
