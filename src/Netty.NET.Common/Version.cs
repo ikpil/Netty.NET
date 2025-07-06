@@ -14,20 +14,13 @@
  * under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Reflection;
+
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Retrieves the version information of available Netty artifacts.
@@ -37,8 +30,8 @@ namespace Netty.NET.Common;
  * your environment, such as the specified {@link ClassLoader}, the current {@link SecurityManager}.
  * </p>
  */
-public final class Version {
-
+public sealed class Version
+{
     private static readonly string PROP_VERSION = ".version";
     private static readonly string PROP_BUILD_DATE = ".buildDate";
     private static readonly string PROP_COMMIT_DATE = ".commitDate";
@@ -52,7 +45,8 @@ public final class Version {
      *
      * @return A {@link Map} whose keys are Maven artifact IDs and whose values are {@link Version}s
      */
-    public static Map<string, Version> identify() {
+    public static IDictionary<string, Version> identify()
+    {
         return identify(null);
     }
 
@@ -61,78 +55,103 @@ public final class Version {
      *
      * @return A {@link Map} whose keys are Maven artifact IDs and whose values are {@link Version}s
      */
-    public static Map<string, Version> identify(ClassLoader classLoader) {
-        if (classLoader == null) {
-            classLoader = PlatformDependent.getContextClassLoader();
+    public static IDictionary<string, Version> identify(Assembly classLoader)
+    {
+        if (classLoader == null)
+        {
+            classLoader = Assembly.GetExecutingAssembly();
         }
 
         // Collect all properties.
-        Properties props = new Properties();
-        try {
-            Enumeration<URL> resources = classLoader.getResources("META-INF/io.netty.versions.properties");
-            while (resources.hasMoreElements()) {
-                URL url = resources.nextElement();
-                InputStream in = url.openStream();
-                try {
-                    props.load(in);
-                } finally {
-                    try {
-                        in.close();
-                    } catch (Exception ignore) {
-                        // Ignore.
-                    }
+        IDictionary<string, string> props = new Dictionary<string, string>();
+        try
+        {
+            var lines = File.ReadLines("io.netty.versions.properties");
+            foreach (var line in lines)
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#")) continue;
+                var index = trimmed.IndexOf('=');
+                if (index > 0)
+                {
+                    var key = trimmed.Substring(0, index).Trim();
+                    var value = trimmed.Substring(index + 1).Trim();
+                    props[key] = value;
                 }
             }
-        } catch (Exception ignore) {
+        }
+        catch (Exception ignore)
+        {
             // Not critical. Just ignore.
         }
 
         // Collect all artifactIds.
-        Set<string> artifactIds = new HashSet<string>();
-        for (object o: props.keySet()) {
-            string k = (string) o;
-
-            int dotIndex = k.indexOf('.');
-            if (dotIndex <= 0) {
+        ISet<string> artifactIds = new HashSet<string>();
+        foreach (string k in props.Keys)
+        {
+            int dotIndex = k.IndexOf('.');
+            if (dotIndex <= 0)
+            {
                 continue;
             }
 
-            string artifactId = k.substring(0, dotIndex);
+            string artifactId = k.Substring(0, dotIndex);
 
             // Skip the entries without required information.
-            if (!props.containsKey(artifactId + PROP_VERSION) ||
-                !props.containsKey(artifactId + PROP_BUILD_DATE) ||
-                !props.containsKey(artifactId + PROP_COMMIT_DATE) ||
-                !props.containsKey(artifactId + PROP_SHORT_COMMIT_HASH) ||
-                !props.containsKey(artifactId + PROP_LONG_COMMIT_HASH) ||
-                !props.containsKey(artifactId + PROP_REPO_STATUS)) {
+            if (!props.ContainsKey(artifactId + PROP_VERSION) ||
+                !props.ContainsKey(artifactId + PROP_BUILD_DATE) ||
+                !props.ContainsKey(artifactId + PROP_COMMIT_DATE) ||
+                !props.ContainsKey(artifactId + PROP_SHORT_COMMIT_HASH) ||
+                !props.ContainsKey(artifactId + PROP_LONG_COMMIT_HASH) ||
+                !props.ContainsKey(artifactId + PROP_REPO_STATUS))
+            {
                 continue;
             }
 
-            artifactIds.add(artifactId);
+            artifactIds.Add(artifactId);
         }
 
-        Map<string, Version> versions = new TreeMap<string, Version>();
-        for (string artifactId: artifactIds) {
-            versions.put(
+        IDictionary<string, Version> versions = new SortedDictionary<string, Version>();
+        foreach (string artifactId in artifactIds)
+        {
+            versions.Add(
+                artifactId,
+                new Version(
                     artifactId,
-                    new Version(
-                            artifactId,
-                            props.getProperty(artifactId + PROP_VERSION),
-                            parseIso8601(props.getProperty(artifactId + PROP_BUILD_DATE)),
-                            parseIso8601(props.getProperty(artifactId + PROP_COMMIT_DATE)),
-                            props.getProperty(artifactId + PROP_SHORT_COMMIT_HASH),
-                            props.getProperty(artifactId + PROP_LONG_COMMIT_HASH),
-                            props.getProperty(artifactId + PROP_REPO_STATUS)));
+                    getProperty(props, artifactId + PROP_VERSION),
+                    parseIso8601(getProperty(props, artifactId + PROP_BUILD_DATE)),
+                    parseIso8601(getProperty(props, artifactId + PROP_COMMIT_DATE)),
+                    getProperty(props, artifactId + PROP_SHORT_COMMIT_HASH),
+                    getProperty(props, artifactId + PROP_LONG_COMMIT_HASH),
+                    getProperty(props, artifactId + PROP_REPO_STATUS)));
         }
 
         return versions;
     }
 
-    private static long parseIso8601(string value) {
-        try {
-            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").parse(value).getTime();
-        } catch (ParseException ignored) {
+    private static string getProperty(IDictionary<string, string> props, string key)
+    {
+        return props.TryGetValue(key, out var value)
+            ? value
+            : "";
+    }
+
+    private static long parseIso8601(string value)
+    {
+        try
+        {
+            // Java 포맷 "yyyy-MM-dd HH:mm:ss Z"
+            // C# 포맷 "yyyy-MM-dd HH:mm:ss zzz"
+            var dt = DateTime.ParseExact(
+                value,
+                "yyyy-MM-dd HH:mm:ss zzz",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AdjustToUniversal);
+            // Unix 시간(ms)으로 변환
+            return new DateTimeOffset(dt).ToUnixTimeMilliseconds();
+        }
+        catch (FormatException)
+        {
             return 0;
         }
     }
@@ -140,64 +159,74 @@ public final class Version {
     /**
      * Prints the version information to {@link System#err}.
      */
-    public static void main(string[] args) {
-        for (Version v: identify().values()) {
-            System.err.println(v);
+    public static void Main(string[] args)
+    {
+        foreach (Version v in identify().Values)
+        {
+            Console.Error.WriteLine(v);
         }
     }
 
-    private readonly string artifactId;
-    private readonly string artifactVersion;
-    private readonly long buildTimeMillis;
-    private readonly long commitTimeMillis;
-    private readonly string shortCommitHash;
-    private readonly string longCommitHash;
-    private readonly string repositoryStatus;
+    private readonly string _artifactId;
+    private readonly string _artifactVersion;
+    private readonly long _buildTimeMillis;
+    private readonly long _commitTimeMillis;
+    private readonly string _shortCommitHash;
+    private readonly string _longCommitHash;
+    private readonly string _repositoryStatus;
 
     private Version(
-            string artifactId, string artifactVersion,
-            long buildTimeMillis, long commitTimeMillis,
-            string shortCommitHash, string longCommitHash, string repositoryStatus) {
-        this.artifactId = artifactId;
-        this.artifactVersion = artifactVersion;
-        this.buildTimeMillis = buildTimeMillis;
-        this.commitTimeMillis = commitTimeMillis;
-        this.shortCommitHash = shortCommitHash;
-        this.longCommitHash = longCommitHash;
-        this.repositoryStatus = repositoryStatus;
+        string artifactId, string artifactVersion,
+        long buildTimeMillis, long commitTimeMillis,
+        string shortCommitHash, string longCommitHash, string repositoryStatus)
+    {
+        _artifactId = artifactId;
+        _artifactVersion = artifactVersion;
+        _buildTimeMillis = buildTimeMillis;
+        _commitTimeMillis = commitTimeMillis;
+        _shortCommitHash = shortCommitHash;
+        _longCommitHash = longCommitHash;
+        _repositoryStatus = repositoryStatus;
     }
 
-    public string artifactId() {
-        return artifactId;
+    public string artifactId()
+    {
+        return _artifactId;
     }
 
-    public string artifactVersion() {
-        return artifactVersion;
+    public string artifactVersion()
+    {
+        return _artifactVersion;
     }
 
-    public long buildTimeMillis() {
-        return buildTimeMillis;
+    public long buildTimeMillis()
+    {
+        return _buildTimeMillis;
     }
 
-    public long commitTimeMillis() {
-        return commitTimeMillis;
+    public long commitTimeMillis()
+    {
+        return _commitTimeMillis;
     }
 
-    public string shortCommitHash() {
-        return shortCommitHash;
+    public string shortCommitHash()
+    {
+        return _shortCommitHash;
     }
 
-    public string longCommitHash() {
-        return longCommitHash;
+    public string longCommitHash()
+    {
+        return _longCommitHash;
     }
 
-    public string repositoryStatus() {
-        return repositoryStatus;
+    public string repositoryStatus()
+    {
+        return _repositoryStatus;
     }
 
-    @Override
-    public string toString() {
-        return artifactId + '-' + artifactVersion + '.' + shortCommitHash +
-               ("clean".equals(repositoryStatus)? "" : " (repository: " + repositoryStatus + ')');
+    public override string ToString()
+    {
+        return _artifactId + '-' + _artifactVersion + '.' + _shortCommitHash +
+               ("clean" == _repositoryStatus ? "" : " (repository: " + _repositoryStatus + ')');
     }
 }

@@ -13,13 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Internal;
 
+
+using System;
+using Netty.NET.Common.Internal.Logging;
+
+namespace Netty.NET.Common.Internal;
 
 /**
  * The {@link PlatformDependent} operations which requires access to {@code sun.misc.*}.
  */
-final class PlatformDependent0 {
+public class PlatformDependent0 {
 
     private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent0));
     private static readonly long ADDRESS_FIELD_OFFSET;
