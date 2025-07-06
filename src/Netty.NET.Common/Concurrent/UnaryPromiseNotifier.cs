@@ -24,7 +24,7 @@ namespace Netty.NET.Common.Concurrent;
  * @deprecated use {@link PromiseNotifier#cascade(bool, Future, Promise)}.
  */
 @Deprecated
-public final class UnaryPromiseNotifier<T> implements FutureListener<T> {
+public final class UnaryPromiseNotifier<T> : FutureListener<T> {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(UnaryPromiseNotifier.class);
     private final Promise<? super T> promise;
 

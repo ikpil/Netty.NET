@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * A {@link ThreadFactory} implementation with a simple naming rule.
  */
-public class DefaultThreadFactory implements ThreadFactory {
+public class DefaultThreadFactory : ThreadFactory {
 
     private static final AtomicInteger poolId = new AtomicInteger();
 

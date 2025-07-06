@@ -28,7 +28,7 @@ namespace Netty.NET.Common.Internal;
  * Provide a way to clean direct {@link ByteBuffer} instances on Java 24+,
  * where we don't have {@code Unsafe} available, but we have memory segments.
  */
-final class CleanerJava25 implements Cleaner {
+final class CleanerJava25 : Cleaner {
     private static final InternalLogger logger;
 
     private static final MethodHandle INVOKE_ALLOCATOR;
@@ -177,7 +177,7 @@ final class CleanerJava25 implements Cleaner {
         throw new UnsupportedOperationException("Cannot clean arbitrary ByteBuffer instances");
     }
 
-    private static final class CleanableDirectBufferImpl implements CleanableDirectBuffer {
+    private static final class CleanableDirectBufferImpl : CleanableDirectBuffer {
         private final AutoCloseable closeable;
         private final ByteBuffer buffer;
         private final long memoryAddress;

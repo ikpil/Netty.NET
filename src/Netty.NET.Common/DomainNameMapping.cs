@@ -36,7 +36,7 @@ namespace Netty.NET.Common;
  * @deprecated Use {@link DomainWildcardMappingBuilder}}
  */
 @Deprecated
-public class DomainNameMapping<V> implements Mapping<String, V> {
+public class DomainNameMapping<V> : Mapping<String, V> {
 
     final V defaultValue;
     private final Map<String, V> map;

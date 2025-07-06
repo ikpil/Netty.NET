@@ -229,7 +229,7 @@ public abstract class Recycler<T> {
     public interface Handle<T> extends ObjectPool.Handle<T>  { }
 
     @UnstableApi
-    public abstract static class EnhancedHandle<T> implements Handle<T> {
+    public abstract static class EnhancedHandle<T> : Handle<T> {
 
         public abstract void unguardedRecycle(Object object);
 
@@ -300,7 +300,7 @@ public abstract class Recycler<T> {
         }
     }
 
-    private static final class LocalPool<T> implements MessagePassingQueue.Consumer<DefaultHandle<T>> {
+    private static final class LocalPool<T> : MessagePassingQueue.Consumer<DefaultHandle<T>> {
         private final int ratioInterval;
         private final int chunkSize;
         private final ArrayDeque<DefaultHandle<T>> batch;
@@ -385,7 +385,7 @@ public abstract class Recycler<T> {
      * The implementation relies on synchronised monitor locks for thread-safety.
      * The {@code fill} bulk operation is not supported by this implementation.
      */
-    private static final class BlockingMessageQueue<T> implements MessagePassingQueue<T> {
+    private static final class BlockingMessageQueue<T> : MessagePassingQueue<T> {
         private final Queue<T> deque;
         private final int maxCapacity;
 

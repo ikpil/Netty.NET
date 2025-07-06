@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Internal;
  * @deprecated please use {@link LongAdder} instead.
  */
 @Deprecated
-final class LongAdderCounter extends LongAdder implements LongCounter {
+final class LongAdderCounter extends LongAdder : LongCounter {
 
     @Override
     public long value() {

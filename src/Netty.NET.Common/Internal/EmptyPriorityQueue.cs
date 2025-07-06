@@ -20,7 +20,7 @@ namespace Netty.NET.Common.Internal;
 
 
 
-public final class EmptyPriorityQueue<T> implements PriorityQueue<T> {
+public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
     private static final PriorityQueue<Object> INSTANCE = new EmptyPriorityQueue<Object>();
 
     private EmptyPriorityQueue() {

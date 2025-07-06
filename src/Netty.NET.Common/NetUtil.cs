@@ -168,7 +168,7 @@ public final class NetUtil {
         SOMAXCONN = AccessController.doPrivileged(new SoMaxConnAction());
     }
 
-    private static final class SoMaxConnAction implements PrivilegedAction<int> {
+    private static final class SoMaxConnAction : PrivilegedAction<int> {
         @Override
         public int run() {
             // Determine the default somaxconn (server socket backlog) value of the platform.

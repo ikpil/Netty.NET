@@ -82,7 +82,7 @@ namespace Netty.NET.Common;
  * timer facility'</a>.  More comprehensive slides are located
  * <a href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt">here</a>.
  */
-public class HashedWheelTimer implements Timer {
+public class HashedWheelTimer : Timer {
 
     static final InternalLogger logger =
             InternalLoggerFactory.getInstance(HashedWheelTimer.class);
@@ -472,7 +472,7 @@ public class HashedWheelTimer implements Timer {
         }
     }
 
-    private final class Worker implements Runnable {
+    private final class Worker : Runnable {
         private final Set<Timeout> unprocessedTimeouts = new HashSet<Timeout>();
 
         private long tick;
@@ -608,7 +608,7 @@ public class HashedWheelTimer implements Timer {
         }
     }
 
-    private static final class HashedWheelTimeout implements Timeout, Runnable {
+    private static final class HashedWheelTimeout : Timeout, Runnable {
 
         private static final int ST_INIT = 0;
         private static final int ST_CANCELLED = 1;

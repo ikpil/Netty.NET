@@ -212,7 +212,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
         return new PriorityQueueIterator();
     }
 
-    private final class PriorityQueueIterator implements Iterator<T> {
+    private final class PriorityQueueIterator : Iterator<T> {
         private int index;
 
         @Override

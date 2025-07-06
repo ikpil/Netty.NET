@@ -39,7 +39,7 @@ namespace Netty.NET.Common.Concurrent;
  * executors of type {@link OrderedEventExecutor}.
  */
 @UnstableApi
-public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
+public final class NonStickyEventExecutorGroup : EventExecutorGroup {
     private final EventExecutorGroup group;
     private final int maxTaskExecutePerRun;
 

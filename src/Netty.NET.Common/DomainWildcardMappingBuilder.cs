@@ -98,7 +98,7 @@ public class DomainWildcardMappingBuilder<V> {
         return new ImmutableDomainWildcardMapping<V>(defaultValue, map);
     }
 
-    private static final class ImmutableDomainWildcardMapping<V> implements Mapping<String, V> {
+    private static final class ImmutableDomainWildcardMapping<V> : Mapping<String, V> {
         private static final String REPR_HEADER = "ImmutableDomainWildcardMapping(default: ";
         private static final String REPR_MAP_OPENING = ", map: ";
         private static final String REPR_MAP_CLOSING = ")";

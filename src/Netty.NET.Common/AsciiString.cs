@@ -44,7 +44,7 @@ namespace Netty.NET.Common;
  * {@link #array()}. If any changes are made to the underlying byte array it is the user's responsibility to call
  * {@link #arrayChanged()} so the state of this class can be reset.
  */
-public final class AsciiString implements CharSequence, Comparable<CharSequence> {
+public final class AsciiString : CharSequence, Comparable<CharSequence> {
     public static final AsciiString EMPTY_STRING = cached("");
     private static final char MAX_CHAR_VALUE = 255;
 
@@ -1529,7 +1529,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         bool equals(char a, char b);
     }
 
-    private static final class DefaultCharEqualityComparator implements CharEqualityComparator {
+    private static final class DefaultCharEqualityComparator : CharEqualityComparator {
         static final DefaultCharEqualityComparator INSTANCE = new DefaultCharEqualityComparator();
         private DefaultCharEqualityComparator() { }
 
@@ -1539,7 +1539,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         }
     }
 
-    private static final class AsciiCaseInsensitiveCharEqualityComparator implements CharEqualityComparator {
+    private static final class AsciiCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
         static final AsciiCaseInsensitiveCharEqualityComparator
                 INSTANCE = new AsciiCaseInsensitiveCharEqualityComparator();
         private AsciiCaseInsensitiveCharEqualityComparator() { }
@@ -1550,7 +1550,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         }
     }
 
-    private static final class GeneralCaseInsensitiveCharEqualityComparator implements CharEqualityComparator {
+    private static final class GeneralCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
         static final GeneralCaseInsensitiveCharEqualityComparator
                 INSTANCE = new GeneralCaseInsensitiveCharEqualityComparator();
         private GeneralCaseInsensitiveCharEqualityComparator() { }

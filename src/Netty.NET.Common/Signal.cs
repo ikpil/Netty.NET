@@ -20,7 +20,7 @@ namespace Netty.NET.Common;
  * A special {@link Error} which is used to signal some state or request by throwing it.
  * {@link Signal} has an empty stack trace and has no cause to save the instantiation overhead.
  */
-public final class Signal extends Error implements Constant<Signal> {
+public final class Signal extends Error : Constant<Signal> {
 
     private static final long serialVersionUID = -221145131122459977L;
 

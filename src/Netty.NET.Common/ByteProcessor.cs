@@ -26,7 +26,7 @@ public interface ByteProcessor {
     /**
      * A {@link ByteProcessor} which finds the first appearance of a specific byte.
      */
-    class IndexOfProcessor implements ByteProcessor {
+    class IndexOfProcessor : ByteProcessor {
         private final byte byteToFind;
 
         public IndexOfProcessor(byte byteToFind) {
@@ -42,7 +42,7 @@ public interface ByteProcessor {
     /**
      * A {@link ByteProcessor} which finds the first appearance which is not of a specific byte.
      */
-    class IndexNotOfProcessor implements ByteProcessor {
+    class IndexNotOfProcessor : ByteProcessor {
         private final byte byteToNotFind;
 
         public IndexNotOfProcessor(byte byteToNotFind) {

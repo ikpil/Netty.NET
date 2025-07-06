@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Internal.Logging;
  * all methods that have a {@link InternalLogLevel} parameter by default to call
  * specific logger methods such as {@link #info(String)} or {@link #isInfoEnabled()}.
  */
-public abstract class AbstractInternalLogger implements InternalLogger, Serializable {
+public abstract class AbstractInternalLogger : InternalLogger, Serializable {
 
     private static final long serialVersionUID = -6382972526573193470L;
 

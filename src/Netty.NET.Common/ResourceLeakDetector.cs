@@ -384,7 +384,7 @@ public class ResourceLeakDetector<T> {
 
     @SuppressWarnings("deprecation")
     private static final class DefaultResourceLeak<T>
-            extends WeakReference<Object> implements ResourceLeakTracker<T>, ResourceLeak {
+            extends WeakReference<Object> : ResourceLeakTracker<T>, ResourceLeak {
 
         @SuppressWarnings("unchecked") // generics and updaters do not mix.
         private static final AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater =

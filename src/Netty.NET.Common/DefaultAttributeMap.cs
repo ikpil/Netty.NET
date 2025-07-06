@@ -26,7 +26,7 @@ namespace Netty.NET.Common;
  * copy-on-write approach on the modify path.<br> Attributes lookup and remove exibit {@code O(logn)} time worst-case
  * complexity, hence {@code attribute::set(null)} is to be preferred to {@code remove}.
  */
-public class DefaultAttributeMap implements AttributeMap {
+public class DefaultAttributeMap : AttributeMap {
 
     private static final AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(DefaultAttributeMap.class, DefaultAttribute[].class, "attributes");
@@ -154,7 +154,7 @@ public class DefaultAttributeMap implements AttributeMap {
     }
 
     @SuppressWarnings("serial")
-    private static final class DefaultAttribute<T> extends AtomicReference<T> implements Attribute<T> {
+    private static final class DefaultAttribute<T> extends AtomicReference<T> : Attribute<T> {
 
         private static final AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(DefaultAttribute.class,

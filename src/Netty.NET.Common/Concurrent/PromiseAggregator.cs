@@ -32,7 +32,7 @@ namespace Netty.NET.Common.Concurrent;
  * @param <F> the type of {@link Future}
  */
 @Deprecated
-public class PromiseAggregator<V, F extends Future<V>> implements GenericFutureListener<F> {
+public class PromiseAggregator<V, F extends Future<V>> : GenericFutureListener<F> {
 
     private final Promise<?> aggregatePromise;
     private final bool failPending;

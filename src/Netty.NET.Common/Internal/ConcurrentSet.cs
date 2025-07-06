@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Internal;
  * @deprecated For removal in Netty 4.2. Please use {@link ConcurrentHashMap#newKeySet()} instead
  */
 @Deprecated
-public final class ConcurrentSet<E> extends AbstractSet<E> implements Serializable {
+public final class ConcurrentSet<E> extends AbstractSet<E> : Serializable {
 
     private static final long serialVersionUID = -6761513279741915432L;
 

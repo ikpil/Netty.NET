@@ -48,7 +48,7 @@ namespace Netty.NET.Common.Concurrent;
  * off-loading to their own thread-pools.
  */
 @Deprecated
-public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor implements EventExecutor {
+public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor : EventExecutor {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(
             UnorderedThreadPoolEventExecutor.class);
 
@@ -290,7 +290,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     // EventExecutor.execute(...) when notify the listeners of the promise.
     //
     // See https://github.com/netty/netty/issues/6507
-    private static final class NonNotifyRunnable implements Runnable {
+    private static final class NonNotifyRunnable : Runnable {
 
         private final Runnable task;
 
@@ -304,7 +304,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         }
     }
 
-    private static final class AccountingThreadFactory implements ThreadFactory {
+    private static final class AccountingThreadFactory : ThreadFactory {
         private final ThreadFactory delegate;
         private final Set<Thread> threads;
 

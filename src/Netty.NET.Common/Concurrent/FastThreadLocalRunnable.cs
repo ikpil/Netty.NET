@@ -17,7 +17,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 
-final class FastThreadLocalRunnable implements Runnable {
+final class FastThreadLocalRunnable : Runnable {
     private final Runnable runnable;
 
     private FastThreadLocalRunnable(Runnable runnable) {

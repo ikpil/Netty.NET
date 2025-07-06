@@ -20,7 +20,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 
-public final class ThreadPerTaskExecutor implements Executor {
+public final class ThreadPerTaskExecutor : Executor {
     private final ThreadFactory threadFactory;
 
     public ThreadPerTaskExecutor(ThreadFactory threadFactory) {

@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Internal;
 
 
 
-public class CleanerJava24Linker implements Cleaner {
+public class CleanerJava24Linker : Cleaner {
     private static final InternalLogger logger;
 
     private static final MethodHandle INVOKE_MALLOC;
@@ -224,7 +224,7 @@ public class CleanerJava24Linker implements Cleaner {
         }
     }
 
-    private static final class CleanableDirectBufferImpl implements CleanableDirectBuffer {
+    private static final class CleanableDirectBufferImpl : CleanableDirectBuffer {
         private final ByteBuffer buffer;
         private final long memoryAddress;
 

@@ -18,7 +18,7 @@ namespace Netty.NET.Common.Internal;
 
 
 
-public final class ReadOnlyIterator<T> implements Iterator<T> {
+public final class ReadOnlyIterator<T> : Iterator<T> {
     private final Iterator<? extends T> iterator;
 
     public ReadOnlyIterator(Iterator<? extends T> iterator) {

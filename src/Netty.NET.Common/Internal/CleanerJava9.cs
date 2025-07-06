@@ -30,7 +30,7 @@ namespace Netty.NET.Common.Internal;
 /**
  * Provide a way to clean a ByteBuffer on Java9+.
  */
-final class CleanerJava9 implements Cleaner {
+final class CleanerJava9 : Cleaner {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(CleanerJava9.class);
 
     private static final MethodHandle INVOKE_CLEANER;
@@ -123,7 +123,7 @@ final class CleanerJava9 implements Cleaner {
         }
     }
 
-    private static final class CleanableDirectBufferImpl implements CleanableDirectBuffer {
+    private static final class CleanableDirectBufferImpl : CleanableDirectBuffer {
         private final ByteBuffer buffer;
 
         private CleanableDirectBufferImpl(ByteBuffer buffer) {

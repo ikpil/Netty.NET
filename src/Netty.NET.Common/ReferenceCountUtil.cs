@@ -176,7 +176,7 @@ public final class ReferenceCountUtil {
     /**
      * Releases the objects when the thread that called {@link #releaseLater(Object)} has been terminated.
      */
-    private static final class ReleasingTask implements Runnable {
+    private static final class ReleasingTask : Runnable {
 
         private final ReferenceCounted obj;
         private final int decrement;

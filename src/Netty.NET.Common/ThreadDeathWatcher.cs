@@ -143,7 +143,7 @@ public final class ThreadDeathWatcher {
 
     private ThreadDeathWatcher() { }
 
-    private static final class Watcher implements Runnable {
+    private static final class Watcher : Runnable {
 
         private final List<Entry> watchees = new ArrayList<Entry>();
 

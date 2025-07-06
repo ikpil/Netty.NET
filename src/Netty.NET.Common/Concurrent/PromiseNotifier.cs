@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Concurrent;
  * @param <V> the type of value returned by the future
  * @param <F> the type of future
  */
-public class PromiseNotifier<V, F extends Future<V>> implements GenericFutureListener<F> {
+public class PromiseNotifier<V, F extends Future<V>> : GenericFutureListener<F> {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PromiseNotifier.class);
     private final Promise<? super V>[] promises;

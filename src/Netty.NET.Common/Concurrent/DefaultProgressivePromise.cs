@@ -18,7 +18,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 
-public class DefaultProgressivePromise<V> extends DefaultPromise<V> implements ProgressivePromise<V> {
+public class DefaultProgressivePromise<V> extends DefaultPromise<V> : ProgressivePromise<V> {
 
     /**
      * Creates a new instance.

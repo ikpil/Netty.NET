@@ -18,7 +18,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 
-final class SystemTicker implements Ticker {
+final class SystemTicker : Ticker {
     static final SystemTicker INSTANCE = new SystemTicker();
     private static final long START_TIME = System.nanoTime();
 

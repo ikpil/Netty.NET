@@ -41,7 +41,7 @@ namespace Netty.NET.Common.Concurrent;
  * (default is 1 second).  Please note it is not scalable to schedule large number of tasks to this executor;
  * use a dedicated executor.
  */
-public final class GlobalEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
+public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : OrderedEventExecutor {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(GlobalEventExecutor.class);
 
     private static final long SCHEDULE_QUIET_PERIOD_INTERVAL;
@@ -274,7 +274,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
         });
     }
 
-    final class TaskRunner implements Runnable {
+    final class TaskRunner : Runnable {
         @Override
         public void run() {
             for (;;) {

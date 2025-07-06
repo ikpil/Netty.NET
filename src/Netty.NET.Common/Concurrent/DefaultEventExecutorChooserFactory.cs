@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * Default implementation which uses simple round-robin to choose next {@link EventExecutor}.
  */
-public final class DefaultEventExecutorChooserFactory implements EventExecutorChooserFactory {
+public final class DefaultEventExecutorChooserFactory : EventExecutorChooserFactory {
 
     public static final DefaultEventExecutorChooserFactory INSTANCE = new DefaultEventExecutorChooserFactory();
 
@@ -40,7 +40,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
         return (val & -val) == val;
     }
 
-    private static final class PowerOfTwoEventExecutorChooser implements EventExecutorChooser {
+    private static final class PowerOfTwoEventExecutorChooser : EventExecutorChooser {
         private final AtomicInteger idx = new AtomicInteger();
         private final EventExecutor[] executors;
 
@@ -54,7 +54,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
         }
     }
 
-    private static final class GenericEventExecutorChooser implements EventExecutorChooser {
+    private static final class GenericEventExecutorChooser : EventExecutorChooser {
         // Use a 'long' counter to avoid non-round-robin behaviour at the 32-bit overflow boundary.
         // The 64-bit long solves this by placing the overflow so far into the future, that no system
         // will encounter this in practice.

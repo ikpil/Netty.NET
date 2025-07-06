@@ -17,7 +17,7 @@ namespace Netty.NET.Common.Internal;
 
 
 
-final class DirectCleaner implements Cleaner {
+final class DirectCleaner : Cleaner {
     @Override
     public CleanableDirectBuffer allocate(int capacity) {
         return new CleanableDirectBufferImpl(PlatformDependent.allocateDirectNoCleaner(capacity));
@@ -33,7 +33,7 @@ final class DirectCleaner implements Cleaner {
         return new CleanableDirectBufferImpl(newByteBuffer);
     }
 
-    private static final class CleanableDirectBufferImpl implements CleanableDirectBuffer {
+    private static final class CleanableDirectBufferImpl : CleanableDirectBuffer {
         private final ByteBuffer buffer;
 
         private CleanableDirectBufferImpl(ByteBuffer buffer) {

@@ -35,7 +35,7 @@ class Hidden {
      * and SHOULD NOT be considered a public API.
      */
     @UnstableApi
-    public static final class NettyBlockHoundIntegration implements BlockHoundIntegration {
+    public static final class NettyBlockHoundIntegration : BlockHoundIntegration {
 
         @Override
         public void applyTo(BlockHound.Builder builder) {

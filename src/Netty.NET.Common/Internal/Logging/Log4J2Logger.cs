@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Internal.Logging;
 
 
 
-class Log4J2Logger extends ExtendedLoggerWrapper implements InternalLogger {
+class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
 
     private static final long serialVersionUID = 5485418394879791397L;
     private static final bool VARARGS_ONLY;

@@ -20,7 +20,7 @@ namespace Netty.NET.Common;
 /**
  * Base implementation of {@link Constant}.
  */
-public abstract class AbstractConstant<T extends AbstractConstant<T>> implements Constant<T> {
+public abstract class AbstractConstant<T extends AbstractConstant<T>> : Constant<T> {
 
     private static final AtomicLong uniqueIdGenerator = new AtomicLong();
     private final int id;

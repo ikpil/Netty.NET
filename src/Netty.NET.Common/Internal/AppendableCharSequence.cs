@@ -20,7 +20,7 @@ namespace Netty.NET.Common.Internal;
 
 
 
-public final class AppendableCharSequence implements CharSequence, Appendable {
+public final class AppendableCharSequence : CharSequence, Appendable {
     private char[] chars;
     private int pos;
 
