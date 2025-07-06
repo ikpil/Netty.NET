@@ -29,9 +29,9 @@ namespace Netty.NET.Common.Internal;
  * where we don't have {@code Unsafe} available, but we have memory segments.
  */
 final class CleanerJava25 : Cleaner {
-    private static final InternalLogger logger;
+    private static readonly InternalLogger logger;
 
-    private static final MethodHandle INVOKE_ALLOCATOR;
+    private static readonly MethodHandle INVOKE_ALLOCATOR;
 
     static {
         bool suitableJavaVersion;
@@ -177,10 +177,10 @@ final class CleanerJava25 : Cleaner {
         throw new UnsupportedOperationException("Cannot clean arbitrary ByteBuffer instances");
     }
 
-    private static final class CleanableDirectBufferImpl : CleanableDirectBuffer {
-        private final AutoCloseable closeable;
-        private final ByteBuffer buffer;
-        private final long memoryAddress;
+    private static readonly class CleanableDirectBufferImpl : CleanableDirectBuffer {
+        private readonly AutoCloseable closeable;
+        private readonly ByteBuffer buffer;
+        private readonly long memoryAddress;
 
         // NOTE: must be at least package-protected to allow calls from the method handles!
         CleanableDirectBufferImpl(AutoCloseable closeable, ByteBuffer buffer, long memoryAddress) {

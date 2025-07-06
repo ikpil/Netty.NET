@@ -46,7 +46,7 @@ final class NetUtilSubstitutions {
     @InjectAccessors(NetUtilNetworkInterfacesAccessor.class)
     public static Collection<NetworkInterface> NETWORK_INTERFACES;
 
-    private static final class NetUtilLocalhost4Accessor {
+    private static readonly class NetUtilLocalhost4Accessor {
         static Inet4Address get() {
             // using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
             return NetUtilLocalhost4LazyHolder.LOCALHOST4;
@@ -57,11 +57,11 @@ final class NetUtilSubstitutions {
         }
     }
 
-    private static final class NetUtilLocalhost4LazyHolder {
-        private static final Inet4Address LOCALHOST4 = NetUtilInitializations.createLocalhost4();
+    private static readonly class NetUtilLocalhost4LazyHolder {
+        private static readonly Inet4Address LOCALHOST4 = NetUtilInitializations.createLocalhost4();
     }
 
-    private static final class NetUtilLocalhost6Accessor {
+    private static readonly class NetUtilLocalhost6Accessor {
         static Inet6Address get() {
             // using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
             return NetUtilLocalhost6LazyHolder.LOCALHOST6;
@@ -72,11 +72,11 @@ final class NetUtilSubstitutions {
         }
     }
 
-    private static final class NetUtilLocalhost6LazyHolder {
-        private static final Inet6Address LOCALHOST6 = NetUtilInitializations.createLocalhost6();
+    private static readonly class NetUtilLocalhost6LazyHolder {
+        private static readonly Inet6Address LOCALHOST6 = NetUtilInitializations.createLocalhost6();
     }
 
-    private static final class NetUtilLocalhostAccessor {
+    private static readonly class NetUtilLocalhostAccessor {
         static InetAddress get() {
             // using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
             return NetUtilLocalhostLazyHolder.LOCALHOST;
@@ -87,14 +87,14 @@ final class NetUtilSubstitutions {
         }
     }
 
-    private static final class NetUtilLocalhostLazyHolder {
-        private static final InetAddress LOCALHOST = NetUtilInitializations
+    private static readonly class NetUtilLocalhostLazyHolder {
+        private static readonly InetAddress LOCALHOST = NetUtilInitializations
                 .determineLoopback(NetUtilNetworkInterfacesLazyHolder.NETWORK_INTERFACES,
                         NetUtilLocalhost4LazyHolder.LOCALHOST4, NetUtilLocalhost6LazyHolder.LOCALHOST6)
                 .address();
     }
 
-    private static final class NetUtilNetworkInterfacesAccessor {
+    private static readonly class NetUtilNetworkInterfacesAccessor {
         static Collection<NetworkInterface> get() {
             // using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
             return NetUtilNetworkInterfacesLazyHolder.NETWORK_INTERFACES;
@@ -105,8 +105,8 @@ final class NetUtilSubstitutions {
         }
     }
 
-    private static final class NetUtilNetworkInterfacesLazyHolder {
-        private static final Collection<NetworkInterface> NETWORK_INTERFACES =
+    private static readonly class NetUtilNetworkInterfacesLazyHolder {
+        private static readonly Collection<NetworkInterface> NETWORK_INTERFACES =
                 NetUtilInitializations.networkInterfaces();
     }
 }

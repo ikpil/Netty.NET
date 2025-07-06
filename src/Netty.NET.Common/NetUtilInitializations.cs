@@ -35,7 +35,7 @@ final class NetUtilInitializations {
     /**
      * The logger being used by this class
      */
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(NetUtilInitializations.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(NetUtilInitializations.class);
 
     private NetUtilInitializations() {
     }
@@ -168,9 +168,9 @@ final class NetUtilInitializations {
         return new NetworkIfaceAndInetAddress(loopbackIface, loopbackAddr);
     }
 
-    static final class NetworkIfaceAndInetAddress {
-        private final NetworkInterface iface;
-        private final InetAddress address;
+    static readonly class NetworkIfaceAndInetAddress {
+        private readonly NetworkInterface iface;
+        private readonly InetAddress address;
 
         NetworkIfaceAndInetAddress(NetworkInterface iface, InetAddress address) {
             this.iface = iface;

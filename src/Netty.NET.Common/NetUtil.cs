@@ -54,89 +54,89 @@ public final class NetUtil {
     /**
      * The {@link Inet4Address} that represents the IPv4 loopback address '127.0.0.1'
      */
-    public static final Inet4Address LOCALHOST4;
+    public static readonly Inet4Address LOCALHOST4;
 
     /**
      * The {@link Inet6Address} that represents the IPv6 loopback address '::1'
      */
-    public static final Inet6Address LOCALHOST6;
+    public static readonly Inet6Address LOCALHOST6;
 
     /**
      * The {@link InetAddress} that represents the loopback address. If IPv6 stack is available, it will refer to
      * {@link #LOCALHOST6}.  Otherwise, {@link #LOCALHOST4}.
      */
-    public static final InetAddress LOCALHOST;
+    public static readonly InetAddress LOCALHOST;
 
     /**
      * The loopback {@link NetworkInterface} of the current machine
      */
-    public static final NetworkInterface LOOPBACK_IF;
+    public static readonly NetworkInterface LOOPBACK_IF;
 
     /**
      * An unmodifiable Collection of all the interfaces on this machine.
      */
-    public static final Collection<NetworkInterface> NETWORK_INTERFACES;
+    public static readonly Collection<NetworkInterface> NETWORK_INTERFACES;
 
     /**
      * The SOMAXCONN value of the current machine.  If failed to get the value,  {@code 200} is used as a
      * default value for Windows and {@code 128} for others.
      */
-    public static final int SOMAXCONN;
+    public static readonly int SOMAXCONN;
 
     /**
      * This defines how many words (represented as ints) are needed to represent an IPv6 address
      */
-    private static final int IPV6_WORD_COUNT = 8;
+    private static readonly int IPV6_WORD_COUNT = 8;
 
     /**
      * The maximum number of characters for an IPV6 string with no scope
      */
-    private static final int IPV6_MAX_CHAR_COUNT = 39;
+    private static readonly int IPV6_MAX_CHAR_COUNT = 39;
 
     /**
      * Number of bytes needed to represent an IPV6 value
      */
-    private static final int IPV6_BYTE_COUNT = 16;
+    private static readonly int IPV6_BYTE_COUNT = 16;
 
     /**
      * Maximum amount of value adding characters in between IPV6 separators
      */
-    private static final int IPV6_MAX_CHAR_BETWEEN_SEPARATOR = 4;
+    private static readonly int IPV6_MAX_CHAR_BETWEEN_SEPARATOR = 4;
 
     /**
      * Minimum number of separators that must be present in an IPv6 string
      */
-    private static final int IPV6_MIN_SEPARATORS = 2;
+    private static readonly int IPV6_MIN_SEPARATORS = 2;
 
     /**
      * Maximum number of separators that must be present in an IPv6 string
      */
-    private static final int IPV6_MAX_SEPARATORS = 8;
+    private static readonly int IPV6_MAX_SEPARATORS = 8;
 
     /**
      * Maximum amount of value adding characters in between IPV4 separators
      */
-    private static final int IPV4_MAX_CHAR_BETWEEN_SEPARATOR = 3;
+    private static readonly int IPV4_MAX_CHAR_BETWEEN_SEPARATOR = 3;
 
     /**
      * Number of separators that must be present in an IPv4 string
      */
-    private static final int IPV4_SEPARATORS = 3;
+    private static readonly int IPV4_SEPARATORS = 3;
 
     /**
      * {@code true} if IPv4 should be used even if the system supports both IPv4 and IPv6.
      */
-    private static final bool IPV4_PREFERRED = SystemPropertyUtil.getBoolean("java.net.preferIPv4Stack", false);
+    private static readonly bool IPV4_PREFERRED = SystemPropertyUtil.getBoolean("java.net.preferIPv4Stack", false);
 
     /**
      * {@code true} if an IPv6 address should be preferred when a host has both an IPv4 address and an IPv6 address.
      */
-    private static final bool IPV6_ADDRESSES_PREFERRED;
+    private static readonly bool IPV6_ADDRESSES_PREFERRED;
 
     /**
      * The logger being used by this class
      */
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(NetUtil.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(NetUtil.class);
 
     static {
         string prefer = SystemPropertyUtil.get("java.net.preferIPv6Addresses", "false");
@@ -168,7 +168,7 @@ public final class NetUtil {
         SOMAXCONN = AccessController.doPrivileged(new SoMaxConnAction());
     }
 
-    private static final class SoMaxConnAction : PrivilegedAction<int> {
+    private static readonly class SoMaxConnAction : PrivilegedAction<int> {
         @Override
         public int run() {
             // Determine the default somaxconn (server socket backlog) value of the platform.

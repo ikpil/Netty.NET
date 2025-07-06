@@ -46,15 +46,15 @@ namespace Netty.NET.Common;
 @Deprecated
 public final class ThreadDeathWatcher {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ThreadDeathWatcher.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ThreadDeathWatcher.class);
     // visible for testing
-    static final ThreadFactory threadFactory;
+    static readonly ThreadFactory threadFactory;
 
     // Use a MPMC queue as we may end up checking isEmpty() from multiple threads which may not be allowed to do
     // concurrently depending on the implementation of it in a MPSC queue.
-    private static final Queue<Entry> pendingEntries = new ConcurrentLinkedQueue<Entry>();
-    private static final Watcher watcher = new Watcher();
-    private static final AtomicBoolean started = new AtomicBoolean();
+    private static readonly Queue<Entry> pendingEntries = new ConcurrentLinkedQueue<Entry>();
+    private static readonly Watcher watcher = new Watcher();
+    private static readonly AtomicBoolean started = new AtomicBoolean();
     private static volatile Thread watcherThread;
 
     static {
@@ -143,9 +143,9 @@ public final class ThreadDeathWatcher {
 
     private ThreadDeathWatcher() { }
 
-    private static final class Watcher : Runnable {
+    private static readonly class Watcher : Runnable {
 
-        private final List<Entry> watchees = new ArrayList<Entry>();
+        private readonly List<Entry> watchees = new ArrayList<Entry>();
 
         @Override
         public void run() {
@@ -227,7 +227,7 @@ public final class ThreadDeathWatcher {
         }
     }
 
-    private static final class Entry {
+    private static readonly class Entry {
         final Thread thread;
         final Runnable task;
         final bool isWatch;

@@ -26,10 +26,10 @@ namespace Netty.NET.Common.Internal;
  * Calculate sizes in a adaptive way.
  */
 public final class AdaptiveCalculator {
-    private static final int INDEX_INCREMENT = 4;
-    private static final int INDEX_DECREMENT = 1;
+    private static readonly int INDEX_INCREMENT = 4;
+    private static readonly int INDEX_DECREMENT = 1;
 
-    private static final int[] SIZE_TABLE;
+    private static readonly int[] SIZE_TABLE;
 
     static {
         List<int> sizeTable = new ArrayList<int>();
@@ -72,10 +72,10 @@ public final class AdaptiveCalculator {
         }
     }
 
-    private final int minIndex;
-    private final int maxIndex;
-    private final int minCapacity;
-    private final int maxCapacity;
+    private readonly int minIndex;
+    private readonly int maxIndex;
+    private readonly int minCapacity;
+    private readonly int maxCapacity;
     private int index;
     private int nextSize;
     private bool decreaseNow;

@@ -73,7 +73,7 @@ public final class NettyRuntime {
         }
     }
 
-    private static final AvailableProcessorsHolder holder = new AvailableProcessorsHolder();
+    private static readonly AvailableProcessorsHolder holder = new AvailableProcessorsHolder();
 
     /**
      * Set the number of available processors.

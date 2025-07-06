@@ -45,24 +45,24 @@ namespace Netty.NET.Common;
  * {@link #arrayChanged()} so the state of this class can be reset.
  */
 public final class AsciiString : CharSequence, Comparable<CharSequence> {
-    public static final AsciiString EMPTY_STRING = cached("");
-    private static final char MAX_CHAR_VALUE = 255;
+    public static readonly AsciiString EMPTY_STRING = cached("");
+    private static readonly char MAX_CHAR_VALUE = 255;
 
-    public static final int INDEX_NOT_FOUND = -1;
+    public static readonly int INDEX_NOT_FOUND = -1;
 
     /**
      * If this value is modified outside the constructor then call {@link #arrayChanged()}.
      */
-    private final byte[] value;
+    private readonly byte[] value;
     /**
      * Offset into {@link #value} that all operations should use when acting upon {@link #value}.
      */
-    private final int offset;
+    private readonly int offset;
     /**
      * Length in bytes for {@link #value} that we care about. This is independent from {@code value.length}
      * because we may be looking at a subsection of the array.
      */
-    private final int length;
+    private readonly int length;
     /**
      * The hash code is cached after it is first computed. It can be reset with {@link #arrayChanged()}.
      */
@@ -1351,7 +1351,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
         return Double.parseDouble(toString(start, end));
     }
 
-    public static final HashingStrategy<CharSequence> CASE_INSENSITIVE_HASHER =
+    public static readonly HashingStrategy<CharSequence> CASE_INSENSITIVE_HASHER =
             new HashingStrategy<CharSequence>() {
         @Override
         public int hashCode(CharSequence o) {
@@ -1364,7 +1364,7 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
         }
     };
 
-    public static final HashingStrategy<CharSequence> CASE_SENSITIVE_HASHER =
+    public static readonly HashingStrategy<CharSequence> CASE_SENSITIVE_HASHER =
             new HashingStrategy<CharSequence>() {
         @Override
         public int hashCode(CharSequence o) {
@@ -1529,8 +1529,8 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
         bool equals(char a, char b);
     }
 
-    private static final class DefaultCharEqualityComparator : CharEqualityComparator {
-        static final DefaultCharEqualityComparator INSTANCE = new DefaultCharEqualityComparator();
+    private static readonly class DefaultCharEqualityComparator : CharEqualityComparator {
+        static readonly DefaultCharEqualityComparator INSTANCE = new DefaultCharEqualityComparator();
         private DefaultCharEqualityComparator() { }
 
         @Override
@@ -1539,8 +1539,8 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
         }
     }
 
-    private static final class AsciiCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
-        static final AsciiCaseInsensitiveCharEqualityComparator
+    private static readonly class AsciiCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
+        static readonly AsciiCaseInsensitiveCharEqualityComparator
                 INSTANCE = new AsciiCaseInsensitiveCharEqualityComparator();
         private AsciiCaseInsensitiveCharEqualityComparator() { }
 
@@ -1550,8 +1550,8 @@ public final class AsciiString : CharSequence, Comparable<CharSequence> {
         }
     }
 
-    private static final class GeneralCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
-        static final GeneralCaseInsensitiveCharEqualityComparator
+    private static readonly class GeneralCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
+        static readonly GeneralCaseInsensitiveCharEqualityComparator
                 INSTANCE = new GeneralCaseInsensitiveCharEqualityComparator();
         private GeneralCaseInsensitiveCharEqualityComparator() { }
 

@@ -49,12 +49,12 @@ namespace Netty.NET.Common.Concurrent;
  */
 @Deprecated
 public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor : EventExecutor {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(
             UnorderedThreadPoolEventExecutor.class);
 
-    private final Promise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
-    private final Set<EventExecutor> executorSet = Collections.singleton(this);
-    private final Set<Thread> eventLoopThreads = ConcurrentHashMap.newKeySet();
+    private readonly Promise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
+    private readonly Set<EventExecutor> executorSet = Collections.singleton(this);
+    private readonly Set<Thread> eventLoopThreads = ConcurrentHashMap.newKeySet();
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int, ThreadFactory)}
@@ -221,10 +221,10 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         super.schedule(new NonNotifyRunnable(command), 0, NANOSECONDS);
     }
 
-    private static final class RunnableScheduledFutureTask<V> extends PromiseTask<V>
+    private static readonly class RunnableScheduledFutureTask<V> extends PromiseTask<V>
             implements RunnableScheduledFuture<V>, ScheduledFuture<V> {
-        private final RunnableScheduledFuture<V> future;
-        private final bool wasCallable;
+        private readonly RunnableScheduledFuture<V> future;
+        private readonly bool wasCallable;
 
         RunnableScheduledFutureTask(EventExecutor executor, RunnableScheduledFuture<V> future, bool wasCallable) {
             super(executor, future);
@@ -290,9 +290,9 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     // EventExecutor.execute(...) when notify the listeners of the promise.
     //
     // See https://github.com/netty/netty/issues/6507
-    private static final class NonNotifyRunnable : Runnable {
+    private static readonly class NonNotifyRunnable : Runnable {
 
-        private final Runnable task;
+        private readonly Runnable task;
 
         NonNotifyRunnable(Runnable task) {
             this.task = task;
@@ -304,9 +304,9 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         }
     }
 
-    private static final class AccountingThreadFactory : ThreadFactory {
-        private final ThreadFactory delegate;
-        private final Set<Thread> threads;
+    private static readonly class AccountingThreadFactory : ThreadFactory {
+        private readonly ThreadFactory delegate;
+        private readonly Set<Thread> threads;
 
         private AccountingThreadFactory(ThreadFactory delegate, Set<Thread> threads) {
             this.delegate = delegate;

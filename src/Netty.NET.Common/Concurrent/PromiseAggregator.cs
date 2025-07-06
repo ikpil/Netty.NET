@@ -34,8 +34,8 @@ namespace Netty.NET.Common.Concurrent;
 @Deprecated
 public class PromiseAggregator<V, F extends Future<V>> : GenericFutureListener<F> {
 
-    private final Promise<?> aggregatePromise;
-    private final bool failPending;
+    private readonly Promise<?> aggregatePromise;
+    private readonly bool failPending;
     private Set<Promise<V>> pendingPromises;
 
     /**

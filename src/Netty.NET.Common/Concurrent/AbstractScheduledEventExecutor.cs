@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Concurrent;
  * Abstract base class for {@link EventExecutor}s that want to support scheduling.
  */
 public abstract class AbstractScheduledEventExecutor extends AbstractEventExecutor {
-    private static final Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
+    private static readonly Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
             new Comparator<ScheduledFutureTask<?>>() {
                 @Override
                 public int compare(ScheduledFutureTask<?> o1, ScheduledFutureTask<?> o2) {
@@ -37,7 +37,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
                 }
             };
 
-    static final Runnable WAKEUP_TASK = new Runnable() {
+    static readonly Runnable WAKEUP_TASK = new Runnable() {
        @Override
        public void run() { } // Do nothing
     };

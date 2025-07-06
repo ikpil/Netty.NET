@@ -40,8 +40,8 @@ namespace Netty.NET.Common;
  * @param <T> the type of the pooled object
  */
 public abstract class Recycler<T> {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(Recycler.class);
-    private static final EnhancedHandle<?> NOOP_HANDLE = new EnhancedHandle<object>() {
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(Recycler.class);
+    private static readonly EnhancedHandle<?> NOOP_HANDLE = new EnhancedHandle<object>() {
         @Override
         public void recycle(object object) {
             // NOOP
@@ -57,12 +57,12 @@ public abstract class Recycler<T> {
             return "NOOP_HANDLE";
         }
     };
-    private static final int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
-    private static final int DEFAULT_MAX_CAPACITY_PER_THREAD;
-    private static final int RATIO;
-    private static final int DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD;
-    private static final bool BLOCKING_POOL;
-    private static final bool BATCH_FAST_TL_ONLY;
+    private static readonly int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
+    private static readonly int DEFAULT_MAX_CAPACITY_PER_THREAD;
+    private static readonly int RATIO;
+    private static readonly int DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD;
+    private static readonly bool BLOCKING_POOL;
+    private static readonly bool BATCH_FAST_TL_ONLY;
 
     static {
         // In the future, we might have different maxCapacity for different object types.
@@ -102,10 +102,10 @@ public abstract class Recycler<T> {
         }
     }
 
-    private final int maxCapacityPerThread;
-    private final int interval;
-    private final int chunkSize;
-    private final FastThreadLocal<LocalPool<T>> threadLocal = new FastThreadLocal<LocalPool<T>>() {
+    private readonly int maxCapacityPerThread;
+    private readonly int interval;
+    private readonly int chunkSize;
+    private readonly FastThreadLocal<LocalPool<T>> threadLocal = new FastThreadLocal<LocalPool<T>>() {
         @Override
         protected LocalPool<T> initialValue() {
             return new LocalPool<T>(maxCapacityPerThread, interval, chunkSize);
@@ -237,10 +237,10 @@ public abstract class Recycler<T> {
         }
     }
 
-    private static final class DefaultHandle<T> extends EnhancedHandle<T> {
-        private static final int STATE_CLAIMED = 0;
-        private static final int STATE_AVAILABLE = 1;
-        private static final AtomicIntegerFieldUpdater<DefaultHandle<?>> STATE_UPDATER;
+    private static readonly class DefaultHandle<T> extends EnhancedHandle<T> {
+        private static readonly int STATE_CLAIMED = 0;
+        private static readonly int STATE_AVAILABLE = 1;
+        private static readonly AtomicIntegerFieldUpdater<DefaultHandle<?>> STATE_UPDATER;
         static {
             AtomicIntegerFieldUpdater<?> updater = AtomicIntegerFieldUpdater.newUpdater(DefaultHandle.class, "state");
             //noinspection unchecked
@@ -248,7 +248,7 @@ public abstract class Recycler<T> {
         }
 
         private volatile int state; // State is initialised to STATE_CLAIMED (aka. 0) so they can be released.
-        private final LocalPool<T> localPool;
+        private readonly LocalPool<T> localPool;
         private T value;
 
         DefaultHandle(LocalPool<T> localPool) {
@@ -300,10 +300,10 @@ public abstract class Recycler<T> {
         }
     }
 
-    private static final class LocalPool<T> : MessagePassingQueue.Consumer<DefaultHandle<T>> {
-        private final int ratioInterval;
-        private final int chunkSize;
-        private final ArrayDeque<DefaultHandle<T>> batch;
+    private static readonly class LocalPool<T> : MessagePassingQueue.Consumer<DefaultHandle<T>> {
+        private readonly int ratioInterval;
+        private readonly int chunkSize;
+        private readonly ArrayDeque<DefaultHandle<T>> batch;
         private volatile Thread owner;
         private volatile MessagePassingQueue<DefaultHandle<T>> pooledHandles;
         private int ratioCounter;
@@ -385,9 +385,9 @@ public abstract class Recycler<T> {
      * The implementation relies on synchronised monitor locks for thread-safety.
      * The {@code fill} bulk operation is not supported by this implementation.
      */
-    private static final class BlockingMessageQueue<T> : MessagePassingQueue<T> {
-        private final Queue<T> deque;
-        private final int maxCapacity;
+    private static readonly class BlockingMessageQueue<T> : MessagePassingQueue<T> {
+        private readonly Queue<T> deque;
+        private readonly int maxCapacity;
 
         BlockingMessageQueue(int maxCapacity) {
             this.maxCapacity = maxCapacity;

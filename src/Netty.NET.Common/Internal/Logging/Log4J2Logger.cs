@@ -28,8 +28,8 @@ namespace Netty.NET.Common.Internal.Logging;
 
 class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
 
-    private static final long serialVersionUID = 5485418394879791397L;
-    private static final bool VARARGS_ONLY;
+    private static readonly long serialVersionUID = 5485418394879791397L;
+    private static readonly bool VARARGS_ONLY;
 
     static {
         // Older Log4J2 versions have only log methods that takes the format + varargs. So we should not use

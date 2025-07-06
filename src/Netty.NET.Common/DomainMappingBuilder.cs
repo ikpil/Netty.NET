@@ -25,7 +25,7 @@ namespace Netty.NET.Common;
 @Deprecated
 public final class DomainMappingBuilder<V> {
 
-    private final DomainNameMappingBuilder<V> builder;
+    private readonly DomainNameMappingBuilder<V> builder;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings

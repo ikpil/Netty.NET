@@ -84,38 +84,38 @@ namespace Netty.NET.Common;
  */
 public class HashedWheelTimer : Timer {
 
-    static final InternalLogger logger =
+    static readonly InternalLogger logger =
             InternalLoggerFactory.getInstance(HashedWheelTimer.class);
 
-    private static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
-    private static final AtomicBoolean WARNED_TOO_MANY_INSTANCES = new AtomicBoolean();
-    private static final int INSTANCE_COUNT_LIMIT = 64;
-    private static final long MILLISECOND_NANOS = TimeSpan.MILLISECONDS.toNanos(1);
-    private static final ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.instance()
+    private static readonly AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
+    private static readonly AtomicBoolean WARNED_TOO_MANY_INSTANCES = new AtomicBoolean();
+    private static readonly int INSTANCE_COUNT_LIMIT = 64;
+    private static readonly long MILLISECOND_NANOS = TimeSpan.MILLISECONDS.toNanos(1);
+    private static readonly ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.instance()
             .newResourceLeakDetector(HashedWheelTimer.class, 1);
 
-    private static final AtomicIntegerFieldUpdater<HashedWheelTimer> WORKER_STATE_UPDATER =
+    private static readonly AtomicIntegerFieldUpdater<HashedWheelTimer> WORKER_STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(HashedWheelTimer.class, "workerState");
 
-    private final ResourceLeakTracker<HashedWheelTimer> leak;
-    private final Worker worker = new Worker();
-    private final Thread workerThread;
+    private readonly ResourceLeakTracker<HashedWheelTimer> leak;
+    private readonly Worker worker = new Worker();
+    private readonly Thread workerThread;
 
-    public static final int WORKER_STATE_INIT = 0;
-    public static final int WORKER_STATE_STARTED = 1;
-    public static final int WORKER_STATE_SHUTDOWN = 2;
+    public static readonly int WORKER_STATE_INIT = 0;
+    public static readonly int WORKER_STATE_STARTED = 1;
+    public static readonly int WORKER_STATE_SHUTDOWN = 2;
     @SuppressWarnings({"unused", "FieldMayBeFinal"})
     private volatile int workerState; // 0 - init, 1 - started, 2 - shut down
 
-    private final long tickDuration;
-    private final HashedWheelBucket[] wheel;
-    private final int mask;
-    private final CountDownLatch startTimeInitialized = new CountDownLatch(1);
-    private final Queue<HashedWheelTimeout> timeouts = PlatformDependent.newMpscQueue();
-    private final Queue<HashedWheelTimeout> cancelledTimeouts = PlatformDependent.newMpscQueue();
-    private final AtomicLong pendingTimeouts = new AtomicLong(0);
-    private final long maxPendingTimeouts;
-    private final Executor taskExecutor;
+    private readonly long tickDuration;
+    private readonly HashedWheelBucket[] wheel;
+    private readonly int mask;
+    private readonly CountDownLatch startTimeInitialized = new CountDownLatch(1);
+    private readonly Queue<HashedWheelTimeout> timeouts = PlatformDependent.newMpscQueue();
+    private readonly Queue<HashedWheelTimeout> cancelledTimeouts = PlatformDependent.newMpscQueue();
+    private readonly AtomicLong pendingTimeouts = new AtomicLong(0);
+    private readonly long maxPendingTimeouts;
+    private readonly Executor taskExecutor;
 
     private volatile long startTime;
 
@@ -472,8 +472,8 @@ public class HashedWheelTimer : Timer {
         }
     }
 
-    private final class Worker : Runnable {
-        private final Set<Timeout> unprocessedTimeouts = new HashSet<Timeout>();
+    private readonly class Worker : Runnable {
+        private readonly Set<Timeout> unprocessedTimeouts = new HashSet<Timeout>();
 
         private long tick;
 
@@ -608,17 +608,17 @@ public class HashedWheelTimer : Timer {
         }
     }
 
-    private static final class HashedWheelTimeout : Timeout, Runnable {
+    private static readonly class HashedWheelTimeout : Timeout, Runnable {
 
-        private static final int ST_INIT = 0;
-        private static final int ST_CANCELLED = 1;
-        private static final int ST_EXPIRED = 2;
-        private static final AtomicIntegerFieldUpdater<HashedWheelTimeout> STATE_UPDATER =
+        private static readonly int ST_INIT = 0;
+        private static readonly int ST_CANCELLED = 1;
+        private static readonly int ST_EXPIRED = 2;
+        private static readonly AtomicIntegerFieldUpdater<HashedWheelTimeout> STATE_UPDATER =
                 AtomicIntegerFieldUpdater.newUpdater(HashedWheelTimeout.class, "state");
 
-        private final HashedWheelTimer timer;
-        private final TimerTask task;
-        private final long deadline;
+        private readonly HashedWheelTimer timer;
+        private readonly TimerTask task;
+        private readonly long deadline;
 
         @SuppressWarnings({"unused", "FieldMayBeFinal", "RedundantFieldInitialization" })
         private volatile int state = ST_INIT;
@@ -756,7 +756,7 @@ public class HashedWheelTimer : Timer {
      * removal of HashedWheelTimeouts in the middle. Also the HashedWheelTimeout act as nodes themself and so no
      * extra object creation is needed.
      */
-    private static final class HashedWheelBucket {
+    private static readonly class HashedWheelBucket {
         // Used for the linked-list datastructure
         private HashedWheelTimeout head;
         private HashedWheelTimeout tail;

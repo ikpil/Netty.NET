@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 public class JdkLoggerFactory extends InternalLoggerFactory {
 
-    public static final InternalLoggerFactory INSTANCE = new JdkLoggerFactory();
+    public static readonly InternalLoggerFactory INSTANCE = new JdkLoggerFactory();
 
     /**
      * @deprecated Use {@link #INSTANCE} instead.

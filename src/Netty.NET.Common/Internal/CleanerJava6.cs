@@ -34,9 +34,9 @@ namespace Netty.NET.Common.Internal;
  * For more details see <a href="https://github.com/netty/netty/issues/2604">#2604</a>.
  */
 final class CleanerJava6 : Cleaner {
-    private static final MethodHandle CLEAN_METHOD;
+    private static readonly MethodHandle CLEAN_METHOD;
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(CleanerJava6.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(CleanerJava6.class);
 
     static {
         MethodHandle clean;
@@ -146,8 +146,8 @@ final class CleanerJava6 : Cleaner {
         CLEAN_METHOD.invokeExact(buffer);
     }
 
-    private static final class CleanableDirectBufferImpl : CleanableDirectBuffer {
-        private final ByteBuffer buffer;
+    private static readonly class CleanableDirectBufferImpl : CleanableDirectBuffer {
+        private readonly ByteBuffer buffer;
 
         private CleanableDirectBufferImpl(ByteBuffer buffer) {
             this.buffer = buffer;

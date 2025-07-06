@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Concurrent;
  * calling the constructor of this future.
  */
 public final class SucceededFuture<V> extends CompleteFuture<V> {
-    private final V result;
+    private readonly V result;
 
     /**
      * Creates a new instance.

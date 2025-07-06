@@ -22,7 +22,7 @@ namespace Netty.NET.Common;
  */
 public class IllegalReferenceCountException extends IllegalStateException {
 
-    private static final long serialVersionUID = -2507492394288153468L;
+    private static readonly long serialVersionUID = -2507492394288153468L;
 
     public IllegalReferenceCountException() { }
 

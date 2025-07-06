@@ -23,7 +23,7 @@ namespace Netty.NET.Common.Concurrent;
  * {@link Executor} which execute tasks in the callers thread.
  */
 public final class ImmediateExecutor : Executor {
-    public static final ImmediateExecutor INSTANCE = new ImmediateExecutor();
+    public static readonly ImmediateExecutor INSTANCE = new ImmediateExecutor();
 
     private ImmediateExecutor() {
         // use static instance

@@ -28,10 +28,10 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     // IMPORTANT: All our log methods first check if the log level is enabled before call the wrapped
     // LocationAwareLogger.log(...) method. This is done to reduce GC creation that is caused by varargs.
 
-    static final string FQCN = LocationAwareSlf4JLogger.class.getName();
-    private static final long serialVersionUID = -8292030083201538180L;
+    static readonly string FQCN = LocationAwareSlf4JLogger.class.getName();
+    private static readonly long serialVersionUID = -8292030083201538180L;
 
-    private final transient LocationAwareLogger logger;
+    private readonly transient LocationAwareLogger logger;
 
     LocationAwareSlf4JLogger(LocationAwareLogger logger) {
         super(logger.getName());

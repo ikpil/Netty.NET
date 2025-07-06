@@ -31,12 +31,12 @@ namespace Netty.NET.Common.Concurrent;
  * that all queued {@link Runnable} objects have the chance to be run.
  */
 public final class ImmediateEventExecutor extends AbstractEventExecutor {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ImmediateEventExecutor.class);
-    public static final ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ImmediateEventExecutor.class);
+    public static readonly ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
     /**
      * A Runnable will be queued if we are executing a Runnable. This is to prevent a {@link StackOverflowError}.
      */
-    private static final FastThreadLocal<Queue<Runnable>> DELAYED_RUNNABLES = new FastThreadLocal<Queue<Runnable>>() {
+    private static readonly FastThreadLocal<Queue<Runnable>> DELAYED_RUNNABLES = new FastThreadLocal<Queue<Runnable>>() {
         @Override
         protected Queue<Runnable> initialValue() throws Exception {
             return new ArrayDeque<Runnable>();
@@ -45,14 +45,14 @@ public final class ImmediateEventExecutor extends AbstractEventExecutor {
     /**
      * Set to {@code true} if we are executing a runnable.
      */
-    private static final FastThreadLocal<Boolean> RUNNING = new FastThreadLocal<Boolean>() {
+    private static readonly FastThreadLocal<Boolean> RUNNING = new FastThreadLocal<Boolean>() {
         @Override
         protected Boolean initialValue() throws Exception {
             return false;
         }
     };
 
-    private final Future<?> terminationFuture = new FailedFuture<object>(
+    private readonly Future<?> terminationFuture = new FailedFuture<object>(
             GlobalEventExecutor.INSTANCE, new UnsupportedOperationException());
 
     private ImmediateEventExecutor() { }

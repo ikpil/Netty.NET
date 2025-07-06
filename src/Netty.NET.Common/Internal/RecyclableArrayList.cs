@@ -29,11 +29,11 @@ namespace Netty.NET.Common.Internal;
  */
 public final class RecyclableArrayList extends ArrayList<object> {
 
-    private static final long serialVersionUID = -8605125654176467947L;
+    private static readonly long serialVersionUID = -8605125654176467947L;
 
-    private static final int DEFAULT_INITIAL_CAPACITY = 8;
+    private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
-    private static final ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.newPool(
+    private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.newPool(
             new ObjectCreator<RecyclableArrayList>() {
         @Override
         public RecyclableArrayList newObject(Handle<RecyclableArrayList> handle) {
@@ -59,7 +59,7 @@ public final class RecyclableArrayList extends ArrayList<object> {
         return ret;
     }
 
-    private final Handle<RecyclableArrayList> handle;
+    private readonly Handle<RecyclableArrayList> handle;
 
     private RecyclableArrayList(Handle<RecyclableArrayList> handle) {
         this(handle, DEFAULT_INITIAL_CAPACITY);

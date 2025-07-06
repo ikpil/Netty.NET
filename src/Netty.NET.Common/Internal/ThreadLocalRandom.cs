@@ -63,15 +63,15 @@ namespace Netty.NET.Common.Internal;
 @SuppressWarnings("all")
 public final class ThreadLocalRandom extends Random {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ThreadLocalRandom.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ThreadLocalRandom.class);
 
-    private static final AtomicLong seedUniquifier = new AtomicLong();
+    private static readonly AtomicLong seedUniquifier = new AtomicLong();
 
     private static volatile long initialSeedUniquifier;
 
-    private static final Thread seedGeneratorThread;
-    private static final BlockingQueue<long> seedQueue;
-    private static final long seedGeneratorStartTime;
+    private static readonly Thread seedGeneratorThread;
+    private static readonly BlockingQueue<long> seedQueue;
+    private static readonly long seedGeneratorStartTime;
     private static volatile long seedGeneratorEndTime;
 
     static {
@@ -229,9 +229,9 @@ public final class ThreadLocalRandom extends Random {
     }
 
     // same constants as Random, but must be redeclared because private
-    private static final long multiplier = 0x5DEECE66DL;
-    private static final long addend = 0xBL;
-    private static final long mask = (1L << 48) - 1;
+    private static readonly long multiplier = 0x5DEECE66DL;
+    private static readonly long addend = 0xBL;
+    private static readonly long mask = (1L << 48) - 1;
 
     /**
      * The random seed. We can't use super.seed.
@@ -383,5 +383,5 @@ public final class ThreadLocalRandom extends Random {
         return nextDouble() * (bound - least) + least;
     }
 
-    private static final long serialVersionUID = -5851777807851030925L;
+    private static readonly long serialVersionUID = -5851777807851030925L;
 }

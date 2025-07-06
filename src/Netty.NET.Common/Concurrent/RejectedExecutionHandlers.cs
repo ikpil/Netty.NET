@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Concurrent;
  * Expose helper methods which create different {@link RejectedExecutionHandler}s.
  */
 public final class RejectedExecutionHandlers {
-    private static final RejectedExecutionHandler REJECT = new RejectedExecutionHandler() {
+    private static readonly RejectedExecutionHandler REJECT = new RejectedExecutionHandler() {
         @Override
         public void rejected(Runnable task, SingleThreadEventExecutor executor) {
             throw new RejectedExecutionException();

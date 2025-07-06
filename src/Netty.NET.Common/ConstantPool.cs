@@ -30,9 +30,9 @@ namespace Netty.NET.Common;
  */
 public abstract class ConstantPool<T extends Constant<T>> {
 
-    private final ConcurrentMap<string, T> constants = new ConcurrentHashMap<>();
+    private readonly ConcurrentMap<string, T> constants = new ConcurrentHashMap<>();
 
-    private final AtomicInteger nextId = new AtomicInteger(1);
+    private readonly AtomicInteger nextId = new AtomicInteger(1);
 
     /**
      * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.

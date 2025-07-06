@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class CompleteFuture<V> extends AbstractFuture<V> {
 
-    private final EventExecutor executor;
+    private readonly EventExecutor executor;
 
     /**
      * Creates a new instance.

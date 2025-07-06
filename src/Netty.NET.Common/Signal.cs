@@ -22,9 +22,9 @@ namespace Netty.NET.Common;
  */
 public final class Signal extends Error : Constant<Signal> {
 
-    private static final long serialVersionUID = -221145131122459977L;
+    private static readonly long serialVersionUID = -221145131122459977L;
 
-    private static final ConstantPool<Signal> pool = new ConstantPool<Signal>() {
+    private static readonly ConstantPool<Signal> pool = new ConstantPool<Signal>() {
         @Override
         protected Signal newConstant(int id, string name) {
             return new Signal(id, name);
@@ -45,7 +45,7 @@ public final class Signal extends Error : Constant<Signal> {
         return pool.valueOf(firstNameComponent, secondNameComponent);
     }
 
-    private final SignalConstant constant;
+    private readonly SignalConstant constant;
 
     /**
      * Creates a new {@link Signal} with the specified {@code name}.
@@ -110,7 +110,7 @@ public final class Signal extends Error : Constant<Signal> {
         return name();
     }
 
-    private static final class SignalConstant extends AbstractConstant<SignalConstant> {
+    private static readonly class SignalConstant extends AbstractConstant<SignalConstant> {
         SignalConstant(int id, string name) {
             super(id, name);
         }

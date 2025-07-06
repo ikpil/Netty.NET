@@ -39,26 +39,26 @@ namespace Netty.NET.Common.Internal;
  * unless you know what you are doing.
  */
 public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
-    private static final ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap =
+    private static readonly ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap =
             new ThreadLocal<InternalThreadLocalMap>();
-    private static final AtomicInteger nextIndex = new AtomicInteger();
+    private static readonly AtomicInteger nextIndex = new AtomicInteger();
     // Internal use only.
-    public static final int VARIABLES_TO_REMOVE_INDEX = nextVariableIndex();
+    public static readonly int VARIABLES_TO_REMOVE_INDEX = nextVariableIndex();
 
-    private static final int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
-    private static final int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
+    private static readonly int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
+    private static readonly int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
     // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/ArrayList.java#l229
-    private static final int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MAX_VALUE - 8;
+    private static readonly int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MAX_VALUE - 8;
 
-    private static final int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
-    private static final int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
+    private static readonly int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
+    private static readonly int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
 
-    private static final int STRING_BUILDER_INITIAL_SIZE;
-    private static final int STRING_BUILDER_MAX_SIZE;
+    private static readonly int STRING_BUILDER_INITIAL_SIZE;
+    private static readonly int STRING_BUILDER_MAX_SIZE;
 
-    private static final InternalLogger logger;
+    private static readonly InternalLogger logger;
     /** Internal use only. */
-    public static final object UNSET = new object();
+    public static readonly object UNSET = new object();
 
     /** Used by {@link FastThreadLocal} */
     private object[] indexedVariables;

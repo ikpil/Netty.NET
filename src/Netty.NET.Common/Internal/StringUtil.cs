@@ -28,26 +28,26 @@ namespace Netty.NET.Common.Internal;
  */
 public final class StringUtil {
 
-    public static final string EMPTY_STRING = "";
-    public static final string NEWLINE = SystemPropertyUtil.get("line.separator", "\n");
+    public static readonly string EMPTY_STRING = "";
+    public static readonly string NEWLINE = SystemPropertyUtil.get("line.separator", "\n");
 
-    public static final char DOUBLE_QUOTE = '\"';
-    public static final char COMMA = ',';
-    public static final char LINE_FEED = '\n';
-    public static final char CARRIAGE_RETURN = '\r';
-    public static final char TAB = '\t';
-    public static final char SPACE = 0x20;
+    public static readonly char DOUBLE_QUOTE = '\"';
+    public static readonly char COMMA = ',';
+    public static readonly char LINE_FEED = '\n';
+    public static readonly char CARRIAGE_RETURN = '\r';
+    public static readonly char TAB = '\t';
+    public static readonly char SPACE = 0x20;
 
-    private static final string[] BYTE2HEX_PAD = new string[256];
-    private static final string[] BYTE2HEX_NOPAD = new string[256];
-    private static final byte[] HEX2B;
+    private static readonly string[] BYTE2HEX_PAD = new string[256];
+    private static readonly string[] BYTE2HEX_NOPAD = new string[256];
+    private static readonly byte[] HEX2B;
 
     /**
      * 2 - Quote character at beginning and end.
      * 5 - Extra allowance for anticipated escape characters that may be added.
      */
-    private static final int CSV_NUMBER_ESCAPE_CHARACTERS = 2 + 5;
-    private static final char PACKAGE_SEPARATOR_CHAR = '.';
+    private static readonly int CSV_NUMBER_ESCAPE_CHARACTERS = 2 + 5;
+    private static readonly char PACKAGE_SEPARATOR_CHAR = '.';
 
     static {
         // Generate the lookup table that converts a byte into a 2-digit hexadecimal integer.

@@ -23,7 +23,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public final class DefaultEventExecutorChooserFactory : EventExecutorChooserFactory {
 
-    public static final DefaultEventExecutorChooserFactory INSTANCE = new DefaultEventExecutorChooserFactory();
+    public static readonly DefaultEventExecutorChooserFactory INSTANCE = new DefaultEventExecutorChooserFactory();
 
     private DefaultEventExecutorChooserFactory() { }
 
@@ -40,9 +40,9 @@ public final class DefaultEventExecutorChooserFactory : EventExecutorChooserFact
         return (val & -val) == val;
     }
 
-    private static final class PowerOfTwoEventExecutorChooser : EventExecutorChooser {
-        private final AtomicInteger idx = new AtomicInteger();
-        private final EventExecutor[] executors;
+    private static readonly class PowerOfTwoEventExecutorChooser : EventExecutorChooser {
+        private readonly AtomicInteger idx = new AtomicInteger();
+        private readonly EventExecutor[] executors;
 
         PowerOfTwoEventExecutorChooser(EventExecutor[] executors) {
             this.executors = executors;
@@ -54,12 +54,12 @@ public final class DefaultEventExecutorChooserFactory : EventExecutorChooserFact
         }
     }
 
-    private static final class GenericEventExecutorChooser : EventExecutorChooser {
+    private static readonly class GenericEventExecutorChooser : EventExecutorChooser {
         // Use a 'long' counter to avoid non-round-robin behaviour at the 32-bit overflow boundary.
         // The 64-bit long solves this by placing the overflow so far into the future, that no system
         // will encounter this in practice.
-        private final AtomicLong idx = new AtomicLong();
-        private final EventExecutor[] executors;
+        private readonly AtomicLong idx = new AtomicLong();
+        private readonly EventExecutor[] executors;
 
         GenericEventExecutorChooser(EventExecutor[] executors) {
             this.executors = executors;

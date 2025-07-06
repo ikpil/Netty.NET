@@ -25,8 +25,8 @@ namespace Netty.NET.Common.Concurrent;
  */
 @Deprecated
 public final class UnaryPromiseNotifier<T> : FutureListener<T> {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(UnaryPromiseNotifier.class);
-    private final Promise<? super T> promise;
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(UnaryPromiseNotifier.class);
+    private readonly Promise<? super T> promise;
 
     public UnaryPromiseNotifier(Promise<? super T> promise) {
         this.promise = ObjectUtil.checkNotNull(promise, "promise");

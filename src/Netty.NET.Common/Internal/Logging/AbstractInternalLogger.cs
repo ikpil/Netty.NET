@@ -23,12 +23,9 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 public abstract class AbstractInternalLogger : IInternalLogger
 {
+    private static readonly string EXCEPTION_MESSAGE = "Unexpected exception:";
 
-    private static final long serialVersionUID = -6382972526573193470L;
-
-    static final string EXCEPTION_MESSAGE = "Unexpected exception:";
-
-    private final string name;
+    private readonly string name;
 
     /**
      * Creates a new instance.

@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Internal;
 
 public abstract class TypeParameterMatcher {
 
-    private static final TypeParameterMatcher NOOP = new TypeParameterMatcher() {
+    private static readonly TypeParameterMatcher NOOP = new TypeParameterMatcher() {
         @Override
         public bool match(object msg) {
             return true;
@@ -69,8 +69,8 @@ public abstract class TypeParameterMatcher {
 
     public abstract bool match(object msg);
 
-    private static final class ReflectiveMatcher extends TypeParameterMatcher {
-        private final Class<?> type;
+    private static readonly class ReflectiveMatcher extends TypeParameterMatcher {
+        private readonly Class<?> type;
 
         ReflectiveMatcher(Class<?> type) {
             this.type = type;

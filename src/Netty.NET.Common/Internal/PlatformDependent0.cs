@@ -38,48 +38,48 @@ namespace Netty.NET.Common.Internal;
  */
 final class PlatformDependent0 {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(PlatformDependent0.class);
-    private static final long ADDRESS_FIELD_OFFSET;
-    private static final long BYTE_ARRAY_BASE_OFFSET;
-    private static final long INT_ARRAY_BASE_OFFSET;
-    private static final long INT_ARRAY_INDEX_SCALE;
-    private static final long LONG_ARRAY_BASE_OFFSET;
-    private static final long LONG_ARRAY_INDEX_SCALE;
-    private static final MethodHandle DIRECT_BUFFER_CONSTRUCTOR;
-    private static final MethodHandle ALLOCATE_ARRAY_METHOD;
-    private static final MethodHandle ALIGN_SLICE;
-    private static final bool IS_ANDROID = isAndroid0();
-    private static final int JAVA_VERSION = javaVersion0();
-    private static final Exception EXPLICIT_NO_UNSAFE_CAUSE = explicitNoUnsafeCause0();
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(PlatformDependent0.class);
+    private static readonly long ADDRESS_FIELD_OFFSET;
+    private static readonly long BYTE_ARRAY_BASE_OFFSET;
+    private static readonly long INT_ARRAY_BASE_OFFSET;
+    private static readonly long INT_ARRAY_INDEX_SCALE;
+    private static readonly long LONG_ARRAY_BASE_OFFSET;
+    private static readonly long LONG_ARRAY_INDEX_SCALE;
+    private static readonly MethodHandle DIRECT_BUFFER_CONSTRUCTOR;
+    private static readonly MethodHandle ALLOCATE_ARRAY_METHOD;
+    private static readonly MethodHandle ALIGN_SLICE;
+    private static readonly bool IS_ANDROID = isAndroid0();
+    private static readonly int JAVA_VERSION = javaVersion0();
+    private static readonly Exception EXPLICIT_NO_UNSAFE_CAUSE = explicitNoUnsafeCause0();
 
-    private static final Exception UNSAFE_UNAVAILABILITY_CAUSE;
+    private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE;
 
     // See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/
     // ImageInfo.java
-    private static final bool RUNNING_IN_NATIVE_IMAGE = SystemPropertyUtil.contains(
+    private static readonly bool RUNNING_IN_NATIVE_IMAGE = SystemPropertyUtil.contains(
             "org.graalvm.nativeimage.imagecode");
 
-    private static final bool IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = explicitTryReflectionSetAccessible0();
+    private static readonly bool IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = explicitTryReflectionSetAccessible0();
 
     // Package-private for testing.
-    static final MethodHandle IS_VIRTUAL_THREAD_METHOD_HANDLE = getIsVirtualThreadMethodHandle();
+    static readonly MethodHandle IS_VIRTUAL_THREAD_METHOD_HANDLE = getIsVirtualThreadMethodHandle();
 
-    static final Unsafe UNSAFE;
+    static readonly Unsafe UNSAFE;
 
     // constants borrowed from murmur3
-    static final int HASH_CODE_ASCII_SEED = 0xc2b2ae35;
-    static final int HASH_CODE_C1 = 0xcc9e2d51;
-    static final int HASH_CODE_C2 = 0x1b873593;
+    static readonly int HASH_CODE_ASCII_SEED = 0xc2b2ae35;
+    static readonly int HASH_CODE_C1 = 0xcc9e2d51;
+    static readonly int HASH_CODE_C2 = 0x1b873593;
 
     /**
      * Limits the number of bytes to copy per {@link Unsafe#copyMemory(long, long, long)} to allow safepoint polling
      * during a large copy.
      */
-    private static final long UNSAFE_COPY_THRESHOLD = 1024L * 1024L;
+    private static readonly long UNSAFE_COPY_THRESHOLD = 1024L * 1024L;
 
-    private static final bool UNALIGNED;
+    private static readonly bool UNALIGNED;
 
-    private static final long BITS_MAX_DIRECT_MEMORY;
+    private static readonly long BITS_MAX_DIRECT_MEMORY;
 
     static {
         MethodHandles.Lookup lookup = MethodHandles.lookup();

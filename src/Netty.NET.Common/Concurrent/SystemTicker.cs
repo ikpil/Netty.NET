@@ -19,8 +19,8 @@ namespace Netty.NET.Common.Concurrent;
 
 
 final class SystemTicker : Ticker {
-    static final SystemTicker INSTANCE = new SystemTicker();
-    private static final long START_TIME = System.nanoTime();
+    static readonly SystemTicker INSTANCE = new SystemTicker();
+    private static readonly long START_TIME = System.nanoTime();
 
     @Override
     public long initialNanoTime() {

@@ -24,7 +24,7 @@ namespace Netty.NET.Common.Internal;
  * Some pending write which should be picked up later.
  */
 public final class PendingWrite {
-    private static final ObjectPool<PendingWrite> RECYCLER = ObjectPool.newPool(new ObjectCreator<PendingWrite>() {
+    private static readonly ObjectPool<PendingWrite> RECYCLER = ObjectPool.newPool(new ObjectCreator<PendingWrite>() {
         @Override
         public PendingWrite newObject(Handle<PendingWrite> handle) {
             return new PendingWrite(handle);
@@ -41,7 +41,7 @@ public final class PendingWrite {
         return pending;
     }
 
-    private final Handle<PendingWrite> handle;
+    private readonly Handle<PendingWrite> handle;
     private object msg;
     private Promise<Void> promise;
 

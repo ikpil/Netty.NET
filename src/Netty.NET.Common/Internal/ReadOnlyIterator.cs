@@ -19,7 +19,7 @@ namespace Netty.NET.Common.Internal;
 
 
 public final class ReadOnlyIterator<T> : Iterator<T> {
-    private final Iterator<? extends T> iterator;
+    private readonly Iterator<? extends T> iterator;
 
     public ReadOnlyIterator(Iterator<? extends T> iterator) {
         this.iterator = ObjectUtil.checkNotNull(iterator, "iterator");

@@ -32,11 +32,11 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
 
-    private final EventExecutor[] children;
-    private final Set<EventExecutor> readonlyChildren;
-    private final AtomicInteger terminatedChildren = new AtomicInteger();
-    private final Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
-    private final EventExecutorChooserFactory.EventExecutorChooser chooser;
+    private readonly EventExecutor[] children;
+    private readonly Set<EventExecutor> readonlyChildren;
+    private readonly AtomicInteger terminatedChildren = new AtomicInteger();
+    private readonly Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
+    private readonly EventExecutorChooserFactory.EventExecutorChooser chooser;
 
     /**
      * Create a new instance.

@@ -69,8 +69,8 @@ public abstract class ObjectPool<T> {
         return new RecyclerObjectPool<T>(ObjectUtil.checkNotNull(creator, "creator"));
     }
 
-    private static final class RecyclerObjectPool<T> extends ObjectPool<T> {
-        private final Recycler<T> recycler;
+    private static readonly class RecyclerObjectPool<T> extends ObjectPool<T> {
+        private readonly Recycler<T> recycler;
 
         RecyclerObjectPool(final ObjectCreator<T> creator) {
              recycler = new Recycler<T>() {

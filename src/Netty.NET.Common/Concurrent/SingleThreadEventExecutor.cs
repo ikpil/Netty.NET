@@ -51,47 +51,47 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor : OrderedEventExecutor {
 
-    static final int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.max(16,
+    static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.max(16,
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MAX_VALUE));
 
-    private static final InternalLogger logger =
+    private static readonly InternalLogger logger =
             InternalLoggerFactory.getInstance(SingleThreadEventExecutor.class);
 
-    private static final int ST_NOT_STARTED = 1;
-    private static final int ST_SUSPENDING = 2;
-    private static final int ST_SUSPENDED = 3;
-    private static final int ST_STARTED = 4;
-    private static final int ST_SHUTTING_DOWN = 5;
-    private static final int ST_SHUTDOWN = 6;
-    private static final int ST_TERMINATED = 7;
+    private static readonly int ST_NOT_STARTED = 1;
+    private static readonly int ST_SUSPENDING = 2;
+    private static readonly int ST_SUSPENDED = 3;
+    private static readonly int ST_STARTED = 4;
+    private static readonly int ST_SHUTTING_DOWN = 5;
+    private static readonly int ST_SHUTDOWN = 6;
+    private static readonly int ST_TERMINATED = 7;
 
-    private static final Runnable NOOP_TASK = new Runnable() {
+    private static readonly Runnable NOOP_TASK = new Runnable() {
         @Override
         public void run() {
             // Do nothing.
         }
     };
 
-    private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
+    private static readonly AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
-    private static final AtomicReferenceFieldUpdater<SingleThreadEventExecutor, ThreadProperties> PROPERTIES_UPDATER =
+    private static readonly AtomicReferenceFieldUpdater<SingleThreadEventExecutor, ThreadProperties> PROPERTIES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(
                     SingleThreadEventExecutor.class, ThreadProperties.class, "threadProperties");
-    private final Queue<Runnable> taskQueue;
+    private readonly Queue<Runnable> taskQueue;
 
     private volatile Thread thread;
     @SuppressWarnings("unused")
     private volatile ThreadProperties threadProperties;
-    private final Executor executor;
+    private readonly Executor executor;
     private volatile bool interrupted;
 
-    private final Lock processingLock = new ReentrantLock();
-    private final CountDownLatch threadLock = new CountDownLatch(1);
-    private final Set<Runnable> shutdownHooks = new LinkedHashSet<Runnable>();
-    private final bool addTaskWakesUp;
-    private final int maxPendingTasks;
-    private final RejectedExecutionHandler rejectedExecutionHandler;
-    private final bool supportSuspension;
+    private readonly Lock processingLock = new ReentrantLock();
+    private readonly CountDownLatch threadLock = new CountDownLatch(1);
+    private readonly Set<Runnable> shutdownHooks = new LinkedHashSet<Runnable>();
+    private readonly bool addTaskWakesUp;
+    private readonly int maxPendingTasks;
+    private readonly RejectedExecutionHandler rejectedExecutionHandler;
+    private readonly bool supportSuspension;
 
     private long lastExecutionTime;
 
@@ -102,7 +102,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private volatile long gracefulShutdownTimeout;
     private long gracefulShutdownStartTime;
 
-    private final Promise<?> terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    private readonly Promise<?> terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
 
     /**
      * Create a new instance
@@ -1016,7 +1016,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     // ScheduledExecutorService implementation
 
-    private static final long SCHEDULE_PURGE_INTERVAL = TimeSpan.SECONDS.toNanos(1);
+    private static readonly long SCHEDULE_PURGE_INTERVAL = TimeSpan.SECONDS.toNanos(1);
 
     private void startThread() {
         int currentState = state;
@@ -1199,8 +1199,8 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         return numTasks;
     }
 
-    private static final class DefaultThreadProperties : ThreadProperties {
-        private final Thread t;
+    private static readonly class DefaultThreadProperties : ThreadProperties {
+        private readonly Thread t;
 
         DefaultThreadProperties(Thread t) {
             this.t = t;

@@ -33,8 +33,8 @@ final class DirectCleaner : Cleaner {
         return new CleanableDirectBufferImpl(newByteBuffer);
     }
 
-    private static final class CleanableDirectBufferImpl : CleanableDirectBuffer {
-        private final ByteBuffer buffer;
+    private static readonly class CleanableDirectBufferImpl : CleanableDirectBuffer {
+        private readonly ByteBuffer buffer;
 
         private CleanableDirectBufferImpl(ByteBuffer buffer) {
             this.buffer = buffer;

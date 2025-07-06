@@ -28,7 +28,7 @@ namespace Netty.NET.Common.Internal.Logging;
 public class Slf4JLoggerFactory extends InternalLoggerFactory {
 
     @SuppressWarnings("deprecation")
-    public static final InternalLoggerFactory INSTANCE = new Slf4JLoggerFactory();
+    public static readonly InternalLoggerFactory INSTANCE = new Slf4JLoggerFactory();
 
     /**
      * @deprecated Use {@link #INSTANCE} instead.
@@ -59,7 +59,7 @@ public class Slf4JLoggerFactory extends InternalLoggerFactory {
         return NopInstanceHolder.INSTANCE_WITH_NOP_CHECK;
     }
 
-    private static final class NopInstanceHolder {
-        private static final InternalLoggerFactory INSTANCE_WITH_NOP_CHECK = new Slf4JLoggerFactory(true);
+    private static readonly class NopInstanceHolder {
+        private static readonly InternalLoggerFactory INSTANCE_WITH_NOP_CHECK = new Slf4JLoggerFactory(true);
     }
 }

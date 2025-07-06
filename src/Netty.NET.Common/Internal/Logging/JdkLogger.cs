@@ -49,9 +49,9 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 class JdkLogger extends AbstractInternalLogger {
 
-    private static final long serialVersionUID = -1767272577989225979L;
+    private static readonly long serialVersionUID = -1767272577989225979L;
 
-    private final transient Logger logger;
+    private readonly transient Logger logger;
 
     JdkLogger(Logger logger) {
         super(logger.getName());
@@ -606,8 +606,8 @@ class JdkLogger extends AbstractInternalLogger {
         logger.log(record);
     }
 
-    static final string SELF = JdkLogger.class.getName();
-    static final string SUPER = AbstractInternalLogger.class.getName();
+    static readonly string SELF = JdkLogger.class.getName();
+    static readonly string SUPER = AbstractInternalLogger.class.getName();
 
     /**
      * Fill in caller data if possible.

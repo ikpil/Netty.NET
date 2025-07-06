@@ -34,13 +34,13 @@ namespace Netty.NET.Common.Concurrent;
  * Abstract base class for {@link EventExecutor} implementations.
  */
 public abstract class AbstractEventExecutor extends AbstractExecutorService : EventExecutor {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractEventExecutor.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(AbstractEventExecutor.class);
 
-    static final long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;
-    static final long DEFAULT_SHUTDOWN_TIMEOUT = 15;
+    static readonly long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;
+    static readonly long DEFAULT_SHUTDOWN_TIMEOUT = 15;
 
-    private final EventExecutorGroup parent;
-    private final Collection<EventExecutor> selfCollection = Collections.<EventExecutor>singleton(this);
+    private readonly EventExecutorGroup parent;
+    private readonly Collection<EventExecutor> selfCollection = Collections.<EventExecutor>singleton(this);
 
     protected AbstractEventExecutor() {
         this(null);

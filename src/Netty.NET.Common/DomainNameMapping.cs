@@ -39,8 +39,8 @@ namespace Netty.NET.Common;
 public class DomainNameMapping<V> : Mapping<string, V> {
 
     final V defaultValue;
-    private final Map<string, V> map;
-    private final Map<string, V> unmodifiableMap;
+    private readonly Map<string, V> map;
+    private readonly Map<string, V> unmodifiableMap;
 
     /**
      * Creates a default, order-sensitive mapping. If your hostnames are in conflict, the mapping

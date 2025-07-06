@@ -43,24 +43,24 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      * <p>
      * The default value is {@code 8}.
      */
-    public static final string PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
+    public static readonly string PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
-    private static final InternalLogger rejectedExecutionLogger =
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
+    private static readonly InternalLogger rejectedExecutionLogger =
             InternalLoggerFactory.getInstance(DefaultPromise.class.getName() + ".rejectedExecution");
-    private static final int MAX_LISTENER_STACK_DEPTH = Math.min(8,
+    private static readonly int MAX_LISTENER_STACK_DEPTH = Math.min(8,
             SystemPropertyUtil.getInt(PROPERTY_MAX_LISTENER_STACK_DEPTH, 8));
     @SuppressWarnings("rawtypes")
-    private static final AtomicReferenceFieldUpdater<DefaultPromise, object> RESULT_UPDATER =
+    private static readonly AtomicReferenceFieldUpdater<DefaultPromise, object> RESULT_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(DefaultPromise.class, object.class, "result");
-    private static final object SUCCESS = new object();
-    private static final object UNCANCELLABLE = new object();
-    private static final CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(
+    private static readonly object SUCCESS = new object();
+    private static readonly object UNCANCELLABLE = new object();
+    private static readonly CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(
             StacklessCancellationException.newInstance(DefaultPromise.class, "cancel(...)"));
-    private static final StackTraceElement[] CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.getStackTrace();
+    private static readonly StackTraceElement[] CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.getStackTrace();
 
     private volatile object result;
-    private final EventExecutor executor;
+    private readonly EventExecutor executor;
 
     /**
      * One or more listeners. Can be a {@link GenericFutureListener} or a {@link DefaultFutureListeners}.
@@ -151,8 +151,8 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         return result == null;
     }
 
-    private static final class LeanCancellationException extends CancellationException {
-        private static final long serialVersionUID = 2794674970981187807L;
+    private static readonly class LeanCancellationException extends CancellationException {
+        private static readonly long serialVersionUID = 2794674970981187807L;
 
         // Suppress a warning since the method doesn't need synchronization
         @Override
@@ -866,7 +866,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         return result != null && result != UNCANCELLABLE;
     }
 
-    private static final class CauseHolder {
+    private static readonly class CauseHolder {
         final Exception cause;
         CauseHolder(Exception cause) {
             this.cause = cause;
@@ -881,9 +881,9 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         }
     }
 
-    private static final class StacklessCancellationException extends CancellationException {
+    private static readonly class StacklessCancellationException extends CancellationException {
 
-        private static final long serialVersionUID = -2974906711413716191L;
+        private static readonly long serialVersionUID = -2974906711413716191L;
 
         private StacklessCancellationException() { }
 

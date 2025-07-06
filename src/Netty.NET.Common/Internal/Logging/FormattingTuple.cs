@@ -44,8 +44,8 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 public final class FormattingTuple {
 
-    private final string message;
-    private final Exception throwable;
+    private readonly string message;
+    private readonly Exception throwable;
 
     public FormattingTuple(string message, Exception throwable) {
         this.message = message;

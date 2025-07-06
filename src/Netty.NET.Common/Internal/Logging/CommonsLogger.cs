@@ -52,9 +52,9 @@ namespace Netty.NET.Common.Internal.Logging;
 @Deprecated
 class CommonsLogger extends AbstractInternalLogger {
 
-    private static final long serialVersionUID = 8647838678388394885L;
+    private static readonly long serialVersionUID = 8647838678388394885L;
 
-    private final transient Log logger;
+    private readonly transient Log logger;
 
     CommonsLogger(Log logger, string name) {
         super(name);

@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public final class FailedFuture<V> extends CompleteFuture<V> {
 
-    private final Exception cause;
+    private readonly Exception cause;
 
     /**
      * Creates a new instance.

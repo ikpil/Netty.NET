@@ -22,9 +22,9 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 final class Slf4JLogger extends AbstractInternalLogger {
 
-    private static final long serialVersionUID = 108038972685130825L;
+    private static readonly long serialVersionUID = 108038972685130825L;
 
-    private final transient Logger logger;
+    private readonly transient Logger logger;
 
     Slf4JLogger(Logger logger) {
         super(logger.getName());

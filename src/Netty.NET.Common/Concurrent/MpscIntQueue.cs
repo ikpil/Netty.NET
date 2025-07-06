@@ -94,15 +94,15 @@ public interface MpscIntQueue {
      * This implementation is based on MpscAtomicUnpaddedArrayQueue from JCTools.
      */
     final class MpscAtomicIntegerArrayQueue extends AtomicIntegerArray : MpscIntQueue {
-        private static final long serialVersionUID = 8740338425124821455L;
-        private static final AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> PRODUCER_INDEX =
+        private static readonly long serialVersionUID = 8740338425124821455L;
+        private static readonly AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> PRODUCER_INDEX =
                 AtomicLongFieldUpdater.newUpdater(MpscAtomicIntegerArrayQueue.class, "producerIndex");
-        private static final AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> PRODUCER_LIMIT =
+        private static readonly AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> PRODUCER_LIMIT =
                 AtomicLongFieldUpdater.newUpdater(MpscAtomicIntegerArrayQueue.class, "producerLimit");
-        private static final AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> CONSUMER_INDEX =
+        private static readonly AtomicLongFieldUpdater<MpscAtomicIntegerArrayQueue> CONSUMER_INDEX =
                 AtomicLongFieldUpdater.newUpdater(MpscAtomicIntegerArrayQueue.class, "consumerIndex");
-        private final int mask;
-        private final int emptyValue;
+        private readonly int mask;
+        private readonly int emptyValue;
         private volatile long producerIndex;
         private volatile long producerLimit;
         private volatile long consumerIndex;

@@ -27,9 +27,9 @@ namespace Netty.NET.Common.Internal;
 @Deprecated
 public final class ConcurrentSet<E> extends AbstractSet<E> : Serializable {
 
-    private static final long serialVersionUID = -6761513279741915432L;
+    private static readonly long serialVersionUID = -6761513279741915432L;
 
-    private final ConcurrentMap<E, Boolean> map;
+    private readonly ConcurrentMap<E, Boolean> map;
 
     /**
      * Creates a new instance which wraps the specified {@code map}.

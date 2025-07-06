@@ -24,20 +24,20 @@ namespace Netty.NET.Common.Internal;
 
 public final class EmptyArrays {
 
-    public static final int[] EMPTY_INTS = {};
-    public static final byte[] EMPTY_BYTES = {};
-    public static final char[] EMPTY_CHARS = {};
-    public static final object[] EMPTY_OBJECTS = {};
-    public static final Class<?>[] EMPTY_CLASSES = {};
-    public static final string[] EMPTY_STRINGS = {};
-    public static final AsciiString[] EMPTY_ASCII_STRINGS = {};
-    public static final StackTraceElement[] EMPTY_STACK_TRACE = {};
-    public static final ByteBuffer[] EMPTY_BYTE_BUFFERS = {};
-    public static final Certificate[] EMPTY_CERTIFICATES = {};
-    public static final X509Certificate[] EMPTY_X509_CERTIFICATES = {};
-    public static final javax.security.cert.X509Certificate[] EMPTY_JAVAX_X509_CERTIFICATES = {};
+    public static readonly int[] EMPTY_INTS = {};
+    public static readonly byte[] EMPTY_BYTES = {};
+    public static readonly char[] EMPTY_CHARS = {};
+    public static readonly object[] EMPTY_OBJECTS = {};
+    public static readonly Class<?>[] EMPTY_CLASSES = {};
+    public static readonly string[] EMPTY_STRINGS = {};
+    public static readonly AsciiString[] EMPTY_ASCII_STRINGS = {};
+    public static readonly StackTraceElement[] EMPTY_STACK_TRACE = {};
+    public static readonly ByteBuffer[] EMPTY_BYTE_BUFFERS = {};
+    public static readonly Certificate[] EMPTY_CERTIFICATES = {};
+    public static readonly X509Certificate[] EMPTY_X509_CERTIFICATES = {};
+    public static readonly javax.security.cert.X509Certificate[] EMPTY_JAVAX_X509_CERTIFICATES = {};
 
-    public static final Exception[] EMPTY_THROWABLES = {};
+    public static readonly Exception[] EMPTY_THROWABLES = {};
 
     private EmptyArrays() { }
 }

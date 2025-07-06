@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class ThreadExecutorMap {
 
-    private static final FastThreadLocal<EventExecutor> mappings = new FastThreadLocal<EventExecutor>();
+    private static readonly FastThreadLocal<EventExecutor> mappings = new FastThreadLocal<EventExecutor>();
 
     private ThreadExecutorMap() { }
 

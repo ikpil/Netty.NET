@@ -48,15 +48,15 @@ namespace Netty.NET.Common.Internal.Logging;
  */
 class Log4JLogger extends AbstractInternalLogger {
 
-    private static final long serialVersionUID = 2851357342488183058L;
+    private static readonly long serialVersionUID = 2851357342488183058L;
 
-    private final transient Logger logger;
+    private readonly transient Logger logger;
 
     /**
      * Following the pattern discussed in pages 162 through 168 of "The complete
      * log4j manual".
      */
-    static final string FQCN = Log4JLogger.class.getName();
+    static readonly string FQCN = Log4JLogger.class.getName();
 
     // Does the log4j version in use recognize the TRACE level?
     // The trace level was introduced in log4j 1.2.12.

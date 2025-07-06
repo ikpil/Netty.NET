@@ -30,7 +30,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, 
 
     private long deadlineNanos;
     /* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
-    private final long periodNanos;
+    private readonly long periodNanos;
 
     private int queueIndex = INDEX_NOT_IN_QUEUE;
 

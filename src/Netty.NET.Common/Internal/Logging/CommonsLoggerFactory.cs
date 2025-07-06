@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Internal.Logging;
 @Deprecated
 public class CommonsLoggerFactory extends InternalLoggerFactory {
 
-    public static final InternalLoggerFactory INSTANCE = new CommonsLoggerFactory();
+    public static readonly InternalLoggerFactory INSTANCE = new CommonsLoggerFactory();
 
     /**
      * @deprecated Use {@link #INSTANCE} instead.

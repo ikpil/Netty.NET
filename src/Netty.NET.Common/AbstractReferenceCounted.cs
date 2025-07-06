@@ -23,12 +23,12 @@ namespace Netty.NET.Common;
  * Abstract base class for classes wants to implement {@link ReferenceCounted}.
  */
 public abstract class AbstractReferenceCounted : ReferenceCounted {
-    private static final long REFCNT_FIELD_OFFSET =
+    private static readonly long REFCNT_FIELD_OFFSET =
             ReferenceCountUpdater.getUnsafeOffset(AbstractReferenceCounted.class, "refCnt");
-    private static final AtomicIntegerFieldUpdater<AbstractReferenceCounted> AIF_UPDATER =
+    private static readonly AtomicIntegerFieldUpdater<AbstractReferenceCounted> AIF_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(AbstractReferenceCounted.class, "refCnt");
 
-    private static final ReferenceCountUpdater<AbstractReferenceCounted> updater =
+    private static readonly ReferenceCountUpdater<AbstractReferenceCounted> updater =
             new ReferenceCountUpdater<AbstractReferenceCounted>() {
         @Override
         protected AtomicIntegerFieldUpdater<AbstractReferenceCounted> updater() {

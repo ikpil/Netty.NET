@@ -24,9 +24,9 @@ namespace Netty.NET.Common;
 @Deprecated
 public class ResourceLeakException extends RuntimeException {
 
-    private static final long serialVersionUID = 7186453858343358280L;
+    private static readonly long serialVersionUID = 7186453858343358280L;
 
-    private final StackTraceElement[] cachedStackTrace;
+    private readonly StackTraceElement[] cachedStackTrace;
 
     public ResourceLeakException() {
         cachedStackTrace = getStackTrace();

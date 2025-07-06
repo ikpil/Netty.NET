@@ -30,8 +30,8 @@ namespace Netty.NET.Common.Internal;
  */
 public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends AbstractQueue<T>
                                                                      implements PriorityQueue<T> {
-    private static final PriorityQueueNode[] EMPTY_ARRAY = new PriorityQueueNode[0];
-    private final Comparator<T> comparator;
+    private static readonly PriorityQueueNode[] EMPTY_ARRAY = new PriorityQueueNode[0];
+    private readonly Comparator<T> comparator;
     private T[] queue;
     private int size;
 
@@ -212,7 +212,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
         return new PriorityQueueIterator();
     }
 
-    private final class PriorityQueueIterator : Iterator<T> {
+    private readonly class PriorityQueueIterator : Iterator<T> {
         private int index;
 
         @Override

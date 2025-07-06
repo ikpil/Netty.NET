@@ -27,15 +27,15 @@ namespace Netty.NET.Common.Concurrent;
  */
 public class FastThreadLocalThread extends Thread {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(FastThreadLocalThread.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(FastThreadLocalThread.class);
 
     /**
      * Sorted array of thread IDs that are treated like {@link FastThreadLocalThread}.
      */
-    private static final AtomicReference<long[]> fallbackThreads = new AtomicReference<>(null);
+    private static readonly AtomicReference<long[]> fallbackThreads = new AtomicReference<>(null);
 
     // This will be set to true if we have a chance to wrap the Runnable.
-    private final bool cleanupFastThreadLocals;
+    private readonly bool cleanupFastThreadLocals;
 
     private InternalThreadLocalMap threadLocalMap;
 

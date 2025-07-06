@@ -109,8 +109,8 @@ namespace Netty.NET.Common.Internal.Logging;
  * {@link #arrayFormat(string, object[])} methods for more details.
  */
 public final class MessageFormatter {
-    private static final string DELIM_STR = "{}";
-    private static final char ESCAPE_CHAR = '\\';
+    private static readonly string DELIM_STR = "{}";
+    private static readonly char ESCAPE_CHAR = '\\';
 
     /**
      * Performs single argument substitution for the 'messagePattern' passed as

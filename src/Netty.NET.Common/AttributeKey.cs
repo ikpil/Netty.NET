@@ -24,7 +24,7 @@ namespace Netty.NET.Common;
 @SuppressWarnings("UnusedDeclaration") // 'T' is used only at compile time
 public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
 
-    private static final ConstantPool<AttributeKey<object>> pool = new ConstantPool<AttributeKey<object>>() {
+    private static readonly ConstantPool<AttributeKey<object>> pool = new ConstantPool<AttributeKey<object>>() {
         @Override
         protected AttributeKey<object> newConstant(int id, string name) {
             return new AttributeKey<object>(id, name);

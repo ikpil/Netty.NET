@@ -27,8 +27,8 @@ namespace Netty.NET.Common;
  */
 public class DomainWildcardMappingBuilder<V> {
 
-    private final V defaultValue;
-    private final Map<string, V> map;
+    private readonly V defaultValue;
+    private readonly Map<string, V> map;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
@@ -98,13 +98,13 @@ public class DomainWildcardMappingBuilder<V> {
         return new ImmutableDomainWildcardMapping<V>(defaultValue, map);
     }
 
-    private static final class ImmutableDomainWildcardMapping<V> : Mapping<string, V> {
-        private static final string REPR_HEADER = "ImmutableDomainWildcardMapping(default: ";
-        private static final string REPR_MAP_OPENING = ", map: ";
-        private static final string REPR_MAP_CLOSING = ")";
+    private static readonly class ImmutableDomainWildcardMapping<V> : Mapping<string, V> {
+        private static readonly string REPR_HEADER = "ImmutableDomainWildcardMapping(default: ";
+        private static readonly string REPR_MAP_OPENING = ", map: ";
+        private static readonly string REPR_MAP_CLOSING = ")";
 
-        private final V defaultValue;
-        private final Map<string, V> map;
+        private readonly V defaultValue;
+        private readonly Map<string, V> map;
 
         ImmutableDomainWildcardMapping(V defaultValue, Map<string, V> map) {
             this.defaultValue = defaultValue;

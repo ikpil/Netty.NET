@@ -37,7 +37,7 @@ public final class PromiseCombiner {
     private int doneCount;
     private Promise<Void> aggregatePromise;
     private Exception cause;
-    private final GenericFutureListener<Future<?>> listener = new GenericFutureListener<Future<?>>() {
+    private readonly GenericFutureListener<Future<?>> listener = new GenericFutureListener<Future<?>>() {
         @Override
         public void operationComplete(final Future<?> future) {
             if (executor.inEventLoop()) {
@@ -64,7 +64,7 @@ public final class PromiseCombiner {
         }
     };
 
-    private final EventExecutor executor;
+    private readonly EventExecutor executor;
 
     /**
      * Deprecated use {@link PromiseCombiner#PromiseCombiner(EventExecutor)}.

@@ -26,11 +26,11 @@ namespace Netty.NET.Common.Internal;
 
 
 public class CleanerJava24Linker : Cleaner {
-    private static final InternalLogger logger;
+    private static readonly InternalLogger logger;
 
-    private static final MethodHandle INVOKE_MALLOC;
-    private static final MethodHandle INVOKE_CREATE_BYTEBUFFER;
-    private static final MethodHandle INVOKE_FREE;
+    private static readonly MethodHandle INVOKE_MALLOC;
+    private static readonly MethodHandle INVOKE_CREATE_BYTEBUFFER;
+    private static readonly MethodHandle INVOKE_FREE;
 
     static {
         bool suitableJavaVersion;
@@ -224,9 +224,9 @@ public class CleanerJava24Linker : Cleaner {
         }
     }
 
-    private static final class CleanableDirectBufferImpl : CleanableDirectBuffer {
-        private final ByteBuffer buffer;
-        private final long memoryAddress;
+    private static readonly class CleanableDirectBufferImpl : CleanableDirectBuffer {
+        private readonly ByteBuffer buffer;
+        private readonly long memoryAddress;
 
         private CleanableDirectBufferImpl(int capacity) {
             long addr = malloc(capacity);

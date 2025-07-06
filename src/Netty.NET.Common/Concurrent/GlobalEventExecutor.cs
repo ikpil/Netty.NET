@@ -42,9 +42,9 @@ namespace Netty.NET.Common.Concurrent;
  * use a dedicated executor.
  */
 public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : OrderedEventExecutor {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(GlobalEventExecutor.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(GlobalEventExecutor.class);
 
-    private static final long SCHEDULE_QUIET_PERIOD_INTERVAL;
+    private static readonly long SCHEDULE_QUIET_PERIOD_INTERVAL;
 
     static {
         int quietPeriod = SystemPropertyUtil.getInt("io.netty.globalEventExecutor.quietPeriodSeconds", 1);
@@ -56,7 +56,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : 
         SCHEDULE_QUIET_PERIOD_INTERVAL = TimeSpan.SECONDS.toNanos(quietPeriod);
     }
 
-    public static final GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
+    public static readonly GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
 
     final BlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
     final ScheduledFutureTask<Void> quietPeriodTask = new ScheduledFutureTask<Void>(
@@ -77,11 +77,11 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : 
     // be sticky about its thread group
     // visible for testing
     final ThreadFactory threadFactory;
-    private final TaskRunner taskRunner = new TaskRunner();
-    private final AtomicBoolean started = new AtomicBoolean();
+    private readonly TaskRunner taskRunner = new TaskRunner();
+    private readonly AtomicBoolean started = new AtomicBoolean();
     volatile Thread thread;
 
-    private final Future<?> terminationFuture;
+    private readonly Future<?> terminationFuture;
 
     private GlobalEventExecutor() {
         scheduledTaskQueue().add(quietPeriodTask);

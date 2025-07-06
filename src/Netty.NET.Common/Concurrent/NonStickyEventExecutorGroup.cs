@@ -40,8 +40,8 @@ namespace Netty.NET.Common.Concurrent;
  */
 @UnstableApi
 public final class NonStickyEventExecutorGroup : EventExecutorGroup {
-    private final EventExecutorGroup group;
-    private final int maxTaskExecutePerRun;
+    private readonly EventExecutorGroup group;
+    private readonly int maxTaskExecutePerRun;
 
     /**
      * Creates a new instance. Be aware that the given {@link EventExecutorGroup} <strong>MUST NOT</strong> contain
@@ -212,19 +212,19 @@ public final class NonStickyEventExecutorGroup : EventExecutorGroup {
         group.execute(command);
     }
 
-    private static final class NonStickyOrderedEventExecutor extends AbstractEventExecutor
+    private static readonly class NonStickyOrderedEventExecutor extends AbstractEventExecutor
             implements Runnable, OrderedEventExecutor {
-        private final EventExecutor executor;
-        private final Queue<Runnable> tasks = PlatformDependent.newMpscQueue();
+        private readonly EventExecutor executor;
+        private readonly Queue<Runnable> tasks = PlatformDependent.newMpscQueue();
 
-        private static final int NONE = 0;
-        private static final int SUBMITTED = 1;
-        private static final int RUNNING = 2;
+        private static readonly int NONE = 0;
+        private static readonly int SUBMITTED = 1;
+        private static readonly int RUNNING = 2;
 
-        private final AtomicInteger state = new AtomicInteger();
-        private final int maxTaskExecutePerRun;
+        private readonly AtomicInteger state = new AtomicInteger();
+        private readonly int maxTaskExecutePerRun;
 
-        private final AtomicReference<Thread> executingThread = new AtomicReference<Thread>();
+        private readonly AtomicReference<Thread> executingThread = new AtomicReference<Thread>();
 
         NonStickyOrderedEventExecutor(EventExecutor executor, int maxTaskExecutePerRun) {
             super(executor);

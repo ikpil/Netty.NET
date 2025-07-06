@@ -22,11 +22,11 @@ namespace Netty.NET.Common.Internal;
  */
 public final class ObjectUtil {
 
-    private static final float FLOAT_ZERO = 0.0F;
-    private static final double DOUBLE_ZERO = 0.0D;
-    private static final long LONG_ZERO = 0L;
-    private static final int INT_ZERO = 0;
-    private static final short SHORT_ZERO = 0;
+    private static readonly float FLOAT_ZERO = 0.0F;
+    private static readonly double DOUBLE_ZERO = 0.0D;
+    private static readonly long LONG_ZERO = 0L;
+    private static readonly int INT_ZERO = 0;
+    private static readonly short SHORT_ZERO = 0;
 
     private ObjectUtil() {
     }

@@ -28,7 +28,7 @@ namespace Netty.NET.Common;
  * This static factory should be used to load {@link ResourceLeakDetector}s as needed
  */
 public abstract class ResourceLeakDetectorFactory {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ResourceLeakDetectorFactory.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ResourceLeakDetectorFactory.class);
 
     private static volatile ResourceLeakDetectorFactory factoryInstance = new DefaultResourceLeakDetectorFactory();
 
@@ -95,9 +95,9 @@ public abstract class ResourceLeakDetectorFactory {
     /**
      * Default implementation that loads custom leak detector via system property
      */
-    private static final class DefaultResourceLeakDetectorFactory extends ResourceLeakDetectorFactory {
-        private final Constructor<?> obsoleteCustomClassConstructor;
-        private final Constructor<?> customClassConstructor;
+    private static readonly class DefaultResourceLeakDetectorFactory extends ResourceLeakDetectorFactory {
+        private readonly Constructor<?> obsoleteCustomClassConstructor;
+        private readonly Constructor<?> customClassConstructor;
 
         DefaultResourceLeakDetectorFactory() {
             string customLeakDetector;

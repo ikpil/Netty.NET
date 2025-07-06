@@ -43,7 +43,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class SocketUtils {
 
-    private static final Enumeration<object> EMPTY = Collections.enumeration(Collections.emptyList());
+    private static readonly Enumeration<object> EMPTY = Collections.enumeration(Collections.emptyList());
 
     private SocketUtils() {
     }

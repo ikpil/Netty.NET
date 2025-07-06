@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 public final class ThreadPerTaskExecutor : Executor {
-    private final ThreadFactory threadFactory;
+    private readonly ThreadFactory threadFactory;
 
     public ThreadPerTaskExecutor(ThreadFactory threadFactory) {
         this.threadFactory = ObjectUtil.checkNotNull(threadFactory, "threadFactory");

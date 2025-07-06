@@ -28,12 +28,12 @@ namespace Netty.NET.Common.Concurrent;
  */
 public class DefaultThreadFactory : ThreadFactory {
 
-    private static final AtomicInteger poolId = new AtomicInteger();
+    private static readonly AtomicInteger poolId = new AtomicInteger();
 
-    private final AtomicInteger nextId = new AtomicInteger();
-    private final string prefix;
-    private final bool daemon;
-    private final int priority;
+    private readonly AtomicInteger nextId = new AtomicInteger();
+    private readonly string prefix;
+    private readonly bool daemon;
+    private readonly int priority;
     protected final ThreadGroup threadGroup;
 
     public DefaultThreadFactory(Class<?> poolType) {

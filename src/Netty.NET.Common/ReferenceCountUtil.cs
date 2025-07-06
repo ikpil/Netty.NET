@@ -25,7 +25,7 @@ namespace Netty.NET.Common;
  */
 public final class ReferenceCountUtil {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ReferenceCountUtil.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(ReferenceCountUtil.class);
 
     static {
         ResourceLeakDetector.addExclusions(ReferenceCountUtil.class, "touch");
@@ -176,10 +176,10 @@ public final class ReferenceCountUtil {
     /**
      * Releases the objects when the thread that called {@link #releaseLater(object)} has been terminated.
      */
-    private static final class ReleasingTask : Runnable {
+    private static readonly class ReleasingTask : Runnable {
 
-        private final ReferenceCounted obj;
-        private final int decrement;
+        private readonly ReferenceCounted obj;
+        private readonly int decrement;
 
         ReleasingTask(ReferenceCounted obj, int decrement) {
             this.obj = obj;

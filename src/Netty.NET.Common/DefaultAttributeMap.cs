@@ -28,9 +28,9 @@ namespace Netty.NET.Common;
  */
 public class DefaultAttributeMap : AttributeMap {
 
-    private static final AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
+    private static readonly AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(DefaultAttributeMap.class, DefaultAttribute[].class, "attributes");
-    private static final DefaultAttribute[] EMPTY_ATTRIBUTES = new DefaultAttribute[0];
+    private static readonly DefaultAttribute[] EMPTY_ATTRIBUTES = new DefaultAttribute[0];
 
     /**
      * Similarly to {@code Arrays::binarySearch} it perform a binary search optimized for this use case, in order to
@@ -154,15 +154,15 @@ public class DefaultAttributeMap : AttributeMap {
     }
 
     @SuppressWarnings("serial")
-    private static final class DefaultAttribute<T> extends AtomicReference<T> : Attribute<T> {
+    private static readonly class DefaultAttribute<T> extends AtomicReference<T> : Attribute<T> {
 
-        private static final AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
+        private static readonly AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(DefaultAttribute.class,
                                                        DefaultAttributeMap.class, "attributeMap");
-        private static final long serialVersionUID = -2661411462200283011L;
+        private static readonly long serialVersionUID = -2661411462200283011L;
 
         private volatile DefaultAttributeMap attributeMap;
-        private final AttributeKey<T> key;
+        private readonly AttributeKey<T> key;
 
         DefaultAttribute(DefaultAttributeMap attributeMap, AttributeKey<T> key) {
             this.attributeMap = attributeMap;

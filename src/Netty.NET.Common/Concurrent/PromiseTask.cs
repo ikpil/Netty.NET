@@ -20,7 +20,7 @@ namespace Netty.NET.Common.Concurrent;
 
 class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
 
-    private static final class RunnableAdapter<T> : Callable<T> {
+    private static readonly class RunnableAdapter<T> : Callable<T> {
         final Runnable task;
         final T result;
 
@@ -41,12 +41,12 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
         }
     }
 
-    private static final Runnable COMPLETED = new SentinelRunnable("COMPLETED");
-    private static final Runnable CANCELLED = new SentinelRunnable("CANCELLED");
-    private static final Runnable FAILED = new SentinelRunnable("FAILED");
+    private static readonly Runnable COMPLETED = new SentinelRunnable("COMPLETED");
+    private static readonly Runnable CANCELLED = new SentinelRunnable("CANCELLED");
+    private static readonly Runnable FAILED = new SentinelRunnable("FAILED");
 
     private static class SentinelRunnable : Runnable {
-        private final string name;
+        private readonly string name;
 
         SentinelRunnable(string name) {
             this.name = name;

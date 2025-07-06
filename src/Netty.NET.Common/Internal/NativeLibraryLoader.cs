@@ -49,16 +49,16 @@ namespace Netty.NET.Common.Internal;
  */
 public final class NativeLibraryLoader {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(NativeLibraryLoader.class);
+    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(NativeLibraryLoader.class);
 
-    private static final string NATIVE_RESOURCE_HOME = "META-INF/native/";
-    private static final File WORKDIR;
-    private static final bool DELETE_NATIVE_LIB_AFTER_LOADING;
-    private static final bool TRY_TO_PATCH_SHADED_ID;
-    private static final bool DETECT_NATIVE_LIBRARY_DUPLICATES;
+    private static readonly string NATIVE_RESOURCE_HOME = "META-INF/native/";
+    private static readonly File WORKDIR;
+    private static readonly bool DELETE_NATIVE_LIB_AFTER_LOADING;
+    private static readonly bool TRY_TO_PATCH_SHADED_ID;
+    private static readonly bool DETECT_NATIVE_LIBRARY_DUPLICATES;
 
     // Just use a-Z and numbers as valid ID bytes.
-    private static final byte[] UNIQUE_ID_BYTES =
+    private static readonly byte[] UNIQUE_ID_BYTES =
             "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(CharsetUtil.US_ASCII);
 
     static {
@@ -511,7 +511,7 @@ public final class NativeLibraryLoader {
         // Utility
     }
 
-    private static final class NoexecVolumeDetector {
+    private static readonly class NoexecVolumeDetector {
 
         private static bool canExecuteExecutable(File file) throws IOException {
             // If we can already execute, there is nothing to do.

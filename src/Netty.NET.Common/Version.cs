@@ -39,12 +39,12 @@ namespace Netty.NET.Common;
  */
 public final class Version {
 
-    private static final string PROP_VERSION = ".version";
-    private static final string PROP_BUILD_DATE = ".buildDate";
-    private static final string PROP_COMMIT_DATE = ".commitDate";
-    private static final string PROP_SHORT_COMMIT_HASH = ".shortCommitHash";
-    private static final string PROP_LONG_COMMIT_HASH = ".longCommitHash";
-    private static final string PROP_REPO_STATUS = ".repoStatus";
+    private static readonly string PROP_VERSION = ".version";
+    private static readonly string PROP_BUILD_DATE = ".buildDate";
+    private static readonly string PROP_COMMIT_DATE = ".commitDate";
+    private static readonly string PROP_SHORT_COMMIT_HASH = ".shortCommitHash";
+    private static readonly string PROP_LONG_COMMIT_HASH = ".longCommitHash";
+    private static readonly string PROP_REPO_STATUS = ".repoStatus";
 
     /**
      * Retrieves the version information of Netty artifacts using the current
@@ -146,13 +146,13 @@ public final class Version {
         }
     }
 
-    private final string artifactId;
-    private final string artifactVersion;
-    private final long buildTimeMillis;
-    private final long commitTimeMillis;
-    private final string shortCommitHash;
-    private final string longCommitHash;
-    private final string repositoryStatus;
+    private readonly string artifactId;
+    private readonly string artifactVersion;
+    private readonly long buildTimeMillis;
+    private readonly long commitTimeMillis;
+    private readonly string shortCommitHash;
+    private readonly string longCommitHash;
+    private readonly string repositoryStatus;
 
     private Version(
             string artifactId, string artifactVersion,

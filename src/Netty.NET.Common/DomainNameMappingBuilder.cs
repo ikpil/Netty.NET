@@ -32,8 +32,8 @@ namespace Netty.NET.Common;
 @Deprecated
 public final class DomainNameMappingBuilder<V> {
 
-    private final V defaultValue;
-    private final Map<string, V> map;
+    private readonly V defaultValue;
+    private readonly Map<string, V> map;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
@@ -90,16 +90,16 @@ public final class DomainNameMappingBuilder<V> {
      *
      * @param <V> concrete type of value objects
      */
-    private static final class ImmutableDomainNameMapping<V> extends DomainNameMapping<V> {
-        private static final string REPR_HEADER = "ImmutableDomainNameMapping(default: ";
-        private static final string REPR_MAP_OPENING = ", map: {";
-        private static final string REPR_MAP_CLOSING = "})";
-        private static final int REPR_CONST_PART_LENGTH =
+    private static readonly class ImmutableDomainNameMapping<V> extends DomainNameMapping<V> {
+        private static readonly string REPR_HEADER = "ImmutableDomainNameMapping(default: ";
+        private static readonly string REPR_MAP_OPENING = ", map: {";
+        private static readonly string REPR_MAP_CLOSING = "})";
+        private static readonly int REPR_CONST_PART_LENGTH =
             REPR_HEADER.length() + REPR_MAP_OPENING.length() + REPR_MAP_CLOSING.length();
 
-        private final string[] domainNamePatterns;
-        private final V[] values;
-        private final Map<string, V> map;
+        private readonly string[] domainNamePatterns;
+        private readonly V[] values;
+        private readonly Map<string, V> map;
 
         @SuppressWarnings("unchecked")
         private ImmutableDomainNameMapping(V defaultValue, Map<string, V> map) {
