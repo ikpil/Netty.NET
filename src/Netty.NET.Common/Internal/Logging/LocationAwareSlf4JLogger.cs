@@ -51,7 +51,7 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public boolean isTraceEnabled() {
+    public bool isTraceEnabled() {
         return logger.isTraceEnabled();
     }
 
@@ -91,7 +91,7 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public boolean isDebugEnabled() {
+    public bool isDebugEnabled() {
         return logger.isDebugEnabled();
     }
 
@@ -131,7 +131,7 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public boolean isInfoEnabled() {
+    public bool isInfoEnabled() {
         return logger.isInfoEnabled();
     }
 
@@ -171,7 +171,7 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public boolean isWarnEnabled() {
+    public bool isWarnEnabled() {
         return logger.isWarnEnabled();
     }
 
@@ -211,7 +211,7 @@ final class LocationAwareSlf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public boolean isErrorEnabled() {
+    public bool isErrorEnabled() {
         return logger.isErrorEnabled();
     }
 

@@ -97,7 +97,7 @@ public final class ThreadDeathWatcher {
                 false);
     }
 
-    private static void schedule(Thread thread, Runnable task, boolean isWatch) {
+    private static void schedule(Thread thread, Runnable task, bool isWatch) {
         pendingEntries.add(new Entry(thread, task, isWatch));
 
         if (started.compareAndSet(false, true)) {
@@ -129,7 +129,7 @@ public final class ThreadDeathWatcher {
      *
      * @return {@code true} if and only if the watcher thread has been terminated
      */
-    public static boolean awaitInactivity(long timeout, TimeUnit unit) throws InterruptedException {
+    public static bool awaitInactivity(long timeout, TimeSpan unit) throws InterruptedException {
         ObjectUtil.checkNotNull(unit, "unit");
 
         Thread watcherThread = ThreadDeathWatcher.watcherThread;
@@ -168,7 +168,7 @@ public final class ThreadDeathWatcher {
                     // Mark the current worker thread as stopped.
                     // The following CAS must always success and must be uncontended,
                     // because only one watcher thread should be running at the same time.
-                    boolean stopped = started.compareAndSet(true, false);
+                    bool stopped = started.compareAndSet(true, false);
                     assert stopped;
 
                     // Check if there are pending entries added by watch() while we do CAS above.
@@ -230,9 +230,9 @@ public final class ThreadDeathWatcher {
     private static final class Entry {
         final Thread thread;
         final Runnable task;
-        final boolean isWatch;
+        final bool isWatch;
 
-        Entry(Thread thread, Runnable task, boolean isWatch) {
+        Entry(Thread thread, Runnable task, bool isWatch) {
             this.thread = thread;
             this.task = task;
             this.isWatch = isWatch;
@@ -244,7 +244,7 @@ public final class ThreadDeathWatcher {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public bool equals(Object obj) {
             if (obj == this) {
                 return true;
             }

@@ -41,7 +41,7 @@ public final class RecyclableArrayList extends ArrayList<Object> {
         }
     });
 
-    private boolean insertSinceRecycled;
+    private bool insertSinceRecycled;
 
     /**
      * Create a new empty {@link RecyclableArrayList} instance
@@ -71,7 +71,7 @@ public final class RecyclableArrayList extends ArrayList<Object> {
     }
 
     @Override
-    public boolean addAll(Collection<?> c) {
+    public bool addAll(Collection<?> c) {
         checkNullElements(c);
         if (super.addAll(c)) {
             insertSinceRecycled = true;
@@ -81,7 +81,7 @@ public final class RecyclableArrayList extends ArrayList<Object> {
     }
 
     @Override
-    public boolean addAll(int index, Collection<?> c) {
+    public bool addAll(int index, Collection<?> c) {
         checkNullElements(c);
         if (super.addAll(index, c)) {
             insertSinceRecycled = true;
@@ -110,7 +110,7 @@ public final class RecyclableArrayList extends ArrayList<Object> {
     }
 
     @Override
-    public boolean add(Object element) {
+    public bool add(Object element) {
         if (super.add(ObjectUtil.checkNotNull(element, "element"))) {
             insertSinceRecycled = true;
             return true;
@@ -134,14 +134,14 @@ public final class RecyclableArrayList extends ArrayList<Object> {
     /**
      * Returns {@code true} if any elements where added or set. This will be reset once {@link #recycle()} was called.
      */
-    public boolean insertSinceRecycled() {
+    public bool insertSinceRecycled() {
         return insertSinceRecycled;
     }
 
     /**
      * Clear and recycle this instance.
      */
-    public boolean recycle() {
+    public bool recycle() {
         clear();
         insertSinceRecycled = false;
         handle.recycle(this);

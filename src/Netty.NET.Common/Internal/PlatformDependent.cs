@@ -88,13 +88,13 @@ public final class PlatformDependent {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PlatformDependent.class);
 
     private static Pattern MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
-    private static final boolean MAYBE_SUPER_USER;
+    private static final bool MAYBE_SUPER_USER;
 
-    private static final boolean CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !isAndroid();
+    private static final bool CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !isAndroid();
 
     private static final Throwable UNSAFE_UNAVAILABILITY_CAUSE = unsafeUnavailabilityCause0();
-    private static final boolean DIRECT_BUFFER_PREFERRED;
-    private static final boolean EXPLICIT_NO_PREFER_DIRECT;
+    private static final bool DIRECT_BUFFER_PREFERRED;
+    private static final bool EXPLICIT_NO_PREFER_DIRECT;
     private static final long MAX_DIRECT_MEMORY = estimateMaxDirectMemory();
 
     private static final int MPSC_CHUNK_SIZE =  1024;
@@ -111,24 +111,24 @@ public final class PlatformDependent {
 
     private static final Set<String> LINUX_OS_CLASSIFIERS;
 
-    private static final boolean IS_WINDOWS = isWindows0();
-    private static final boolean IS_OSX = isOsx0();
-    private static final boolean IS_J9_JVM = isJ9Jvm0();
-    private static final boolean IS_IVKVM_DOT_NET = isIkvmDotNet0();
+    private static final bool IS_WINDOWS = isWindows0();
+    private static final bool IS_OSX = isOsx0();
+    private static final bool IS_J9_JVM = isJ9Jvm0();
+    private static final bool IS_IVKVM_DOT_NET = isIkvmDotNet0();
 
     private static final int ADDRESS_SIZE = addressSize0();
-    private static final boolean USE_DIRECT_BUFFER_NO_CLEANER;
+    private static final bool USE_DIRECT_BUFFER_NO_CLEANER;
     private static final AtomicLong DIRECT_MEMORY_COUNTER;
     private static final long DIRECT_MEMORY_LIMIT;
     private static final Cleaner CLEANER;
     private static final Cleaner DIRECT_CLEANER;
     private static final Cleaner LEGACY_CLEANER;
-    private static final boolean HAS_ALLOCATE_UNINIT_ARRAY;
+    private static final bool HAS_ALLOCATE_UNINIT_ARRAY;
     private static final String LINUX_ID_PREFIX = "ID=";
     private static final String LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
-    public static final boolean BIG_ENDIAN_NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
+    public static final bool BIG_ENDIAN_NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
 
-    private static final boolean JFR;
+    private static final bool JFR;
 
     private static final Cleaner NOOP = new Cleaner() {
         @Override
@@ -243,7 +243,7 @@ public final class PlatformDependent {
         }
         LINUX_OS_CLASSIFIERS = Collections.unmodifiableSet(availableClassifiers);
 
-        boolean jfrAvailable;
+        bool jfrAvailable;
         Throwable jfrFailure = null;
         try {
             //noinspection Since15
@@ -268,7 +268,7 @@ public final class PlatformDependent {
         processOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
-    private static boolean processOsReleaseFile(String osReleaseFileName, Set<String> availableClassifiers) {
+    private static bool processOsReleaseFile(String osReleaseFileName, Set<String> availableClassifiers) {
         Path file = Paths.get(osReleaseFileName);
         return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> {
             try {
@@ -302,7 +302,7 @@ public final class PlatformDependent {
         });
     }
 
-    static boolean addPropertyOsClassifiers(Set<String> availableClassifiers) {
+    static bool addPropertyOsClassifiers(Set<String> availableClassifiers) {
         // empty: -Dio.netty.osClassifiers (no distro specific classifiers for native libs)
         // single ID: -Dio.netty.osClassifiers=ubuntu
         // pair ID, ID_LIKE: -Dio.netty.osClassifiers=ubuntu,debian
@@ -337,7 +337,7 @@ public final class PlatformDependent {
         return BYTE_ARRAY_BASE_OFFSET;
     }
 
-    public static boolean hasDirectBufferNoCleanerConstructor() {
+    public static bool hasDirectBufferNoCleanerConstructor() {
         return PlatformDependent0.hasDirectBufferNoCleanerConstructor();
     }
 
@@ -348,21 +348,21 @@ public final class PlatformDependent {
     /**
      * Returns {@code true} if and only if the current platform is Android
      */
-    public static boolean isAndroid() {
+    public static bool isAndroid() {
         return PlatformDependent0.isAndroid();
     }
 
     /**
      * Return {@code true} if the JVM is running on Windows
      */
-    public static boolean isWindows() {
+    public static bool isWindows() {
         return IS_WINDOWS;
     }
 
     /**
      * Return {@code true} if the JVM is running on OSX / MacOS
      */
-    public static boolean isOsx() {
+    public static bool isOsx() {
         return IS_OSX;
     }
 
@@ -370,7 +370,7 @@ public final class PlatformDependent {
      * Return {@code true} if the current user may be a super-user. Be aware that this is just an hint and so it may
      * return false-positives.
      */
-    public static boolean maybeSuperUser() {
+    public static bool maybeSuperUser() {
         return MAYBE_SUPER_USER;
     }
 
@@ -385,14 +385,14 @@ public final class PlatformDependent {
      * @param thread The thread to be checked.
      * @return {@code true} if this {@link Thread} is a virtual thread, {@code false} otherwise.
      */
-    public static boolean isVirtualThread(Thread thread) {
+    public static bool isVirtualThread(Thread thread) {
         return PlatformDependent0.isVirtualThread(thread);
     }
 
     /**
      * Returns {@code true} if and only if it is fine to enable TCP_NODELAY socket option by default.
      */
-    public static boolean canEnableTcpNoDelayByDefault() {
+    public static bool canEnableTcpNoDelayByDefault() {
         return CAN_ENABLE_TCP_NODELAY_BY_DEFAULT;
     }
 
@@ -400,7 +400,7 @@ public final class PlatformDependent {
      * Return {@code true} if {@code sun.misc.Unsafe} was found on the classpath and can be used for accelerated
      * direct memory access.
      */
-    public static boolean hasUnsafe() {
+    public static bool hasUnsafe() {
         return UNSAFE_UNAVAILABILITY_CAUSE == null;
     }
 
@@ -416,7 +416,7 @@ public final class PlatformDependent {
      *
      * @see <a href="https://en.wikipedia.org/wiki/Segmentation_fault#Bus_error">Wikipedia on segfault</a>
      */
-    public static boolean isUnaligned() {
+    public static bool isUnaligned() {
         return PlatformDependent0.isUnaligned();
     }
 
@@ -424,7 +424,7 @@ public final class PlatformDependent {
      * Returns {@code true} if the platform has reliable low-level direct buffer access API and a user has not specified
      * {@code -Dio.netty.noPreferDirect} option.
      */
-    public static boolean directBufferPreferred() {
+    public static bool directBufferPreferred() {
         return DIRECT_BUFFER_PREFERRED;
     }
 
@@ -432,7 +432,7 @@ public final class PlatformDependent {
      * Returns {@code true} if user has specified
      * {@code -Dio.netty.noPreferDirect=true} option.
      */
-    public static boolean isExplicitNoPreferDirect() {
+    public static bool isExplicitNoPreferDirect() {
         return EXPLICIT_NO_PREFER_DIRECT;
     }
 
@@ -441,7 +441,7 @@ public final class PlatformDependent {
      * applies for buffers allocated via {@link #allocateDirect(int)} and when using the {@code clean} method of the
      * returned {@link CleanableDirectBuffer}.
      */
-    public static boolean canReliabilyFreeDirectBuffers() {
+    public static bool canReliabilyFreeDirectBuffers() {
         return CLEANER != NOOP;
     }
 
@@ -898,7 +898,7 @@ public final class PlatformDependent {
         decrementMemoryCounter(capacity);
     }
 
-    public static boolean hasAlignDirectByteBuffer() {
+    public static bool hasAlignDirectByteBuffer() {
         return hasUnsafe() || PlatformDependent0.hasAlignSliceMethod();
     }
 
@@ -943,7 +943,7 @@ public final class PlatformDependent {
         }
     }
 
-    public static boolean useDirectBufferNoCleaner() {
+    public static bool useDirectBufferNoCleaner() {
         return USE_DIRECT_BUFFER_NO_CLEANER;
     }
 
@@ -958,7 +958,7 @@ public final class PlatformDependent {
      * @param length the amount of bytes to compare. This is assumed to be validated as not going out of bounds
      * by the caller.
      */
-    public static boolean equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    public static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         if (javaVersion() > 8 && (startPos2 | startPos1 | (bytes1.length - length) | bytes2.length - length) == 0) {
             return Arrays.equals(bytes1, bytes2);
         }
@@ -974,7 +974,7 @@ public final class PlatformDependent {
      * @param length The amount of bytes to check for zero.
      * @return {@code false} if {@code bytes[startPos:startsPos+length)} contains a value other than zero.
      */
-    public static boolean isZero(byte[] bytes, int startPos, int length) {
+    public static bool isZero(byte[] bytes, int startPos, int length) {
         return !hasUnsafe() || !unalignedAccess() ?
                 isZeroSafe(bytes, startPos, length) :
                 PlatformDependent0.isZero(bytes, startPos, length);
@@ -990,7 +990,7 @@ public final class PlatformDependent {
      *     byte[] s2 = new {1, 2, 3};
      *     byte[] s3 = new {1, 2, 3};
      *     byte[] s4 = new {4, 5, 6};
-     *     boolean equals = (equalsConstantTime(s1, 0, s2, 0, s1.length) &
+     *     bool equals = (equalsConstantTime(s1, 0, s2, 0, s1.length) &
      *                       equalsConstantTime(s3, 0, s4, 0, s3.length)) != 0;
      * </pre>
      * @param bytes1 the first byte array.
@@ -1073,7 +1073,7 @@ public final class PlatformDependent {
     }
 
     private static final class Mpsc {
-        private static final boolean USE_MPSC_CHUNKED_ARRAY_QUEUE;
+        private static final bool USE_MPSC_CHUNKED_ARRAY_QUEUE;
 
         static {
             Object unsafe = null;
@@ -1214,23 +1214,23 @@ public final class PlatformDependent {
         return ThreadLocalRandom.current();
     }
 
-    private static boolean isWindows0() {
-        boolean windows = "windows".equals(NORMALIZED_OS);
+    private static bool isWindows0() {
+        bool windows = "windows".equals(NORMALIZED_OS);
         if (windows) {
             logger.debug("Platform: Windows");
         }
         return windows;
     }
 
-    private static boolean isOsx0() {
-        boolean osx = "osx".equals(NORMALIZED_OS);
+    private static bool isOsx0() {
+        bool osx = "osx".equals(NORMALIZED_OS);
         if (osx) {
             logger.debug("Platform: MacOS");
         }
         return osx;
     }
 
-    private static boolean maybeSuperUser0() {
+    private static bool maybeSuperUser0() {
         String username = SystemPropertyUtil.get("user.name");
         if (isWindows()) {
             return "Administrator".equals(username);
@@ -1256,7 +1256,7 @@ public final class PlatformDependent {
         }
 
         try {
-            boolean hasUnsafe = PlatformDependent0.hasUnsafe();
+            bool hasUnsafe = PlatformDependent0.hasUnsafe();
             logger.debug("sun.misc.Unsafe: {}", hasUnsafe ? "available" : "unavailable");
             return null;
         } catch (Throwable t) {
@@ -1270,11 +1270,11 @@ public final class PlatformDependent {
      * Returns {@code true} if the running JVM is either <a href="https://developer.ibm.com/javasdk/">IBM J9</a> or
      * <a href="https://www.eclipse.org/openj9/">Eclipse OpenJ9</a>, {@code false} otherwise.
      */
-    public static boolean isJ9Jvm() {
+    public static bool isJ9Jvm() {
         return IS_J9_JVM;
     }
 
-    private static boolean isJ9Jvm0() {
+    private static bool isJ9Jvm0() {
         String vmName = SystemPropertyUtil.get("java.vm.name", "").toLowerCase();
         return vmName.startsWith("ibm j9") || vmName.startsWith("eclipse openj9");
     }
@@ -1282,11 +1282,11 @@ public final class PlatformDependent {
     /**
      * Returns {@code true} if the running JVM is <a href="https://www.ikvm.net">IKVM.NET</a>, {@code false} otherwise.
      */
-    public static boolean isIkvmDotNet() {
+    public static bool isIkvmDotNet() {
         return IS_IVKVM_DOT_NET;
     }
 
-    private static boolean isIkvmDotNet0() {
+    private static bool isIkvmDotNet0() {
         String vmName = SystemPropertyUtil.get("java.vm.name", "").toUpperCase(Locale.US);
         return vmName.equals("IKVM.NET");
     }
@@ -1341,7 +1341,7 @@ public final class PlatformDependent {
                     continue;
                 }
 
-                maxDirectMemory = Long.parseLong(m.group(1));
+                maxDirectMemory = long.parseLong(m.group(1));
                 switch (m.group(2).charAt(0)) {
                     case 'k': case 'K':
                         maxDirectMemory *= 1024;
@@ -1487,7 +1487,7 @@ public final class PlatformDependent {
         Pattern bitPattern = Pattern.compile("([1-9][0-9]+)-?bit");
         Matcher m = bitPattern.matcher(vm);
         if (m.find()) {
-            return Integer.parseInt(m.group(1));
+            return int.parseInt(m.group(1));
         } else {
             return 64;
         }
@@ -1507,7 +1507,7 @@ public final class PlatformDependent {
         return PlatformDependent0.byteArrayBaseOffset();
     }
 
-    private static boolean equalsSafe(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    private static bool equalsSafe(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         final int end = startPos1 + length;
         for (; startPos1 < end; ++startPos1, ++startPos2) {
             if (bytes1[startPos1] != bytes2[startPos2]) {
@@ -1517,7 +1517,7 @@ public final class PlatformDependent {
         return true;
     }
 
-    private static boolean isZeroSafe(byte[] bytes, int startPos, int length) {
+    private static bool isZeroSafe(byte[] bytes, int startPos, int length) {
         final int end = startPos + length;
         for (; startPos < end; ++startPos) {
             if (bytes[startPos] != 0) {
@@ -1595,7 +1595,7 @@ public final class PlatformDependent {
         }
     }
     // keep in sync with maven's pom.xml via os.detection.classifierWithLikes!
-    private static boolean isAllowedClassifier(String classifier) {
+    private static bool isAllowedClassifier(String classifier) {
         switch (classifier) {
             case "fedora":
             case "suse":
@@ -1739,7 +1739,7 @@ public final class PlatformDependent {
     /**
      * Check if JFR events are supported on this platform.
      */
-    public static boolean isJfrEnabled() {
+    public static bool isJfrEnabled() {
         return JFR;
     }
 

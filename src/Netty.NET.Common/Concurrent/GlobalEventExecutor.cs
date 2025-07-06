@@ -53,7 +53,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
         }
         logger.debug("-Dio.netty.globalEventExecutor.quietPeriodSeconds: {}", quietPeriod);
 
-        SCHEDULE_QUIET_PERIOD_INTERVAL = TimeUnit.SECONDS.toNanos(quietPeriod);
+        SCHEDULE_QUIET_PERIOD_INTERVAL = TimeSpan.SECONDS.toNanos(quietPeriod);
     }
 
     public static final GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
@@ -115,7 +115,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
                 Runnable task = null;
                 if (delayNanos > 0) {
                     try {
-                        task = taskQueue.poll(delayNanos, TimeUnit.NANOSECONDS);
+                        task = taskQueue.poll(delayNanos, TimeSpan.NANOSECONDS);
                     } catch (InterruptedException e) {
                         // Waken up.
                         return null;
@@ -162,12 +162,12 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
     }
 
     @Override
-    public boolean inEventLoop(Thread thread) {
+    public bool inEventLoop(Thread thread) {
         return thread == this.thread;
     }
 
     @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
         return terminationFuture();
     }
 
@@ -183,22 +183,22 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
     }
 
     @Override
-    public boolean isShuttingDown() {
+    public bool isShuttingDown() {
         return false;
     }
 
     @Override
-    public boolean isShutdown() {
+    public bool isShutdown() {
         return false;
     }
 
     @Override
-    public boolean isTerminated() {
+    public bool isTerminated() {
         return false;
     }
 
     @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit) {
+    public bool awaitTermination(long timeout, TimeSpan unit) {
         return false;
     }
 
@@ -210,7 +210,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
      *
      * @return {@code true} if and only if the worker thread has been terminated
      */
-    public boolean awaitInactivity(long timeout, TimeUnit unit) throws InterruptedException {
+    public bool awaitInactivity(long timeout, TimeSpan unit) throws InterruptedException {
         ObjectUtil.checkNotNull(unit, "unit");
 
         final Thread thread = this.thread;
@@ -297,7 +297,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor im
                     // Mark the current thread as stopped.
                     // The following CAS must always success and must be uncontended,
                     // because only one thread should be running at the same time.
-                    boolean stopped = started.compareAndSet(true, false);
+                    bool stopped = started.compareAndSet(true, false);
                     assert stopped;
 
                     // Check if there are pending entries added by execute() or schedule*() while we do CAS above.

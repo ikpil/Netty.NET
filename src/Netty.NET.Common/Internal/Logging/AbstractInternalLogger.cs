@@ -47,7 +47,7 @@ public abstract class AbstractInternalLogger implements InternalLogger, Serializ
     }
 
     @Override
-    public boolean isEnabled(InternalLogLevel level) {
+    public bool isEnabled(InternalLogLevel level) {
         switch (level) {
         case TRACE:
             return isTraceEnabled();

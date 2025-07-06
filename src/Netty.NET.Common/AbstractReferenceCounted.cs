@@ -72,16 +72,16 @@ public abstract class AbstractReferenceCounted implements ReferenceCounted {
     }
 
     @Override
-    public boolean release() {
+    public bool release() {
         return handleRelease(updater.release(this));
     }
 
     @Override
-    public boolean release(int decrement) {
+    public bool release(int decrement) {
         return handleRelease(updater.release(this, decrement));
     }
 
-    private boolean handleRelease(boolean result) {
+    private bool handleRelease(bool result) {
         if (result) {
             deallocate();
         }

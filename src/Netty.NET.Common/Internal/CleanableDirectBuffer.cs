@@ -41,7 +41,7 @@ public interface CleanableDirectBuffer {
      * @return {@code true} if the {@linkplain #memoryAddress() native memory address} is available,
      * otherwise {@code false}.
      */
-    default boolean hasMemoryAddress() {
+    default bool hasMemoryAddress() {
         return false;
     }
 

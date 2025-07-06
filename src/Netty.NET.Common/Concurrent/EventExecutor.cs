@@ -32,14 +32,14 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
     EventExecutorGroup parent();
 
     @Override
-    default boolean isExecutorThread(Thread thread) {
+    default bool isExecutorThread(Thread thread) {
         return inEventLoop(thread);
     }
 
     /**
      * Calls {@link #inEventLoop(Thread)} with {@link Thread#currentThread()} as argument
      */
-    default boolean inEventLoop() {
+    default bool inEventLoop() {
         return inEventLoop(Thread.currentThread());
     }
 
@@ -47,7 +47,7 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
      * Return {@code true} if the given {@link Thread} is executed in the event loop,
      * {@code false} otherwise.
      */
-    boolean inEventLoop(Thread thread);
+    bool inEventLoop(Thread thread);
 
     /**
      * Return a new {@link Promise}.
@@ -86,7 +86,7 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
      *
      * @return {@code true} if suspended, {@code false} otherwise.
      */
-    default boolean isSuspended() {
+    default bool isSuspended() {
         return false;
     }
 
@@ -97,10 +97,10 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
      * by submitting work to it via one of the following methods:
      * <ul>
      *   <li>{@link #execute(Runnable)}</li>
-     *   <li>{@link #schedule(Runnable, long, TimeUnit)}</li>
-     *   <li>{@link #schedule(Callable, long, TimeUnit)}</li>
-     *   <li>{@link #scheduleAtFixedRate(Runnable, long, long, TimeUnit)}</li>
-     *   <li>{@link #scheduleWithFixedDelay(Runnable, long, long, TimeUnit)}</li>
+     *   <li>{@link #schedule(Runnable, long, TimeSpan)}</li>
+     *   <li>{@link #schedule(Callable, long, TimeSpan)}</li>
+     *   <li>{@link #scheduleAtFixedRate(Runnable, long, long, TimeSpan)}</li>
+     *   <li>{@link #scheduleWithFixedDelay(Runnable, long, long, TimeSpan)}</li>
      * </ul>
      *
      * Even if this method returns {@code true} it might take some time for the {@link EventExecutor} to fully suspend
@@ -108,7 +108,7 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
      *
      * @return {@code true} if suspension was successful, otherwise {@code false}.
      */
-    default boolean trySuspend() {
+    default bool trySuspend() {
         return false;
     }
 }

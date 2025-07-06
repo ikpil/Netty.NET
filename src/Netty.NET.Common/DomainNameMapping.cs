@@ -95,7 +95,7 @@ public class DomainNameMapping<V> implements Mapping<String, V> {
     /**
      * Simple function to match <a href="https://en.wikipedia.org/wiki/Wildcard_DNS_record">DNS wildcard</a>.
      */
-    static boolean matches(String template, String hostName) {
+    static bool matches(String template, String hostName) {
         if (template.startsWith("*.")) {
             return template.regionMatches(2, hostName, 0, hostName.length())
                 || commonSuffixOfLength(hostName, template, template.length() - 1);
@@ -113,7 +113,7 @@ public class DomainNameMapping<V> implements Mapping<String, V> {
         return hostname.toLowerCase(Locale.US);
     }
 
-    private static boolean needsNormalization(String hostname) {
+    private static bool needsNormalization(String hostname) {
         final int length = hostname.length();
         for (int i = 0; i < length; i++) {
             int c = hostname.charAt(i);

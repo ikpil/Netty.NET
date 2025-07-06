@@ -87,7 +87,7 @@ public final class Signal extends Error implements Constant<Signal> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public bool equals(Object obj) {
         return this == obj;
     }
 

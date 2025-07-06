@@ -52,7 +52,7 @@ public interface HashingStrategy<T> {
      * {@code b} is {@code null} then this method returns {@code false}</li>
      * </ul>
      */
-    boolean equals(T a, T b);
+    bool equals(T a, T b);
 
     /**
      * A {@link HashingStrategy} which delegates to java's {@link Object#hashCode()}
@@ -66,7 +66,7 @@ public interface HashingStrategy<T> {
         }
 
         @Override
-        public boolean equals(Object a, Object b) {
+        public bool equals(Object a, Object b) {
             return (a == b) || (a != null && a.equals(b));
         }
     };

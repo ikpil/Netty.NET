@@ -48,7 +48,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     private static final int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
     private static final int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
     // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/ArrayList.java#l229
-    private static final int ARRAY_LIST_CAPACITY_MAX_SIZE = Integer.MAX_VALUE - 8;
+    private static final int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MAX_VALUE - 8;
 
     private static final int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
     private static final int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
@@ -322,7 +322,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     /**
      * @return {@code true} if and only if a new thread-local variable has been created
      */
-    public boolean setIndexedVariable(int index, Object value) {
+    public bool setIndexedVariable(int index, Object value) {
         return getAndSetIndexedVariable(index, value) == UNSET;
     }
 
@@ -373,13 +373,13 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         }
     }
 
-    public boolean isIndexedVariableSet(int index) {
+    public bool isIndexedVariableSet(int index) {
         Object[] lookup = indexedVariables;
         return index < lookup.length && lookup[index] != UNSET;
     }
 
     @Deprecated
-    public boolean isCleanerFlagSet(int index) {
+    public bool isCleanerFlagSet(int index) {
         return cleanerFlags != null && cleanerFlags.get(index);
     }
 

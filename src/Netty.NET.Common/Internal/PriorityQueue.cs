@@ -21,12 +21,12 @@ public interface PriorityQueue<T> extends Queue<T> {
     /**
      * Same as {@link #remove(Object)} but typed using generics.
      */
-    boolean removeTyped(T node);
+    bool removeTyped(T node);
 
     /**
      * Same as {@link #contains(Object)} but typed using generics.
      */
-    boolean containsTyped(T node);
+    bool containsTyped(T node);
 
     /**
      * Notify the queue that the priority for {@code node} has changed. The queue will adjust to ensure the priority

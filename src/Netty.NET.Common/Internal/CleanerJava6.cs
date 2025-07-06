@@ -56,9 +56,9 @@ final class CleanerJava6 implements Cleaner {
                                 cleanerClass, "clean", methodType(void.class));
                         // But only if the cleaner is non-null
                         MethodHandle nullTest = lookup.findStatic(
-                                Objects.class, "nonNull", methodType(boolean.class, Object.class));
+                                Objects.class, "nonNull", methodType(bool.class, Object.class));
                         clean = MethodHandles.guardWithTest(
-                                nullTest.asType(methodType(boolean.class, cleanerClass)),
+                                nullTest.asType(methodType(bool.class, cleanerClass)),
                                 clean,
                                 nullTest.asType(methodType(void.class, cleanerClass)));
                         // Change receiver to DirectBuffer, convert DirectBuffer to Cleaner by calling cleaner()
@@ -95,7 +95,7 @@ final class CleanerJava6 implements Cleaner {
         CLEAN_METHOD = clean;
     }
 
-    static boolean isSupported() {
+    static bool isSupported() {
         return CLEAN_METHOD != null;
     }
 

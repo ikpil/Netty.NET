@@ -36,7 +36,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
         }
     }
 
-    private static boolean isPowerOfTwo(int val) {
+    private static bool isPowerOfTwo(int val) {
         return (val & -val) == val;
     }
 

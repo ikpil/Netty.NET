@@ -83,7 +83,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * Initialize this byte string based upon a byte array.
      * {@code copy} determines if a copy is made or the array is shared.
      */
-    public AsciiString(byte[] value, boolean copy) {
+    public AsciiString(byte[] value, bool copy) {
         this(value, 0, value.length, copy);
     }
 
@@ -92,7 +92,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @param copy {@code true} then a copy of the memory will be made. {@code false} the underlying memory
      * will be shared.
      */
-    public AsciiString(byte[] value, int start, int length, boolean copy) {
+    public AsciiString(byte[] value, int start, int length, bool copy) {
         if (copy) {
             final byte[] rangedCopy = new byte[length];
             System.arraycopy(value, start, rangedCopy, 0, rangedCopy.length);
@@ -123,7 +123,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * if {@code copy} is {@code true} a copy will be made of the memory.
      * if {@code copy} is {@code false} the underlying storage will be shared, if possible.
      */
-    public AsciiString(ByteBuffer value, boolean copy) {
+    public AsciiString(ByteBuffer value, bool copy) {
         this(value, value.position(), value.remaining(), copy);
     }
 
@@ -133,7 +133,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * if {@code copy} is {@code true} a copy will be made of the memory.
      * if {@code copy} is {@code false} the underlying storage will be shared, if possible.
      */
-    public AsciiString(ByteBuffer value, int start, int length, boolean copy) {
+    public AsciiString(ByteBuffer value, int start, int length, bool copy) {
         if (isOutOfBounds(start, length, value.capacity())) {
             throw new IndexOutOfBoundsException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
                             + ") <= " + "value.capacity(" + value.capacity() + ')');
@@ -338,7 +338,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
     /**
      * Determine if this instance has 0 length.
      */
-    public boolean isEmpty() {
+    public bool isEmpty() {
         return length == 0;
     }
 
@@ -383,7 +383,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * Determine if the storage represented by {@link #array()} is entirely used.
      * @see #array()
      */
-    public boolean isEntireArrayUsed() {
+    public bool isEntireArrayUsed() {
         return offset == 0 && length == value.length;
     }
 
@@ -430,7 +430,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @param cs the character sequence to search for.
      * @return {@code true} if the sequence of characters are contained in this string, otherwise {@code false}.
      */
-    public boolean contains(CharSequence cs) {
+    public bool contains(CharSequence cs) {
         return indexOf(cs) >= 0;
     }
 
@@ -512,7 +512,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @return {@code true} if the specified string is a suffix of this string, {@code false} otherwise.
      * @throws NullPointerException if {@code suffix} is {@code null}.
      */
-    public boolean endsWith(CharSequence suffix) {
+    public bool endsWith(CharSequence suffix) {
         int suffixLen = suffix.length();
         return regionMatches(length() - suffixLen, suffix, 0, suffixLen);
     }
@@ -524,7 +524,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @param string the string to compare.
      * @return {@code true} if the specified string is equal to this string, {@code false} otherwise.
      */
-    public boolean contentEqualsIgnoreCase(CharSequence string) {
+    public bool contentEqualsIgnoreCase(CharSequence string) {
         if (this == string) {
             return true;
         }
@@ -557,7 +557,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         return true;
     }
 
-    private boolean misalignedEqualsIgnoreCase(AsciiString other) {
+    private bool misalignedEqualsIgnoreCase(AsciiString other) {
         byte[] value = this.value;
         byte[] otherValue = other.value;
         for (int i = offset, j = other.offset, end = offset + length; i < end; ++i, ++j) {
@@ -653,7 +653,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @return a new string containing the characters from start to the end of the string.
      * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
      */
-    public AsciiString subSequence(int start, int end, boolean copy) {
+    public AsciiString subSequence(int start, int end, bool copy) {
         if (isOutOfBounds(start, end - start, length())) {
             throw new IndexOutOfBoundsException("expected: 0 <= start(" + start + ") <= end (" + end + ") <= length("
                             + length() + ')');
@@ -817,7 +817,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise
      * @throws NullPointerException if {@code string} is {@code null}.
      */
-    public boolean regionMatches(int thisStart, CharSequence string, int start, int length) {
+    public bool regionMatches(int thisStart, CharSequence string, int start, int length) {
         ObjectUtil.checkNotNull(string, "string");
 
         if (start < 0 || string.length() - start < length) {
@@ -859,7 +859,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
      * @throws NullPointerException if {@code string} is {@code null}.
      */
-    public boolean regionMatches(boolean ignoreCase, int thisStart, CharSequence string, int start, int length) {
+    public bool regionMatches(bool ignoreCase, int thisStart, CharSequence string, int start, int length) {
         if (!ignoreCase) {
             return regionMatches(thisStart, string, start, length);
         }
@@ -934,7 +934,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @return {@code true} if the specified string is a prefix of this string, {@code false} otherwise
      * @throws NullPointerException if {@code prefix} is {@code null}.
      */
-    public boolean startsWith(CharSequence prefix) {
+    public bool startsWith(CharSequence prefix) {
         return startsWith(prefix, 0);
     }
 
@@ -948,7 +948,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      *         otherwise.
      * @throws NullPointerException if {@code prefix} is {@code null}.
      */
-    public boolean startsWith(CharSequence prefix, int start) {
+    public bool startsWith(CharSequence prefix, int start) {
         return regionMatches(start, prefix, 0, prefix.length());
     }
 
@@ -1025,7 +1025,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @param a the character sequence to compare to.
      * @return {@code true} if equal, otherwise {@code false}
      */
-    public boolean contentEquals(CharSequence a) {
+    public bool contentEquals(CharSequence a) {
         if (this == a) {
             return true;
         }
@@ -1053,7 +1053,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
      * @throws NullPointerException if {@code expr} is {@code null}.
      */
-    public boolean matches(String expr) {
+    public bool matches(String expr) {
         return Pattern.matches(expr, this);
     }
 
@@ -1128,7 +1128,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public bool equals(Object obj) {
         if (obj == null || obj.getClass() != AsciiString.class) {
             return false;
         }
@@ -1183,7 +1183,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         return str;
     }
 
-    public boolean parseBoolean() {
+    public bool parseBoolean() {
         return length >= 1 && value[offset] != 0;
     }
 
@@ -1243,7 +1243,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         }
 
         int i = start;
-        boolean negative = byteAt(i) == '-';
+        bool negative = byteAt(i) == '-';
         if (negative && ++i == end) {
             throw new NumberFormatException(subSequence(start, end, false).toString());
         }
@@ -1251,8 +1251,8 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         return parseInt(i, end, radix, negative);
     }
 
-    private int parseInt(int start, int end, int radix, boolean negative) {
-        int max = Integer.MIN_VALUE / radix;
+    private int parseInt(int start, int end, int radix, bool negative) {
+        int max = int.MIN_VALUE / radix;
         int result = 0;
         int currOffset = start;
         while (currOffset < end) {
@@ -1300,7 +1300,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         }
 
         int i = start;
-        boolean negative = byteAt(i) == '-';
+        bool negative = byteAt(i) == '-';
         if (negative && ++i == end) {
             throw new NumberFormatException(subSequence(start, end, false).toString());
         }
@@ -1308,8 +1308,8 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         return parseLong(i, end, radix, negative);
     }
 
-    private long parseLong(int start, int end, int radix, boolean negative) {
-        long max = Long.MIN_VALUE / radix;
+    private long parseLong(int start, int end, int radix, bool negative) {
+        long max = long.MIN_VALUE / radix;
         long result = 0;
         int currOffset = start;
         while (currOffset < end) {
@@ -1359,7 +1359,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         }
 
         @Override
-        public boolean equals(CharSequence a, CharSequence b) {
+        public bool equals(CharSequence a, CharSequence b) {
             return AsciiString.contentEqualsIgnoreCase(a, b);
         }
     };
@@ -1372,7 +1372,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         }
 
         @Override
-        public boolean equals(CharSequence a, CharSequence b) {
+        public bool equals(CharSequence a, CharSequence b) {
             return AsciiString.contentEquals(a, b);
         }
     };
@@ -1416,14 +1416,14 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
     /**
      * Determine if {@code a} contains {@code b} in a case sensitive manner.
      */
-    public static boolean contains(CharSequence a, CharSequence b) {
+    public static bool contains(CharSequence a, CharSequence b) {
         return contains(a, b, DefaultCharEqualityComparator.INSTANCE);
     }
 
     /**
      * Determine if {@code a} contains {@code b} in a case insensitive manner.
      */
-    public static boolean containsIgnoreCase(CharSequence a, CharSequence b) {
+    public static bool containsIgnoreCase(CharSequence a, CharSequence b) {
         return contains(a, b, AsciiCaseInsensitiveCharEqualityComparator.INSTANCE);
     }
 
@@ -1431,7 +1431,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * Returns {@code true} if both {@link CharSequence}'s are equals when ignore the case. This only supports 8-bit
      * ASCII.
      */
-    public static boolean contentEqualsIgnoreCase(CharSequence a, CharSequence b) {
+    public static bool contentEqualsIgnoreCase(CharSequence a, CharSequence b) {
         if (a == null || b == null) {
             return a == b;
         }
@@ -1463,7 +1463,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * {@link #contentEqualsIgnoreCase(CharSequence, CharSequence)}. {@code false} otherwise.
      * @see #contentEqualsIgnoreCase(CharSequence, CharSequence)
      */
-    public static boolean containsContentEqualsIgnoreCase(Collection<CharSequence> collection, CharSequence value) {
+    public static bool containsContentEqualsIgnoreCase(Collection<CharSequence> collection, CharSequence value) {
         for (CharSequence v : collection) {
             if (contentEqualsIgnoreCase(value, v)) {
                 return true;
@@ -1481,7 +1481,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * {@link #contentEqualsIgnoreCase(CharSequence, CharSequence)} to compare values. {@code false} otherwise.
      * @see #contentEqualsIgnoreCase(CharSequence, CharSequence)
      */
-    public static boolean containsAllContentEqualsIgnoreCase(Collection<CharSequence> a, Collection<CharSequence> b) {
+    public static bool containsAllContentEqualsIgnoreCase(Collection<CharSequence> a, Collection<CharSequence> b) {
         for (CharSequence v : b) {
             if (!containsContentEqualsIgnoreCase(a, v)) {
                 return false;
@@ -1493,7 +1493,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
     /**
      * Returns {@code true} if the content of both {@link CharSequence}'s are equals. This only supports 8-bit ASCII.
      */
-    public static boolean contentEquals(CharSequence a, CharSequence b) {
+    public static bool contentEquals(CharSequence a, CharSequence b) {
         if (a == null || b == null) {
             return a == b;
         }
@@ -1526,7 +1526,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
     }
 
     private interface CharEqualityComparator {
-        boolean equals(char a, char b);
+        bool equals(char a, char b);
     }
 
     private static final class DefaultCharEqualityComparator implements CharEqualityComparator {
@@ -1534,7 +1534,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         private DefaultCharEqualityComparator() { }
 
         @Override
-        public boolean equals(char a, char b) {
+        public bool equals(char a, char b) {
             return a == b;
         }
     }
@@ -1545,7 +1545,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         private AsciiCaseInsensitiveCharEqualityComparator() { }
 
         @Override
-        public boolean equals(char a, char b) {
+        public bool equals(char a, char b) {
             return equalsIgnoreCase(a, b);
         }
     }
@@ -1556,14 +1556,14 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         private GeneralCaseInsensitiveCharEqualityComparator() { }
 
         @Override
-        public boolean equals(char a, char b) {
+        public bool equals(char a, char b) {
             //For motivation, why we need two checks, see comment in String#regionMatches
             return Character.toUpperCase(a) == Character.toUpperCase(b) ||
                 Character.toLowerCase(a) == Character.toLowerCase(b);
         }
     }
 
-    private static boolean contains(CharSequence a, CharSequence b, CharEqualityComparator cmp) {
+    private static bool contains(CharSequence a, CharSequence b, CharEqualityComparator cmp) {
         if (a == null || b == null || a.length() < b.length()) {
             return false;
         }
@@ -1587,7 +1587,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         return false;
     }
 
-    private static boolean regionMatchesCharSequences(final CharSequence cs, final int csStart,
+    private static bool regionMatchesCharSequences(final CharSequence cs, final int csStart,
                                          final CharSequence string, final int start, final int length,
                                          CharEqualityComparator charEqualityComparator) {
         //general purpose implementation for CharSequences
@@ -1623,7 +1623,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @param length the number of characters to compare.
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
      */
-    public static boolean regionMatches(final CharSequence cs, final boolean ignoreCase, final int csStart,
+    public static bool regionMatches(final CharSequence cs, final bool ignoreCase, final int csStart,
                                         final CharSequence string, final int start, final int length) {
         if (cs == null || string == null) {
             return false;
@@ -1652,7 +1652,7 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
      * @param length the number of characters to compare.
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
      */
-    public static boolean regionMatchesAscii(final CharSequence cs, final boolean ignoreCase, final int csStart,
+    public static bool regionMatchesAscii(final CharSequence cs, final bool ignoreCase, final int csStart,
                                         final CharSequence string, final int start, final int length) {
         if (cs == null || string == null) {
             return false;
@@ -1809,11 +1809,11 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         return INDEX_NOT_FOUND;
     }
 
-    private static boolean equalsIgnoreCase(byte a, byte b) {
+    private static bool equalsIgnoreCase(byte a, byte b) {
         return a == b || AsciiStringUtil.toLowerCase(a) == AsciiStringUtil.toLowerCase(b);
     }
 
-    private static boolean equalsIgnoreCase(char a, char b) {
+    private static bool equalsIgnoreCase(char a, char b) {
         return a == b || toLowerCase(a) == toLowerCase(b);
     }
 
@@ -1831,11 +1831,11 @@ public final class AsciiString implements CharSequence, Comparable<CharSequence>
         return AsciiStringUtil.toUpperCase(b);
     }
 
-    public static boolean isUpperCase(byte value) {
+    public static bool isUpperCase(byte value) {
         return AsciiStringUtil.isUpperCase(value);
     }
 
-    public static boolean isUpperCase(char value) {
+    public static bool isUpperCase(char value) {
         return value >= 'A' && value <= 'Z';
     }
 

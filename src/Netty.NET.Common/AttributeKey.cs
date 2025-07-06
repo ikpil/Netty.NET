@@ -42,7 +42,7 @@ public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
      */
-    public static boolean exists(String name) {
+    public static bool exists(String name) {
         return pool.exists(name);
     }
 

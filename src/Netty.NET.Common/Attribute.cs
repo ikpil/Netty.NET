@@ -71,7 +71,7 @@ public interface Attribute<T> {
      * Atomically sets the value to the given updated value if the current value == the expected value.
      * If it the set was successful it returns {@code true} otherwise {@code false}.
      */
-    boolean compareAndSet(T oldValue, T newValue);
+    bool compareAndSet(T oldValue, T newValue);
 
     /**
      * Removes this attribute from the {@link AttributeMap}. Subsequent {@link #get()} calls will return @{code null}.

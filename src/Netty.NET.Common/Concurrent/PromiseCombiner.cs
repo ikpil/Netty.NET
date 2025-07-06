@@ -166,7 +166,7 @@ public final class PromiseCombiner {
         }
     }
 
-    private boolean tryPromise() {
+    private bool tryPromise() {
         return (cause == null) ? aggregatePromise.trySuccess(null) : aggregatePromise.tryFailure(cause);
     }
 

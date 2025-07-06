@@ -64,7 +64,7 @@ class JdkLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for level FINEST, false otherwise.
      */
     @Override
-    public boolean isTraceEnabled() {
+    public bool isTraceEnabled() {
         return logger.isLoggable(Level.FINEST);
     }
 
@@ -170,7 +170,7 @@ class JdkLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for level FINE, false otherwise.
      */
     @Override
-    public boolean isDebugEnabled() {
+    public bool isDebugEnabled() {
         return logger.isLoggable(Level.FINE);
     }
 
@@ -275,7 +275,7 @@ class JdkLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for the INFO level, false otherwise.
      */
     @Override
-    public boolean isInfoEnabled() {
+    public bool isInfoEnabled() {
         return logger.isLoggable(Level.INFO);
     }
 
@@ -382,7 +382,7 @@ class JdkLogger extends AbstractInternalLogger {
      *         otherwise.
      */
     @Override
-    public boolean isWarnEnabled() {
+    public bool isWarnEnabled() {
         return logger.isLoggable(Level.WARNING);
     }
 
@@ -489,7 +489,7 @@ class JdkLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for level SEVERE, false otherwise.
      */
     @Override
-    public boolean isErrorEnabled() {
+    public bool isErrorEnabled() {
         return logger.isLoggable(Level.SEVERE);
     }
 

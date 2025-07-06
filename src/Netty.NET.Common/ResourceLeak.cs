@@ -38,5 +38,5 @@ public interface ResourceLeak {
      *
      * @return {@code true} if called first time, {@code false} if called already
      */
-    boolean close();
+    bool close();
 }

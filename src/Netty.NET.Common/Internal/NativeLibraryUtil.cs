@@ -31,7 +31,7 @@ final class NativeLibraryUtil {
      * @param libName - The native library path or name
      * @param absolute - Whether the native library will be loaded by path or by name
      */
-    public static void loadLibrary(String libName, boolean absolute) {
+    public static void loadLibrary(String libName, bool absolute) {
         if (absolute) {
             System.load(libName);
         } else {

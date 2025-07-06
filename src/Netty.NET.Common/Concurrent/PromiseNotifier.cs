@@ -33,7 +33,7 @@ public class PromiseNotifier<V, F extends Future<V>> implements GenericFutureLis
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(PromiseNotifier.class);
     private final Promise<? super V>[] promises;
-    private final boolean logNotifyFailure;
+    private final bool logNotifyFailure;
 
     /**
      * Create a new instance.
@@ -52,7 +52,7 @@ public class PromiseNotifier<V, F extends Future<V>> implements GenericFutureLis
      * @param promises  the {@link Promise}s to notify once this {@link GenericFutureListener} is notified.
      */
     @SafeVarargs
-    public PromiseNotifier(boolean logNotifyFailure, Promise<? super V>... promises) {
+    public PromiseNotifier(bool logNotifyFailure, Promise<? super V>... promises) {
         checkNotNull(promises, "promises");
         for (Promise<? super V> promise: promises) {
             checkNotNullWithIAE(promise, "promise");
@@ -89,7 +89,7 @@ public class PromiseNotifier<V, F extends Future<V>> implements GenericFutureLis
      * @return                  the passed in {@link Future}
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <V, F extends Future<V>> F cascade(boolean logNotifyFailure, final F future,
+    public static <V, F extends Future<V>> F cascade(bool logNotifyFailure, final F future,
                                                      final Promise<? super V> promise) {
         promise.addListener(new FutureListener() {
             @Override

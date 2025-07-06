@@ -30,5 +30,5 @@ public interface AttributeMap {
     /**
      * Returns {@code true} if and only if the given {@link Attribute} exists in this {@link AttributeMap}.
      */
-    <T> boolean hasAttr(AttributeKey<T> key);
+    <T> bool hasAttr(AttributeKey<T> key);
 }

@@ -16,22 +16,22 @@
 namespace Netty.NET.Common;
 
 /**
- * Represents a supplier of {@code boolean}-valued results.
+ * Represents a supplier of {@code bool}-valued results.
  */
 public interface BooleanSupplier {
     /**
-     * Gets a boolean value.
-     * @return a boolean value.
+     * Gets a bool value.
+     * @return a bool value.
      * @throws Exception If an exception occurs.
      */
-    boolean get() throws Exception;
+    bool get() throws Exception;
 
     /**
      * A supplier which always returns {@code false} and never throws.
      */
     BooleanSupplier FALSE_SUPPLIER = new BooleanSupplier() {
         @Override
-        public boolean get() {
+        public bool get() {
             return false;
         }
     };
@@ -41,7 +41,7 @@ public interface BooleanSupplier {
      */
     BooleanSupplier TRUE_SUPPLIER = new BooleanSupplier() {
         @Override
-        public boolean get() {
+        public bool get() {
             return true;
         }
     };

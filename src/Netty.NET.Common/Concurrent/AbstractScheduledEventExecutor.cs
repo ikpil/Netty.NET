@@ -95,7 +95,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     static long deadlineNanos(long nanoTime, long delay) {
         long deadlineNanos = nanoTime + delay;
         // Guard against overflow
-        return deadlineNanos < 0 ? Long.MAX_VALUE : deadlineNanos;
+        return deadlineNanos < 0 ? long.MAX_VALUE : deadlineNanos;
     }
 
     /**
@@ -144,7 +144,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
         return scheduledTaskQueue;
     }
 
-    private static boolean isNullOrEmpty(Queue<ScheduledFutureTask<?>> queue) {
+    private static bool isNullOrEmpty(Queue<ScheduledFutureTask<?>> queue) {
         return queue == null || queue.isEmpty();
     }
 
@@ -184,7 +184,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
      * @return {@code true} if we were able to transfer everything, {@code false} if we need to call this method again
      *         as soon as there is space again in {@code taskQueue}.
      */
-    protected boolean fetchFromScheduledTaskQueue(Queue<Runnable> taskQueue) {
+    protected bool fetchFromScheduledTaskQueue(Queue<Runnable> taskQueue) {
         assert inEventLoop();
         Objects.requireNonNull(taskQueue, "taskQueue");
         if (scheduledTaskQueue == null || scheduledTaskQueue.isEmpty()) {
@@ -245,13 +245,13 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     /**
      * Returns {@code true} if a scheduled task is ready for processing.
      */
-    protected final boolean hasScheduledTasks() {
+    protected final bool hasScheduledTasks() {
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
         return scheduledTask != null && scheduledTask.deadlineNanos() <= getCurrentTimeNanos();
     }
 
     @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (delay < 0) {
@@ -266,7 +266,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(callable, "callable");
         ObjectUtil.checkNotNull(unit, "unit");
         if (delay < 0) {
@@ -279,7 +279,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
@@ -298,7 +298,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     }
 
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
@@ -318,7 +318,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     }
 
     @SuppressWarnings("deprecation")
-    private void validateScheduled0(long amount, TimeUnit unit) {
+    private void validateScheduled0(long amount, TimeSpan unit) {
         validateScheduled(amount, unit);
     }
 
@@ -328,7 +328,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
      * @deprecated will be removed in the future.
      */
     @Deprecated
-    protected void validateScheduled(long amount, TimeUnit unit) {
+    protected void validateScheduled(long amount, TimeSpan unit) {
         // NOOP
     }
 
@@ -385,7 +385,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
      *     relative to {@link AbstractScheduledEventExecutor#getCurrentTimeNanos()}
      * @return {@code true} if the {@link EventExecutor} thread should be woken, {@code false} otherwise
      */
-    protected boolean beforeScheduledTaskSubmitted(long deadlineNanos) {
+    protected bool beforeScheduledTaskSubmitted(long deadlineNanos) {
         return true;
     }
 
@@ -395,7 +395,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
      * @param deadlineNanos relative to {@link AbstractScheduledEventExecutor#getCurrentTimeNanos()}
      * @return  {@code true} if the {@link EventExecutor} thread should be woken, {@code false} otherwise
      */
-    protected boolean afterScheduledTaskSubmitted(long deadlineNanos) {
+    protected bool afterScheduledTaskSubmitted(long deadlineNanos) {
         return true;
     }
 }

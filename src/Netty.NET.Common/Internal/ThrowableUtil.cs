@@ -56,7 +56,7 @@ public final class ThrowableUtil {
     }
 
     @Deprecated
-    public static boolean haveSuppressed() {
+    public static bool haveSuppressed() {
         return true;
     }
 

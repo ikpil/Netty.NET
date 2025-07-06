@@ -77,7 +77,7 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
     }
 
     @Override
-    public boolean isShuttingDown() {
+    public bool isShuttingDown() {
         return group.isShuttingDown();
     }
 
@@ -87,7 +87,7 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
     }
 
     @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
         return group.shutdownGracefully(quietPeriod, timeout, unit);
     }
 
@@ -118,7 +118,7 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
         final Iterator<EventExecutor> itr = group.iterator();
         return new Iterator<EventExecutor>() {
             @Override
-            public boolean hasNext() {
+            public bool hasNext() {
                 return itr.hasNext();
             }
 
@@ -150,37 +150,37 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
     }
 
     @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit) {
         return group.schedule(command, delay, unit);
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit) {
         return group.schedule(callable, delay, unit);
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
         return group.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
         return group.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
     @Override
-    public boolean isShutdown() {
+    public bool isShutdown() {
         return group.isShutdown();
     }
 
     @Override
-    public boolean isTerminated() {
+    public bool isTerminated() {
         return group.isTerminated();
     }
 
     @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+    public bool awaitTermination(long timeout, TimeSpan unit) throws InterruptedException {
         return group.awaitTermination(timeout, unit);
     }
 
@@ -192,7 +192,7 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) throws InterruptedException {
         return group.invokeAll(tasks, timeout, unit);
     }
 
@@ -202,7 +202,7 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
+    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit)
             throws InterruptedException, ExecutionException, TimeoutException {
         return group.invokeAny(tasks, timeout, unit);
     }
@@ -292,17 +292,17 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
         }
 
         @Override
-        public boolean inEventLoop(Thread thread) {
+        public bool inEventLoop(Thread thread) {
             return executingThread.get() == thread;
         }
 
         @Override
-        public boolean isShuttingDown() {
+        public bool isShuttingDown() {
             return executor.isShutdown();
         }
 
         @Override
-        public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+        public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
             return executor.shutdownGracefully(quietPeriod, timeout, unit);
         }
 
@@ -317,17 +317,17 @@ public final class NonStickyEventExecutorGroup implements EventExecutorGroup {
         }
 
         @Override
-        public boolean isShutdown() {
+        public bool isShutdown() {
             return executor.isShutdown();
         }
 
         @Override
-        public boolean isTerminated() {
+        public bool isTerminated() {
             return executor.isTerminated();
         }
 
         @Override
-        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+        public bool awaitTermination(long timeout, TimeSpan unit) throws InterruptedException {
             return executor.awaitTermination(timeout, unit);
         }
 

@@ -33,10 +33,10 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
      * Returns {@code true} if and only if all {@link EventExecutor}s managed by this {@link EventExecutorGroup}
      * are being {@linkplain #shutdownGracefully() shut down gracefully} or was {@linkplain #isShutdown() shut down}.
      */
-    boolean isShuttingDown();
+    bool isShuttingDown();
 
     /**
-     * Shortcut method for {@link #shutdownGracefully(long, long, TimeUnit)} with sensible default values.
+     * Shortcut method for {@link #shutdownGracefully(long, long, TimeSpan)} with sensible default values.
      *
      * @return the {@link #terminationFuture()}
      */
@@ -56,7 +56,7 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
      *
      * @return the {@link #terminationFuture()}
      */
-    Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit);
+    Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit);
 
     /**
      * Returns the {@link Future} which is notified when all {@link EventExecutor}s managed by this
@@ -65,14 +65,14 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
     Future<?> terminationFuture();
 
     /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     * @deprecated {@link #shutdownGracefully(long, long, TimeSpan)} or {@link #shutdownGracefully()} instead.
      */
     @Override
     @Deprecated
     void shutdown();
 
     /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     * @deprecated {@link #shutdownGracefully(long, long, TimeSpan)} or {@link #shutdownGracefully()} instead.
      */
     @Override
     @Deprecated
@@ -109,14 +109,14 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
     }
 
     @Override
-    ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit);
+    ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit);
 
     @Override
-    <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit);
+    <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit);
 
     @Override
-    ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit);
+    ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit);
 
     @Override
-    ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit);
+    ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit);
 }

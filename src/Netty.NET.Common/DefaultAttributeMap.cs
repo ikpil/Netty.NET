@@ -50,7 +50,7 @@ public class DefaultAttributeMap implements AttributeMap {
             int midValKeyId = midValKey.id();
             int keyId = key.id();
             assert midValKeyId != keyId;
-            boolean searchRight = midValKeyId < keyId;
+            bool searchRight = midValKeyId < keyId;
             if (searchRight) {
                 low = mid + 1;
             } else {
@@ -120,7 +120,7 @@ public class DefaultAttributeMap implements AttributeMap {
     }
 
     @Override
-    public <T> boolean hasAttr(AttributeKey<T> key) {
+    public <T> bool hasAttr(AttributeKey<T> key) {
         ObjectUtil.checkNotNull(key, "key");
         return searchAttributeByKey(attributes, key) >= 0;
     }
@@ -174,7 +174,7 @@ public class DefaultAttributeMap implements AttributeMap {
             return key;
         }
 
-        private boolean isRemoved() {
+        private bool isRemoved() {
             return attributeMap == null;
         }
 
@@ -192,7 +192,7 @@ public class DefaultAttributeMap implements AttributeMap {
         @Override
         public T getAndRemove() {
             final DefaultAttributeMap attributeMap = this.attributeMap;
-            final boolean removed = attributeMap != null && MAP_UPDATER.compareAndSet(this, attributeMap, null);
+            final bool removed = attributeMap != null && MAP_UPDATER.compareAndSet(this, attributeMap, null);
             T oldValue = getAndSet(null);
             if (removed) {
                 attributeMap.removeAttributeIfMatch(key, this);
@@ -203,7 +203,7 @@ public class DefaultAttributeMap implements AttributeMap {
         @Override
         public void remove() {
             final DefaultAttributeMap attributeMap = this.attributeMap;
-            final boolean removed = attributeMap != null && MAP_UPDATER.compareAndSet(this, attributeMap, null);
+            final bool removed = attributeMap != null && MAP_UPDATER.compareAndSet(this, attributeMap, null);
             set(null);
             if (removed) {
                 attributeMap.removeAttributeIfMatch(key, this);

@@ -32,7 +32,7 @@ public final class AdaptiveCalculator {
     private static final int[] SIZE_TABLE;
 
     static {
-        List<Integer> sizeTable = new ArrayList<Integer>();
+        List<int> sizeTable = new ArrayList<int>();
         for (int i = 16; i < 512; i += 16) {
             sizeTable.add(i);
         }
@@ -78,7 +78,7 @@ public final class AdaptiveCalculator {
     private final int maxCapacity;
     private int index;
     private int nextSize;
-    private boolean decreaseNow;
+    private bool decreaseNow;
 
     public AdaptiveCalculator(int minimum, int initial, int maximum) {
         checkPositive(minimum, "minimum");

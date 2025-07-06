@@ -239,7 +239,7 @@ public class FastThreadLocal<V> {
     /**
      * Returns {@code true} if and only if this thread-local variable is set.
      */
-    public final boolean isSet() {
+    public final bool isSet() {
         return isSet(InternalThreadLocalMap.getIfSet());
     }
 
@@ -247,7 +247,7 @@ public class FastThreadLocal<V> {
      * Returns {@code true} if and only if this thread-local variable is set.
      * The specified thread local map must be for the current thread.
      */
-    public final boolean isSet(InternalThreadLocalMap threadLocalMap) {
+    public final bool isSet(InternalThreadLocalMap threadLocalMap) {
         return threadLocalMap != null && threadLocalMap.isIndexedVariableSet(index);
     }
     /**

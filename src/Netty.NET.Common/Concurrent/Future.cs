@@ -16,9 +16,6 @@
 namespace Netty.NET.Common.Concurrent;
 
 
-
-
-
 /**
  * The result of an asynchronous operation.
  */
@@ -29,12 +26,12 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * Returns {@code true} if and only if the I/O operation was completed
      * successfully.
      */
-    boolean isSuccess();
+    bool isSuccess();
 
     /**
-     * returns {@code true} if and only if the operation can be cancelled via {@link #cancel(boolean)}.
+     * returns {@code true} if and only if the operation can be cancelled via {@link #cancel(bool)}.
      */
-    boolean isCancellable();
+    bool isCancellable();
 
     /**
      * Returns the cause of the failed I/O operation if the I/O operation has
@@ -117,7 +114,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * @throws InterruptedException
      *         if the current thread was interrupted
      */
-    boolean await(long timeout, TimeUnit unit) throws InterruptedException;
+    bool await(long timeout, TimeSpan unit) throws InterruptedException;
 
     /**
      * Waits for this future to be completed within the
@@ -129,7 +126,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * @throws InterruptedException
      *         if the current thread was interrupted
      */
-    boolean await(long timeoutMillis) throws InterruptedException;
+    bool await(long timeoutMillis) throws InterruptedException;
 
     /**
      * Waits for this future to be completed within the
@@ -139,7 +136,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * @return {@code true} if and only if the future was completed within
      *         the specified time limit
      */
-    boolean awaitUninterruptibly(long timeout, TimeUnit unit);
+    bool awaitUninterruptibly(long timeout, TimeSpan unit);
 
     /**
      * Waits for this future to be completed within the
@@ -149,7 +146,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * @return {@code true} if and only if the future was completed within
      *         the specified time limit
      */
-    boolean awaitUninterruptibly(long timeoutMillis);
+    bool awaitUninterruptibly(long timeoutMillis);
 
     /**
      * Return the result without blocking. If the future is not done yet this will return {@code null}.
@@ -165,5 +162,5 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * If the cancellation was successful it will fail the future with a {@link CancellationException}.
      */
     @Override
-    boolean cancel(boolean mayInterruptIfRunning);
+    bool cancel(bool mayInterruptIfRunning);
 }

@@ -51,8 +51,8 @@ public final class SWARUtil {
      * @return the index of the first occurrence of the specified pattern in the specified word.
      * If no pattern is found, returns 8.
      */
-    public static int getIndex(final long word, final boolean isBigEndian) {
-        final int zeros = isBigEndian? Long.numberOfLeadingZeros(word) : Long.numberOfTrailingZeros(word);
+    public static int getIndex(final long word, final bool isBigEndian) {
+        final int zeros = isBigEndian? long.numberOfLeadingZeros(word) : long.numberOfTrailingZeros(word);
         return zeros >>> 3;
     }
 
@@ -112,28 +112,28 @@ public final class SWARUtil {
     /**
      * Returns true if the given word contains at least one ASCII uppercase byte.
      */
-    public static boolean containsUpperCase(final long word) {
+    public static bool containsUpperCase(final long word) {
         return applyUpperCasePattern(word) != 0;
     }
 
     /**
      * Returns true if the given word contains at least one ASCII uppercase byte.
      */
-    public static boolean containsUpperCase(final int word) {
+    public static bool containsUpperCase(final int word) {
         return applyUpperCasePattern(word) != 0;
     }
 
     /**
      * Returns true if the given word contains at least one ASCII lowercase byte.
      */
-    public static boolean containsLowerCase(final long word) {
+    public static bool containsLowerCase(final long word) {
         return applyLowerCasePattern(word) != 0;
     }
 
     /**
      * Returns true if the given word contains at least one ASCII lowercase byte.
      */
-    public static boolean containsLowerCase(final int word) {
+    public static bool containsLowerCase(final int word) {
         return applyLowerCasePattern(word) != 0;
     }
 

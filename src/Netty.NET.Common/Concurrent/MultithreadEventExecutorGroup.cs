@@ -79,7 +79,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         children = new EventExecutor[nThreads];
 
         for (int i = 0; i < nThreads; i ++) {
-            boolean success = false;
+            bool success = false;
             try {
                 children[i] = newChild(executor, args);
                 success = true;
@@ -96,7 +96,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                         EventExecutor e = children[j];
                         try {
                             while (!e.isTerminated()) {
-                                e.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
+                                e.awaitTermination(int.MAX_VALUE, TimeSpan.SECONDS);
                             }
                         } catch (InterruptedException interrupted) {
                             // Let the caller handle the interruption.
@@ -158,7 +158,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     protected abstract EventExecutor newChild(Executor executor, Object... args) throws Exception;
 
     @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
         for (EventExecutor l: children) {
             l.shutdownGracefully(quietPeriod, timeout, unit);
         }
@@ -179,7 +179,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     @Override
-    public boolean isShuttingDown() {
+    public bool isShuttingDown() {
         for (EventExecutor l: children) {
             if (!l.isShuttingDown()) {
                 return false;
@@ -189,7 +189,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     @Override
-    public boolean isShutdown() {
+    public bool isShutdown() {
         for (EventExecutor l: children) {
             if (!l.isShutdown()) {
                 return false;
@@ -199,7 +199,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     @Override
-    public boolean isTerminated() {
+    public bool isTerminated() {
         for (EventExecutor l: children) {
             if (!l.isTerminated()) {
                 return false;
@@ -209,7 +209,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit)
+    public bool awaitTermination(long timeout, TimeSpan unit)
             throws InterruptedException {
         long deadline = System.nanoTime() + unit.toNanos(timeout);
         loop: for (EventExecutor l: children) {
@@ -218,7 +218,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                 if (timeLeft <= 0) {
                     break loop;
                 }
-                if (l.awaitTermination(timeLeft, TimeUnit.NANOSECONDS)) {
+                if (l.awaitTermination(timeLeft, TimeSpan.NANOSECONDS)) {
                     break;
                 }
             }

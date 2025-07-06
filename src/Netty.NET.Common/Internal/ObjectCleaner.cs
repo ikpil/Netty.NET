@@ -45,7 +45,7 @@ public final class ObjectCleaner {
     private static final Runnable CLEANER_TASK = new Runnable() {
         @Override
         public void run() {
-            boolean interrupted = false;
+            bool interrupted = false;
             for (;;) {
                 // Keep on processing as long as the LIVE_SET is not empty and once it becomes empty
                 // See if we can let this thread complete.

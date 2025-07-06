@@ -35,7 +35,7 @@ namespace Netty.NET.Common.Concurrent;
 public class PromiseAggregator<V, F extends Future<V>> implements GenericFutureListener<F> {
 
     private final Promise<?> aggregatePromise;
-    private final boolean failPending;
+    private final bool failPending;
     private Set<Promise<V>> pendingPromises;
 
     /**
@@ -44,13 +44,13 @@ public class PromiseAggregator<V, F extends Future<V>> implements GenericFutureL
      * @param aggregatePromise  the {@link Promise} to notify
      * @param failPending  {@code true} to fail pending promises, false to leave them unaffected
      */
-    public PromiseAggregator(Promise<Void> aggregatePromise, boolean failPending) {
+    public PromiseAggregator(Promise<Void> aggregatePromise, bool failPending) {
         this.aggregatePromise = ObjectUtil.checkNotNull(aggregatePromise, "aggregatePromise");
         this.failPending = failPending;
     }
 
     /**
-     * See {@link PromiseAggregator#PromiseAggregator(Promise, boolean)}.
+     * See {@link PromiseAggregator#PromiseAggregator(Promise, bool)}.
      * Defaults {@code failPending} to true.
      */
     public PromiseAggregator(Promise<Void> aggregatePromise) {

@@ -66,7 +66,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * {@link Log} instance.
      */
     @Override
-    public boolean isTraceEnabled() {
+    public bool isTraceEnabled() {
         return logger.isTraceEnabled();
     }
 
@@ -166,7 +166,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * {@link Log} instance.
      */
     @Override
-    public boolean isDebugEnabled() {
+    public bool isDebugEnabled() {
         return logger.isDebugEnabled();
     }
 
@@ -268,7 +268,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * {@link Log} instance.
      */
     @Override
-    public boolean isInfoEnabled() {
+    public bool isInfoEnabled() {
         return logger.isInfoEnabled();
     }
 
@@ -368,7 +368,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * {@link Log} instance.
      */
     @Override
-    public boolean isWarnEnabled() {
+    public bool isWarnEnabled() {
         return logger.isWarnEnabled();
     }
 
@@ -469,7 +469,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * {@link Log} instance.
      */
     @Override
-    public boolean isErrorEnabled() {
+    public bool isErrorEnabled() {
         return logger.isErrorEnabled();
     }
 

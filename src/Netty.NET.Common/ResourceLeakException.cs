@@ -57,7 +57,7 @@ public class ResourceLeakException extends RuntimeException {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public bool equals(Object o) {
         if (!(o instanceof ResourceLeakException)) {
             return false;
         }

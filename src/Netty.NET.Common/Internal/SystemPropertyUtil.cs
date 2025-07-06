@@ -34,7 +34,7 @@ public final class SystemPropertyUtil {
      * Returns {@code true} if and only if the system property with the specified {@code key}
      * exists.
      */
-    public static boolean contains(String key) {
+    public static bool contains(String key) {
         return get(key) != null;
     }
 
@@ -92,7 +92,7 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static boolean getBoolean(String key, boolean def) {
+    public static bool getBoolean(String key, bool def) {
         String value = get(key);
         if (value == null) {
             return def;
@@ -112,7 +112,7 @@ public final class SystemPropertyUtil {
         }
 
         logger.warn(
-                "Unable to parse the boolean system property '{}':{} - using the default value: {}",
+                "Unable to parse the bool system property '{}':{} - using the default value: {}",
                 key, value, def
         );
 
@@ -136,7 +136,7 @@ public final class SystemPropertyUtil {
 
         value = value.trim();
         try {
-            return Integer.parseInt(value);
+            return int.parseInt(value);
         } catch (Exception e) {
             // Ignore
         }
@@ -166,7 +166,7 @@ public final class SystemPropertyUtil {
 
         value = value.trim();
         try {
-            return Long.parseLong(value);
+            return long.parseLong(value);
         } catch (Exception e) {
             // Ignore
         }

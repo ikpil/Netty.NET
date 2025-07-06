@@ -44,17 +44,17 @@ public final class ConcurrentSet<E> extends AbstractSet<E> implements Serializab
     }
 
     @Override
-    public boolean contains(Object o) {
+    public bool contains(Object o) {
         return map.containsKey(o);
     }
 
     @Override
-    public boolean add(E o) {
+    public bool add(E o) {
         return map.putIfAbsent(o, Boolean.TRUE) == null;
     }
 
     @Override
-    public boolean remove(Object o) {
+    public bool remove(Object o) {
         return map.remove(o) != null;
     }
 

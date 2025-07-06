@@ -27,11 +27,11 @@ public final class ReflectionUtil {
     private ReflectionUtil() { }
 
     /**
-     * Try to call {@link AccessibleObject#setAccessible(boolean)} but will catch any {@link SecurityException} and
+     * Try to call {@link AccessibleObject#setAccessible(bool)} but will catch any {@link SecurityException} and
      * {@link java.lang.reflect.InaccessibleObjectException} and return it.
      * The caller must check if it returns {@code null} and if not handle the returned exception.
      */
-    public static Throwable trySetAccessible(AccessibleObject object, boolean checkAccessible) {
+    public static Throwable trySetAccessible(AccessibleObject object, bool checkAccessible) {
         if (checkAccessible && !PlatformDependent0.isExplicitTryReflectionSetAccessible()) {
             return new UnsupportedOperationException("Reflective setAccessible(true) disabled");
         }

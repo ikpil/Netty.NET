@@ -85,7 +85,7 @@ class PromiseTask<V> extends DefaultPromise<V> implements RunnableFuture<V> {
     }
 
     @Override
-    public final boolean equals(Object obj) {
+    public final bool equals(Object obj) {
         return this == obj;
     }
 
@@ -111,7 +111,7 @@ class PromiseTask<V> extends DefaultPromise<V> implements RunnableFuture<V> {
         }
     }
 
-    private boolean clearTaskAfterCompletion(boolean done, Runnable result) {
+    private bool clearTaskAfterCompletion(bool done, Runnable result) {
         if (done) {
             // The only time where it might be possible for the sentinel task
             // to be called is in the case of a periodic ScheduledFutureTask,
@@ -134,11 +134,11 @@ class PromiseTask<V> extends DefaultPromise<V> implements RunnableFuture<V> {
     }
 
     @Override
-    public final boolean tryFailure(Throwable cause) {
+    public final bool tryFailure(Throwable cause) {
         return false;
     }
 
-    protected final boolean tryFailureInternal(Throwable cause) {
+    protected final bool tryFailureInternal(Throwable cause) {
         return clearTaskAfterCompletion(super.tryFailure(cause), FAILED);
     }
 
@@ -154,25 +154,25 @@ class PromiseTask<V> extends DefaultPromise<V> implements RunnableFuture<V> {
     }
 
     @Override
-    public final boolean trySuccess(V result) {
+    public final bool trySuccess(V result) {
         return false;
     }
 
-    protected final boolean trySuccessInternal(V result) {
+    protected final bool trySuccessInternal(V result) {
         return clearTaskAfterCompletion(super.trySuccess(result), COMPLETED);
     }
 
     @Override
-    public final boolean setUncancellable() {
+    public final bool setUncancellable() {
         throw new IllegalStateException();
     }
 
-    protected final boolean setUncancellableInternal() {
+    protected final bool setUncancellableInternal() {
         return super.setUncancellable();
     }
 
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
+    public bool cancel(bool mayInterruptIfRunning) {
         return clearTaskAfterCompletion(super.cancel(mayInterruptIfRunning), CANCELLED);
     }
 

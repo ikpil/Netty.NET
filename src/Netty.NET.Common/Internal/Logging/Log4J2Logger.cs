@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Internal.Logging;
 class Log4J2Logger extends ExtendedLoggerWrapper implements InternalLogger {
 
     private static final long serialVersionUID = 5485418394879791397L;
-    private static final boolean VARARGS_ONLY;
+    private static final bool VARARGS_ONLY;
 
     static {
         // Older Log4J2 versions have only log methods that takes the format + varargs. So we should not use
@@ -90,7 +90,7 @@ class Log4J2Logger extends ExtendedLoggerWrapper implements InternalLogger {
     }
 
     @Override
-    public boolean isEnabled(InternalLogLevel level) {
+    public bool isEnabled(InternalLogLevel level) {
         return isEnabled(toLevel(level));
     }
 

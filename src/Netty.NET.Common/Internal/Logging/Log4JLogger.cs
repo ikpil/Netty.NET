@@ -60,7 +60,7 @@ class Log4JLogger extends AbstractInternalLogger {
 
     // Does the log4j version in use recognize the TRACE level?
     // The trace level was introduced in log4j 1.2.12.
-    final boolean traceCapable;
+    final bool traceCapable;
 
     Log4JLogger(Logger logger) {
         super(logger.getName());
@@ -68,7 +68,7 @@ class Log4JLogger extends AbstractInternalLogger {
         traceCapable = isTraceCapable();
     }
 
-    private boolean isTraceCapable() {
+    private bool isTraceCapable() {
         try {
             logger.isTraceEnabled();
             return true;
@@ -83,7 +83,7 @@ class Log4JLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for level TRACE, false otherwise.
      */
     @Override
-    public boolean isTraceEnabled() {
+    public bool isTraceEnabled() {
         if (traceCapable) {
             return logger.isTraceEnabled();
         } else {
@@ -192,7 +192,7 @@ class Log4JLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for level DEBUG, false otherwise.
      */
     @Override
-    public boolean isDebugEnabled() {
+    public bool isDebugEnabled() {
         return logger.isDebugEnabled();
     }
 
@@ -293,7 +293,7 @@ class Log4JLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for the INFO level, false otherwise.
      */
     @Override
-    public boolean isInfoEnabled() {
+    public bool isInfoEnabled() {
         return logger.isInfoEnabled();
     }
 
@@ -395,7 +395,7 @@ class Log4JLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for the WARN level, false otherwise.
      */
     @Override
-    public boolean isWarnEnabled() {
+    public bool isWarnEnabled() {
         return logger.isEnabledFor(Level.WARN);
     }
 
@@ -498,7 +498,7 @@ class Log4JLogger extends AbstractInternalLogger {
      * @return True if this Logger is enabled for level ERROR, false otherwise.
      */
     @Override
-    public boolean isErrorEnabled() {
+    public bool isErrorEnabled() {
         return logger.isEnabledFor(Level.ERROR);
     }
 

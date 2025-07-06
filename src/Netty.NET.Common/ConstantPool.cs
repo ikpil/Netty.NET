@@ -77,7 +77,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
      */
-    public boolean exists(String name) {
+    public bool exists(String name) {
         return constants.containsKey(checkNonEmpty(name, "name"));
     }
 

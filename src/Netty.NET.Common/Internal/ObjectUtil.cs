@@ -318,22 +318,22 @@ public final class ObjectUtil {
     }
 
     /**
-     * Resolves a possibly null Integer to a primitive int, using a default value.
+     * Resolves a possibly null int to a primitive int, using a default value.
      * @param wrapper the wrapper
      * @param defaultValue the default value
      * @return the primitive value
      */
-    public static int intValue(Integer wrapper, int defaultValue) {
+    public static int intValue(int wrapper, int defaultValue) {
         return wrapper != null ? wrapper : defaultValue;
     }
 
     /**
-     * Resolves a possibly null Long to a primitive long, using a default value.
+     * Resolves a possibly null long to a primitive long, using a default value.
      * @param wrapper the wrapper
      * @param defaultValue the default value
      * @return the primitive value
      */
-    public static long longValue(Long wrapper, long defaultValue) {
+    public static long longValue(long wrapper, long defaultValue) {
         return wrapper != null ? wrapper : defaultValue;
     }
 }

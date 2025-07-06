@@ -32,12 +32,12 @@ public interface ThreadProperties {
     /**
      * @see Thread#isInterrupted()
      */
-    boolean isInterrupted();
+    bool isInterrupted();
 
     /**
      * @see Thread#isDaemon()
      */
-    boolean isDaemon();
+    bool isDaemon();
 
     /**
      * @see Thread#getName()
@@ -57,5 +57,5 @@ public interface ThreadProperties {
     /**
      * @see Thread#isAlive()
      */
-    boolean isAlive();
+    bool isAlive();
 }

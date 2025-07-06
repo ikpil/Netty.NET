@@ -78,7 +78,7 @@ public final class MacAddressUtil {
                 continue;
             }
 
-            boolean replace = false;
+            bool replace = false;
             int res = compareAddresses(bestMacAddr, macAddr);
             if (res < 0) {
                 // Found a better MAC address.
@@ -205,7 +205,7 @@ public final class MacAddressUtil {
         }
 
         // Must not be filled with only 0 and 1.
-        boolean onlyZeroAndOne = true;
+        bool onlyZeroAndOne = true;
         for (byte b: candidate) {
             if (b != 0 && b != 1) {
                 onlyZeroAndOne = false;

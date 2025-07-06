@@ -55,11 +55,11 @@ public interface Ticker {
      * Waits until the given amount of time goes by.
      *
      * @param delay the amount of delay.
-     * @param unit the {@link TimeUnit} of {@code delay}.
+     * @param unit the {@link TimeSpan} of {@code delay}.
      *
      * @see Thread#sleep(long)
      */
-    void sleep(long delay, TimeUnit unit) throws InterruptedException;
+    void sleep(long delay, TimeSpan unit) throws InterruptedException;
 
     /**
      * Waits until the given amount of time goes by.
@@ -69,6 +69,6 @@ public interface Ticker {
      * @see Thread#sleep(long)
      */
     default void sleepMillis(long delayMillis) throws InterruptedException {
-        sleep(delayMillis, TimeUnit.MILLISECONDS);
+        sleep(delayMillis, TimeSpan.MILLISECONDS);
     }
 }

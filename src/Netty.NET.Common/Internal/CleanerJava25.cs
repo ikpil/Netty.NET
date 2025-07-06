@@ -34,13 +34,13 @@ final class CleanerJava25 implements Cleaner {
     private static final MethodHandle INVOKE_ALLOCATOR;
 
     static {
-        boolean suitableJavaVersion;
+        bool suitableJavaVersion;
         if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
             // native image supports this since 25, but we don't use PlatformDependent0 here, since
             // we need to initialize CleanerJava25 at build time.
             String v = System.getProperty("java.specification.version");
             try {
-                suitableJavaVersion = Integer.parseInt(v) >= 25;
+                suitableJavaVersion = int.parseInt(v) >= 25;
             } catch (NumberFormatException e) {
                 suitableJavaVersion = false;
             }
@@ -156,7 +156,7 @@ final class CleanerJava25 implements Cleaner {
         INVOKE_ALLOCATOR = method;
     }
 
-    static boolean isSupported() {
+    static bool isSupported() {
         return INVOKE_ALLOCATOR != null;
     }
 
@@ -206,7 +206,7 @@ final class CleanerJava25 implements Cleaner {
         }
 
         @Override
-        public boolean hasMemoryAddress() {
+        public bool hasMemoryAddress() {
             return true;
         }
 

@@ -83,7 +83,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     }
 
     @Override
-    public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+    public bool await(long timeout, TimeSpan unit) throws InterruptedException {
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
@@ -101,7 +101,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     }
 
     @Override
-    public boolean await(long timeoutMillis) throws InterruptedException {
+    public bool await(long timeoutMillis) throws InterruptedException {
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
@@ -114,27 +114,27 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     }
 
     @Override
-    public boolean awaitUninterruptibly(long timeout, TimeUnit unit) {
+    public bool awaitUninterruptibly(long timeout, TimeSpan unit) {
         return true;
     }
 
     @Override
-    public boolean awaitUninterruptibly(long timeoutMillis) {
+    public bool awaitUninterruptibly(long timeoutMillis) {
         return true;
     }
 
     @Override
-    public boolean isDone() {
+    public bool isDone() {
         return true;
     }
 
     @Override
-    public boolean isCancellable() {
+    public bool isCancellable() {
         return false;
     }
 
     @Override
-    public boolean isCancelled() {
+    public bool isCancelled() {
         return false;
     }
 
@@ -144,7 +144,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
      * @param mayInterruptIfRunning this value has no effect in this implementation.
      */
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
+    public bool cancel(bool mayInterruptIfRunning) {
         return false;
     }
 }

@@ -50,7 +50,7 @@ public interface MpscIntQueue {
      * @return {@code true} if the value was added to the queue,
      * or {@code false} if the value could not be added because the queue is full.
      */
-    boolean offer(int value);
+    bool offer(int value);
 
     /**
      * Remove and return the next value from the queue, or return the "empty" value if the queue is empty.
@@ -80,7 +80,7 @@ public interface MpscIntQueue {
      * This method is inherently racy and the result may be out of date by the time the method returns.
      * @return {@code true} if the queue was observed to be empty, otherwise {@code false.
      */
-    boolean isEmpty();
+    bool isEmpty();
 
     /**
      * Query the number of elements currently in the queue.
@@ -123,7 +123,7 @@ public interface MpscIntQueue {
         }
 
         @Override
-        public boolean offer(int value) {
+        public bool offer(int value) {
             if (value == emptyValue) {
                 throw new IllegalArgumentException("Cannot offer the \"empty\" value: " + emptyValue);
             }
@@ -245,7 +245,7 @@ public interface MpscIntQueue {
         }
 
         @Override
-        public boolean isEmpty() {
+        public bool isEmpty() {
             // Load consumer index before producer index, so our check is conservative.
             long cIndex = consumerIndex;
             long pIndex = producerIndex;
@@ -266,7 +266,7 @@ public interface MpscIntQueue {
                     break;
                 }
             }
-            return size < 0 ? 0 : size > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) size;
+            return size < 0 ? 0 : size > int.MAX_VALUE ? int.MAX_VALUE : (int) size;
         }
     }
 }

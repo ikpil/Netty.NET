@@ -82,7 +82,7 @@ public final class SocketUtils {
         }
     }
 
-    public static boolean connect(final SocketChannel socketChannel, final SocketAddress remoteAddress)
+    public static bool connect(final SocketChannel socketChannel, final SocketAddress remoteAddress)
             throws IOException {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<Boolean>() {

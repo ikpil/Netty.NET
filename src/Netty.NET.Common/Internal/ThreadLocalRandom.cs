@@ -49,7 +49,7 @@ namespace Netty.NET.Common.Internal;
  *
  * <p>Usages of this class should typically be of the form:
  * {@code ThreadLocalRandom.current().nextX(...)} (where
- * {@code X} is {@code Int}, {@code Long}, etc).
+ * {@code X} is {@code Int}, {@code long}, etc).
  * When all usages are of this form, it is never possible to
  * accidentally share a {@code ThreadLocalRandom} across multiple threads.
  *
@@ -70,16 +70,16 @@ public final class ThreadLocalRandom extends Random {
     private static volatile long initialSeedUniquifier;
 
     private static final Thread seedGeneratorThread;
-    private static final BlockingQueue<Long> seedQueue;
+    private static final BlockingQueue<long> seedQueue;
     private static final long seedGeneratorStartTime;
     private static volatile long seedGeneratorEndTime;
 
     static {
         initialSeedUniquifier = SystemPropertyUtil.getLong("io.netty.initialSeedUniquifier", 0);
         if (initialSeedUniquifier == 0) {
-            boolean secureRandom = SystemPropertyUtil.getBoolean("java.util.secureRandomSeed", false);
+            bool secureRandom = SystemPropertyUtil.getBoolean("java.util.secureRandomSeed", false);
             if (secureRandom) {
-                seedQueue = new LinkedBlockingQueue<Long>();
+                seedQueue = new LinkedBlockingQueue<long>();
                 seedGeneratorStartTime = System.nanoTime();
 
                 // Try to generate a real random number from /dev/random.
@@ -141,16 +141,16 @@ public final class ThreadLocalRandom extends Random {
 
             // Get the random seed from the generator thread with timeout.
             final long timeoutSeconds = 3;
-            final long deadLine = seedGeneratorStartTime + TimeUnit.SECONDS.toNanos(timeoutSeconds);
-            boolean interrupted = false;
+            final long deadLine = seedGeneratorStartTime + TimeSpan.SECONDS.toNanos(timeoutSeconds);
+            bool interrupted = false;
             for (;;) {
                 final long waitTime = deadLine - System.nanoTime();
                 try {
-                    final Long seed;
+                    final long seed;
                     if (waitTime <= 0) {
                         seed = seedQueue.poll();
                     } else {
-                        seed = seedQueue.poll(waitTime, TimeUnit.NANOSECONDS);
+                        seed = seedQueue.poll(waitTime, TimeSpan.NANOSECONDS);
                     }
 
                     if (seed != null) {
@@ -175,7 +175,7 @@ public final class ThreadLocalRandom extends Random {
 
             // Just in case the initialSeedUniquifier is zero or some other constant
             initialSeedUniquifier ^= 0x3255ecdc33bae119L; // just a meaningless random number
-            initialSeedUniquifier ^= Long.reverse(System.nanoTime());
+            initialSeedUniquifier ^= long.reverse(System.nanoTime());
 
             ThreadLocalRandom.initialSeedUniquifier = initialSeedUniquifier;
 
@@ -210,7 +210,7 @@ public final class ThreadLocalRandom extends Random {
                         logger.debug(String.format(
                                 "-Dio.netty.initialSeedUniquifier: 0x%016x (took %d ms)",
                                 actualCurrent,
-                                TimeUnit.NANOSECONDS.toMillis(seedGeneratorEndTime - seedGeneratorStartTime)));
+                                TimeSpan.NANOSECONDS.toMillis(seedGeneratorEndTime - seedGeneratorStartTime)));
                     } else {
                         logger.debug(String.format("-Dio.netty.initialSeedUniquifier: 0x%016x", actualCurrent));
                     }
@@ -244,7 +244,7 @@ public final class ThreadLocalRandom extends Random {
      * since it would cause setting seed in one part of a program to
      * unintentionally impact other usages by the thread.
      */
-    boolean initialized;
+    bool initialized;
 
     // Padding to help avoid memory contention among seed updates in
     // different TLRs in the common case that they are located near
@@ -323,7 +323,7 @@ public final class ThreadLocalRandom extends Random {
         // (offset) and whether to continue with the lower vs upper
         // half (which makes a difference only if odd).
         long offset = 0;
-        while (n >= Integer.MAX_VALUE) {
+        while (n >= int.MAX_VALUE) {
             int bits = next(2);
             long half = n >>> 1;
             long nextn = ((bits & 2) == 0) ? half : n - half;

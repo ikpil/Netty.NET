@@ -35,13 +35,13 @@ public interface Timeout {
      * Returns {@code true} if and only if the {@link TimerTask} associated
      * with this handle has been expired.
      */
-    boolean isExpired();
+    bool isExpired();
 
     /**
      * Returns {@code true} if and only if the {@link TimerTask} associated
      * with this handle has been cancelled.
      */
-    boolean isCancelled();
+    bool isCancelled();
 
     /**
      * Attempts to cancel the {@link TimerTask} associated with this handle.
@@ -50,5 +50,5 @@ public interface Timeout {
      *
      * @return True if the cancellation completed successfully, otherwise false
      */
-    boolean cancel();
+    bool cancel();
 }

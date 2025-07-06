@@ -52,7 +52,7 @@ public final class PendingWrite {
     /**
      * Clear and recycle this instance.
      */
-    public boolean recycle() {
+    public bool recycle() {
         msg = null;
         promise = null;
         handle.recycle(this);
@@ -62,7 +62,7 @@ public final class PendingWrite {
     /**
      * Fails the underlying {@link Promise} with the given cause and recycle this instance.
      */
-    public boolean failAndRecycle(Throwable cause) {
+    public bool failAndRecycle(Throwable cause) {
         ReferenceCountUtil.release(msg);
         if (promise != null) {
             promise.setFailure(cause);
@@ -73,7 +73,7 @@ public final class PendingWrite {
     /**
      * Mark the underlying {@link Promise} successfully and recycle this instance.
      */
-    public boolean successAndRecycle() {
+    public bool successAndRecycle() {
         if (promise != null) {
             promise.setSuccess(null);
         }

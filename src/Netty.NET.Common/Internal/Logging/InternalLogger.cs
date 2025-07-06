@@ -58,7 +58,7 @@ public interface InternalLogger {
      * @return True if this Logger is enabled for the TRACE level,
      *         false otherwise.
      */
-    boolean isTraceEnabled();
+    bool isTraceEnabled();
 
     /**
      * Log a message at the TRACE level.
@@ -129,7 +129,7 @@ public interface InternalLogger {
      * @return True if this Logger is enabled for the DEBUG level,
      *         false otherwise.
      */
-    boolean isDebugEnabled();
+    bool isDebugEnabled();
 
     /**
      * Log a message at the DEBUG level.
@@ -201,7 +201,7 @@ public interface InternalLogger {
      * @return True if this Logger is enabled for the INFO level,
      *         false otherwise.
      */
-    boolean isInfoEnabled();
+    bool isInfoEnabled();
 
     /**
      * Log a message at the INFO level.
@@ -273,7 +273,7 @@ public interface InternalLogger {
      * @return True if this Logger is enabled for the WARN level,
      *         false otherwise.
      */
-    boolean isWarnEnabled();
+    bool isWarnEnabled();
 
     /**
      * Log a message at the WARN level.
@@ -345,7 +345,7 @@ public interface InternalLogger {
      * @return True if this Logger is enabled for the ERROR level,
      *         false otherwise.
      */
-    boolean isErrorEnabled();
+    bool isErrorEnabled();
 
     /**
      * Log a message at the ERROR level.
@@ -417,7 +417,7 @@ public interface InternalLogger {
      * @return True if this Logger is enabled for the specified {@code level},
      *         false otherwise.
      */
-    boolean isEnabled(InternalLogLevel level);
+    bool isEnabled(InternalLogLevel level);
 
     /**
      * Log a message at the specified {@code level}.

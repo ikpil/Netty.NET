@@ -58,17 +58,17 @@ public final class ImmediateEventExecutor extends AbstractEventExecutor {
     private ImmediateEventExecutor() { }
 
     @Override
-    public boolean inEventLoop() {
+    public bool inEventLoop() {
         return true;
     }
 
     @Override
-    public boolean inEventLoop(Thread thread) {
+    public bool inEventLoop(Thread thread) {
         return true;
     }
 
     @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
         return terminationFuture();
     }
 
@@ -82,22 +82,22 @@ public final class ImmediateEventExecutor extends AbstractEventExecutor {
     public void shutdown() { }
 
     @Override
-    public boolean isShuttingDown() {
+    public bool isShuttingDown() {
         return false;
     }
 
     @Override
-    public boolean isShutdown() {
+    public bool isShutdown() {
         return false;
     }
 
     @Override
-    public boolean isTerminated() {
+    public bool isTerminated() {
         return false;
     }
 
     @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit) {
+    public bool awaitTermination(long timeout, TimeSpan unit) {
         return false;
     }
 

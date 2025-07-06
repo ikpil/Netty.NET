@@ -19,13 +19,13 @@ namespace Netty.NET.Common;
 
 /**
  * A task which is executed after the delay specified with
- * {@link Timer#newTimeout(TimerTask, long, TimeUnit)}.
+ * {@link Timer#newTimeout(TimerTask, long, TimeSpan)}.
  */
 public interface TimerTask {
 
     /**
      * Executed after the delay specified with
-     * {@link Timer#newTimeout(TimerTask, long, TimeUnit)}.
+     * {@link Timer#newTimeout(TimerTask, long, TimeSpan)}.
      *
      * @param timeout a handle which is associated with this task
      */

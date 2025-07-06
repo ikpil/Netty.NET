@@ -46,7 +46,7 @@ public final class RejectedExecutionHandlers {
      * is only done if the task was added from outside of the event loop which means
      * {@link EventExecutor#inEventLoop()} returns {@code false}.
      */
-    public static RejectedExecutionHandler backoff(final int retries, long backoffAmount, TimeUnit unit) {
+    public static RejectedExecutionHandler backoff(final int retries, long backoffAmount, TimeSpan unit) {
         ObjectUtil.checkPositive(retries, "retries");
         final long backOffNanos = unit.toNanos(backoffAmount);
         return new RejectedExecutionHandler() {

@@ -33,9 +33,9 @@ public interface MockTicker extends Ticker {
      * Advances the current {@link #nanoTime()} by the given amount of time.
      *
      * @param amount the amount of time to advance this ticker by.
-     * @param unit the {@link TimeUnit} of {@code amount}.
+     * @param unit the {@link TimeSpan} of {@code amount}.
      */
-    void advance(long amount, TimeUnit unit);
+    void advance(long amount, TimeSpan unit);
 
     /**
      * Advances the current {@link #nanoTime()} by the given amount of time.
@@ -43,6 +43,6 @@ public interface MockTicker extends Ticker {
      * @param amountMillis the number of milliseconds to advance this ticker by.
      */
     default void advanceMillis(long amountMillis) {
-        advance(amountMillis, TimeUnit.MILLISECONDS);
+        advance(amountMillis, TimeSpan.MILLISECONDS);
     }
 }

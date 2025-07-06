@@ -32,7 +32,7 @@ public class DefaultThreadFactory implements ThreadFactory {
 
     private final AtomicInteger nextId = new AtomicInteger();
     private final String prefix;
-    private final boolean daemon;
+    private final bool daemon;
     private final int priority;
     protected final ThreadGroup threadGroup;
 
@@ -44,11 +44,11 @@ public class DefaultThreadFactory implements ThreadFactory {
         this(poolName, false, Thread.NORM_PRIORITY);
     }
 
-    public DefaultThreadFactory(Class<?> poolType, boolean daemon) {
+    public DefaultThreadFactory(Class<?> poolType, bool daemon) {
         this(poolType, daemon, Thread.NORM_PRIORITY);
     }
 
-    public DefaultThreadFactory(String poolName, boolean daemon) {
+    public DefaultThreadFactory(String poolName, bool daemon) {
         this(poolName, daemon, Thread.NORM_PRIORITY);
     }
 
@@ -60,7 +60,7 @@ public class DefaultThreadFactory implements ThreadFactory {
         this(poolName, false, priority);
     }
 
-    public DefaultThreadFactory(Class<?> poolType, boolean daemon, int priority) {
+    public DefaultThreadFactory(Class<?> poolType, bool daemon, int priority) {
         this(toPoolName(poolType), daemon, priority);
     }
 
@@ -82,7 +82,7 @@ public class DefaultThreadFactory implements ThreadFactory {
         }
     }
 
-    public DefaultThreadFactory(String poolName, boolean daemon, int priority, ThreadGroup threadGroup) {
+    public DefaultThreadFactory(String poolName, bool daemon, int priority, ThreadGroup threadGroup) {
         ObjectUtil.checkNotNull(poolName, "poolName");
 
         if (priority < Thread.MIN_PRIORITY || priority > Thread.MAX_PRIORITY) {
@@ -96,7 +96,7 @@ public class DefaultThreadFactory implements ThreadFactory {
         this.threadGroup = threadGroup;
     }
 
-    public DefaultThreadFactory(String poolName, boolean daemon, int priority) {
+    public DefaultThreadFactory(String poolName, bool daemon, int priority) {
         this(poolName, daemon, priority, null);
     }
 

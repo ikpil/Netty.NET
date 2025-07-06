@@ -35,12 +35,12 @@ public final class EmptyPriorityQueue<T> implements PriorityQueue<T> {
     }
 
     @Override
-    public boolean removeTyped(T node) {
+    public bool removeTyped(T node) {
         return false;
     }
 
     @Override
-    public boolean containsTyped(T node) {
+    public bool containsTyped(T node) {
         return false;
     }
 
@@ -54,12 +54,12 @@ public final class EmptyPriorityQueue<T> implements PriorityQueue<T> {
     }
 
     @Override
-    public boolean isEmpty() {
+    public bool isEmpty() {
         return true;
     }
 
     @Override
-    public boolean contains(Object o) {
+    public bool contains(Object o) {
         return false;
     }
 
@@ -82,32 +82,32 @@ public final class EmptyPriorityQueue<T> implements PriorityQueue<T> {
     }
 
     @Override
-    public boolean add(T t) {
+    public bool add(T t) {
         return false;
     }
 
     @Override
-    public boolean remove(Object o) {
+    public bool remove(Object o) {
         return false;
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public bool containsAll(Collection<?> c) {
         return false;
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> c) {
+    public bool addAll(Collection<? extends T> c) {
         return false;
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public bool removeAll(Collection<?> c) {
         return false;
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public bool retainAll(Collection<?> c) {
         return false;
     }
 
@@ -120,7 +120,7 @@ public final class EmptyPriorityQueue<T> implements PriorityQueue<T> {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public bool equals(Object o) {
         return o instanceof PriorityQueue && ((PriorityQueue) o).isEmpty();
     }
 
@@ -130,7 +130,7 @@ public final class EmptyPriorityQueue<T> implements PriorityQueue<T> {
     }
 
     @Override
-    public boolean offer(T t) {
+    public bool offer(T t) {
         return false;
     }
 

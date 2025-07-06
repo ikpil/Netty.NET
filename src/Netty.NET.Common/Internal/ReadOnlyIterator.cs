@@ -26,7 +26,7 @@ public final class ReadOnlyIterator<T> implements Iterator<T> {
     }
 
     @Override
-    public boolean hasNext() {
+    public bool hasNext() {
         return iterator.hasNext();
     }
 

@@ -33,13 +33,13 @@ public class CleanerJava24Linker implements Cleaner {
     private static final MethodHandle INVOKE_FREE;
 
     static {
-        boolean suitableJavaVersion;
+        bool suitableJavaVersion;
         if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
             // native image supports this since 25, but we don't use PlatformDependent0 here, since
             // we need to initialize CleanerJava24Linker at build time.
             String v = System.getProperty("java.specification.version");
             try {
-                suitableJavaVersion = Integer.parseInt(v) >= 25;
+                suitableJavaVersion = int.parseInt(v) >= 25;
             } catch (NumberFormatException e) {
                 suitableJavaVersion = false;
             }
@@ -69,11 +69,11 @@ public class CleanerJava24Linker implements Cleaner {
                 MethodHandle getModule = lookup.findVirtual(
                         Class.class, "getModule", methodType(moduleCls));
                 MethodHandle isNativeAccessEnabledModule = lookup.findVirtual(
-                        moduleCls, "isNativeAccessEnabled", methodType(boolean.class));
+                        moduleCls, "isNativeAccessEnabled", methodType(bool.class));
                 MethodHandle isNativeAccessEnabledForClass = MethodHandles.filterArguments(
                         isNativeAccessEnabledModule, 0, getModule);
-                boolean isNativeAccessEnabled =
-                        (boolean) isNativeAccessEnabledForClass.invokeExact(CleanerJava24Linker.class);
+                bool isNativeAccessEnabled =
+                        (bool) isNativeAccessEnabledForClass.invokeExact(CleanerJava24Linker.class);
                 if (!isNativeAccessEnabled) {
                     throw new UnsupportedOperationException(
                             "Native access (restricted methods) is not enabled for the io.netty.common module.");
@@ -90,7 +90,7 @@ public class CleanerJava24Linker implements Cleaner {
                 MethodHandle byteSize = lookup.findVirtual(valueLayoutAddressCls, "byteSize", methodType(long.class));
                 MethodHandle byteSizeOfAddress = MethodHandles.foldArguments(byteSize, addressLayoutGetter);
                 long addressSize = (long) byteSizeOfAddress.invokeExact();
-                if (addressSize != Long.BYTES) {
+                if (addressSize != long.BYTES) {
                     throw new UnsupportedOperationException(
                             "Linking to malloc and free is only supported on 64-bit platforms.");
                 }
@@ -189,7 +189,7 @@ public class CleanerJava24Linker implements Cleaner {
         INVOKE_FREE = freeMethod;
     }
 
-    static boolean isSupported() {
+    static bool isSupported() {
         return INVOKE_MALLOC != null;
     }
 
@@ -255,7 +255,7 @@ public class CleanerJava24Linker implements Cleaner {
         }
 
         @Override
-        public boolean hasMemoryAddress() {
+        public bool hasMemoryAddress() {
             return true;
         }
 

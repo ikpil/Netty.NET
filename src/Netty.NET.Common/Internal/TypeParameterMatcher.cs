@@ -23,7 +23,7 @@ public abstract class TypeParameterMatcher {
 
     private static final TypeParameterMatcher NOOP = new TypeParameterMatcher() {
         @Override
-        public boolean match(Object msg) {
+        public bool match(Object msg) {
             return true;
         }
     };
@@ -67,7 +67,7 @@ public abstract class TypeParameterMatcher {
         return matcher;
     }
 
-    public abstract boolean match(Object msg);
+    public abstract bool match(Object msg);
 
     private static final class ReflectiveMatcher extends TypeParameterMatcher {
         private final Class<?> type;
@@ -77,7 +77,7 @@ public abstract class TypeParameterMatcher {
         }
 
         @Override
-        public boolean match(Object msg) {
+        public bool match(Object msg) {
             return type.isInstance(msg);
         }
     }

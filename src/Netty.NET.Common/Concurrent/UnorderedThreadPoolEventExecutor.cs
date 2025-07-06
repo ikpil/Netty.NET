@@ -100,12 +100,12 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public boolean inEventLoop() {
+    public bool inEventLoop() {
         return inEventLoop(Thread.currentThread());
     }
 
     @Override
-    public boolean inEventLoop(Thread thread) {
+    public bool inEventLoop(Thread thread) {
         return eventLoopThreads.contains(thread);
     }
 
@@ -130,7 +130,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public boolean isShuttingDown() {
+    public bool isShuttingDown() {
         return isShutdown();
     }
 
@@ -149,11 +149,11 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
 
     @Override
     public Future<?> shutdownGracefully() {
-        return shutdownGracefully(2, 15, TimeUnit.SECONDS);
+        return shutdownGracefully(2, 15, TimeSpan.SECONDS);
     }
 
     @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
         // TODO: At the moment this just calls shutdown but we may be able to do something more smart here which
         //       respects the quietPeriod and timeout.
         shutdown();
@@ -182,22 +182,22 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit) {
         return (ScheduledFuture<?>) super.schedule(command, delay, unit);
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit) {
         return (ScheduledFuture<V>) super.schedule(callable, delay, unit);
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
         return (ScheduledFuture<?>) super.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
         return (ScheduledFuture<?>) super.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
@@ -224,9 +224,9 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     private static final class RunnableScheduledFutureTask<V> extends PromiseTask<V>
             implements RunnableScheduledFuture<V>, ScheduledFuture<V> {
         private final RunnableScheduledFuture<V> future;
-        private final boolean wasCallable;
+        private final bool wasCallable;
 
-        RunnableScheduledFutureTask(EventExecutor executor, RunnableScheduledFuture<V> future, boolean wasCallable) {
+        RunnableScheduledFutureTask(EventExecutor executor, RunnableScheduledFuture<V> future, bool wasCallable) {
             super(executor, future);
             this.future = future;
             this.wasCallable = wasCallable;
@@ -268,12 +268,12 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         }
 
         @Override
-        public boolean isPeriodic() {
+        public bool isPeriodic() {
             return future.isPeriodic();
         }
 
         @Override
-        public long getDelay(TimeUnit unit) {
+        public long getDelay(TimeSpan unit) {
             return future.getDelay(unit);
         }
 

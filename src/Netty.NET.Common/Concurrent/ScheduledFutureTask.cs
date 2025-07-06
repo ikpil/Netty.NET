@@ -114,8 +114,8 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
     }
 
     @Override
-    public long getDelay(TimeUnit unit) {
-        return unit.convert(delayNanos(), TimeUnit.NANOSECONDS);
+    public long getDelay(TimeSpan unit) {
+        return unit.convert(delayNanos(), TimeSpan.NANOSECONDS);
     }
 
     @Override
@@ -187,15 +187,15 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> implements ScheduledFu
      * @param mayInterruptIfRunning this value has no effect in this implementation.
      */
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        boolean canceled = super.cancel(mayInterruptIfRunning);
+    public bool cancel(bool mayInterruptIfRunning) {
+        bool canceled = super.cancel(mayInterruptIfRunning);
         if (canceled) {
             scheduledExecutor().removeScheduled(this);
         }
         return canceled;
     }
 
-    boolean cancelWithoutRemove(boolean mayInterruptIfRunning) {
+    bool cancelWithoutRemove(bool mayInterruptIfRunning) {
         return super.cancel(mayInterruptIfRunning);
     }
 

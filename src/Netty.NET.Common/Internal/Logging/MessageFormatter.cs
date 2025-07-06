@@ -191,7 +191,7 @@ public final class MessageFormatter {
         int i = 0;
         int L = 0;
         do {
-            boolean notEscaped = j == 0 || messagePattern.charAt(j - 1) != ESCAPE_CHAR;
+            bool notEscaped = j == 0 || messagePattern.charAt(j - 1) != ESCAPE_CHAR;
             if (notEscaped) {
                 // normal case
                 sbuf.append(messagePattern, i, j);
@@ -230,9 +230,9 @@ public final class MessageFormatter {
         if (!objClass.isArray()) {
             if (Number.class.isAssignableFrom(objClass)) {
                 // Prevent String instantiation for some number types
-                if (objClass == Long.class) {
-                    sbuf.append(((Long) o).longValue());
-                } else if (objClass == Integer.class || objClass == Short.class || objClass == Byte.class) {
+                if (objClass == long.class) {
+                    sbuf.append(((long) o).longValue());
+                } else if (objClass == int.class || objClass == Short.class || objClass == Byte.class) {
                     sbuf.append(((Number) o).intValue());
                 } else if (objClass == Double.class) {
                     sbuf.append(((Double) o).doubleValue());
@@ -248,8 +248,8 @@ public final class MessageFormatter {
             // check for primitive array types because they
             // unfortunately cannot be cast to Object[]
             sbuf.append('[');
-            if (objClass == boolean[].class) {
-                booleanArrayAppend(sbuf, (boolean[]) o);
+            if (objClass == bool[].class) {
+                booleanArrayAppend(sbuf, (bool[]) o);
             } else if (objClass == byte[].class) {
                 byteArrayAppend(sbuf, (byte[]) o);
             } else if (objClass == char[].class) {
@@ -304,7 +304,7 @@ public final class MessageFormatter {
         }
     }
 
-    private static void booleanArrayAppend(StringBuilder sbuf, boolean[] a) {
+    private static void booleanArrayAppend(StringBuilder sbuf, bool[] a) {
         if (a.length == 0) {
             return;
         }

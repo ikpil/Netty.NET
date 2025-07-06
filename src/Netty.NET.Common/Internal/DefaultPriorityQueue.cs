@@ -47,12 +47,12 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
     }
 
     @Override
-    public boolean isEmpty() {
+    public bool isEmpty() {
         return size == 0;
     }
 
     @Override
-    public boolean contains(Object o) {
+    public bool contains(Object o) {
         if (!(o instanceof PriorityQueueNode)) {
             return false;
         }
@@ -61,7 +61,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
     }
 
     @Override
-    public boolean containsTyped(T node) {
+    public bool containsTyped(T node) {
         return contains(node, node.priorityQueueIndex(this));
     }
 
@@ -83,7 +83,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
     }
 
     @Override
-    public boolean offer(T e) {
+    public bool offer(T e) {
         if (e.priorityQueueIndex(this) != INDEX_NOT_IN_QUEUE) {
             throw new IllegalArgumentException("e.priorityQueueIndex(): " + e.priorityQueueIndex(this) +
                     " (expected: " + INDEX_NOT_IN_QUEUE + ") + e: " + e);
@@ -126,7 +126,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
 
     @SuppressWarnings("unchecked")
     @Override
-    public boolean remove(Object o) {
+    public bool remove(Object o) {
         final T node;
         try {
             node = (T) o;
@@ -137,7 +137,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
     }
 
     @Override
-    public boolean removeTyped(T node) {
+    public bool removeTyped(T node) {
         int i = node.priorityQueueIndex(this);
         if (!contains(node, i)) {
             return false;
@@ -216,7 +216,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
         private int index;
 
         @Override
-        public boolean hasNext() {
+        public bool hasNext() {
             return index < size;
         }
 
@@ -235,7 +235,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
         }
     }
 
-    private boolean contains(PriorityQueueNode node, int i) {
+    private bool contains(PriorityQueueNode node, int i) {
         return i >= 0 && i < size && node.equals(queue[i]);
     }
 

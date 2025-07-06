@@ -25,5 +25,5 @@ public interface ThreadAwareExecutor extends Executor {
      * Return {@code true} if the given {@link Thread} is used by this {@link ThreadAwareExecutor} to execute
      * work.
      */
-    boolean isExecutorThread(Thread thread);
+    bool isExecutorThread(Thread thread);
 }

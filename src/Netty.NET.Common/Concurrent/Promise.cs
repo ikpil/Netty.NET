@@ -36,7 +36,7 @@ public interface Promise<V> extends Future<V> {
      *         a success. Otherwise {@code false} because this future is
      *         already marked as either a success or a failure.
      */
-    boolean trySuccess(V result);
+    bool trySuccess(V result);
 
     /**
      * Marks this future as a failure and notifies all
@@ -54,7 +54,7 @@ public interface Promise<V> extends Future<V> {
      *         a failure. Otherwise {@code false} because this future is
      *         already marked as either a success or a failure.
      */
-    boolean tryFailure(Throwable cause);
+    bool tryFailure(Throwable cause);
 
     /**
      * Make this future impossible to cancel.
@@ -62,7 +62,7 @@ public interface Promise<V> extends Future<V> {
      * @return {@code true} if and only if successfully marked this future as uncancellable or it is already done
      *         without being cancelled.  {@code false} if this future has been cancelled already.
      */
-    boolean setUncancellable();
+    bool setUncancellable();
 
     @Override
     Promise<V> addListener(GenericFutureListener<? extends Future<? super V>> listener);

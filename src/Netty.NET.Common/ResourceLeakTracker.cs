@@ -35,5 +35,5 @@ public interface ResourceLeakTracker<T>  {
      *
      * @return {@code true} if called first time, {@code false} if called already
      */
-    boolean close(T trackedObject);
+    bool close(T trackedObject);
 }

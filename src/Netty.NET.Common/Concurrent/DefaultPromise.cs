@@ -79,7 +79,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
      * Threading - synchronized(this). We must prevent concurrent notification and FIFO listener notification if the
      * executor changes.
      */
-    private boolean notifyingListeners;
+    private bool notifyingListeners;
 
     /**
      * Creates a new instance.
@@ -114,7 +114,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     @Override
-    public boolean trySuccess(V result) {
+    public bool trySuccess(V result) {
         return setSuccess0(result);
     }
 
@@ -127,12 +127,12 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     @Override
-    public boolean tryFailure(Throwable cause) {
+    public bool tryFailure(Throwable cause) {
         return setFailure0(cause);
     }
 
     @Override
-    public boolean setUncancellable() {
+    public bool setUncancellable() {
         if (RESULT_UPDATER.compareAndSet(this, null, UNCANCELLABLE)) {
             return true;
         }
@@ -141,13 +141,13 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     @Override
-    public boolean isSuccess() {
+    public bool isSuccess() {
         Object result = this.result;
         return result != null && result != UNCANCELLABLE && !(result instanceof CauseHolder);
     }
 
     @Override
-    public boolean isCancellable() {
+    public bool isCancellable() {
         return result == null;
     }
 
@@ -281,7 +281,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
         checkDeadLock();
 
-        boolean interrupted = false;
+        bool interrupted = false;
         synchronized (this) {
             while (!isDone()) {
                 incWaiters();
@@ -304,17 +304,17 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     @Override
-    public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+    public bool await(long timeout, TimeSpan unit) throws InterruptedException {
         return await0(unit.toNanos(timeout), true);
     }
 
     @Override
-    public boolean await(long timeoutMillis) throws InterruptedException {
+    public bool await(long timeoutMillis) throws InterruptedException {
         return await0(MILLISECONDS.toNanos(timeoutMillis), true);
     }
 
     @Override
-    public boolean awaitUninterruptibly(long timeout, TimeUnit unit) {
+    public bool awaitUninterruptibly(long timeout, TimeSpan unit) {
         try {
             return await0(unit.toNanos(timeout), false);
         } catch (InterruptedException e) {
@@ -324,7 +324,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     @Override
-    public boolean awaitUninterruptibly(long timeoutMillis) {
+    public bool awaitUninterruptibly(long timeoutMillis) {
         try {
             return await0(MILLISECONDS.toNanos(timeoutMillis), false);
         } catch (InterruptedException e) {
@@ -366,7 +366,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public V get(long timeout, TimeSpan unit) throws InterruptedException, ExecutionException, TimeoutException {
         Object result = this.result;
         if (!isDone0(result)) {
             if (!await(timeout, unit)) {
@@ -393,7 +393,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
      * @param mayInterruptIfRunning this value has no effect in this implementation.
      */
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
+    public bool cancel(bool mayInterruptIfRunning) {
         if (RESULT_UPDATER.compareAndSet(this, null, CANCELLATION_CAUSE_HOLDER)) {
             if (checkNotifyWaiters()) {
                 notifyListeners();
@@ -404,12 +404,12 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     }
 
     @Override
-    public boolean isCancelled() {
+    public bool isCancelled() {
         return isCancelled0(result);
     }
 
     @Override
-    public boolean isDone() {
+    public bool isDone() {
         return isDone0(result);
     }
 
@@ -436,7 +436,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         StringBuilder buf = new StringBuilder(64)
                 .append(StringUtil.simpleClassName(this))
                 .append('@')
-                .append(Integer.toHexString(hashCode()));
+                .append(int.toHexString(hashCode()));
 
         Object result = this.result;
         if (result == SUCCESS) {
@@ -634,15 +634,15 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         }
     }
 
-    private boolean setSuccess0(V result) {
+    private bool setSuccess0(V result) {
         return setValue0(result == null ? SUCCESS : result);
     }
 
-    private boolean setFailure0(Throwable cause) {
+    private bool setFailure0(Throwable cause) {
         return setValue0(new CauseHolder(checkNotNull(cause, "cause")));
     }
 
-    private boolean setValue0(Object objResult) {
+    private bool setValue0(Object objResult) {
         if (RESULT_UPDATER.compareAndSet(this, null, objResult) ||
             RESULT_UPDATER.compareAndSet(this, UNCANCELLABLE, objResult)) {
             if (checkNotifyWaiters()) {
@@ -657,7 +657,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
      * Check if there are any waiters and if so notify these.
      * @return {@code true} if there are any listeners attached to the promise, {@code false} otherwise.
      */
-    private synchronized boolean checkNotifyWaiters() {
+    private synchronized bool checkNotifyWaiters() {
         if (waiters > 0) {
             notifyAll();
         }
@@ -687,7 +687,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         PlatformDependent.throwException(cause);
     }
 
-    private boolean await0(long timeoutNanos, boolean interruptable) throws InterruptedException {
+    private bool await0(long timeoutNanos, bool interruptable) throws InterruptedException {
         if (isDone()) {
             return true;
         }
@@ -706,7 +706,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         // to avoid/postpone performance cost of System.nanoTime().
         final long startTime = System.nanoTime();
         synchronized (this) {
-            boolean interrupted = false;
+            bool interrupted = false;
             try {
                 long waitTime = timeoutNanos;
                 while (!isDone() && waitTime > 0) {
@@ -858,11 +858,11 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
         }
     }
 
-    private static boolean isCancelled0(Object result) {
+    private static bool isCancelled0(Object result) {
         return result instanceof CauseHolder && ((CauseHolder) result).cause instanceof CancellationException;
     }
 
-    private static boolean isDone0(Object result) {
+    private static bool isDone0(Object result) {
         return result != null && result != UNCANCELLABLE;
     }
 

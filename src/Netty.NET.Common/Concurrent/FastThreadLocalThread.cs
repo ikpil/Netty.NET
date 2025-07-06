@@ -35,7 +35,7 @@ public class FastThreadLocalThread extends Thread {
     private static final AtomicReference<long[]> fallbackThreads = new AtomicReference<>(null);
 
     // This will be set to true if we have a chance to wrap the Runnable.
-    private final boolean cleanupFastThreadLocals;
+    private final bool cleanupFastThreadLocals;
 
     private InternalThreadLocalMap threadLocalMap;
 
@@ -108,7 +108,7 @@ public class FastThreadLocalThread extends Thread {
      * @deprecated Use {@link FastThreadLocalThread#currentThreadWillCleanupFastThreadLocals()} instead
      */
     @Deprecated
-    public boolean willCleanupFastThreadLocals() {
+    public bool willCleanupFastThreadLocals() {
         return cleanupFastThreadLocals;
     }
 
@@ -118,7 +118,7 @@ public class FastThreadLocalThread extends Thread {
      * @deprecated Use {@link FastThreadLocalThread#currentThreadWillCleanupFastThreadLocals()} instead
      */
     @Deprecated
-    public static boolean willCleanupFastThreadLocals(Thread thread) {
+    public static bool willCleanupFastThreadLocals(Thread thread) {
         return thread instanceof FastThreadLocalThread &&
                 ((FastThreadLocalThread) thread).willCleanupFastThreadLocals();
     }
@@ -126,7 +126,7 @@ public class FastThreadLocalThread extends Thread {
     /**
      * Returns {@code true} if {@link FastThreadLocal#removeAll()} will be called once {@link Thread#run()} completes.
      */
-    public static boolean currentThreadWillCleanupFastThreadLocals() {
+    public static bool currentThreadWillCleanupFastThreadLocals() {
         // intentionally doesn't accept a thread parameter to work with ScopedValue in the future
         Thread currentThread = currentThread();
         if (currentThread instanceof FastThreadLocalThread) {
@@ -138,12 +138,12 @@ public class FastThreadLocalThread extends Thread {
     /**
      * Returns {@code true} if this thread supports {@link FastThreadLocal}.
      */
-    public static boolean currentThreadHasFastThreadLocal() {
+    public static bool currentThreadHasFastThreadLocal() {
         // intentionally doesn't accept a thread parameter to work with ScopedValue in the future
         return currentThread() instanceof FastThreadLocalThread || isFastThreadLocalVirtualThread();
     }
 
-    private static boolean isFastThreadLocalVirtualThread() {
+    private static bool isFastThreadLocalVirtualThread() {
         long[] arr = fallbackThreads.get();
         if (arr == null) {
             return false;
@@ -214,7 +214,7 @@ public class FastThreadLocalThread extends Thread {
      *
      * @return {@code false}, unless overriden by a subclass.
      */
-    public boolean permitBlockingCalls() {
+    public bool permitBlockingCalls() {
         return false;
     }
 }

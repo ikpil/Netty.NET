@@ -31,7 +31,7 @@ public interface ProgressivePromise<V> extends Promise<V>, ProgressiveFuture<V> 
      * {@link GenericProgressiveFutureListener}.  If the operation is already complete or the progress is out of range,
      * this method does nothing but returning {@code false}.
      */
-    boolean tryProgress(long progress, long total);
+    bool tryProgress(long progress, long total);
 
     @Override
     ProgressivePromise<V> setSuccess(V result);

@@ -184,7 +184,7 @@ class Hidden {
                 public Predicate<Thread> apply(final Predicate<Thread> p) {
                     return new Predicate<Thread>() {
                         @Override
-                        public boolean test(Thread thread) {
+                        public bool test(Thread thread) {
                             return p.test(thread) ||
                                     thread instanceof FastThreadLocalThread &&
                                             !((FastThreadLocalThread) thread).permitBlockingCalls();

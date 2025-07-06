@@ -53,9 +53,9 @@ public final class NativeLibraryLoader {
 
     private static final String NATIVE_RESOURCE_HOME = "META-INF/native/";
     private static final File WORKDIR;
-    private static final boolean DELETE_NATIVE_LIB_AFTER_LOADING;
-    private static final boolean TRY_TO_PATCH_SHADED_ID;
-    private static final boolean DETECT_NATIVE_LIBRARY_DUPLICATES;
+    private static final bool DELETE_NATIVE_LIB_AFTER_LOADING;
+    private static final bool TRY_TO_PATCH_SHADED_ID;
+    private static final bool DETECT_NATIVE_LIBRARY_DUPLICATES;
 
     // Just use a-Z and numbers as valid ID bytes.
     private static final byte[] UNIQUE_ID_BYTES =
@@ -282,7 +282,7 @@ public final class NativeLibraryLoader {
                         // the same as in this case it will not have any bad effect.
                         URL url = urlsList.get(0);
                         byte[] digest = digest(md, url);
-                        boolean allSame = true;
+                        bool allSame = true;
                         if (digest != null) {
                             for (int i = 1; i < size; i++) {
                                 byte[] digest2 = digest(md, urlsList.get(i));
@@ -339,7 +339,7 @@ public final class NativeLibraryLoader {
         tryExec("codesign -s - " + libraryFile.getAbsolutePath());
     }
 
-    private static boolean tryExec(String cmd) {
+    private static bool tryExec(String cmd) {
         try {
             int exitValue = Runtime.getRuntime().exec(cmd).waitFor();
             if (exitValue != 0) {
@@ -358,7 +358,7 @@ public final class NativeLibraryLoader {
         return false;
     }
 
-    private static boolean shouldShadedLibraryIdBePatched(String packagePrefix) {
+    private static bool shouldShadedLibraryIdBePatched(String packagePrefix) {
         return TRY_TO_PATCH_SHADED_ID && PlatformDependent.isOsx() && !packagePrefix.isEmpty();
     }
 
@@ -378,7 +378,7 @@ public final class NativeLibraryLoader {
      * @param name - The native library path or name
      * @param absolute - Whether the native library will be loaded by path or by name
      */
-    private static void loadLibrary(final ClassLoader loader, final String name, final boolean absolute) {
+    private static void loadLibrary(final ClassLoader loader, final String name, final bool absolute) {
         Throwable suppressed = null;
         try {
             try {
@@ -408,7 +408,7 @@ public final class NativeLibraryLoader {
         }
     }
 
-    private static void loadLibraryByHelper(final Class<?> helper, final String name, final boolean absolute)
+    private static void loadLibraryByHelper(final Class<?> helper, final String name, final bool absolute)
             throws UnsatisfiedLinkError {
         Object ret = AccessController.doPrivileged(new PrivilegedAction<Object>() {
             @Override
@@ -416,7 +416,7 @@ public final class NativeLibraryLoader {
                 try {
                     // Invoke the helper to load the native library, if it succeeds, then the native
                     // library belong to the specified ClassLoader.
-                    Method method = helper.getMethod("loadLibrary", String.class, boolean.class);
+                    Method method = helper.getMethod("loadLibrary", String.class, bool.class);
                     method.setAccessible(true);
                     return method.invoke(null, name, absolute);
                 } catch (Exception e) {
@@ -513,7 +513,7 @@ public final class NativeLibraryLoader {
 
     private static final class NoexecVolumeDetector {
 
-        private static boolean canExecuteExecutable(File file) throws IOException {
+        private static bool canExecuteExecutable(File file) throws IOException {
             // If we can already execute, there is nothing to do.
             if (file.canExecute()) {
                 return true;

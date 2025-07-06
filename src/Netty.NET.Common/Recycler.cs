@@ -61,8 +61,8 @@ public abstract class Recycler<T> {
     private static final int DEFAULT_MAX_CAPACITY_PER_THREAD;
     private static final int RATIO;
     private static final int DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD;
-    private static final boolean BLOCKING_POOL;
-    private static final boolean BATCH_FAST_TL_ONLY;
+    private static final bool BLOCKING_POOL;
+    private static final bool BATCH_FAST_TL_ONLY;
 
     static {
         // In the future, we might have different maxCapacity for different object types.
@@ -201,7 +201,7 @@ public abstract class Recycler<T> {
      * @deprecated use {@link Handle#recycle(Object)}.
      */
     @Deprecated
-    public final boolean recycle(T o, Handle<T> handle) {
+    public final bool recycle(T o, Handle<T> handle) {
         if (handle == NOOP_HANDLE) {
             return false;
         }
@@ -339,7 +339,7 @@ public abstract class Recycler<T> {
             return handle;
         }
 
-        void release(DefaultHandle<T> handle, boolean guarded) {
+        void release(DefaultHandle<T> handle, bool guarded) {
             if (guarded) {
                 handle.toAvailable();
             } else {
@@ -359,7 +359,7 @@ public abstract class Recycler<T> {
             }
         }
 
-        private static boolean isTerminated(Thread owner) {
+        private static bool isTerminated(Thread owner) {
             // Do not use `Thread.getState()` in J9 JVM because it's known to have a performance issue.
             // See: https://github.com/netty/netty/issues/13347#issuecomment-1518537895
             return PlatformDependent.isJ9Jvm() ? !owner.isAlive() : owner.getState() == Thread.State.TERMINATED;
@@ -404,7 +404,7 @@ public abstract class Recycler<T> {
         }
 
         @Override
-        public synchronized boolean offer(T e) {
+        public synchronized bool offer(T e) {
             if (deque.size() == maxCapacity) {
                 return false;
             }
@@ -432,7 +432,7 @@ public abstract class Recycler<T> {
         }
 
         @Override
-        public synchronized boolean isEmpty() {
+        public synchronized bool isEmpty() {
             return deque.isEmpty();
         }
 
@@ -442,7 +442,7 @@ public abstract class Recycler<T> {
         }
 
         @Override
-        public boolean relaxedOffer(T e) {
+        public bool relaxedOffer(T e) {
             return offer(e);
         }
 

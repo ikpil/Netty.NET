@@ -48,7 +48,7 @@ final class PlatformDependent0 {
     private static final MethodHandle DIRECT_BUFFER_CONSTRUCTOR;
     private static final MethodHandle ALLOCATE_ARRAY_METHOD;
     private static final MethodHandle ALIGN_SLICE;
-    private static final boolean IS_ANDROID = isAndroid0();
+    private static final bool IS_ANDROID = isAndroid0();
     private static final int JAVA_VERSION = javaVersion0();
     private static final Throwable EXPLICIT_NO_UNSAFE_CAUSE = explicitNoUnsafeCause0();
 
@@ -56,10 +56,10 @@ final class PlatformDependent0 {
 
     // See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/
     // ImageInfo.java
-    private static final boolean RUNNING_IN_NATIVE_IMAGE = SystemPropertyUtil.contains(
+    private static final bool RUNNING_IN_NATIVE_IMAGE = SystemPropertyUtil.contains(
             "org.graalvm.nativeimage.imagecode");
 
-    private static final boolean IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = explicitTryReflectionSetAccessible0();
+    private static final bool IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = explicitTryReflectionSetAccessible0();
 
     // Package-private for testing.
     static final MethodHandle IS_VIRTUAL_THREAD_METHOD_HANDLE = getIsVirtualThreadMethodHandle();
@@ -77,7 +77,7 @@ final class PlatformDependent0 {
      */
     private static final long UNSAFE_COPY_THRESHOLD = 1024L * 1024L;
 
-    private static final boolean UNALIGNED;
+    private static final bool UNALIGNED;
 
     private static final long BITS_MAX_DIRECT_MEMORY;
 
@@ -331,7 +331,7 @@ final class PlatformDependent0 {
             INT_ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(int[].class);
             LONG_ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(long[].class);
             LONG_ARRAY_INDEX_SCALE = UNSAFE.arrayIndexScale(long[].class);
-            final boolean unaligned;
+            final bool unaligned;
             // using a known type to avoid loading new classes
             final AtomicLong maybeMaxMemory = new AtomicLong(-1);
             Object maybeUnaligned = AccessController.doPrivileged(new PrivilegedAction<Object>() {
@@ -359,7 +359,7 @@ final class PlatformDependent0 {
                             fieldName = version >= 11? "UNALIGNED" : "unaligned";
                             try {
                                 Field unalignedField = bitsClass.getDeclaredField(fieldName);
-                                if (unalignedField.getType() == boolean.class) {
+                                if (unalignedField.getType() == bool.class) {
                                     long offset = UNSAFE.staticFieldOffset(unalignedField);
                                     Object object = UNSAFE.staticFieldBase(unalignedField);
                                     return UNSAFE.getBoolean(object, offset);
@@ -486,9 +486,9 @@ final class PlatformDependent0 {
     private static MethodHandle getIsVirtualThreadMethodHandle() {
         try {
             MethodHandle methodHandle = MethodHandles.publicLookup().findVirtual(Thread.class, "isVirtual",
-                    methodType(boolean.class));
+                    methodType(bool.class));
             // Call once to make sure the invocation works.
-            boolean isVirtual = (boolean) methodHandle.invokeExact(Thread.currentThread());
+            bool isVirtual = (bool) methodHandle.invokeExact(Thread.currentThread());
             return methodHandle;
         } catch (Throwable e) {
             if (logger.isTraceEnabled()) {
@@ -504,12 +504,12 @@ final class PlatformDependent0 {
      * @param thread The thread to be checked.
      * @return {@code true} if this {@link Thread} is a virtual thread, {@code false} otherwise.
      */
-    static boolean isVirtualThread(Thread thread) {
+    static bool isVirtualThread(Thread thread) {
         if (thread == null || IS_VIRTUAL_THREAD_METHOD_HANDLE == null) {
             return false;
         }
         try {
-            return (boolean) IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(thread);
+            return (bool) IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(thread);
         } catch (Throwable t) {
             // Should not happen.
             if (t instanceof Error) {
@@ -519,17 +519,17 @@ final class PlatformDependent0 {
         }
     }
 
-    private static boolean unsafeStaticFieldOffsetSupported() {
+    private static bool unsafeStaticFieldOffsetSupported() {
         return !RUNNING_IN_NATIVE_IMAGE;
     }
 
-    static boolean isExplicitNoUnsafe() {
+    static bool isExplicitNoUnsafe() {
         return EXPLICIT_NO_UNSAFE_CAUSE != null;
     }
 
     private static Throwable explicitNoUnsafeCause0() {
-        boolean explicitProperty = SystemPropertyUtil.contains("io.netty.noUnsafe");
-        boolean noUnsafe = SystemPropertyUtil.getBoolean("io.netty.noUnsafe", false);
+        bool explicitProperty = SystemPropertyUtil.contains("io.netty.noUnsafe");
+        bool noUnsafe = SystemPropertyUtil.getBoolean("io.netty.noUnsafe", false);
         logger.debug("-Dio.netty.noUnsafe: {}", noUnsafe);
 
         // See JDK 23 JEP 471 https://openjdk.org/jeps/471 and sun.misc.Unsafe.beforeMemoryAccess() on JDK 23+.
@@ -570,7 +570,7 @@ final class PlatformDependent0 {
         return null;
     }
 
-    static boolean isUnaligned() {
+    static bool isUnaligned() {
         return UNALIGNED;
     }
 
@@ -581,7 +581,7 @@ final class PlatformDependent0 {
         return BITS_MAX_DIRECT_MEMORY;
     }
 
-    static boolean hasUnsafe() {
+    static bool hasUnsafe() {
         return UNSAFE != null;
     }
 
@@ -589,7 +589,7 @@ final class PlatformDependent0 {
         return UNSAFE_UNAVAILABILITY_CAUSE;
     }
 
-    static boolean unalignedAccess() {
+    static bool unalignedAccess() {
         return UNALIGNED;
     }
 
@@ -602,7 +602,7 @@ final class PlatformDependent0 {
         throw (E) t;
     }
 
-    static boolean hasDirectBufferNoCleanerConstructor() {
+    static bool hasDirectBufferNoCleanerConstructor() {
         return DIRECT_BUFFER_CONSTRUCTOR != null;
     }
 
@@ -617,7 +617,7 @@ final class PlatformDependent0 {
         return newDirectBuffer(UNSAFE.allocateMemory(Math.max(1, capacity)), capacity);
     }
 
-    static boolean hasAlignSliceMethod() {
+    static bool hasAlignSliceMethod() {
         return ALIGN_SLICE != null;
     }
 
@@ -630,7 +630,7 @@ final class PlatformDependent0 {
         }
     }
 
-    static boolean hasAllocateArrayMethod() {
+    static bool hasAllocateArrayMethod() {
         return ALLOCATE_ARRAY_METHOD != null;
     }
 
@@ -838,7 +838,7 @@ final class PlatformDependent0 {
         UNSAFE.setMemory(o, offset, bytes, value);
     }
 
-    static boolean equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         int remainingBytes = length & 7;
         final long baseOffset1 = BYTE_ARRAY_BASE_OFFSET + startPos1;
         final long diff = startPos2 - startPos1;
@@ -892,7 +892,7 @@ final class PlatformDependent0 {
         return ConstantTimeUtils.equalsConstantTime(result, 0);
     }
 
-    static boolean isZero(byte[] bytes, int startPos, int length) {
+    static bool isZero(byte[] bytes, int startPos, int length) {
         if (length <= 0) {
             return true;
         }
@@ -1023,11 +1023,11 @@ final class PlatformDependent0 {
         return UNSAFE.reallocateMemory(address, newSize);
     }
 
-    static boolean isAndroid() {
+    static bool isAndroid() {
         return IS_ANDROID;
     }
 
-    private static boolean isAndroid0() {
+    private static bool isAndroid0() {
         // Idea: Sometimes java binaries include Android classes on the classpath, even if it isn't actually Android.
         // Rather than check if certain classes are present, just check the VM, which is tied to the JDK.
 
@@ -1036,20 +1036,20 @@ final class PlatformDependent0 {
 
         // Android sets this property to Dalvik, regardless of whether it actually is.
         String vmName = SystemPropertyUtil.get("java.vm.name");
-        boolean isAndroid = "Dalvik".equals(vmName);
+        bool isAndroid = "Dalvik".equals(vmName);
         if (isAndroid) {
             logger.debug("Platform: Android");
         }
         return isAndroid;
     }
 
-    private static boolean explicitTryReflectionSetAccessible0() {
+    private static bool explicitTryReflectionSetAccessible0() {
         // we disable reflective access
         return SystemPropertyUtil.getBoolean("io.netty.tryReflectionSetAccessible",
                 javaVersion() < 9 || RUNNING_IN_NATIVE_IMAGE);
     }
 
-    static boolean isExplicitTryReflectionSetAccessible() {
+    static bool isExplicitTryReflectionSetAccessible() {
         return IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE;
     }
 
@@ -1081,7 +1081,7 @@ final class PlatformDependent0 {
         final String[] components = javaSpecVersion.split("\\.");
         final int[] version = new int[components.length];
         for (int i = 0; i < components.length; i++) {
-            version[i] = Integer.parseInt(components[i]);
+            version[i] = int.parseInt(components[i]);
         }
 
         if (version[0] == 1) {

@@ -16,22 +16,22 @@
 namespace Netty.NET.Common;
 
 /**
- * Represents a supplier of {@code boolean}-valued results which doesn't throw any checked exceptions.
+ * Represents a supplier of {@code bool}-valued results which doesn't throw any checked exceptions.
  */
 public interface UncheckedBooleanSupplier extends BooleanSupplier {
     /**
-     * Gets a boolean value.
-     * @return a boolean value.
+     * Gets a bool value.
+     * @return a bool value.
      */
     @Override
-    boolean get();
+    bool get();
 
     /**
      * A supplier which always returns {@code false} and never throws.
      */
     UncheckedBooleanSupplier FALSE_SUPPLIER = new UncheckedBooleanSupplier() {
         @Override
-        public boolean get() {
+        public bool get() {
             return false;
         }
     };
@@ -41,7 +41,7 @@ public interface UncheckedBooleanSupplier extends BooleanSupplier {
      */
     UncheckedBooleanSupplier TRUE_SUPPLIER = new UncheckedBooleanSupplier() {
         @Override
-        public boolean get() {
+        public bool get() {
             return true;
         }
     };

@@ -26,14 +26,14 @@ public final class MathUtil {
      * Fast method of finding the next power of 2 greater than or equal to the supplied value.
      *
      * <p>If the value is {@code <= 0} then 1 will be returned.
-     * This method is not suitable for {@link Integer#MIN_VALUE} or numbers greater than 2^30.
+     * This method is not suitable for {@link int#MIN_VALUE} or numbers greater than 2^30.
      *
      * @param value from which to search for next power of 2
      * @return The next power of 2 or the value itself if it is a power of 2
      */
     public static int findNextPositivePowerOfTwo(final int value) {
-        assert value > Integer.MIN_VALUE && value < 0x40000000;
-        return 1 << (32 - Integer.numberOfLeadingZeros(value - 1));
+        assert value > int.MIN_VALUE && value < 0x40000000;
+        return 1 << (32 - int.numberOfLeadingZeros(value - 1));
     }
 
     /**
@@ -60,12 +60,12 @@ public final class MathUtil {
      * @return {@code false} if the requested {@code index} and {@code length} will fit within {@code capacity}.
      * {@code true} if this would result in an index out of bounds exception.
      */
-    public static boolean isOutOfBounds(int index, int length, int capacity) {
+    public static bool isOutOfBounds(int index, int length, int capacity) {
         return (index | length | capacity | (index + length) | (capacity - (index + length))) < 0;
     }
 
     /**
-     * @deprecated not used anymore. User Integer.compare() instead. For removal.
+     * @deprecated not used anymore. User int.compare() instead. For removal.
      * Compares two {@code int} values.
      *
      * @param  x the first {@code int} to compare
@@ -77,11 +77,11 @@ public final class MathUtil {
     @Deprecated
     public static int compare(final int x, final int y) {
         // do not subtract for comparison, it could overflow
-        return Integer.compare(x, y);
+        return int.compare(x, y);
     }
 
     /**
-     * @deprecated not used anymore. User Long.compare() instead. For removal.
+     * @deprecated not used anymore. User long.compare() instead. For removal.
      * Compare two {@code long} values.
      * @param x the first {@code long} to compare.
      * @param y the second {@code long} to compare.
@@ -94,7 +94,7 @@ public final class MathUtil {
      */
     @Deprecated
     public static int compare(long x, long y) {
-        return Long.compare(x, y);
+        return long.compare(x, y);
     }
 
 }

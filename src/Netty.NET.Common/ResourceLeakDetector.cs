@@ -101,7 +101,7 @@ public class ResourceLeakDetector<T> {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ResourceLeakDetector.class);
 
     static {
-        final boolean disabled;
+        final bool disabled;
         if (SystemPropertyUtil.get("io.netty.noResourceLeakDetection") != null) {
             disabled = SystemPropertyUtil.getBoolean("io.netty.noResourceLeakDetection", false);
             logger.debug("-Dio.netty.noResourceLeakDetection: {}", disabled);
@@ -135,14 +135,14 @@ public class ResourceLeakDetector<T> {
      * @deprecated Use {@link #setLevel(Level)} instead.
      */
     @Deprecated
-    public static void setEnabled(boolean enabled) {
+    public static void setEnabled(bool enabled) {
         setLevel(enabled? Level.SIMPLE : Level.DISABLED);
     }
 
     /**
      * Returns {@code true} if resource leak detection is enabled.
      */
-    public static boolean isEnabled() {
+    public static bool isEnabled() {
         return getLevel().ordinal() > Level.DISABLED.ordinal();
     }
 
@@ -187,7 +187,7 @@ public class ResourceLeakDetector<T> {
      */
     @Deprecated
     public ResourceLeakDetector(String resourceType) {
-        this(resourceType, DEFAULT_SAMPLING_INTERVAL, Long.MAX_VALUE);
+        this(resourceType, DEFAULT_SAMPLING_INTERVAL, long.MAX_VALUE);
     }
 
     /**
@@ -211,7 +211,7 @@ public class ResourceLeakDetector<T> {
      */
     @SuppressWarnings("deprecation")
     public ResourceLeakDetector(Class<?> resourceType, int samplingInterval) {
-        this(simpleClassName(resourceType), samplingInterval, Long.MAX_VALUE);
+        this(simpleClassName(resourceType), samplingInterval, long.MAX_VALUE);
     }
 
     /**
@@ -263,7 +263,7 @@ public class ResourceLeakDetector<T> {
     }
 
     @SuppressWarnings("unchecked")
-    private DefaultResourceLeak track0(T obj, boolean force) {
+    private DefaultResourceLeak track0(T obj, bool force) {
         Level level = ResourceLeakDetector.level;
         if (force ||
                 level == Level.PARANOID ||
@@ -290,7 +290,7 @@ public class ResourceLeakDetector<T> {
      *
      * @return {@code true} to enable leak reporting.
      */
-    protected boolean needReport() {
+    protected bool needReport() {
         return logger.isErrorEnabled();
     }
 
@@ -467,7 +467,7 @@ public class ResourceLeakDetector<T> {
                 TraceRecord oldHead;
                 TraceRecord prevHead;
                 TraceRecord newHead;
-                boolean dropped;
+                bool dropped;
                 do {
                     if ((prevHead = oldHead = headUpdater.get(this)) == null) {
                         // already closed.
@@ -491,13 +491,13 @@ public class ResourceLeakDetector<T> {
             }
         }
 
-        boolean dispose() {
+        bool dispose() {
             clear();
             return allLeaks.remove(this);
         }
 
         @Override
-        public boolean close() {
+        public bool close() {
             if (allLeaks.remove(this)) {
                 // Call clear so the reference is not even enqueued.
                 clear();
@@ -508,7 +508,7 @@ public class ResourceLeakDetector<T> {
         }
 
         @Override
-        public boolean close(T trackedObject) {
+        public bool close(T trackedObject) {
             // Ensure that the object that was tracked is the same as the one that was passed to close(...).
             assert trackedHash == System.identityHashCode(trackedObject);
 

@@ -126,12 +126,12 @@ public final class NetUtil {
     /**
      * {@code true} if IPv4 should be used even if the system supports both IPv4 and IPv6.
      */
-    private static final boolean IPV4_PREFERRED = SystemPropertyUtil.getBoolean("java.net.preferIPv4Stack", false);
+    private static final bool IPV4_PREFERRED = SystemPropertyUtil.getBoolean("java.net.preferIPv4Stack", false);
 
     /**
      * {@code true} if an IPv6 address should be preferred when a host has both an IPv4 address and an IPv6 address.
      */
-    private static final boolean IPV6_ADDRESSES_PREFERRED;
+    private static final bool IPV6_ADDRESSES_PREFERRED;
 
     /**
      * The logger being used by this class
@@ -168,9 +168,9 @@ public final class NetUtil {
         SOMAXCONN = AccessController.doPrivileged(new SoMaxConnAction());
     }
 
-    private static final class SoMaxConnAction implements PrivilegedAction<Integer> {
+    private static final class SoMaxConnAction implements PrivilegedAction<int> {
         @Override
-        public Integer run() {
+        public int run() {
             // Determine the default somaxconn (server socket backlog) value of the platform.
             // The known defaults:
             // - Windows NT Server 4.0+: 200
@@ -192,14 +192,14 @@ public final class NetUtil {
                 if (file.exists()) {
                     try (BufferedReader in = new BufferedReader(new InputStreamReader(
                             new BoundedInputStream(new FileInputStream(file))))) {
-                        somaxconn = Integer.parseInt(in.readLine());
+                        somaxconn = int.parseInt(in.readLine());
                         if (logger.isDebugEnabled()) {
                             logger.debug("{}: {}", file, somaxconn);
                         }
                     }
                 } else {
                     // Try to get from sysctl
-                    Integer tmp = null;
+                    int tmp = null;
                     if (SystemPropertyUtil.getBoolean("io.netty.net.somaxconn.trySysctl", false)) {
                         tmp = sysctlGetInt("kern.ipc.somaxconn");
                         if (tmp == null) {
@@ -232,7 +232,7 @@ public final class NetUtil {
      * @param sysctlKey The key which the return value corresponds to.
      * @return The <a href ="https://www.freebsd.org/cgi/man.cgi?sysctl(8)">sysctl</a> value for {@code sysctlKey}.
      */
-    private static Integer sysctlGetInt(String sysctlKey) throws IOException {
+    private static int sysctlGetInt(String sysctlKey) throws IOException {
         Process process = new ProcessBuilder("sysctl", sysctlKey).start();
         try {
             // Suppress warnings about resource leaks since the buffered reader is closed below
@@ -243,7 +243,7 @@ public final class NetUtil {
                 if (line != null && line.startsWith(sysctlKey)) {
                     for (int i = line.length() - 1; i > sysctlKey.length(); --i) {
                         if (!Character.isDigit(line.charAt(i))) {
-                            return Integer.valueOf(line.substring(i + 1));
+                            return int.valueOf(line.substring(i + 1));
                         }
                     }
                 }
@@ -264,7 +264,7 @@ public final class NetUtil {
      * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Java SE
      *      networking properties</a>
      */
-    public static boolean isIpV4StackPreferred() {
+    public static bool isIpV4StackPreferred() {
         return IPV4_PREFERRED;
     }
 
@@ -275,7 +275,7 @@ public final class NetUtil {
      * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Java SE
      *      networking properties</a>
      */
-    public static boolean isIpV6AddressesPreferred() {
+    public static bool isIpV6AddressesPreferred() {
         return IPV6_ADDRESSES_PREFERRED;
     }
 
@@ -326,7 +326,7 @@ public final class NetUtil {
             int percentPos = ipAddressString.indexOf('%');
             if (percentPos >= 0) {
                 try {
-                    int scopeId = Integer.parseInt(ipAddressString.substring(percentPos + 1));
+                    int scopeId = int.parseInt(ipAddressString.substring(percentPos + 1));
                     ipAddressString = ipAddressString.substring(0, percentPos);
                     byte[] bytes = getIPv6ByName(ipAddressString, true);
                     if (bytes == null) {
@@ -447,11 +447,11 @@ public final class NetUtil {
         }
     }
 
-    public static boolean isValidIpV6Address(String ip) {
+    public static bool isValidIpV6Address(String ip) {
         return isValidIpV6Address((CharSequence) ip);
     }
 
-    public static boolean isValidIpV6Address(CharSequence ip) {
+    public static bool isValidIpV6Address(CharSequence ip) {
         int end = ip.length();
         if (end < 2) {
             return false;
@@ -571,7 +571,7 @@ public final class NetUtil {
                wordLen > 0 && (colons < 8 || compressBegin <= start);
     }
 
-    private static boolean isValidIpV4Word(CharSequence word, int from, int toExclusive) {
+    private static bool isValidIpV4Word(CharSequence word, int from, int toExclusive) {
         int len = toExclusive - from;
         char c0, c1, c2;
         if (len < 1 || len > 3 || (c0 = word.charAt(from)) < '0') {
@@ -586,27 +586,27 @@ public final class NetUtil {
         return c0 <= '9' && (len == 1 || isValidNumericChar(word.charAt(from + 1)));
     }
 
-    private static boolean isValidHexChar(char c) {
+    private static bool isValidHexChar(char c) {
         return c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f';
     }
 
-    private static boolean isValidNumericChar(char c) {
+    private static bool isValidNumericChar(char c) {
         return c >= '0' && c <= '9';
     }
 
-    private static boolean isValidIPv4MappedChar(char c) {
+    private static bool isValidIPv4MappedChar(char c) {
         return c == 'f' || c == 'F';
     }
 
-    private static boolean isValidIPv4MappedSeparators(byte b0, byte b1, boolean mustBeZero) {
+    private static bool isValidIPv4MappedSeparators(byte b0, byte b1, bool mustBeZero) {
         // We allow IPv4 Mapped (https://tools.ietf.org/html/rfc4291#section-2.5.5.1)
         // and IPv4 compatible (https://tools.ietf.org/html/rfc4291#section-2.5.5.1).
         // The IPv4 compatible is deprecated, but it allows parsing of plain IPv4 addressed into IPv6-Mapped addresses.
         return b0 == b1 && (b0 == 0 || !mustBeZero && b1 == -1);
     }
 
-    private static boolean isValidIPv4Mapped(byte[] bytes, int currentIndex, int compressBegin, int compressLength) {
-        final boolean mustBeZero = compressBegin + compressLength >= 14;
+    private static bool isValidIPv4Mapped(byte[] bytes, int currentIndex, int compressBegin, int compressLength) {
+        final bool mustBeZero = compressBegin + compressLength >= 14;
         return currentIndex <= 12 && currentIndex >= 2 && (!mustBeZero || compressBegin < 12) &&
                 isValidIPv4MappedSeparators(bytes[currentIndex - 1], bytes[currentIndex - 2], mustBeZero) &&
                 PlatformDependent.isZero(bytes, 0, currentIndex - 3);
@@ -618,7 +618,7 @@ public final class NetUtil {
      * @return true, if the string represents an IPV4 address in dotted
      *         notation, false otherwise
      */
-    public static boolean isValidIpV4Address(CharSequence ip) {
+    public static bool isValidIpV4Address(CharSequence ip) {
         return isValidIpV4Address(ip, 0, ip.length());
     }
 
@@ -628,18 +628,18 @@ public final class NetUtil {
      * @return true, if the string represents an IPV4 address in dotted
      *         notation, false otherwise
      */
-    public static boolean isValidIpV4Address(String ip) {
+    public static bool isValidIpV4Address(String ip) {
         return isValidIpV4Address(ip, 0, ip.length());
     }
 
-    private static boolean isValidIpV4Address(CharSequence ip, int from, int toExcluded) {
+    private static bool isValidIpV4Address(CharSequence ip, int from, int toExcluded) {
         return ip instanceof String ? isValidIpV4Address((String) ip, from, toExcluded) :
                 ip instanceof AsciiString ? isValidIpV4Address((AsciiString) ip, from, toExcluded) :
                         isValidIpV4Address0(ip, from, toExcluded);
     }
 
     @SuppressWarnings("DuplicateBooleanBranch")
-    private static boolean isValidIpV4Address(String ip, int from, int toExcluded) {
+    private static bool isValidIpV4Address(String ip, int from, int toExcluded) {
         int len = toExcluded - from;
         int i;
         return len <= 15 && len >= 7 &&
@@ -650,7 +650,7 @@ public final class NetUtil {
     }
 
     @SuppressWarnings("DuplicateBooleanBranch")
-    private static boolean isValidIpV4Address(AsciiString ip, int from, int toExcluded) {
+    private static bool isValidIpV4Address(AsciiString ip, int from, int toExcluded) {
         int len = toExcluded - from;
         int i;
         return len <= 15 && len >= 7 &&
@@ -661,7 +661,7 @@ public final class NetUtil {
     }
 
     @SuppressWarnings("DuplicateBooleanBranch")
-    private static boolean isValidIpV4Address0(CharSequence ip, int from, int toExcluded) {
+    private static bool isValidIpV4Address0(CharSequence ip, int from, int toExcluded) {
         int len = toExcluded - from;
         int i;
         return len <= 15 && len >= 7 &&
@@ -674,7 +674,7 @@ public final class NetUtil {
     /**
      * Returns the {@link Inet6Address} representation of a {@link CharSequence} IP address.
      * <p>
-     * This method will treat all IPv4 type addresses as "IPv4 mapped" (see {@link #getByName(CharSequence, boolean)})
+     * This method will treat all IPv4 type addresses as "IPv4 mapped" (see {@link #getByName(CharSequence, bool)})
      * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
@@ -696,7 +696,7 @@ public final class NetUtil {
      * </ul>
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
-    public static Inet6Address getByName(CharSequence ip, boolean ipv4Mapped) {
+    public static Inet6Address getByName(CharSequence ip, bool ipv4Mapped) {
         byte[] bytes = getIPv6ByName(ip, ipv4Mapped);
         if (bytes == null) {
             return null;
@@ -723,7 +723,7 @@ public final class NetUtil {
      * @return byte array representation of the {@code ip} or {@code null} if not a valid IP address.
      */
      // visible for test
-    static byte[] getIPv6ByName(CharSequence ip, boolean ipv4Mapped) {
+    static byte[] getIPv6ByName(CharSequence ip, bool ipv4Mapped) {
         final byte[] bytes = new byte[IPV6_BYTE_COUNT];
         final int ipLength = ip.length();
         int compressBegin = 0;
@@ -822,7 +822,7 @@ public final class NetUtil {
             }
         }
 
-        final boolean isCompressed = compressBegin > 0;
+        final bool isCompressed = compressBegin > 0;
         // Finish up last set of data that was accumulated in the loop (or before the loop)
         if (ipv4Separators > 0) {
             if (begin > 0 && i - begin > IPV4_MAX_CHAR_BETWEEN_SEPARATOR ||
@@ -920,7 +920,7 @@ public final class NetUtil {
                 host, portStr, !isValidIpV6Address(host)).append(':').append(portStr).toString();
     }
 
-    private static StringBuilder newSocketAddressStringBuilder(String host, String port, boolean ipv4) {
+    private static StringBuilder newSocketAddressStringBuilder(String host, String port, bool ipv4) {
         int hostLen = host.length();
         if (ipv4) {
             // Need to include enough space for hostString:port.
@@ -974,7 +974,7 @@ public final class NetUtil {
      * </ul>
      * @return {@code String} containing the text-formatted IP address
      */
-    public static String toAddressString(InetAddress ip, boolean ipv4Mapped) {
+    public static String toAddressString(InetAddress ip, bool ipv4Mapped) {
         if (ip instanceof Inet4Address) {
             return ip.getHostAddress();
         }
@@ -985,7 +985,7 @@ public final class NetUtil {
         return toAddressString(ip.getAddress(), 0, ipv4Mapped);
     }
 
-    private static String toAddressString(byte[] bytes, int offset, boolean ipv4Mapped) {
+    private static String toAddressString(byte[] bytes, int offset, bool ipv4Mapped) {
         final int[] words = new int[IPV6_WORD_COUNT];
         for (int i = 0; i < words.length; ++i) {
             int idx = (i << 1) + offset;
@@ -1029,19 +1029,19 @@ public final class NetUtil {
         final int shortestEnd = shortestStart + shortestLength;
         final StringBuilder b = new StringBuilder(IPV6_MAX_CHAR_COUNT);
         if (shortestEnd < 0) { // Optimization when there is no compressing needed
-            b.append(Integer.toHexString(words[0]));
+            b.append(int.toHexString(words[0]));
             for (int i = 1; i < words.length; ++i) {
                 b.append(':');
-                b.append(Integer.toHexString(words[i]));
+                b.append(int.toHexString(words[i]));
             }
         } else { // General case that can handle compressing (and not compressing)
             // Loop unroll the first index (so we don't constantly check i==0 cases in loop)
-            final boolean isIpv4Mapped;
+            final bool isIpv4Mapped;
             if (inRangeEndExclusive(0, shortestStart, shortestEnd)) {
                 b.append("::");
                 isIpv4Mapped = ipv4Mapped && (shortestEnd == 5 && words[5] == 0xffff);
             } else {
-                b.append(Integer.toHexString(words[0]));
+                b.append(int.toHexString(words[0]));
                 isIpv4Mapped = false;
             }
             for (int i = 1; i < words.length; ++i) {
@@ -1059,7 +1059,7 @@ public final class NetUtil {
                         b.append('.');
                         b.append(words[i] & 0xff);
                     } else {
-                        b.append(Integer.toHexString(words[i]));
+                        b.append(int.toHexString(words[i]));
                     }
                 } else if (!inRangeEndExclusive(i - 1, shortestStart, shortestEnd)) {
                     // If we are in the shortened sequence and the last index was not
@@ -1091,7 +1091,7 @@ public final class NetUtil {
      * <li>{@code false} otherwise</li>
      * </ul>
      */
-    private static boolean inRangeEndExclusive(int value, int start, int end) {
+    private static bool inRangeEndExclusive(int value, int start, int end) {
         return value >= start && value < end;
     }
 

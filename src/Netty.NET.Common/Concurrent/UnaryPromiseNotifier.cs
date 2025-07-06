@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Concurrent;
 
 /**
  *
- * @deprecated use {@link PromiseNotifier#cascade(boolean, Future, Promise)}.
+ * @deprecated use {@link PromiseNotifier#cascade(bool, Future, Promise)}.
  */
 @Deprecated
 public final class UnaryPromiseNotifier<T> implements FutureListener<T> {

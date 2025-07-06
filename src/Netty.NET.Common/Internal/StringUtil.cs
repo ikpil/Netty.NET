@@ -52,7 +52,7 @@ public final class StringUtil {
     static {
         // Generate the lookup table that converts a byte into a 2-digit hexadecimal integer.
         for (int i = 0; i < BYTE2HEX_PAD.length; i++) {
-            String str = Integer.toHexString(i);
+            String str = int.toHexString(i);
             BYTE2HEX_PAD[i] = i > 0xf ? str : ('0' + str);
             BYTE2HEX_NOPAD[i] = str;
         }
@@ -123,7 +123,7 @@ public final class StringUtil {
      * @param len length of the common suffix
      * @return true if both s and p are not null and both have the same suffix. Otherwise - false
      */
-    public static boolean commonSuffixOfLength(String s, String p, int len) {
+    public static bool commonSuffixOfLength(String s, String p, int len) {
         return s != null && p != null && len >= 0 && s.regionMatches(s.length() - len, p, p.length() - len, len);
     }
 
@@ -358,7 +358,7 @@ public final class StringUtil {
      *                       according to <a href="https://tools.ietf.org/html/rfc7230#section-7">RFC-7230</a>
      * @return {@link CharSequence} the escaped value if necessary, or the value unchanged
      */
-    public static CharSequence escapeCsv(CharSequence value, boolean trimWhiteSpace) {
+    public static CharSequence escapeCsv(CharSequence value, bool trimWhiteSpace) {
         int length = checkNotNull(value, "value").length();
         int start;
         int last;
@@ -374,7 +374,7 @@ public final class StringUtil {
         }
 
         int firstUnescapedSpecial = -1;
-        boolean quoted = false;
+        bool quoted = false;
         if (isDoubleQuote(value.charAt(start))) {
             quoted = isDoubleQuote(value.charAt(last)) && last > start;
             if (quoted) {
@@ -450,7 +450,7 @@ public final class StringUtil {
             return value;
         }
         int last = length - 1;
-        boolean quoted = isDoubleQuote(value.charAt(0)) && isDoubleQuote(value.charAt(last)) && length != 1;
+        bool quoted = isDoubleQuote(value.charAt(0)) && isDoubleQuote(value.charAt(last)) && length != 1;
         if (!quoted) {
             validateCsvFormat(value);
             return value;
@@ -484,7 +484,7 @@ public final class StringUtil {
     public static List<CharSequence> unescapeCsvFields(CharSequence value) {
         List<CharSequence> unescaped = new ArrayList<CharSequence>(2);
         StringBuilder current = InternalThreadLocalMap.get().stringBuilder();
-        boolean quoted = false;
+        bool quoted = false;
         int last = value.length() - 1;
         for (int i = 0; i <= last; i++) {
             char c = value.charAt(i);
@@ -579,7 +579,7 @@ public final class StringUtil {
     /**
      * Determine if a string is {@code null} or {@link String#isEmpty()} returns {@code true}.
      */
-    public static boolean isNullOrEmpty(String s) {
+    public static bool isNullOrEmpty(String s) {
         return s == null || s.isEmpty();
     }
 
@@ -623,11 +623,11 @@ public final class StringUtil {
      * @return {@code true} if {@code c} lies within the range of values defined for
      * <a href="https://unicode.org/glossary/#surrogate_code_point">Surrogate Code Point</a>. {@code false} otherwise.
      */
-    public static boolean isSurrogate(char c) {
+    public static bool isSurrogate(char c) {
         return c >= '\uD800' && c <= '\uDFFF';
     }
 
-    private static boolean isDoubleQuote(char c) {
+    private static bool isDoubleQuote(char c) {
         return c == DOUBLE_QUOTE;
     }
 
@@ -638,7 +638,7 @@ public final class StringUtil {
      * @param c the tested char
      * @return true if {@code s} ends with the char {@code c}
      */
-    public static boolean endsWith(CharSequence s, char c) {
+    public static bool endsWith(CharSequence s, char c) {
         int len = s.length();
         return len > 0 && s.charAt(len - 1) == c;
     }
@@ -712,7 +712,7 @@ public final class StringUtil {
         return i;
     }
 
-    private static boolean isOws(char c) {
+    private static bool isOws(char c) {
         return c == SPACE || c == TAB;
     }
 
