@@ -13,6 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Internal.Logging;
 
 
@@ -25,198 +28,220 @@ public abstract class AbstractInternalLogger : IInternalLogger
 {
     private static readonly string EXCEPTION_MESSAGE = "Unexpected exception:";
 
-    private readonly string name;
+    private readonly string _name;
 
     /**
      * Creates a new instance.
      */
     protected AbstractInternalLogger(string name) {
-        this.name = ObjectUtil.checkNotNull(name, "name");
+        this._name = ObjectUtil.checkNotNull(name, "name");
     }
 
-    @Override
     public string name() {
-        return name;
+        return _name;
     }
 
-    @Override
+    public abstract bool isTraceEnabled();
+    public abstract void trace(string msg);
+    public abstract void trace(string format, object arg);
+    public abstract void trace(string format, object argA, object argB);
+    public abstract void trace(string format, params object[] arguments);
+    public abstract void trace(string msg, Exception t);
+
     public bool isEnabled(InternalLogLevel level) {
         switch (level) {
-        case TRACE:
+        case InternalLogLevel.TRACE:
             return isTraceEnabled();
-        case DEBUG:
+        case InternalLogLevel.DEBUG:
             return isDebugEnabled();
-        case INFO:
+        case InternalLogLevel.INFO:
             return isInfoEnabled();
-        case WARN:
+        case InternalLogLevel.WARN:
             return isWarnEnabled();
-        case ERROR:
+        case InternalLogLevel.ERROR:
             return isErrorEnabled();
         default:
-            throw new Error();
+            throw new ArgumentOutOfRangeException();
         }
     }
 
-    @Override
     public void trace(Exception t) {
         trace(EXCEPTION_MESSAGE, t);
     }
 
-    @Override
+    public abstract bool isDebugEnabled();
+    public abstract void debug(string msg);
+    public abstract void debug(string format, object arg);
+    public abstract void debug(string format, object argA, object argB);
+    public abstract void debug(string format, params object[] arguments);
+    public abstract void debug(string msg, Exception t);
+
     public void debug(Exception t) {
         debug(EXCEPTION_MESSAGE, t);
     }
 
-    @Override
+    public abstract bool isInfoEnabled();
+    public abstract void info(string msg);
+    public abstract void info(string format, object arg);
+    public abstract void info(string format, object argA, object argB);
+    public abstract void info(string format, params object[] arguments);
+    public abstract void info(string msg, Exception t);
+
     public void info(Exception t) {
         info(EXCEPTION_MESSAGE, t);
     }
 
-    @Override
+    public abstract bool isWarnEnabled();
+    public abstract void warn(string msg);
+    public abstract void warn(string format, object arg);
+    public abstract void warn(string format, params object[] arguments);
+    public abstract void warn(string format, object argA, object argB);
+    public abstract void warn(string msg, Exception t);
+
     public void warn(Exception t) {
         warn(EXCEPTION_MESSAGE, t);
     }
 
-    @Override
+    public abstract bool isErrorEnabled();
+    public abstract void error(string msg);
+    public abstract void error(string format, object arg);
+    public abstract void error(string format, object argA, object argB);
+    public abstract void error(string format, params object[] arguments);
+    public abstract void error(string msg, Exception t);
+
     public void error(Exception t) {
         error(EXCEPTION_MESSAGE, t);
     }
 
-    @Override
     public void log(InternalLogLevel level, string msg, Exception cause) {
         switch (level) {
-        case TRACE:
+        case InternalLogLevel.TRACE:
             trace(msg, cause);
             break;
-        case DEBUG:
+        case InternalLogLevel.DEBUG:
             debug(msg, cause);
             break;
-        case INFO:
+        case InternalLogLevel.INFO:
             info(msg, cause);
             break;
-        case WARN:
+        case InternalLogLevel.WARN:
             warn(msg, cause);
             break;
-        case ERROR:
+        case InternalLogLevel.ERROR:
             error(msg, cause);
             break;
         default:
-            throw new Error();
+            throw new ArgumentOutOfRangeException();
         }
     }
 
-    @Override
     public void log(InternalLogLevel level, Exception cause) {
         switch (level) {
-            case TRACE:
+            case InternalLogLevel.TRACE:
                 trace(cause);
                 break;
-            case DEBUG:
+            case InternalLogLevel.DEBUG:
                 debug(cause);
                 break;
-            case INFO:
+            case InternalLogLevel.INFO:
                 info(cause);
                 break;
-            case WARN:
+            case InternalLogLevel.WARN:
                 warn(cause);
                 break;
-            case ERROR:
+            case InternalLogLevel.ERROR:
                 error(cause);
                 break;
             default:
-                throw new Error();
+                throw new ArgumentOutOfRangeException();
         }
     }
 
-    @Override
     public void log(InternalLogLevel level, string msg) {
         switch (level) {
-        case TRACE:
+        case InternalLogLevel.TRACE:
             trace(msg);
             break;
-        case DEBUG:
+        case InternalLogLevel.DEBUG:
             debug(msg);
             break;
-        case INFO:
+        case InternalLogLevel.INFO:
             info(msg);
             break;
-        case WARN:
+        case InternalLogLevel.WARN:
             warn(msg);
             break;
-        case ERROR:
+        case InternalLogLevel.ERROR:
             error(msg);
             break;
         default:
-            throw new Error();
+            throw new ArgumentOutOfRangeException();
         }
     }
 
-    @Override
     public void log(InternalLogLevel level, string format, object arg) {
         switch (level) {
-        case TRACE:
+        case InternalLogLevel.TRACE:
             trace(format, arg);
             break;
-        case DEBUG:
+        case InternalLogLevel.DEBUG:
             debug(format, arg);
             break;
-        case INFO:
+        case InternalLogLevel.INFO:
             info(format, arg);
             break;
-        case WARN:
+        case InternalLogLevel.WARN:
             warn(format, arg);
             break;
-        case ERROR:
+        case InternalLogLevel.ERROR:
             error(format, arg);
             break;
         default:
-            throw new Error();
+            throw new ArgumentOutOfRangeException();
         }
     }
 
-    @Override
     public void log(InternalLogLevel level, string format, object argA, object argB) {
         switch (level) {
-        case TRACE:
+        case InternalLogLevel.TRACE:
             trace(format, argA, argB);
             break;
-        case DEBUG:
+        case InternalLogLevel.DEBUG:
             debug(format, argA, argB);
             break;
-        case INFO:
+        case InternalLogLevel.INFO:
             info(format, argA, argB);
             break;
-        case WARN:
+        case InternalLogLevel.WARN:
             warn(format, argA, argB);
             break;
-        case ERROR:
+        case InternalLogLevel.ERROR:
             error(format, argA, argB);
             break;
         default:
-            throw new Error();
+            throw new ArgumentOutOfRangeException();
         }
     }
 
-    @Override
     public void log(InternalLogLevel level, string format, params object[] arguments) {
         switch (level) {
-        case TRACE:
+        case InternalLogLevel.TRACE:
             trace(format, arguments);
             break;
-        case DEBUG:
+        case InternalLogLevel.DEBUG:
             debug(format, arguments);
             break;
-        case INFO:
+        case InternalLogLevel.INFO:
             info(format, arguments);
             break;
-        case WARN:
+        case InternalLogLevel.WARN:
             warn(format, arguments);
             break;
-        case ERROR:
+        case InternalLogLevel.ERROR:
             error(format, arguments);
             break;
         default:
-            throw new Error();
+            throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -224,8 +249,7 @@ public abstract class AbstractInternalLogger : IInternalLogger
         return InternalLoggerFactory.getInstance(name());
     }
 
-    @Override
-    public string toString() {
+    public override string ToString() {
         return StringUtil.simpleClassName(this) + '(' + name() + ')';
     }
 }
