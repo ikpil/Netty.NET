@@ -123,7 +123,7 @@ public class DefaultProgressivePromise<V> extends DefaultPromise<V> : Progressiv
     }
 
     @Override
-    public ProgressivePromise<V> setFailure(Throwable cause) {
+    public ProgressivePromise<V> setFailure(Exception cause) {
         super.setFailure(cause);
         return this;
     }

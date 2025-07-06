@@ -158,7 +158,7 @@ class JdkLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void trace(string msg, Throwable t) {
+    public void trace(string msg, Exception t) {
         if (logger.isLoggable(Level.FINEST)) {
             log(SELF, Level.FINEST, msg, t);
         }
@@ -263,7 +263,7 @@ class JdkLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void debug(string msg, Throwable t) {
+    public void debug(string msg, Exception t) {
         if (logger.isLoggable(Level.FINE)) {
             log(SELF, Level.FINE, msg, t);
         }
@@ -369,7 +369,7 @@ class JdkLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void info(string msg, Throwable t) {
+    public void info(string msg, Exception t) {
         if (logger.isLoggable(Level.INFO)) {
             log(SELF, Level.INFO, msg, t);
         }
@@ -477,7 +477,7 @@ class JdkLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void warn(string msg, Throwable t) {
+    public void warn(string msg, Exception t) {
         if (logger.isLoggable(Level.WARNING)) {
             log(SELF, Level.WARNING, msg, t);
         }
@@ -584,7 +584,7 @@ class JdkLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void error(string msg, Throwable t) {
+    public void error(string msg, Exception t) {
         if (logger.isLoggable(Level.SEVERE)) {
             log(SELF, Level.SEVERE, msg, t);
         }
@@ -597,7 +597,7 @@ class JdkLogger extends AbstractInternalLogger {
      *
      * See bug report #13 for more details.
      */
-    private void log(string callerFQCN, Level level, string msg, Throwable t) {
+    private void log(string callerFQCN, Level level, string msg, Exception t) {
         // millis and thread are filled by the constructor
         LogRecord record = new LogRecord(level, msg);
         record.setLoggerName(name());
@@ -616,7 +616,7 @@ class JdkLogger extends AbstractInternalLogger {
      *          The record to update
      */
     private static void fillCallerData(string callerFQCN, LogRecord record) {
-        StackTraceElement[] steArray = new Throwable().getStackTrace();
+        StackTraceElement[] steArray = new Exception().getStackTrace();
 
         int selfIndex = -1;
         for (int i = 0; i < steArray.length; i++) {

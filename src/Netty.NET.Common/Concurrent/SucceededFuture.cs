@@ -34,7 +34,7 @@ public final class SucceededFuture<V> extends CompleteFuture<V> {
     }
 
     @Override
-    public Throwable cause() {
+    public Exception cause() {
         return null;
     }
 

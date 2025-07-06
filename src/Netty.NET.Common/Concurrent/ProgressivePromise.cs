@@ -37,7 +37,7 @@ public interface ProgressivePromise<V> extends Promise<V>, ProgressiveFuture<V> 
     ProgressivePromise<V> setSuccess(V result);
 
     @Override
-    ProgressivePromise<V> setFailure(Throwable cause);
+    ProgressivePromise<V> setFailure(Exception cause);
 
     @Override
     ProgressivePromise<V> addListener(GenericFutureListener<? extends Future<? super V>> listener);

@@ -61,32 +61,32 @@ public abstract class AbstractInternalLogger : IInternalLogger
     }
 
     @Override
-    public void trace(Throwable t) {
+    public void trace(Exception t) {
         trace(EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void debug(Throwable t) {
+    public void debug(Exception t) {
         debug(EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void info(Throwable t) {
+    public void info(Exception t) {
         info(EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void warn(Throwable t) {
+    public void warn(Exception t) {
         warn(EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void error(Throwable t) {
+    public void error(Exception t) {
         error(EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void log(InternalLogLevel level, string msg, Throwable cause) {
+    public void log(InternalLogLevel level, string msg, Exception cause) {
         switch (level) {
         case TRACE:
             trace(msg, cause);
@@ -109,7 +109,7 @@ public abstract class AbstractInternalLogger : IInternalLogger
     }
 
     @Override
-    public void log(InternalLogLevel level, Throwable cause) {
+    public void log(InternalLogLevel level, Exception cause) {
         switch (level) {
             case TRACE:
                 trace(cause);

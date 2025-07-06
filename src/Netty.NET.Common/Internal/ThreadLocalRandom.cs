@@ -104,7 +104,7 @@ public final class ThreadLocalRandom extends Random {
                 seedGeneratorThread.setDaemon(true);
                 seedGeneratorThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
                     @Override
-                    public void uncaughtException(Thread t, Throwable e) {
+                    public void uncaughtException(Thread t, Exception e) {
                         logger.debug("An exception has been raised by {}", t.getName(), e);
                     }
                 });

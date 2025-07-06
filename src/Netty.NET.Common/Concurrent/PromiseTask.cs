@@ -90,7 +90,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
     }
 
     @SuppressWarnings("unchecked")
-    V runTask() throws Throwable {
+    V runTask() throws Exception {
         final object task = this.task;
         if (task instanceof Callable) {
             return ((Callable<V>) task).call();
@@ -106,7 +106,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
                 V result = runTask();
                 setSuccessInternal(result);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             setFailureInternal(e);
         }
     }
@@ -123,22 +123,22 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
     }
 
     @Override
-    public final Promise<V> setFailure(Throwable cause) {
+    public final Promise<V> setFailure(Exception cause) {
         throw new IllegalStateException();
     }
 
-    protected final Promise<V> setFailureInternal(Throwable cause) {
+    protected final Promise<V> setFailureInternal(Exception cause) {
         super.setFailure(cause);
         clearTaskAfterCompletion(true, FAILED);
         return this;
     }
 
     @Override
-    public final bool tryFailure(Throwable cause) {
+    public final bool tryFailure(Exception cause) {
         return false;
     }
 
-    protected final bool tryFailureInternal(Throwable cause) {
+    protected final bool tryFailureInternal(Exception cause) {
         return clearTaskAfterCompletion(super.tryFailure(cause), FAILED);
     }
 

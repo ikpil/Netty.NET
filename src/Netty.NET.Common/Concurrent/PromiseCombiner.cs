@@ -36,7 +36,7 @@ public final class PromiseCombiner {
     private int expectedCount;
     private int doneCount;
     private Promise<Void> aggregatePromise;
-    private Throwable cause;
+    private Exception cause;
     private final GenericFutureListener<Future<?>> listener = new GenericFutureListener<Future<?>>() {
         @Override
         public void operationComplete(final Future<?> future) {

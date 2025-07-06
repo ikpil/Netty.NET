@@ -172,7 +172,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, 
                     }
                 }
             }
-        } catch (Throwable cause) {
+        } catch (Exception cause) {
             setFailureInternal(cause);
         }
     }

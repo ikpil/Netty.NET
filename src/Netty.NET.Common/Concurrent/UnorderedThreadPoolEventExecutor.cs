@@ -125,7 +125,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public <V> Future<V> newFailedFuture(Throwable cause) {
+    public <V> Future<V> newFailedFuture(Exception cause) {
         return new FailedFuture<V>(this, cause);
     }
 
@@ -233,7 +233,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         }
 
         @Override
-        V runTask() throws Throwable {
+        V runTask() throws Exception {
             V result =  super.runTask();
             if (result == null && wasCallable) {
                 // If this RunnableScheduledFutureTask wraps a RunnableScheduledFuture that wraps a Callable we need
@@ -259,7 +259,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
                 try {
                     // Its a periodic task so we need to ignore the return value
                     runTask();
-                } catch (Throwable cause) {
+                } catch (Exception cause) {
                     if (!tryFailureInternal(cause)) {
                         logger.warn("Failure during execution of task", cause);
                     }

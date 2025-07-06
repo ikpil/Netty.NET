@@ -282,7 +282,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : 
                 if (task != null) {
                     try {
                         runTask(task);
-                    } catch (Throwable t) {
+                    } catch (Exception t) {
                         logger.warn("Unexpected exception from the global event executor: ", t);
                     }
 

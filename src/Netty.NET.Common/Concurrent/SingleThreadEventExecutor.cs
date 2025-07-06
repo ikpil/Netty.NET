@@ -637,7 +637,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             for (Runnable task: copy) {
                 try {
                     runTask(task);
-                } catch (Throwable t) {
+                } catch (Exception t) {
                     logger.warn("Shutdown hook raised an exception.", t);
                 } finally {
                     ran = true;
@@ -1039,7 +1039,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (oldState == ST_NOT_STARTED || oldState == ST_SUSPENDED) {
             try {
                 doStartThread();
-            } catch (Throwable cause) {
+            } catch (Exception cause) {
                 STATE_UPDATER.set(this, ST_TERMINATED);
                 terminationFuture.tryFailure(cause);
 
@@ -1065,7 +1065,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                     interrupted = false;
                 }
                 bool success = false;
-                Throwable unexpectedException = null;
+                Exception unexpectedException = null;
                 updateLastExecutionTime();
                 bool suspend = false;
                 try {
@@ -1091,7 +1091,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                         }
                         break;
                     }
-                } catch (Throwable t) {
+                } catch (Exception t) {
                     unexpectedException = t;
                     logger.warn("Unexpected exception from an event executor: ", t);
                 } finally {

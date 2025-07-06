@@ -104,13 +104,13 @@ public final class NativeLibraryLoader {
      *         if none of the given libraries load successfully.
      */
     public static void loadFirstAvailable(ClassLoader loader, string... names) {
-        List<Throwable> suppressed = new ArrayList<Throwable>();
+        List<Exception> suppressed = new ArrayList<Exception>();
         for (string name : names) {
             try {
                 load(name, loader);
                 logger.debug("Loaded library with name '{}'", name);
                 return;
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 suppressed.add(t);
             }
         }
@@ -160,12 +160,12 @@ public final class NativeLibraryLoader {
     public static void load(string originalName, ClassLoader loader) {
         string mangledPackagePrefix = calculateMangledPackagePrefix();
         string name = mangledPackagePrefix + originalName;
-        List<Throwable> suppressed = new ArrayList<>();
+        List<Exception> suppressed = new ArrayList<>();
         try {
             // first try to load from java.library.path
             loadLibrary(loader, name, false);
             return;
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             suppressed.add(ex);
         }
 
@@ -233,7 +233,7 @@ public final class NativeLibraryLoader {
                     suppressed.add(ThrowableUtil.unknownStackTrace(
                             new UnsatisfiedLinkError(message), NativeLibraryLoader.class, "load"));
                 }
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 suppressed.add(t);
                 logger.debug("Error checking if {} is on a file store mounted with noexec", tmpFile, t);
             }
@@ -379,7 +379,7 @@ public final class NativeLibraryLoader {
      * @param absolute - Whether the native library will be loaded by path or by name
      */
     private static void loadLibrary(final ClassLoader loader, final string name, final bool absolute) {
-        Throwable suppressed = null;
+        Exception suppressed = null;
         try {
             try {
                 // Make sure the helper belongs to the target ClassLoader.
@@ -424,10 +424,10 @@ public final class NativeLibraryLoader {
                 }
             }
         });
-        if (ret instanceof Throwable) {
-            Throwable t = (Throwable) ret;
+        if (ret instanceof Exception) {
+            Exception t = (Exception) ret;
             assert !(t instanceof UnsatisfiedLinkError) : t + " should be a wrapper throwable";
-            Throwable cause = t.getCause();
+            Exception cause = t.getCause();
             if (cause instanceof UnsatisfiedLinkError) {
                 throw (UnsatisfiedLinkError) cause;
             }

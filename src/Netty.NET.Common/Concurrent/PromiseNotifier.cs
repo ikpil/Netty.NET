@@ -125,7 +125,7 @@ public class PromiseNotifier<V, F extends Future<V>> : GenericFutureListener<F> 
                 PromiseNotificationUtil.tryCancel(p, internalLogger);
             }
         } else {
-            Throwable cause = future.cause();
+            Exception cause = future.cause();
             for (Promise<? super V> p: promises) {
                 PromiseNotificationUtil.tryFailure(p, cause, internalLogger);
             }

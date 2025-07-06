@@ -45,7 +45,7 @@ public abstract class ReferenceCountUpdater<T extends ReferenceCounted> {
             if (PlatformDependent.hasUnsafe()) {
                 return PlatformDependent.objectFieldOffset(clz.getDeclaredField(fieldName));
             }
-        } catch (Throwable ignore) {
+        } catch (Exception ignore) {
             // fall-back
         }
         return -1;

@@ -94,7 +94,7 @@ public class PromiseAggregator<V, F extends Future<V>> : GenericFutureListener<F
         } else {
             pendingPromises.remove(future);
             if (!future.isSuccess()) {
-                Throwable cause = future.cause();
+                Exception cause = future.cause();
                 aggregatePromise.setFailure(cause);
                 if (failPending) {
                     for (Promise<V> pendingFuture : pendingPromises) {

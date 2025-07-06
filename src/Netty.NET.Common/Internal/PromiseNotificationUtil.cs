@@ -30,7 +30,7 @@ public final class PromiseNotificationUtil {
      */
     public static void tryCancel(Promise<?> p, InternalLogger logger) {
         if (!p.cancel(false) && logger != null) {
-            Throwable err = p.cause();
+            Exception err = p.cause();
             if (err == null) {
                 logger.warn("Failed to cancel promise because it has succeeded already: {}", p);
             } else {
@@ -46,7 +46,7 @@ public final class PromiseNotificationUtil {
      */
     public static <V> void trySuccess(Promise<? super V> p, V result, InternalLogger logger) {
         if (!p.trySuccess(result) && logger != null) {
-            Throwable err = p.cause();
+            Exception err = p.cause();
             if (err == null) {
                 logger.warn("Failed to mark a promise as success because it has succeeded already: {}", p);
             } else {
@@ -60,9 +60,9 @@ public final class PromiseNotificationUtil {
     /**
      * Try to mark the {@link Promise} as failure and log if {@code logger} is not {@code null} in case this fails.
      */
-    public static void tryFailure(Promise<?> p, Throwable cause, InternalLogger logger) {
+    public static void tryFailure(Promise<?> p, Exception cause, InternalLogger logger) {
         if (!p.tryFailure(cause) && logger != null) {
-            Throwable err = p.cause();
+            Exception err = p.cause();
             if (err == null) {
                 logger.warn("Failed to mark a promise as failure because it has succeeded already: {}", p, cause);
             } else if (logger.isWarnEnabled()) {

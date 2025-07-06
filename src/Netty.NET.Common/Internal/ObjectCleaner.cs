@@ -61,7 +61,7 @@ public final class ObjectCleaner {
                     if (reference != null) {
                         try {
                             reference.cleanup();
-                        } catch (Throwable ignored) {
+                        } catch (Exception ignored) {
                             // ignore exceptions, and don't log in case the logger throws an exception, blocks, or has
                             // other unexpected side effects.
                         }

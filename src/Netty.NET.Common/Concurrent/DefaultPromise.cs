@@ -119,7 +119,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public Promise<V> setFailure(Throwable cause) {
+    public Promise<V> setFailure(Exception cause) {
         if (setFailure0(cause)) {
             return this;
         }
@@ -127,7 +127,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public bool tryFailure(Throwable cause) {
+    public bool tryFailure(Exception cause) {
         return setFailure0(cause);
     }
 
@@ -156,7 +156,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
 
         // Suppress a warning since the method doesn't need synchronization
         @Override
-        public Throwable fillInStackTrace() {
+        public Exception fillInStackTrace() {
             setStackTrace(CANCELLATION_STACK);
             return this;
         }
@@ -168,11 +168,11 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public Throwable cause() {
+    public Exception cause() {
         return cause0(result);
     }
 
-    private Throwable cause0(object result) {
+    private Exception cause0(object result) {
         if (!(result instanceof CauseHolder)) {
             return null;
         }
@@ -354,7 +354,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         if (result == SUCCESS || result == UNCANCELLABLE) {
             return null;
         }
-        Throwable cause = cause0(result);
+        Exception cause = cause0(result);
         if (cause == null) {
             return (V) result;
         }
@@ -377,7 +377,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         if (result == SUCCESS || result == UNCANCELLABLE) {
             return null;
         }
-        Throwable cause = cause0(result);
+        Exception cause = cause0(result);
         if (cause == null) {
             return (V) result;
         }
@@ -601,7 +601,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     private static void notifyListener0(Future future, GenericFutureListener l) {
         try {
             l.operationComplete(future);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             if (logger.isWarnEnabled()) {
                 logger.warn("An exception was thrown by " + l.getClass().getName() + ".operationComplete()", t);
             }
@@ -638,7 +638,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         return setValue0(result == null ? SUCCESS : result);
     }
 
-    private bool setFailure0(Throwable cause) {
+    private bool setFailure0(Exception cause) {
         return setValue0(new CauseHolder(checkNotNull(cause, "cause")));
     }
 
@@ -676,7 +676,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     private void rethrowIfFailed() {
-        Throwable cause = cause();
+        Exception cause = cause();
         if (cause == null) {
             return;
         }
@@ -851,7 +851,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
             ProgressiveFuture future, GenericProgressiveFutureListener l, long progress, long total) {
         try {
             l.operationProgressed(future, progress, total);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             if (logger.isWarnEnabled()) {
                 logger.warn("An exception was thrown by " + l.getClass().getName() + ".operationProgressed()", t);
             }
@@ -867,8 +867,8 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     private static final class CauseHolder {
-        final Throwable cause;
-        CauseHolder(Throwable cause) {
+        final Exception cause;
+        CauseHolder(Exception cause) {
             this.cause = cause;
         }
     }
@@ -876,7 +876,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     private static void safeExecute(EventExecutor executor, Runnable task) {
         try {
             executor.execute(task);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             rejectedExecutionLogger.error("Failed to submit a listener notification task. Event loop shut down?", t);
         }
     }
@@ -890,7 +890,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         // Override fillInStackTrace() so we not populate the backtrace via a native call and so leak the
         // Classloader.
         @Override
-        public Throwable fillInStackTrace() {
+        public Exception fillInStackTrace() {
             return this;
         }
 

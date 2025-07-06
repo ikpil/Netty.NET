@@ -44,7 +44,7 @@ public interface Promise<V> extends Future<V> {
      *
      * If it is success or failed already it will throw an {@link IllegalStateException}.
      */
-    Promise<V> setFailure(Throwable cause);
+    Promise<V> setFailure(Exception cause);
 
     /**
      * Marks this future as a failure and notifies all
@@ -54,7 +54,7 @@ public interface Promise<V> extends Future<V> {
      *         a failure. Otherwise {@code false} because this future is
      *         already marked as either a success or a failure.
      */
-    bool tryFailure(Throwable cause);
+    bool tryFailure(Exception cause);
 
     /**
      * Make this future impossible to cancel.

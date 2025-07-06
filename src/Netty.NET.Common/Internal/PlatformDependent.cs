@@ -92,7 +92,7 @@ public final class PlatformDependent {
 
     private static final bool CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !isAndroid();
 
-    private static final Throwable UNSAFE_UNAVAILABILITY_CAUSE = unsafeUnavailabilityCause0();
+    private static final Exception UNSAFE_UNAVAILABILITY_CAUSE = unsafeUnavailabilityCause0();
     private static final bool DIRECT_BUFFER_PREFERRED;
     private static final bool EXPLICIT_NO_PREFER_DIRECT;
     private static final long MAX_DIRECT_MEMORY = estimateMaxDirectMemory();
@@ -244,11 +244,11 @@ public final class PlatformDependent {
         LINUX_OS_CLASSIFIERS = Collections.unmodifiableSet(availableClassifiers);
 
         bool jfrAvailable;
-        Throwable jfrFailure = null;
+        Exception jfrFailure = null;
         try {
             //noinspection Since15
             jfrAvailable = FlightRecorder.isAvailable();
-        } catch (Throwable t) {
+        } catch (Exception t) {
             jfrFailure = t;
             jfrAvailable = false;
         }
@@ -407,7 +407,7 @@ public final class PlatformDependent {
     /**
      * Return the reason (if any) why {@code sun.misc.Unsafe} was not available.
      */
-    public static Throwable getUnsafeUnavailabilityCause() {
+    public static Exception getUnsafeUnavailabilityCause() {
         return UNSAFE_UNAVAILABILITY_CAUSE;
     }
 
@@ -499,7 +499,7 @@ public final class PlatformDependent {
     /**
      * Raises an exception bypassing compiler checks for checked exceptions.
      */
-    public static void throwException(Throwable t) {
+    public static void throwException(Exception t) {
         PlatformDependent0.throwException(t);
     }
 
@@ -839,7 +839,7 @@ public final class PlatformDependent {
         incrementMemoryCounter(capacity);
         try {
             return PlatformDependent0.allocateDirectNoCleaner(capacity);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             decrementMemoryCounter(capacity);
             throwException(e);
             return null;
@@ -867,7 +867,7 @@ public final class PlatformDependent {
         incrementMemoryCounter(len);
         try {
             return PlatformDependent0.reallocateDirectNoCleaner(buffer, capacity);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             decrementMemoryCounter(len);
             throwException(e);
             return null;
@@ -1239,7 +1239,7 @@ public final class PlatformDependent {
         return "root".equals(username) || "toor".equals(username);
     }
 
-    private static Throwable unsafeUnavailabilityCause0() {
+    private static Exception unsafeUnavailabilityCause0() {
         if (isAndroid()) {
             logger.debug("sun.misc.Unsafe: unavailable (Android)");
             return new UnsupportedOperationException("sun.misc.Unsafe: unavailable (Android)");
@@ -1250,7 +1250,7 @@ public final class PlatformDependent {
             return new UnsupportedOperationException("sun.misc.Unsafe: unavailable (IKVM.NET)");
         }
 
-        Throwable cause = PlatformDependent0.getUnsafeUnavailabilityCause();
+        Exception cause = PlatformDependent0.getUnsafeUnavailabilityCause();
         if (cause != null) {
             return cause;
         }
@@ -1259,7 +1259,7 @@ public final class PlatformDependent {
             bool hasUnsafe = PlatformDependent0.hasUnsafe();
             logger.debug("sun.misc.Unsafe: {}", hasUnsafe ? "available" : "unavailable");
             return null;
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.trace("Could not determine if Unsafe is available", t);
             // Probably failed to initialize PlatformDependent0.
             return new UnsupportedOperationException("Could not determine if Unsafe is available", t);
@@ -1357,7 +1357,7 @@ public final class PlatformDependent {
                 }
                 break;
             }
-        } catch (Throwable ignored) {
+        } catch (Exception ignored) {
             // Ignore
         }
 
@@ -1415,7 +1415,7 @@ public final class PlatformDependent {
                     return f;
                 }
             }
-        } catch (Throwable ignored) {
+        } catch (Exception ignored) {
             // Environment variable inaccessible
         }
 

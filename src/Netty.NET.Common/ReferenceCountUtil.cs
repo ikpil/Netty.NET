@@ -114,7 +114,7 @@ public final class ReferenceCountUtil {
     public static void safeRelease(object msg) {
         try {
             release(msg);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.warn("Failed to release a message: {}", msg, t);
         }
     }
@@ -130,7 +130,7 @@ public final class ReferenceCountUtil {
         try {
             ObjectUtil.checkPositive(decrement, "decrement");
             release(msg, decrement);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             if (logger.isWarnEnabled()) {
                 logger.warn("Failed to release a message: {} (decrement: {})", msg, decrement, t);
             }

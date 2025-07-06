@@ -37,7 +37,7 @@ final class CleanerJava9 : Cleaner {
 
     static {
         final MethodHandle method;
-        final Throwable error;
+        final Exception error;
         if (PlatformDependent0.hasUnsafe()) {
             final ByteBuffer buffer = ByteBuffer.allocateDirect(1);
             object maybeInvokeMethod = AccessController.doPrivileged(new PrivilegedAction<object>() {
@@ -52,15 +52,15 @@ final class CleanerJava9 : Cleaner {
                         invokeCleaner = invokeCleaner.bindTo(PlatformDependent0.UNSAFE);
                         invokeCleaner.invokeExact(buffer);
                         return invokeCleaner;
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         return e;
                     }
                 }
             });
 
-            if (maybeInvokeMethod instanceof Throwable) {
+            if (maybeInvokeMethod instanceof Exception) {
                 method = null;
-                error = (Throwable) maybeInvokeMethod;
+                error = (Exception) maybeInvokeMethod;
             } else {
                 method = (MethodHandle) maybeInvokeMethod;
                 error = null;
@@ -98,7 +98,7 @@ final class CleanerJava9 : Cleaner {
         if (System.getSecurityManager() == null) {
             try {
                 INVOKE_CLEANER.invokeExact(buffer);
-            } catch (Throwable cause) {
+            } catch (Exception cause) {
                 PlatformDependent0.throwException(cause);
             }
         } else {
@@ -107,12 +107,12 @@ final class CleanerJava9 : Cleaner {
     }
 
     private static void freeDirectBufferPrivileged(final ByteBuffer buffer) {
-        Throwable error = AccessController.doPrivileged(new PrivilegedAction<Throwable>() {
+        Exception error = AccessController.doPrivileged(new PrivilegedAction<Exception>() {
             @Override
-            public Throwable run() {
+            public Exception run() {
                 try {
                     INVOKE_CLEANER.invokeExact(buffer);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     return e;
                 }
                 return null;

@@ -182,7 +182,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void trace(string msg, Throwable t) {
+    public void trace(string msg, Exception t) {
         logger.log(FQCN, traceCapable ? Level.TRACE : Level.DEBUG, msg, t);
     }
 
@@ -283,7 +283,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void debug(string msg, Throwable t) {
+    public void debug(string msg, Exception t) {
         logger.log(FQCN, Level.DEBUG, msg, t);
     }
 
@@ -385,7 +385,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void info(string msg, Throwable t) {
+    public void info(string msg, Exception t) {
         logger.log(FQCN, Level.INFO, msg, t);
     }
 
@@ -488,7 +488,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void warn(string msg, Throwable t) {
+    public void warn(string msg, Exception t) {
         logger.log(FQCN, Level.WARN, msg, t);
     }
 
@@ -591,7 +591,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void error(string msg, Throwable t) {
+    public void error(string msg, Exception t) {
         logger.log(FQCN, Level.ERROR, msg, t);
     }
 }

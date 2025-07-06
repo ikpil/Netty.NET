@@ -134,12 +134,12 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService : Ev
     }
 
     /**
-     * Try to execute the given {@link Runnable} and just log if it throws a {@link Throwable}.
+     * Try to execute the given {@link Runnable} and just log if it throws a {@link Exception}.
      */
     protected static void safeExecute(Runnable task) {
         try {
             runTask(task);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             logger.warn("A task raised an exception. Task: {}", task, t);
         }
     }

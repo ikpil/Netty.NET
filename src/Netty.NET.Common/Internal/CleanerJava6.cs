@@ -40,7 +40,7 @@ final class CleanerJava6 : Cleaner {
 
     static {
         MethodHandle clean;
-        Throwable error = null;
+        Exception error = null;
         final ByteBuffer direct = ByteBuffer.allocateDirect(1);
         try {
             object mayBeCleanerField = AccessController.doPrivileged(new PrivilegedAction<object>() {
@@ -70,18 +70,18 @@ final class CleanerJava6 : Cleaner {
                         clean = MethodHandles.explicitCastArguments(clean,
                                 methodType(void.class, ByteBuffer.class));
                         return clean;
-                    } catch (Throwable cause) {
+                    } catch (Exception cause) {
                         return cause;
                     }
                 }
             });
-            if (mayBeCleanerField instanceof Throwable) {
-                throw (Throwable) mayBeCleanerField;
+            if (mayBeCleanerField instanceof Exception) {
+                throw (Exception) mayBeCleanerField;
             }
 
             clean = (MethodHandle) mayBeCleanerField;
             clean.invokeExact(direct);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // We don't have ByteBuffer.cleaner().
             clean = null;
             error = t;
@@ -117,7 +117,7 @@ final class CleanerJava6 : Cleaner {
         if (System.getSecurityManager() == null) {
             try {
                 freeDirectBuffer0(buffer);
-            } catch (Throwable cause) {
+            } catch (Exception cause) {
                 PlatformDependent0.throwException(cause);
             }
         } else {
@@ -126,13 +126,13 @@ final class CleanerJava6 : Cleaner {
     }
 
     private static void freeDirectBufferPrivileged(final ByteBuffer buffer) {
-        Throwable cause = AccessController.doPrivileged(new PrivilegedAction<Throwable>() {
+        Exception cause = AccessController.doPrivileged(new PrivilegedAction<Exception>() {
             @Override
-            public Throwable run() {
+            public Exception run() {
                 try {
                     freeDirectBuffer0(buffer);
                     return null;
-                } catch (Throwable cause) {
+                } catch (Exception cause) {
                     return cause;
                 }
             }
@@ -142,7 +142,7 @@ final class CleanerJava6 : Cleaner {
         }
     }
 
-    private static void freeDirectBuffer0(ByteBuffer buffer) throws Throwable {
+    private static void freeDirectBuffer0(ByteBuffer buffer) throws Exception {
         CLEAN_METHOD.invokeExact(buffer);
     }
 

@@ -57,7 +57,7 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void trace(string msg, Throwable t) {
+    public void trace(string msg, Exception t) {
         logger.trace(msg, t);
     }
 
@@ -87,7 +87,7 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void debug(string msg, Throwable t) {
+    public void debug(string msg, Exception t) {
         logger.debug(msg, t);
     }
 
@@ -117,7 +117,7 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void info(string msg, Throwable t) {
+    public void info(string msg, Exception t) {
         logger.info(msg, t);
     }
 
@@ -147,7 +147,7 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void warn(string msg, Throwable t) {
+    public void warn(string msg, Exception t) {
         logger.warn(msg, t);
     }
 
@@ -177,7 +177,7 @@ final class Slf4JLogger extends AbstractInternalLogger {
     }
 
     @Override
-    public void error(string msg, Throwable t) {
+    public void error(string msg, Exception t) {
         logger.error(msg, t);
     }
 }

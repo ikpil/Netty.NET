@@ -65,27 +65,27 @@ class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
     }
 
     @Override
-    public void trace(Throwable t) {
+    public void trace(Exception t) {
         log(Level.TRACE, EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void debug(Throwable t) {
+    public void debug(Exception t) {
         log(Level.DEBUG, EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void info(Throwable t) {
+    public void info(Exception t) {
         log(Level.INFO, EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void warn(Throwable t) {
+    public void warn(Exception t) {
         log(Level.WARN, EXCEPTION_MESSAGE, t);
     }
 
     @Override
-    public void error(Throwable t) {
+    public void error(Exception t) {
         log(Level.ERROR, EXCEPTION_MESSAGE, t);
     }
 
@@ -115,12 +115,12 @@ class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
     }
 
     @Override
-    public void log(InternalLogLevel level, string msg, Throwable t) {
+    public void log(InternalLogLevel level, string msg, Exception t) {
         log(toLevel(level), msg, t);
     }
 
     @Override
-    public void log(InternalLogLevel level, Throwable t) {
+    public void log(InternalLogLevel level, Exception t) {
         log(toLevel(level), EXCEPTION_MESSAGE, t);
     }
 

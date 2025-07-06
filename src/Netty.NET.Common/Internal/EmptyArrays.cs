@@ -37,7 +37,7 @@ public final class EmptyArrays {
     public static final X509Certificate[] EMPTY_X509_CERTIFICATES = {};
     public static final javax.security.cert.X509Certificate[] EMPTY_JAVAX_X509_CERTIFICATES = {};
 
-    public static final Throwable[] EMPTY_THROWABLES = {};
+    public static final Exception[] EMPTY_THROWABLES = {};
 
     private EmptyArrays() { }
 }

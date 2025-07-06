@@ -66,13 +66,13 @@ public final class Signal extends Error : Constant<Signal> {
 
     // Suppress a warning since the method doesn't need synchronization
     @Override
-    public Throwable initCause(Throwable cause) {
+    public Exception initCause(Exception cause) {
         return this;
     }
 
     // Suppress a warning since the method doesn't need synchronization
     @Override
-    public Throwable fillInStackTrace() {
+    public Exception fillInStackTrace() {
         return this;
     }
 

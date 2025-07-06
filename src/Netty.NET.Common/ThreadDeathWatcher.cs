@@ -217,7 +217,7 @@ public final class ThreadDeathWatcher {
                     watchees.remove(i);
                     try {
                         e.task.run();
-                    } catch (Throwable t) {
+                    } catch (Exception t) {
                         logger.warn("Thread death watcher task raised an exception:", t);
                     }
                 } else {

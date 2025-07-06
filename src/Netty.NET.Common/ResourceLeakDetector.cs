@@ -640,7 +640,7 @@ public class ResourceLeakDetector<T> {
         } while (!excludedMethods.compareAndSet(oldMethods, newMethods));
     }
 
-    private static class TraceRecord extends Throwable {
+    private static class TraceRecord extends Exception {
         private static final long serialVersionUID = 6065153674892850720L;
 
         private static final TraceRecord BOTTOM = new TraceRecord() {
@@ -650,7 +650,7 @@ public class ResourceLeakDetector<T> {
             // Classloader.
             // See https://github.com/netty/netty/pull/10691
             @Override
-            public Throwable fillInStackTrace() {
+            public Exception fillInStackTrace() {
                 return this;
             }
         };

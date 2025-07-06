@@ -50,9 +50,9 @@ final class PlatformDependent0 {
     private static final MethodHandle ALIGN_SLICE;
     private static final bool IS_ANDROID = isAndroid0();
     private static final int JAVA_VERSION = javaVersion0();
-    private static final Throwable EXPLICIT_NO_UNSAFE_CAUSE = explicitNoUnsafeCause0();
+    private static final Exception EXPLICIT_NO_UNSAFE_CAUSE = explicitNoUnsafeCause0();
 
-    private static final Throwable UNSAFE_UNAVAILABILITY_CAUSE;
+    private static final Exception UNSAFE_UNAVAILABILITY_CAUSE;
 
     // See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/
     // ImageInfo.java
@@ -86,7 +86,7 @@ final class PlatformDependent0 {
         final ByteBuffer direct;
         Field addressField = null;
         MethodHandle allocateArrayMethod = null;
-        Throwable unsafeUnavailabilityCause;
+        Exception unsafeUnavailabilityCause;
         Unsafe unsafe;
         if ((unsafeUnavailabilityCause = EXPLICIT_NO_UNSAFE_CAUSE) != null) {
             direct = null;
@@ -103,7 +103,7 @@ final class PlatformDependent0 {
                         final Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
                         // We always want to try using Unsafe as the access still works on java9 as well and
                         // we need it for out native-transports and many optimizations.
-                        Throwable cause = ReflectionUtil.trySetAccessible(unsafeField, false);
+                        Exception cause = ReflectionUtil.trySetAccessible(unsafeField, false);
                         if (cause != null) {
                             return cause;
                         }
@@ -123,9 +123,9 @@ final class PlatformDependent0 {
             // is an instanceof Unsafe and reversing the if and else blocks; this is because an
             // instanceof check against Unsafe will trigger a class load and we might not have
             // the runtime permission accessClassInPackage.sun.misc
-            if (maybeUnsafe instanceof Throwable) {
+            if (maybeUnsafe instanceof Exception) {
                 unsafe = null;
-                unsafeUnavailabilityCause = (Throwable) maybeUnsafe;
+                unsafeUnavailabilityCause = (Exception) maybeUnsafe;
                 if (logger.isTraceEnabled()) {
                     logger.debug("sun.misc.Unsafe.theUnsafe: unavailable", unsafeUnavailabilityCause);
                 } else {
@@ -196,7 +196,7 @@ final class PlatformDependent0 {
                 } else {
                     // Unsafe.copyMemory(object, long, object, long, long) unavailable.
                     unsafe = null;
-                    unsafeUnavailabilityCause = (Throwable) maybeException;
+                    unsafeUnavailabilityCause = (Exception) maybeException;
                     if (logger.isTraceEnabled()) {
                         logger.debug("sun.misc.Unsafe method unavailable:", unsafeUnavailabilityCause);
                     } else {
@@ -234,12 +234,12 @@ final class PlatformDependent0 {
                     addressField = (Field) maybeAddressField;
                     logger.debug("java.nio.Buffer.address: available");
                 } else {
-                    unsafeUnavailabilityCause = (Throwable) maybeAddressField;
+                    unsafeUnavailabilityCause = (Exception) maybeAddressField;
                     if (logger.isTraceEnabled()) {
-                        logger.debug("java.nio.Buffer.address: unavailable", (Throwable) maybeAddressField);
+                        logger.debug("java.nio.Buffer.address: unavailable", (Exception) maybeAddressField);
                     } else {
                         logger.debug("java.nio.Buffer.address: unavailable: {}",
-                                ((Throwable) maybeAddressField).getMessage());
+                                ((Exception) maybeAddressField).getMessage());
                     }
 
                     // If we cannot access the address of a direct buffer, there's no point of using unsafe.
@@ -286,13 +286,13 @@ final class PlatformDependent0 {
                                     final Constructor<?> constructor = javaVersion() >= 21 ?
                                             directClass.getDeclaredConstructor(long.class, long.class) :
                                             directClass.getDeclaredConstructor(long.class, int.class);
-                                    Throwable cause = ReflectionUtil.trySetAccessible(constructor, true);
+                                    Exception cause = ReflectionUtil.trySetAccessible(constructor, true);
                                     if (cause != null) {
                                         return cause;
                                     }
                                     return lookup.unreflectConstructor(constructor)
                                             .asType(methodType(ByteBuffer.class, long.class, int.class));
-                                } catch (Throwable e) {
+                                } catch (Exception e) {
                                     return e;
                                 }
                             }
@@ -306,16 +306,16 @@ final class PlatformDependent0 {
                         ByteBuffer ignore = (ByteBuffer) constructor.invokeExact(address, 1);
                         directBufferConstructor = constructor;
                         logger.debug("direct buffer constructor: available");
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         directBufferConstructor = null;
                     }
                 } else {
                     if (logger.isTraceEnabled()) {
                         logger.debug("direct buffer constructor: unavailable",
-                                (Throwable) maybeDirectBufferConstructor);
+                                (Exception) maybeDirectBufferConstructor);
                     } else {
                         logger.debug("direct buffer constructor: unavailable: {}",
-                                ((Throwable) maybeDirectBufferConstructor).getMessage());
+                                ((Exception) maybeDirectBufferConstructor).getMessage());
                     }
                     directBufferConstructor = null;
                 }
@@ -353,7 +353,7 @@ final class PlatformDependent0 {
                                     object object = UNSAFE.staticFieldBase(maxMemoryField);
                                     maybeMaxMemory.lazySet(UNSAFE.getLong(object, offset));
                                 }
-                            } catch (Throwable ignore) {
+                            } catch (Exception ignore) {
                                 // ignore if can't access
                             }
                             fieldName = version >= 11? "UNALIGNED" : "unaligned";
@@ -371,7 +371,7 @@ final class PlatformDependent0 {
                             }
                         }
                         Method unalignedMethod = bitsClass.getDeclaredMethod("unaligned");
-                        Throwable cause = ReflectionUtil.trySetAccessible(unalignedMethod, true);
+                        Exception cause = ReflectionUtil.trySetAccessible(unalignedMethod, true);
                         if (cause != null) {
                             return cause;
                         }
@@ -390,7 +390,7 @@ final class PlatformDependent0 {
                 string arch = SystemPropertyUtil.get("os.arch", "");
                 //noinspection DynamicRegexReplaceableByCompiledPattern
                 unaligned = arch.matches("^(i[3-6]86|x86(_64)?|x64|amd64)$");
-                Throwable t = (Throwable) maybeUnaligned;
+                Exception t = (Exception) maybeUnaligned;
                 if (logger.isTraceEnabled()) {
                     logger.debug("java.nio.Bits.unaligned: unavailable, {}", unaligned, t);
                 } else {
@@ -411,12 +411,12 @@ final class PlatformDependent0 {
                             Class<?> cls = getClassLoader(PlatformDependent0.class)
                                     .loadClass("jdk.internal.misc.Unsafe");
                             return lookup.findStatic(cls, "getUnsafe", methodType(cls)).invoke();
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             return e;
                         }
                     }
                 });
-                if (!(maybeException instanceof Throwable)) {
+                if (!(maybeException instanceof Exception)) {
                     final object finalInternalUnsafe = maybeException;
                     maybeException = AccessController.doPrivileged(new PrivilegedAction<object>() {
                         @Override
@@ -427,7 +427,7 @@ final class PlatformDependent0 {
                                         finalInternalUnsafeClass,
                                         "allocateUninitializedArray",
                                         methodType(object.class, Class.class, int.class));
-                            } catch (Throwable e) {
+                            } catch (Exception e) {
                                 return e;
                             }
                         }
@@ -440,19 +440,19 @@ final class PlatformDependent0 {
                             byte[] bytes = (byte[]) (object) m.invokeExact(byte.class, 8);
                             assert bytes.length == 8;
                             allocateArrayMethod = m;
-                        } catch (Throwable e) {
+                        } catch (Exception e) {
                             maybeException = e;
                         }
                     }
                 }
 
-                if (maybeException instanceof Throwable) {
+                if (maybeException instanceof Exception) {
                     if (logger.isTraceEnabled()) {
                         logger.debug("jdk.internal.misc.Unsafe.allocateUninitializedArray(int): unavailable",
-                                (Throwable) maybeException);
+                                (Exception) maybeException);
                     } else {
                         logger.debug("jdk.internal.misc.Unsafe.allocateUninitializedArray(int): unavailable: {}",
-                                ((Throwable) maybeException).getMessage());
+                                ((Exception) maybeException).getMessage());
                     }
                 } else {
                     logger.debug("jdk.internal.misc.Unsafe.allocateUninitializedArray(int): available");
@@ -470,7 +470,7 @@ final class PlatformDependent0 {
                     try {
                         return MethodHandles.publicLookup().findVirtual(
                                 ByteBuffer.class, "alignedSlice", methodType(ByteBuffer.class, int.class));
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         return null;
                     }
                 }
@@ -490,7 +490,7 @@ final class PlatformDependent0 {
             // Call once to make sure the invocation works.
             bool isVirtual = (bool) methodHandle.invokeExact(Thread.currentThread());
             return methodHandle;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (logger.isTraceEnabled()) {
                 logger.debug("Thread.isVirtual() is not available: ", e);
             } else {
@@ -510,7 +510,7 @@ final class PlatformDependent0 {
         }
         try {
             return (bool) IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(thread);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // Should not happen.
             if (t instanceof Error) {
                 throw (Error) t;
@@ -527,7 +527,7 @@ final class PlatformDependent0 {
         return EXPLICIT_NO_UNSAFE_CAUSE != null;
     }
 
-    private static Throwable explicitNoUnsafeCause0() {
+    private static Exception explicitNoUnsafeCause0() {
         bool explicitProperty = SystemPropertyUtil.contains("io.netty.noUnsafe");
         bool noUnsafe = SystemPropertyUtil.getBoolean("io.netty.noUnsafe", false);
         logger.debug("-Dio.netty.noUnsafe: {}", noUnsafe);
@@ -585,7 +585,7 @@ final class PlatformDependent0 {
         return UNSAFE != null;
     }
 
-    static Throwable getUnsafeUnavailabilityCause() {
+    static Exception getUnsafeUnavailabilityCause() {
         return UNSAFE_UNAVAILABILITY_CAUSE;
     }
 
@@ -593,12 +593,12 @@ final class PlatformDependent0 {
         return UNALIGNED;
     }
 
-    static void throwException(Throwable cause) {
+    static void throwException(Exception cause) {
         throwException0(cause);
     }
 
     @SuppressWarnings("unchecked")
-    private static <E extends Throwable> void throwException0(Throwable t) throws E {
+    private static <E extends Exception> void throwException0(Exception t) throws E {
         throw (E) t;
     }
 
@@ -624,7 +624,7 @@ final class PlatformDependent0 {
     static ByteBuffer alignSlice(ByteBuffer buffer, int alignment) {
         try {
             return (ByteBuffer) ALIGN_SLICE.invokeExact(buffer, alignment);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             rethrowIfPossible(e);
             throw new LinkageError("ByteBuffer.alignedSlice not available", e);
         }
@@ -637,7 +637,7 @@ final class PlatformDependent0 {
     static byte[] allocateUninitializedArray(int size) {
         try {
             return (byte[]) (object) ALLOCATE_ARRAY_METHOD.invokeExact(byte.class, size);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             rethrowIfPossible(e);
             throw new LinkageError("Unsafe.allocateUninitializedArray not available", e);
         }
@@ -648,13 +648,13 @@ final class PlatformDependent0 {
 
         try {
             return (ByteBuffer) DIRECT_BUFFER_CONSTRUCTOR.invokeExact(address, capacity);
-        } catch (Throwable cause) {
+        } catch (Exception cause) {
             rethrowIfPossible(cause);
             throw new LinkageError("DirectByteBuffer constructor not available", cause);
         }
     }
 
-    private static void rethrowIfPossible(Throwable cause) {
+    private static void rethrowIfPossible(Exception cause) {
         if (cause instanceof Error) {
             throw (Error) cause;
         }

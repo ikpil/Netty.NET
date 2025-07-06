@@ -59,7 +59,7 @@ public class CleanerJava24Linker : Cleaner {
         MethodHandle mallocMethod;
         MethodHandle wrapMethod;
         MethodHandle freeMethod;
-        Throwable error;
+        Exception error;
 
         if (suitableJavaVersion) {
             try {
@@ -164,7 +164,7 @@ public class CleanerJava24Linker : Cleaner {
                         asByteBuffer);
 
                 error = null;
-            } catch (Throwable throwable) {
+            } catch (Exception throwable) {
                 mallocMethod = null;
                 wrapMethod = null;
                 freeMethod = null;
@@ -207,7 +207,7 @@ public class CleanerJava24Linker : Cleaner {
         final long addr;
         try {
             addr = (long) INVOKE_MALLOC.invokeExact((long) capacity);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new Error(e); // Should not happen.
         }
         if (addr == 0) {
@@ -219,7 +219,7 @@ public class CleanerJava24Linker : Cleaner {
     static void free(long memoryAddress) {
         try {
             INVOKE_FREE.invokeExact(memoryAddress);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new Error(e); // Should not happen.
         }
     }
@@ -233,11 +233,11 @@ public class CleanerJava24Linker : Cleaner {
             try {
                 memoryAddress = addr;
                 buffer = (ByteBuffer) INVOKE_CREATE_BYTEBUFFER.invokeExact(addr, (long) capacity);
-            } catch (Throwable throwable) {
+            } catch (Exception throwable) {
                 Error error = new Error(throwable);
                 try {
                     free(addr);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     error.addSuppressed(e);
                 }
                 throw error;

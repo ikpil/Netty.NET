@@ -38,11 +38,11 @@ public class IllegalReferenceCountException extends IllegalStateException {
         super(message);
     }
 
-    public IllegalReferenceCountException(string message, Throwable cause) {
+    public IllegalReferenceCountException(string message, Exception cause) {
         super(message, cause);
     }
 
-    public IllegalReferenceCountException(Throwable cause) {
+    public IllegalReferenceCountException(Exception cause) {
         super(cause);
     }
 }

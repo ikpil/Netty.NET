@@ -103,7 +103,7 @@ public abstract class ResourceLeakDetectorFactory {
             string customLeakDetector;
             try {
                 customLeakDetector = SystemPropertyUtil.get("io.netty.customResourceLeakDetector");
-            } catch (Throwable cause) {
+            } catch (Exception cause) {
                 logger.error("Could not access System property: io.netty.customResourceLeakDetector", cause);
                 customLeakDetector = null;
             }
@@ -125,7 +125,7 @@ public abstract class ResourceLeakDetectorFactory {
                 } else {
                     logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);
                 }
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 logger.error("Could not load custom resource leak detector class provided: {}",
                         customLeakDetector, t);
             }
@@ -142,7 +142,7 @@ public abstract class ResourceLeakDetectorFactory {
                 } else {
                     logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);
                 }
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 logger.error("Could not load custom resource leak detector class provided: {}",
                         customLeakDetector, t);
             }
@@ -162,7 +162,7 @@ public abstract class ResourceLeakDetectorFactory {
                     logger.debug("Loaded custom ResourceLeakDetector: {}",
                             obsoleteCustomClassConstructor.getDeclaringClass().getName());
                     return leakDetector;
-                } catch (Throwable t) {
+                } catch (Exception t) {
                     logger.error(
                             "Could not load custom resource leak detector provided: {} with the given resource: {}",
                             obsoleteCustomClassConstructor.getDeclaringClass().getName(), resource, t);
@@ -185,7 +185,7 @@ public abstract class ResourceLeakDetectorFactory {
                     logger.debug("Loaded custom ResourceLeakDetector: {}",
                             customClassConstructor.getDeclaringClass().getName());
                     return leakDetector;
-                } catch (Throwable t) {
+                } catch (Exception t) {
                     logger.error(
                             "Could not load custom resource leak detector provided: {} with the given resource: {}",
                             customClassConstructor.getDeclaringClass().getName(), resource, t);

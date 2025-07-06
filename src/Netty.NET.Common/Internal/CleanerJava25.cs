@@ -55,7 +55,7 @@ final class CleanerJava25 : Cleaner {
         }
 
         MethodHandle method;
-        Throwable error;
+        Exception error;
         if (suitableJavaVersion) {
             try {
                 // Here we compose and construct a MethodHandle that takes an 'int' capacity argument,
@@ -138,7 +138,7 @@ final class CleanerJava25 : Cleaner {
                 // ctorInt.type() = (int)CleanableDirectBufferImpl
                 method = MethodHandles.foldArguments(ctorArenaInt, ofShared);
                 error = null;
-            } catch (Throwable throwable) {
+            } catch (Exception throwable) {
                 method = null;
                 error = throwable;
             }
@@ -167,7 +167,7 @@ final class CleanerJava25 : Cleaner {
             return (CleanableDirectBufferImpl) INVOKE_ALLOCATOR.invokeExact(capacity);
         } catch (RuntimeException e) {
             throw e; // Propagate the runtime exceptions that the Arena would normally throw.
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new IllegalStateException("Unexpected allocation exception", e);
         }
     }

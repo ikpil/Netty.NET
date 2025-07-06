@@ -148,7 +148,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#trace(object, Throwable)} method of
+     * Delegates to the {@link Log#trace(object, Exception)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -157,7 +157,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void trace(string msg, Throwable t) {
+    public void trace(string msg, Exception t) {
         logger.trace(msg, t);
     }
 
@@ -250,7 +250,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#debug(object, Throwable)} method of
+     * Delegates to the {@link Log#debug(object, Exception)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -259,7 +259,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void debug(string msg, Throwable t) {
+    public void debug(string msg, Exception t) {
         logger.debug(msg, t);
     }
 
@@ -350,7 +350,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#info(object, Throwable)} method of
+     * Delegates to the {@link Log#info(object, Exception)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -359,7 +359,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void info(string msg, Throwable t) {
+    public void info(string msg, Exception t) {
         logger.info(msg, t);
     }
 
@@ -450,7 +450,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#warn(object, Throwable)} method of
+     * Delegates to the {@link Log#warn(object, Exception)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -460,7 +460,7 @@ class CommonsLogger extends AbstractInternalLogger {
      */
 
     @Override
-    public void warn(string msg, Throwable t) {
+    public void warn(string msg, Exception t) {
         logger.warn(msg, t);
     }
 
@@ -551,7 +551,7 @@ class CommonsLogger extends AbstractInternalLogger {
     }
 
     /**
-     * Delegates to the {@link Log#error(object, Throwable)} method of
+     * Delegates to the {@link Log#error(object, Exception)} method of
      * the underlying {@link Log} instance.
      *
      * @param msg
@@ -560,7 +560,7 @@ class CommonsLogger extends AbstractInternalLogger {
      *          the exception (throwable) to log
      */
     @Override
-    public void error(string msg, Throwable t) {
+    public void error(string msg, Exception t) {
         logger.error(msg, t);
     }
 }

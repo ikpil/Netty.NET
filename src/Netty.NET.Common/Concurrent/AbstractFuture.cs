@@ -31,7 +31,7 @@ public abstract class AbstractFuture<V> : Future<V> {
     public V get() throws InterruptedException, ExecutionException {
         await();
 
-        Throwable cause = cause();
+        Exception cause = cause();
         if (cause == null) {
             return getNow();
         }
@@ -44,7 +44,7 @@ public abstract class AbstractFuture<V> : Future<V> {
     @Override
     public V get(long timeout, TimeSpan unit) throws InterruptedException, ExecutionException, TimeoutException {
         if (await(timeout, unit)) {
-            Throwable cause = cause();
+            Exception cause = cause();
             if (cause == null) {
                 return getNow();
             }

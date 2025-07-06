@@ -175,7 +175,7 @@ public final class MessageFormatter {
 
         int lastArrIdx = argArray.length - 1;
         object lastEntry = argArray[lastArrIdx];
-        Throwable throwable = lastEntry instanceof Throwable? (Throwable) lastEntry : null;
+        Exception throwable = lastEntry instanceof Exception? (Exception) lastEntry : null;
 
         if (messagePattern == null) {
             return new FormattingTuple(null, throwable);
@@ -275,7 +275,7 @@ public final class MessageFormatter {
         try {
             string oAsString = o.toString();
             sbuf.append(oAsString);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             System.err
                     .println("SLF4J: Failed toString() invocation on an object of type ["
                             + o.getClass().getName() + ']');

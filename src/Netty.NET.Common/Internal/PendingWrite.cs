@@ -62,7 +62,7 @@ public final class PendingWrite {
     /**
      * Fails the underlying {@link Promise} with the given cause and recycle this instance.
      */
-    public bool failAndRecycle(Throwable cause) {
+    public bool failAndRecycle(Exception cause) {
         ReferenceCountUtil.release(msg);
         if (promise != null) {
             promise.setFailure(cause);

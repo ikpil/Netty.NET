@@ -77,7 +77,7 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
      * will return {@code false}. All {@link FutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
-    default <V> Future<V> newFailedFuture(Throwable cause) {
+    default <V> Future<V> newFailedFuture(Exception cause) {
         return new FailedFuture<>(this, cause);
     }
 

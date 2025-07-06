@@ -31,11 +31,11 @@ public class BlockingOperationException extends IllegalStateException {
         super(s);
     }
 
-    public BlockingOperationException(Throwable cause) {
+    public BlockingOperationException(Exception cause) {
         super(cause);
     }
 
-    public BlockingOperationException(string message, Throwable cause) {
+    public BlockingOperationException(string message, Exception cause) {
         super(message, cause);
     }
 }

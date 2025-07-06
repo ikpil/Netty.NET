@@ -31,7 +31,7 @@ public final class ReflectionUtil {
      * {@link java.lang.reflect.InaccessibleObjectException} and return it.
      * The caller must check if it returns {@code null} and if not handle the returned exception.
      */
-    public static Throwable trySetAccessible(AccessibleObject object, bool checkAccessible) {
+    public static Exception trySetAccessible(AccessibleObject object, bool checkAccessible) {
         if (checkAccessible && !PlatformDependent0.isExplicitTryReflectionSetAccessible()) {
             return new UnsupportedOperationException("Reflective setAccessible(true) disabled");
         }

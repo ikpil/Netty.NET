@@ -320,7 +320,7 @@ public class HashedWheelTimer : Timer {
     }
 
     @Override
-    protected void finalize() throws Throwable {
+    protected void finalize() throws Exception {
         try {
             super.finalize();
         } finally {
@@ -552,7 +552,7 @@ public class HashedWheelTimer : Timer {
                 }
                 try {
                     timeout.removeAfterCancellation();
-                } catch (Throwable t) {
+                } catch (Exception t) {
                     if (logger.isWarnEnabled()) {
                         logger.warn("An exception was thrown while process a cancellation task", t);
                     }
@@ -702,7 +702,7 @@ public class HashedWheelTimer : Timer {
             try {
                 remove();
                 timer.taskExecutor.execute(this);
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 if (logger.isWarnEnabled()) {
                     logger.warn("An exception was thrown while submit " + TimerTask.class.getSimpleName()
                             + " for execution.", t);
@@ -714,7 +714,7 @@ public class HashedWheelTimer : Timer {
         public void run() {
             try {
                 task.run(this);
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 if (logger.isWarnEnabled()) {
                     logger.warn("An exception was thrown by " + TimerTask.class.getSimpleName() + '.', t);
                 }

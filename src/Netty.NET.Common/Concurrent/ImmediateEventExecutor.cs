@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Concurrent;
  * Executes {@link Runnable} objects in the caller's thread. If the {@link #execute(Runnable)} is reentrant it will be
  * queued until the original {@link Runnable} finishes execution.
  * <p>
- * All {@link Throwable} objects thrown from {@link #execute(Runnable)} will be swallowed and logged. This is to ensure
+ * All {@link Exception} objects thrown from {@link #execute(Runnable)} will be swallowed and logged. This is to ensure
  * that all queued {@link Runnable} objects have the chance to be run.
  */
 public final class ImmediateEventExecutor extends AbstractEventExecutor {
@@ -108,16 +108,16 @@ public final class ImmediateEventExecutor extends AbstractEventExecutor {
             RUNNING.set(true);
             try {
                 command.run();
-            } catch (Throwable cause) {
-                logger.info("Throwable caught while executing Runnable {}", command, cause);
+            } catch (Exception cause) {
+                logger.info("Exception caught while executing Runnable {}", command, cause);
             } finally {
                 Queue<Runnable> delayedRunnables = DELAYED_RUNNABLES.get();
                 Runnable runnable;
                 while ((runnable = delayedRunnables.poll()) != null) {
                     try {
                         runnable.run();
-                    } catch (Throwable cause) {
-                        logger.info("Throwable caught while executing Runnable {}", runnable, cause);
+                    } catch (Exception cause) {
+                        logger.info("Exception caught while executing Runnable {}", runnable, cause);
                     }
                 }
                 RUNNING.set(false);
