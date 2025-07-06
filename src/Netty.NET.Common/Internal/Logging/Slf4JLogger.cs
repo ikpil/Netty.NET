@@ -20,13 +20,13 @@ namespace Netty.NET.Common.Internal.Logging;
 /**
  * <a href="https://www.slf4j.org/">SLF4J</a> logger.
  */
-final class Slf4JLogger extends AbstractInternalLogger {
+public class Slf4JLogger : AbstractInternalLogger {
 
     private static readonly long serialVersionUID = 108038972685130825L;
 
     private readonly transient Logger logger;
 
-    Slf4JLogger(Logger logger) {
+    public Slf4JLogger(Logger logger) {
         super(logger.getName());
         this.logger = logger;
     }

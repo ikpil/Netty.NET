@@ -15,26 +15,16 @@
  */
 namespace Netty.NET.Common.Internal.Logging;
 
-
-
-
-
-
-
 /**
  * Logger factory which creates a <a href="https://www.slf4j.org/">SLF4J</a>
  * logger.
  */
-public class Slf4JLoggerFactory extends InternalLoggerFactory {
+public class Slf4JLoggerFactory : InternalLoggerFactory {
 
-    @SuppressWarnings("deprecation")
     public static readonly InternalLoggerFactory INSTANCE = new Slf4JLoggerFactory();
 
-    /**
-     * @deprecated Use {@link #INSTANCE} instead.
-     */
-    @Deprecated
-    public Slf4JLoggerFactory() {
+    private Slf4JLoggerFactory() 
+    {
     }
 
     Slf4JLoggerFactory(bool failIfNOP) {
@@ -55,11 +45,11 @@ public class Slf4JLoggerFactory extends InternalLoggerFactory {
                 new LocationAwareSlf4JLogger((LocationAwareLogger) logger) : new Slf4JLogger(logger);
     }
 
-    static InternalLoggerFactory getInstanceWithNopCheck() {
+    public static InternalLoggerFactory getInstanceWithNopCheck() {
         return NopInstanceHolder.INSTANCE_WITH_NOP_CHECK;
     }
 
-    private static readonly class NopInstanceHolder {
+    private static class NopInstanceHolder {
         private static readonly InternalLoggerFactory INSTANCE_WITH_NOP_CHECK = new Slf4JLoggerFactory(true);
     }
 }

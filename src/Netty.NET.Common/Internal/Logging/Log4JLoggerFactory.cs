@@ -13,28 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Internal.Logging;
-
-
 
 /**
  * Logger factory which creates an
  * <a href="https://logging.apache.org/log4j/1.2/index.html">Apache Log4J</a>
  * logger.
  */
-public class Log4JLoggerFactory extends InternalLoggerFactory {
-
+public class Log4JLoggerFactory : InternalLoggerFactory
+{
     public static readonly InternalLoggerFactory INSTANCE = new Log4JLoggerFactory();
 
-    /**
-     * @deprecated Use {@link #INSTANCE} instead.
-     */
-    @Deprecated
-    public Log4JLoggerFactory() {
+    private Log4JLoggerFactory()
+    {
+        
     }
 
-    @Override
-    public IInternalLogger newInstance(string name) {
+    public IInternalLogger newInstance(string name)
+    {
         return new Log4JLogger(Logger.getLogger(name));
     }
 }

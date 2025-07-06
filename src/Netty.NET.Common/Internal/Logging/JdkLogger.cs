@@ -39,21 +39,17 @@
  */
 namespace Netty.NET.Common.Internal.Logging;
 
-
-
-
-
 /**
  * <a href="https://java.sun.com/javase/6/docs/technotes/guides/logging/index.html">java.util.logging</a>
  * logger.
  */
-class JdkLogger extends AbstractInternalLogger {
+internal class JdkLogger : AbstractInternalLogger {
 
     private static readonly long serialVersionUID = -1767272577989225979L;
 
-    private readonly transient Logger logger;
+    private readonly Logger logger;
 
-    JdkLogger(Logger logger) {
+    private JdkLogger(Logger logger) {
         super(logger.getName());
         this.logger = logger;
     }

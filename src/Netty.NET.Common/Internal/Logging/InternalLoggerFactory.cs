@@ -14,9 +14,10 @@
  * under the License.
  */
 
+using System;
+using System.Threading;
+
 namespace Netty.NET.Common.Internal.Logging;
-
-
 
 /**
  * Creates an {@link InternalLogger} or changes the default factory
@@ -33,70 +34,92 @@ namespace Netty.NET.Common.Internal.Logging;
  * {@link #setDefaultFactory(InternalLoggerFactory)} should be called as early
  * as possible and shouldn't be called more than once.
  */
-public abstract class InternalLoggerFactory {
+public abstract class InternalLoggerFactory
+{
+    private static InternalLoggerFactory defaultFactory;
 
-    private static volatile InternalLoggerFactory defaultFactory;
-
-    @SuppressWarnings("UnusedCatchParameter")
-    private static InternalLoggerFactory newDefaultFactory(string name) {
+    private static InternalLoggerFactory newDefaultFactory(string name)
+    {
         InternalLoggerFactory f = useSlf4JLoggerFactory(name);
-        if (f != null) {
+        if (f != null)
+        {
             return f;
         }
 
         f = useLog4J2LoggerFactory(name);
-        if (f != null) {
+        if (f != null)
+        {
             return f;
         }
 
         f = useLog4JLoggerFactory(name);
-        if (f != null) {
+        if (f != null)
+        {
             return f;
         }
 
         return useJdkLoggerFactory(name);
     }
 
-    private static InternalLoggerFactory useSlf4JLoggerFactory(string name) {
-        try {
+    private static InternalLoggerFactory useSlf4JLoggerFactory(string name)
+    {
+        try
+        {
             InternalLoggerFactory f = Slf4JLoggerFactory.getInstanceWithNopCheck();
             f.newInstance(name).debug("Using SLF4J as the default logging framework");
             return f;
-        } catch (LinkageError ignore) {
+        }
+        catch (DllNotFoundException ignore)
+        {
             return null;
-        } catch (Exception ignore) {
+        }
+        catch (Exception ignore)
+        {
             // We catch Exception and not ReflectiveOperationException as we still support java 6
             return null;
         }
     }
 
-    private static InternalLoggerFactory useLog4J2LoggerFactory(string name) {
-        try {
+    private static InternalLoggerFactory useLog4J2LoggerFactory(string name)
+    {
+        try
+        {
             InternalLoggerFactory f = Log4J2LoggerFactory.INSTANCE;
             f.newInstance(name).debug("Using Log4J2 as the default logging framework");
             return f;
-        } catch (LinkageError ignore) {
+        }
+        catch (DllNotFoundException ignore)
+        {
             return null;
-        } catch (Exception ignore) {
+        }
+        catch (Exception ignore)
+        {
             // We catch Exception and not ReflectiveOperationException as we still support java 6
             return null;
         }
     }
 
-    private static InternalLoggerFactory useLog4JLoggerFactory(string name) {
-        try {
+    private static InternalLoggerFactory useLog4JLoggerFactory(string name)
+    {
+        try
+        {
             InternalLoggerFactory f = Log4JLoggerFactory.INSTANCE;
             f.newInstance(name).debug("Using Log4J as the default logging framework");
             return f;
-        } catch (LinkageError ignore) {
+        }
+        catch (DllNotFoundException ignore)
+        {
             return null;
-        } catch (Exception ignore) {
+        }
+        catch (Exception ignore)
+        {
             // We catch Exception and not ReflectiveOperationException as we still support java 6
             return null;
         }
     }
 
-    private static InternalLoggerFactory useJdkLoggerFactory(string name) {
+    private static InternalLoggerFactory useJdkLoggerFactory(string name)
+    {
         InternalLoggerFactory f = JdkLoggerFactory.INSTANCE;
         f.newInstance(name).debug("Using java.util.logging as the default logging framework");
         return f;
@@ -106,31 +129,54 @@ public abstract class InternalLoggerFactory {
      * Returns the default factory.  The initial default factory is
      * {@link JdkLoggerFactory}.
      */
-    public static InternalLoggerFactory getDefaultFactory() {
-        if (defaultFactory == null) {
-            defaultFactory = newDefaultFactory(InternalLoggerFactory.class.getName());
+    public static InternalLoggerFactory getDefaultFactory()
+    {
+        if (defaultFactory == null)
+        {
+            var factory = Volatile.Read(ref defaultFactory);
+            if (factory == null)
+            {
+                factory = newDefaultFactory(typeof(InternalLoggerFactory).FullName);
+                var current = Interlocked.CompareExchange(ref defaultFactory, factory, null);
+                if (current != null)
+                {
+                    defaultFactory = current;
+                    return current;
+                }
+            }
         }
+
         return defaultFactory;
     }
 
     /**
      * Changes the default factory.
      */
-    public static void setDefaultFactory(InternalLoggerFactory defaultFactory) {
-        InternalLoggerFactory.defaultFactory = ObjectUtil.checkNotNull(defaultFactory, "defaultFactory");
+    public static void setDefaultFactory(InternalLoggerFactory factory)
+    {
+        ObjectUtil.checkNotNull(factory, "defaultFactory");
+        Volatile.Write(ref defaultFactory, factory);
     }
 
     /**
      * Creates a new logger instance with the name of the specified class.
      */
-    public static IInternalLogger getInstance(Class<?> clazz) {
-        return getInstance(clazz.getName());
+    public static IInternalLogger getInstance<T>()
+    {
+        return getInstance(typeof(T));
     }
+
+    public static IInternalLogger getInstance(Type type)
+    {
+        return getInstance(type.FullName);
+    }
+
 
     /**
      * Creates a new logger instance with the specified name.
      */
-    public static IInternalLogger getInstance(string name) {
+    public static IInternalLogger getInstance(string name)
+    {
         return getDefaultFactory().newInstance(name);
     }
 
@@ -138,5 +184,4 @@ public abstract class InternalLoggerFactory {
      * Creates a new logger instance with the specified name.
      */
     protected abstract IInternalLogger newInstance(string name);
-
 }

@@ -16,22 +16,12 @@
 namespace Netty.NET.Common.Internal.Logging;
 
 
-
-
-
-
-
-
-
-
-
-
-class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
-
-    private static readonly long serialVersionUID = 5485418394879791397L;
+public class Log4J2Logger : IInternalLogger 
+{
     private static readonly bool VARARGS_ONLY;
 
-    static {
+    static Log4J2Logger() 
+    {
         // Older Log4J2 versions have only log methods that takes the format + varargs. So we should not use
         // Log4J2 if the version is too old.
         // See https://github.com/netty/netty/issues/8217
@@ -52,7 +42,7 @@ class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
         });
     }
 
-    Log4J2Logger(Logger logger) {
+    public Log4J2Logger(Logger logger) {
         super((ExtendedLogger) logger, logger.getName(), logger.getMessageFactory());
         if (VARARGS_ONLY) {
             throw new UnsupportedOperationException("Log4J2 version mismatch");

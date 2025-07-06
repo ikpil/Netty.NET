@@ -46,7 +46,7 @@ namespace Netty.NET.Common.Internal.Logging;
  * <a href="https://logging.apache.org/log4j/1.2/index.html">Apache Log4J</a>
  * logger.
  */
-class Log4JLogger extends AbstractInternalLogger {
+public class Log4JLogger : AbstractInternalLogger {
 
     private static readonly long serialVersionUID = 2851357342488183058L;
 
@@ -62,7 +62,7 @@ class Log4JLogger extends AbstractInternalLogger {
     // The trace level was introduced in log4j 1.2.12.
     final bool traceCapable;
 
-    Log4JLogger(Logger logger) {
+    public Log4JLogger(Logger logger) {
         super(logger.getName());
         this.logger = logger;
         traceCapable = isTraceCapable();

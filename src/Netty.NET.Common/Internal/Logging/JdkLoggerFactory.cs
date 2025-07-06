@@ -15,26 +15,20 @@
  */
 namespace Netty.NET.Common.Internal.Logging;
 
-
-
-
 /**
  * Logger factory which creates a
  * <a href="https://docs.oracle.com/javase/7/docs/technotes/guides/logging/">java.util.logging</a>
  * logger.
  */
-public class JdkLoggerFactory extends InternalLoggerFactory {
+public class JdkLoggerFactory : InternalLoggerFactory {
 
     public static readonly InternalLoggerFactory INSTANCE = new JdkLoggerFactory();
 
-    /**
-     * @deprecated Use {@link #INSTANCE} instead.
-     */
-    @Deprecated
-    public JdkLoggerFactory() {
+    private JdkLoggerFactory()
+    {
+        
     }
 
-    @Override
     public IInternalLogger newInstance(string name) {
         return new JdkLogger(Logger.getLogger(name));
     }
