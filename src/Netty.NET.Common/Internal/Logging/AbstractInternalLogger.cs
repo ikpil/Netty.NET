@@ -201,7 +201,7 @@ public abstract class AbstractInternalLogger : IInternalLogger
     }
 
     @Override
-    public void log(InternalLogLevel level, string format, object... arguments) {
+    public void log(InternalLogLevel level, string format, params object[] arguments) {
         switch (level) {
         case TRACE:
             trace(format, arguments);

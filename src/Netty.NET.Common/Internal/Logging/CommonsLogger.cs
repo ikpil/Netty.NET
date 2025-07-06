@@ -140,7 +140,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void trace(string format, object... arguments) {
+    public void trace(string format, params object[] arguments) {
         if (logger.isTraceEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.trace(ft.getMessage(), ft.getThrowable());
@@ -242,7 +242,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void debug(string format, object... arguments) {
+    public void debug(string format, params object[] arguments) {
         if (logger.isDebugEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.debug(ft.getMessage(), ft.getThrowable());
@@ -342,7 +342,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void info(string format, object... arguments) {
+    public void info(string format, params object[] arguments) {
         if (logger.isInfoEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.info(ft.getMessage(), ft.getThrowable());
@@ -442,7 +442,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void warn(string format, object... arguments) {
+    public void warn(string format, params object[] arguments) {
         if (logger.isWarnEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.warn(ft.getMessage(), ft.getThrowable());
@@ -543,7 +543,7 @@ class CommonsLogger extends AbstractInternalLogger {
      * @param arguments a list of 3 or more arguments
      */
     @Override
-    public void error(string format, object... arguments) {
+    public void error(string format, params object[] arguments) {
         if (logger.isErrorEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.error(ft.getMessage(), ft.getThrowable());

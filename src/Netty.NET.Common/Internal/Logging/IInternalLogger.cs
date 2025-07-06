@@ -105,7 +105,7 @@ public interface IInternalLogger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void trace(string format, object... arguments);
+    void trace(string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the TRACE level with an
@@ -177,7 +177,7 @@ public interface IInternalLogger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void debug(string format, object... arguments);
+    void debug(string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the DEBUG level with an
@@ -249,7 +249,7 @@ public interface IInternalLogger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void info(string format, object... arguments);
+    void info(string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the INFO level with an
@@ -308,7 +308,7 @@ public interface IInternalLogger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void warn(string format, object... arguments);
+    void warn(string format, params object[] arguments);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -393,7 +393,7 @@ public interface IInternalLogger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void error(string format, object... arguments);
+    void error(string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the ERROR level with an
@@ -466,7 +466,7 @@ public interface IInternalLogger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void log(InternalLogLevel level, string format, object... arguments);
+    void log(InternalLogLevel level, string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the specified {@code level} with an

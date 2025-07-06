@@ -45,7 +45,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, ThreadFactory threadFactory, object... args) {
+    protected MultithreadEventExecutorGroup(int nThreads, ThreadFactory threadFactory, params object[] args) {
         this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args);
     }
 
@@ -56,7 +56,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param executor          the Executor to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, Executor executor, object... args) {
+    protected MultithreadEventExecutorGroup(int nThreads, Executor executor, params object[] args) {
         this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);
     }
 
@@ -69,7 +69,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor,
-                                            EventExecutorChooserFactory chooserFactory, object... args) {
+                                            EventExecutorChooserFactory chooserFactory, params object[] args) {
         checkPositive(nThreads, "nThreads");
 
         if (executor == null) {
@@ -155,7 +155,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
      */
-    protected abstract EventExecutor newChild(Executor executor, object... args) throws Exception;
+    protected abstract EventExecutor newChild(Executor executor, params object[] args) throws Exception;
 
     @Override
     public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {

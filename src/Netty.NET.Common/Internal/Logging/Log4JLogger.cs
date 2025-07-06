@@ -165,7 +165,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          an array of arguments
      */
     @Override
-    public void trace(string format, object... arguments) {
+    public void trace(string format, params object[] arguments) {
         if (isTraceEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.log(FQCN, traceCapable ? Level.TRACE : Level.DEBUG, ft
@@ -267,7 +267,7 @@ class Log4JLogger extends AbstractInternalLogger {
      * @param arguments an array of arguments
      */
     @Override
-    public void debug(string format, object... arguments) {
+    public void debug(string format, params object[] arguments) {
         if (logger.isDebugEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
             logger.log(FQCN, Level.DEBUG, ft.getMessage(), ft.getThrowable());
@@ -368,7 +368,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          an array of arguments
      */
     @Override
-    public void info(string format, object... argArray) {
+    public void info(string format, params object[] argArray) {
         if (logger.isInfoEnabled()) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, argArray);
             logger.log(FQCN, Level.INFO, ft.getMessage(), ft.getThrowable());
@@ -471,7 +471,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          an array of arguments
      */
     @Override
-    public void warn(string format, object... argArray) {
+    public void warn(string format, params object[] argArray) {
         if (logger.isEnabledFor(Level.WARN)) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, argArray);
             logger.log(FQCN, Level.WARN, ft.getMessage(), ft.getThrowable());
@@ -574,7 +574,7 @@ class Log4JLogger extends AbstractInternalLogger {
      *          an array of arguments
      */
     @Override
-    public void error(string format, object... argArray) {
+    public void error(string format, params object[] argArray) {
         if (logger.isEnabledFor(Level.ERROR)) {
             FormattingTuple ft = MessageFormatter.arrayFormat(format, argArray);
             logger.log(FQCN, Level.ERROR, ft.getMessage(), ft.getThrowable());

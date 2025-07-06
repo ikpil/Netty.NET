@@ -110,7 +110,7 @@ class Log4J2Logger extends ExtendedLoggerWrapper : InternalLogger {
     }
 
     @Override
-    public void log(InternalLogLevel level, string format, object... arguments) {
+    public void log(InternalLogLevel level, string format, params object[] arguments) {
         log(toLevel(level), format, arguments);
     }
 
