@@ -95,7 +95,7 @@ public abstract class AbstractEventExecutorGroup : EventExecutorGroup {
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) throws InterruptedException {
+            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) {
         return next().invokeAll(tasks, timeout, unit);
     }
 

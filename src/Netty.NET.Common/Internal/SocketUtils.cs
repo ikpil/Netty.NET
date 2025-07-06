@@ -58,7 +58,7 @@ public final class SocketUtils {
         try {
             AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
                 @Override
-                public Void run() throws IOException {
+                public Void run() {
                     socket.connect(remoteAddress, timeout);
                     return null;
                 }
@@ -68,11 +68,11 @@ public final class SocketUtils {
         }
     }
 
-    public static void bind(final Socket socket, final SocketAddress bindpoint) throws IOException {
+    public static void bind(final Socket socket, final SocketAddress bindpoint) {
         try {
             AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
                 @Override
-                public Void run() throws IOException {
+                public Void run() {
                     socket.bind(bindpoint);
                     return null;
                 }
@@ -87,7 +87,7 @@ public final class SocketUtils {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<Boolean>() {
                 @Override
-                public Boolean run() throws IOException {
+                public Boolean run() {
                     return socketChannel.connect(remoteAddress);
                 }
             });
@@ -96,11 +96,11 @@ public final class SocketUtils {
         }
     }
 
-    public static void bind(final SocketChannel socketChannel, final SocketAddress address) throws IOException {
+    public static void bind(final SocketChannel socketChannel, final SocketAddress address) {
         try {
             AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
                 @Override
-                public Void run() throws IOException {
+                public Void run() {
                     socketChannel.bind(address);
                     return null;
                 }
@@ -110,11 +110,11 @@ public final class SocketUtils {
         }
     }
 
-    public static SocketChannel accept(final ServerSocketChannel serverSocketChannel) throws IOException {
+    public static SocketChannel accept(final ServerSocketChannel serverSocketChannel) {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<SocketChannel>() {
                 @Override
-                public SocketChannel run() throws IOException {
+                public SocketChannel run() {
                     return serverSocketChannel.accept();
                 }
             });
@@ -123,11 +123,11 @@ public final class SocketUtils {
         }
     }
 
-    public static void bind(final DatagramChannel networkChannel, final SocketAddress address) throws IOException {
+    public static void bind(final DatagramChannel networkChannel, final SocketAddress address) {
         try {
             AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
                 @Override
-                public Void run() throws IOException {
+                public Void run() {
                     networkChannel.bind(address);
                     return null;
                 }
@@ -146,11 +146,11 @@ public final class SocketUtils {
         });
     }
 
-    public static InetAddress addressByName(final string hostname) throws UnknownHostException {
+    public static InetAddress addressByName(final string hostname) {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<InetAddress>() {
                 @Override
-                public InetAddress run() throws UnknownHostException {
+                public InetAddress run() {
                     return InetAddress.getByName(hostname);
                 }
             });
@@ -159,11 +159,11 @@ public final class SocketUtils {
         }
     }
 
-    public static InetAddress[] allAddressesByName(final string hostname) throws UnknownHostException {
+    public static InetAddress[] allAddressesByName(final string hostname) {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<InetAddress[]>() {
                 @Override
-                public InetAddress[] run() throws UnknownHostException {
+                public InetAddress[] run() {
                     return InetAddress.getAllByName(hostname);
                 }
             });
@@ -207,11 +207,11 @@ public final class SocketUtils {
         });
     }
 
-    public static byte[] hardwareAddressFromNetworkInterface(final NetworkInterface intf) throws SocketException {
+    public static byte[] hardwareAddressFromNetworkInterface(final NetworkInterface intf) {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<byte[]>() {
                 @Override
-                public byte[] run() throws SocketException {
+                public byte[] run() {
                     return intf.getHardwareAddress();
                 }
             });

@@ -598,7 +598,7 @@ final class PlatformDependent0 {
     }
 
     @SuppressWarnings("unchecked")
-    private static <E extends Exception> void throwException0(Exception t) throws E {
+    private static <E extends Exception> void throwException0(Exception t) {
         throw (E) t;
     }
 

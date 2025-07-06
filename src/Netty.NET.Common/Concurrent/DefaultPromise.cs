@@ -249,7 +249,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public Promise<V> await() throws InterruptedException {
+    public Promise<V> await() {
         if (isDone()) {
             return this;
         }
@@ -304,12 +304,12 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public bool await(long timeout, TimeSpan unit) throws InterruptedException {
+    public bool await(long timeout, TimeSpan unit) {
         return await0(unit.toNanos(timeout), true);
     }
 
     @Override
-    public bool await(long timeoutMillis) throws InterruptedException {
+    public bool await(long timeoutMillis) {
         return await0(MILLISECONDS.toNanos(timeoutMillis), true);
     }
 
@@ -414,7 +414,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public Promise<V> sync() throws InterruptedException {
+    public Promise<V> sync() {
         await();
         rethrowIfFailed();
         return this;
@@ -687,7 +687,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         PlatformDependent.throwException(cause);
     }
 
-    private bool await0(long timeoutNanos, bool interruptable) throws InterruptedException {
+    private bool await0(long timeoutNanos, bool interruptable) {
         if (isDone()) {
             return true;
         }

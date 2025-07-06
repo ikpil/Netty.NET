@@ -847,7 +847,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     @Override
-    public bool awaitTermination(long timeout, TimeSpan unit) throws InterruptedException {
+    public bool awaitTermination(long timeout, TimeSpan unit) {
         ObjectUtil.checkNotNull(unit, "unit");
         if (inEventLoop()) {
             throw new IllegalStateException("cannot await termination of the current thread");
@@ -951,7 +951,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) throws InterruptedException {
+            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) {
         throwIfInEventLoop("invokeAll");
         return super.invokeAll(tasks, timeout, unit);
     }

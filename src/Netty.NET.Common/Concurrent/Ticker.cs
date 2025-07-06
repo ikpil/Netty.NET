@@ -68,7 +68,7 @@ public interface Ticker {
      *
      * @see Thread#sleep(long)
      */
-    default void sleepMillis(long delayMillis) throws InterruptedException {
+    default void sleepMillis(long delayMillis) {
         sleep(delayMillis, TimeSpan.MILLISECONDS);
     }
 }

@@ -44,7 +44,7 @@ final class DefaultMockTicker : MockTicker {
     }
 
     @Override
-    public void sleep(long delay, TimeSpan unit) throws InterruptedException {
+    public void sleep(long delay, TimeSpan unit) {
         checkPositiveOrZero(delay, "delay");
         requireNonNull(unit, "unit");
 
@@ -70,7 +70,7 @@ final class DefaultMockTicker : MockTicker {
     /**
      * Wait for the given thread to enter the {@link #sleep(long, TimeSpan)} method, and block.
      */
-    public void awaitSleepingThread(Thread thread) throws InterruptedException {
+    public void awaitSleepingThread(Thread thread) {
         lock.lockInterruptibly();
         try {
             while (!sleepers.contains(thread)) {

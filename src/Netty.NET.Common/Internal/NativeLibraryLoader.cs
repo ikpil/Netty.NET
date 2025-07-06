@@ -485,7 +485,7 @@ public final class NativeLibraryLoader {
      * @return The binary content of helper {@link Class}.
      * @throws ClassNotFoundException Helper class not found or loading failed
      */
-    private static byte[] classToByteArray(Class<?> clazz) throws ClassNotFoundException {
+    private static byte[] classToByteArray(Class<?> clazz) {
         string fileName = clazz.getName();
         int lastDot = fileName.lastIndexOf('.');
         if (lastDot > 0) {
@@ -513,7 +513,7 @@ public final class NativeLibraryLoader {
 
     private static readonly class NoexecVolumeDetector {
 
-        private static bool canExecuteExecutable(File file) throws IOException {
+        private static bool canExecuteExecutable(File file) {
             // If we can already execute, there is nothing to do.
             if (file.canExecute()) {
                 return true;

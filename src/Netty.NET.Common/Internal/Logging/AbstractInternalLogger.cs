@@ -220,7 +220,7 @@ public abstract class AbstractInternalLogger : IInternalLogger
         }
     }
 
-    protected object readResolve() throws ObjectStreamException {
+    protected object readResolve() {
         return InternalLoggerFactory.getInstance(name());
     }
 

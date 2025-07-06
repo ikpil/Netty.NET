@@ -180,19 +180,19 @@ public final class NonStickyEventExecutorGroup : EventExecutorGroup {
     }
 
     @Override
-    public bool awaitTermination(long timeout, TimeSpan unit) throws InterruptedException {
+    public bool awaitTermination(long timeout, TimeSpan unit) {
         return group.awaitTermination(timeout, unit);
     }
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks) throws InterruptedException {
+            Collection<? extends Callable<T>> tasks) {
         return group.invokeAll(tasks);
     }
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) throws InterruptedException {
+            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) {
         return group.invokeAll(tasks, timeout, unit);
     }
 
@@ -327,7 +327,7 @@ public final class NonStickyEventExecutorGroup : EventExecutorGroup {
         }
 
         @Override
-        public bool awaitTermination(long timeout, TimeSpan unit) throws InterruptedException {
+        public bool awaitTermination(long timeout, TimeSpan unit) {
             return executor.awaitTermination(timeout, unit);
         }
 

@@ -210,7 +210,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : 
      *
      * @return {@code true} if and only if the worker thread has been terminated
      */
-    public bool awaitInactivity(long timeout, TimeSpan unit) throws InterruptedException {
+    public bool awaitInactivity(long timeout, TimeSpan unit) {
         ObjectUtil.checkNotNull(unit, "unit");
 
         final Thread thread = this.thread;

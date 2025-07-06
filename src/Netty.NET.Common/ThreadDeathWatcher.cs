@@ -129,7 +129,7 @@ public final class ThreadDeathWatcher {
      *
      * @return {@code true} if and only if the watcher thread has been terminated
      */
-    public static bool awaitInactivity(long timeout, TimeSpan unit) throws InterruptedException {
+    public static bool awaitInactivity(long timeout, TimeSpan unit) {
         ObjectUtil.checkNotNull(unit, "unit");
 
         Thread watcherThread = ThreadDeathWatcher.watcherThread;

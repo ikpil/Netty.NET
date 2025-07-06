@@ -112,7 +112,7 @@ public abstract class Recycler<T> {
         }
 
         @Override
-        protected void onRemoval(LocalPool<T> value) throws Exception {
+        protected void onRemoval(LocalPool<T> value) {
             super.onRemoval(value);
             MessagePassingQueue<DefaultHandle<T>> handles = value.pooledHandles;
             value.pooledHandles = null;

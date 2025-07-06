@@ -14,13 +14,11 @@
  */
 namespace Netty.NET.Common.Internal;
 
-
-
-
 /**
  * A grab-bag of useful utility methods.
  */
-public final class ObjectUtil {
+public static class ObjectUtil 
+{
 
     private static readonly float FLOAT_ZERO = 0.0F;
     private static readonly double DOUBLE_ZERO = 0.0D;
@@ -28,14 +26,12 @@ public final class ObjectUtil {
     private static readonly int INT_ZERO = 0;
     private static readonly short SHORT_ZERO = 0;
 
-    private ObjectUtil() {
-    }
 
     /**
      * Checks that the given argument is not null. If it is, throws {@link NullPointerException}.
      * Otherwise, returns the argument.
      */
-    public static <T> T checkNotNull(T arg, string text) {
+    public static T checkNotNull<T>(T arg, string text) {
         if (arg == null) {
             throw new NullPointerException(text);
         }
@@ -49,12 +45,12 @@ public final class ObjectUtil {
      * If it is, throws {@link NullPointerException}.
      * Otherwise, returns the argument.
      */
-    public static <T> T[] deepCheckNotNull(string text, T... varargs) {
+    public static T[] deepCheckNotNull<T>(string text, params T[] varargs) {
         if (varargs == null) {
             throw new NullPointerException(text);
         }
 
-        for (T element : varargs) {
+        foreach (T element in varargs) {
             if (element == null) {
                 throw new NullPointerException(text);
             }
@@ -66,7 +62,7 @@ public final class ObjectUtil {
      * Checks that the given argument is not null. If it is, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static <T> T checkNotNullWithIAE(final T arg, final string paramName) throws IllegalArgumentException {
+    public static T checkNotNullWithIAE<T>(T arg, string paramName) {
         if (arg == null) {
             throw new IllegalArgumentException("Param '" + paramName + "' must not be null");
         }
@@ -84,7 +80,7 @@ public final class ObjectUtil {
      * @return the given argument value.
      * @throws IllegalArgumentException if value is null.
      */
-    public static <T> T checkNotNullArrayParam(T value, int index, string name) throws IllegalArgumentException {
+    public static T checkNotNullArrayParam<T>(T value, int index, string name) {
         if (value == null) {
             throw new IllegalArgumentException(
                     "Array index " + index + " of parameter '" + name + "' must not be null");

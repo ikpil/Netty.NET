@@ -93,7 +93,7 @@ public class DefaultProgressivePromise<V> extends DefaultPromise<V> : Progressiv
     }
 
     @Override
-    public ProgressivePromise<V> sync() throws InterruptedException {
+    public ProgressivePromise<V> sync() {
         super.sync();
         return this;
     }
@@ -105,7 +105,7 @@ public class DefaultProgressivePromise<V> extends DefaultPromise<V> : Progressiv
     }
 
     @Override
-    public ProgressivePromise<V> await() throws InterruptedException {
+    public ProgressivePromise<V> await() {
         super.await();
         return this;
     }

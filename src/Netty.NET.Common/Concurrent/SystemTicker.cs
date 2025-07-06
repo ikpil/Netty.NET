@@ -33,7 +33,7 @@ final class SystemTicker : Ticker {
     }
 
     @Override
-    public void sleep(long delay, TimeSpan unit) throws InterruptedException {
+    public void sleep(long delay, TimeSpan unit) {
         Objects.requireNonNull(unit, "unit");
         unit.sleep(delay);
     }

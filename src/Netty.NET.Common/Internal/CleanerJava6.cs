@@ -142,7 +142,7 @@ final class CleanerJava6 : Cleaner {
         }
     }
 
-    private static void freeDirectBuffer0(ByteBuffer buffer) throws Exception {
+    private static void freeDirectBuffer0(ByteBuffer buffer) {
         CLEAN_METHOD.invokeExact(buffer);
     }
 

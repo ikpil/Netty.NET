@@ -36,7 +36,7 @@ public final class BoundedInputStream extends FilterInputStream {
     }
 
     @Override
-    public int read() throws IOException {
+    public int read() {
         checkMaxBytesRead();
 
         int b = super.read();
@@ -47,7 +47,7 @@ public final class BoundedInputStream extends FilterInputStream {
     }
 
     @Override
-    public int read(byte[] buf, int off, int len) throws IOException {
+    public int read(byte[] buf, int off, int len) {
         checkMaxBytesRead();
 
         // Calculate the maximum number of bytes that we should try to read.
@@ -61,7 +61,7 @@ public final class BoundedInputStream extends FilterInputStream {
         return b;
     }
 
-    private void checkMaxBytesRead() throws IOException {
+    private void checkMaxBytesRead() {
         if (numRead > maxBytesRead) {
             throw new IOException("Maximum number of bytes read: " + numRead);
         }

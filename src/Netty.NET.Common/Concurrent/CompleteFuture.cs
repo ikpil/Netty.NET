@@ -75,7 +75,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     }
 
     @Override
-    public Future<V> await() throws InterruptedException {
+    public Future<V> await() {
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
@@ -83,7 +83,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     }
 
     @Override
-    public bool await(long timeout, TimeSpan unit) throws InterruptedException {
+    public bool await(long timeout, TimeSpan unit) {
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
@@ -91,7 +91,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     }
 
     @Override
-    public Future<V> sync() throws InterruptedException {
+    public Future<V> sync() {
         return this;
     }
 
@@ -101,7 +101,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     }
 
     @Override
-    public bool await(long timeoutMillis) throws InterruptedException {
+    public bool await(long timeoutMillis) {
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }

@@ -233,7 +233,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         }
 
         @Override
-        V runTask() throws Exception {
+        V runTask() {
             V result =  super.runTask();
             if (result == null && wasCallable) {
                 // If this RunnableScheduledFutureTask wraps a RunnableScheduledFuture that wraps a Callable we need

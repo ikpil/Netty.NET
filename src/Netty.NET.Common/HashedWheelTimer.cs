@@ -320,7 +320,7 @@ public class HashedWheelTimer : Timer {
     }
 
     @Override
-    protected void finalize() throws Exception {
+    protected void finalize() {
         try {
             super.finalize();
         } finally {

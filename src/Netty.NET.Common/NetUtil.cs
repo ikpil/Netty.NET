@@ -232,7 +232,7 @@ public final class NetUtil {
      * @param sysctlKey The key which the return value corresponds to.
      * @return The <a href ="https://www.freebsd.org/cgi/man.cgi?sysctl(8)">sysctl</a> value for {@code sysctlKey}.
      */
-    private static int sysctlGetInt(string sysctlKey) throws IOException {
+    private static int sysctlGetInt(string sysctlKey) {
         Process process = new ProcessBuilder("sysctl", sysctlKey).start();
         try {
             // Suppress warnings about resource leaks since the buffered reader is closed below

@@ -1574,7 +1574,7 @@ public final class PlatformDependent {
         return LINUX_OS_CLASSIFIERS;
     }
 
-    public static File createTempFile(string prefix, string suffix, File directory) throws IOException {
+    public static File createTempFile(string prefix, string suffix, File directory) {
         if (directory == null) {
             return Files.createTempFile(prefix, suffix).toFile();
         }
