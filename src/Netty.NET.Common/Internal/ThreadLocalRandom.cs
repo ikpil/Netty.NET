@@ -63,7 +63,7 @@ namespace Netty.NET.Common.Internal;
 @SuppressWarnings("all")
 public final class ThreadLocalRandom extends Random {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ThreadLocalRandom));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ThreadLocalRandom));
 
     private static readonly AtomicLong seedUniquifier = new AtomicLong();
 

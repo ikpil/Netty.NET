@@ -49,7 +49,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class NativeLibraryLoader {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(NativeLibraryLoader));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(NativeLibraryLoader));
 
     private static readonly string NATIVE_RESOURCE_HOME = "META-INF/native/";
     private static readonly File WORKDIR;

@@ -2,9 +2,9 @@ using System;
 
 namespace Netty.NET.Common.Internal.Logging
 {
-    public class InternalLogger : AbstractInternalLogger
+    public class InternalDefaultLogger : AbstractInternalLogger
     {
-        public InternalLogger(string name) : base(name)
+        public InternalDefaultLogger(string name) : base(name)
         {
         }
 

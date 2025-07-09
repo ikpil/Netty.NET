@@ -14,20 +14,14 @@
  * under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -46,7 +40,7 @@ namespace Netty.NET.Common;
 @Deprecated
 public final class ThreadDeathWatcher {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ThreadDeathWatcher));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ThreadDeathWatcher));
     // visible for testing
     static readonly ThreadFactory threadFactory;
 

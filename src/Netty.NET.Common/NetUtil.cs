@@ -136,7 +136,7 @@ public final class NetUtil {
     /**
      * The logger being used by this class
      */
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(NetUtil));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(NetUtil));
 
     static {
         string prefer = SystemPropertyUtil.get("java.net.preferIPv6Addresses", "false");

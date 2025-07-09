@@ -77,7 +77,7 @@ public class ResourceLeakDetector<T> {
 
     private static Level level;
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetector));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetector));
 
     static {
         final bool disabled;

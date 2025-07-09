@@ -14,26 +14,15 @@
  * under the License.
  */
 
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Text;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Internal;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-public final class MacAddressUtil {
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(MacAddressUtil));
+public static class MacAddressUtil {
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(MacAddressUtil));
 
     private static readonly int EUI64_MAC_ADDRESS_LENGTH = 8;
     private static readonly int EUI48_MAC_ADDRESS_LENGTH = 6;

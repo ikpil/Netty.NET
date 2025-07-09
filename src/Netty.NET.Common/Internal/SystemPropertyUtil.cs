@@ -13,14 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Security;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Internal;
-
-
-
-
-
-
-
 
 
 /**
@@ -28,7 +26,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class SystemPropertyUtil {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(SystemPropertyUtil));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SystemPropertyUtil));
 
     /**
      * Returns {@code true} if and only if the system property with the specified {@code key}

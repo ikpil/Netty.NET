@@ -54,7 +54,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.max(16,
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MAX_VALUE));
 
-    private static readonly InternalLogger logger =
+    private static readonly IInternalLogger logger =
             InternalLoggerFactory.getInstance(typeof(SingleThreadEventExecutor));
 
     private static readonly int ST_NOT_STARTED = 1;

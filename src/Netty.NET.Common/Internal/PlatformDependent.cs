@@ -85,7 +85,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class PlatformDependent {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent));
 
     private static Pattern MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
     private static readonly bool MAYBE_SUPER_USER;

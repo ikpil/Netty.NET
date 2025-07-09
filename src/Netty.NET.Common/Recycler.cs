@@ -26,7 +26,7 @@ namespace Netty.NET.Common;
  * @param <T> the type of the pooled object
  */
 public abstract class Recycler<T> {
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(Recycler));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(Recycler));
     private static readonly EnhancedHandle<?> NOOP_HANDLE = new EnhancedHandle<object>() {
         @Override
         public void recycle(object object) {

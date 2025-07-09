@@ -45,8 +45,8 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      */
     public static readonly string PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultPromise));
-    private static readonly InternalLogger rejectedExecutionLogger =
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultPromise));
+    private static readonly IInternalLogger  rejectedExecutionLogger =
             InternalLoggerFactory.getInstance(typeof(DefaultPromise).getName() + ".rejectedExecution");
     private static readonly int MAX_LISTENER_STACK_DEPTH = Math.min(8,
             SystemPropertyUtil.getInt(PROPERTY_MAX_LISTENER_STACK_DEPTH, 8));

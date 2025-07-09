@@ -56,7 +56,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     private static readonly int STRING_BUILDER_INITIAL_SIZE;
     private static readonly int STRING_BUILDER_MAX_SIZE;
 
-    private static readonly InternalLogger logger;
+    private static readonly IInternalLogger logger;
     /** Internal use only. */
     public static readonly object UNSET = new object();
 

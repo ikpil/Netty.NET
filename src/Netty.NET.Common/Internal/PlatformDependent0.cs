@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Internal;
  */
 public class PlatformDependent0 {
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent0));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent0));
     private static readonly long ADDRESS_FIELD_OFFSET;
     private static readonly long BYTE_ARRAY_BASE_OFFSET;
     private static readonly long INT_ARRAY_BASE_OFFSET;

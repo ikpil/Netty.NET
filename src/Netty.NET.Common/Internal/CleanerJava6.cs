@@ -36,7 +36,7 @@ namespace Netty.NET.Common.Internal;
 final class CleanerJava6 : Cleaner {
     private static readonly MethodHandle CLEAN_METHOD;
 
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(CleanerJava6));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(CleanerJava6));
 
     static {
         MethodHandle clean;

@@ -35,7 +35,7 @@ final class NetUtilInitializations {
     /**
      * The logger being used by this class
      */
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(typeof(NetUtilInitializations));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(NetUtilInitializations));
 
     private NetUtilInitializations() {
     }

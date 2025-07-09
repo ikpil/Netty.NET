@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Internal;
 
 
 public class CleanerJava24Linker : Cleaner {
-    private static readonly InternalLogger logger;
+    private static readonly IInternalLogger logger;
 
     private static readonly MethodHandle INVOKE_MALLOC;
     private static readonly MethodHandle INVOKE_CREATE_BYTEBUFFER;

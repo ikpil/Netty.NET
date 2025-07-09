@@ -40,7 +40,7 @@ public abstract class InternalLoggerFactory
 
     private static IInternalLoggerFactory newDefaultFactory(string name)
     {
-        return new DefaultLoggerFactory();
+        return new InternalDefaultLoggerFactory();
     }
 
     /**
@@ -56,10 +56,9 @@ public abstract class InternalLoggerFactory
             {
                 factory = newDefaultFactory(typeof(InternalLoggerFactory).FullName);
                 var current = Interlocked.CompareExchange(ref defaultFactory, factory, null);
-                if (current != null)
+                if (current == null)
                 {
-                    defaultFactory = current;
-                    return current;
+                    return factory;
                 }
             }
         }
@@ -79,12 +78,12 @@ public abstract class InternalLoggerFactory
     /**
      * Creates a new logger instance with the name of the specified class.
      */
-    public static InternalLogger getInstance<T>()
+    public static IInternalLogger getInstance<T>()
     {
         return getInstance(typeof(T));
     }
 
-    public static InternalLogger getInstance(Type type)
+    public static IInternalLogger getInstance(Type type)
     {
         return getInstance(type.FullName);
     }
@@ -93,7 +92,7 @@ public abstract class InternalLoggerFactory
     /**
      * Creates a new logger instance with the specified name.
      */
-    public static InternalLogger getInstance(string name)
+    public static IInternalLogger getInstance(string name)
     {
         return getDefaultFactory().newInstance(name);
     }

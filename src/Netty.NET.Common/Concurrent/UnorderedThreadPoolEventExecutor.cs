@@ -49,7 +49,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 @Deprecated
 public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor : EventExecutor {
-    private static readonly InternalLogger logger = InternalLoggerFactory.getInstance(
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(
             typeof(UnorderedThreadPoolEventExecutor));
 
     private readonly Promise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();

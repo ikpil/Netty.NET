@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Internal;
  * where we don't have {@code Unsafe} available, but we have memory segments.
  */
 final class CleanerJava25 : Cleaner {
-    private static readonly InternalLogger logger;
+    private static readonly IInternalLogger logger;
 
     private static readonly MethodHandle INVOKE_ALLOCATOR;
 
