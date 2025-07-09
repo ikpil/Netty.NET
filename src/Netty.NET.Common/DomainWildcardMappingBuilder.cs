@@ -28,7 +28,7 @@ namespace Netty.NET.Common;
 public class DomainWildcardMappingBuilder<V> {
 
     private readonly V defaultValue;
-    private readonly Map<string, V> map;
+    private readonly IDictionary<string, V> map;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
@@ -104,9 +104,9 @@ public class DomainWildcardMappingBuilder<V> {
         private static readonly string REPR_MAP_CLOSING = ")";
 
         private readonly V defaultValue;
-        private readonly Map<string, V> map;
+        private readonly IDictionary<string, V> map;
 
-        ImmutableDomainWildcardMapping(V defaultValue, Map<string, V> map) {
+        ImmutableDomainWildcardMapping(V defaultValue, IDictionary<string, V> map) {
             this.defaultValue = defaultValue;
             this.map = new LinkedHashMap<string, V>(map);
         }

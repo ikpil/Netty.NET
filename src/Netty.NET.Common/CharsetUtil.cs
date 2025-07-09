@@ -114,7 +114,7 @@ public final class CharsetUtil {
     public static CharsetEncoder encoder(Charset charset) {
         checkNotNull(charset, "charset");
 
-        Map<Charset, CharsetEncoder> map = InternalThreadLocalMap.get().charsetEncoderCache();
+        IDictionary<Charset, CharsetEncoder> map = InternalThreadLocalMap.get().charsetEncoderCache();
         CharsetEncoder e = map.get(charset);
         if (e != null) {
             e.reset().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
@@ -170,7 +170,7 @@ public final class CharsetUtil {
     public static CharsetDecoder decoder(Charset charset) {
         checkNotNull(charset, "charset");
 
-        Map<Charset, CharsetDecoder> map = InternalThreadLocalMap.get().charsetDecoderCache();
+        IDictionary<Charset, CharsetDecoder> map = InternalThreadLocalMap.get().charsetDecoderCache();
         CharsetDecoder d = map.get(charset);
         if (d != null) {
             d.reset().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);

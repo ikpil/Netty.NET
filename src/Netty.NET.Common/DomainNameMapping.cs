@@ -39,8 +39,8 @@ namespace Netty.NET.Common;
 public class DomainNameMapping<V> : Mapping<string, V> {
 
     final V defaultValue;
-    private readonly Map<string, V> map;
-    private readonly Map<string, V> unmodifiableMap;
+    private readonly IDictionary<string, V> map;
+    private readonly IDictionary<string, V> unmodifiableMap;
 
     /**
      * Creates a default, order-sensitive mapping. If your hostnames are in conflict, the mapping
@@ -67,7 +67,7 @@ public class DomainNameMapping<V> : Mapping<string, V> {
         this(new LinkedHashMap<string, V>(initialCapacity), defaultValue);
     }
 
-    DomainNameMapping(Map<string, V> map, V defaultValue) {
+    DomainNameMapping(IDictionary<string, V> map, V defaultValue) {
         this.defaultValue = checkNotNull(defaultValue, "defaultValue");
         this.map = map;
         unmodifiableMap = map != null ? Collections.unmodifiableMap(map)
@@ -141,7 +141,7 @@ public class DomainNameMapping<V> : Mapping<string, V> {
     /**
      * Returns a read-only {@link Map} of the domain mapping patterns and their associated value objects.
      */
-    public Map<string, V> asMap() {
+    public IDictionary<string, V> asMap() {
         return unmodifiableMap;
     }
 

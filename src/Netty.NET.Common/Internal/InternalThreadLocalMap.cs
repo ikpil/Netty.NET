@@ -57,14 +57,14 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     // Core thread-locals
     private int futureListenerStackDepth;
     private int localChannelReaderStackDepth;
-    private Map<Type, Boolean> handlerSharableCache;
-    private Map<Type, TypeParameterMatcher> typeParameterMatcherGetCache;
-    private Map<Type, Map<string, TypeParameterMatcher>> typeParameterMatcherFindCache;
+    private IDictionary<Type, Boolean> handlerSharableCache;
+    private IDictionary<Type, TypeParameterMatcher> typeParameterMatcherGetCache;
+    private IDictionary<Type, IDictionary<string, TypeParameterMatcher>> typeParameterMatcherFindCache;
 
     // string-related thread-locals
     private StringBuilder stringBuilder;
-    private Map<Charset, CharsetEncoder> charsetEncoderCache;
-    private Map<Charset, CharsetDecoder> charsetDecoderCache;
+    private IDictionary<Charset, CharsetEncoder> charsetEncoderCache;
+    private IDictionary<Charset, CharsetDecoder> charsetDecoderCache;
 
     // List-related thread-locals
     private List<object> arrayList;
@@ -214,16 +214,16 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return sb;
     }
 
-    public Map<Charset, CharsetEncoder> charsetEncoderCache() {
-        Map<Charset, CharsetEncoder> cache = charsetEncoderCache;
+    public IDictionary<Charset, CharsetEncoder> charsetEncoderCache() {
+        IDictionary<Charset, CharsetEncoder> cache = charsetEncoderCache;
         if (cache == null) {
             charsetEncoderCache = cache = new IdentityHashMap<>();
         }
         return cache;
     }
 
-    public Map<Charset, CharsetDecoder> charsetDecoderCache() {
-        Map<Charset, CharsetDecoder> cache = charsetDecoderCache;
+    public IDictionary<Charset, CharsetDecoder> charsetDecoderCache() {
+        IDictionary<Charset, CharsetDecoder> cache = charsetDecoderCache;
         if (cache == null) {
             charsetDecoderCache = cache = new IdentityHashMap<>();
         }
@@ -262,16 +262,16 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return new ThreadLocalRandom();
     }
 
-    public Map<Type, TypeParameterMatcher> typeParameterMatcherGetCache() {
-        Map<Type, TypeParameterMatcher> cache = typeParameterMatcherGetCache;
+    public IDictionary<Type, TypeParameterMatcher> typeParameterMatcherGetCache() {
+        IDictionary<Type, TypeParameterMatcher> cache = typeParameterMatcherGetCache;
         if (cache == null) {
             typeParameterMatcherGetCache = cache = new IdentityHashMap<>();
         }
         return cache;
     }
 
-    public Map<Type, Map<string, TypeParameterMatcher>> typeParameterMatcherFindCache() {
-        Map<Type, Map<string, TypeParameterMatcher>> cache = typeParameterMatcherFindCache;
+    public IDictionary<Type, IDictionary<string, TypeParameterMatcher>> typeParameterMatcherFindCache() {
+        IDictionary<Type, IDictionary<string, TypeParameterMatcher>> cache = typeParameterMatcherFindCache;
         if (cache == null) {
             typeParameterMatcherFindCache = cache = new IdentityHashMap<>();
         }
@@ -288,8 +288,8 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         // No-op.
     }
 
-    public Map<Type, Boolean> handlerSharableCache() {
-        Map<Type, Boolean> cache = handlerSharableCache;
+    public IDictionary<Type, Boolean> handlerSharableCache() {
+        IDictionary<Type, Boolean> cache = handlerSharableCache;
         if (cache == null) {
             // Start with small capacity to keep memory overhead as low as possible.
             handlerSharableCache = cache = new WeakHashMap<>(HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY);

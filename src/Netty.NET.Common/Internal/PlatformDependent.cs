@@ -494,7 +494,7 @@ public final class PlatformDependent {
      * @deprecated please use new ConcurrentHashMap<K, V>() directly.
      */
     @Deprecated
-    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap(Map<? extends K, ? extends V> map) {
+    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap(IDictionary<? extends K, ? extends V> map) {
         return new ConcurrentHashMap<>(map);
     }
 

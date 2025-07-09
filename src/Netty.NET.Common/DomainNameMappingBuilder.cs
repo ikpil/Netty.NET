@@ -33,7 +33,7 @@ namespace Netty.NET.Common;
 public final class DomainNameMappingBuilder<V> {
 
     private readonly V defaultValue;
-    private readonly Map<string, V> map;
+    private readonly IDictionary<string, V> map;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
@@ -99,10 +99,10 @@ public final class DomainNameMappingBuilder<V> {
 
         private readonly string[] domainNamePatterns;
         private readonly V[] values;
-        private readonly Map<string, V> map;
+        private readonly IDictionary<string, V> map;
 
         @SuppressWarnings("unchecked")
-        private ImmutableDomainNameMapping(V defaultValue, Map<string, V> map) {
+        private ImmutableDomainNameMapping(V defaultValue, IDictionary<string, V> map) {
             super(null, defaultValue);
 
             ISet<Map.Entry<string, V>> mappings = map.entrySet();
@@ -110,7 +110,7 @@ public final class DomainNameMappingBuilder<V> {
             domainNamePatterns = new string[numberOfMappings];
             values = (V[]) new object[numberOfMappings];
 
-            final Map<string, V> mapCopy = new LinkedHashMap<string, V>(map.size());
+            final IDictionary<string, V> mapCopy = new LinkedHashMap<string, V>(map.size());
             int index = 0;
             for (Map.Entry<string, V> mapping : mappings) {
                 final string hostname = normalizeHostname(mapping.getKey());
@@ -148,7 +148,7 @@ public final class DomainNameMappingBuilder<V> {
         }
 
         @Override
-        public Map<string, V> asMap() {
+        public IDictionary<string, V> asMap() {
             return map;
         }
 
