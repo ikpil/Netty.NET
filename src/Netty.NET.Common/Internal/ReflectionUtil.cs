@@ -56,7 +56,7 @@ public final class ReflectionUtil {
     }
 
     private static Class<?> fail(Class<?> type, string typeParamName) {
-        throw new IllegalStateException(
+        throw new InvalidOperationException(
                 "cannot determine the type of the type parameter '" + typeParamName + "': " + type);
     }
 
@@ -66,7 +66,7 @@ public final class ReflectionUtil {
      * @param parametrizedSuperclass The parametrized superclass
      * @param typeParamName The name of the type parameter to resolve
      * @return The resolved type parameter
-     * @throws IllegalStateException if the type parameter could not be resolved
+     * @throws InvalidOperationException if the type parameter could not be resolved
      * */
     public static Class<?> resolveTypeParameter(final object object,
                                                 Class<?> parametrizedSuperclass,
@@ -85,7 +85,7 @@ public final class ReflectionUtil {
                 }
 
                 if (typeParamIndex < 0) {
-                    throw new IllegalStateException(
+                    throw new InvalidOperationException(
                             "unknown type parameter '" + typeParamName + "': " + parametrizedSuperclass);
                 }
 

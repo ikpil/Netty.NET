@@ -273,14 +273,14 @@ public abstract class Recycler<T> {
         void toAvailable() {
             int prev = STATE_UPDATER.getAndSet(this, STATE_AVAILABLE);
             if (prev == STATE_AVAILABLE) {
-                throw new IllegalStateException("object has been recycled already.");
+                throw new InvalidOperationException("object has been recycled already.");
             }
         }
 
         void unguardedToAvailable() {
             int prev = state;
             if (prev == STATE_AVAILABLE) {
-                throw new IllegalStateException("object has been recycled already.");
+                throw new InvalidOperationException("object has been recycled already.");
             }
             STATE_UPDATER.lazySet(this, STATE_AVAILABLE);
         }

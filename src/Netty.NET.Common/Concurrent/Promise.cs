@@ -24,7 +24,7 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a success and notifies all
      * listeners.
      *
-     * If it is success or failed already it will throw an {@link IllegalStateException}.
+     * If it is success or failed already it will throw an {@link InvalidOperationException}.
      */
     Promise<V> setSuccess(V result);
 
@@ -42,7 +42,7 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a failure and notifies all
      * listeners.
      *
-     * If it is success or failed already it will throw an {@link IllegalStateException}.
+     * If it is success or failed already it will throw an {@link InvalidOperationException}.
      */
     Promise<V> setFailure(Exception cause);
 

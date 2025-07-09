@@ -55,12 +55,12 @@ public final class Signal extends Error : Constant<Signal> {
     }
 
     /**
-     * Check if the given {@link Signal} is the same as this instance. If not an {@link IllegalStateException} will
+     * Check if the given {@link Signal} is the same as this instance. If not an {@link InvalidOperationException} will
      * be thrown.
      */
     public void expect(Signal signal) {
         if (this != signal) {
-            throw new IllegalStateException("unexpected signal: " + signal);
+            throw new InvalidOperationException("unexpected signal: " + signal);
         }
     }
 

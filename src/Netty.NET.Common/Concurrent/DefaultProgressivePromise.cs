@@ -46,7 +46,7 @@ public class DefaultProgressivePromise<V> extends DefaultPromise<V> : Progressiv
         }
 
         if (isDone()) {
-            throw new IllegalStateException("complete already");
+            throw new InvalidOperationException("complete already");
         }
 
         notifyProgressiveListeners(progress, total);

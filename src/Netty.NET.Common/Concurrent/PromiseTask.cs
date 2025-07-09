@@ -124,7 +124,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
 
     @Override
     public final Promise<V> setFailure(Exception cause) {
-        throw new IllegalStateException();
+        throw new InvalidOperationException();
     }
 
     protected final Promise<V> setFailureInternal(Exception cause) {
@@ -144,7 +144,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
 
     @Override
     public final Promise<V> setSuccess(V result) {
-        throw new IllegalStateException();
+        throw new InvalidOperationException();
     }
 
     protected final Promise<V> setSuccessInternal(V result) {
@@ -164,7 +164,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
 
     @Override
     public final bool setUncancellable() {
-        throw new IllegalStateException();
+        throw new InvalidOperationException();
     }
 
     protected final bool setUncancellableInternal() {

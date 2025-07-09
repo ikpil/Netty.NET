@@ -314,7 +314,7 @@ public final class NetUtil {
                 return InetAddress.getByAddress(bytes);
             } catch (UnknownHostException e) {
                 // Should never happen!
-                throw new IllegalStateException(e);
+                throw new InvalidOperationException(e);
             }
         }
 
@@ -336,7 +336,7 @@ public final class NetUtil {
                         return Inet6Address.getByAddress(null, bytes, scopeId);
                     } catch (UnknownHostException e) {
                         // Should never happen!
-                        throw new IllegalStateException(e);
+                        throw new InvalidOperationException(e);
                     }
                 } catch (NumberFormatException e) {
                     return null;
@@ -350,7 +350,7 @@ public final class NetUtil {
                 return InetAddress.getByAddress(bytes);
             } catch (UnknownHostException e) {
                 // Should never happen!
-                throw new IllegalStateException(e);
+                throw new InvalidOperationException(e);
             }
         }
         return null;

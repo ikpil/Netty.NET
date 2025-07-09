@@ -16,12 +16,12 @@
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * An {@link IllegalStateException} which is raised when a user performed a blocking operation
+ * An {@link InvalidOperationException} which is raised when a user performed a blocking operation
  * when the user is in an event loop thread.  If a blocking operation is performed in an event loop
  * thread, the blocking operation will most likely enter a dead lock state, hence throwing this
  * exception.
  */
-public class BlockingOperationException extends IllegalStateException {
+public class BlockingOperationException extends InvalidOperationException {
 
     private static readonly long serialVersionUID = 2462223247762460301L;
 

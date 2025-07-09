@@ -152,7 +152,7 @@ public final class PromiseCombiner {
         ObjectUtil.checkNotNull(aggregatePromise, "aggregatePromise");
         checkInEventLoop();
         if (this.aggregatePromise != null) {
-            throw new IllegalStateException("Already finished");
+            throw new InvalidOperationException("Already finished");
         }
         this.aggregatePromise = aggregatePromise;
         if (doneCount == expectedCount) {
@@ -162,7 +162,7 @@ public final class PromiseCombiner {
 
     private void checkInEventLoop() {
         if (!executor.inEventLoop()) {
-            throw new IllegalStateException("Must be called from EventExecutor thread");
+            throw new InvalidOperationException("Must be called from EventExecutor thread");
         }
     }
 
@@ -172,7 +172,7 @@ public final class PromiseCombiner {
 
     private void checkAddAllowed() {
         if (aggregatePromise != null) {
-            throw new IllegalStateException("Adding promises is not allowed after finished adding");
+            throw new InvalidOperationException("Adding promises is not allowed after finished adding");
         }
     }
 }

@@ -797,7 +797,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
 
         if (!inEventLoop()) {
-            throw new IllegalStateException("must be invoked from an event loop");
+            throw new InvalidOperationException("must be invoked from an event loop");
         }
 
         cancelScheduledTasks();
@@ -850,7 +850,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     public bool awaitTermination(long timeout, TimeSpan unit) {
         ObjectUtil.checkNotNull(unit, "unit");
         if (inEventLoop()) {
-            throw new IllegalStateException("cannot await termination of the current thread");
+            throw new InvalidOperationException("cannot await termination of the current thread");
         }
 
         threadLock.await(timeout, unit);

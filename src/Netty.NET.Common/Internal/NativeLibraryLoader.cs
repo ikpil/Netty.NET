@@ -301,7 +301,7 @@ public final class NativeLibraryLoader {
                         logger.debug("Don't support SHA-256, can't check if resources have same content.", e);
                     }
 
-                    throw new IllegalStateException(
+                    throw new InvalidOperationException(
                             "Multiple resources found for '" + path + "' with different content: " + urlsList);
                 } else {
                     logger.warn("Multiple resources found for '" + path + "' with different content: " +
@@ -468,7 +468,7 @@ public final class NativeLibraryLoader {
                             return (Class<?>) defineClass.invoke(loader, helper.getName(), classBinary, 0,
                                     classBinary.length);
                         } catch (Exception e) {
-                            throw new IllegalStateException("Define class failed!", e);
+                            throw new InvalidOperationException("Define class failed!", e);
                         }
                     }
                 });

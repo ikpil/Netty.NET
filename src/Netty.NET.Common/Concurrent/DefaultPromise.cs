@@ -110,7 +110,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         if (setSuccess0(result)) {
             return this;
         }
-        throw new IllegalStateException("complete already: " + this);
+        throw new InvalidOperationException("complete already: " + this);
     }
 
     @Override
@@ -123,7 +123,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         if (setFailure0(cause)) {
             return this;
         }
-        throw new IllegalStateException("complete already: " + this, cause);
+        throw new InvalidOperationException("complete already: " + this, cause);
     }
 
     @Override
@@ -666,7 +666,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
 
     private void incWaiters() {
         if (waiters == Short.MAX_VALUE) {
-            throw new IllegalStateException("too many waiters: " + this);
+            throw new InvalidOperationException("too many waiters: " + this);
         }
         ++waiters;
     }

@@ -31,7 +31,7 @@ public interface Timer
      *
      * @return a handle which is associated with the specified task
      *
-     * @throws IllegalStateException       if this timer has been {@linkplain #stop() stopped} already
+     * @throws InvalidOperationException       if this timer has been {@linkplain #stop() stopped} already
      * @throws RejectedExecutionException if the pending timeouts are too many and creating new timeout
      *                                    can cause instability in the system.
      */

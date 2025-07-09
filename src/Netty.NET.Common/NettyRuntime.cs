@@ -38,7 +38,7 @@ public final class NettyRuntime {
          *
          * @param availableProcessors the number of available processors
          * @throws ArgumentException if the specified number of available processors is non-positive
-         * @throws IllegalStateException    if the number of available processors is already configured
+         * @throws InvalidOperationException    if the number of available processors is already configured
          */
         synchronized void setAvailableProcessors(final int availableProcessors) {
             ObjectUtil.checkPositive(availableProcessors, "availableProcessors");
@@ -48,7 +48,7 @@ public final class NettyRuntime {
                         "availableProcessors is already set to [%d], rejecting [%d]",
                         this.availableProcessors,
                         availableProcessors);
-                throw new IllegalStateException(message);
+                throw new InvalidOperationException(message);
             }
             this.availableProcessors = availableProcessors;
         }
@@ -80,7 +80,7 @@ public final class NettyRuntime {
      *
      * @param availableProcessors the number of available processors
      * @throws ArgumentException if the specified number of available processors is non-positive
-     * @throws IllegalStateException    if the number of available processors is already configured
+     * @throws InvalidOperationException    if the number of available processors is already configured
      */
     @SuppressWarnings("unused,WeakerAccess") // this method is part of the public API
     public static void setAvailableProcessors(final int availableProcessors) {

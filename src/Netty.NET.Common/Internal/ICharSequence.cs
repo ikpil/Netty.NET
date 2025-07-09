@@ -25,4 +25,5 @@ public interface ICharSequence : IReadOnlyList<char>
     string ToString(int start);
 
     string ToString();
+    char charAt(int index);
 }

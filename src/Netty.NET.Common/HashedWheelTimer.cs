@@ -328,7 +328,7 @@ public class HashedWheelTimer : Timer {
      * Starts the background thread explicitly.  The background thread will
      * start automatically on demand even if you did not call this method.
      *
-     * @throws IllegalStateException if this timer has been
+     * @throws InvalidOperationException if this timer has been
      *                               {@linkplain #stop() stopped} already
      */
     public void start() {
@@ -341,7 +341,7 @@ public class HashedWheelTimer : Timer {
             case WORKER_STATE_STARTED:
                 break;
             case WORKER_STATE_SHUTDOWN:
-                throw new IllegalStateException("cannot be started once stopped");
+                throw new InvalidOperationException("cannot be started once stopped");
             default:
                 throw new Error("Invalid WorkerState");
         }
@@ -359,7 +359,7 @@ public class HashedWheelTimer : Timer {
     @Override
     public ISet<Timeout> stop() {
         if (Thread.currentThread() == workerThread) {
-            throw new IllegalStateException(
+            throw new InvalidOperationException(
                     typeof(HashedWheelTimer).getSimpleName() +
                             ".stop() cannot be called from " +
                             typeof(TimerTask).getSimpleName());
@@ -772,7 +772,7 @@ public class HashedWheelTimer : Timer {
                         timeout.expire();
                     } else {
                         // The timeout was placed into a wrong slot. This should never happen.
-                        throw new IllegalStateException(string.format(
+                        throw new InvalidOperationException(string.format(
                                 "timeout.deadline (%d) > deadline (%d)", timeout.deadline, deadline));
                     }
                 } else if (!timeout.isCancelled()) {

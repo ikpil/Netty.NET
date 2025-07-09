@@ -168,7 +168,7 @@ final class CleanerJava25 : Cleaner {
         } catch (RuntimeException e) {
             throw e; // Propagate the runtime exceptions that the Arena would normally throw.
         } catch (Exception e) {
-            throw new IllegalStateException("Unexpected allocation exception", e);
+            throw new InvalidOperationException("Unexpected allocation exception", e);
         }
     }
 
@@ -201,7 +201,7 @@ final class CleanerJava25 : Cleaner {
             } catch (RuntimeException e) {
                 throw e; // Propagate the runtime exceptions that Arena would normally throw.
             } catch (Exception e) {
-                throw new IllegalStateException("Unexpected close exception", e);
+                throw new InvalidOperationException("Unexpected close exception", e);
             }
         }
 

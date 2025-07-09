@@ -100,7 +100,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
             this.offset = 0;
         } else {
             if (isOutOfBounds(start, length, value.length)) {
-                throw new IndexOutOfBoundsException("expected: " + "0 <= start(" + start + ") <= start + length(" +
+                throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" +
                         length + ") <= " + "value.length(" + value.length + ')');
             }
             this.value = value;
@@ -135,7 +135,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      */
     public AsciiString(ByteBuffer value, int start, int length, bool copy) {
         if (isOutOfBounds(start, length, value.capacity())) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
                             + ") <= " + "value.capacity(" + value.capacity() + ')');
         }
 
@@ -171,7 +171,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      */
     public AsciiString(char[] value, int start, int length) {
         if (isOutOfBounds(start, length, value.length)) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
                             + ") <= " + "value.length(" + value.length + ')');
         }
 
@@ -218,7 +218,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      */
     public AsciiString(ICharSequence value, int start, int length) {
         if (isOutOfBounds(start, length, value.length())) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
                             + ") <= " + "value.length(" + value.length() + ')');
         }
 
@@ -271,7 +271,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      */
     public int forEachByte(int index, int length, ByteProcessor visitor) {
         if (isOutOfBounds(index, length, length())) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
                     + ") <= " + "length(" + length() + ')');
         }
         return forEachByte0(index, length, visitor);
@@ -306,7 +306,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      */
     public int forEachByteDesc(int index, int length, ByteProcessor visitor) {
         if (isOutOfBounds(index, length, length())) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
                     + ") <= " + "length(" + length() + ')');
         }
         return forEachByteDesc0(index, length, visitor);
@@ -326,7 +326,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
         // We must do a range check here to enforce the access does not go outside our sub region of the array.
         // We rely on the array access itself to pick up the array out of bounds conditions
         if (index < 0 || index >= length) {
-            throw new IndexOutOfBoundsException("index: " + index + " must be in the range [0," + length + ")");
+            throw new ArgumentOutOfRangeException("index: " + index + " must be in the range [0," + length + ")");
         }
         // Try to use unsafe to avoid double checking the index bounds
         if (PlatformDependent.hasUnsafe()) {
@@ -412,7 +412,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      */
     public void copy(int srcIdx, byte[] dst, int dstIdx, int length) {
         if (isOutOfBounds(srcIdx, length, length())) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= srcIdx(" + srcIdx + ") <= srcIdx + length("
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= srcIdx(" + srcIdx + ") <= srcIdx + length("
                             + length + ") <= srcLen(" + length() + ')');
         }
 
@@ -589,7 +589,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
         }
 
         if (isOutOfBounds(start, length, length())) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= start(" + start + ") <= srcIdx + length("
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= srcIdx + length("
                             + length + ") <= srcLen(" + length() + ')');
         }
 
@@ -612,7 +612,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
         ObjectUtil.checkNotNull(dst, "dst");
 
         if (isOutOfBounds(srcIdx, length, length())) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= srcIdx(" + srcIdx + ") <= srcIdx + length("
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= srcIdx(" + srcIdx + ") <= srcIdx + length("
                             + length + ") <= srcLen(" + length() + ')');
         }
 
@@ -626,7 +626,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      * Copies a range of characters into a new string.
      * @param start the offset of the first character (inclusive).
      * @return a new string containing the characters from start to the end of the string.
-     * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
+     * @throws ArgumentOutOfRangeException if {@code start < 0} or {@code start > length()}.
      */
     public AsciiString subSequence(int start) {
         return subSequence(start, length());
@@ -637,7 +637,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      * @param start the offset of the first character (inclusive).
      * @param end The index to stop at (exclusive).
      * @return a new string containing the characters from start to the end of the string.
-     * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
+     * @throws ArgumentOutOfRangeException if {@code start < 0} or {@code start > length()}.
      */
     @Override
     public AsciiString subSequence(int start, int end) {
@@ -651,11 +651,11 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
      * @param copy If {@code true} then a copy of the underlying storage will be made.
      * If {@code false} then the underlying storage will be shared.
      * @return a new string containing the characters from start to the end of the string.
-     * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
+     * @throws ArgumentOutOfRangeException if {@code start < 0} or {@code start > length()}.
      */
     public AsciiString subSequence(int start, int end, bool copy) {
         if (isOutOfBounds(start, end - start, length())) {
-            throw new IndexOutOfBoundsException("expected: 0 <= start(" + start + ") <= end (" + end + ") <= length("
+            throw new ArgumentOutOfRangeException("expected: 0 <= start(" + start + ") <= end (" + end + ") <= length("
                             + length() + ')');
         }
 
@@ -1174,7 +1174,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
         }
 
         if (isOutOfBounds(start, length, length())) {
-            throw new IndexOutOfBoundsException("expected: " + "0 <= start(" + start + ") <= srcIdx + length("
+            throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= srcIdx + length("
                             + length + ") <= srcLen(" + length() + ')');
         }
 
@@ -1193,7 +1193,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
 
     public char parseChar(int start) {
         if (start + 1 >= length()) {
-            throw new IndexOutOfBoundsException("2 bytes required to convert to character. index " +
+            throw new ArgumentOutOfRangeException("2 bytes required to convert to character. index " +
                     start + " would go out of bounds.");
         }
         final int startWithOffset = start + offset;

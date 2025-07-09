@@ -215,7 +215,7 @@ public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : 
 
         final Thread thread = this.thread;
         if (thread == null) {
-            throw new IllegalStateException("thread was not started");
+            throw new InvalidOperationException("thread was not started");
         }
         thread.join(unit.toMillis(timeout));
         return !thread.isAlive();

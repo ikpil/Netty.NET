@@ -166,7 +166,7 @@ public class FastThreadLocalThread extends Thread {
     public static void runWithFastThreadLocal(Runnable runnable) {
         Thread current = currentThread();
         if (current instanceof FastThreadLocalThread) {
-            throw new IllegalStateException("Caller is a real FastThreadLocalThread");
+            throw new InvalidOperationException("Caller is a real FastThreadLocalThread");
         }
         long id = current.getId();
         fallbackThreads.updateAndGet(arr -> {
@@ -175,7 +175,7 @@ public class FastThreadLocalThread extends Thread {
             }
             int index = Arrays.binarySearch(arr, id);
             if (index >= 0) {
-                throw new IllegalStateException("Reentrant call to run()");
+                throw new InvalidOperationException("Reentrant call to run()");
             }
             index = ~index; // same as -(index + 1)
             long[] next = new long[arr.length + 1];

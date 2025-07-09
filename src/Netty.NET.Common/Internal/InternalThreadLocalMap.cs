@@ -134,7 +134,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         int index = nextIndex.getAndIncrement();
         if (index >= ARRAY_LIST_CAPACITY_MAX_SIZE || index < 0) {
             nextIndex.set(ARRAY_LIST_CAPACITY_MAX_SIZE);
-            throw new IllegalStateException("too many thread-local indexed variables");
+            throw new InvalidOperationException("too many thread-local indexed variables");
         }
         return index;
     }

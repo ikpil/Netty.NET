@@ -47,7 +47,7 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public char charAt(int index) {
         if (index > pos) {
-            throw new IndexOutOfBoundsException();
+            throw new ArgumentOutOfRangeException();
         }
         return chars[index];
     }
@@ -68,15 +68,15 @@ public sealed class AppendableCharSequence : ICharSequence
             // If start and end index is the same we need to return an empty sequence to conform to the interface.
             // As our expanding logic depends on the fact that we have a char[] with length > 0 we need to construct
             // an instance for which this is true.
-            return new AppendableCharSequence(Math.min(16, chars.length));
+            return new AppendableCharSequence(Math.Min(16, chars.Length));
         }
         return new AppendableCharSequence(Arrays.copyOfRange(chars, start, end));
     }
 
     public AppendableCharSequence append(char c) {
-        if (pos == chars.length) {
+        if (pos == chars.Length) {
             char[] old = chars;
-            chars = new char[old.length << 1];
+            chars = new char[old.Length << 1];
             System.arraycopy(old, 0, chars, 0, old.length);
         }
         chars[pos++] = c;
@@ -84,19 +84,19 @@ public sealed class AppendableCharSequence : ICharSequence
     }
 
     public AppendableCharSequence append(ICharSequence csq) {
-        return append(csq, 0, csq.length());
+        return append(csq, 0, csq.Count);
     }
 
     public AppendableCharSequence append(ICharSequence csq, int start, int end) {
-        if (csq.length() < end) {
-            throw new IndexOutOfBoundsException("expected: csq.length() >= ("
-                    + end + "),but actual is (" + csq.length() + ")");
+        if (csq.Count < end) {
+            throw new ArgumentOutOfRangeException("expected: csq.Count >= ("
+                    + end + "),but actual is (" + csq.Count + ")");
         }
         int length = end - start;
-        if (length > chars.length - pos) {
+        if (length > chars.Length - pos) {
             chars = expand(chars, pos + length, pos);
         }
-        if (csq instanceof AppendableCharSequence) {
+        if (csq is AppendableCharSequence) {
             // Optimize append operations via array copy
             AppendableCharSequence seq = (AppendableCharSequence) csq;
             char[] src = seq.chars;
@@ -129,7 +129,7 @@ public sealed class AppendableCharSequence : ICharSequence
     public string substring(int start, int end) {
         int length = end - start;
         if (start > pos || length > pos) {
-            throw new IndexOutOfBoundsException("expected: start and length <= ("
+            throw new ArgumentOutOfRangeException("expected: start and length <= ("
                     + pos + ")");
         }
         return new string(chars, start, length);
@@ -145,13 +145,13 @@ public sealed class AppendableCharSequence : ICharSequence
     }
 
     private static char[] expand(char[] array, int neededSpace, int size) {
-        int newCapacity = array.length;
+        int newCapacity = array.Length;
         do {
             // double capacity until it is big enough
             newCapacity <<= 1;
 
             if (newCapacity < 0) {
-                throw new IllegalStateException();
+                throw new InvalidOperationException();
             }
 
         } while (neededSpace > newCapacity);
