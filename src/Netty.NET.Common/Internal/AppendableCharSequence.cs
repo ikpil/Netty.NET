@@ -25,6 +25,7 @@ public sealed class AppendableCharSequence : ICharSequence
 {
     private char[] chars;
     private int pos;
+    public int Count => pos;
 
     public AppendableCharSequence(int length)
     {
@@ -35,6 +36,19 @@ public sealed class AppendableCharSequence : ICharSequence
     {
         this.chars = checkNonEmpty(chars, "chars");
         pos = chars.Length;
+    }
+
+    public char this[int index]
+    {
+        get
+        {
+            if (index > pos)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            return chars[index];
+        }
     }
 
     public void setLength(int length)
@@ -50,16 +64,6 @@ public sealed class AppendableCharSequence : ICharSequence
     public int length()
     {
         return pos;
-    }
-
-    public char charAt(int index)
-    {
-        if (index > pos)
-        {
-            throw new ArgumentOutOfRangeException();
-        }
-
-        return chars[index];
     }
 
     /**
@@ -205,8 +209,4 @@ public sealed class AppendableCharSequence : ICharSequence
 
         return newArray;
     }
-
-    public int Count { get; }
-
-    public char this[int index] => throw new NotImplementedException();
 }

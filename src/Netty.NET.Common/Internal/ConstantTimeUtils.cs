@@ -13,11 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Internal;
 
-public final class ConstantTimeUtils {
-    private ConstantTimeUtils() { }
-
+public static class ConstantTimeUtils
+{
     /**
      * Compare two {@code int}s without leaking timing information.
      * <p>
@@ -33,7 +33,8 @@ public final class ConstantTimeUtils {
      * @param y the second value.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(int x, int y) {
+    public static int equalsConstantTime(int x, int y)
+    {
         int z = ~(x ^ y);
         z &= z >> 16;
         z &= z >> 8;
@@ -58,7 +59,8 @@ public final class ConstantTimeUtils {
      * @param y the second value.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(long x, long y) {
+    public static int equalsConstantTime(long x, long y)
+    {
         long z = ~(x ^ y);
         z &= z >> 32;
         z &= z >> 16;
@@ -66,7 +68,7 @@ public final class ConstantTimeUtils {
         z &= z >> 4;
         z &= z >> 2;
         z &= z >> 1;
-        return (int) (z & 1);
+        return (int)(z & 1);
     }
 
     /**
@@ -91,13 +93,16 @@ public final class ConstantTimeUtils {
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
     public static int equalsConstantTime(byte[] bytes1, int startPos1,
-                                         byte[] bytes2, int startPos2, int length) {
+        byte[] bytes2, int startPos2, int length)
+    {
         // Benchmarking demonstrates that using an int to accumulate is faster than other data types.
         int b = 0;
-        final int end = startPos1 + length;
-        for (; startPos1 < end; ++startPos1, ++startPos2) {
+        int end = startPos1 + length;
+        for (; startPos1 < end; ++startPos1, ++startPos2)
+        {
             b |= bytes1[startPos1] ^ bytes2[startPos2];
         }
+
         return equalsConstantTime(b, 0);
     }
 
@@ -116,16 +121,20 @@ public final class ConstantTimeUtils {
      * @param s2 the second value.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(ICharSequence s1, ICharSequence s2) {
-        if (s1.length() != s2.length()) {
+    public static int equalsConstantTime(ICharSequence s1, ICharSequence s2)
+    {
+        if (s1.Count != s2.Count)
+        {
             return 0;
         }
 
         // Benchmarking demonstrates that using an int to accumulate is faster than other data types.
         int c = 0;
-        for (int i = 0; i < s1.length(); ++i) {
-            c |= s1.charAt(i) ^ s2.charAt(i);
+        for (int i = 0; i < s1.Count; ++i)
+        {
+            c |= s1[i] ^ s2[i];
         }
+
         return equalsConstantTime(c, 0);
     }
 }
