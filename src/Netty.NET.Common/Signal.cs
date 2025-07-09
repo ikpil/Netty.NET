@@ -41,7 +41,7 @@ public final class Signal extends Error : Constant<Signal> {
     /**
      * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
-    public static Signal valueOf(Class<?> firstNameComponent, string secondNameComponent) {
+    public static Signal valueOf(Type firstNameComponent, string secondNameComponent) {
         return pool.valueOf(firstNameComponent, secondNameComponent);
     }
 

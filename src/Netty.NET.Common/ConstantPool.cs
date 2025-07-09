@@ -37,7 +37,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
     /**
      * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
-    public T valueOf(Class<?> firstNameComponent, string secondNameComponent) {
+    public T valueOf(Type firstNameComponent, string secondNameComponent) {
         return valueOf(
                 checkNotNull(firstNameComponent, "firstNameComponent").getName() +
                 '#' +

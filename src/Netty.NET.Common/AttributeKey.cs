@@ -56,7 +56,7 @@ public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> AttributeKey<T> valueOf(Class<?> firstNameComponent, string secondNameComponent) {
+    public static <T> AttributeKey<T> valueOf(Type firstNameComponent, string secondNameComponent) {
         return (AttributeKey<T>) pool.valueOf(firstNameComponent, secondNameComponent);
     }
 

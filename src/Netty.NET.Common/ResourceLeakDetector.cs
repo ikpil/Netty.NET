@@ -157,7 +157,7 @@ public class ResourceLeakDetector<T> {
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
     @Deprecated
-    public ResourceLeakDetector(Class<?> resourceType) {
+    public ResourceLeakDetector(Type resourceType) {
         this(simpleClassName(resourceType));
     }
 
@@ -179,7 +179,7 @@ public class ResourceLeakDetector<T> {
      * @param maxActive This is deprecated and will be ignored.
      */
     @Deprecated
-    public ResourceLeakDetector(Class<?> resourceType, int samplingInterval, long maxActive) {
+    public ResourceLeakDetector(Type resourceType, int samplingInterval, long maxActive) {
         this(resourceType, samplingInterval);
     }
 
@@ -189,7 +189,7 @@ public class ResourceLeakDetector<T> {
      * or {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}
      */
     @SuppressWarnings("deprecation")
-    public ResourceLeakDetector(Class<?> resourceType, int samplingInterval) {
+    public ResourceLeakDetector(Type resourceType, int samplingInterval) {
         this(simpleClassName(resourceType), samplingInterval, long.MAX_VALUE);
     }
 

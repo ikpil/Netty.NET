@@ -14,6 +14,13 @@
  * under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Internal;
 
 
@@ -50,9 +57,9 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     // Core thread-locals
     private int futureListenerStackDepth;
     private int localChannelReaderStackDepth;
-    private Map<Class<?>, Boolean> handlerSharableCache;
-    private Map<Class<?>, TypeParameterMatcher> typeParameterMatcherGetCache;
-    private Map<Class<?>, Map<string, TypeParameterMatcher>> typeParameterMatcherFindCache;
+    private Map<Type, Boolean> handlerSharableCache;
+    private Map<Type, TypeParameterMatcher> typeParameterMatcherGetCache;
+    private Map<Type, Map<string, TypeParameterMatcher>> typeParameterMatcherFindCache;
 
     // string-related thread-locals
     private StringBuilder stringBuilder;
@@ -255,16 +262,16 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return new ThreadLocalRandom();
     }
 
-    public Map<Class<?>, TypeParameterMatcher> typeParameterMatcherGetCache() {
-        Map<Class<?>, TypeParameterMatcher> cache = typeParameterMatcherGetCache;
+    public Map<Type, TypeParameterMatcher> typeParameterMatcherGetCache() {
+        Map<Type, TypeParameterMatcher> cache = typeParameterMatcherGetCache;
         if (cache == null) {
             typeParameterMatcherGetCache = cache = new IdentityHashMap<>();
         }
         return cache;
     }
 
-    public Map<Class<?>, Map<string, TypeParameterMatcher>> typeParameterMatcherFindCache() {
-        Map<Class<?>, Map<string, TypeParameterMatcher>> cache = typeParameterMatcherFindCache;
+    public Map<Type, Map<string, TypeParameterMatcher>> typeParameterMatcherFindCache() {
+        Map<Type, Map<string, TypeParameterMatcher>> cache = typeParameterMatcherFindCache;
         if (cache == null) {
             typeParameterMatcherFindCache = cache = new IdentityHashMap<>();
         }
@@ -281,8 +288,8 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         // No-op.
     }
 
-    public Map<Class<?>, Boolean> handlerSharableCache() {
-        Map<Class<?>, Boolean> cache = handlerSharableCache;
+    public Map<Type, Boolean> handlerSharableCache() {
+        Map<Type, Boolean> cache = handlerSharableCache;
         if (cache == null) {
             // Start with small capacity to keep memory overhead as low as possible.
             handlerSharableCache = cache = new WeakHashMap<>(HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY);

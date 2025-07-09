@@ -325,7 +325,7 @@ public class PlatformDependent0 {
                 @Override
                 public object run() {
                     try {
-                        Class<?> bitsClass =
+                        Type bitsClass =
                                 Class.forName("java.nio.Bits", false, getSystemClassLoader());
                         int version = javaVersion();
                         if (unsafeStaticFieldOffsetSupported() && version >= 9) {
@@ -395,7 +395,7 @@ public class PlatformDependent0 {
                         try {
                             // Java9 has jdk.internal.misc.Unsafe and not all methods are propagated to
                             // sun.misc.Unsafe
-                            Class<?> cls = getClassLoader(typeof(PlatformDependent0))
+                            Type cls = getClassLoader(typeof(PlatformDependent0))
                                     .loadClass("jdk.internal.misc.Unsafe");
                             return lookup.findStatic(cls, "getUnsafe", methodType(cls)).invoke();
                         } catch (Exception e) {
@@ -409,7 +409,7 @@ public class PlatformDependent0 {
                         @Override
                         public object run() {
                             try {
-                                Class<?> finalInternalUnsafeClass = finalInternalUnsafe.getClass();
+                                Type finalInternalUnsafeClass = finalInternalUnsafe.getClass();
                                 return lookup.findVirtual(
                                         finalInternalUnsafeClass,
                                         "allocateUninitializedArray",
@@ -955,7 +955,7 @@ public class PlatformDependent0 {
         return value & 0x1f;
     }
 
-    static ClassLoader getClassLoader(final Class<?> clazz) {
+    static ClassLoader getClassLoader(final Type clazz) {
         if (System.getSecurityManager() == null) {
             return clazz.getClassLoader();
         } else {

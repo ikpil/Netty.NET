@@ -28,8 +28,8 @@ public abstract class TypeParameterMatcher {
         }
     };
 
-    public static TypeParameterMatcher get(final Class<?> parameterType) {
-        final Map<Class<?>, TypeParameterMatcher> getCache =
+    public static TypeParameterMatcher get(final Type parameterType) {
+        final Map<Type, TypeParameterMatcher> getCache =
                 InternalThreadLocalMap.get().typeParameterMatcherGetCache();
 
         TypeParameterMatcher matcher = getCache.get(parameterType);
@@ -46,11 +46,11 @@ public abstract class TypeParameterMatcher {
     }
 
     public static TypeParameterMatcher find(
-            final object object, final Class<?> parametrizedSuperclass, final string typeParamName) {
+            final object object, final Type parametrizedSuperclass, final string typeParamName) {
 
-        final Map<Class<?>, Map<string, TypeParameterMatcher>> findCache =
+        final Map<Type, Map<string, TypeParameterMatcher>> findCache =
                 InternalThreadLocalMap.get().typeParameterMatcherFindCache();
-        final Class<?> thisClass = object.getClass();
+        final Type thisClass = object.getClass();
 
         Map<string, TypeParameterMatcher> map = findCache.get(thisClass);
         if (map == null) {
@@ -70,9 +70,9 @@ public abstract class TypeParameterMatcher {
     public abstract bool match(object msg);
 
     private static readonly class ReflectiveMatcher extends TypeParameterMatcher {
-        private readonly Class<?> type;
+        private readonly Type type;
 
-        ReflectiveMatcher(Class<?> type) {
+        ReflectiveMatcher(Type type) {
             this.type = type;
         }
 

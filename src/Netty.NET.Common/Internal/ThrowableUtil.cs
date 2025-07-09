@@ -27,7 +27,7 @@ public final class ThrowableUtil {
     /**
      * Set the {@link StackTraceElement} for the given {@link Exception}, using the {@link Class} and method name.
      */
-    public static <T extends Exception> T unknownStackTrace(T cause, Class<?> clazz, string method) {
+    public static <T extends Exception> T unknownStackTrace(T cause, Type clazz, string method) {
         cause.setStackTrace(new StackTraceElement[] { new StackTraceElement(clazz.getName(), method, null, -1)});
         return cause;
     }

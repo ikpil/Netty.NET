@@ -383,7 +383,7 @@ public final class NativeLibraryLoader {
         try {
             try {
                 // Make sure the helper belongs to the target ClassLoader.
-                final Class<?> newHelper = tryToLoadClass(loader, typeof(NativeLibraryUtil));
+                final Type newHelper = tryToLoadClass(loader, typeof(NativeLibraryUtil));
                 loadLibraryByHelper(newHelper, name, absolute);
                 logger.debug("Successfully loaded the library {}", name);
                 return;
@@ -408,7 +408,7 @@ public final class NativeLibraryLoader {
         }
     }
 
-    private static void loadLibraryByHelper(final Class<?> helper, final string name, final bool absolute)
+    private static void loadLibraryByHelper(final Type helper, final string name, final bool absolute)
             throws UnsatisfiedLinkError {
         object ret = AccessController.doPrivileged(new PrivilegedAction<object>() {
             @Override
@@ -444,7 +444,7 @@ public final class NativeLibraryLoader {
      * @return A new helper Class defined in the specified ClassLoader.
      * @throws ClassNotFoundException Helper class not found or loading failed
      */
-    private static Class<?> tryToLoadClass(final ClassLoader loader, final Class<?> helper)
+    private static Type tryToLoadClass(final ClassLoader loader, final Type helper)
             throws ClassNotFoundException {
         try {
             return Class.forName(helper.getName(), false, loader);
@@ -458,14 +458,14 @@ public final class NativeLibraryLoader {
                 final byte[] classBinary = classToByteArray(helper);
                 return AccessController.doPrivileged(new PrivilegedAction<Class<?>>() {
                     @Override
-                    public Class<?> run() {
+                    public Type run() {
                         try {
                             // Define the helper class in the target ClassLoader,
                             //  then we can call the helper to load the native library.
                             Method defineClass = typeof(ClassLoader).getDeclaredMethod("defineClass", typeof(string),
                                     byte[].class, typeof(int), typeof(int));
                             defineClass.setAccessible(true);
-                            return (Class<?>) defineClass.invoke(loader, helper.getName(), classBinary, 0,
+                            return (Type) defineClass.invoke(loader, helper.getName(), classBinary, 0,
                                     classBinary.length);
                         } catch (Exception e) {
                             throw new InvalidOperationException("Define class failed!", e);
@@ -485,7 +485,7 @@ public final class NativeLibraryLoader {
      * @return The binary content of helper {@link Class}.
      * @throws ClassNotFoundException Helper class not found or loading failed
      */
-    private static byte[] classToByteArray(Class<?> clazz) {
+    private static byte[] classToByteArray(Type clazz) {
         string fileName = clazz.getName();
         int lastDot = fileName.lastIndexOf('.');
         if (lastDot > 0) {

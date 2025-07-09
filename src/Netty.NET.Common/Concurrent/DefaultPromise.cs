@@ -894,7 +894,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
             return this;
         }
 
-        static StacklessCancellationException newInstance(Class<?> clazz, string method) {
+        static StacklessCancellationException newInstance(Type clazz, string method) {
             return ThrowableUtil.unknownStackTrace(new StacklessCancellationException(), clazz, method);
         }
     }

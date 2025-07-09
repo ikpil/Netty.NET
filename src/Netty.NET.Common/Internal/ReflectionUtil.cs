@@ -55,7 +55,7 @@ public final class ReflectionUtil {
         throw e;
     }
 
-    private static Class<?> fail(Class<?> type, string typeParamName) {
+    private static Type fail(Type type, string typeParamName) {
         throw new InvalidOperationException(
                 "cannot determine the type of the type parameter '" + typeParamName + "': " + type);
     }
@@ -68,11 +68,11 @@ public final class ReflectionUtil {
      * @return The resolved type parameter
      * @throws InvalidOperationException if the type parameter could not be resolved
      * */
-    public static Class<?> resolveTypeParameter(final object object,
-                                                Class<?> parametrizedSuperclass,
+    public static Type resolveTypeParameter(final object object,
+                                                Type parametrizedSuperclass,
                                                 string typeParamName) {
-        final Class<?> thisClass = object.getClass();
-        Class<?> currentClass = thisClass;
+        final Type thisClass = object.getClass();
+        Type currentClass = thisClass;
         for (;;) {
             if (currentClass.getSuperclass() == parametrizedSuperclass) {
                 int typeParamIndex = -1;
@@ -101,7 +101,7 @@ public final class ReflectionUtil {
                     actualTypeParam = ((ParameterizedType) actualTypeParam).getRawType();
                 }
                 if (actualTypeParam instanceof Class) {
-                    return (Class<?>) actualTypeParam;
+                    return (Type) actualTypeParam;
                 }
                 if (actualTypeParam instanceof GenericArrayType) {
                     Type componentType = ((GenericArrayType) actualTypeParam).getGenericComponentType();
@@ -109,7 +109,7 @@ public final class ReflectionUtil {
                         componentType = ((ParameterizedType) componentType).getRawType();
                     }
                     if (componentType instanceof Class) {
-                        return Array.newInstance((Class<?>) componentType, 0).getClass();
+                        return Array.newInstance((Type) componentType, 0).getClass();
                     }
                 }
                 if (actualTypeParam instanceof TypeVariable) {
@@ -120,7 +120,7 @@ public final class ReflectionUtil {
                     }
 
                     currentClass = thisClass;
-                    parametrizedSuperclass = (Class<?>) v.getGenericDeclaration();
+                    parametrizedSuperclass = (Type) v.getGenericDeclaration();
                     typeParamName = v.getName();
                     if (parametrizedSuperclass.isAssignableFrom(thisClass)) {
                         continue;

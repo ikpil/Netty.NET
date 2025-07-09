@@ -36,7 +36,7 @@ public class DefaultThreadFactory : ThreadFactory {
     private readonly int priority;
     protected final ThreadGroup threadGroup;
 
-    public DefaultThreadFactory(Class<?> poolType) {
+    public DefaultThreadFactory(Type poolType) {
         this(poolType, false, Thread.NORM_PRIORITY);
     }
 
@@ -44,7 +44,7 @@ public class DefaultThreadFactory : ThreadFactory {
         this(poolName, false, Thread.NORM_PRIORITY);
     }
 
-    public DefaultThreadFactory(Class<?> poolType, bool daemon) {
+    public DefaultThreadFactory(Type poolType, bool daemon) {
         this(poolType, daemon, Thread.NORM_PRIORITY);
     }
 
@@ -52,7 +52,7 @@ public class DefaultThreadFactory : ThreadFactory {
         this(poolName, daemon, Thread.NORM_PRIORITY);
     }
 
-    public DefaultThreadFactory(Class<?> poolType, int priority) {
+    public DefaultThreadFactory(Type poolType, int priority) {
         this(poolType, false, priority);
     }
 
@@ -60,11 +60,11 @@ public class DefaultThreadFactory : ThreadFactory {
         this(poolName, false, priority);
     }
 
-    public DefaultThreadFactory(Class<?> poolType, bool daemon, int priority) {
+    public DefaultThreadFactory(Type poolType, bool daemon, int priority) {
         this(toPoolName(poolType), daemon, priority);
     }
 
-    public static string toPoolName(Class<?> poolType) {
+    public static string toPoolName(Type poolType) {
         ObjectUtil.checkNotNull(poolType, "poolType");
 
         string poolName = StringUtil.simpleClassName(poolType);

@@ -114,7 +114,7 @@ public abstract class ResourceLeakDetectorFactory {
 
         private static Constructor<?> obsoleteCustomClassConstructor(string customLeakDetector) {
             try {
-                final Class<?> detectorClass = Class.forName(customLeakDetector, true,
+                final Type detectorClass = Class.forName(customLeakDetector, true,
                         PlatformDependent.getSystemClassLoader());
 
                 if (typeof(ResourceLeakDetector<>).isAssignableFrom(detectorClass)) {
@@ -131,7 +131,7 @@ public abstract class ResourceLeakDetectorFactory {
 
         private static Constructor<?> customClassConstructor(string customLeakDetector) {
             try {
-                final Class<?> detectorClass = Class.forName(customLeakDetector, true,
+                final Type detectorClass = Class.forName(customLeakDetector, true,
                         PlatformDependent.getSystemClassLoader());
 
                 if (typeof(ResourceLeakDetector).isAssignableFrom(detectorClass)) {

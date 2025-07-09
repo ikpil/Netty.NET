@@ -1120,7 +1120,7 @@ public final class PlatformDependent {
     /**
      * Return the {@link ClassLoader} for the given {@link Class}.
      */
-    public static ClassLoader getClassLoader(final Class<?> clazz) {
+    public static ClassLoader getClassLoader(final Type clazz) {
         return PlatformDependent0.getClassLoader(clazz);
     }
 
@@ -1261,9 +1261,9 @@ public final class PlatformDependent {
             // Now try to get the JVM option (-XX:MaxDirectMemorySize) and parse it.
             // Note that we are using reflection because Android doesn't have these classes.
             ClassLoader systemClassLoader = getSystemClassLoader();
-            Class<?> mgmtFactoryClass = Class.forName(
+            Type mgmtFactoryClass = Class.forName(
                     "java.lang.management.ManagementFactory", true, systemClassLoader);
-            Class<?> runtimeClass = Class.forName(
+            Type runtimeClass = Class.forName(
                     "java.lang.management.RuntimeMXBean", true, systemClassLoader);
 
             MethodHandles.Lookup lookup = MethodHandles.publicLookup();
