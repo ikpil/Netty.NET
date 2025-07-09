@@ -275,10 +275,10 @@ public class HashedWheelTimer : Timer {
         long duration = unit.toNanos(tickDuration);
 
         // Prevent overflow.
-        if (duration >= long.MAX_VALUE / wheel.length) {
+        if (duration >= long.MaxValue / wheel.length) {
             throw new ArgumentException(string.format(
                     "tickDuration: %d (expected: 0 < tickDuration in nanos < %d",
-                    tickDuration, long.MAX_VALUE / wheel.length));
+                    tickDuration, long.MaxValue / wheel.length));
         }
 
         if (duration < MILLISECOND_NANOS) {
@@ -431,7 +431,7 @@ public class HashedWheelTimer : Timer {
 
         // Guard against overflow.
         if (delay > 0 && deadline < 0) {
-            deadline = long.MAX_VALUE;
+            deadline = long.MaxValue;
         }
         HashedWheelTimeout timeout = new HashedWheelTimeout(this, task, deadline);
         timeouts.add(timeout);
@@ -557,7 +557,7 @@ public class HashedWheelTimer : Timer {
 
                 if (sleepTimeMs <= 0) {
                     if (currentTime == long.MIN_VALUE) {
-                        return -long.MAX_VALUE;
+                        return -long.MaxValue;
                     } else {
                         return currentTime;
                     }

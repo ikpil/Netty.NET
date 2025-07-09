@@ -95,7 +95,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     static long deadlineNanos(long nanoTime, long delay) {
         long deadlineNanos = nanoTime + delay;
         // Guard against overflow
-        return deadlineNanos < 0 ? long.MAX_VALUE : deadlineNanos;
+        return deadlineNanos < 0 ? long.MaxValue : deadlineNanos;
     }
 
     /**

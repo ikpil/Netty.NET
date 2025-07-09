@@ -100,7 +100,7 @@ public class FastThreadLocal<V> {
         object v = threadLocalMap.indexedVariable(VARIABLES_TO_REMOVE_INDEX);
         ISet<FastThreadLocal<?>> variablesToRemove;
         if (v == InternalThreadLocalMap.UNSET || v == null) {
-            variablesToRemove = Collections.newSetFromMap(new IdentityHashMap<FastThreadLocal<?>, Boolean>());
+            variablesToRemove = Collections.newSetFromMap(new IdentityHashMap<FastThreadLocal<?>, bool>());
             threadLocalMap.setIndexedVariable(VARIABLES_TO_REMOVE_INDEX, variablesToRemove);
         } else {
             variablesToRemove = (ISet<FastThreadLocal<?>>) v;

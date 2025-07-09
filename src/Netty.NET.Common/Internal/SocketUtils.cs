@@ -85,9 +85,9 @@ public final class SocketUtils {
     public static bool connect(final SocketChannel socketChannel, final SocketAddress remoteAddress)
             throws IOException {
         try {
-            return AccessController.doPrivileged(new PrivilegedExceptionAction<Boolean>() {
+            return AccessController.doPrivileged(new PrivilegedExceptionAction<bool>() {
                 @Override
-                public Boolean run() {
+                public bool run() {
                     return socketChannel.connect(remoteAddress);
                 }
             });

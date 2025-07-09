@@ -29,9 +29,9 @@ namespace Netty.NET.Common.Internal;
  * Note that this class is for internal use only and is subject to change at any time.  Use {@link FastThreadLocal}
  * unless you know what you are doing.
  */
-public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
-    private static readonly ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap =
-            new ThreadLocal<InternalThreadLocalMap>();
+public sealed class InternalThreadLocalMap
+{
+    private static readonly ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = new ThreadLocal<InternalThreadLocalMap>();
     private static readonly AtomicInteger nextIndex = new AtomicInteger();
     // Internal use only.
     public static readonly int VARIABLES_TO_REMOVE_INDEX = nextVariableIndex();
@@ -39,7 +39,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     private static readonly int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
     private static readonly int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
     // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/List.java#l229
-    private static readonly int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MAX_VALUE - 8;
+    private static readonly int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
 
     private static readonly int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
     private static readonly int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
@@ -57,7 +57,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     // Core thread-locals
     private int futureListenerStackDepth;
     private int localChannelReaderStackDepth;
-    private IDictionary<Type, Boolean> handlerSharableCache;
+    private IDictionary<Type, bool> handlerSharableCache;
     private IDictionary<Type, TypeParameterMatcher> typeParameterMatcherGetCache;
     private IDictionary<Type, IDictionary<string, TypeParameterMatcher>> typeParameterMatcherFindCache;
 
@@ -288,8 +288,8 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         // No-op.
     }
 
-    public IDictionary<Type, Boolean> handlerSharableCache() {
-        IDictionary<Type, Boolean> cache = handlerSharableCache;
+    public IDictionary<Type, bool> handlerSharableCache() {
+        IDictionary<Type, bool> cache = handlerSharableCache;
         if (cache == null) {
             // Start with small capacity to keep memory overhead as low as possible.
             handlerSharableCache = cache = new WeakHashMap<>(HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY);

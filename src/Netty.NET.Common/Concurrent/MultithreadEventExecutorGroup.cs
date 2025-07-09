@@ -96,7 +96,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                         EventExecutor e = children[j];
                         try {
                             while (!e.isTerminated()) {
-                                e.awaitTermination(int.MAX_VALUE, TimeSpan.SECONDS);
+                                e.awaitTermination(int.MaxValue, TimeSpan.SECONDS);
                             }
                         } catch (InterruptedException interrupted) {
                             // Let the caller handle the interruption.

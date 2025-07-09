@@ -210,7 +210,7 @@ public final class PlatformDependent {
 
     private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers) {
         Path file = Paths.get(osReleaseFileName);
-        return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> {
+        return AccessController.doPrivileged((PrivilegedAction<bool>) () -> {
             try {
                 if (Files.exists(file)) {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(

@@ -370,8 +370,8 @@ public class PlatformDependent0 {
                 }
             });
 
-            if (maybeUnaligned instanceof Boolean) {
-                unaligned = (Boolean) maybeUnaligned;
+            if (maybeUnaligned instanceof bool) {
+                unaligned = (bool) maybeUnaligned;
                 logger.debug("java.nio.Bits.unaligned: available, {}", unaligned);
             } else {
                 string arch = SystemPropertyUtil.get("os.arch", "");

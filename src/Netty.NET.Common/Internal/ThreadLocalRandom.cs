@@ -323,7 +323,7 @@ public final class ThreadLocalRandom extends Random {
         // (offset) and whether to continue with the lower vs upper
         // half (which makes a difference only if odd).
         long offset = 0;
-        while (n >= int.MAX_VALUE) {
+        while (n >= int.MaxValue) {
             int bits = next(2);
             long half = n >>> 1;
             long nextn = ((bits & 2) == 0) ? half : n - half;

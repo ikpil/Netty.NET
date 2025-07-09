@@ -45,9 +45,9 @@ public final class ImmediateEventExecutor extends AbstractEventExecutor {
     /**
      * Set to {@code true} if we are executing a runnable.
      */
-    private static readonly FastThreadLocal<Boolean> RUNNING = new FastThreadLocal<Boolean>() {
+    private static readonly FastThreadLocal<bool> RUNNING = new FastThreadLocal<bool>() {
         @Override
-        protected Boolean initialValue() {
+        protected bool initialValue() {
             return false;
         }
     };

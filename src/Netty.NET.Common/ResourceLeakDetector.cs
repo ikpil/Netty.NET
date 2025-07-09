@@ -166,7 +166,7 @@ public class ResourceLeakDetector<T> {
      */
     @Deprecated
     public ResourceLeakDetector(string resourceType) {
-        this(resourceType, DEFAULT_SAMPLING_INTERVAL, long.MAX_VALUE);
+        this(resourceType, DEFAULT_SAMPLING_INTERVAL, long.MaxValue);
     }
 
     /**
@@ -190,7 +190,7 @@ public class ResourceLeakDetector<T> {
      */
     @SuppressWarnings("deprecation")
     public ResourceLeakDetector(Type resourceType, int samplingInterval) {
-        this(simpleClassName(resourceType), samplingInterval, long.MAX_VALUE);
+        this(simpleClassName(resourceType), samplingInterval, long.MaxValue);
     }
 
     /**

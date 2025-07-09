@@ -266,7 +266,7 @@ public interface MpscIntQueue {
                     break;
                 }
             }
-            return size < 0 ? 0 : size > int.MAX_VALUE ? int.MAX_VALUE : (int) size;
+            return size < 0 ? 0 : size > int.MaxValue ? int.MaxValue : (int) size;
         }
     }
 }
