@@ -13,60 +13,75 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using static Netty.NET.Common.Internal.ObjectUtil;
+
 namespace Netty.NET.Common.Internal;
-
-
-
-
-
-
-
 
 /**
  * Calculate sizes in a adaptive way.
  */
-public final class AdaptiveCalculator {
+public sealed class AdaptiveCalculator
+{
     private static readonly int INDEX_INCREMENT = 4;
     private static readonly int INDEX_DECREMENT = 1;
 
     private static readonly int[] SIZE_TABLE;
 
-    static {
-        List<int> sizeTable = new ArrayList<int>();
-        for (int i = 16; i < 512; i += 16) {
-            sizeTable.add(i);
+    static AdaptiveCalculator()
+    {
+        List<int> sizeTable = new List<int>();
+        for (int i = 16; i < 512; i += 16)
+        {
+            sizeTable.Add(i);
         }
 
         // Suppress a warning since i becomes negative when an integer overflow happens
-        for (int i = 512; i > 0; i <<= 1) {
-            sizeTable.add(i);
+        for (int i = 512; i > 0; i <<= 1)
+        {
+            sizeTable.Add(i);
         }
 
-        SIZE_TABLE = new int[sizeTable.size()];
-        for (int i = 0; i < SIZE_TABLE.length; i ++) {
-            SIZE_TABLE[i] = sizeTable.get(i);
+        SIZE_TABLE = new int[sizeTable.Count];
+        for (int i = 0; i < SIZE_TABLE.Length; i++)
+        {
+            SIZE_TABLE[i] = sizeTable[i];
         }
     }
 
-    private static int getSizeTableIndex(final int size) {
-        for (int low = 0, high = SIZE_TABLE.length - 1;;) {
-            if (high < low) {
+    private static int getSizeTableIndex(int size)
+    {
+        for (int low = 0, high = SIZE_TABLE.Length - 1;;)
+        {
+            if (high < low)
+            {
                 return low;
             }
-            if (high == low) {
+
+            if (high == low)
+            {
                 return high;
             }
 
             int mid = low + high >>> 1;
             int a = SIZE_TABLE[mid];
             int b = SIZE_TABLE[mid + 1];
-            if (size > b) {
+            if (size > b)
+            {
                 low = mid + 1;
-            } else if (size < a) {
+            }
+            else if (size < a)
+            {
                 high = mid - 1;
-            } else if (size == a) {
+            }
+            else if (size == a)
+            {
                 return mid;
-            } else {
+            }
+            else
+            {
                 return mid + 1;
             }
         }
@@ -77,60 +92,82 @@ public final class AdaptiveCalculator {
     private readonly int minCapacity;
     private readonly int maxCapacity;
     private int index;
-    private int nextSize;
+    private int _nextSize;
     private bool decreaseNow;
 
-    public AdaptiveCalculator(int minimum, int initial, int maximum) {
+    public AdaptiveCalculator(int minimum, int initial, int maximum)
+    {
         checkPositive(minimum, "minimum");
-        if (initial < minimum) {
-            throw new IllegalArgumentException("initial: " + initial);
+        if (initial < minimum)
+        {
+            throw new ArgumentException("initial: " + initial);
         }
-        if (maximum < initial) {
-            throw new IllegalArgumentException("maximum: " + maximum);
+
+        if (maximum < initial)
+        {
+            throw new ArgumentException("maximum: " + maximum);
         }
 
         int minIndex = getSizeTableIndex(minimum);
-        if (SIZE_TABLE[minIndex] < minimum) {
+        if (SIZE_TABLE[minIndex] < minimum)
+        {
             this.minIndex = minIndex + 1;
-        } else {
+        }
+        else
+        {
             this.minIndex = minIndex;
         }
 
         int maxIndex = getSizeTableIndex(maximum);
-        if (SIZE_TABLE[maxIndex] > maximum) {
+        if (SIZE_TABLE[maxIndex] > maximum)
+        {
             this.maxIndex = maxIndex - 1;
-        } else {
+        }
+        else
+        {
             this.maxIndex = maxIndex;
         }
 
         int initialIndex = getSizeTableIndex(initial);
-        if (SIZE_TABLE[initialIndex] > initial) {
+        if (SIZE_TABLE[initialIndex] > initial)
+        {
             this.index = initialIndex - 1;
-        } else {
+        }
+        else
+        {
             this.index = initialIndex;
         }
+
         this.minCapacity = minimum;
         this.maxCapacity = maximum;
-        nextSize = max(SIZE_TABLE[index], minCapacity);
+        _nextSize = Math.Max(SIZE_TABLE[index], minCapacity);
     }
 
-    public void record(int size) {
-        if (size <= SIZE_TABLE[max(0, index - INDEX_DECREMENT)]) {
-            if (decreaseNow) {
-                index = max(index - INDEX_DECREMENT, minIndex);
-                nextSize = max(SIZE_TABLE[index], minCapacity);
+    public void record(int size)
+    {
+        if (size <= SIZE_TABLE[Math.Max(0, index - INDEX_DECREMENT)])
+        {
+            if (decreaseNow)
+            {
+                index = Math.Max(index - INDEX_DECREMENT, minIndex);
+                _nextSize = Math.Max(SIZE_TABLE[index], minCapacity);
                 decreaseNow = false;
-            } else {
+            }
+            else
+            {
                 decreaseNow = true;
             }
-        } else if (size >= nextSize) {
-            index = min(index + INDEX_INCREMENT, maxIndex);
-            nextSize = min(SIZE_TABLE[index], maxCapacity);
+        }
+        else if (size >= _nextSize)
+        {
+            index = Math.Min(index + INDEX_INCREMENT, maxIndex);
+            _nextSize = Math.Min(SIZE_TABLE[index], maxCapacity);
             decreaseNow = false;
         }
     }
 
-    public int nextSize() {
-        return nextSize;
+    public int nextSize()
+    {
+        return _nextSize;
     }
 }
