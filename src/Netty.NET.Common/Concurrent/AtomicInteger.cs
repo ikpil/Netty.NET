@@ -36,7 +36,7 @@ public class AtomicInteger
         return Volatile.Read(ref _location);
     }
 
-    public int exchange(int exchange)
+    public int set(int exchange)
     {
         return Interlocked.Exchange(ref _location, exchange);
     }

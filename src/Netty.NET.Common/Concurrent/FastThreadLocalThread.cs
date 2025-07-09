@@ -13,19 +13,19 @@
 * License for the specific language governing permissions and limitations
 * under the License.
 */
+
+using System;
+using System.Threading;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Concurrent;
-
-
-
-
-
-
 
 
 /**
  * A special {@link Thread} that provides fast access to {@link FastThreadLocal} variables.
  */
-public class FastThreadLocalThread extends Thread {
+public class FastThreadLocalThread : Thread {
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(FastThreadLocalThread));
 

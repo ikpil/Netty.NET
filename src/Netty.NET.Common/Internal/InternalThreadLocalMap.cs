@@ -31,7 +31,9 @@ namespace Netty.NET.Common.Internal;
  */
 public sealed class InternalThreadLocalMap
 {
-    private static readonly ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = new ThreadLocal<InternalThreadLocalMap>();
+    [ThreadStatic]
+    private static readonly InternalThreadLocalMap slowThreadLocalMap = new InternalThreadLocalMap();
+    
     private static readonly AtomicInteger nextIndex = new AtomicInteger();
     // Internal use only.
     public static readonly int VARIABLES_TO_REMOVE_INDEX = nextVariableIndex();
@@ -69,12 +71,11 @@ public sealed class InternalThreadLocalMap
     // List-related thread-locals
     private List<object> arrayList;
 
-    private BitSet cleanerFlags;
-
     /** @deprecated These padding fields will be removed in the future. */
     public long rp1, rp2, rp3, rp4, rp5, rp6, rp7, rp8;
 
-    static {
+    static InternalThreadLocalMap()
+    {
         STRING_BUILDER_INITIAL_SIZE =
                 SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.initialSize", 1024);
         STRING_BUILDER_MAX_SIZE =
@@ -90,15 +91,19 @@ public sealed class InternalThreadLocalMap
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
     }
 
-    public static InternalThreadLocalMap getIfSet() {
-        Thread thread = Thread.currentThread();
-        if (thread instanceof FastThreadLocalThread) {
-            return ((FastThreadLocalThread) thread).threadLocalMap();
-        }
-        return slowThreadLocalMap.get();
+    public static InternalThreadLocalMap getIfSet()
+    {
+        return slowThreadLocalMap;
     }
 
-    public static InternalThreadLocalMap get() {
+    public static InternalThreadLocalMap get()
+    {
+        var ret = slowThreadLocalMap;
+        if (ret == null)
+        {
+        }
+            
+        // ...?
         Thread thread = Thread.currentThread();
         if (thread instanceof FastThreadLocalThread) {
             return fastGet((FastThreadLocalThread) thread);
@@ -254,14 +259,6 @@ public sealed class InternalThreadLocalMap
         this.futureListenerStackDepth = futureListenerStackDepth;
     }
 
-    /**
-     * @deprecated Use {@link java.util.concurrent.ThreadLocalRandom#current()} instead.
-     */
-    @Deprecated
-    public ThreadLocalRandom random() {
-        return new ThreadLocalRandom();
-    }
-
     public IDictionary<Type, TypeParameterMatcher> typeParameterMatcherGetCache() {
         IDictionary<Type, TypeParameterMatcher> cache = typeParameterMatcherGetCache;
         if (cache == null) {
@@ -276,16 +273,6 @@ public sealed class InternalThreadLocalMap
             typeParameterMatcherFindCache = cache = new IdentityHashMap<>();
         }
         return cache;
-    }
-
-    @Deprecated
-    public IntegerHolder counterHashCode() {
-        return new IntegerHolder();
-    }
-
-    @Deprecated
-    public void setCounterHashCode(IntegerHolder counterHashCode) {
-        // No-op.
     }
 
     public IDictionary<Type, bool> handlerSharableCache() {
@@ -367,18 +354,5 @@ public sealed class InternalThreadLocalMap
     public bool isIndexedVariableSet(int index) {
         object[] lookup = indexedVariables;
         return index < lookup.length && lookup[index] != UNSET;
-    }
-
-    @Deprecated
-    public bool isCleanerFlagSet(int index) {
-        return cleanerFlags != null && cleanerFlags.get(index);
-    }
-
-    @Deprecated
-    public void setCleanerFlag(int index) {
-        if (cleanerFlags == null) {
-            cleanerFlags = new BitSet();
-        }
-        cleanerFlags.set(index);
     }
 }
