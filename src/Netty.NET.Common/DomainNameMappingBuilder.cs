@@ -105,7 +105,7 @@ public final class DomainNameMappingBuilder<V> {
         private ImmutableDomainNameMapping(V defaultValue, Map<string, V> map) {
             super(null, defaultValue);
 
-            Set<Map.Entry<string, V>> mappings = map.entrySet();
+            ISet<Map.Entry<string, V>> mappings = map.entrySet();
             int numberOfMappings = mappings.size();
             domainNamePatterns = new string[numberOfMappings];
             values = (V[]) new object[numberOfMappings];

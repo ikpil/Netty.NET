@@ -87,7 +87,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private readonly Lock processingLock = new ReentrantLock();
     private readonly CountDownLatch threadLock = new CountDownLatch(1);
-    private readonly Set<Runnable> shutdownHooks = new LinkedHashSet<Runnable>();
+    private readonly ISet<Runnable> shutdownHooks = new LinkedHashSet<Runnable>();
     private readonly bool addTaskWakesUp;
     private readonly int maxPendingTasks;
     private readonly RejectedExecutionHandler rejectedExecutionHandler;

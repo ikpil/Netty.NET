@@ -52,13 +52,13 @@ public interface ProgressivePromise<V> extends Promise<V>, ProgressiveFuture<V> 
     ProgressivePromise<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
 
     @Override
-    ProgressivePromise<V> await() throws InterruptedException;
+    ProgressivePromise<V> await();
 
     @Override
     ProgressivePromise<V> awaitUninterruptibly();
 
     @Override
-    ProgressivePromise<V> sync() throws InterruptedException;
+    ProgressivePromise<V> sync();
 
     @Override
     ProgressivePromise<V> syncUninterruptibly();

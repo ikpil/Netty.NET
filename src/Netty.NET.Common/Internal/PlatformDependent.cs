@@ -109,7 +109,7 @@ public final class PlatformDependent {
     private static readonly string NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", ""));
     private static readonly string NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name", ""));
 
-    private static readonly Set<string> LINUX_OS_CLASSIFIERS;
+    private static readonly ISet<string> LINUX_OS_CLASSIFIERS;
 
     private static readonly bool IS_WINDOWS = isWindows0();
     private static readonly bool IS_OSX = isOsx0();
@@ -236,7 +236,7 @@ public final class PlatformDependent {
                     "instability.");
         }
 
-        final Set<string> availableClassifiers = new LinkedHashSet<>();
+        final ISet<string> availableClassifiers = new LinkedHashSet<>();
 
         if (!addPropertyOsClassifiers(availableClassifiers)) {
             addFilesystemOsClassifiers(availableClassifiers);
@@ -261,14 +261,14 @@ public final class PlatformDependent {
     }
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
-    static void addFilesystemOsClassifiers(final Set<string> availableClassifiers) {
+    static void addFilesystemOsClassifiers(final ISet<string> availableClassifiers) {
         if (processOsReleaseFile("/etc/os-release", availableClassifiers)) {
             return;
         }
         processOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
-    private static bool processOsReleaseFile(string osReleaseFileName, Set<string> availableClassifiers) {
+    private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers) {
         Path file = Paths.get(osReleaseFileName);
         return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> {
             try {
@@ -302,7 +302,7 @@ public final class PlatformDependent {
         });
     }
 
-    static bool addPropertyOsClassifiers(Set<string> availableClassifiers) {
+    static bool addPropertyOsClassifiers(ISet<string> availableClassifiers) {
         // empty: -Dio.netty.osClassifiers (no distro specific classifiers for native libs)
         // single ID: -Dio.netty.osClassifiers=ubuntu
         // pair ID, ID_LIKE: -Dio.netty.osClassifiers=ubuntu,debian
@@ -1570,7 +1570,7 @@ public final class PlatformDependent {
         return NORMALIZED_OS;
     }
 
-    public static Set<string> normalizedLinuxClassifiers() {
+    public static ISet<string> normalizedLinuxClassifiers() {
         return LINUX_OS_CLASSIFIERS;
     }
 
@@ -1587,7 +1587,7 @@ public final class PlatformDependent {
      * @param dest             destination set
      * @param maybeClassifiers potential classifiers to add
      */
-    private static void addClassifier(Set<string> dest, string... maybeClassifiers) {
+    private static void addClassifier(ISet<string> dest, string... maybeClassifiers) {
         for (string id : maybeClassifiers) {
             if (isAllowedClassifier(id)) {
                 dest.add(id);

@@ -61,7 +61,7 @@ public class FastThreadLocal<V> {
             object v = threadLocalMap.indexedVariable(VARIABLES_TO_REMOVE_INDEX);
             if (v != null && v != InternalThreadLocalMap.UNSET) {
                 @SuppressWarnings("unchecked")
-                Set<FastThreadLocal<?>> variablesToRemove = (Set<FastThreadLocal<?>>) v;
+                ISet<FastThreadLocal<?>> variablesToRemove = (ISet<FastThreadLocal<?>>) v;
                 FastThreadLocal<?>[] variablesToRemoveArray =
                         variablesToRemove.toArray(new FastThreadLocal[0]);
                 for (FastThreadLocal<?> tlv: variablesToRemoveArray) {
@@ -98,12 +98,12 @@ public class FastThreadLocal<V> {
     @SuppressWarnings("unchecked")
     private static void addToVariablesToRemove(InternalThreadLocalMap threadLocalMap, FastThreadLocal<?> variable) {
         object v = threadLocalMap.indexedVariable(VARIABLES_TO_REMOVE_INDEX);
-        Set<FastThreadLocal<?>> variablesToRemove;
+        ISet<FastThreadLocal<?>> variablesToRemove;
         if (v == InternalThreadLocalMap.UNSET || v == null) {
             variablesToRemove = Collections.newSetFromMap(new IdentityHashMap<FastThreadLocal<?>, Boolean>());
             threadLocalMap.setIndexedVariable(VARIABLES_TO_REMOVE_INDEX, variablesToRemove);
         } else {
-            variablesToRemove = (Set<FastThreadLocal<?>>) v;
+            variablesToRemove = (ISet<FastThreadLocal<?>>) v;
         }
 
         variablesToRemove.add(variable);
@@ -119,7 +119,7 @@ public class FastThreadLocal<V> {
         }
 
         @SuppressWarnings("unchecked")
-        Set<FastThreadLocal<?>> variablesToRemove = (Set<FastThreadLocal<?>>) v;
+        ISet<FastThreadLocal<?>> variablesToRemove = (ISet<FastThreadLocal<?>>) v;
         variablesToRemove.remove(variable);
     }
 

@@ -203,7 +203,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         object v = indexedVariable(VARIABLES_TO_REMOVE_INDEX);
         if (v != null && v != InternalThreadLocalMap.UNSET) {
             @SuppressWarnings("unchecked")
-            Set<FastThreadLocal<?>> variablesToRemove = (Set<FastThreadLocal<?>>) v;
+            ISet<FastThreadLocal<?>> variablesToRemove = (ISet<FastThreadLocal<?>>) v;
             count += variablesToRemove.size();
         }
 

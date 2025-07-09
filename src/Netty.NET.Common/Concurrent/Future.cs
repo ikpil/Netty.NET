@@ -81,7 +81,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * Waits for this future until it is done, and rethrows the cause of the failure if this future
      * failed.
      */
-    Future<V> sync() throws InterruptedException;
+    Future<V> sync();
 
     /**
      * Waits for this future until it is done, and rethrows the cause of the failure if this future
@@ -95,7 +95,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * @throws InterruptedException
      *         if the current thread was interrupted
      */
-    Future<V> await() throws InterruptedException;
+    Future<V> await();
 
     /**
      * Waits for this future to be completed without
@@ -114,7 +114,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * @throws InterruptedException
      *         if the current thread was interrupted
      */
-    bool await(long timeout, TimeSpan unit) throws InterruptedException;
+    bool await(long timeout, TimeSpan unit);
 
     /**
      * Waits for this future to be completed within the
@@ -126,7 +126,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * @throws InterruptedException
      *         if the current thread was interrupted
      */
-    bool await(long timeoutMillis) throws InterruptedException;
+    bool await(long timeoutMillis);
 
     /**
      * Waits for this future to be completed within the

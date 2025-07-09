@@ -36,7 +36,7 @@ final class DefaultMockTicker : MockTicker {
     private readonly Condition tickCondition = lock.newCondition();
     private readonly Condition sleeperCondition = lock.newCondition();
     private readonly AtomicLong nanoTime = new AtomicLong();
-    private readonly Set<Thread> sleepers = Collections.newSetFromMap(new IdentityHashMap<>());
+    private readonly ISet<Thread> sleepers = Collections.newSetFromMap(new IdentityHashMap<>());
 
     @Override
     public long nanoTime() {

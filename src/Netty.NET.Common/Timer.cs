@@ -13,18 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+
 namespace Netty.NET.Common;
-
-
-
-
 
 /**
  * Schedules {@link TimerTask}s for one-time future execution in a background
  * thread.
  */
-public interface Timer {
-
+public interface Timer
+{
     /**
      * Schedules the specified {@link TimerTask} for one-time execution after
      * the specified delay.
@@ -44,5 +44,5 @@ public interface Timer {
      * @return the handles associated with the tasks which were canceled by
      *         this method
      */
-    Set<Timeout> stop();
+    ISet<Timeout> stop();
 }

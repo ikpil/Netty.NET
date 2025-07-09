@@ -34,13 +34,13 @@ public interface ProgressiveFuture<V> extends Future<V> {
     ProgressiveFuture<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
 
     @Override
-    ProgressiveFuture<V> sync() throws InterruptedException;
+    ProgressiveFuture<V> sync();
 
     @Override
     ProgressiveFuture<V> syncUninterruptibly();
 
     @Override
-    ProgressiveFuture<V> await() throws InterruptedException;
+    ProgressiveFuture<V> await();
 
     @Override
     ProgressiveFuture<V> awaitUninterruptibly();

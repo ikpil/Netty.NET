@@ -375,7 +375,7 @@ public class HashedWheelTimer : Timer {
     }
 
     @Override
-    public Set<Timeout> stop() {
+    public ISet<Timeout> stop() {
         if (Thread.currentThread() == workerThread) {
             throw new IllegalStateException(
                     typeof(HashedWheelTimer).getSimpleName() +
@@ -417,8 +417,8 @@ public class HashedWheelTimer : Timer {
                 assert closed;
             }
         }
-        Set<Timeout> unprocessed = worker.unprocessedTimeouts();
-        Set<Timeout> cancelled = new HashSet<Timeout>(unprocessed.size());
+        ISet<Timeout> unprocessed = worker.unprocessedTimeouts();
+        ISet<Timeout> cancelled = new HashSet<Timeout>(unprocessed.size());
         for (Timeout timeout : unprocessed) {
             if (timeout.cancel()) {
                 cancelled.add(timeout);
@@ -473,7 +473,7 @@ public class HashedWheelTimer : Timer {
     }
 
     private readonly class Worker : Runnable {
-        private readonly Set<Timeout> unprocessedTimeouts = new HashSet<Timeout>();
+        private readonly ISet<Timeout> unprocessedTimeouts = new HashSet<Timeout>();
 
         private long tick;
 
@@ -603,7 +603,7 @@ public class HashedWheelTimer : Timer {
             }
         }
 
-        public Set<Timeout> unprocessedTimeouts() {
+        public ISet<Timeout> unprocessedTimeouts() {
             return Collections.unmodifiableSet(unprocessedTimeouts);
         }
     }
@@ -832,7 +832,7 @@ public class HashedWheelTimer : Timer {
         /**
          * Clear this bucket and return all not expired / cancelled {@link Timeout}s.
          */
-        public void clearTimeouts(Set<Timeout> set) {
+        public void clearTimeouts(ISet<Timeout> set) {
             for (;;) {
                 HashedWheelTimeout timeout = pollTimeout();
                 if (timeout == null) {

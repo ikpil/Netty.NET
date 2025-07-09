@@ -523,8 +523,8 @@ public final class NativeLibraryLoader {
             // The File#canExecute() method honors this behavior, probaby via parsing the noexec flag when initializing
             // the UnixFileStore, though the flag is not exposed via a public API.  To find out if library is being
             // loaded off a volume with noexec, confirm or add executalbe permissions, then check File#canExecute().
-            Set<PosixFilePermission> existingFilePermissions = Files.getPosixFilePermissions(file.toPath());
-            Set<PosixFilePermission> executePermissions =
+            ISet<PosixFilePermission> existingFilePermissions = Files.getPosixFilePermissions(file.toPath());
+            ISet<PosixFilePermission> executePermissions =
                     EnumSet.of(PosixFilePermission.OWNER_EXECUTE,
                             PosixFilePermission.GROUP_EXECUTE,
                             PosixFilePermission.OTHERS_EXECUTE);
@@ -532,7 +532,7 @@ public final class NativeLibraryLoader {
                 return false;
             }
 
-            Set<PosixFilePermission> newPermissions = EnumSet.copyOf(existingFilePermissions);
+            ISet<PosixFilePermission> newPermissions = EnumSet.copyOf(existingFilePermissions);
             newPermissions.addAll(executePermissions);
             Files.setPosixFilePermissions(file.toPath(), newPermissions);
             return file.canExecute();

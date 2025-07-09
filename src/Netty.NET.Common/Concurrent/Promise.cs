@@ -77,13 +77,13 @@ public interface Promise<V> extends Future<V> {
     Promise<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
 
     @Override
-    Promise<V> await() throws InterruptedException;
+    Promise<V> await();
 
     @Override
     Promise<V> awaitUninterruptibly();
 
     @Override
-    Promise<V> sync() throws InterruptedException;
+    Promise<V> sync();
 
     @Override
     Promise<V> syncUninterruptibly();

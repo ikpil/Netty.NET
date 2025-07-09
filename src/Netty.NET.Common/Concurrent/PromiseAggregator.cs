@@ -36,7 +36,7 @@ public class PromiseAggregator<V, F extends Future<V>> : GenericFutureListener<F
 
     private readonly Promise<?> aggregatePromise;
     private readonly bool failPending;
-    private Set<Promise<V>> pendingPromises;
+    private ISet<Promise<V>> pendingPromises;
 
     /**
      * Creates a new instance.

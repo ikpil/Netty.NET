@@ -140,10 +140,10 @@ public class ResourceLeakDetector<T> {
     }
 
     /** the collection of active resources */
-    private readonly Set<DefaultResourceLeak<?>> allLeaks = ConcurrentHashMap.newKeySet();
+    private readonly ISet<DefaultResourceLeak<?>> allLeaks = ConcurrentHashMap.newKeySet();
 
     private readonly ReferenceQueue<object> refQueue = new ReferenceQueue<>();
-    private readonly Set<string> reportedLeaks = ConcurrentHashMap.newKeySet();
+    private readonly ISet<string> reportedLeaks = ConcurrentHashMap.newKeySet();
 
     private readonly string resourceType;
     private readonly int samplingInterval;
@@ -380,13 +380,13 @@ public class ResourceLeakDetector<T> {
         @SuppressWarnings("unused")
         private volatile int droppedRecords;
 
-        private readonly Set<DefaultResourceLeak<?>> allLeaks;
+        private readonly ISet<DefaultResourceLeak<?>> allLeaks;
         private readonly int trackedHash;
 
         DefaultResourceLeak(
                 object referent,
                 ReferenceQueue<object> refQueue,
-                Set<DefaultResourceLeak<?>> allLeaks,
+                ISet<DefaultResourceLeak<?>> allLeaks,
                 object initialHint) {
             super(referent, refQueue);
 
@@ -555,7 +555,7 @@ public class ResourceLeakDetector<T> {
             buf.append("Recent access records: ").append(NEWLINE);
 
             int i = 1;
-            Set<string> seen = new HashSet<string>(present);
+            ISet<string> seen = new HashSet<string>(present);
             for (; oldHead != TraceRecord.BOTTOM; oldHead = oldHead.next) {
                 string s = oldHead.toString();
                 if (seen.add(s)) {
@@ -596,7 +596,7 @@ public class ResourceLeakDetector<T> {
             new AtomicReference<string[]>(EmptyArrays.EMPTY_STRINGS);
 
     public static void addExclusions(Class clz, string ... methodNames) {
-        Set<string> nameSet = new HashSet<string>(Arrays.asList(methodNames));
+        ISet<string> nameSet = new HashSet<string>(Arrays.asList(methodNames));
         // Use loop rather than lookup. This avoids knowing the parameters, and doesn't have to handle
         // NoSuchMethodException.
         for (Method method : clz.getDeclaredMethods()) {

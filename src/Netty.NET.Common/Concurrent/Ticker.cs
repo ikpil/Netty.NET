@@ -59,7 +59,7 @@ public interface Ticker {
      *
      * @see Thread#sleep(long)
      */
-    void sleep(long delay, TimeSpan unit) throws InterruptedException;
+    void sleep(long delay, TimeSpan unit);
 
     /**
      * Waits until the given amount of time goes by.

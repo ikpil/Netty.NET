@@ -33,7 +33,7 @@ namespace Netty.NET.Common.Concurrent;
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
 
     private readonly EventExecutor[] children;
-    private readonly Set<EventExecutor> readonlyChildren;
+    private readonly ISet<EventExecutor> readonlyChildren;
     private readonly AtomicInteger terminatedChildren = new AtomicInteger();
     private readonly Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
     private readonly EventExecutorChooserFactory.EventExecutorChooser chooser;
@@ -123,7 +123,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             e.terminationFuture().addListener(terminationListener);
         }
 
-        Set<EventExecutor> childrenSet = new LinkedHashSet<EventExecutor>(children.length);
+        ISet<EventExecutor> childrenSet = new LinkedHashSet<EventExecutor>(children.length);
         Collections.addAll(childrenSet, children);
         readonlyChildren = Collections.unmodifiableSet(childrenSet);
     }
@@ -155,7 +155,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
      */
-    protected abstract EventExecutor newChild(Executor executor, params object[] args) throws Exception;
+    protected abstract EventExecutor newChild(Executor executor, params object[] args);
 
     @Override
     public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
