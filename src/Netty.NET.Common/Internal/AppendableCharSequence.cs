@@ -15,40 +15,50 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common.Internal;
-
 
 public sealed class AppendableCharSequence : ICharSequence
 {
     private char[] chars;
     private int pos;
 
-    public AppendableCharSequence(int length) {
+    public AppendableCharSequence(int length)
+    {
         chars = new char[checkPositive(length, "length")];
     }
 
-    private AppendableCharSequence(char[] chars) {
+    private AppendableCharSequence(char[] chars)
+    {
         this.chars = checkNonEmpty(chars, "chars");
         pos = chars.Length;
     }
 
-    public void setLength(int length) {
-        if (length < 0 || length > pos) {
+    public void setLength(int length)
+    {
+        if (length < 0 || length > pos)
+        {
             throw new ArgumentException("length: " + length + " (length: >= 0, <= " + pos + ')');
         }
+
         this.pos = length;
     }
 
-    public int length() {
+    public int length()
+    {
         return pos;
     }
 
-    public char charAt(int index) {
-        if (index > pos) {
+    public char charAt(int index)
+    {
+        if (index > pos)
+        {
             throw new ArgumentOutOfRangeException();
         }
+
         return chars[index];
     }
 
@@ -59,53 +69,69 @@ public sealed class AppendableCharSequence : ICharSequence
      * @param index The index to access the underlying array at.
      * @return The value at {@code index}.
      */
-    public char charAtUnsafe(int index) {
+    public char charAtUnsafe(int index)
+    {
         return chars[index];
     }
 
-    public AppendableCharSequence subSequence(int start, int end) {
-        if (start == end) {
+    public AppendableCharSequence subSequence(int start, int end)
+    {
+        if (start == end)
+        {
             // If start and end index is the same we need to return an empty sequence to conform to the interface.
             // As our expanding logic depends on the fact that we have a char[] with length > 0 we need to construct
             // an instance for which this is true.
             return new AppendableCharSequence(Math.Min(16, chars.Length));
         }
+
         return new AppendableCharSequence(Arrays.copyOfRange(chars, start, end));
     }
 
-    public AppendableCharSequence append(char c) {
-        if (pos == chars.Length) {
+    public AppendableCharSequence append(char c)
+    {
+        if (pos == chars.Length)
+        {
             char[] old = chars;
             chars = new char[old.Length << 1];
-            System.arraycopy(old, 0, chars, 0, old.length);
+            Arrays.arraycopy(old, 0, chars, 0, old.Length);
         }
+
         chars[pos++] = c;
         return this;
     }
 
-    public AppendableCharSequence append(ICharSequence csq) {
+    public AppendableCharSequence append(ICharSequence csq)
+    {
         return append(csq, 0, csq.Count);
     }
 
-    public AppendableCharSequence append(ICharSequence csq, int start, int end) {
-        if (csq.Count < end) {
+    public AppendableCharSequence append(ICharSequence csq, int start, int end)
+    {
+        if (csq.Count < end)
+        {
             throw new ArgumentOutOfRangeException("expected: csq.Count >= ("
-                    + end + "),but actual is (" + csq.Count + ")");
+                                                  + end + "),but actual is (" + csq.Count + ")");
         }
+
         int length = end - start;
-        if (length > chars.Length - pos) {
+        if (length > chars.Length - pos)
+        {
             chars = expand(chars, pos + length, pos);
         }
-        if (csq is AppendableCharSequence) {
+
+        if (csq is AppendableCharSequence)
+        {
             // Optimize append operations via array copy
-            AppendableCharSequence seq = (AppendableCharSequence) csq;
+            AppendableCharSequence seq = (AppendableCharSequence)csq;
             char[] src = seq.chars;
-            System.arraycopy(src, start, chars, pos, length);
+            Arrays.arraycopy(src, start, chars, pos, length);
             pos += length;
             return this;
         }
-        for (int i = start; i < end; i++) {
-            chars[pos++] = csq.charAt(i);
+
+        for (int i = start; i < end; i++)
+        {
+            chars[pos++] = csq[i];
         }
 
         return this;
@@ -115,23 +141,38 @@ public sealed class AppendableCharSequence : ICharSequence
      * Reset the {@link AppendableCharSequence}. Be aware this will only reset the current internal position and not
      * shrink the internal char array.
      */
-    public void reset() {
+    public void reset()
+    {
         pos = 0;
     }
 
-    public override string ToString() {
+    public IEnumerator<char> GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override string ToString()
+    {
         return new string(chars, 0, pos);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 
     /**
      * Create a new {@link string} from the given start to end.
      */
-    public string substring(int start, int end) {
+    public string substring(int start, int end)
+    {
         int length = end - start;
-        if (start > pos || length > pos) {
+        if (start > pos || length > pos)
+        {
             throw new ArgumentOutOfRangeException("expected: start and length <= ("
-                    + pos + ")");
+                                                  + pos + ")");
         }
+
         return new string(chars, start, length);
     }
 
@@ -140,25 +181,32 @@ public sealed class AppendableCharSequence : ICharSequence
      * This method is considered unsafe as index values are assumed to be legitimate.
      * Only underlying array bounds checking is done.
      */
-    public string subStringUnsafe(int start, int end) {
+    public string subStringUnsafe(int start, int end)
+    {
         return new string(chars, start, end - start);
     }
 
-    private static char[] expand(char[] array, int neededSpace, int size) {
+    private static char[] expand(char[] array, int neededSpace, int size)
+    {
         int newCapacity = array.Length;
-        do {
+        do
+        {
             // double capacity until it is big enough
             newCapacity <<= 1;
 
-            if (newCapacity < 0) {
+            if (newCapacity < 0)
+            {
                 throw new InvalidOperationException();
             }
-
         } while (neededSpace > newCapacity);
 
         char[] newArray = new char[newCapacity];
-        System.arraycopy(array, 0, newArray, 0, size);
+        Arrays.arraycopy(array, 0, newArray, 0, size);
 
         return newArray;
     }
+
+    public int Count { get; }
+
+    public char this[int index] => throw new NotImplementedException();
 }

@@ -874,7 +874,7 @@ public final class NetUtil {
         if (currentIndex < bytes.length) {
             int toBeCopiedLength = currentIndex - compressBegin;
             int targetIndex = bytes.length - toBeCopiedLength;
-            System.arraycopy(bytes, compressBegin, bytes, targetIndex, toBeCopiedLength);
+            Arrays.arraycopy(bytes, compressBegin, bytes, targetIndex, toBeCopiedLength);
             // targetIndex is also the `toIndex` to fill 0
             Arrays.fill(bytes, compressBegin, targetIndex, (byte) 0);
         }

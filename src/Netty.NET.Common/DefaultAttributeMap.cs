@@ -77,7 +77,7 @@ public class DefaultAttributeMap : AttributeMap {
         copy[i + 1] = toInsert;
         final int toCopy = i + 1;
         if (toCopy > 0) {
-            System.arraycopy(sortedSrc, 0, copy, 0, toCopy);
+            Arrays.arraycopy(sortedSrc, 0, copy, 0, toCopy);
         }
     }
 
@@ -142,10 +142,10 @@ public class DefaultAttributeMap : AttributeMap {
             final DefaultAttribute[] newAttributes =
                     newCount == 0? EMPTY_ATTRIBUTES : new DefaultAttribute[newCount];
             // perform 2 bulk copies
-            System.arraycopy(attributes, 0, newAttributes, 0, index);
+            Arrays.arraycopy(attributes, 0, newAttributes, 0, index);
             final int remaining = count - index - 1;
             if (remaining > 0) {
-                System.arraycopy(attributes, index + 1, newAttributes, index, remaining);
+                Arrays.arraycopy(attributes, index + 1, newAttributes, index, remaining);
             }
             if (ATTRIBUTES_UPDATER.compareAndSet(this, attributes, newAttributes)) {
                 return;

@@ -179,9 +179,9 @@ public class FastThreadLocalThread extends Thread {
             }
             index = ~index; // same as -(index + 1)
             long[] next = new long[arr.length + 1];
-            System.arraycopy(arr, 0, next, 0, index);
+            Arrays.arraycopy(arr, 0, next, 0, index);
             next[index] = id;
-            System.arraycopy(arr, index, next, index + 1, arr.length - index);
+            Arrays.arraycopy(arr, index, next, index + 1, arr.length - index);
             return next;
         });
         try {
@@ -196,8 +196,8 @@ public class FastThreadLocalThread extends Thread {
                     return arr;
                 }
                 long[] next = new long[arr.length - 1];
-                System.arraycopy(arr, 0, next, 0, index);
-                System.arraycopy(arr, index + 1, next, index, arr.length - index - 1);
+                Arrays.arraycopy(arr, 0, next, 0, index);
+                Arrays.arraycopy(arr, index + 1, next, index, arr.length - index - 1);
                 return next;
             });
             FastThreadLocal.removeAll();

@@ -59,7 +59,7 @@ final class DefaultFutureListeners {
             if (listeners[i] == l) {
                 int listenersToMove = size - i - 1;
                 if (listenersToMove > 0) {
-                    System.arraycopy(listeners, i + 1, listeners, i, listenersToMove);
+                    Arrays.arraycopy(listeners, i + 1, listeners, i, listenersToMove);
                 }
                 listeners[-- size] = null;
                 this.size = size;

@@ -197,7 +197,7 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
         if (a.length < size) {
             return (X[]) Arrays.copyOf(queue, size, a.getClass());
         }
-        System.arraycopy(queue, 0, a, 0, size);
+        Arrays.arraycopy(queue, 0, a, 0, size);
         if (a.length > size) {
             a[size] = null;
         }

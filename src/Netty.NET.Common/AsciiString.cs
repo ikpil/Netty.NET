@@ -95,7 +95,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
     public AsciiString(byte[] value, int start, int length, bool copy) {
         if (copy) {
             final byte[] rangedCopy = new byte[length];
-            System.arraycopy(value, start, rangedCopy, 0, rangedCopy.length);
+            Arrays.arraycopy(value, start, rangedCopy, 0, rangedCopy.length);
             this.value = rangedCopy;
             this.offset = 0;
         } else {
@@ -416,7 +416,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
                             + length + ") <= srcLen(" + length() + ')');
         }
 
-        System.arraycopy(value, srcIdx + offset, checkNotNull(dst, "dst"), dstIdx, length);
+        Arrays.arraycopy(value, srcIdx + offset, checkNotNull(dst, "dst"), dstIdx, length);
     }
 
     @Override
@@ -487,8 +487,8 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
             }
 
             byte[] newValue = PlatformDependent.allocateUninitializedArray(thisLen + thatLen);
-            System.arraycopy(value, arrayOffset(), newValue, 0, thisLen);
-            System.arraycopy(that.value, that.arrayOffset(), newValue, thisLen, thatLen);
+            Arrays.arraycopy(value, arrayOffset(), newValue, 0, thisLen);
+            Arrays.arraycopy(that.value, that.arrayOffset(), newValue, thisLen, thatLen);
             return new AsciiString(newValue, false);
         }
 
@@ -497,7 +497,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
         }
 
         byte[] newValue = PlatformDependent.allocateUninitializedArray(thisLen + thatLen);
-        System.arraycopy(value, arrayOffset(), newValue, 0, thisLen);
+        Arrays.arraycopy(value, arrayOffset(), newValue, 0, thisLen);
         for (int i = thisLen, j = 0; i < newValue.length; i++, j++) {
             newValue[i] = c2b(string.charAt(j));
         }
@@ -914,7 +914,7 @@ public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
         for (int i = offset; i < len; ++i) {
             if (value[i] == oldCharAsByte) {
                 byte[] buffer = PlatformDependent.allocateUninitializedArray(length());
-                System.arraycopy(value, offset, buffer, 0, i - offset);
+                Arrays.arraycopy(value, offset, buffer, 0, i - offset);
                 buffer[i - offset] = newCharAsByte;
                 ++i;
                 for (; i < len; ++i) {
