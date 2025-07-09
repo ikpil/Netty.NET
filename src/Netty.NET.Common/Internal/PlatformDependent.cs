@@ -706,9 +706,9 @@ public final class PlatformDependent {
     }
 
     /**
-     * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link CharSequence}.
+     * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link ICharSequence}.
      */
-    private static int hashCodeAsciiCompute(CharSequence value, int offset, int hash) {
+    private static int hashCodeAsciiCompute(ICharSequence value, int offset, int hash) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             return hash * HASH_CODE_C1 +
                     // Low order int
@@ -724,9 +724,9 @@ public final class PlatformDependent {
     }
 
     /**
-     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(int)} but for {@link CharSequence}.
+     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(int)} but for {@link ICharSequence}.
      */
-    private static int hashCodeAsciiSanitizeInt(CharSequence value, int offset) {
+    private static int hashCodeAsciiSanitizeInt(ICharSequence value, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             // mimic a unsafe.getInt call on a big endian machine
             return (value.charAt(offset + 3) & 0x1f) |
@@ -741,9 +741,9 @@ public final class PlatformDependent {
     }
 
     /**
-     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(short)} but for {@link CharSequence}.
+     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(short)} but for {@link ICharSequence}.
      */
-    private static int hashCodeAsciiSanitizeShort(CharSequence value, int offset) {
+    private static int hashCodeAsciiSanitizeShort(ICharSequence value, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             // mimic a unsafe.getShort call on a big endian machine
             return (value.charAt(offset + 1) & 0x1f) |
@@ -754,7 +754,7 @@ public final class PlatformDependent {
     }
 
     /**
-     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(byte)} but for {@link CharSequence}.
+     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(byte)} but for {@link ICharSequence}.
      */
     private static int hashCodeAsciiSanitizeByte(char value) {
         return value & 0x1f;
@@ -1026,13 +1026,13 @@ public final class PlatformDependent {
      * Calculate a hash code of a byte array assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      * <p>
-     * This method assumes that {@code bytes} is equivalent to a {@code byte[]} but just using {@link CharSequence}
+     * This method assumes that {@code bytes} is equivalent to a {@code byte[]} but just using {@link ICharSequence}
      * for storage. The upper most byte of each {@code char} from {@code bytes} is ignored.
      * @param bytes The array which contains the data to hash (assumed to be equivalent to a {@code byte[]}).
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      */
-    public static int hashCodeAscii(CharSequence bytes) {
+    public static int hashCodeAscii(ICharSequence bytes) {
         final int length = bytes.length();
         final int remainingBytes = length & 7;
         int hash = HASH_CODE_ASCII_SEED;

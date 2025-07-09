@@ -274,7 +274,7 @@ public final class StringUtil {
     /**
      * Decode a 2-digit hex byte from within a string.
      */
-    public static byte decodeHexByte(CharSequence s, int pos) {
+    public static byte decodeHexByte(ICharSequence s, int pos) {
         int hi = decodeHexNibble(s.charAt(pos));
         int lo = decodeHexNibble(s.charAt(pos + 1));
         if (hi == -1 || lo == -1) {
@@ -287,11 +287,11 @@ public final class StringUtil {
     /**
      * Decodes part of a string with <a href="https://en.wikipedia.org/wiki/Hex_dump">hex dump</a>
      *
-     * @param hexDump a {@link CharSequence} which contains the hex dump
+     * @param hexDump a {@link ICharSequence} which contains the hex dump
      * @param fromIndex start of hex dump in {@code hexDump}
      * @param length hex string length
      */
-    public static byte[] decodeHexDump(CharSequence hexDump, int fromIndex, int length) {
+    public static byte[] decodeHexDump(ICharSequence hexDump, int fromIndex, int length) {
         if (length < 0 || (length & 1) != 0) {
             throw new ArgumentException("length: " + length);
         }
@@ -308,7 +308,7 @@ public final class StringUtil {
     /**
      * Decodes a <a href="https://en.wikipedia.org/wiki/Hex_dump">hex dump</a>
      */
-    public static byte[] decodeHexDump(CharSequence hexDump) {
+    public static byte[] decodeHexDump(ICharSequence hexDump) {
         return decodeHexDump(hexDump, 0, hexDump.length());
     }
 
@@ -342,9 +342,9 @@ public final class StringUtil {
      *
      * @param value The value which will be escaped according to
      *              <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
-     * @return {@link CharSequence} the escaped value if necessary, or the value unchanged
+     * @return {@link ICharSequence} the escaped value if necessary, or the value unchanged
      */
-    public static CharSequence escapeCsv(CharSequence value) {
+    public static ICharSequence escapeCsv(ICharSequence value) {
         return escapeCsv(value, false);
     }
 
@@ -356,9 +356,9 @@ public final class StringUtil {
      *                       <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
      * @param trimWhiteSpace The value will first be trimmed of its optional white-space characters,
      *                       according to <a href="https://tools.ietf.org/html/rfc7230#section-7">RFC-7230</a>
-     * @return {@link CharSequence} the escaped value if necessary, or the value unchanged
+     * @return {@link ICharSequence} the escaped value if necessary, or the value unchanged
      */
-    public static CharSequence escapeCsv(CharSequence value, bool trimWhiteSpace) {
+    public static ICharSequence escapeCsv(ICharSequence value, bool trimWhiteSpace) {
         int length = checkNotNull(value, "value").length();
         int start;
         int last;
@@ -442,9 +442,9 @@ public final class StringUtil {
      *
      * @param value The escaped CSV field which will be unescaped according to
      *              <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
-     * @return {@link CharSequence} the unescaped value if necessary, or the value unchanged
+     * @return {@link ICharSequence} the unescaped value if necessary, or the value unchanged
      */
-    public static CharSequence unescapeCsv(CharSequence value) {
+    public static ICharSequence unescapeCsv(ICharSequence value) {
         int length = checkNotNull(value, "value").length();
         if (length == 0) {
             return value;
@@ -481,8 +481,8 @@ public final class StringUtil {
      *              <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
      * @return {@link List} the list of unescaped fields
      */
-    public static List<CharSequence> unescapeCsvFields(CharSequence value) {
-        List<CharSequence> unescaped = new List<CharSequence>(2);
+    public static List<ICharSequence> unescapeCsvFields(ICharSequence value) {
+        List<ICharSequence> unescaped = new List<ICharSequence>(2);
         StringBuilder current = InternalThreadLocalMap.get().stringBuilder();
         bool quoted = false;
         int last = value.length() - 1;
@@ -550,7 +550,7 @@ public final class StringUtil {
      *
      * @throws ArgumentException if {@code value} needs to be encoded with double-quotes.
      */
-    private static void validateCsvFormat(CharSequence value) {
+    private static void validateCsvFormat(ICharSequence value) {
         int length = value.length();
         for (int i = 0; i < length; i++) {
             switch (value.charAt(i)) {
@@ -565,7 +565,7 @@ public final class StringUtil {
         }
     }
 
-    private static ArgumentException newInvalidEscapedCsvFieldException(CharSequence value, int index) {
+    private static ArgumentException newInvalidEscapedCsvFieldException(ICharSequence value, int index) {
         return new ArgumentException("invalid escaped CSV field: " + value + " index: " + index);
     }
 
@@ -590,7 +590,7 @@ public final class StringUtil {
      * @param offset The offset to start searching at.
      * @return the index of the first non-white space character or &lt;{@code -1} if none was found.
      */
-    public static int indexOfNonWhiteSpace(CharSequence seq, int offset) {
+    public static int indexOfNonWhiteSpace(ICharSequence seq, int offset) {
         for (; offset < seq.length(); ++offset) {
             if (!Character.isWhitespace(seq.charAt(offset))) {
                 return offset;
@@ -606,7 +606,7 @@ public final class StringUtil {
      * @param offset The offset to start searching at.
      * @return the index of the first white space character or &lt;{@code -1} if none was found.
      */
-    public static int indexOfWhiteSpace(CharSequence seq, int offset) {
+    public static int indexOfWhiteSpace(ICharSequence seq, int offset) {
         for (; offset < seq.length(); ++offset) {
             if (Character.isWhitespace(seq.charAt(offset))) {
                 return offset;
@@ -638,7 +638,7 @@ public final class StringUtil {
      * @param c the tested char
      * @return true if {@code s} ends with the char {@code c}
      */
-    public static bool endsWith(CharSequence s, char c) {
+    public static bool endsWith(ICharSequence s, char c) {
         int len = s.length();
         return len > 0 && s.charAt(len - 1) == c;
     }
@@ -648,9 +648,9 @@ public final class StringUtil {
      * according to <a href="https://tools.ietf.org/html/rfc7230#section-7">RFC-7230</a>.
      *
      * @param value the value to trim
-     * @return {@link CharSequence} the trimmed value if necessary, or the value unchanged
+     * @return {@link ICharSequence} the trimmed value if necessary, or the value unchanged
      */
-    public static CharSequence trimOws(CharSequence value) {
+    public static ICharSequence trimOws(ICharSequence value) {
         final int length = value.length();
         if (length == 0) {
             return value;
@@ -668,16 +668,16 @@ public final class StringUtil {
      *
      * @return a char sequence joined by a given separator.
      */
-    public static CharSequence join(CharSequence separator, Iterable<? extends CharSequence> elements) {
+    public static ICharSequence join(ICharSequence separator, Iterable<? extends ICharSequence> elements) {
         ObjectUtil.checkNotNull(separator, "separator");
         ObjectUtil.checkNotNull(elements, "elements");
 
-        Iterator<? extends CharSequence> iterator = elements.iterator();
+        Iterator<? extends ICharSequence> iterator = elements.iterator();
         if (!iterator.hasNext()) {
             return EMPTY_STRING;
         }
 
-        CharSequence firstElement = iterator.next();
+        ICharSequence firstElement = iterator.next();
         if (!iterator.hasNext()) {
             return firstElement;
         }
@@ -693,7 +693,7 @@ public final class StringUtil {
     /**
      * @return {@code length} if no OWS is found.
      */
-    private static int indexOfFirstNonOwsChar(CharSequence value, int length) {
+    private static int indexOfFirstNonOwsChar(ICharSequence value, int length) {
         int i = 0;
         while (i < length && isOws(value.charAt(i))) {
             i++;
@@ -704,7 +704,7 @@ public final class StringUtil {
     /**
      * @return {@code start} if no OWS is found.
      */
-    private static int indexOfLastNonOwsChar(CharSequence value, int start, int length) {
+    private static int indexOfLastNonOwsChar(ICharSequence value, int start, int length) {
         int i = length - 1;
         while (i > start && isOws(value.charAt(i))) {
             i--;

@@ -13,14 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using static Netty.NET.Common.Internal.ObjectUtil;
+
 namespace Netty.NET.Common.Internal;
 
 
-
-
-
-
-public final class AppendableCharSequence : ICharSequence, Appendable {
+public sealed class AppendableCharSequence : ICharSequence
+{
     private char[] chars;
     private int pos;
 
@@ -30,7 +31,7 @@ public final class AppendableCharSequence : ICharSequence, Appendable {
 
     private AppendableCharSequence(char[] chars) {
         this.chars = checkNonEmpty(chars, "chars");
-        pos = chars.length;
+        pos = chars.Length;
     }
 
     public void setLength(int length) {
@@ -40,12 +41,10 @@ public final class AppendableCharSequence : ICharSequence, Appendable {
         this.pos = length;
     }
 
-    @Override
     public int length() {
         return pos;
     }
 
-    @Override
     public char charAt(int index) {
         if (index > pos) {
             throw new IndexOutOfBoundsException();
@@ -54,7 +53,7 @@ public final class AppendableCharSequence : ICharSequence, Appendable {
     }
 
     /**
-     * Access a value in this {@link CharSequence}.
+     * Access a value in this {@link ICharSequence}.
      * This method is considered unsafe as index values are assumed to be legitimate.
      * Only underlying array bounds checking is done.
      * @param index The index to access the underlying array at.
@@ -64,7 +63,6 @@ public final class AppendableCharSequence : ICharSequence, Appendable {
         return chars[index];
     }
 
-    @Override
     public AppendableCharSequence subSequence(int start, int end) {
         if (start == end) {
             // If start and end index is the same we need to return an empty sequence to conform to the interface.
@@ -75,7 +73,6 @@ public final class AppendableCharSequence : ICharSequence, Appendable {
         return new AppendableCharSequence(Arrays.copyOfRange(chars, start, end));
     }
 
-    @Override
     public AppendableCharSequence append(char c) {
         if (pos == chars.length) {
             char[] old = chars;
@@ -86,13 +83,11 @@ public final class AppendableCharSequence : ICharSequence, Appendable {
         return this;
     }
 
-    @Override
-    public AppendableCharSequence append(CharSequence csq) {
+    public AppendableCharSequence append(ICharSequence csq) {
         return append(csq, 0, csq.length());
     }
 
-    @Override
-    public AppendableCharSequence append(CharSequence csq, int start, int end) {
+    public AppendableCharSequence append(ICharSequence csq, int start, int end) {
         if (csq.length() < end) {
             throw new IndexOutOfBoundsException("expected: csq.length() >= ("
                     + end + "),but actual is (" + csq.length() + ")");
@@ -124,8 +119,7 @@ public final class AppendableCharSequence : ICharSequence, Appendable {
         pos = 0;
     }
 
-    @Override
-    public string toString() {
+    public override string ToString() {
         return new string(chars, 0, pos);
     }
 

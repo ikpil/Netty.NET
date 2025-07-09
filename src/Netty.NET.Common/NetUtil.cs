@@ -448,10 +448,10 @@ public final class NetUtil {
     }
 
     public static bool isValidIpV6Address(string ip) {
-        return isValidIpV6Address((CharSequence) ip);
+        return isValidIpV6Address((ICharSequence) ip);
     }
 
-    public static bool isValidIpV6Address(CharSequence ip) {
+    public static bool isValidIpV6Address(ICharSequence ip) {
         int end = ip.length();
         if (end < 2) {
             return false;
@@ -571,7 +571,7 @@ public final class NetUtil {
                wordLen > 0 && (colons < 8 || compressBegin <= start);
     }
 
-    private static bool isValidIpV4Word(CharSequence word, int from, int toExclusive) {
+    private static bool isValidIpV4Word(ICharSequence word, int from, int toExclusive) {
         int len = toExclusive - from;
         char c0, c1, c2;
         if (len < 1 || len > 3 || (c0 = word.charAt(from)) < '0') {
@@ -613,12 +613,12 @@ public final class NetUtil {
     }
 
     /**
-     * Takes a {@link CharSequence} and parses it to see if it is a valid IPV4 address.
+     * Takes a {@link ICharSequence} and parses it to see if it is a valid IPV4 address.
      *
      * @return true, if the string represents an IPV4 address in dotted
      *         notation, false otherwise
      */
-    public static bool isValidIpV4Address(CharSequence ip) {
+    public static bool isValidIpV4Address(ICharSequence ip) {
         return isValidIpV4Address(ip, 0, ip.length());
     }
 
@@ -632,7 +632,7 @@ public final class NetUtil {
         return isValidIpV4Address(ip, 0, ip.length());
     }
 
-    private static bool isValidIpV4Address(CharSequence ip, int from, int toExcluded) {
+    private static bool isValidIpV4Address(ICharSequence ip, int from, int toExcluded) {
         return ip instanceof string ? isValidIpV4Address((string) ip, from, toExcluded) :
                 ip instanceof AsciiString ? isValidIpV4Address((AsciiString) ip, from, toExcluded) :
                         isValidIpV4Address0(ip, from, toExcluded);
@@ -661,7 +661,7 @@ public final class NetUtil {
     }
 
     @SuppressWarnings("DuplicateBooleanBranch")
-    private static bool isValidIpV4Address0(CharSequence ip, int from, int toExcluded) {
+    private static bool isValidIpV4Address0(ICharSequence ip, int from, int toExcluded) {
         int len = toExcluded - from;
         int i;
         return len <= 15 && len >= 7 &&
@@ -672,23 +672,23 @@ public final class NetUtil {
     }
 
     /**
-     * Returns the {@link Inet6Address} representation of a {@link CharSequence} IP address.
+     * Returns the {@link Inet6Address} representation of a {@link ICharSequence} IP address.
      * <p>
-     * This method will treat all IPv4 type addresses as "IPv4 mapped" (see {@link #getByName(CharSequence, bool)})
-     * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
+     * This method will treat all IPv4 type addresses as "IPv4 mapped" (see {@link #getByName(ICharSequence, bool)})
+     * @param ip {@link ICharSequence} IP address to be converted to a {@link Inet6Address}
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
-    public static Inet6Address getByName(CharSequence ip) {
+    public static Inet6Address getByName(ICharSequence ip) {
         return getByName(ip, true);
     }
 
     /**
-     * Returns the {@link Inet6Address} representation of a {@link CharSequence} IP address.
+     * Returns the {@link Inet6Address} representation of a {@link ICharSequence} IP address.
      * <p>
      * The {@code ipv4Mapped} parameter specifies how IPv4 addresses should be treated.
      * "IPv4 mapped" format as
      * defined in <a href="https://tools.ietf.org/html/rfc4291#section-2.5.5">rfc 4291 section 2</a> is supported.
-     * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
+     * @param ip {@link ICharSequence} IP address to be converted to a {@link Inet6Address}
      * @param ipv4Mapped
      * <ul>
      * <li>{@code true} To allow IPv4 mapped inputs to be translated into {@link Inet6Address}</li>
@@ -696,7 +696,7 @@ public final class NetUtil {
      * </ul>
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
-    public static Inet6Address getByName(CharSequence ip, bool ipv4Mapped) {
+    public static Inet6Address getByName(ICharSequence ip, bool ipv4Mapped) {
         byte[] bytes = getIPv6ByName(ip, ipv4Mapped);
         if (bytes == null) {
             return null;
@@ -709,12 +709,12 @@ public final class NetUtil {
     }
 
     /**
-     * Returns the byte array representation of a {@link CharSequence} IP address.
+     * Returns the byte array representation of a {@link ICharSequence} IP address.
      * <p>
      * The {@code ipv4Mapped} parameter specifies how IPv4 addresses should be treated.
      * "IPv4 mapped" format as
      * defined in <a href="https://tools.ietf.org/html/rfc4291#section-2.5.5">rfc 4291 section 2</a> is supported.
-     * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
+     * @param ip {@link ICharSequence} IP address to be converted to a {@link Inet6Address}
      * @param ipv4Mapped
      * <ul>
      * <li>{@code true} To allow IPv4 mapped inputs to be translated into {@link Inet6Address}</li>
@@ -723,7 +723,7 @@ public final class NetUtil {
      * @return byte array representation of the {@code ip} or {@code null} if not a valid IP address.
      */
      // visible for test
-    static byte[] getIPv6ByName(CharSequence ip, bool ipv4Mapped) {
+    static byte[] getIPv6ByName(ICharSequence ip, bool ipv4Mapped) {
         final byte[] bytes = new byte[IPV6_BYTE_COUNT];
         final int ipLength = ip.length();
         int compressBegin = 0;

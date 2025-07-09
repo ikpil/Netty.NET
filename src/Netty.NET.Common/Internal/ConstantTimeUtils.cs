@@ -102,7 +102,7 @@ public final class ConstantTimeUtils {
     }
 
     /**
-     * Compare two {@link CharSequence} objects without leaking timing information.
+     * Compare two {@link ICharSequence} objects without leaking timing information.
      * <p>
      * The {@code int} return type is intentional and is designed to allow cascading of constant time operations:
      * <pre>
@@ -116,7 +116,7 @@ public final class ConstantTimeUtils {
      * @param s2 the second value.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(CharSequence s1, CharSequence s2) {
+    public static int equalsConstantTime(ICharSequence s1, ICharSequence s2) {
         if (s1.length() != s2.length()) {
             return 0;
         }
