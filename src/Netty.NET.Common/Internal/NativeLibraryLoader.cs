@@ -100,11 +100,11 @@ public final class NativeLibraryLoader {
      * Loads the first available library in the collection with the specified
      * {@link ClassLoader}.
      *
-     * @throws IllegalArgumentException
+     * @throws ArgumentException
      *         if none of the given libraries load successfully.
      */
     public static void loadFirstAvailable(ClassLoader loader, string... names) {
-        List<Exception> suppressed = new ArrayList<Exception>();
+        List<Exception> suppressed = new List<Exception>();
         for (string name : names) {
             try {
                 load(name, loader);
@@ -115,8 +115,8 @@ public final class NativeLibraryLoader {
             }
         }
 
-        IllegalArgumentException iae =
-                new IllegalArgumentException("Failed to load any of the given libraries: " + Arrays.toString(names));
+        ArgumentException iae =
+                new ArgumentException("Failed to load any of the given libraries: " + Arrays.toString(names));
         ThrowableUtil.addSuppressedAndClear(iae, suppressed);
         throw iae;
     }
@@ -160,7 +160,7 @@ public final class NativeLibraryLoader {
     public static void load(string originalName, ClassLoader loader) {
         string mangledPackagePrefix = calculateMangledPackagePrefix();
         string name = mangledPackagePrefix + originalName;
-        List<Exception> suppressed = new ArrayList<>();
+        List<Exception> suppressed = new List<>();
         try {
             // first try to load from java.library.path
             loadLibrary(loader, name, false);

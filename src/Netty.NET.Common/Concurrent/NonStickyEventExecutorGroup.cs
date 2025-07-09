@@ -65,7 +65,7 @@ public final class NonStickyEventExecutorGroup : EventExecutorGroup {
         while (executors.hasNext()) {
             EventExecutor executor = executors.next();
             if (executor instanceof OrderedEventExecutor) {
-                throw new IllegalArgumentException("EventExecutorGroup " + group
+                throw new ArgumentException("EventExecutorGroup " + group
                         + " contains OrderedEventExecutors: " + executor);
             }
         }

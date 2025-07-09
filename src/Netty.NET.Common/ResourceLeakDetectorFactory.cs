@@ -14,15 +14,12 @@
  * under the License.
  */
 
+using System;
+using Netty.NET.Common;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
-
 
 /**
  * This static factory should be used to load {@link ResourceLeakDetector}s as needed
@@ -120,7 +117,7 @@ public abstract class ResourceLeakDetectorFactory {
                 final Class<?> detectorClass = Class.forName(customLeakDetector, true,
                         PlatformDependent.getSystemClassLoader());
 
-                if (typeof(ResourceLeakDetector).isAssignableFrom(detectorClass)) {
+                if (typeof(ResourceLeakDetector<>).isAssignableFrom(detectorClass)) {
                     return detectorClass.getConstructor(typeof(Class), typeof(int), typeof(long));
                 } else {
                     logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);

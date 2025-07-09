@@ -69,14 +69,14 @@ public final class ThreadDeathWatcher {
      * @param thread the {@link Thread} to watch
      * @param task the {@link Runnable} to run when the {@code thread} dies
      *
-     * @throws IllegalArgumentException if the specified {@code thread} is not alive
+     * @throws ArgumentException if the specified {@code thread} is not alive
      */
     public static void watch(Thread thread, Runnable task) {
         ObjectUtil.checkNotNull(thread, "thread");
         ObjectUtil.checkNotNull(task, "task");
 
         if (!thread.isAlive()) {
-            throw new IllegalArgumentException("thread must be alive.");
+            throw new ArgumentException("thread must be alive.");
         }
 
         schedule(thread, task, true);
@@ -139,7 +139,7 @@ public final class ThreadDeathWatcher {
 
     private static readonly class Watcher : Runnable {
 
-        private readonly List<Entry> watchees = new ArrayList<Entry>();
+        private readonly List<Entry> watchees = new List<Entry>();
 
         @Override
         public void run() {

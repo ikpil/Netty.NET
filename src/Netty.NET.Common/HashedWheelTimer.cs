@@ -13,33 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * A {@link Timer} optimized for approximated I/O timeout scheduling.
@@ -84,8 +67,7 @@ namespace Netty.NET.Common;
  */
 public class HashedWheelTimer : Timer {
 
-    static readonly InternalLogger logger =
-            InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
     private static readonly AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
     private static readonly AtomicBoolean WARNED_TOO_MANY_INSTANCES = new AtomicBoolean();
@@ -136,7 +118,7 @@ public class HashedWheelTimer : Timer {
      * @param tickDuration the duration between tick
      * @param unit         the time unit of the {@code tickDuration}
      * @throws NullPointerException     if {@code unit} is {@code null}
-     * @throws IllegalArgumentException if {@code tickDuration} is &lt;= 0
+     * @throws ArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(long tickDuration, TimeSpan unit) {
         this(Executors.defaultThreadFactory(), tickDuration, unit);
@@ -150,7 +132,7 @@ public class HashedWheelTimer : Timer {
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
      * @throws NullPointerException     if {@code unit} is {@code null}
-     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(long tickDuration, TimeSpan unit, int ticksPerWheel) {
         this(Executors.defaultThreadFactory(), tickDuration, unit, ticksPerWheel);
@@ -178,7 +160,7 @@ public class HashedWheelTimer : Timer {
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws IllegalArgumentException if {@code tickDuration} is &lt;= 0
+     * @throws ArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(
             ThreadFactory threadFactory, long tickDuration, TimeSpan unit) {
@@ -195,7 +177,7 @@ public class HashedWheelTimer : Timer {
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
             ThreadFactory threadFactory,
@@ -216,7 +198,7 @@ public class HashedWheelTimer : Timer {
      *                      if false it will only be enabled if the worker thread is not
      *                      a daemon thread.
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
             ThreadFactory threadFactory,
@@ -242,7 +224,7 @@ public class HashedWheelTimer : Timer {
      *                             being thrown. No maximum pending timeouts limit is assumed if
      *                             this value is 0 or negative.
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
             ThreadFactory threadFactory,
@@ -272,7 +254,7 @@ public class HashedWheelTimer : Timer {
      *                             The caller is responsible to shutdown the {@link Executor} once it is not needed
      *                             anymore.
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
             ThreadFactory threadFactory,
@@ -294,7 +276,7 @@ public class HashedWheelTimer : Timer {
 
         // Prevent overflow.
         if (duration >= long.MAX_VALUE / wheel.length) {
-            throw new IllegalArgumentException(string.format(
+            throw new ArgumentException(string.format(
                     "tickDuration: %d (expected: 0 < tickDuration in nanos < %d",
                     tickDuration, long.MAX_VALUE / wheel.length));
         }

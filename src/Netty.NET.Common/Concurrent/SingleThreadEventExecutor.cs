@@ -632,7 +632,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         bool ran = false;
         // Note shutdown hooks can add / remove shutdown hooks.
         while (!shutdownHooks.isEmpty()) {
-            List<Runnable> copy = new ArrayList<Runnable>(shutdownHooks);
+            List<Runnable> copy = new List<Runnable>(shutdownHooks);
             shutdownHooks.clear();
             for (Runnable task: copy) {
                 try {
@@ -709,7 +709,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
         ObjectUtil.checkPositiveOrZero(quietPeriod, "quietPeriod");
         if (timeout < quietPeriod) {
-            throw new IllegalArgumentException(
+            throw new ArgumentException(
                     "timeout: " + timeout + " (expected >= quietPeriod (" + quietPeriod + "))");
         }
         ObjectUtil.checkNotNull(unit, "unit");

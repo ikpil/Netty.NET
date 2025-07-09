@@ -415,7 +415,7 @@ public final class NetUtil {
     /**
      * Converts 4-byte or 16-byte data into an IPv4 or IPv6 string respectively.
      *
-     * @throws IllegalArgumentException
+     * @throws ArgumentException
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
     public static string bytesToIpAddress(byte[] bytes) {
@@ -425,7 +425,7 @@ public final class NetUtil {
     /**
      * Converts 4-byte or 16-byte data into an IPv4 or IPv6 string respectively.
      *
-     * @throws IllegalArgumentException
+     * @throws ArgumentException
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
     public static string bytesToIpAddress(byte[] bytes, int offset, int length) {
@@ -443,7 +443,7 @@ public final class NetUtil {
             case 16:
                 return toAddressString(bytes, offset, false);
             default:
-                throw new IllegalArgumentException("length: " + length + " (expected: 4 or 16)");
+                throw new ArgumentException("length: " + length + " (expected: 4 or 16)");
         }
     }
 
@@ -979,7 +979,7 @@ public final class NetUtil {
             return ip.getHostAddress();
         }
         if (!(ip instanceof Inet6Address)) {
-            throw new IllegalArgumentException("Unhandled type: " + ip);
+            throw new ArgumentException("Unhandled type: " + ip);
         }
 
         return toAddressString(ip.getAddress(), 0, ipv4Mapped);

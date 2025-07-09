@@ -278,7 +278,7 @@ public final class StringUtil {
         int hi = decodeHexNibble(s.charAt(pos));
         int lo = decodeHexNibble(s.charAt(pos + 1));
         if (hi == -1 || lo == -1) {
-            throw new IllegalArgumentException(string.format(
+            throw new ArgumentException(string.format(
                     "invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
         }
         return (byte) ((hi << 4) + lo);
@@ -293,7 +293,7 @@ public final class StringUtil {
      */
     public static byte[] decodeHexDump(CharSequence hexDump, int fromIndex, int length) {
         if (length < 0 || (length & 1) != 0) {
-            throw new IllegalArgumentException("length: " + length);
+            throw new ArgumentException("length: " + length);
         }
         if (length == 0) {
             return EmptyArrays.EMPTY_BYTES;
@@ -482,7 +482,7 @@ public final class StringUtil {
      * @return {@link List} the list of unescaped fields
      */
     public static List<CharSequence> unescapeCsvFields(CharSequence value) {
-        List<CharSequence> unescaped = new ArrayList<CharSequence>(2);
+        List<CharSequence> unescaped = new List<CharSequence>(2);
         StringBuilder current = InternalThreadLocalMap.get().stringBuilder();
         bool quoted = false;
         int last = value.length() - 1;
@@ -548,7 +548,7 @@ public final class StringUtil {
     /**
      * Validate if {@code value} is a valid csv field without double-quotes.
      *
-     * @throws IllegalArgumentException if {@code value} needs to be encoded with double-quotes.
+     * @throws ArgumentException if {@code value} needs to be encoded with double-quotes.
      */
     private static void validateCsvFormat(CharSequence value) {
         int length = value.length();
@@ -565,8 +565,8 @@ public final class StringUtil {
         }
     }
 
-    private static IllegalArgumentException newInvalidEscapedCsvFieldException(CharSequence value, int index) {
-        return new IllegalArgumentException("invalid escaped CSV field: " + value + " index: " + index);
+    private static ArgumentException newInvalidEscapedCsvFieldException(CharSequence value, int index) {
+        return new ArgumentException("invalid escaped CSV field: " + value + " index: " + index);
     }
 
     /**

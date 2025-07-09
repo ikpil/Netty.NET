@@ -17,22 +17,6 @@
 namespace Netty.NET.Common.Internal;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * The internal data structure that stores the thread-local variables for Netty and all {@link FastThreadLocal}s.
  * Note that this class is for internal use only and is subject to change at any time.  Use {@link FastThreadLocal}
@@ -47,7 +31,7 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
 
     private static readonly int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
     private static readonly int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
-    // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/ArrayList.java#l229
+    // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/List.java#l229
     private static readonly int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MAX_VALUE - 8;
 
     private static readonly int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
@@ -75,8 +59,8 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
     private Map<Charset, CharsetEncoder> charsetEncoderCache;
     private Map<Charset, CharsetDecoder> charsetDecoderCache;
 
-    // ArrayList-related thread-locals
-    private ArrayList<object> arrayList;
+    // List-related thread-locals
+    private List<object> arrayList;
 
     private BitSet cleanerFlags;
 
@@ -239,16 +223,16 @@ public final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap
         return cache;
     }
 
-    public <E> ArrayList<E> arrayList() {
+    public <E> List<E> arrayList() {
         return arrayList(DEFAULT_ARRAY_LIST_INITIAL_CAPACITY);
     }
 
     @SuppressWarnings("unchecked")
-    public <E> ArrayList<E> arrayList(int minCapacity) {
-        ArrayList<E> list = (ArrayList<E>) arrayList;
+    public <E> List<E> arrayList(int minCapacity) {
+        List<E> list = (List<E>) arrayList;
         if (list == null) {
-            arrayList = new ArrayList<>(minCapacity);
-            return (ArrayList<E>) arrayList;
+            arrayList = new List<>(minCapacity);
+            return (List<E>) arrayList;
         }
         list.clear();
         list.ensureCapacity(minCapacity);

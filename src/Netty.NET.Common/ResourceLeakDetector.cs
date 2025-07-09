@@ -605,7 +605,7 @@ public class ResourceLeakDetector<T> {
             }
         }
         if (!nameSet.isEmpty()) {
-            throw new IllegalArgumentException("Can't find '" + nameSet + "' in " + clz.getName());
+            throw new ArgumentException("Can't find '" + nameSet + "' in " + clz.getName());
         }
         string[] oldMethods;
         string[] newMethods;

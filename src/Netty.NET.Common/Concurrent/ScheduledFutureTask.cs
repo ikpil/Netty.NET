@@ -68,7 +68,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, 
 
     private static long validatePeriod(long period) {
         if (period == 0) {
-            throw new IllegalArgumentException("period: 0 (expected: != 0)");
+            throw new ArgumentException("period: 0 (expected: != 0)");
         }
         return period;
     }

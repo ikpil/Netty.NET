@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Internal;
 /**
  * A simple list which is recyclable. This implementation does not allow {@code null} elements to be added.
  */
-public final class RecyclableArrayList extends ArrayList<object> {
+public final class RecyclableArrayList extends List<object> {
 
     private static readonly long serialVersionUID = -8605125654176467947L;
 
@@ -97,13 +97,13 @@ public final class RecyclableArrayList extends ArrayList<object> {
             int size = list.size();
             for (int i = 0; i  < size; i++) {
                 if (list.get(i) == null) {
-                    throw new IllegalArgumentException("c contains null values");
+                    throw new ArgumentException("c contains null values");
                 }
             }
         } else {
             for (object element: c) {
                 if (element == null) {
-                    throw new IllegalArgumentException("c contains null values");
+                    throw new ArgumentException("c contains null values");
                 }
             }
         }

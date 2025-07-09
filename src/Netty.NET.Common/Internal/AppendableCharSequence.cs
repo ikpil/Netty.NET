@@ -35,7 +35,7 @@ public final class AppendableCharSequence : ICharSequence, Appendable {
 
     public void setLength(int length) {
         if (length < 0 || length > pos) {
-            throw new IllegalArgumentException("length: " + length + " (length: >= 0, <= " + pos + ')');
+            throw new ArgumentException("length: " + length + " (length: >= 0, <= " + pos + ')');
         }
         this.pos = length;
     }

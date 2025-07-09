@@ -318,13 +318,13 @@ public final class PlatformDependent {
         }
         string[] classifiers = osClassifiers.split(",");
         if (classifiers.length == 0) {
-            throw new IllegalArgumentException(
+            throw new ArgumentException(
                     osClassifiersPropertyName + " property is not empty, but contains no classifiers: "
                             + osClassifiers);
         }
         // at most ID, ID_LIKE classifiers
         if (classifiers.length > 2) {
-            throw new IllegalArgumentException(
+            throw new ArgumentException(
                     osClassifiersPropertyName + " property contains more than 2 classifiers: " + osClassifiers);
         }
         for (string classifier : classifiers) {
@@ -904,7 +904,7 @@ public final class PlatformDependent {
 
     public static ByteBuffer alignDirectBuffer(ByteBuffer buffer, int alignment) {
         if (!buffer.isDirect()) {
-            throw new IllegalArgumentException("Cannot get aligned slice of non-direct byte buffer.");
+            throw new ArgumentException("Cannot get aligned slice of non-direct byte buffer.");
         }
         if (PlatformDependent0.hasAlignSliceMethod()) {
             return PlatformDependent0.alignSlice(buffer, alignment);

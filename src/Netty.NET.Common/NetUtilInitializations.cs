@@ -69,7 +69,7 @@ final class NetUtilInitializations {
     }
 
     static Collection<NetworkInterface> networkInterfaces() {
-        List<NetworkInterface> networkInterfaces = new ArrayList<NetworkInterface>();
+        List<NetworkInterface> networkInterfaces = new List<NetworkInterface>();
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             if (interfaces != null) {
@@ -92,7 +92,7 @@ final class NetUtilInitializations {
     static NetworkIfaceAndInetAddress determineLoopback(
             Collection<NetworkInterface> networkInterfaces, Inet4Address localhost4, Inet6Address localhost6) {
         // Retrieve the list of available network interfaces.
-        List<NetworkInterface> ifaces = new ArrayList<NetworkInterface>();
+        List<NetworkInterface> ifaces = new List<NetworkInterface>();
         for (NetworkInterface iface: networkInterfaces) {
             // Use the interface with proper INET addresses only.
             if (SocketUtils.addressesFromNetworkInterface(iface).hasMoreElements()) {

@@ -37,7 +37,7 @@ public final class NettyRuntime {
          * Set the number of available processors.
          *
          * @param availableProcessors the number of available processors
-         * @throws IllegalArgumentException if the specified number of available processors is non-positive
+         * @throws ArgumentException if the specified number of available processors is non-positive
          * @throws IllegalStateException    if the number of available processors is already configured
          */
         synchronized void setAvailableProcessors(final int availableProcessors) {
@@ -79,7 +79,7 @@ public final class NettyRuntime {
      * Set the number of available processors.
      *
      * @param availableProcessors the number of available processors
-     * @throws IllegalArgumentException if the specified number of available processors is non-positive
+     * @throws ArgumentException if the specified number of available processors is non-positive
      * @throws IllegalStateException    if the number of available processors is already configured
      */
     @SuppressWarnings("unused,WeakerAccess") // this method is part of the public API

@@ -83,7 +83,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
 
     /**
      * Creates a new {@link Constant} for the given {@code name} or fail with an
-     * {@link IllegalArgumentException} if a {@link Constant} for the given {@code name} exists.
+     * {@link ArgumentException} if a {@link Constant} for the given {@code name} exists.
      */
     public T newInstance(string name) {
         return createOrThrow(checkNonEmpty(name, "name"));
@@ -104,7 +104,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
             }
         }
 
-        throw new IllegalArgumentException(string.format("'%s' is already in use", name));
+        throw new ArgumentException(string.format("'%s' is already in use", name));
     }
 
     protected abstract T newConstant(int id, string name);

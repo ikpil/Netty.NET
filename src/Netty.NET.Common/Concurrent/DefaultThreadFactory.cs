@@ -86,7 +86,7 @@ public class DefaultThreadFactory : ThreadFactory {
         ObjectUtil.checkNotNull(poolName, "poolName");
 
         if (priority < Thread.MIN_PRIORITY || priority > Thread.MAX_PRIORITY) {
-            throw new IllegalArgumentException(
+            throw new ArgumentException(
                     "priority: " + priority + " (expected: Thread.MIN_PRIORITY <= priority <= Thread.MAX_PRIORITY)");
         }
 

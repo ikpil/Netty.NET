@@ -125,7 +125,7 @@ public interface MpscIntQueue {
         @Override
         public bool offer(int value) {
             if (value == emptyValue) {
-                throw new IllegalArgumentException("Cannot offer the \"empty\" value: " + emptyValue);
+                throw new ArgumentException("Cannot offer the \"empty\" value: " + emptyValue);
             }
             // use a cached view on consumer index (potentially updated in loop)
             final int mask = this.mask;

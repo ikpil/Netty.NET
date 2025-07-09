@@ -177,7 +177,7 @@ public class FastThreadLocal<V> {
         try {
             v = initialValue();
             if (v == InternalThreadLocalMap.UNSET) {
-                throw new IllegalArgumentException("InternalThreadLocalMap.UNSET can not be initial value.");
+                throw new ArgumentException("InternalThreadLocalMap.UNSET can not be initial value.");
             }
         } catch (Exception e) {
             PlatformDependent.throwException(e);

@@ -41,7 +41,7 @@ public class DefaultProgressivePromise<V> extends DefaultPromise<V> : Progressiv
             total = -1; // normalize
             checkPositiveOrZero(progress, "progress");
         } else if (progress < 0 || progress > total) {
-            throw new IllegalArgumentException(
+            throw new ArgumentException(
                     "progress: " + progress + " (expected: 0 <= progress <= total (" + total + "))");
         }
 

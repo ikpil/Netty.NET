@@ -244,7 +244,7 @@ public abstract class Recycler<T> {
         @Override
         public void recycle(object object) {
             if (object != value) {
-                throw new IllegalArgumentException("object does not belong to handle");
+                throw new ArgumentException("object does not belong to handle");
             }
             localPool.release(this, true);
         }
@@ -252,7 +252,7 @@ public abstract class Recycler<T> {
         @Override
         public void unguardedRecycle(object object) {
             if (object != value) {
-                throw new IllegalArgumentException("object does not belong to handle");
+                throw new ArgumentException("object does not belong to handle");
             }
             localPool.release(this, false);
         }
@@ -381,7 +381,7 @@ public abstract class Recycler<T> {
             // made thread-safe by synchronising on `this` BlockingMessageQueue instance.
             // Why ArrayDeque?
             // We use ArrayDeque instead of LinkedList or LinkedBlockingQueue because it's more space efficient.
-            // We use ArrayDeque instead of ArrayList because we need the queue APIs.
+            // We use ArrayDeque instead of List because we need the queue APIs.
             // We use ArrayDeque instead of ConcurrentLinkedQueue because CLQ is unbounded and has O(n) size().
             // We use ArrayDeque instead of ArrayBlockingQueue because ABQ allocates its max capacity up-front,
             // and these queues will usually have large capacities, in potentially great numbers (one per thread),
