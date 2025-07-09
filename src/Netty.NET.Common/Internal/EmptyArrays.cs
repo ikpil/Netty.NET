@@ -14,30 +14,26 @@
  * under the License.
  */
 
+using System;
+using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
+
 namespace Netty.NET.Common.Internal;
 
+public static class EmptyArrays
+{
+    public static readonly int[] EMPTY_INTS = Array.Empty<int>();
+    public static readonly byte[] EMPTY_BYTES = Array.Empty<byte>();
+    public static readonly char[] EMPTY_CHARS = Array.Empty<char>();
+    public static readonly object[] EMPTY_OBJECTS = Array.Empty<object>();
+    public static readonly Type[] EMPTY_CLASSES = Array.Empty<Type>();
+    public static readonly string[] EMPTY_STRINGS = Array.Empty<string>();
+    public static readonly AsciiString[] EMPTY_ASCII_STRINGS = Array.Empty<AsciiString>();
+    public static readonly StackFrame[] EMPTY_STACK_TRACE = Array.Empty<StackFrame>();
+    //public static readonly ByteBuffer[] EMPTY_BYTE_BUFFERS = Array.Empty<ByteBuffer>();
+    public static readonly X509Certificate[] EMPTY_CERTIFICATES = Array.Empty<X509Certificate>();
+    public static readonly X509Certificate[] EMPTY_X509_CERTIFICATES = Array.Empty<X509Certificate>();
+    public static readonly X509Certificate2[] EMPTY_JAVAX_X509_CERTIFICATES = Array.Empty<X509Certificate2>();
 
-
-
-
-
-
-public final class EmptyArrays {
-
-    public static readonly int[] EMPTY_INTS = {};
-    public static readonly byte[] EMPTY_BYTES = {};
-    public static readonly char[] EMPTY_CHARS = {};
-    public static readonly object[] EMPTY_OBJECTS = {};
-    public static readonly Class<?>[] EMPTY_CLASSES = {};
-    public static readonly string[] EMPTY_STRINGS = {};
-    public static readonly AsciiString[] EMPTY_ASCII_STRINGS = {};
-    public static readonly StackTraceElement[] EMPTY_STACK_TRACE = {};
-    public static readonly ByteBuffer[] EMPTY_BYTE_BUFFERS = {};
-    public static readonly Certificate[] EMPTY_CERTIFICATES = {};
-    public static readonly X509Certificate[] EMPTY_X509_CERTIFICATES = {};
-    public static readonly javax.security.cert.X509Certificate[] EMPTY_JAVAX_X509_CERTIFICATES = {};
-
-    public static readonly Exception[] EMPTY_THROWABLES = {};
-
-    private EmptyArrays() { }
+    public static readonly Exception[] EMPTY_THROWABLES = Array.Empty<Exception>();
 }

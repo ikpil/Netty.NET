@@ -15,14 +15,6 @@
  */
 namespace Netty.NET.Common.Internal;
 
-
-
-
-
-
-
-
-
 /**
  * A priority queue which uses natural ordering of elements. Elements are also required to be of type
  * {@link PriorityQueueNode} for the purpose of maintaining the index in the priority queue.

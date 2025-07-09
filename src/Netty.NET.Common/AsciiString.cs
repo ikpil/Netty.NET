@@ -13,6 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.ObjectModel;
+using Netty.NET.Common;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common;
 
 
@@ -44,7 +50,7 @@ namespace Netty.NET.Common;
  * {@link #array()}. If any changes are made to the underlying byte array it is the user's responsibility to call
  * {@link #arrayChanged()} so the state of this class can be reset.
  */
-public final class AsciiString : ICharSequence, Comparable<ICharSequence> {
+public class AsciiString : ICharSequence, Comparable<ICharSequence> {
     public static readonly AsciiString EMPTY_STRING = cached("");
     private static readonly char MAX_CHAR_VALUE = 255;
 
