@@ -27,8 +27,8 @@ namespace Netty.NET.Common.Concurrent;
  * Abstract base class for {@link OrderedEventExecutor}'s that execute all its submitted tasks in a single thread.
  *
  */
-public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor : OrderedEventExecutor {
-
+public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor , OrderedEventExecutor 
+{
     static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
 
