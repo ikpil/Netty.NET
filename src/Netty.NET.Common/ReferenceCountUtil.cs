@@ -13,17 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Threading;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common;
-
-
-
-
 
 
 /**
  * Collection of method to handle objects that may implement {@link ReferenceCounted}.
  */
-public final class ReferenceCountUtil {
+public sealed class ReferenceCountUtil 
+{
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ReferenceCountUtil));
 

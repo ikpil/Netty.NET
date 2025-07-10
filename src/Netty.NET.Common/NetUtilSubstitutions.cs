@@ -15,16 +15,6 @@
  */
 namespace Netty.NET.Common;
 
-
-
-
-
-
-
-
-
-
-
 @TargetClass(typeof(NetUtil))
 final class NetUtilSubstitutions {
     private NetUtilSubstitutions() {

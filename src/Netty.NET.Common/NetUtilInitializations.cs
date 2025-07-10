@@ -13,25 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-final class NetUtilInitializations {
+internal static class NetUtilInitializations 
+{
     /**
      * The logger being used by this class
      */

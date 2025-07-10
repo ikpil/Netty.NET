@@ -13,34 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Diagnostics;
+using System.Net.NetworkInformation;
+using System.Text;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * A class that holds a number of network-related constants.
@@ -49,7 +30,8 @@ namespace Netty.NET.Common;
  * <a href="https://svn.apache.org/repos/asf/harmony/enhanced/java/branches/java6/classlib/modules/luni/
  * src/main/java/org/apache/harmony/luni/util/Inet6Util.java">Inet6Util class</a> which was part of Apache Harmony.
  */
-public final class NetUtil {
+public static class NetUtil 
+{
 
     /**
      * The {@link Inet4Address} that represents the IPv4 loopback address '127.0.0.1'
