@@ -14,35 +14,39 @@
  * under the License.
  */
 
+using System;
+
 namespace Netty.NET.Common;
 
 /**
  * An {@link InvalidOperationException} which is raised when a user attempts to access a {@link ReferenceCounted} whose
  * reference count has been decreased to 0 (and consequently freed).
  */
-public class IllegalReferenceCountException extends InvalidOperationException {
-
-    private static readonly long serialVersionUID = -2507492394288153468L;
-
-    public IllegalReferenceCountException() { }
-
-    public IllegalReferenceCountException(int refCnt) {
-        this("refCnt: " + refCnt);
+public class IllegalReferenceCountException : InvalidOperationException
+{
+    public IllegalReferenceCountException()
+    {
     }
 
-    public IllegalReferenceCountException(int refCnt, int increment) {
-        this("refCnt: " + refCnt + ", " + (increment > 0? "increment: " + increment : "decrement: " + -increment));
+    public IllegalReferenceCountException(int refCnt)
+        : this("refCnt: " + refCnt)
+    {
     }
 
-    public IllegalReferenceCountException(string message) {
-        super(message);
+    public IllegalReferenceCountException(int refCnt, int increment)
+        : this("refCnt: " + refCnt + ", " + (increment > 0 ? "increment: " + increment : "decrement: " + -increment))
+    {
     }
 
-    public IllegalReferenceCountException(string message, Exception cause) {
-        super(message, cause);
+    public IllegalReferenceCountException(string message) : base(message)
+    {
     }
 
-    public IllegalReferenceCountException(Exception cause) {
-        super(cause);
+    public IllegalReferenceCountException(string message, Exception cause) : base(message, cause)
+    {
+    }
+
+    public IllegalReferenceCountException(Exception cause) : base(null, cause)
+    {
     }
 }
