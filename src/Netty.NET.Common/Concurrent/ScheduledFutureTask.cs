@@ -106,7 +106,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, 
     }
 
     static long deadlineToDelayNanos(long currentTimeNanos, long deadlineNanos) {
-        return deadlineNanos == 0L ? 0L : Math.max(0L, deadlineNanos - currentTimeNanos);
+        return deadlineNanos == 0L ? 0L : Math.Max(0L, deadlineNanos - currentTimeNanos);
     }
 
     public long delayNanos(long currentTimeNanos) {

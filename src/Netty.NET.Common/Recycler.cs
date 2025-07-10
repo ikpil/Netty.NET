@@ -66,7 +66,7 @@ public abstract class Recycler<T> {
         // By default, we allow one push to a Recycler for each 8th try on handles that were never recycled before.
         // This should help to slowly increase the capacity of the recycler while not be too sensitive to allocation
         // bursts.
-        RATIO = max(0, SystemPropertyUtil.getInt("io.netty.recycler.ratio", 8));
+        RATIO = Math.Max(0, SystemPropertyUtil.getInt("io.netty.recycler.ratio", 8));
 
         BLOCKING_POOL = SystemPropertyUtil.getBoolean("io.netty.recycler.blocking", false);
         BATCH_FAST_TL_ONLY = SystemPropertyUtil.getBoolean("io.netty.recycler.batchFastThreadLocalOnly", true);
@@ -148,13 +148,13 @@ public abstract class Recycler<T> {
     }
 
     protected Recycler(int maxCapacityPerThread, int ratio, int chunkSize) {
-        interval = max(0, ratio);
+        interval = Math.Max(0, ratio);
         if (maxCapacityPerThread <= 0) {
             this.maxCapacityPerThread = 0;
             this.chunkSize = 0;
         } else {
-            this.maxCapacityPerThread = max(4, maxCapacityPerThread);
-            this.chunkSize = max(2, min(chunkSize, this.maxCapacityPerThread >> 1));
+            this.maxCapacityPerThread = Math.Max(4, maxCapacityPerThread);
+            this.chunkSize = Math.Max(2, min(chunkSize, this.maxCapacityPerThread >> 1));
         }
     }
 

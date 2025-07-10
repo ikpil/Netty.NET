@@ -517,7 +517,7 @@ public class HashedWheelTimer : Timer {
                 long calculated = timeout.deadline / tickDuration;
                 timeout.remainingRounds = (calculated - tick) / wheel.length;
 
-                final long ticks = Math.max(calculated, tick); // Ensure we don't schedule for past.
+                final long ticks = Math.Max(calculated, tick); // Ensure we don't schedule for past.
                 int stopIndex = (int) (ticks & mask);
 
                 HashedWheelBucket bucket = wheel[stopIndex];

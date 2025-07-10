@@ -41,7 +41,7 @@ namespace Netty.NET.Common.Internal;
  */
 public final class ObjectCleaner {
     private static readonly int REFERENCE_QUEUE_POLL_TIMEOUT_MS =
-            max(500, getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
+            Math.Max(500, getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
 
     // Package-private for testing
     static readonly string CLEANER_THREAD_NAME = typeof(ObjectCleaner).getSimpleName() + "Thread";

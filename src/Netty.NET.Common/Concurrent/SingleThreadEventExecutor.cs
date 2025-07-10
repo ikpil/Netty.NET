@@ -13,37 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Concurrent;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Abstract base class for {@link OrderedEventExecutor}'s that execute all its submitted tasks in a single thread.
@@ -51,7 +29,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor : OrderedEventExecutor {
 
-    static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.max(16,
+    static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
 
     private static readonly IInternalLogger logger =
@@ -197,7 +175,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         super(parent);
         this.addTaskWakesUp = addTaskWakesUp;
         this.supportSuspension = supportSuspension;
-        this.maxPendingTasks = Math.max(16, maxPendingTasks);
+        this.maxPendingTasks = Math.Max(16, maxPendingTasks);
         this.executor = ThreadExecutorMap.apply(executor, this);
         taskQueue = newTaskQueue(this.maxPendingTasks);
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
@@ -540,7 +518,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     protected long delayNanos(long currentTimeNanos) {
         currentTimeNanos -= ticker().initialNanoTime();
 
-        ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+        ScheduledFutureTask<> ?> scheduledTask = peekScheduledTask();
         if (scheduledTask == null) {
             return SCHEDULE_PURGE_INTERVAL;
         }

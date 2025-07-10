@@ -601,7 +601,7 @@ public class PlatformDependent0 {
         // Calling malloc with capacity of 0 may return a null ptr or a memory address that can be used.
         // Just use 1 to make it safe to use in all cases:
         // See: https://pubs.opengroup.org/onlinepubs/009695399/functions/malloc.html
-        return newDirectBuffer(UNSAFE.allocateMemory(Math.max(1, capacity)), capacity);
+        return newDirectBuffer(UNSAFE.allocateMemory(Math.Max(1, capacity)), capacity);
     }
 
     static bool hasAlignSliceMethod() {
