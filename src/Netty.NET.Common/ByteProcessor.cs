@@ -14,11 +14,6 @@
  */
 namespace Netty.NET.Common;
 
-
-
-
-
-
 /**
  * Provides a mechanism to iterate over a collection of bytes.
  */
