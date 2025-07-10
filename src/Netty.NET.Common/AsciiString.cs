@@ -15,29 +15,9 @@
  */
 
 using System;
-using System.Collections.ObjectModel;
-using Netty.NET.Common;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * A string which has been encoded into a character encoding whose character always takes a single byte, similarly to
@@ -56,6 +36,9 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
 
     public static readonly int INDEX_NOT_FOUND = -1;
 
+    public static readonly IHashingStrategy<ICharSequence> CASE_INSENSITIVE_HASHER = new CaseInsensitiveHashingStrategy();
+    public static readonly IHashingStrategy<ICharSequence> CASE_SENSITIVE_HASHER = new CaseSensitiveHashingStrategy();
+    
     /**
      * If this value is modified outside the constructor then call {@link #arrayChanged()}.
      */
@@ -1357,31 +1340,6 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
         return Double.parseDouble(toString(start, end));
     }
 
-    public static readonly HashingStrategy<ICharSequence> CASE_INSENSITIVE_HASHER =
-            new HashingStrategy<ICharSequence>() {
-        @Override
-        public int hashCode(ICharSequence o) {
-            return AsciiString.hashCode(o);
-        }
-
-        @Override
-        public bool equals(ICharSequence a, ICharSequence b) {
-            return AsciiString.contentEqualsIgnoreCase(a, b);
-        }
-    };
-
-    public static readonly HashingStrategy<ICharSequence> CASE_SENSITIVE_HASHER =
-            new HashingStrategy<ICharSequence>() {
-        @Override
-        public int hashCode(ICharSequence o) {
-            return AsciiString.hashCode(o);
-        }
-
-        @Override
-        public bool equals(ICharSequence a, ICharSequence b) {
-            return AsciiString.contentEquals(a, b);
-        }
-    };
 
     /**
      * Returns an {@link AsciiString} containing the given character sequence. If the given string is already a

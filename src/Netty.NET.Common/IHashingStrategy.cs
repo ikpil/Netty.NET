@@ -13,12 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Collections.Generic;
+
 namespace Netty.NET.Common;
 
 /**
  * Abstraction for hash code generation and equality comparison.
  */
-public interface HashingStrategy<T> {
+public interface IHashingStrategy<in T> : IEqualityComparer<T>
+{
     /**
      * Generate a hash code for {@code obj}.
      * <p>
@@ -36,38 +40,21 @@ public interface HashingStrategy<T> {
      */
     int hashCode(T obj);
 
-    /**
-     * Returns {@code true} if the arguments are equal to each other and {@code false} otherwise.
-     * This method has the following restrictions:
-     * <ul>
-     * <li><i>reflexive</i> - {@code equals(a, a)} should return true</li>
-     * <li><i>symmetric</i> - {@code equals(a, b)} returns {@code true} if {@code equals(b, a)} returns
-     * {@code true}</li>
-     * <li><i>transitive</i> - if {@code equals(a, b)} returns {@code true} and {@code equals(a, c)} returns
-     * {@code true} then {@code equals(b, c)} should also return {@code true}</li>
-     * <li><i>consistent</i> - {@code equals(a, b)} should return the same result when called multiple times
-     * assuming {@code a} and {@code b} remain unchanged relative to the comparison criteria</li>
-     * <li>if {@code a} and {@code b} are both {@code null} then this method returns {@code true}</li>
-     * <li>if {@code a} is {@code null} and {@code b} is non-{@code null}, or {@code a} is non-{@code null} and
-     * {@code b} is {@code null} then this method returns {@code false}</li>
-     * </ul>
-     */
-    bool equals(T a, T b);
-
-    /**
-     * A {@link HashingStrategy} which delegates to java's {@link object#hashCode()}
-     * and {@link object#equals(object)}.
-     */
-    @SuppressWarnings("rawtypes")
-    HashingStrategy JAVA_HASHER = new HashingStrategy() {
-        @Override
-        public int hashCode(object obj) {
-            return obj != null ? obj.hashCode() : 0;
-        }
-
-        @Override
-        public bool equals(object a, object b) {
-            return (a == b) || (a != null && a.equals(b));
-        }
-    };
+    // /**
+    //  * Returns {@code true} if the arguments are equal to each other and {@code false} otherwise.
+    //  * This method has the following restrictions:
+    //  * <ul>
+    //  * <li><i>reflexive</i> - {@code equals(a, a)} should return true</li>
+    //  * <li><i>symmetric</i> - {@code equals(a, b)} returns {@code true} if {@code equals(b, a)} returns
+    //  * {@code true}</li>
+    //  * <li><i>transitive</i> - if {@code equals(a, b)} returns {@code true} and {@code equals(a, c)} returns
+    //  * {@code true} then {@code equals(b, c)} should also return {@code true}</li>
+    //  * <li><i>consistent</i> - {@code equals(a, b)} should return the same result when called multiple times
+    //  * assuming {@code a} and {@code b} remain unchanged relative to the comparison criteria</li>
+    //  * <li>if {@code a} and {@code b} are both {@code null} then this method returns {@code true}</li>
+    //  * <li>if {@code a} is {@code null} and {@code b} is non-{@code null}, or {@code a} is non-{@code null} and
+    //  * {@code b} is {@code null} then this method returns {@code false}</li>
+    //  * </ul>
+    //  */
+    // bool equals(T a, T b);
 }
