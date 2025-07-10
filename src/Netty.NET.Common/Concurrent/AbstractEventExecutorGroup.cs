@@ -27,9 +27,9 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * Abstract base class for {@link EventExecutorGroup} implementations.
+ * Abstract base class for {@link IEventExecutorGroup} implementations.
  */
-public abstract class AbstractEventExecutorGroup : EventExecutorGroup {
+public abstract class AbstractEventExecutorGroup : IEventExecutorGroup {
     @Override
     public Future<?> submit(Runnable task) {
         return next().submit(task);

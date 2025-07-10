@@ -17,7 +17,7 @@ namespace Netty.NET.Common.Concurrent;
 
 /**
  * The {@link CompleteFuture} which is succeeded already.  It is
- * recommended to use {@link EventExecutor#newSucceededFuture(object)} instead of
+ * recommended to use {@link IEventExecutor#newSucceededFuture(object)} instead of
  * calling the constructor of this future.
  */
 public final class SucceededFuture<V> extends CompleteFuture<V> {
@@ -26,9 +26,9 @@ public final class SucceededFuture<V> extends CompleteFuture<V> {
     /**
      * Creates a new instance.
      *
-     * @param executor the {@link EventExecutor} associated with this future
+     * @param executor the {@link IEventExecutor} associated with this future
      */
-    public SucceededFuture(EventExecutor executor, V result) {
+    public SucceededFuture(IEventExecutor executor, V result) {
         super(executor);
         this.result = result;
     }

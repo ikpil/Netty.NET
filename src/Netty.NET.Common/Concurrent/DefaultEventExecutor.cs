@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Concurrent;
 public final class DefaultEventExecutor extends SingleThreadEventExecutor {
 
     public DefaultEventExecutor() {
-        this((EventExecutorGroup) null);
+        this((IEventExecutorGroup) null);
     }
 
     public DefaultEventExecutor(ThreadFactory threadFactory) {
@@ -36,24 +36,24 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
         this(null, executor);
     }
 
-    public DefaultEventExecutor(EventExecutorGroup parent) {
+    public DefaultEventExecutor(IEventExecutorGroup parent) {
         this(parent, new DefaultThreadFactory(typeof(DefaultEventExecutor)));
     }
 
-    public DefaultEventExecutor(EventExecutorGroup parent, ThreadFactory threadFactory) {
+    public DefaultEventExecutor(IEventExecutorGroup parent, ThreadFactory threadFactory) {
         super(parent, threadFactory, true);
     }
 
-    public DefaultEventExecutor(EventExecutorGroup parent, Executor executor) {
+    public DefaultEventExecutor(IEventExecutorGroup parent, Executor executor) {
         super(parent, executor, true);
     }
 
-    public DefaultEventExecutor(EventExecutorGroup parent, ThreadFactory threadFactory, int maxPendingTasks,
+    public DefaultEventExecutor(IEventExecutorGroup parent, ThreadFactory threadFactory, int maxPendingTasks,
                                 RejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, threadFactory, true, maxPendingTasks, rejectedExecutionHandler);
     }
 
-    public DefaultEventExecutor(EventExecutorGroup parent, Executor executor, int maxPendingTasks,
+    public DefaultEventExecutor(IEventExecutorGroup parent, Executor executor, int maxPendingTasks,
                                 RejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, executor, true, maxPendingTasks, rejectedExecutionHandler);
     }

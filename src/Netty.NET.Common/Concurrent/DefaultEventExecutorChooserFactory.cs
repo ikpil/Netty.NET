@@ -19,7 +19,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * Default implementation which uses simple round-robin to choose next {@link EventExecutor}.
+ * Default implementation which uses simple round-robin to choose next {@link IEventExecutor}.
  */
 public final class DefaultEventExecutorChooserFactory : EventExecutorChooserFactory {
 
@@ -28,7 +28,7 @@ public final class DefaultEventExecutorChooserFactory : EventExecutorChooserFact
     private DefaultEventExecutorChooserFactory() { }
 
     @Override
-    public EventExecutorChooser newChooser(EventExecutor[] executors) {
+    public EventExecutorChooser newChooser(IEventExecutor[] executors) {
         if (isPowerOfTwo(executors.length)) {
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {
@@ -42,14 +42,14 @@ public final class DefaultEventExecutorChooserFactory : EventExecutorChooserFact
 
     private static readonly class PowerOfTwoEventExecutorChooser : EventExecutorChooser {
         private readonly AtomicInteger idx = new AtomicInteger();
-        private readonly EventExecutor[] executors;
+        private readonly IEventExecutor[] executors;
 
-        PowerOfTwoEventExecutorChooser(EventExecutor[] executors) {
+        PowerOfTwoEventExecutorChooser(IEventExecutor[] executors) {
             this.executors = executors;
         }
 
         @Override
-        public EventExecutor next() {
+        public IEventExecutor next() {
             return executors[idx.getAndIncrement() & executors.length - 1];
         }
     }
@@ -59,14 +59,14 @@ public final class DefaultEventExecutorChooserFactory : EventExecutorChooserFact
         // The 64-bit long solves this by placing the overflow so far into the future, that no system
         // will encounter this in practice.
         private readonly AtomicLong idx = new AtomicLong();
-        private readonly EventExecutor[] executors;
+        private readonly IEventExecutor[] executors;
 
-        GenericEventExecutorChooser(EventExecutor[] executors) {
+        GenericEventExecutorChooser(IEventExecutor[] executors) {
             this.executors = executors;
         }
 
         @Override
-        public EventExecutor next() {
+        public IEventExecutor next() {
             return executors[(int) Math.abs(idx.getAndIncrement() % executors.length)];
         }
     }

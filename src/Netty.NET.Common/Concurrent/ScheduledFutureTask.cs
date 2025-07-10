@@ -81,7 +81,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, 
     }
 
     @Override
-    protected EventExecutor executor() {
+    protected IEventExecutor executor() {
         return super.executor();
     }
 

@@ -13,35 +13,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Threading;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Concurrent;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
- * Single-thread singleton {@link EventExecutor}.  It starts the thread automatically and stops it when there is no
+ * Single-thread singleton {@link IEventExecutor}.  It starts the thread automatically and stops it when there is no
  * task pending in the task queue for {@code io.netty.globalEventExecutor.quietPeriodSeconds} second
  * (default is 1 second).  Please note it is not scalable to schedule large number of tasks to this executor;
  * use a dedicated executor.
  */
-public final class GlobalEventExecutor extends AbstractScheduledEventExecutor : OrderedEventExecutor {
+public final class GlobalEventExecutor : AbstractScheduledEventExecutor : OrderedEventExecutor {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(GlobalEventExecutor));
 
     private static readonly long SCHEDULE_QUIET_PERIOD_INTERVAL;

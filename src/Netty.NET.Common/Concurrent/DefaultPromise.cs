@@ -13,24 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Text;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Concurrent;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
@@ -60,13 +51,13 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     private static readonly StackTraceElement[] CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.getStackTrace();
 
     private volatile object result;
-    private readonly EventExecutor executor;
+    private readonly IEventExecutor executor;
 
     /**
      * One or more listeners. Can be a {@link GenericFutureListener} or a {@link DefaultFutureListeners}.
      * If {@code null}, it means either 1) no listeners were added yet or 2) all listeners were notified.
      * <p>
-     * Threading - synchronized(this). We must support adding listeners when there is no EventExecutor.
+     * Threading - synchronized(this). We must support adding listeners when there is no IEventExecutor.
      */
     private GenericFutureListener<? extends Future<?>> listener;
     private DefaultFutureListeners listeners;
@@ -84,16 +75,16 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     /**
      * Creates a new instance.
      * <p>
-     * It is preferable to use {@link EventExecutor#newPromise()} to create a new promise
+     * It is preferable to use {@link IEventExecutor#newPromise()} to create a new promise
      *
      * @param executor
-     *        the {@link EventExecutor} which is used to notify the promise once it is complete.
+     *        the {@link IEventExecutor} which is used to notify the promise once it is complete.
      *        It is assumed this executor will protect against {@link StackOverflowError} exceptions.
      *        The executor may be used to avoid {@link StackOverflowError} by executing a {@link Runnable} if the stack
      *        depth exceeds a threshold.
      *
      */
-    public DefaultPromise(EventExecutor executor) {
+    public DefaultPromise(IEventExecutor executor) {
         this.executor = checkNotNull(executor, "executor");
     }
 
@@ -177,7 +168,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
             return null;
         }
         if (result == CANCELLATION_CAUSE_HOLDER) {
-            CancellationException ce = new LeanCancellationException();
+            CancellationException ce = new Concurrent.LeanCancellationException();
             if (RESULT_UPDATER.compareAndSet(this, CANCELLATION_CAUSE_HOLDER, new CauseHolder(ce))) {
                 return ce;
             }
@@ -466,12 +457,12 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      * depth exceeds a threshold.
      * @return The executor used to notify listeners when this promise is complete.
      */
-    protected EventExecutor executor() {
+    protected IEventExecutor executor() {
         return executor;
     }
 
     protected void checkDeadLock() {
-        EventExecutor e = executor();
+        IEventExecutor e = executor();
         if (e != null && e.inEventLoop()) {
             throw new BlockingOperationException(toString());
         }
@@ -487,7 +478,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      * @param listener the listener to notify.
      */
     protected static void notifyListener(
-            EventExecutor eventExecutor, final Future<?> future, final GenericFutureListener<?> listener) {
+            IEventExecutor eventExecutor, final Future<?> future, final GenericFutureListener<?> listener) {
         notifyListenerWithStackOverFlowProtection(
                 checkNotNull(eventExecutor, "eventExecutor"),
                 checkNotNull(future, "future"),
@@ -495,7 +486,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     private void notifyListeners() {
-        EventExecutor executor = executor();
+        IEventExecutor executor = executor();
         if (executor.inEventLoop()) {
             final InternalThreadLocalMap threadLocals = InternalThreadLocalMap.get();
             final int stackDepth = threadLocals.futureListenerStackDepth();
@@ -523,7 +514,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      * cannot share code because the listener(s) cannot be cached for an instance of {@link DefaultPromise} since the
      * listener(s) may be changed and is protected by a synchronized operation.
      */
-    private static void notifyListenerWithStackOverFlowProtection(final EventExecutor executor,
+    private static void notifyListenerWithStackOverFlowProtection(final IEventExecutor executor,
                                                                   final Future<?> future,
                                                                   final GenericFutureListener<?> listener) {
         if (executor.inEventLoop()) {
@@ -758,7 +749,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
 
         final ProgressiveFuture<V> self = (ProgressiveFuture<V>) this;
 
-        EventExecutor executor = executor();
+        IEventExecutor executor = executor();
         if (executor.inEventLoop()) {
             if (listeners instanceof GenericProgressiveFutureListener[]) {
                 notifyProgressiveListeners0(
@@ -873,7 +864,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         }
     }
 
-    private static void safeExecute(EventExecutor executor, Runnable task) {
+    private static void safeExecute(IEventExecutor executor, Runnable task) {
         try {
             executor.execute(task);
         } catch (Exception t) {

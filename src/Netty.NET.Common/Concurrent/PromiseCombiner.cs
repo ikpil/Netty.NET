@@ -30,7 +30,7 @@ namespace Netty.NET.Common.Concurrent;
  * finished via the {@link PromiseCombiner#finish(Promise)} method.</p>
  *
  * <p>This implementation is <strong>NOT</strong> thread-safe and all methods must be called
- * from the {@link EventExecutor} thread.</p>
+ * from the {@link IEventExecutor} thread.</p>
  */
 public final class PromiseCombiner {
     private int expectedCount;
@@ -64,10 +64,10 @@ public final class PromiseCombiner {
         }
     };
 
-    private readonly EventExecutor executor;
+    private readonly IEventExecutor executor;
 
     /**
-     * Deprecated use {@link PromiseCombiner#PromiseCombiner(EventExecutor)}.
+     * Deprecated use {@link PromiseCombiner#PromiseCombiner(IEventExecutor)}.
      */
     @Deprecated
     public PromiseCombiner() {
@@ -75,12 +75,12 @@ public final class PromiseCombiner {
     }
 
     /**
-     * The {@link EventExecutor} to use for notifications. You must call {@link #add(Future)}, {@link #addAll(Future[])}
-     * and {@link #finish(Promise)} from within the {@link EventExecutor} thread.
+     * The {@link IEventExecutor} to use for notifications. You must call {@link #add(Future)}, {@link #addAll(Future[])}
+     * and {@link #finish(Promise)} from within the {@link IEventExecutor} thread.
      *
-     * @param executor the {@link EventExecutor} to use for notifications.
+     * @param executor the {@link IEventExecutor} to use for notifications.
      */
-    public PromiseCombiner(EventExecutor executor) {
+    public PromiseCombiner(IEventExecutor executor) {
         this.executor = ObjectUtil.checkNotNull(executor, "executor");
     }
 
@@ -162,7 +162,7 @@ public final class PromiseCombiner {
 
     private void checkInEventLoop() {
         if (!executor.inEventLoop()) {
-            throw new InvalidOperationException("Must be called from EventExecutor thread");
+            throw new InvalidOperationException("Must be called from IEventExecutor thread");
         }
     }
 

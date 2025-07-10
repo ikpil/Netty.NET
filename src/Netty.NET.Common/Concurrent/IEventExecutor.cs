@@ -19,17 +19,17 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * The {@link EventExecutor} is a special {@link EventExecutorGroup} which comes
+ * The {@link IEventExecutor} is a special {@link IEventExecutorGroup} which comes
  * with some handy methods to see if a {@link Thread} is executed in a event loop.
- * Besides this, it also extends the {@link EventExecutorGroup} to allow for a generic
+ * Besides this, it also extends the {@link IEventExecutorGroup} to allow for a generic
  * way to access methods.
  */
-public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
+public interface IEventExecutor : IEventExecutorGroup, ThreadAwareExecutor {
 
     /**
-     * Return the {@link EventExecutorGroup} which is the parent of this {@link EventExecutor},
+     * Return the {@link IEventExecutorGroup} which is the parent of this {@link IEventExecutor},
      */
-    EventExecutorGroup parent();
+    IEventExecutorGroup parent();
 
     @Override
     default bool isExecutorThread(Thread thread) {
@@ -82,7 +82,7 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
     }
 
     /**
-     * Returns {@code true} if the {@link EventExecutor} is considered suspended.
+     * Returns {@code true} if the {@link IEventExecutor} is considered suspended.
      *
      * @return {@code true} if suspended, {@code false} otherwise.
      */
@@ -91,9 +91,9 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
     }
 
     /**
-     * Try to suspend this {@link EventExecutor} and return {@code true} if suspension was successful.
-     * Suspending an {@link EventExecutor} will allow it to free up resources, like for example a {@link Thread} that
-     * is backing the {@link EventExecutor}. Once an {@link EventExecutor} was suspended it will be started again
+     * Try to suspend this {@link IEventExecutor} and return {@code true} if suspension was successful.
+     * Suspending an {@link IEventExecutor} will allow it to free up resources, like for example a {@link Thread} that
+     * is backing the {@link IEventExecutor}. Once an {@link IEventExecutor} was suspended it will be started again
      * by submitting work to it via one of the following methods:
      * <ul>
      *   <li>{@link #execute(Runnable)}</li>
@@ -103,7 +103,7 @@ public interface EventExecutor extends EventExecutorGroup, ThreadAwareExecutor {
      *   <li>{@link #scheduleWithFixedDelay(Runnable, long, long, TimeSpan)}</li>
      * </ul>
      *
-     * Even if this method returns {@code true} it might take some time for the {@link EventExecutor} to fully suspend
+     * Even if this method returns {@code true} it might take some time for the {@link IEventExecutor} to fully suspend
      * itself.
      *
      * @return {@code true} if suspension was successful, otherwise {@code false}.

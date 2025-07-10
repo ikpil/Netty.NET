@@ -138,7 +138,7 @@ public final class ImmediateEventExecutor extends AbstractEventExecutor {
     }
 
     static class ImmediatePromise<V> extends DefaultPromise<V> {
-        ImmediatePromise(EventExecutor executor) {
+        ImmediatePromise(IEventExecutor executor) {
             super(executor);
         }
 
@@ -149,7 +149,7 @@ public final class ImmediateEventExecutor extends AbstractEventExecutor {
     }
 
     static class ImmediateProgressivePromise<V> extends DefaultProgressivePromise<V> {
-        ImmediateProgressivePromise(EventExecutor executor) {
+        ImmediateProgressivePromise(IEventExecutor executor) {
             super(executor);
         }
 

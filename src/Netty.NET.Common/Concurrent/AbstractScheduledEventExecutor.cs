@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * Abstract base class for {@link EventExecutor}s that want to support scheduling.
+ * Abstract base class for {@link IEventExecutor}s that want to support scheduling.
  */
 public abstract class AbstractScheduledEventExecutor extends AbstractEventExecutor {
     private static readonly Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
@@ -49,7 +49,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     protected AbstractScheduledEventExecutor() {
     }
 
-    protected AbstractScheduledEventExecutor(EventExecutorGroup parent) {
+    protected AbstractScheduledEventExecutor(IEventExecutorGroup parent) {
         super(parent);
     }
 
@@ -373,17 +373,17 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
     }
 
     /**
-     * Called from arbitrary non-{@link EventExecutor} threads prior to scheduled task submission.
-     * Returns {@code true} if the {@link EventExecutor} thread should be woken immediately to
+     * Called from arbitrary non-{@link IEventExecutor} threads prior to scheduled task submission.
+     * Returns {@code true} if the {@link IEventExecutor} thread should be woken immediately to
      * process the scheduled task (if not already awake).
      * <p>
      * If {@code false} is returned, {@link #afterScheduledTaskSubmitted(long)} will be called with
      * the same value <i>after</i> the scheduled task is enqueued, providing another opportunity
-     * to wake the {@link EventExecutor} thread if required.
+     * to wake the {@link IEventExecutor} thread if required.
      *
      * @param deadlineNanos deadline of the to-be-scheduled task
      *     relative to {@link AbstractScheduledEventExecutor#getCurrentTimeNanos()}
-     * @return {@code true} if the {@link EventExecutor} thread should be woken, {@code false} otherwise
+     * @return {@code true} if the {@link IEventExecutor} thread should be woken, {@code false} otherwise
      */
     protected bool beforeScheduledTaskSubmitted(long deadlineNanos) {
         return true;
@@ -393,7 +393,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
      * See {@link #beforeScheduledTaskSubmitted(long)}. Called only after that method returns false.
      *
      * @param deadlineNanos relative to {@link AbstractScheduledEventExecutor#getCurrentTimeNanos()}
-     * @return  {@code true} if the {@link EventExecutor} thread should be woken, {@code false} otherwise
+     * @return  {@code true} if the {@link IEventExecutor} thread should be woken, {@code false} otherwise
      */
     protected bool afterScheduledTaskSubmitted(long deadlineNanos) {
         return true;

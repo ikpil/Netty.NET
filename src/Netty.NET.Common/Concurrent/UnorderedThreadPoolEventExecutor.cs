@@ -36,7 +36,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * {@link EventExecutor} implementation which makes no guarantees about the ordering of task execution that
+ * {@link IEventExecutor} implementation which makes no guarantees about the ordering of task execution that
  * are submitted because there may be multiple threads executing these tasks.
  * This implementation is most useful for protocols that do not need strict ordering.
  * <p>
@@ -48,12 +48,12 @@ namespace Netty.NET.Common.Concurrent;
  * off-loading to their own thread-pools.
  */
 @Deprecated
-public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor : EventExecutor {
+public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor : IEventExecutor {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(
             typeof(UnorderedThreadPoolEventExecutor));
 
     private readonly Promise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
-    private readonly ISet<EventExecutor> executorSet = Collections.singleton(this);
+    private readonly ISet<IEventExecutor> executorSet = Collections.singleton(this);
     private readonly ISet<Thread> eventLoopThreads = ConcurrentHashMap.newKeySet();
 
     /**
@@ -90,12 +90,12 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public EventExecutor next() {
+    public IEventExecutor next() {
         return this;
     }
 
     @Override
-    public EventExecutorGroup parent() {
+    public IEventExecutorGroup parent() {
         return this;
     }
 
@@ -166,7 +166,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public Iterator<EventExecutor> iterator() {
+    public Iterator<IEventExecutor> iterator() {
         return executorSet.iterator();
     }
 
@@ -226,7 +226,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         private readonly RunnableScheduledFuture<V> future;
         private readonly bool wasCallable;
 
-        RunnableScheduledFutureTask(EventExecutor executor, RunnableScheduledFuture<V> future, bool wasCallable) {
+        RunnableScheduledFutureTask(IEventExecutor executor, RunnableScheduledFuture<V> future, bool wasCallable) {
             super(executor, future);
             this.future = future;
             this.wasCallable = wasCallable;
@@ -287,7 +287,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     // ScheduledThreadPoolExecutor.execute(...) will delegate to submit(...) which will then use decorateTask(...).
     // The problem with this is that decorateTask(...) needs to ensure we only do our own decoration if we not call
     // from execute(...) as otherwise we may end up creating an endless loop because DefaultPromise will call
-    // EventExecutor.execute(...) when notify the listeners of the promise.
+    // IEventExecutor.execute(...) when notify the listeners of the promise.
     //
     // See https://github.com/netty/netty/issues/6507
     private static readonly class NonNotifyRunnable : Runnable {

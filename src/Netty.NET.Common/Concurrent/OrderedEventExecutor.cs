@@ -13,10 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Marker interface for {@link EventExecutor}s that will process all submitted tasks in an ordered / serial fashion.
+ * Marker interface for {@link IEventExecutor}s that will process all submitted tasks in an ordered / serial fashion.
  */
-public interface OrderedEventExecutor extends EventExecutor {
+public interface OrderedEventExecutor : IEventExecutor
+{
 }

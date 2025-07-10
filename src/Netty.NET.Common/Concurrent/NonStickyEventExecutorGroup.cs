@@ -20,47 +20,47 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * {@link EventExecutorGroup} which will preserve {@link Runnable} execution order but makes no guarantees about what
- * {@link EventExecutor} (and therefore {@link Thread}) will be used to execute the {@link Runnable}s.
+ * {@link IEventExecutorGroup} which will preserve {@link Runnable} execution order but makes no guarantees about what
+ * {@link IEventExecutor} (and therefore {@link Thread}) will be used to execute the {@link Runnable}s.
  *
- * <p>The {@link EventExecutorGroup#next()} for the wrapped {@link EventExecutorGroup} must <strong>NOT</strong> return
+ * <p>The {@link IEventExecutorGroup#next()} for the wrapped {@link IEventExecutorGroup} must <strong>NOT</strong> return
  * executors of type {@link OrderedEventExecutor}.
  */
 @UnstableApi
-public final class NonStickyEventExecutorGroup : EventExecutorGroup {
-    private readonly EventExecutorGroup group;
+public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
+    private readonly IEventExecutorGroup group;
     private readonly int maxTaskExecutePerRun;
 
     /**
-     * Creates a new instance. Be aware that the given {@link EventExecutorGroup} <strong>MUST NOT</strong> contain
+     * Creates a new instance. Be aware that the given {@link IEventExecutorGroup} <strong>MUST NOT</strong> contain
      * any {@link OrderedEventExecutor}s.
      */
-    public NonStickyEventExecutorGroup(EventExecutorGroup group) {
+    public NonStickyEventExecutorGroup(IEventExecutorGroup group) {
         this(group, 1024);
     }
 
     /**
-     * Creates a new instance. Be aware that the given {@link EventExecutorGroup} <strong>MUST NOT</strong> contain
+     * Creates a new instance. Be aware that the given {@link IEventExecutorGroup} <strong>MUST NOT</strong> contain
      * any {@link OrderedEventExecutor}s.
      */
-    public NonStickyEventExecutorGroup(EventExecutorGroup group, int maxTaskExecutePerRun) {
+    public NonStickyEventExecutorGroup(IEventExecutorGroup group, int maxTaskExecutePerRun) {
         this.group = verify(group);
         this.maxTaskExecutePerRun = ObjectUtil.checkPositive(maxTaskExecutePerRun, "maxTaskExecutePerRun");
     }
 
-    private static EventExecutorGroup verify(EventExecutorGroup group) {
-        Iterator<EventExecutor> executors = ObjectUtil.checkNotNull(group, "group").iterator();
+    private static IEventExecutorGroup verify(IEventExecutorGroup group) {
+        Iterator<IEventExecutor> executors = ObjectUtil.checkNotNull(group, "group").iterator();
         while (executors.hasNext()) {
-            EventExecutor executor = executors.next();
+            IEventExecutor executor = executors.next();
             if (executor instanceof OrderedEventExecutor) {
-                throw new ArgumentException("EventExecutorGroup " + group
+                throw new ArgumentException("IEventExecutorGroup " + group
                         + " contains OrderedEventExecutors: " + executor);
             }
         }
         return group;
     }
 
-    private NonStickyOrderedEventExecutor newExecutor(EventExecutor executor) {
+    private NonStickyOrderedEventExecutor newExecutor(IEventExecutor executor) {
         return new NonStickyOrderedEventExecutor(executor, maxTaskExecutePerRun);
     }
 
@@ -97,21 +97,21 @@ public final class NonStickyEventExecutorGroup : EventExecutorGroup {
     }
 
     @Override
-    public EventExecutor next() {
+    public IEventExecutor next() {
         return newExecutor(group.next());
     }
 
     @Override
-    public Iterator<EventExecutor> iterator() {
-        final Iterator<EventExecutor> itr = group.iterator();
-        return new Iterator<EventExecutor>() {
+    public Iterator<IEventExecutor> iterator() {
+        final Iterator<IEventExecutor> itr = group.iterator();
+        return new Iterator<IEventExecutor>() {
             @Override
             public bool hasNext() {
                 return itr.hasNext();
             }
 
             @Override
-            public EventExecutor next() {
+            public IEventExecutor next() {
                 return newExecutor(itr.next());
             }
 
@@ -202,7 +202,7 @@ public final class NonStickyEventExecutorGroup : EventExecutorGroup {
 
     private static readonly class NonStickyOrderedEventExecutor extends AbstractEventExecutor
             implements Runnable, OrderedEventExecutor {
-        private readonly EventExecutor executor;
+        private readonly IEventExecutor executor;
         private readonly Queue<Runnable> tasks = PlatformDependent.newMpscQueue();
 
         private static readonly int NONE = 0;
@@ -214,7 +214,7 @@ public final class NonStickyEventExecutorGroup : EventExecutorGroup {
 
         private readonly AtomicReference<Thread> executingThread = new AtomicReference<Thread>();
 
-        NonStickyOrderedEventExecutor(EventExecutor executor, int maxTaskExecutePerRun) {
+        NonStickyOrderedEventExecutor(IEventExecutor executor, int maxTaskExecutePerRun) {
             super(executor);
             this.executor = executor;
             this.maxTaskExecutePerRun = maxTaskExecutePerRun;

@@ -64,17 +64,17 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
     // Strictly of type Callable<V> or Runnable
     private object task;
 
-    PromiseTask(EventExecutor executor, Runnable runnable, V result) {
+    PromiseTask(IEventExecutor executor, Runnable runnable, V result) {
         super(executor);
         task = result == null ? runnable : new RunnableAdapter<V>(runnable, result);
     }
 
-    PromiseTask(EventExecutor executor, Runnable runnable) {
+    PromiseTask(IEventExecutor executor, Runnable runnable) {
         super(executor);
         task = runnable;
     }
 
-    PromiseTask(EventExecutor executor, Callable<V> callable) {
+    PromiseTask(IEventExecutor executor, Callable<V> callable) {
         super(executor);
         task = callable;
     }

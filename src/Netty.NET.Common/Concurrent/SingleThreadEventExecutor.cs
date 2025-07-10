@@ -107,20 +107,20 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     /**
      * Create a new instance
      *
-     * @param parent            the {@link EventExecutorGroup} which is the parent of this instance and belongs to it
+     * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
      * @param threadFactory     the {@link ThreadFactory} which will be used for the used {@link Thread}
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      */
     protected SingleThreadEventExecutor(
-            EventExecutorGroup parent, ThreadFactory threadFactory, bool addTaskWakesUp) {
+            IEventExecutorGroup parent, ThreadFactory threadFactory, bool addTaskWakesUp) {
         this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp);
     }
 
     /**
      * Create a new instance
      *
-     * @param parent            the {@link EventExecutorGroup} which is the parent of this instance and belongs to it
+     * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
      * @param threadFactory     the {@link ThreadFactory} which will be used for the used {@link Thread}
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
@@ -128,7 +128,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
     protected SingleThreadEventExecutor(
-            EventExecutorGroup parent, ThreadFactory threadFactory,
+            IEventExecutorGroup parent, ThreadFactory threadFactory,
             bool addTaskWakesUp, int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
         this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp, maxPendingTasks, rejectedHandler);
     }
@@ -136,7 +136,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     /**
      * Create a new instance
      *
-     * @param parent            the {@link EventExecutorGroup} which is the parent of this instance and belongs to it
+     * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
      * @param threadFactory     the {@link ThreadFactory} which will be used for the used {@link Thread}
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
@@ -145,7 +145,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
     protected SingleThreadEventExecutor(
-            EventExecutorGroup parent, ThreadFactory threadFactory,
+            IEventExecutorGroup parent, ThreadFactory threadFactory,
             bool addTaskWakesUp, bool supportSuspension,
             int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
         this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp, supportSuspension,
@@ -155,26 +155,26 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     /**
      * Create a new instance
      *
-     * @param parent            the {@link EventExecutorGroup} which is the parent of this instance and belongs to it
+     * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
      * @param executor          the {@link Executor} which will be used for executing
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      */
-    protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor, bool addTaskWakesUp) {
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor, bool addTaskWakesUp) {
         this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.reject());
     }
 
     /**
      * Create a new instance
      *
-     * @param parent            the {@link EventExecutorGroup} which is the parent of this instance and belongs to it
+     * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
      * @param executor          the {@link Executor} which will be used for executing
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
-    protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor,
                                         bool addTaskWakesUp, int maxPendingTasks,
                                         RejectedExecutionHandler rejectedHandler) {
         this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler);
@@ -183,7 +183,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     /**
      * Create a new instance
      *
-     * @param parent            the {@link EventExecutorGroup} which is the parent of this instance and belongs to it
+     * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
      * @param executor          the {@link Executor} which will be used for executing
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
@@ -191,7 +191,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
-    protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor,
                                         bool addTaskWakesUp, bool supportSuspension,
                                         int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
         super(parent);
@@ -203,13 +203,13 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
     }
 
-    protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor,
                                         bool addTaskWakesUp, Queue<Runnable> taskQueue,
                                         RejectedExecutionHandler rejectedHandler) {
         this(parent, executor, addTaskWakesUp, false, taskQueue, rejectedHandler);
     }
 
-    protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor,
                                         bool addTaskWakesUp, bool supportSuspension,
                                         Queue<Runnable> taskQueue, RejectedExecutionHandler rejectedHandler) {
         super(parent);
@@ -425,7 +425,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      * Execute all expired scheduled tasks and all current tasks in the executor queue until both queues are empty,
      * or {@code maxDrainAttempts} has been exceeded.
      * @param maxDrainAttempts The maximum amount of times this method attempts to drain from queues. This is to prevent
-     *                         continuous task execution and scheduling from preventing the EventExecutor thread to
+     *                         continuous task execution and scheduling from preventing the IEventExecutor thread to
      *                         make progress and return to the selector mechanism to process inbound I/O events.
      * @return {@code true} if at least one task was run.
      */
@@ -994,7 +994,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     protected interface NonWakeupRunnable extends LazyRunnable { }
 
     /**
-     * Can be overridden to control which tasks require waking the {@link EventExecutor} thread
+     * Can be overridden to control which tasks require waking the {@link IEventExecutor} thread
      * if it is waiting so that they can be run immediately.
      */
     protected bool wakesUpForTask(Runnable task) {
@@ -1108,7 +1108,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                         if (success && gracefulShutdownStartTime == 0) {
                             // Check if confirmShutdown() was called at the end of the loop.
                             if (logger.isErrorEnabled()) {
-                                logger.error("Buggy " + typeof(EventExecutor).getSimpleName() + " implementation; " +
+                                logger.error("Buggy " + typeof(IEventExecutor).getSimpleName() + " implementation; " +
                                         typeof(SingleThreadEventExecutor).getSimpleName() + ".confirmShutdown() must " +
                                         "be called before run() implementation terminates.");
                             }

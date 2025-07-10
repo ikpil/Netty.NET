@@ -16,11 +16,9 @@
 namespace Netty.NET.Common.Concurrent;
 
 
-
-
 /**
  * The {@link CompleteFuture} which is failed already.  It is
- * recommended to use {@link EventExecutor#newFailedFuture(Exception)}
+ * recommended to use {@link IEventExecutor#newFailedFuture(Exception)}
  * instead of calling the constructor of this future.
  */
 public final class FailedFuture<V> extends CompleteFuture<V> {
@@ -30,10 +28,10 @@ public final class FailedFuture<V> extends CompleteFuture<V> {
     /**
      * Creates a new instance.
      *
-     * @param executor the {@link EventExecutor} associated with this future
+     * @param executor the {@link IEventExecutor} associated with this future
      * @param cause   the cause of failure
      */
-    public FailedFuture(EventExecutor executor, Exception cause) {
+    public FailedFuture(IEventExecutor executor, Exception cause) {
         super(executor);
         this.cause = ObjectUtil.checkNotNull(cause, "cause");
     }

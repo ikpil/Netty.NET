@@ -27,13 +27,13 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * Abstract base class for {@link EventExecutorGroup} implementations that handles their tasks with multiple threads at
+ * Abstract base class for {@link IEventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
  */
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
 
-    private readonly EventExecutor[] children;
-    private readonly ISet<EventExecutor> readonlyChildren;
+    private readonly IEventExecutor[] children;
+    private readonly ISet<IEventExecutor> readonlyChildren;
     private readonly AtomicInteger terminatedChildren = new AtomicInteger();
     private readonly Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
     private readonly EventExecutorChooserFactory.EventExecutorChooser chooser;
@@ -76,7 +76,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
-        children = new EventExecutor[nThreads];
+        children = new IEventExecutor[nThreads];
 
         for (int i = 0; i < nThreads; i ++) {
             bool success = false;
@@ -93,7 +93,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
                     }
 
                     for (int j = 0; j < i; j ++) {
-                        EventExecutor e = children[j];
+                        IEventExecutor e = children[j];
                         try {
                             while (!e.isTerminated()) {
                                 e.awaitTermination(int.MaxValue, TimeSpan.SECONDS);
@@ -119,11 +119,11 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             }
         };
 
-        for (EventExecutor e: children) {
+        for (IEventExecutor e: children) {
             e.terminationFuture().addListener(terminationListener);
         }
 
-        ISet<EventExecutor> childrenSet = new LinkedHashSet<EventExecutor>(children.length);
+        ISet<IEventExecutor> childrenSet = new LinkedHashSet<IEventExecutor>(children.length);
         Collections.addAll(childrenSet, children);
         readonlyChildren = Collections.unmodifiableSet(childrenSet);
     }
@@ -133,17 +133,17 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     @Override
-    public EventExecutor next() {
+    public IEventExecutor next() {
         return chooser.next();
     }
 
     @Override
-    public Iterator<EventExecutor> iterator() {
+    public Iterator<IEventExecutor> iterator() {
         return readonlyChildren.iterator();
     }
 
     /**
-     * Return the number of {@link EventExecutor} this implementation uses. This number is the maps
+     * Return the number of {@link IEventExecutor} this implementation uses. This number is the maps
      * 1:1 to the threads it use.
      */
     public final int executorCount() {
@@ -151,15 +151,15 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     /**
-     * Create a new EventExecutor which will later then accessible via the {@link #next()}  method. This method will be
+     * Create a new IEventExecutor which will later then accessible via the {@link #next()}  method. This method will be
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
      */
-    protected abstract EventExecutor newChild(Executor executor, params object[] args);
+    protected abstract IEventExecutor newChild(Executor executor, params object[] args);
 
     @Override
     public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
-        for (EventExecutor l: children) {
+        for (IEventExecutor l: children) {
             l.shutdownGracefully(quietPeriod, timeout, unit);
         }
         return terminationFuture();
@@ -173,14 +173,14 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     @Override
     @Deprecated
     public void shutdown() {
-        for (EventExecutor l: children) {
+        for (IEventExecutor l: children) {
             l.shutdown();
         }
     }
 
     @Override
     public bool isShuttingDown() {
-        for (EventExecutor l: children) {
+        for (IEventExecutor l: children) {
             if (!l.isShuttingDown()) {
                 return false;
             }
@@ -190,7 +190,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
     @Override
     public bool isShutdown() {
-        for (EventExecutor l: children) {
+        for (IEventExecutor l: children) {
             if (!l.isShutdown()) {
                 return false;
             }
@@ -200,7 +200,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
 
     @Override
     public bool isTerminated() {
-        for (EventExecutor l: children) {
+        for (IEventExecutor l: children) {
             if (!l.isTerminated()) {
                 return false;
             }
@@ -212,7 +212,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     public bool awaitTermination(long timeout, TimeSpan unit)
             throws InterruptedException {
         long deadline = System.nanoTime() + unit.toNanos(timeout);
-        loop: for (EventExecutor l: children) {
+        loop: for (IEventExecutor l: children) {
             for (;;) {
                 long timeLeft = deadline - System.nanoTime();
                 if (timeLeft <= 0) {

@@ -15,22 +15,16 @@
  */
 namespace Netty.NET.Common.Concurrent;
 
-
-
-
-
-
-
 /**
- * The {@link EventExecutorGroup} is responsible for providing the {@link EventExecutor}'s to use
+ * The {@link IEventExecutorGroup} is responsible for providing the {@link IEventExecutor}'s to use
  * via its {@link #next()} method. Besides this, it is also responsible for handling their
  * life-cycle and allows shutting them down in a global fashion.
  *
  */
-public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<EventExecutor> {
+public interface IEventExecutorGroup : ScheduledExecutorService, Iterable<IEventExecutor> {
 
     /**
-     * Returns {@code true} if and only if all {@link EventExecutor}s managed by this {@link EventExecutorGroup}
+     * Returns {@code true} if and only if all {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}
      * are being {@linkplain #shutdownGracefully() shut down gracefully} or was {@linkplain #isShutdown() shut down}.
      */
     bool isShuttingDown();
@@ -59,8 +53,8 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
     Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit);
 
     /**
-     * Returns the {@link Future} which is notified when all {@link EventExecutor}s managed by this
-     * {@link EventExecutorGroup} have been terminated.
+     * Returns the {@link Future} which is notified when all {@link IEventExecutor}s managed by this
+     * {@link IEventExecutorGroup} have been terminated.
      */
     Future<?> terminationFuture();
 
@@ -79,12 +73,12 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
     List<Runnable> shutdownNow();
 
     /**
-     * Returns one of the {@link EventExecutor}s managed by this {@link EventExecutorGroup}.
+     * Returns one of the {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}.
      */
-    EventExecutor next();
+    IEventExecutor next();
 
     @Override
-    Iterator<EventExecutor> iterator();
+    Iterator<IEventExecutor> iterator();
 
     @Override
     Future<?> submit(Runnable task);

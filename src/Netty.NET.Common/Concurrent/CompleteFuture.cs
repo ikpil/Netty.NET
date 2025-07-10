@@ -25,21 +25,21 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class CompleteFuture<V> extends AbstractFuture<V> {
 
-    private readonly EventExecutor executor;
+    private readonly IEventExecutor executor;
 
     /**
      * Creates a new instance.
      *
-     * @param executor the {@link EventExecutor} associated with this future
+     * @param executor the {@link IEventExecutor} associated with this future
      */
-    protected CompleteFuture(EventExecutor executor) {
+    protected CompleteFuture(IEventExecutor executor) {
         this.executor = executor;
     }
 
     /**
-     * Return the {@link EventExecutor} which is used by this {@link CompleteFuture}.
+     * Return the {@link IEventExecutor} which is used by this {@link CompleteFuture}.
      */
-    protected EventExecutor executor() {
+    protected IEventExecutor executor() {
         return executor;
     }
 

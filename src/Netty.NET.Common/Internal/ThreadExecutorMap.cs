@@ -22,25 +22,25 @@ namespace Netty.NET.Common.Internal;
 
 
 /**
- * Allow to retrieve the {@link EventExecutor} for the calling {@link Thread}.
+ * Allow to retrieve the {@link IEventExecutor} for the calling {@link Thread}.
  */
 public final class ThreadExecutorMap {
 
-    private static readonly FastThreadLocal<EventExecutor> mappings = new FastThreadLocal<EventExecutor>();
+    private static readonly FastThreadLocal<IEventExecutor> mappings = new FastThreadLocal<IEventExecutor>();
 
     private ThreadExecutorMap() { }
 
     /**
-     * Returns the current {@link EventExecutor} that uses the {@link Thread}, or {@code null} if none / unknown.
+     * Returns the current {@link IEventExecutor} that uses the {@link Thread}, or {@code null} if none / unknown.
      */
-    public static EventExecutor currentExecutor() {
+    public static IEventExecutor currentExecutor() {
         return mappings.get();
     }
 
     /**
-     * Set the current {@link EventExecutor} that is used by the {@link Thread}.
+     * Set the current {@link IEventExecutor} that is used by the {@link Thread}.
      */
-    public static EventExecutor setCurrentExecutor(EventExecutor executor) {
+    public static IEventExecutor setCurrentExecutor(IEventExecutor executor) {
         return mappings.getAndSet(executor);
     }
 
@@ -48,7 +48,7 @@ public final class ThreadExecutorMap {
      * Decorate the given {@link Executor} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static Executor apply(final Executor executor, final EventExecutor eventExecutor) {
+    public static Executor apply(final Executor executor, final IEventExecutor eventExecutor) {
         ObjectUtil.checkNotNull(executor, "executor");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
         return new Executor() {
@@ -63,13 +63,13 @@ public final class ThreadExecutorMap {
      * Decorate the given {@link Runnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static Runnable apply(final Runnable command, final EventExecutor eventExecutor) {
+    public static Runnable apply(final Runnable command, final IEventExecutor eventExecutor) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
         return new Runnable() {
             @Override
             public void run() {
-                EventExecutor old = setCurrentExecutor(eventExecutor);
+                IEventExecutor old = setCurrentExecutor(eventExecutor);
                 try {
                     command.run();
                 } finally {
@@ -83,7 +83,7 @@ public final class ThreadExecutorMap {
      * Decorate the given {@link ThreadFactory} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static ThreadFactory apply(final ThreadFactory threadFactory, final EventExecutor eventExecutor) {
+    public static ThreadFactory apply(final ThreadFactory threadFactory, final IEventExecutor eventExecutor) {
         ObjectUtil.checkNotNull(threadFactory, "threadFactory");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
         return new ThreadFactory() {

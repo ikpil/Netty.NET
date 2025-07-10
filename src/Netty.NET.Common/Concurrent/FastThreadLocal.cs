@@ -16,15 +16,6 @@
 namespace Netty.NET.Common.Concurrent;
 
 
-
-
-
-
-
-
-
-
-
 /**
  * A special variant of {@link ThreadLocal} that yields higher access performance when accessed from a
  * {@link FastThreadLocalThread}.

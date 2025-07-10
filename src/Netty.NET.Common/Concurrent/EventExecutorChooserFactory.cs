@@ -23,16 +23,16 @@ public interface EventExecutorChooserFactory {
     /**
      * Returns a new {@link EventExecutorChooser}.
      */
-    EventExecutorChooser newChooser(EventExecutor[] executors);
+    EventExecutorChooser newChooser(IEventExecutor[] executors);
 
     /**
-     * Chooses the next {@link EventExecutor} to use.
+     * Chooses the next {@link IEventExecutor} to use.
      */
     interface EventExecutorChooser {
 
         /**
-         * Returns the new {@link EventExecutor} to use.
+         * Returns the new {@link IEventExecutor} to use.
          */
-        EventExecutor next();
+        IEventExecutor next();
     }
 }

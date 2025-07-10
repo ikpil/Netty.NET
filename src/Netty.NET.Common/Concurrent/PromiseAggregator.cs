@@ -22,7 +22,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * @deprecated Use {@link PromiseCombiner#PromiseCombiner(EventExecutor)}.
+ * @deprecated Use {@link PromiseCombiner#PromiseCombiner(IEventExecutor)}.
  *
  * {@link GenericFutureListener} implementation which consolidates multiple {@link Future}s
  * into one, by listening to individual {@link Future}s and producing an aggregated result
