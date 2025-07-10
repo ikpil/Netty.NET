@@ -13,6 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
@@ -21,21 +24,21 @@ namespace Netty.NET.Common.Concurrent;
  * thread, the blocking operation will most likely enter a dead lock state, hence throwing this
  * exception.
  */
-public class BlockingOperationException extends InvalidOperationException {
-
-    private static readonly long serialVersionUID = 2462223247762460301L;
-
-    public BlockingOperationException() { }
-
-    public BlockingOperationException(string s) {
-        super(s);
+public class BlockingOperationException : InvalidOperationException
+{
+    public BlockingOperationException()
+    {
     }
 
-    public BlockingOperationException(Exception cause) {
-        super(cause);
+    public BlockingOperationException(string s) : base(s)
+    {
     }
 
-    public BlockingOperationException(string message, Exception cause) {
-        super(message, cause);
+    public BlockingOperationException(Exception cause) : base(null, cause)
+    {
+    }
+
+    public BlockingOperationException(string message, Exception cause) : base(message, cause)
+    {
     }
 }
