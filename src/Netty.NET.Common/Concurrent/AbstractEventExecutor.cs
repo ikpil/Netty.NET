@@ -13,12 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
  * Abstract base class for {@link IEventExecutor} implementations.
  */
-public abstract class AbstractEventExecutor extends AbstractExecutorService : IEventExecutor {
+public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExecutor 
+{
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(AbstractEventExecutor));
 
     static readonly long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;

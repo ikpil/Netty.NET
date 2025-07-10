@@ -13,13 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Concurrent;
 
 
-
-
-final class SystemTicker : Ticker {
-    static readonly SystemTicker INSTANCE = new SystemTicker();
+sealed class SystemTicker : Ticker 
+{
+    public static readonly SystemTicker INSTANCE = new SystemTicker();
     private static readonly long START_TIME = System.nanoTime();
 
     @Override

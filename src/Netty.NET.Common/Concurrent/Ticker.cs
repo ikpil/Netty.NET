@@ -13,20 +13,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Concurrent;
-
-
 
 /**
  * A nanosecond-based time source, e.g. {@link System#nanoTime()}.
  */
-public interface Ticker {
+public interface Ticker
+{
     /**
      * Returns the singleton {@link Ticker} that returns the values from the real system clock source.
      * However, note that this is not the same as {@link System#nanoTime()} because we apply a fixed offset
      * to the {@link System#nanoTime() nanoTime}.
      */
-    static Ticker systemTicker() {
+    public static Ticker systemTicker()
+    {
         return SystemTicker.INSTANCE;
     }
 
@@ -35,7 +38,8 @@ public interface Ticker {
      * This can be useful when you test time-sensitive logic without waiting for too long or introducing
      * flakiness due to non-deterministic nature of system clock.
      */
-    static MockTicker newMockTicker() {
+    public static MockTicker newMockTicker()
+    {
         return new DefaultMockTicker();
     }
 
@@ -68,7 +72,8 @@ public interface Ticker {
      *
      * @see Thread#sleep(long)
      */
-    default void sleepMillis(long delayMillis) {
+    void sleepMillis(long delayMillis)
+    {
         sleep(delayMillis, TimeSpan.MILLISECONDS);
     }
 }

@@ -22,7 +22,7 @@ namespace Netty.NET.Common.Concurrent;
  * This can be useful when you test time-sensitive logic without waiting for too long
  * or introducing flakiness due to non-deterministic nature of system clock.
  */
-public interface MockTicker extends Ticker {
+public interface MockTicker : Ticker {
 
     @Override
     default long initialNanoTime() {

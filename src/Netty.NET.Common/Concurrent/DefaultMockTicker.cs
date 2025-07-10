@@ -16,20 +16,11 @@
 namespace Netty.NET.Common.Concurrent;
 
 
-
-
-
-
-
-
-
-
-
-
 /**
  * The default {@link MockTicker} implementation.
  */
-final class DefaultMockTicker : MockTicker {
+public sealed class DefaultMockTicker : MockTicker 
+{
 
     // The lock is fair, so waiters get to process condition signals in the order they (the waiters) queued up.
     private readonly ReentrantLock lock = new ReentrantLock(true);
