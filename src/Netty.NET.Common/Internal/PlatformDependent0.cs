@@ -788,7 +788,7 @@ public class PlatformDependent0 {
 
     private static void copyMemoryWithSafePointPolling(long srcAddr, long dstAddr, long length) {
         while (length > 0) {
-            long size = Math.min(length, UNSAFE_COPY_THRESHOLD);
+            long size = Math.Min(length, UNSAFE_COPY_THRESHOLD);
             UNSAFE.copyMemory(srcAddr, dstAddr, size);
             length -= size;
             srcAddr += size;
@@ -809,7 +809,7 @@ public class PlatformDependent0 {
     private static void copyMemoryWithSafePointPolling(
             object src, long srcOffset, object dst, long dstOffset, long length) {
         while (length > 0) {
-            long size = Math.min(length, UNSAFE_COPY_THRESHOLD);
+            long size = Math.Min(length, UNSAFE_COPY_THRESHOLD);
             UNSAFE.copyMemory(src, srcOffset, dst, dstOffset, size);
             length -= size;
             srcOffset += size;

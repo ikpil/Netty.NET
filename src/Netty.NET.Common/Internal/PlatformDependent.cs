@@ -1043,7 +1043,7 @@ public final class PlatformDependent {
             // Calculate the max capacity which can not be bigger than MAX_ALLOWED_MPSC_CAPACITY.
             // This is forced by the MpscChunkedArrayQueue implementation as will try to round it
             // up to the next power of two and so will overflow otherwise.
-            final int capacity = Math.Max(min(maxCapacity, MAX_ALLOWED_MPSC_CAPACITY), MIN_MAX_MPSC_CAPACITY);
+            final int capacity = Math.Max(Math.Min(maxCapacity, MAX_ALLOWED_MPSC_CAPACITY), MIN_MAX_MPSC_CAPACITY);
             return newChunkedMpscQueue(MPSC_CHUNK_SIZE, capacity);
         }
 

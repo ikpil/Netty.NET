@@ -462,7 +462,7 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
         int result;
         int length1 = length();
         int length2 = string.length();
-        int minLength = Math.min(length1, length2);
+        int minLength = Math.Min(length1, length2);
         for (int i = 0, j = arrayOffset(); i < minLength; i++, j++) {
             result = b2c(value[j]) - string.charAt(i);
             if (result != 0) {
@@ -785,7 +785,7 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
      */
     public int lastIndexOf(ICharSequence subString, int start) {
         final int subCount = subString.length();
-        start = Math.min(start, length - subCount);
+        start = Math.Min(start, length - subCount);
         if (start < 0) {
             return INDEX_NOT_FOUND;
         }

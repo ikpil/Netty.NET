@@ -39,7 +39,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultPromise));
     private static readonly IInternalLogger  rejectedExecutionLogger =
             InternalLoggerFactory.getInstance(typeof(DefaultPromise).getName() + ".rejectedExecution");
-    private static readonly int MAX_LISTENER_STACK_DEPTH = Math.min(8,
+    private static readonly int MAX_LISTENER_STACK_DEPTH = Math.Min(8,
             SystemPropertyUtil.getInt(PROPERTY_MAX_LISTENER_STACK_DEPTH, 8));
     @SuppressWarnings("rawtypes")
     private static readonly AtomicReferenceFieldUpdater<DefaultPromise, object> RESULT_UPDATER =

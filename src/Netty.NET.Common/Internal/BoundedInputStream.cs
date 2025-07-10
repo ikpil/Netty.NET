@@ -45,7 +45,7 @@ public final class BoundedInputStream extends FilterInputStream {
         checkMaxBytesRead();
 
         // Calculate the maximum number of bytes that we should try to read.
-        int num = Math.min(len, maxBytesRead - numRead + 1);
+        int num = Math.Min(len, maxBytesRead - numRead + 1);
 
         int b = super.read(buf, off, num);
 

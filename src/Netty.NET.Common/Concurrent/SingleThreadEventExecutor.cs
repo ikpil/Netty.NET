@@ -456,7 +456,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (task == null) {
             return false;
         }
-        int remaining = Math.min(maxPendingTasks, taskQueue.size());
+        int remaining = Math.Min(maxPendingTasks, taskQueue.size());
         safeExecute(task);
         // Use taskQueue.poll() directly rather than pollTaskFrom() since the latter may
         // silently consume more than one item from the queue (skips over WAKEUP_TASK instances)

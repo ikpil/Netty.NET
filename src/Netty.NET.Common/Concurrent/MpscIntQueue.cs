@@ -233,7 +233,7 @@ public interface MpscIntQueue {
                         PRODUCER_LIMIT.lazySet(this, producerLimit);
                     }
                 }
-                actualLimit = Math.min((int) available, limit);
+                actualLimit = Math.Min((int) available, limit);
             } while (!PRODUCER_INDEX.compareAndSet(this, pIndex, pIndex + actualLimit));
             // right, now we claimed a few slots and can fill them with goodness
             for (int i = 0; i < actualLimit; i++) {

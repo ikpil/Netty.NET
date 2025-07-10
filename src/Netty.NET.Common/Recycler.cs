@@ -154,7 +154,7 @@ public abstract class Recycler<T> {
             this.chunkSize = 0;
         } else {
             this.maxCapacityPerThread = Math.Max(4, maxCapacityPerThread);
-            this.chunkSize = Math.Max(2, min(chunkSize, this.maxCapacityPerThread >> 1));
+            this.chunkSize = Math.Max(2, Math.Min(chunkSize, this.maxCapacityPerThread >> 1));
         }
     }
 
