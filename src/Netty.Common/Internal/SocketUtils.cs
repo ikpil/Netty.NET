@@ -13,27 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+
 namespace Netty.NET.Common.Internal;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Provides socket operations with privileges enabled. This is necessary for applications that use the
@@ -41,34 +29,23 @@ namespace Netty.NET.Common.Internal;
  * operations are privileged, the operations can proceed even if some code in the calling chain lacks the appropriate
  * {@link SocketPermission}.
  */
-public final class SocketUtils {
-
-    private static readonly Enumeration<object> EMPTY = Collections.enumeration(Collections.emptyList());
-
-    private SocketUtils() {
+public static class SocketUtils 
+{
+    private static IEnumerable<T> empty<T>()
+    {
+        return Enumerable.Empty<T>();
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> Enumeration<T> empty() {
-        return (Enumeration<T>) EMPTY;
-    }
-
-    public static void connect(final Socket socket, final SocketAddress remoteAddress, final int timeout)
-            throws IOException {
+    public static void connect(Socket socket, SocketAddress remoteAddress, int timeout)
+    {
         try {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
-                @Override
-                public Void run() {
-                    socket.connect(remoteAddress, timeout);
-                    return null;
-                }
-            });
+                socket.Connect(remoteAddress, timeout);
         } catch (PrivilegedActionException e) {
             throw (IOException) e.getCause();
         }
     }
 
-    public static void bind(final Socket socket, final SocketAddress bindpoint) {
+    public static void bind(Socket socket, SocketAddress bindpoint) {
         try {
             AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
                 @Override
@@ -82,8 +59,8 @@ public final class SocketUtils {
         }
     }
 
-    public static bool connect(final SocketChannel socketChannel, final SocketAddress remoteAddress)
-            throws IOException {
+    public static bool connect(SocketChannel socketChannel, SocketAddress remoteAddress)
+    {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<bool>() {
                 @Override
@@ -96,7 +73,7 @@ public final class SocketUtils {
         }
     }
 
-    public static void bind(final SocketChannel socketChannel, final SocketAddress address) {
+    public static void bind(SocketChannel socketChannel, SocketAddress address) {
         try {
             AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
                 @Override
@@ -181,40 +158,36 @@ public final class SocketUtils {
         });
     }
 
-    public static Enumeration<InetAddress> addressesFromNetworkInterface(final NetworkInterface intf) {
-        Enumeration<InetAddress> addresses =
-                AccessController.doPrivileged(new PrivilegedAction<Enumeration<InetAddress>>() {
-            @Override
-            public Enumeration<InetAddress> run() {
-                return intf.getInetAddresses();
-            }
-        });
+    public static List<IPAddress> addressesFromNetworkInterface(NetworkInterface intf)
+    {
+        var list = new List<IPAddress>();
+        var ipProps = intf.GetIPProperties();
+        
         // Android seems to sometimes return null even if this is not a valid return value by the api docs.
         // Just return an empty Enumeration in this case.
         // See https://github.com/netty/netty/issues/10045
-        if (addresses == null) {
-            return empty();
-        }
-        return addresses;
-    }
+        if (ipProps == null || ipProps.UnicastAddresses == null)
+            return list;
 
-    public static InetAddress loopbackAddress() {
-        return AccessController.doPrivileged(new PrivilegedAction<InetAddress>() {
-            @Override
-            public InetAddress run() {
-                return InetAddress.getLoopbackAddress();
+        foreach (var unicast in ipProps.UnicastAddresses)
+        {
+            if (unicast?.Address != null)
+            {
+                list.Add(unicast.Address);
             }
-        });
+        }
+
+        return list;
     }
 
-    public static byte[] hardwareAddressFromNetworkInterface(final NetworkInterface intf) {
+    public static IPAddress loopbackAddress()
+    {
+        return IPAddress.Loopback;
+    }
+
+    public static byte[] hardwareAddressFromNetworkInterface(NetworkInterface intf) {
         try {
-            return AccessController.doPrivileged(new PrivilegedExceptionAction<byte[]>() {
-                @Override
-                public byte[] run() {
                     return intf.getHardwareAddress();
-                }
-            });
         } catch (PrivilegedActionException e) {
             throw (SocketException) e.getCause();
         }
