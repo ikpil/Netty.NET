@@ -14,7 +14,7 @@
  * under the License.
  */
 
-namespace Netty.Common.Tests.Internal;;
+namespace Netty.Common.Tests.Internal;
 
 public class VirtualThreadCheckTest {
 

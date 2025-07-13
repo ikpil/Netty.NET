@@ -13,7 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.Common.Tests.Internal;;class SWARUtilTest {
+namespace Netty.Common.Tests.Internal;
+
+class SWARUtilTest {
 
     private final Random random = new Random();
 
