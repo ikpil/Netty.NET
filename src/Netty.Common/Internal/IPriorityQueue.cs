@@ -23,12 +23,12 @@ public interface IPriorityQueue<T> : IEnumerable<T>
     /**
      * Same as {@link #remove(object)} but typed using generics.
      */
-    bool removeTyped(T node);
+    bool remove(T node);
 
     /**
      * Same as {@link #contains(object)} but typed using generics.
      */
-    bool containsTyped(T node);
+    bool contains(T node);
 
     /**
      * Notify the queue that the priority for {@code node} has changed. The queue will adjust to ensure the priority

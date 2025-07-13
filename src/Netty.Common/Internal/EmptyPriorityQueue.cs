@@ -38,12 +38,12 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
         return INSTANCE;
     }
 
-    public bool removeTyped(T node)
+    public bool remove(T node)
     {
         return false;
     }
 
-    public bool containsTyped(T node)
+    public bool contains(T node)
     {
         return false;
     }
@@ -72,10 +72,6 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
         return false;
     }
 
-    public bool remove(object o)
-    {
-        return false;
-    }
 
     public bool containsAll(ICollection<T> c)
     {

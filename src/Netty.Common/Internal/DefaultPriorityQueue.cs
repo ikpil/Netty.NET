@@ -13,6 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
 namespace Netty.NET.Common.Internal;
 
 /**
@@ -20,269 +25,216 @@ namespace Netty.NET.Common.Internal;
  * {@link PriorityQueueNode} for the purpose of maintaining the index in the priority queue.
  * @param <T> The object that is maintained in the queue.
  */
-public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends AbstractQueue<T>
-                                                                     implements PriorityQueue<T> {
-    private static readonly PriorityQueueNode[] EMPTY_ARRAY = new PriorityQueueNode[0];
-    private readonly Comparator<T> comparator;
-    private T[] queue;
-    private int size;
+public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
+    where T : class
+{
+    private readonly IComparer<T> _comparer;
+    private int _count;
+    private int _capacity;
+    private T[] _items;
 
-    @SuppressWarnings("unchecked")
-    public DefaultPriorityQueue(Comparator<T> comparator, int initialSize) {
-        this.comparator = ObjectUtil.checkNotNull(comparator, "comparator");
-        queue = (T[]) (initialSize != 0 ? new PriorityQueueNode[initialSize] : EMPTY_ARRAY);
+    public DefaultPriorityQueue(IComparer<T> comparer, int initialSize)
+    {
+        _comparer = ObjectUtil.checkNotNull(comparer, "comparer");
+        _items = initialSize != 0
+            ? new T[initialSize]
+            : Array.Empty<T>();
     }
 
-    @Override
-    public int size() {
-        return size;
+    public DefaultPriorityQueue() : this(Comparer<T>.Default, 11)
+    {
     }
 
-    @Override
-    public bool isEmpty() {
-        return size == 0;
+    public int size()
+    {
+        return _count;
     }
 
-    @Override
-    public bool contains(object o) {
-        if (!(o instanceof PriorityQueueNode)) {
-            return false;
-        }
-        PriorityQueueNode node = (PriorityQueueNode) o;
-        return contains(node, node.priorityQueueIndex(this));
+    public bool isEmpty()
+    {
+        return _count == 0;
     }
 
-    @Override
-    public bool containsTyped(T node) {
-        return contains(node, node.priorityQueueIndex(this));
+    public bool contains(T o)
+    {
+        return 0 <= Array.IndexOf(_items, o);
     }
 
-    @Override
-    public void clear() {
-        for (int i = 0; i < size; ++i) {
-            T node = queue[i];
-            if (node != null) {
-                node.priorityQueueIndex(this, INDEX_NOT_IN_QUEUE);
-                queue[i] = null;
-            }
-        }
-        size = 0;
+    public void clear()
+    {
+        _count = 0;
+        Array.Clear(_items, 0, 0);
     }
 
-    @Override
-    public void clearIgnoringIndexes() {
-        size = 0;
+    public void clearIgnoringIndexes()
+    {
+        _count = 0;
     }
 
-    @Override
-    public bool offer(T e) {
-        if (e.priorityQueueIndex(this) != INDEX_NOT_IN_QUEUE) {
-            throw new ArgumentException("e.priorityQueueIndex(): " + e.priorityQueueIndex(this) +
-                    " (expected: " + INDEX_NOT_IN_QUEUE + ") + e: " + e);
+
+    public bool offer(T e)
+    {
+        int oldCount = _count;
+        if (oldCount == _capacity)
+        {
+            growHeap();
         }
 
-        // Check that the array capacity is enough to hold values by doubling capacity.
-        if (size >= queue.length) {
-            // Use a policy which allows for a 0 initial capacity. Same policy as JDK's priority queue, double when
-            // "small", then grow by 50% when "large".
-            queue = Arrays.copyOf(queue, queue.length + ((queue.length < 64) ?
-                                                         (queue.length + 2) :
-                                                         (queue.length >>> 1)));
-        }
+        _count = oldCount + 1;
+        bubbleUp(oldCount, e);
 
-        bubbleUp(size++, e);
         return true;
     }
 
-    @Override
-    public T poll() {
-        if (size == 0) {
+    public T poll()
+    {
+        T result = peek();
+        if (result == null)
+        {
             return null;
         }
-        T result = queue[0];
-        result.priorityQueueIndex(this, INDEX_NOT_IN_QUEUE);
 
-        T last = queue[--size];
-        queue[size] = null;
-        if (size != 0) { // Make sure we don't add the last element back.
-            bubbleDown(0, last);
+        int newCount = --_count;
+        T lastItem = _items[newCount];
+        _items[newCount] = null;
+        if (newCount > 0)
+        {
+            trickleDown(0, lastItem);
         }
 
         return result;
     }
 
-    @Override
-    public T peek() {
-        return (size == 0) ? null : queue[0];
+    public T peek()
+    {
+        return isEmpty() ? null : _items[0];
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public bool remove(object o) {
-        final T node;
-        try {
-            node = (T) o;
-        } catch (ClassCastException e) {
-            return false;
-        }
-        return removeTyped(node);
-    }
-
-    @Override
-    public bool removeTyped(T node) {
-        int i = node.priorityQueueIndex(this);
-        if (!contains(node, i)) {
+    public bool remove(T item)
+    {
+        int index = Array.IndexOf(_items, item);
+        if (index == -1)
+        {
             return false;
         }
 
-        node.priorityQueueIndex(this, INDEX_NOT_IN_QUEUE);
-        if (--size == 0 || size == i) {
-            // If there are no node left, or this is the last node in the array just remove and return.
-            queue[i] = null;
-            return true;
+        _count--;
+        if (index == _count)
+        {
+            _items[index] = null;
+        }
+        else
+        {
+            T last = _items[_count];
+            _items[_count] = null;
+            trickleDown(index, last);
+            if (_items[index] == last)
+            {
+                bubbleUp(index, last);
+            }
         }
 
-        // Move the last element where node currently lives in the array.
-        T moved = queue[i] = queue[size];
-        queue[size] = null;
-        // priorityQueueIndex will be updated below in bubbleUp or bubbleDown
-
-        // Make sure the moved node still preserves the min-heap properties.
-        if (comparator.compare(node, moved) < 0) {
-            bubbleDown(i, moved);
-        } else {
-            bubbleUp(i, moved);
-        }
         return true;
     }
 
-    @Override
-    public void priorityChanged(T node) {
-        int i = node.priorityQueueIndex(this);
-        if (!contains(node, i)) {
+    public void priorityChanged(T item)
+    {
+        int index = Array.IndexOf(_items, item);
+        if (-1 >= index)
+        {
             return;
         }
 
         // Preserve the min-heap property by comparing the new priority with parents/children in the heap.
-        if (i == 0) {
-            bubbleDown(i, node);
-        } else {
+        if (index == 0)
+        {
+            trickleDown(index, item);
+        }
+        else
+        {
             // Get the parent to see if min-heap properties are violated.
-            int iParent = (i - 1) >>> 1;
-            T parent = queue[iParent];
-            if (comparator.compare(node, parent) < 0) {
-                bubbleUp(i, node);
-            } else {
-                bubbleDown(i, node);
+            int iParent = (index - 1) >>> 1;
+            T parent = _items[iParent];
+            if (_comparer.Compare(item, parent) < 0)
+            {
+                bubbleUp(index, item);
+            }
+            else
+            {
+                trickleDown(index, item);
             }
         }
     }
 
-    @Override
-    public object[] toArray() {
-        return Arrays.copyOf(queue, size);
+    private void growHeap()
+    {
+        int oldCapacity = _capacity;
+        _capacity = oldCapacity + (oldCapacity <= 64 ? oldCapacity + 2 : (oldCapacity >> 1));
+        var newHeap = new T[_capacity];
+        Array.Copy(_items, 0, newHeap, 0, _count);
+        _items = newHeap;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <X> X[] toArray(X[] a) {
-        if (a.length < size) {
-            return (X[]) Arrays.copyOf(queue, size, a.getClass());
-        }
-        Arrays.arraycopy(queue, 0, a, 0, size);
-        if (a.length > size) {
-            a[size] = null;
-        }
-        return a;
-    }
-
-    /**
-     * This iterator does not return elements in any particular order.
-     */
-    @Override
-    public Iterator<T> iterator() {
-        return new PriorityQueueIterator();
-    }
-
-    private readonly class PriorityQueueIterator : Iterator<T> {
-        private int index;
-
-        @Override
-        public bool hasNext() {
-            return index < size;
-        }
-
-        @Override
-        public T next() {
-            if (index >= size) {
-                throw new NoSuchElementException();
+    private void trickleDown(int index, T item)
+    {
+        int middleIndex = _count >> 1;
+        while (index < middleIndex)
+        {
+            int childIndex = (index << 1) + 1;
+            T childItem = _items[childIndex];
+            int rightChildIndex = childIndex + 1;
+            if (rightChildIndex < _count
+                && _comparer.Compare(childItem, _items[rightChildIndex]) > 0)
+            {
+                childIndex = rightChildIndex;
+                childItem = _items[rightChildIndex];
             }
 
-            return queue[index++];
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove");
-        }
-    }
-
-    private bool contains(PriorityQueueNode node, int i) {
-        return i >= 0 && i < size && node.equals(queue[i]);
-    }
-
-    private void bubbleDown(int k, T node) {
-        final int half = size >>> 1;
-        while (k < half) {
-            // Compare node to the children of index k.
-            int iChild = (k << 1) + 1;
-            T child = queue[iChild];
-
-            // Make sure we get the smallest child to compare against.
-            int rightChild = iChild + 1;
-            if (rightChild < size && comparator.compare(child, queue[rightChild]) > 0) {
-                child = queue[iChild = rightChild];
-            }
-            // If the bubbleDown node is less than or equal to the smallest child then we will preserve the min-heap
-            // property by inserting the bubbleDown node here.
-            if (comparator.compare(node, child) <= 0) {
+            if (_comparer.Compare(item, childItem) <= 0)
+            {
                 break;
             }
 
-            // Bubble the child up.
-            queue[k] = child;
-            child.priorityQueueIndex(this, k);
-
-            // Move down k down the tree for the next iteration.
-            k = iChild;
+            _items[index] = childItem;
+            index = childIndex;
         }
 
-        // We have found where node should live and still satisfy the min-heap property, so put it in the queue.
-        queue[k] = node;
-        node.priorityQueueIndex(this, k);
+        _items[index] = item;
     }
 
-    private void bubbleUp(int k, T node) {
-        while (k > 0) {
-            int iParent = (k - 1) >>> 1;
-            T parent = queue[iParent];
-
-            // If the bubbleUp node is less than the parent, then we have found a spot to insert and still maintain
-            // min-heap properties.
-            if (comparator.compare(node, parent) >= 0) {
+    private void bubbleUp(int index, T item)
+    {
+        while (index > 0)
+        {
+            int parentIndex = (index - 1) >> 1;
+            T parentItem = _items[parentIndex];
+            if (_comparer.Compare(item, parentItem) >= 0)
+            {
                 break;
             }
 
-            // Bubble the parent down.
-            queue[k] = parent;
-            parent.priorityQueueIndex(this, k);
-
-            // Move k up the tree for the next iteration.
-            k = iParent;
+            _items[index] = parentItem;
+            index = parentIndex;
         }
 
-        // We have found where node should live and still satisfy the min-heap property, so put it in the queue.
-        queue[k] = node;
-        node.priorityQueueIndex(this, k);
+        _items[index] = item;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            yield return _items[i];
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public T[] ToArray()
+    {
+        return Arrays.copyOf(_items, _count);
     }
 }

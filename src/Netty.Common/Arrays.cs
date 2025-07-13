@@ -1,9 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Netty.NET.Common;
 
 public static class Arrays
 {
+    public static T[] copyOf<T>(T[] src, int size)
+    {
+        var dest = new T[size];
+        Array.Copy(src, dest, size);
+    }
+
     public static T[] copyOfRange<T>(T[] array, int start, int end) where T : struct
     {
         if (array == null)
