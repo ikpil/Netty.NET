@@ -12,14 +12,13 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+
 namespace Netty.NET.Common;
 
-final class ByteProcessorUtils {
-    static readonly byte SPACE = (byte) ' ';
-    static readonly byte HTAB = (byte) '\t';
-    static readonly byte CARRIAGE_RETURN = (byte) '\r';
-    static readonly byte LINE_FEED = (byte) '\n';
-
-    private ByteProcessorUtils() {
-    }
+public static class ByteProcessorUtils
+{
+    public static readonly byte SPACE = (byte)' ';
+    public static readonly byte HTAB = (byte)'\t';
+    public static readonly byte CARRIAGE_RETURN = (byte)'\r';
+    public static readonly byte LINE_FEED = (byte)'\n';
 }
