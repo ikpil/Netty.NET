@@ -14,17 +14,10 @@
  * under the License.
  */
 
+using System.Collections.Generic;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
-
-
-
 
 
 /**
@@ -36,7 +29,7 @@ namespace Netty.NET.Common;
  * @deprecated Use {@link DomainWildcardMappingBuilder}}
  */
 @Deprecated
-public class DomainNameMapping<V> : Mapping<string, V> {
+public class DomainNameMapping<V> : IMapping<string, V> {
 
     final V defaultValue;
     private readonly IDictionary<string, V> map;

@@ -48,7 +48,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
     @Test
     public void testDefaultValue() {
-        Mapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
+        IMapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
             .add("*.netty.io", "Netty")
             .build();
 
@@ -57,7 +57,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
     @Test
     public void testStrictEquality() {
-        Mapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
+        IMapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
             .add("netty.io", "Netty")
             .add("downloads.netty.io", "Netty-Downloads")
             .build();
@@ -70,7 +70,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
     @Test
     public void testWildcardMatchesNotAnyPrefix() {
-        Mapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
+        IMapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
             .add("*.netty.io", "Netty")
             .build();
 
@@ -100,7 +100,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
     @Test
     public void testToString() {
-        Mapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
+        IMapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
             .add("*.netty.io", "Netty")
             .add("downloads.netty.io", "Netty-Download")
             .build();

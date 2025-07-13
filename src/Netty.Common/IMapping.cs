@@ -13,15 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common;
 
 /**
  * Maintains the mapping from the objects of one type to the objects of the other type.
  */
-public interface Mapping<IN, OUT> {
-
+public interface IMapping<in TIn, out TOut>
+{
     /**
      * Returns mapped value of the specified input.
      */
-    OUT map(IN input);
+    TOut map(TIn input);
 }
