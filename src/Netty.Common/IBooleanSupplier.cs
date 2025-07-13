@@ -13,36 +13,52 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common;
 
 /**
  * Represents a supplier of {@code bool}-valued results.
  */
-public interface BooleanSupplier {
+public interface IBooleanSupplier
+{
     /**
      * Gets a bool value.
      * @return a bool value.
      * @throws Exception If an exception occurs.
      */
     bool get();
+}
 
-    /**
-     * A supplier which always returns {@code false} and never throws.
-     */
-    BooleanSupplier FALSE_SUPPLIER = new BooleanSupplier() {
-        @Override
-        public bool get() {
-            return false;
-        }
-    };
+/**
+ * A supplier which always returns {@code false} and never throws.
+ */
+public class FalseSupplier : IBooleanSupplier
+{
+    public static readonly FalseSupplier INSTANCE = new FalseSupplier();
 
-    /**
-     * A supplier which always returns {@code true} and never throws.
-     */
-    BooleanSupplier TRUE_SUPPLIER = new BooleanSupplier() {
-        @Override
-        public bool get() {
-            return true;
-        }
-    };
+    private FalseSupplier()
+    {
+    }
+
+    public bool get()
+    {
+        return false;
+    }
+}
+
+/**
+ * A supplier which always returns {@code true} and never throws.
+ */
+public class TrueSupplier : IBooleanSupplier
+{
+    public static readonly TrueSupplier INSTANCE = new TrueSupplier();
+
+    private TrueSupplier()
+    {
+    }
+
+    public bool get()
+    {
+        return true;
+    }
 }
