@@ -22,7 +22,7 @@ public class HashedWheelTimerTest {
     public void testScheduleTimeoutShouldNotRunBeforeDelay() throws InterruptedException {
         final Timer timer = new HashedWheelTimer();
         final CountDownLatch barrier = new CountDownLatch(1);
-        final Timeout timeout = timer.newTimeout(new TimerTask() {
+        final Timeout timeout = timer.newTimeout(new ITimerTask() {
             @Override
             public void run(Timeout timeout) throws Exception {
                 fail("This should not have run");
@@ -38,7 +38,7 @@ public class HashedWheelTimerTest {
     public void testScheduleTimeoutShouldRunAfterDelay() throws InterruptedException {
         final Timer timer = new HashedWheelTimer();
         final CountDownLatch barrier = new CountDownLatch(1);
-        final Timeout timeout = timer.newTimeout(new TimerTask() {
+        final Timeout timeout = timer.newTimeout(new ITimerTask() {
             @Override
             public void run(Timeout timeout) throws Exception {
                 barrier.countDown();
@@ -55,7 +55,7 @@ public class HashedWheelTimerTest {
         final CountDownLatch latch = new CountDownLatch(3);
         final Timer timerProcessed = new HashedWheelTimer();
         for (int i = 0; i < 3; i ++) {
-            timerProcessed.newTimeout(new TimerTask() {
+            timerProcessed.newTimeout(new ITimerTask() {
                 @Override
                 public void run(final Timeout timeout) throws Exception {
                     latch.countDown();
@@ -68,7 +68,7 @@ public class HashedWheelTimerTest {
 
         final Timer timerUnprocessed = new HashedWheelTimer();
         for (int i = 0; i < 5; i ++) {
-            timerUnprocessed.newTimeout(new TimerTask() {
+            timerUnprocessed.newTimeout(new ITimerTask() {
                 @Override
                 public void run(Timeout timeout) throws Exception {
                 }
@@ -84,7 +84,7 @@ public class HashedWheelTimerTest {
         final CountDownLatch latch = new CountDownLatch(3);
         final Timer timer = new HashedWheelTimer();
         for (int i = 0; i < 3; i ++) {
-            timer.newTimeout(new TimerTask() {
+            timer.newTimeout(new ITimerTask() {
                 @Override
                 public void run(Timeout timeout) throws Exception {
                     latch.countDown();
@@ -110,7 +110,7 @@ public class HashedWheelTimerTest {
             Executors.defaultThreadFactory(), 100, TimeUnit.MILLISECONDS, 32);
         final CountDownLatch latch = new CountDownLatch(3);
 
-        timer.newTimeout(new TimerTask() {
+        timer.newTimeout(new ITimerTask() {
             @Override
             public void run(final Timeout timeout) throws Exception {
                 timer.newTimeout(this, 100, TimeUnit.MILLISECONDS);
@@ -133,7 +133,7 @@ public class HashedWheelTimerTest {
         int scheduledTasks = 100000;
         for (int i = 0; i < scheduledTasks; i++) {
             final long start = System.nanoTime();
-            timer.newTimeout(new TimerTask() {
+            timer.newTimeout(new ITimerTask() {
                 @Override
                 public void run(final Timeout timeout) throws Exception {
                     queue.add(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
@@ -168,7 +168,7 @@ public class HashedWheelTimerTest {
         };
         final HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(), 100,
                 TimeUnit.MILLISECONDS, 32, true, 2, executor);
-        timer.newTimeout(new TimerTask() {
+        timer.newTimeout(new ITimerTask() {
             @Override
             public void run(final Timeout timeout) throws Exception {
                 timeoutLatch.countDown();
@@ -255,7 +255,7 @@ public class HashedWheelTimerTest {
     public void testOverflow() throws InterruptedException  {
         final HashedWheelTimer timer = new HashedWheelTimer();
         final CountDownLatch latch = new CountDownLatch(1);
-        Timeout timeout = timer.newTimeout(new TimerTask() {
+        Timeout timeout = timer.newTimeout(new ITimerTask() {
             @Override
             public void run(Timeout timeout) {
                 latch.countDown();
@@ -271,7 +271,7 @@ public class HashedWheelTimerTest {
     public void testStopTimerCancelsPendingTasks() throws InterruptedException {
         final Timer timerUnprocessed = new HashedWheelTimer();
         for (int i = 0; i < 5; i ++) {
-            timerUnprocessed.newTimeout(new TimerTask() {
+            timerUnprocessed.newTimeout(new ITimerTask() {
                 @Override
                 public void run(Timeout timeout) throws Exception {
                 }
@@ -288,7 +288,7 @@ public class HashedWheelTimerTest {
     public void cancelWillCallCallback() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final HashedWheelTimer timer = new HashedWheelTimer();
-        final Timeout t1 = timer.newTimeout(new TimerTask() {
+        final Timeout t1 = timer.newTimeout(new ITimerTask() {
             @Override
             public void run(Timeout timeout) {
                 fail();
@@ -311,7 +311,7 @@ public class HashedWheelTimerTest {
         final HashedWheelTimer timer = new HashedWheelTimer();
         final CountDownLatch barrier = new CountDownLatch(1);
         // A total of 11 timeouts with the same delay are submitted, and they will be processed in the same tick.
-        timer.newTimeout(new TimerTask() {
+        timer.newTimeout(new ITimerTask() {
             @Override
             public void run(Timeout timeout) throws Exception {
                 barrier.countDown();
@@ -333,16 +333,16 @@ public class HashedWheelTimerTest {
         timer.stop();
     }
 
-    private static TimerTask createNoOpTimerTask() {
-        return new TimerTask() {
+    private static ITimerTask createNoOpTimerTask() {
+        return new ITimerTask() {
             @Override
             public void run(final Timeout timeout) throws Exception {
             }
         };
     }
 
-    private static TimerTask createCountDownLatchTimerTask(final CountDownLatch latch) {
-        return new TimerTask() {
+    private static ITimerTask createCountDownLatchTimerTask(final CountDownLatch latch) {
+        return new ITimerTask() {
             @Override
             public void run(final Timeout timeout) throws Exception {
                 latch.countDown();

@@ -20,13 +20,13 @@ using System.Collections.Generic;
 namespace Netty.NET.Common;
 
 /**
- * Schedules {@link TimerTask}s for one-time future execution in a background
+ * Schedules {@link ITimerTask}s for one-time future execution in a background
  * thread.
  */
 public interface Timer
 {
     /**
-     * Schedules the specified {@link TimerTask} for one-time execution after
+     * Schedules the specified {@link ITimerTask} for one-time execution after
      * the specified delay.
      *
      * @return a handle which is associated with the specified task
@@ -35,7 +35,7 @@ public interface Timer
      * @throws RejectedExecutionException if the pending timeouts are too many and creating new timeout
      *                                    can cause instability in the system.
      */
-    Timeout newTimeout(TimerTask task, long delay, TimeSpan unit);
+    Timeout newTimeout(ITimerTask task, long delay, TimeSpan unit);
 
     /**
      * Releases all resources acquired by this {@link Timer} and cancels all

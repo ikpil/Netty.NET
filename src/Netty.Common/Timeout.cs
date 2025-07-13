@@ -29,7 +29,7 @@ public interface Timeout {
     /**
      * Returns the {@link TimerTask} which is associated with this handle.
      */
-    TimerTask task();
+    ITimerTask task();
 
     /**
      * Returns {@code true} if and only if the {@link TimerTask} associated

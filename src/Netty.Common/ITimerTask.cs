@@ -13,31 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common;
-
-
 
 /**
  * A task which is executed after the delay specified with
- * {@link Timer#newTimeout(TimerTask, long, TimeSpan)}.
+ * {@link Timer#newTimeout(ITimerTask, long, TimeSpan)}.
  */
-public interface TimerTask {
-
+public interface ITimerTask
+{
     /**
      * Executed after the delay specified with
-     * {@link Timer#newTimeout(TimerTask, long, TimeSpan)}.
+     * {@link Timer#newTimeout(ITimerTask, long, TimeSpan)}.
      *
      * @param timeout a handle which is associated with this task
      */
     void run(Timeout timeout);
-
-    /**
-     * Called for {@link TimerTask}s that are successfully canceled via {@link Timeout#cancel()}. Overriding this
-     * method allows to for example run some cleanup.
-     *
-     * @param timeout a handle which is associated with this task
-     */
-    default void cancelled(Timeout timeout) {
-        // By default do nothing.
-    }
 }

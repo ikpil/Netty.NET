@@ -30,8 +30,8 @@ namespace Netty.NET.Common;
  * <h3>Tick Duration</h3>
  *
  * As described with 'approximated', this timer does not execute the scheduled
- * {@link TimerTask} on time.  {@link HashedWheelTimer}, on every tick, will
- * check if there are any {@link TimerTask}s behind the schedule and execute
+ * {@link ITimerTask} on time.  {@link HashedWheelTimer}, on every tick, will
+ * check if there are any {@link ITimerTask}s behind the schedule and execute
  * them.
  * <p>
  * You can increase or decrease the accuracy of the execution timing by
@@ -43,7 +43,7 @@ namespace Netty.NET.Common;
  * <h3>Ticks per Wheel (Wheel Size)</h3>
  *
  * {@link HashedWheelTimer} maintains a data structure called 'wheel'.
- * To put simply, a wheel is a hash table of {@link TimerTask}s whose hash
+ * To put simply, a wheel is a hash table of {@link ITimerTask}s whose hash
  * function is 'dead line of the task'.  The default number of ticks per wheel
  * (i.e. the size of the wheel) is 512.  You could specify a larger value
  * if you are going to schedule a lot of timeouts.
@@ -144,7 +144,7 @@ public class HashedWheelTimer : Timer {
      *
      * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
-     *                      {@link TimerTask} execution.
+     *                      {@link ITimerTask} execution.
      * @throws NullPointerException if {@code threadFactory} is {@code null}
      */
     public HashedWheelTimer(ThreadFactory threadFactory) {
@@ -156,7 +156,7 @@ public class HashedWheelTimer : Timer {
      *
      * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
-     *                      {@link TimerTask} execution.
+     *                      {@link ITimerTask} execution.
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
@@ -172,7 +172,7 @@ public class HashedWheelTimer : Timer {
      *
      * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
-     *                      {@link TimerTask} execution.
+     *                      {@link ITimerTask} execution.
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
@@ -190,7 +190,7 @@ public class HashedWheelTimer : Timer {
      *
      * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
-     *                      {@link TimerTask} execution.
+     *                      {@link ITimerTask} execution.
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
@@ -211,7 +211,7 @@ public class HashedWheelTimer : Timer {
      *
      * @param threadFactory        a {@link ThreadFactory} that creates a
      *                             background {@link Thread} which is dedicated to
-     *                             {@link TimerTask} execution.
+     *                             {@link ITimerTask} execution.
      * @param tickDuration         the duration between tick
      * @param unit                 the time unit of the {@code tickDuration}
      * @param ticksPerWheel        the size of the wheel
@@ -238,7 +238,7 @@ public class HashedWheelTimer : Timer {
      *
      * @param threadFactory        a {@link ThreadFactory} that creates a
      *                             background {@link Thread} which is dedicated to
-     *                             {@link TimerTask} execution.
+     *                             {@link ITimerTask} execution.
      * @param tickDuration         the duration between tick
      * @param unit                 the time unit of the {@code tickDuration}
      * @param ticksPerWheel        the size of the wheel
@@ -250,7 +250,7 @@ public class HashedWheelTimer : Timer {
      *                             {@link java.util.concurrent.RejectedExecutionException}
      *                             being thrown. No maximum pending timeouts limit is assumed if
      *                             this value is 0 or negative.
-     * @param taskExecutor         The {@link Executor} that is used to execute the submitted {@link TimerTask}s.
+     * @param taskExecutor         The {@link Executor} that is used to execute the submitted {@link ITimerTask}s.
      *                             The caller is responsible to shutdown the {@link Executor} once it is not needed
      *                             anymore.
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
@@ -362,7 +362,7 @@ public class HashedWheelTimer : Timer {
             throw new InvalidOperationException(
                     typeof(HashedWheelTimer).getSimpleName() +
                             ".stop() cannot be called from " +
-                            typeof(TimerTask).getSimpleName());
+                            typeof(ITimerTask).getSimpleName());
         }
 
         if (!WORKER_STATE_UPDATER.compareAndSet(this, WORKER_STATE_STARTED, WORKER_STATE_SHUTDOWN)) {
@@ -410,7 +410,7 @@ public class HashedWheelTimer : Timer {
     }
 
     @Override
-    public Timeout newTimeout(TimerTask task, long delay, TimeSpan unit) {
+    public Timeout newTimeout(ITimerTask task, long delay, TimeSpan unit) {
         checkNotNull(task, "task");
         checkNotNull(unit, "unit");
 
@@ -599,7 +599,7 @@ public class HashedWheelTimer : Timer {
                 AtomicIntegerFieldUpdater.newUpdater(typeof(HashedWheelTimeout), "state");
 
         private readonly HashedWheelTimer timer;
-        private readonly TimerTask task;
+        private readonly ITimerTask task;
         private readonly long deadline;
 
         @SuppressWarnings({"unused", "FieldMayBeFinal", "RedundantFieldInitialization" })
@@ -617,7 +617,7 @@ public class HashedWheelTimer : Timer {
         // The bucket to which the timeout was added
         HashedWheelBucket bucket;
 
-        HashedWheelTimeout(HashedWheelTimer timer, TimerTask task, long deadline) {
+        HashedWheelTimeout(HashedWheelTimer timer, ITimerTask task, long deadline) {
             this.timer = timer;
             this.task = task;
             this.deadline = deadline;
@@ -629,7 +629,7 @@ public class HashedWheelTimer : Timer {
         }
 
         @Override
-        public TimerTask task() {
+        public ITimerTask task() {
             return task;
         }
 
@@ -686,7 +686,7 @@ public class HashedWheelTimer : Timer {
                 timer.taskExecutor.execute(this);
             } catch (Exception t) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn("An exception was thrown while submit " + typeof(TimerTask).getSimpleName()
+                    logger.warn("An exception was thrown while submit " + typeof(ITimerTask).getSimpleName()
                             + " for execution.", t);
                 }
             }
@@ -698,7 +698,7 @@ public class HashedWheelTimer : Timer {
                 task.run(this);
             } catch (Exception t) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn("An exception was thrown by " + typeof(TimerTask).getSimpleName() + '.', t);
+                    logger.warn("An exception was thrown by " + typeof(ITimerTask).getSimpleName() + '.', t);
                 }
             }
         }
