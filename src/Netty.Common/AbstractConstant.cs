@@ -13,77 +13,72 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using Netty.NET.Common.Concurrent;
+
 namespace Netty.NET.Common;
-
-
 
 /**
  * Base implementation of {@link Constant}.
  */
-public abstract class AbstractConstant<T extends AbstractConstant<T>> : IConstant<> <T> {
-
-    private static readonly AtomicLong uniqueIdGenerator = new AtomicLong();
-    private readonly int id;
-    private readonly string name;
-    private readonly long uniquifier;
+public abstract class AbstractConstant<T> : IConstant<T> 
+    where T : AbstractConstant<T>
+{
+    private static readonly AtomicLong _uniqueIdGenerator = new AtomicLong();
+    private readonly int _id;
+    private readonly string _name;
+    private readonly long _uniquifier;
 
     /**
      * Creates a new instance.
      */
-    protected AbstractConstant(int id, string name) {
-        this.id = id;
-        this.name = name;
-        this.uniquifier = uniqueIdGenerator.getAndIncrement();
+    protected AbstractConstant(int id, string name)
+    {
+        _id = id;
+        _name = name;
+        _uniquifier = _uniqueIdGenerator.getAndIncrement();
     }
 
-    @Override
-    public final string name() {
-        return name;
+    public string name()
+    {
+        return _name;
     }
 
-    @Override
-    public final int id() {
-        return id;
+    public int id()
+    {
+        return _id;
     }
 
-    @Override
-    public final string toString() {
+    public override string ToString()
+    {
         return name();
     }
 
-    @Override
-    public final int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public final bool equals(object obj) {
-        return super.equals(obj);
-    }
-
-    @Override
-    public final int compareTo(T o) {
-        if (this == o) {
+    public int CompareTo(T o)
+    {
+        if (this == o)
+        {
             return 0;
         }
 
-        @SuppressWarnings("UnnecessaryLocalVariable")
         AbstractConstant<T> other = o;
-        int returnCode;
-
-        returnCode = hashCode() - other.hashCode();
-        if (returnCode != 0) {
+        int returnCode = GetHashCode() - other.GetHashCode();
+        if (returnCode != 0)
+        {
             return returnCode;
         }
 
-        if (uniquifier < other.uniquifier) {
+        if (_uniquifier < other._uniquifier)
+        {
             return -1;
         }
-        if (uniquifier > other.uniquifier) {
+
+        if (_uniquifier > other._uniquifier)
+        {
             return 1;
         }
 
-        throw new Error("failed to compare two different constants");
+        throw new Exception("failed to compare two different constants");
     }
-
 }
