@@ -69,7 +69,7 @@ public class AsciiStringMemoryTest {
     public void forEachTest() throws Exception {
         final AtomicReference<Integer> aCount = new AtomicReference<Integer>(0);
         final AtomicReference<Integer> bCount = new AtomicReference<Integer>(0);
-        aAsciiString.forEachByte(new ByteProcessor() {
+        aAsciiString.forEachByte(new IByteProcessor() {
             int i;
             @Override
             public boolean process(byte value) {
@@ -78,7 +78,7 @@ public class AsciiStringMemoryTest {
                 return true;
             }
         });
-        bAsciiString.forEachByte(new ByteProcessor() {
+        bAsciiString.forEachByte(new IByteProcessor() {
             int i;
             @Override
             public boolean process(byte value) {
@@ -107,7 +107,7 @@ public class AsciiStringMemoryTest {
     public void forEachDescTest() throws Exception {
         final AtomicReference<Integer> aCount = new AtomicReference<Integer>(0);
         final AtomicReference<Integer> bCount = new AtomicReference<Integer>(0);
-        aAsciiString.forEachByteDesc(new ByteProcessor() {
+        aAsciiString.forEachByteDesc(new IByteProcessor() {
             int i = 1;
             @Override
             public boolean process(byte value) {
@@ -116,7 +116,7 @@ public class AsciiStringMemoryTest {
                 return true;
             }
         });
-        bAsciiString.forEachByteDesc(new ByteProcessor() {
+        bAsciiString.forEachByteDesc(new IByteProcessor() {
             int i = 1;
             @Override
             public boolean process(byte value) {

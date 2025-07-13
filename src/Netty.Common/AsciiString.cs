@@ -245,9 +245,9 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
      * Iterates over the readable bytes of this buffer with the specified {@code processor} in ascending order.
      *
      * @return {@code -1} if the processor iterated to or beyond the end of the readable bytes.
-     *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
+     *         The last-visited index If the {@link IByteProcessor#process(byte)} returned {@code false}.
      */
-    public int forEachByte(ByteProcessor visitor) {
+    public int forEachByte(IByteProcessor visitor) {
         return forEachByte0(0, length(), visitor);
     }
 
@@ -256,9 +256,9 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
      * (i.e. {@code index}, {@code (index + 1)},  .. {@code (index + length - 1)}).
      *
      * @return {@code -1} if the processor iterated to or beyond the end of the specified area.
-     *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
+     *         The last-visited index If the {@link IByteProcessor#process(byte)} returned {@code false}.
      */
-    public int forEachByte(int index, int length, ByteProcessor visitor) {
+    public int forEachByte(int index, int length, IByteProcessor visitor) {
         if (isOutOfBounds(index, length, length())) {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
                     + ") <= " + "length(" + length() + ')');
@@ -266,7 +266,7 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
         return forEachByte0(index, length, visitor);
     }
 
-    private int forEachByte0(int index, int length, ByteProcessor visitor) {
+    private int forEachByte0(int index, int length, IByteProcessor visitor) {
         final int len = offset + index + length;
         for (int i = offset + index; i < len; ++i) {
             if (!visitor.process(value[i])) {
@@ -280,9 +280,9 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
      * Iterates over the readable bytes of this buffer with the specified {@code processor} in descending order.
      *
      * @return {@code -1} if the processor iterated to or beyond the beginning of the readable bytes.
-     *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
+     *         The last-visited index If the {@link IByteProcessor#process(byte)} returned {@code false}.
      */
-    public int forEachByteDesc(ByteProcessor visitor) {
+    public int forEachByteDesc(IByteProcessor visitor) {
         return forEachByteDesc0(0, length(), visitor);
     }
 
@@ -291,9 +291,9 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
      * (i.e. {@code (index + length - 1)}, {@code (index + length - 2)}, ... {@code index}).
      *
      * @return {@code -1} if the processor iterated to or beyond the beginning of the specified area.
-     *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
+     *         The last-visited index If the {@link IByteProcessor#process(byte)} returned {@code false}.
      */
-    public int forEachByteDesc(int index, int length, ByteProcessor visitor) {
+    public int forEachByteDesc(int index, int length, IByteProcessor visitor) {
         if (isOutOfBounds(index, length, length())) {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
                     + ") <= " + "length(" + length() + ')');
@@ -301,7 +301,7 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
         return forEachByteDesc0(index, length, visitor);
     }
 
-    private int forEachByteDesc0(int index, int length, ByteProcessor visitor) {
+    private int forEachByteDesc0(int index, int length, IByteProcessor visitor) {
         final int end = offset + index;
         for (int i = offset + index + length - 1; i >= end; --i) {
             if (!visitor.process(value[i])) {
