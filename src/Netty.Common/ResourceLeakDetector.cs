@@ -140,10 +140,10 @@ public class ResourceLeakDetector<T> {
     }
 
     /** the collection of active resources */
-    private readonly ISet<DefaultResourceLeak<?>> allLeaks = ConcurrentHashMap.newKeySet();
+    private readonly ISet<DefaultResourceLeak<?>> allLeaks = ConcurrentDictionary.newKeySet();
 
     private readonly ReferenceQueue<object> refQueue = new ReferenceQueue<>();
-    private readonly ISet<string> reportedLeaks = ConcurrentHashMap.newKeySet();
+    private readonly ISet<string> reportedLeaks = ConcurrentDictionary.newKeySet();
 
     private readonly string resourceType;
     private readonly int samplingInterval;

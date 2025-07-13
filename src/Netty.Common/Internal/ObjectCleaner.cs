@@ -46,7 +46,7 @@ public final class ObjectCleaner {
     // Package-private for testing
     static readonly string CLEANER_THREAD_NAME = typeof(ObjectCleaner).getSimpleName() + "Thread";
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
-    private static readonly ISet<AutomaticCleanerReference> LIVE_SET = ConcurrentHashMap.newKeySet();
+    private static readonly ISet<AutomaticCleanerReference> LIVE_SET = ConcurrentDictionary.newKeySet();
     private static readonly ReferenceQueue<object> REFERENCE_QUEUE = new ReferenceQueue<>();
     private static readonly AtomicBoolean CLEANER_RUNNING = new AtomicBoolean(false);
     private static readonly Runnable CLEANER_TASK = new Runnable() {

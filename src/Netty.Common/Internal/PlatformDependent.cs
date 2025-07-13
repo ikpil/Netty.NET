@@ -444,12 +444,12 @@ public final class PlatformDependent {
     }
 
     /**
-     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
-     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     @Deprecated
-    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap() {
-        return new ConcurrentHashMap<>();
+    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap() {
+        return new ConcurrentDictionary<>();
     }
 
     /**
@@ -462,40 +462,40 @@ public final class PlatformDependent {
     }
 
     /**
-     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
-     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     @Deprecated
-    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap(int initialCapacity) {
-        return new ConcurrentHashMap<>(initialCapacity);
+    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(int initialCapacity) {
+        return new ConcurrentDictionary<>(initialCapacity);
     }
 
     /**
-     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
-     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     @Deprecated
-    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap(int initialCapacity, float loadFactor) {
-        return new ConcurrentHashMap<>(initialCapacity, loadFactor);
+    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(int initialCapacity, float loadFactor) {
+        return new ConcurrentDictionary<>(initialCapacity, loadFactor);
     }
 
     /**
-     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
-     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     @Deprecated
-    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap(
+    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(
             int initialCapacity, float loadFactor, int concurrencyLevel) {
-        return new ConcurrentHashMap<>(initialCapacity, loadFactor, concurrencyLevel);
+        return new ConcurrentDictionary<>(initialCapacity, loadFactor, concurrencyLevel);
     }
 
     /**
-     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
-     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     @Deprecated
-    public static <K, V> ConcurrentMap<K, V> newConcurrentHashMap(IDictionary<? extends K, ? extends V> map) {
-        return new ConcurrentHashMap<>(map);
+    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(IDictionary<? extends K, ? extends V> map) {
+        return new ConcurrentDictionary<>(map);
     }
 
     /**

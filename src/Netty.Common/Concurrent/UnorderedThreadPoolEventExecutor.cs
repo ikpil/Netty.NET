@@ -54,7 +54,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
 
     private readonly Promise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
     private readonly ISet<IEventExecutor> executorSet = Collections.singleton(this);
-    private readonly ISet<Thread> eventLoopThreads = ConcurrentHashMap.newKeySet();
+    private readonly ISet<Thread> eventLoopThreads = ConcurrentDictionary.newKeySet();
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int, ThreadFactory)}

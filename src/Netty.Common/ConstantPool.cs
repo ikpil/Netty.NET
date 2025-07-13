@@ -14,34 +14,33 @@
  * under the License.
  */
 
+using System;
+using System.Collections.Concurrent;
+using Netty.NET.Common.Concurrent;
+using static Netty.NET.Common.Internal.ObjectUtil;
+
 namespace Netty.NET.Common;
-
-
-
-
-
-
-
 
 /**
  * A pool of {@link Constant}s.
  *
  * @param <T> the type of the constant
  */
-public abstract class ConstantPool<T extends Constant<T>> {
+public abstract class ConstantPool<T> where T : IConstant<T>
+{
+    private readonly ConcurrentDictionary<string, T> _constants = new ConcurrentDictionary<string, T>();
 
-    private readonly ConcurrentMap<string, T> constants = new ConcurrentHashMap<>();
-
-    private readonly AtomicInteger nextId = new AtomicInteger(1);
+    private readonly AtomicInteger _nextId = new AtomicInteger(1);
 
     /**
      * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
-    public T valueOf(Type firstNameComponent, string secondNameComponent) {
+    public T valueOf(Type firstNameComponent, string secondNameComponent)
+    {
         return valueOf(
-                checkNotNull(firstNameComponent, "firstNameComponent").getName() +
-                '#' +
-                checkNotNull(secondNameComponent, "secondNameComponent"));
+            checkNotNull(firstNameComponent, "firstNameComponent").Name +
+            '#' +
+            checkNotNull(secondNameComponent, "secondNameComponent"));
     }
 
     /**
@@ -52,7 +51,8 @@ public abstract class ConstantPool<T extends Constant<T>> {
      *
      * @param name the name of the {@link Constant}
      */
-    public T valueOf(string name) {
+    public T valueOf(string name)
+    {
         return getOrCreate(checkNonEmpty(name, "name"));
     }
 
@@ -61,31 +61,25 @@ public abstract class ConstantPool<T extends Constant<T>> {
      *
      * @param name the name of the {@link Constant}
      */
-    private T getOrCreate(string name) {
-        T constant = constants.get(name);
-        if (constant == null) {
-            final T tempConstant = newConstant(nextId(), name);
-            constant = constants.putIfAbsent(name, tempConstant);
-            if (constant == null) {
-                return tempConstant;
-            }
-        }
-
-        return constant;
+    private T getOrCreate(string name)
+    {
+        return _constants.GetOrAdd(name, k => newConstant(nextId(), name));
     }
 
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
      */
-    public bool exists(string name) {
-        return constants.containsKey(checkNonEmpty(name, "name"));
+    public bool exists(string name)
+    {
+        return _constants.ContainsKey(checkNonEmpty(name, "name"));
     }
 
     /**
      * Creates a new {@link Constant} for the given {@code name} or fail with an
      * {@link ArgumentException} if a {@link Constant} for the given {@code name} exists.
      */
-    public T newInstance(string name) {
+    public T newInstance(string name)
+    {
         return createOrThrow(checkNonEmpty(name, "name"));
     }
 
@@ -94,23 +88,26 @@ public abstract class ConstantPool<T extends Constant<T>> {
      *
      * @param name the name of the {@link Constant}
      */
-    private T createOrThrow(string name) {
-        T constant = constants.get(name);
-        if (constant == null) {
-            final T tempConstant = newConstant(nextId(), name);
-            constant = constants.putIfAbsent(name, tempConstant);
-            if (constant == null) {
+    private T createOrThrow(string name)
+    {
+        _constants.TryGetValue(name, out var constant);
+        if (constant == null)
+        {
+            T tempConstant = newConstant(nextId(), name);
+            bool added = _constants.TryAdd(name, tempConstant);
+            if (added)
+            {
                 return tempConstant;
             }
         }
 
-        throw new ArgumentException(string.format("'%s' is already in use", name));
+        throw new ArgumentException(($"'{name}' is already in use"));
     }
 
     protected abstract T newConstant(int id, string name);
 
-    @Deprecated
-    public final int nextId() {
-        return nextId.getAndIncrement();
+    public int nextId()
+    {
+        return _nextId.getAndIncrement();
     }
 }
