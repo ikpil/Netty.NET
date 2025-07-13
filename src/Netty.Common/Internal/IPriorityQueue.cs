@@ -13,11 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Collections.Generic;
+
 namespace Netty.NET.Common.Internal;
 
-
-
-public interface PriorityQueue<T> extends Queue<T> {
+public interface IPriorityQueue<T> : IEnumerable<T>
+{
     /**
      * Same as {@link #remove(object)} but typed using generics.
      */

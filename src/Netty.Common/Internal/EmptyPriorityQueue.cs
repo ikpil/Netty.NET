@@ -20,8 +20,8 @@ namespace Netty.NET.Common.Internal;
 
 
 
-public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
-    private static readonly PriorityQueue<object> INSTANCE = new EmptyPriorityQueue<object>();
+public final class EmptyPriorityQueue<T> : IPriorityQueue<T> {
+    private static readonly IPriorityQueue<object> INSTANCE = new EmptyPriorityQueue<object>();
 
     private EmptyPriorityQueue() {
     }
@@ -121,7 +121,7 @@ public final class EmptyPriorityQueue<T> : PriorityQueue<T> {
 
     @Override
     public bool equals(object o) {
-        return o instanceof PriorityQueue && ((PriorityQueue) o).isEmpty();
+        return o instanceof IPriorityQueue<> && ((IPriorityQueue<>) o).isEmpty();
     }
 
     @Override
