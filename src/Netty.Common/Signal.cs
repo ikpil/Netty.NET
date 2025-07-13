@@ -13,36 +13,33 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common;
 
+using System;
+
+namespace Netty.NET.Common;
 
 /**
  * A special {@link Error} which is used to signal some state or request by throwing it.
  * {@link Signal} has an empty stack trace and has no cause to save the instantiation overhead.
  */
-public final class Signal extends Error : Constant<Signal> {
-
-    private static readonly long serialVersionUID = -221145131122459977L;
-
-    private static readonly ConstantPool<Signal> pool = new ConstantPool<Signal>() {
-        @Override
-        protected Signal newConstant(int id, string name) {
-            return new Signal(id, name);
-        }
-    };
+public sealed class Signal : Exception, IConstant<Signal>
+{
+    private static readonly ConstantPool<Signal> _pool = new SignalConstantPool();
 
     /**
      * Returns the {@link Signal} of the specified name.
      */
-    public static Signal valueOf(string name) {
-        return pool.valueOf(name);
+    public static Signal valueOf(string name)
+    {
+        return _pool.valueOf(name);
     }
 
     /**
      * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
-    public static Signal valueOf(Type firstNameComponent, string secondNameComponent) {
-        return pool.valueOf(firstNameComponent, secondNameComponent);
+    public static Signal valueOf(Type firstNameComponent, string secondNameComponent)
+    {
+        return _pool.valueOf(firstNameComponent, secondNameComponent);
     }
 
     private readonly SignalConstant constant;
@@ -50,7 +47,8 @@ public final class Signal extends Error : Constant<Signal> {
     /**
      * Creates a new {@link Signal} with the specified {@code name}.
      */
-    private Signal(int id, string name) {
+    public Signal(int id, string name)
+    {
         constant = new SignalConstant(id, name);
     }
 
@@ -58,61 +56,47 @@ public final class Signal extends Error : Constant<Signal> {
      * Check if the given {@link Signal} is the same as this instance. If not an {@link InvalidOperationException} will
      * be thrown.
      */
-    public void expect(Signal signal) {
-        if (this != signal) {
+    public void expect(Signal signal)
+    {
+        if (!ReferenceEquals(this, signal))
+        {
             throw new InvalidOperationException("unexpected signal: " + signal);
         }
     }
 
-    // Suppress a warning since the method doesn't need synchronization
-    @Override
-    public Exception initCause(Exception cause) {
-        return this;
-    }
-
-    // Suppress a warning since the method doesn't need synchronization
-    @Override
-    public Exception fillInStackTrace() {
-        return this;
-    }
-
-    @Override
-    public int id() {
+    public int id()
+    {
         return constant.id();
     }
 
-    @Override
-    public string name() {
+    public string name()
+    {
         return constant.name();
     }
 
-    @Override
-    public bool equals(object obj) {
-        return this == obj;
+    public override bool Equals(object obj)
+    {
+        return ReferenceEquals(this, obj);
     }
 
-    @Override
-    public int hashCode() {
-        return System.identityHashCode(this);
+    public override int GetHashCode()
+    {
+        //return System.identityHashCode(this);
+        return id();
     }
 
-    @Override
-    public int compareTo(Signal other) {
-        if (this == other) {
+    public int CompareTo(Signal other)
+    {
+        if (ReferenceEquals(this, other))
+        {
             return 0;
         }
 
-        return constant.compareTo(other.constant);
+        return constant.CompareTo(other.constant);
     }
 
-    @Override
-    public string toString() {
+    public override string ToString()
+    {
         return name();
-    }
-
-    private static readonly class SignalConstant extends AbstractConstant<SignalConstant> {
-        SignalConstant(int id, string name) {
-            super(id, name);
-        }
     }
 }
