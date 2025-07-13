@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Internal;
  * operations are privileged, the operations can proceed even if some code in the calling chain lacks the appropriate
  * {@link SocketPermission}.
  */
-public static class SocketUtils 
+public static class SocketUtils
 {
     private static IEnumerable<T> empty<T>()
     {
@@ -38,131 +38,113 @@ public static class SocketUtils
 
     public static void connect(Socket socket, SocketAddress remoteAddress, int timeout)
     {
-        try {
-                socket.Connect(remoteAddress, timeout);
-        } catch (PrivilegedActionException e) {
-            throw (IOException) e.getCause();
+        try
+        {
+            socket.Connect(remoteAddress, timeout);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (IOException)e.getCause();
         }
     }
 
-    public static void bind(Socket socket, SocketAddress bindpoint) {
-        try {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
-                @Override
-                public Void run() {
-                    socket.bind(bindpoint);
-                    return null;
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (IOException) e.getCause();
+    public static void bind(Socket socket, SocketAddress bindpoint)
+    {
+        try
+        {
+            socket.bind(bindpoint);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (IOException)e.getCause();
         }
     }
 
     public static bool connect(SocketChannel socketChannel, SocketAddress remoteAddress)
     {
-        try {
-            return AccessController.doPrivileged(new PrivilegedExceptionAction<bool>() {
-                @Override
-                public bool run() {
-                    return socketChannel.connect(remoteAddress);
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (IOException) e.getCause();
+        try
+        {
+            return socketChannel.connect(remoteAddress);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (IOException)e.getCause();
         }
     }
 
-    public static void bind(SocketChannel socketChannel, SocketAddress address) {
-        try {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
-                @Override
-                public Void run() {
-                    socketChannel.bind(address);
-                    return null;
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (IOException) e.getCause();
+    public static void bind(SocketChannel socketChannel, SocketAddress address)
+    {
+        try
+        {
+            socketChannel.bind(address);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (IOException)e.getCause();
         }
     }
 
-    public static SocketChannel accept(final ServerSocketChannel serverSocketChannel) {
-        try {
-            return AccessController.doPrivileged(new PrivilegedExceptionAction<SocketChannel>() {
-                @Override
-                public SocketChannel run() {
-                    return serverSocketChannel.accept();
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (IOException) e.getCause();
+    public static SocketChannel accept(ServerSocketChannel serverSocketChannel)
+    {
+        try
+        {
+            return serverSocketChannel.accept();
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (IOException)e.getCause();
         }
     }
 
-    public static void bind(final DatagramChannel networkChannel, final SocketAddress address) {
-        try {
-            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
-                @Override
-                public Void run() {
-                    networkChannel.bind(address);
-                    return null;
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (IOException) e.getCause();
+    public static void bind(DatagramChannel networkChannel, final SocketAddress address) {
+        try
+        {
+            networkChannel.bind(address);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (IOException)e.getCause();
         }
     }
 
-    public static SocketAddress localSocketAddress(final ServerSocket socket) {
-        return AccessController.doPrivileged(new PrivilegedAction<SocketAddress>() {
-            @Override
-            public SocketAddress run() {
-                return socket.getLocalSocketAddress();
-            }
-        });
+    public static SocketAddress localSocketAddress(ServerSocket socket)
+    {
+        return socket.getLocalSocketAddress();
     }
 
-    public static InetAddress addressByName(final string hostname) {
-        try {
-            return AccessController.doPrivileged(new PrivilegedExceptionAction<InetAddress>() {
-                @Override
-                public InetAddress run() {
-                    return InetAddress.getByName(hostname);
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (UnknownHostException) e.getCause();
+    public static InetAddress addressByName(string hostname)
+    {
+        try
+        {
+            return InetAddress.getByName(hostname);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (UnknownHostException)e.getCause();
         }
     }
 
-    public static InetAddress[] allAddressesByName(final string hostname) {
-        try {
-            return AccessController.doPrivileged(new PrivilegedExceptionAction<InetAddress[]>() {
-                @Override
-                public InetAddress[] run() {
-                    return InetAddress.getAllByName(hostname);
-                }
-            });
-        } catch (PrivilegedActionException e) {
-            throw (UnknownHostException) e.getCause();
+    public static InetAddress[] allAddressesByName(string hostname)
+    {
+        try
+        {
+            return InetAddress.getAllByName(hostname);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (UnknownHostException)e.getCause();
         }
     }
 
-    public static InetSocketAddress socketAddress(final string hostname, final int port) {
-        return AccessController.doPrivileged(new PrivilegedAction<InetSocketAddress>() {
-            @Override
-            public InetSocketAddress run() {
-                return new InetSocketAddress(hostname, port);
-            }
-        });
+    public static InetSocketAddress socketAddress(string hostname, final int port) {
+        return new InetSocketAddress(hostname, port);
     }
 
     public static List<IPAddress> addressesFromNetworkInterface(NetworkInterface intf)
     {
         var list = new List<IPAddress>();
         var ipProps = intf.GetIPProperties();
-        
+
         // Android seems to sometimes return null even if this is not a valid return value by the api docs.
         // Just return an empty Enumeration in this case.
         // See https://github.com/netty/netty/issues/10045
@@ -185,11 +167,15 @@ public static class SocketUtils
         return IPAddress.Loopback;
     }
 
-    public static byte[] hardwareAddressFromNetworkInterface(NetworkInterface intf) {
-        try {
-                    return intf.getHardwareAddress();
-        } catch (PrivilegedActionException e) {
-            throw (SocketException) e.getCause();
+    public static byte[] hardwareAddressFromNetworkInterface(NetworkInterface intf)
+    {
+        try
+        {
+            return intf.getHardwareAddress();
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw (SocketException)e.getCause();
         }
     }
 }
