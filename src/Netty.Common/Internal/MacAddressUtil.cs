@@ -17,11 +17,13 @@
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Collections.Generic;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Internal;
 
-public static class MacAddressUtil {
+public static class MacAddressUtil 
+{
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(MacAddressUtil));
 
     private static readonly int EUI64_MAC_ADDRESS_LENGTH = 8;
@@ -36,12 +38,12 @@ public static class MacAddressUtil {
      */
     public static byte[] bestAvailableMac() {
         // Find the best MAC address available.
-        byte[] bestMacAddr = EMPTY_BYTES;
+        byte[] bestMacAddr = EmptyArrays.EMPTY_BYTES;
         InetAddress bestInetAddr = NetUtil.LOCALHOST4;
 
         // Retrieve the list of available network interfaces.
-        IDictionary<NetworkInterface, InetAddress> ifaces = new LinkedHashMap<NetworkInterface, InetAddress>();
-        for (NetworkInterface iface: NetUtil.NETWORK_INTERFACES) {
+        List<KeyValuePair<NetworkInterface, InetAddress>> ifaces = new List<KeyValuePair<NetworkInterface, InetAddress>>();
+        foreach (NetworkInterface iface in NetUtil.NETWORK_INTERFACES) {
             // Use the interface with proper INET addresses only.
             Enumeration<InetAddress> addrs = SocketUtils.addressesFromNetworkInterface(iface);
             if (addrs.hasMoreElements()) {

@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text;
@@ -57,7 +58,7 @@ public static class NetUtil
     /**
      * An unmodifiable Collection of all the interfaces on this machine.
      */
-    public static readonly Collection<NetworkInterface> NETWORK_INTERFACES;
+    public static readonly ICollection<NetworkInterface> NETWORK_INTERFACES;
 
     /**
      * The SOMAXCONN value of the current machine.  If failed to get the value,  {@code 200} is used as a

@@ -16,7 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Netty.NET.Common.Internal;
@@ -24,73 +25,63 @@ using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
-internal static class NetUtilInitializations 
+internal static class NetUtilInitializations
 {
     /**
      * The logger being used by this class
      */
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(NetUtilInitializations));
 
-    private NetUtilInitializations() {
-    }
+    public static IPAddress createLocalhost4()
+    {
+        byte[] LOCALHOST4_BYTES = { 127, 0, 0, 1 };
 
-    static Inet4Address createLocalhost4() {
-        byte[] LOCALHOST4_BYTES = {127, 0, 0, 1};
-
-        Inet4Address localhost4 = null;
-        try {
-            localhost4 = (Inet4Address) InetAddress.getByAddress("localhost", LOCALHOST4_BYTES);
-        } catch (Exception e) {
-            // We should not get here as long as the length of the address is correct.
-            PlatformDependent.throwException(e);
-        }
+        IPAddress localhost4 = new IPAddress(LOCALHOST4_BYTES);
 
         return localhost4;
     }
 
-    static Inet6Address createLocalhost6() {
-        byte[] LOCALHOST6_BYTES = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+    public static IPAddress createLocalhost6()
+    {
+        byte[] LOCALHOST6_BYTES = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
 
-        Inet6Address localhost6 = null;
-        try {
-            localhost6 = (Inet6Address) InetAddress.getByAddress("localhost", LOCALHOST6_BYTES);
-        } catch (Exception e) {
-            // We should not get here as long as the length of the address is correct.
-            PlatformDependent.throwException(e);
-        }
+        IPAddress localhost6 = new IPAddress(LOCALHOST6_BYTES);
 
         return localhost6;
     }
 
-    static Collection<NetworkInterface> networkInterfaces() {
+    public static List<NetworkInterface> networkInterfaces()
+    {
         List<NetworkInterface> networkInterfaces = new List<NetworkInterface>();
-        try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            if (interfaces != null) {
-                while (interfaces.hasMoreElements()) {
-                    networkInterfaces.add(interfaces.nextElement());
-                }
+        try
+        {
+            NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+            if (0 < interfaces.Length)
+            {
+                foreach (var iface in interfaces)
+                    networkInterfaces.Add(iface);
             }
-        } catch (SocketException e) {
-            logger.warn("Failed to retrieve the list of available network interfaces", e);
-        } catch (NullPointerException e) {
-            if (!PlatformDependent.isAndroid()) {
-                throw e;
-            }
-            // Might happen on earlier version of Android.
-            // See https://developer.android.com/reference/java/net/NetworkInterface#getNetworkInterfaces()
         }
-        return Collections.unmodifiableList(networkInterfaces);
+        catch (Exception e)
+        {
+            logger.warn("Failed to retrieve the list of available network interfaces", e);
+            throw;
+        }
+
+        return networkInterfaces;
     }
 
-    static NetworkIfaceAndInetAddress determineLoopback(
-            Collection<NetworkInterface> networkInterfaces, Inet4Address localhost4, Inet6Address localhost6) {
+    public static NetworkIfaceAndInetAddress determineLoopback(
+        ICollection<NetworkInterface> networkInterfaces, IPAddress localhost4, IPAddress localhost6)
+    {
         // Retrieve the list of available network interfaces.
         List<NetworkInterface> ifaces = new List<NetworkInterface>();
-        for (NetworkInterface iface: networkInterfaces) {
+        foreach (NetworkInterface iface in networkInterfaces)
+        {
             // Use the interface with proper INET addresses only.
-            if (SocketUtils.addressesFromNetworkInterface(iface).hasMoreElements()) {
-                ifaces.add(iface);
+            if (0 < SocketUtils.addressesFromNetworkInterface(iface).Count)
+            {
+                ifaces.Add(iface);
             }
         }
 
@@ -98,61 +89,90 @@ internal static class NetUtilInitializations
         // Note that we do not use NetworkInterface.isLoopback() in the first place because it takes long time
         // on a certain environment. (e.g. Windows with -Djava.net.preferIPv4Stack=true)
         NetworkInterface loopbackIface = null;
-        InetAddress loopbackAddr = null;
-        loop: for (NetworkInterface iface: ifaces) {
-            for (Enumeration<InetAddress> i = SocketUtils.addressesFromNetworkInterface(iface); i.hasMoreElements();) {
-                InetAddress addr = i.nextElement();
-                if (addr.isLoopbackAddress()) {
+        IPAddress loopbackAddr = null;
+        foreach (NetworkInterface iface in ifaces)
+        {
+            var addrs = SocketUtils.addressesFromNetworkInterface(iface);
+            foreach (IPAddress addr in addrs)
+            {
+                if (IPAddress.IsLoopback(addr))
+                {
                     // Found
                     loopbackIface = iface;
                     loopbackAddr = addr;
-                    break loop;
+                    break;
                 }
             }
+
+            if (null != loopbackAddr)
+                break;
         }
 
         // If failed to find the loopback interface from its INET address, fall back to isLoopback().
-        if (loopbackIface == null) {
-            try {
-                for (NetworkInterface iface: ifaces) {
-                    if (iface.isLoopback()) {
-                        Enumeration<InetAddress> i = SocketUtils.addressesFromNetworkInterface(iface);
-                        if (i.hasMoreElements()) {
+        if (loopbackIface == null)
+        {
+            try
+            {
+                foreach (NetworkInterface iface in ifaces)
+                {
+                    if (iface.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+                    {
+                        var addrs = SocketUtils.addressesFromNetworkInterface(iface);
+                        foreach (IPAddress addr in addrs)
+                        {
                             // Found the one with INET address.
                             loopbackIface = iface;
-                            loopbackAddr = i.nextElement();
+                            loopbackAddr = addr;
                             break;
                         }
+
+                        if (null != loopbackAddr)
+                            break;
                     }
                 }
 
-                if (loopbackIface == null) {
+                if (loopbackIface == null)
+                {
                     logger.warn("Failed to find the loopback interface");
                 }
-            } catch (SocketException e) {
+            }
+            catch (SocketException e)
+            {
                 logger.warn("Failed to find the loopback interface", e);
             }
         }
 
-        if (loopbackIface != null) {
+        if (loopbackIface != null)
+        {
             // Found the loopback interface with an INET address.
-            logger.debug(
-                    "Loopback interface: {} ({}, {})",
-                    loopbackIface.getName(), loopbackIface.getDisplayName(), loopbackAddr.getHostAddress());
-        } else {
+            logger.debug($"Loopback interface: {loopbackIface.Name} ({loopbackIface.Description}, {loopbackAddr})");
+        }
+        else
+        {
             // Could not find the loopback interface, but we can't leave LOCALHOST as null.
             // Use LOCALHOST6 or LOCALHOST4, preferably the IPv6 one.
-            if (loopbackAddr == null) {
-                try {
-                    if (NetworkInterface.getByInetAddress(localhost6) != null) {
-                        logger.debug("Using hard-coded IPv6 localhost address: {}", localhost6);
+            if (loopbackAddr == null)
+            {
+                try
+                {
+                    bool same = ifaces.Select(x => x.GetIPProperties())
+                        .SelectMany(x => x.UnicastAddresses)
+                        .Any(x => x.Address.Equals(localhost6));
+                    if (same)
+                    {
+                        logger.debug($"Using hard-coded IPv6 localhost address: {localhost6}");
                         loopbackAddr = localhost6;
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     // Ignore
-                } finally {
-                    if (loopbackAddr == null) {
-                        logger.debug("Using hard-coded IPv4 localhost address: {}", localhost4);
+                }
+                finally
+                {
+                    if (loopbackAddr == null)
+                    {
+                        logger.debug($"Using hard-coded IPv4 localhost address: {localhost4}");
                         loopbackAddr = localhost4;
                     }
                 }
@@ -160,23 +180,5 @@ internal static class NetUtilInitializations
         }
 
         return new NetworkIfaceAndInetAddress(loopbackIface, loopbackAddr);
-    }
-
-    static readonly class NetworkIfaceAndInetAddress {
-        private readonly NetworkInterface iface;
-        private readonly InetAddress address;
-
-        NetworkIfaceAndInetAddress(NetworkInterface iface, InetAddress address) {
-            this.iface = iface;
-            this.address = address;
-        }
-
-        public NetworkInterface iface() {
-            return iface;
-        }
-
-        public InetAddress address() {
-            return address;
-        }
     }
 }
