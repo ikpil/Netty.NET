@@ -12,16 +12,17 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+
+using System;
+using System.Numerics;
+
 namespace Netty.NET.Common.Internal;
 
 /**
  * Math utility methods.
  */
-public final class MathUtil {
-
-    private MathUtil() {
-    }
-
+public static class MathUtil
+{
     /**
      * Fast method of finding the next power of 2 greater than or equal to the supplied value.
      *
@@ -31,9 +32,14 @@ public final class MathUtil {
      * @param value from which to search for next power of 2
      * @return The next power of 2 or the value itself if it is a power of 2
      */
-    public static int findNextPositivePowerOfTwo(final int value) {
-        assert value > int.MIN_VALUE && value < 0x40000000;
-        return 1 << (32 - int.numberOfLeadingZeros(value - 1));
+    public static int findNextPositivePowerOfTwo(int value)
+    {
+        if (value <= 0 || value >= 0x40000000)
+            throw new ArgumentOutOfRangeException(nameof(value), "Must be > 0 and < 0x40000000");
+
+        uint adjusted = (uint)(value - 1);
+        int leadingZeros = BitOperations.LeadingZeroCount(adjusted);
+        return 1 << (32 - leadingZeros);
     }
 
     /**
@@ -48,7 +54,8 @@ public final class MathUtil {
      *     <li>{@code >= 2^30} -> 2^30</li>
      * </ul>
      */
-    public static int safeFindNextPositivePowerOfTwo(final int value) {
+    public static int safeFindNextPositivePowerOfTwo(int value)
+    {
         return value <= 0 ? 1 : value >= 0x40000000 ? 0x40000000 : findNextPositivePowerOfTwo(value);
     }
 
@@ -60,41 +67,8 @@ public final class MathUtil {
      * @return {@code false} if the requested {@code index} and {@code length} will fit within {@code capacity}.
      * {@code true} if this would result in an index out of bounds exception.
      */
-    public static bool isOutOfBounds(int index, int length, int capacity) {
+    public static bool isOutOfBounds(int index, int length, int capacity)
+    {
         return (index | length | capacity | (index + length) | (capacity - (index + length))) < 0;
     }
-
-    /**
-     * @deprecated not used anymore. User int.compare() instead. For removal.
-     * Compares two {@code int} values.
-     *
-     * @param  x the first {@code int} to compare
-     * @param  y the second {@code int} to compare
-     * @return the value {@code 0} if {@code x == y};
-     *         {@code -1} if {@code x < y}; and
-     *         {@code 1} if {@code x > y}
-     */
-    @Deprecated
-    public static int compare(final int x, final int y) {
-        // do not subtract for comparison, it could overflow
-        return int.compare(x, y);
-    }
-
-    /**
-     * @deprecated not used anymore. User long.compare() instead. For removal.
-     * Compare two {@code long} values.
-     * @param x the first {@code long} to compare.
-     * @param y the second {@code long} to compare.
-     * @return
-     * <ul>
-     * <li>0 if {@code x == y}</li>
-     * <li>{@code > 0} if {@code x > y}</li>
-     * <li>{@code < 0} if {@code x < y}</li>
-     * </ul>
-     */
-    @Deprecated
-    public static int compare(long x, long y) {
-        return long.compare(x, y);
-    }
-
 }
