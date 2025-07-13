@@ -13,149 +13,159 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+
 namespace Netty.NET.Common.Internal;
 
+public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
+{
+    private static readonly EmptyPriorityQueue<T> INSTANCE = new EmptyPriorityQueue<T>();
 
-
-
-
-
-public final class EmptyPriorityQueue<T> : IPriorityQueue<T> {
-    private static readonly IPriorityQueue<object> INSTANCE = new EmptyPriorityQueue<object>();
-
-    private EmptyPriorityQueue() {
+    private EmptyPriorityQueue()
+    {
     }
 
     /**
      * Returns an unmodifiable empty {@link PriorityQueue}.
      */
-    @SuppressWarnings("unchecked")
-    public static <V> EmptyPriorityQueue<V> instance() {
-        return (EmptyPriorityQueue<V>) INSTANCE;
+    public static EmptyPriorityQueue<T> instance()
+    {
+        return INSTANCE;
     }
 
-    @Override
-    public bool removeTyped(T node) {
+    public bool removeTyped(T node)
+    {
         return false;
     }
 
-    @Override
-    public bool containsTyped(T node) {
+    public bool containsTyped(T node)
+    {
         return false;
     }
 
-    @Override
-    public void priorityChanged(T node) {
+    public void priorityChanged(T node)
+    {
     }
 
-    @Override
-    public int size() {
+    public int size()
+    {
         return 0;
     }
 
-    @Override
-    public bool isEmpty() {
+    public bool isEmpty()
+    {
         return true;
     }
 
-    @Override
-    public bool contains(object o) {
+    public bool contains(object o)
+    {
         return false;
     }
 
-    @Override
-    public Iterator<T> iterator() {
-        return Collections.<T>emptyList().iterator();
-    }
-
-    @Override
-    public object[] toArray() {
-        return EmptyArrays.EMPTY_OBJECTS;
-    }
-
-    @Override
-    public <T1> T1[] toArray(T1[] a) {
-        if (a.length > 0) {
-            a[0] = null;
-        }
-        return a;
-    }
-
-    @Override
-    public bool add(T t) {
+    public bool add(T t)
+    {
         return false;
     }
 
-    @Override
-    public bool remove(object o) {
+    public bool remove(object o)
+    {
         return false;
     }
 
-    @Override
-    public bool containsAll(Collection<?> c) {
+    public bool containsAll(ICollection<T> c)
+    {
         return false;
     }
 
-    @Override
-    public bool addAll(Collection<? extends T> c) {
+    public bool addAll(Collection<T> c)
+    {
         return false;
     }
 
-    @Override
-    public bool removeAll(Collection<?> c) {
+    public bool removeAll(Collection<T> c)
+    {
         return false;
     }
 
-    @Override
-    public bool retainAll(Collection<?> c) {
+    public bool retainAll(Collection<T> c)
+    {
         return false;
     }
 
-    @Override
-    public void clear() {
+    public void clear()
+    {
     }
 
-    @Override
-    public void clearIgnoringIndexes() {
+    public void clearIgnoringIndexes()
+    {
     }
 
-    @Override
-    public bool equals(object o) {
-        return o instanceof IPriorityQueue<> && ((IPriorityQueue<>) o).isEmpty();
+    public override bool Equals(object o)
+    {
+        return o is IPriorityQueue<T> q && q.isEmpty();
     }
 
-    @Override
-    public int hashCode() {
+    public override int GetHashCode()
+    {
         return 0;
     }
 
-    @Override
-    public bool offer(T t) {
+    public bool offer(T t)
+    {
         return false;
     }
 
-    @Override
-    public T remove() {
-        throw new NoSuchElementException();
+    public T remove()
+    {
+        throw new InvalidOperationException();
     }
 
-    @Override
-    public T poll() {
-        return null;
+    public T poll()
+    {
+        return default;
     }
 
-    @Override
-    public T element() {
-        throw new NoSuchElementException();
+    public T element()
+    {
+        throw new InvalidOperationException();
     }
 
-    @Override
-    public T peek() {
-        return null;
+    public T peek()
+    {
+        return default;
     }
 
-    @Override
-    public string toString() {
-        return typeof(EmptyPriorityQueue).getSimpleName();
+    public IEnumerator<T> GetEnumerator()
+    {
+        return Enumerable.Empty<T>().GetEnumerator();
     }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+
+    public override string ToString()
+    {
+        return typeof(EmptyPriorityQueue<T>).Name;
+    }
+
+    public T[] ToArray()
+    {
+        return Array.Empty<T>();
+    }
+
+    // @Override
+    // public <T1> T1[] toArray(T1[] a) {
+    //     if (a.length > 0) {
+    //         a[0] = null;
+    //     }
+    //     return a;
+    // }
 }

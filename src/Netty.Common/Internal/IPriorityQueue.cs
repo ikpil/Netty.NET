@@ -45,4 +45,6 @@ public interface IPriorityQueue<T> : IEnumerable<T>
      * will be garbage collected after this call.
      */
     void clearIgnoringIndexes();
+    
+    bool isEmpty();
 }
