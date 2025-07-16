@@ -15,16 +15,6 @@
  */
 namespace Netty.NET.Common;
 
-
-
-
-
-
-
-
-
-
-
 /**
  * A utility class that provides various common operations and constants
  * related with {@link Charset} and its relevant classes.

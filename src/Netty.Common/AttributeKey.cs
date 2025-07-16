@@ -13,54 +13,54 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common;
 
 /**
- * Key which can be used to access {@link Attribute} out of the {@link AttributeMap}. Be aware that it is not be
+ * Key which can be used to access {@link IAttribute} out of the {@link IAttributeMap}. Be aware that it is not be
  * possible to have multiple keys with the same name.
  *
- * @param <T>   the type of the {@link Attribute} which can be accessed via this {@link AttributeKey}.
+ * @param <T>   the type of the {@link IAttribute} which can be accessed via this {@link AttributeKey}.
  */
-@SuppressWarnings("UnusedDeclaration") // 'T' is used only at compile time
-public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
-
-    private static readonly ConstantPool<AttributeKey<object>> pool = new ConstantPool<AttributeKey<object>>() {
-        @Override
-        protected AttributeKey<object> newConstant(int id, string name) {
-            return new AttributeKey<object>(id, name);
-        }
-    };
+//@SuppressWarnings("UnusedDeclaration") // 'T' is used only at compile time
+public class AttributeKey<T> : AbstractConstant<AttributeKey<T>>
+{
+    private static readonly ConstantPool<AttributeKey<T>> _pool = new AttributeConstantPool<T>();
 
     /**
      * Returns the singleton instance of the {@link AttributeKey} which has the specified {@code name}.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> AttributeKey<T> valueOf(string name) {
-        return (AttributeKey<T>) pool.valueOf(name);
+    public static AttributeKey<T> valueOf(string name)
+    {
+        return _pool.valueOf(name);
     }
 
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
      */
-    public static bool exists(string name) {
-        return pool.exists(name);
+    public static bool exists(string name)
+    {
+        return _pool.exists(name);
     }
 
     /**
      * Creates a new {@link AttributeKey} for the given {@code name} or fail with an
      * {@link ArgumentException} if a {@link AttributeKey} for the given {@code name} exists.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> AttributeKey<T> newInstance(string name) {
-        return (AttributeKey<T>) pool.newInstance(name);
+    public static AttributeKey<T> newInstance(string name)
+    {
+        return _pool.newInstance(name);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> AttributeKey<T> valueOf(Type firstNameComponent, string secondNameComponent) {
-        return (AttributeKey<T>) pool.valueOf(firstNameComponent, secondNameComponent);
+    public static AttributeKey<T> valueOf(Type firstNameComponent, string secondNameComponent)
+    {
+        return _pool.valueOf(firstNameComponent, secondNameComponent);
     }
 
-    private AttributeKey(int id, string name) {
-        super(id, name);
+    internal AttributeKey(int id, string name)
+        : base(id, name)
+    {
     }
 }

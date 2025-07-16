@@ -13,22 +13,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common;
 
 /**
- * Holds {@link Attribute}s which can be accessed via {@link AttributeKey}.
+ * Holds {@link IAttribute}s which can be accessed via {@link AttributeKey}.
  *
  * Implementations must be Thread-safe.
  */
-public interface AttributeMap {
+public interface IAttributeMap
+{
     /**
-     * Get the {@link Attribute} for the given {@link AttributeKey}. This method will never return null, but may return
-     * an {@link Attribute} which does not have a value set yet.
+     * Get the {@link IAttribute} for the given {@link AttributeKey}. This method will never return null, but may return
+     * an {@link IAttribute} which does not have a value set yet.
      */
-    <T> Attribute<T> attr(AttributeKey<T> key);
+    IAttribute<T> attr<T>(AttributeKey<T> key) where T : class;
 
     /**
-     * Returns {@code true} if and only if the given {@link Attribute} exists in this {@link AttributeMap}.
+     * Returns {@code true} if and only if the given {@link IAttribute} exists in this {@link IAttributeMap}.
      */
-    <T> bool hasAttr(AttributeKey<T> key);
+    bool hasAttr<T>(AttributeKey<T> key) where T : class;
 }

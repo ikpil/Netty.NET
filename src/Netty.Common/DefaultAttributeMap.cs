@@ -16,17 +16,13 @@
 namespace Netty.NET.Common;
 
 
-
-
-
-
-
 /**
- * Default {@link AttributeMap} implementation which not exibit any blocking behaviour on attribute lookup while using a
+ * Default {@link IAttributeMap} implementation which not exibit any blocking behaviour on attribute lookup while using a
  * copy-on-write approach on the modify path.<br> Attributes lookup and remove exibit {@code O(logn)} time worst-case
  * complexity, hence {@code attribute::set(null)} is to be preferred to {@code remove}.
  */
-public class DefaultAttributeMap : AttributeMap {
+public class DefaultAttributeMap : IAttributeMap 
+{
 
     private static readonly AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultAttributeMap), DefaultAttribute[].class, "attributes");
@@ -85,7 +81,7 @@ public class DefaultAttributeMap : AttributeMap {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> Attribute<T> attr(AttributeKey<T> key) {
+    public <T> IAttribute<T> attr(AttributeKey<T> key) {
         ObjectUtil.checkNotNull(key, "key");
         DefaultAttribute newAttribute = null;
         for (;;) {
@@ -154,7 +150,7 @@ public class DefaultAttributeMap : AttributeMap {
     }
 
     @SuppressWarnings("serial")
-    private static readonly class DefaultAttribute<T> extends AtomicReference<T> : Attribute<T> {
+    private static readonly class DefaultAttribute<T> extends AtomicReference<T> : IAttribute<T> {
 
         private static readonly AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
                 AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultAttribute),

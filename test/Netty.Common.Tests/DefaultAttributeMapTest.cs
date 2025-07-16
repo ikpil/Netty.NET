@@ -31,7 +31,7 @@ public class DefaultAttributeMapTest {
     @Test
     public void testGetSetString() {
         AttributeKey<String> key = AttributeKey.valueOf("Nothing");
-        Attribute<String> one = map.attr(key);
+        IAttribute<String> one = map.attr(key);
 
         assertSame(one, map.attr(key));
 
@@ -48,7 +48,7 @@ public class DefaultAttributeMapTest {
     @Test
     public void testGetSetInt() {
         AttributeKey<Integer> key = AttributeKey.valueOf("Nada");
-        Attribute<Integer> one = map.attr(key);
+        IAttribute<Integer> one = map.attr(key);
 
         assertSame(one, map.attr(key));
 
@@ -67,11 +67,11 @@ public class DefaultAttributeMapTest {
     public void testSetRemove() {
         AttributeKey<Integer> key = AttributeKey.valueOf("key");
 
-        Attribute<Integer> attr = map.attr(key);
+        IAttribute<Integer> attr = map.attr(key);
         attr.set(1);
         assertSame(1, attr.getAndRemove());
 
-        Attribute<Integer> attr2 = map.attr(key);
+        IAttribute<Integer> attr2 = map.attr(key);
         attr2.set(2);
         assertSame(2, attr2.get());
         assertNotSame(attr, attr2);
@@ -107,11 +107,11 @@ public class DefaultAttributeMapTest {
     public void testGetAndSetWithNull() {
         AttributeKey<Integer> key = AttributeKey.valueOf("key");
 
-        Attribute<Integer> attr = map.attr(key);
+        IAttribute<Integer> attr = map.attr(key);
         attr.set(1);
         assertSame(1, attr.getAndSet(null));
 
-        Attribute<Integer> attr2 = map.attr(key);
+        IAttribute<Integer> attr2 = map.attr(key);
         attr2.set(2);
         assertSame(2, attr2.get());
         assertSame(attr, attr2);
