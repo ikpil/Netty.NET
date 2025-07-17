@@ -13,7 +13,53 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Security;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Internal;
+
+public interface ICleaner
+{
+    ICleanableDirectBuffer allocate(int capacity);
+    void freeDirectBuffer(ByteBuffer buffer);
+}
+
+public class NoopCleaner : ICleaner
+{
+    public ICleanableDirectBuffer allocate(int capacity) 
+    {
+        return new ICleanableDirectBuffer() 
+        {
+            private readonly ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity);
+
+            @Override
+            public ByteBuffer buffer() {
+                return byteBuffer;
+            }
+
+            @Override
+            public void clean() {
+                // NOOP
+            }
+        };
+    }
+
+    public void freeDirectBuffer(ByteBuffer buffer) {
+        // NOOP
+    }
+}
 
 /**
  * Utility that detects various properties specific to the current runtime
@@ -23,11 +69,11 @@ namespace Netty.NET.Common.Internal;
  * You can disable the use of {@code sun.misc.Unsafe} if you specify
  * the system property <strong>io.netty.noUnsafe</strong>.
  */
-public final class PlatformDependent {
-
+public class PlatformDependent 
+{
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent));
 
-    private static Pattern MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
+    private static Regex MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
     private static readonly bool MAYBE_SUPER_USER;
 
     private static readonly bool CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !isAndroid();
@@ -60,9 +106,9 @@ public final class PlatformDependent {
     private static readonly bool USE_DIRECT_BUFFER_NO_CLEANER;
     private static readonly AtomicLong DIRECT_MEMORY_COUNTER;
     private static readonly long DIRECT_MEMORY_LIMIT;
-    private static readonly Cleaner CLEANER;
-    private static readonly Cleaner DIRECT_CLEANER;
-    private static readonly Cleaner LEGACY_CLEANER;
+    private static readonly ICleaner CLEANER;
+    private static readonly ICleaner DIRECT_CLEANER;
+    private static readonly ICleaner LEGACY_CLEANER;
     private static readonly bool HAS_ALLOCATE_UNINIT_ARRAY;
     private static readonly string LINUX_ID_PREFIX = "ID=";
     private static readonly string LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
@@ -70,31 +116,10 @@ public final class PlatformDependent {
 
     private static readonly bool JFR;
 
-    private static readonly Cleaner NOOP = new Cleaner() {
-        @Override
-        public CleanableDirectBuffer allocate(int capacity) {
-            return new CleanableDirectBuffer() {
-                private readonly ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity);
+    private static readonly ICleaner NOOP = new NoopCleaner();
 
-                @Override
-                public ByteBuffer buffer() {
-                    return byteBuffer;
-                }
-
-                @Override
-                public void clean() {
-                    // NOOP
-                }
-            };
-        }
-
-        @Override
-        public void freeDirectBuffer(ByteBuffer buffer) {
-            // NOOP
-        }
-    };
-
-    static {
+    static PlatformDependent()
+    {
         // Here is how the system property is used:
         //
         // * <  0  - Don't use cleaner, and inherit max direct memory from java. In this case the
@@ -176,7 +201,7 @@ public final class PlatformDependent {
                     "instability.");
         }
 
-        final ISet<string> availableClassifiers = new LinkedHashSet<>();
+        ISet<string> availableClassifiers = new LinkedHashSet<>();
 
         if (!addPropertyOsClassifiers(availableClassifiers)) {
             addFilesystemOsClassifiers(availableClassifiers);
@@ -379,7 +404,7 @@ public final class PlatformDependent {
     /**
      * Return {@code true} if the selected cleaner can free direct buffers in a controlled way. This guarantee only
      * applies for buffers allocated via {@link #allocateDirect(int)} and when using the {@code clean} method of the
-     * returned {@link CleanableDirectBuffer}.
+     * returned {@link ICleanableDirectBuffer}.
      */
     public static bool canReliabilyFreeDirectBuffers() {
         return CLEANER != NOOP;
@@ -448,7 +473,7 @@ public final class PlatformDependent {
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     @Deprecated
-    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap() {
+    public static <K, V> ConcurrentDictionary<,> K, V> newConcurrentHashMap() {
         return new ConcurrentDictionary<>();
     }
 
@@ -492,9 +517,9 @@ public final class PlatformDependent {
     /**
      * Allocate a direct {@link ByteBuffer} of the given capacity, and return it alongside its deallocation mechanism.
      * @param capacity The desired capacity of the direct byte buffer.
-     * @return The {@link CleanableDirectBuffer} instance that contain the buffer and its deallocation mechanism.
+     * @return The {@link ICleanableDirectBuffer} instance that contain the buffer and its deallocation mechanism.
      */
-    public static CleanableDirectBuffer allocateDirect(int capacity) {
+    public static ICleanableDirectBuffer allocateDirect(int capacity) {
         return CLEANER.allocate(capacity);
     }
 
@@ -502,7 +527,7 @@ public final class PlatformDependent {
      * Try to deallocate the specified direct {@link ByteBuffer}. Please note this method does nothing if
      * the current platform does not support this operation or the specified buffer is not a direct buffer.
      *
-     * @deprecated Use the {@link CleanableDirectBuffer#clean()} from {@link #allocateDirect(int)} instead.
+     * @deprecated Use the {@link ICleanableDirectBuffer#clean()} from {@link #allocateDirect(int)} instead.
      */
     @Deprecated
     public static void freeDirectBuffer(ByteBuffer buffer) {
@@ -778,11 +803,11 @@ public final class PlatformDependent {
     }
 
     /**
-     * Allocate a new {@link ByteBuffer} with the given {@code capacity}, inside a {@link CleanableDirectBuffer}.
-     * The {@link ByteBuffer} <strong>MUST</strong> be deallocated via the {@link CleanableDirectBuffer#clean()}
-     * of the returned {@link CleanableDirectBuffer} object.
+     * Allocate a new {@link ByteBuffer} with the given {@code capacity}, inside a {@link ICleanableDirectBuffer}.
+     * The {@link ByteBuffer} <strong>MUST</strong> be deallocated via the {@link ICleanableDirectBuffer#clean()}
+     * of the returned {@link ICleanableDirectBuffer} object.
      */
-    public static CleanableDirectBuffer allocateDirectBufferNoCleaner(int capacity) {
+    public static ICleanableDirectBuffer allocateDirectBufferNoCleaner(int capacity) {
         assert USE_DIRECT_BUFFER_NO_CLEANER;
         return DIRECT_CLEANER.allocate(capacity);
     }
@@ -807,12 +832,12 @@ public final class PlatformDependent {
 
     /**
      * Reallocate a new {@link ByteBuffer} with the given {@code capacity}.
-     * The {@link ByteBuffer} is given as wrapped in its associated {@link CleanableDirectBuffer},
-     * and a new {@link CleanableDirectBuffer} instance will be returned.
+     * The {@link ByteBuffer} is given as wrapped in its associated {@link ICleanableDirectBuffer},
+     * and a new {@link ICleanableDirectBuffer} instance will be returned.
      * The {@link ByteBuffer}s reallocated with this method <strong>MUST</strong> be deallocated
-     * via the {@link CleanableDirectBuffer#clean()} method on the returned object.
+     * via the {@link ICleanableDirectBuffer#clean()} method on the returned object.
      */
-    public static CleanableDirectBuffer reallocateDirectBufferNoCleaner(CleanableDirectBuffer buffer, int capacity) {
+    public static ICleanableDirectBuffer reallocateDirectBufferNoCleaner(ICleanableDirectBuffer buffer, int capacity) {
         assert USE_DIRECT_BUFFER_NO_CLEANER;
         return ((DirectCleaner) DIRECT_CLEANER).reallocate(buffer, capacity);
     }

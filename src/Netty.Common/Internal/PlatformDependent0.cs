@@ -589,7 +589,7 @@ public class PlatformDependent0 {
         throw (E) t;
     }
 
-    static bool hasDirectBufferNoCleanerConstructor() {
+    public static bool hasDirectBufferNoCleanerConstructor() {
         return DIRECT_BUFFER_CONSTRUCTOR != null;
     }
 

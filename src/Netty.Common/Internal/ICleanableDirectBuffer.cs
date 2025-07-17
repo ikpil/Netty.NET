@@ -20,7 +20,8 @@ namespace Netty.NET.Common.Internal;
 /**
  * Encapsulates a direct {@link ByteBuffer} and its mechanism for immediate deallocation, if any.
  */
-public interface CleanableDirectBuffer {
+public interface ICleanableDirectBuffer 
+{
     /**
      * Get the buffer instance.
      * <p>
