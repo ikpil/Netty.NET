@@ -33,33 +33,9 @@ namespace Netty.NET.Common.Internal;
 public interface ICleaner
 {
     ICleanableDirectBuffer allocate(int capacity);
-    void freeDirectBuffer(ByteBuffer buffer);
+    void freeDirectBuffer(ArraySegment<byte> buffer);
 }
 
-public class NoopCleaner : ICleaner
-{
-    public ICleanableDirectBuffer allocate(int capacity) 
-    {
-        return new ICleanableDirectBuffer() 
-        {
-            private readonly ByteBuffer byteBuffer = ByteBuffer.allocateDirect(capacity);
-
-            @Override
-            public ByteBuffer buffer() {
-                return byteBuffer;
-            }
-
-            @Override
-            public void clean() {
-                // NOOP
-            }
-        };
-    }
-
-    public void freeDirectBuffer(ByteBuffer buffer) {
-        // NOOP
-    }
-}
 
 /**
  * Utility that detects various properties specific to the current runtime
@@ -816,7 +792,7 @@ public class PlatformDependent
      * Reallocate a new {@link ByteBuffer} with the given {@code capacity}. {@link ByteBuffer}s reallocated with
      * this method <strong>MUST</strong> be deallocated via {@link #freeDirectNoCleaner(ByteBuffer)}.
      */
-    public static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity) {
+    public static ArraySegment<byte> reallocateDirectNoCleaner(ArraySegment<byte> buffer, int capacity) {
         assert USE_DIRECT_BUFFER_NO_CLEANER;
 
         int len = capacity - buffer.capacity();
@@ -846,7 +822,7 @@ public class PlatformDependent
      * This method <strong>MUST</strong> only be called for {@link ByteBuffer}s that were allocated via
      * {@link #allocateDirectNoCleaner(int)}.
      */
-    public static void freeDirectNoCleaner(ByteBuffer buffer) {
+    public static void freeDirectNoCleaner(ArraySegment<byte> buffer) {
         assert USE_DIRECT_BUFFER_NO_CLEANER;
 
         int capacity = buffer.capacity();

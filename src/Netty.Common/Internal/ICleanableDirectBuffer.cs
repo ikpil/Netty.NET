@@ -13,14 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Internal;
-
-
 
 /**
  * Encapsulates a direct {@link ByteBuffer} and its mechanism for immediate deallocation, if any.
  */
-public interface ICleanableDirectBuffer 
+public interface ICleanableDirectBuffer
 {
     /**
      * Get the buffer instance.
@@ -29,7 +30,7 @@ public interface ICleanableDirectBuffer
      *
      * @return The {@link ByteBuffer} instance.
      */
-    ByteBuffer buffer();
+    ArraySegment<byte> buffer();
 
     /**
      * Deallocate the buffer. This method can only be called once per instance,
@@ -42,7 +43,8 @@ public interface ICleanableDirectBuffer
      * @return {@code true} if the {@linkplain #memoryAddress() native memory address} is available,
      * otherwise {@code false}.
      */
-    default bool hasMemoryAddress() {
+    bool hasMemoryAddress()
+    {
         return false;
     }
 
@@ -51,7 +53,8 @@ public interface ICleanableDirectBuffer
      * otherwise this may return an unspecified value or throw an exception.
      * @return The native memory address of this buffer, if available.
      */
-    default long memoryAddress() {
+    long memoryAddress()
+    {
         return 0;
     }
 }
