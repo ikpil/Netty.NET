@@ -13,16 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
  * Similar to {@link java.util.concurrent.RejectedExecutionHandler} but specific to {@link SingleThreadEventExecutor}.
  */
-public interface RejectedExecutionHandler {
-
+public interface RejectedExecutionHandler
+{
     /**
      * Called when someone tried to add a task to {@link SingleThreadEventExecutor} but this failed due capacity
      * restrictions.
      */
-    void rejected(Runnable task, SingleThreadEventExecutor executor);
+    void rejected(IRunnable task, SingleThreadEventExecutor executor);
 }
