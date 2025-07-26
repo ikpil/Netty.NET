@@ -16,11 +16,6 @@
 
 namespace Netty.NET.Common.Concurrent;
 
-
-
-
-
-
 /**
  * @deprecated Use {@link PromiseCombiner#PromiseCombiner(IEventExecutor)}.
  *

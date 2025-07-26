@@ -13,34 +13,55 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Reflection;
+using System.Security;
+
 namespace Netty.NET.Common.Internal;
 
 /**
  * Utility which ensures that classes are loaded by the {@link ClassLoader}.
  */
-public final class ClassInitializerUtil {
-
-    private ClassInitializerUtil() { }
-
+public static class ClassInitializerUtil
+{
     /**
      * Preload the given classes and so ensure the {@link ClassLoader} has these loaded after this method call.
      *
      * @param loadingClass      the {@link Class} that wants to load the classes.
      * @param classes           the classes to load.
      */
-    public static void tryLoadClasses(Type loadingClass, Type... classes) {
-        ClassLoader loader = PlatformDependent.getClassLoader(loadingClass);
-        for (Type clazz: classes) {
-            tryLoadClass(loader, clazz.getName());
+    public static void tryLoadClasses(Type loadingType, params Type[] classes)
+    {
+        if (loadingType == null)
+            throw new ArgumentNullException(nameof(loadingType));
+
+        Assembly assembly = loadingType.Assembly;
+        foreach (Type type in classes)
+        {
+            tryLoadType(assembly, type.FullName);
         }
     }
 
-    private static void tryLoadClass(ClassLoader classLoader, string className) {
-        try {
-            // Load the class and also ensure we init it which means its linked etc.
-            Class.forName(className, true, classLoader);
-        } catch (ClassNotFoundException | SecurityException ignore) {
-            // Ignore
+    private static void tryLoadType(Assembly assembly, string typeName)
+    {
+        try
+        {
+            // Load the type and ensure it is initialized
+            Type type = assembly.GetType(typeName, throwOnError: false, ignoreCase: false);
+            if (type != null)
+            {
+                // Accessing Type.TypeInitializer ensures the type is initialized (similar to Class.forName with initialize=true)
+                _ = type.TypeInitializer;
+            }
+        }
+        catch (TypeLoadException)
+        {
+            // Ignore type loading failures
+        }
+        catch (SecurityException)
+        {
+            // Ignore security-related failures
         }
     }
 }

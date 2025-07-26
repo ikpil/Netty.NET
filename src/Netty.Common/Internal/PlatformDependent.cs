@@ -1112,7 +1112,7 @@ public class PlatformDependent
     /**
      * Return the {@link ClassLoader} for the given {@link Class}.
      */
-    public static ClassLoader getClassLoader(final Type clazz) {
+    public static ClassLoader getClassLoader(Type clazz) {
         return PlatformDependent0.getClassLoader(clazz);
     }
 

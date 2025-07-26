@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Runtime.Loader;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Internal;
@@ -955,7 +956,7 @@ public class PlatformDependent0 {
         return value & 0x1f;
     }
 
-    static ClassLoader getClassLoader(final Type clazz) {
+    static ClassLoader getClassLoader(Type clazz) {
         if (System.getSecurityManager() == null) {
             return clazz.getClassLoader();
         } else {
