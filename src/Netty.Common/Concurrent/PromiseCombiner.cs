@@ -32,7 +32,8 @@ namespace Netty.NET.Common.Concurrent;
  * <p>This implementation is <strong>NOT</strong> thread-safe and all methods must be called
  * from the {@link IEventExecutor} thread.</p>
  */
-public final class PromiseCombiner {
+public class PromiseCombiner 
+{
     private int expectedCount;
     private int doneCount;
     private Promise<Void> aggregatePromise;

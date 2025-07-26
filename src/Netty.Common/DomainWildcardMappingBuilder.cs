@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common;
 
@@ -25,10 +25,10 @@ namespace Netty.NET.Common;
  * <a href="https://tools.ietf.org/search/rfc6125#section-6.4">DNS wildcard</a> matching.
  * @param <V> the type of the value that we map to.
  */
-public class DomainWildcardMappingBuilder<V> {
-
-    private readonly V defaultValue;
-    private readonly IDictionary<string, V> map;
+public class DomainWildcardMappingBuilder<T>
+{
+    private readonly T defaultValue;
+    private readonly IDictionary<string, T> map;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
@@ -36,8 +36,9 @@ public class DomainWildcardMappingBuilder<V> {
      * @param defaultValue the default value for {@link Mapping#map(object)} )} to return
      *                     when nothing matches the input
      */
-    public DomainWildcardMappingBuilder(V defaultValue) {
-        this(4, defaultValue);
+    public DomainWildcardMappingBuilder(T defaultValue)
+        : this(4, defaultValue)
+    {
     }
 
     /**
@@ -47,9 +48,10 @@ public class DomainWildcardMappingBuilder<V> {
      * @param defaultValue    the default value for {@link Mapping#map(object)} to return
      *                        when nothing matches the input
      */
-    public DomainWildcardMappingBuilder(int initialCapacity, V defaultValue) {
+    public DomainWildcardMappingBuilder(int initialCapacity, T defaultValue)
+    {
         this.defaultValue = checkNotNull(defaultValue, "defaultValue");
-        map = new LinkedHashMap<string, V>(initialCapacity);
+        map = new LinkedHashMap<string, T>(initialCapacity);
     }
 
     /**
@@ -69,91 +71,42 @@ public class DomainWildcardMappingBuilder<V> {
      * @param output   the output value that will be returned by {@link Mapping#map(object)}
      *                 when the specified host name matches the specified input host name
      */
-    public DomainWildcardMappingBuilder<V> add(string hostname, V output) {
-        map.put(normalizeHostName(hostname),
-                checkNotNull(output, "output"));
+    public DomainWildcardMappingBuilder<T> add(string hostname, T output)
+    {
+        map.Add(normalizeHostName(hostname),
+            checkNotNull(output, "output"));
         return this;
     }
 
-    private string normalizeHostName(string hostname) {
+    private string normalizeHostName(string hostname)
+    {
         checkNotNull(hostname, "hostname");
-        if (hostname.isEmpty() || hostname.charAt(0) == '.') {
+        if (string.IsNullOrEmpty(hostname) || hostname[0] == '.')
+        {
             throw new ArgumentException("Hostname '" + hostname + "' not valid");
         }
-        hostname = ImmutableDomainWildcardMapping.normalize(checkNotNull(hostname, "hostname"));
-        if (hostname.charAt(0) == '*') {
-            if (hostname.length() < 3 || hostname.charAt(1) != '.') {
+
+        hostname = ImmutableDomainWildcardMapping<T>.normalize(checkNotNull(hostname, "hostname"));
+        if (hostname[0] == '*')
+        {
+            if (hostname.Length < 3 || hostname[1] != '.')
+            {
                 throw new ArgumentException("Wildcard Hostname '" + hostname + "'not valid");
             }
-            return hostname.substring(1);
+
+            return hostname.Substring(1);
         }
+
         return hostname;
     }
+
     /**
      * Creates a new instance of an immutable {@link Mapping}.
      *
      * @return new {@link Mapping} instance
      */
-    public IMapping<string, V> build() {
-        return new ImmutableDomainWildcardMapping<V>(defaultValue, map);
-    }
-
-    private static readonly class ImmutableDomainWildcardMapping<V> : IMapping<string, V> {
-        private static readonly string REPR_HEADER = "ImmutableDomainWildcardMapping(default: ";
-        private static readonly string REPR_MAP_OPENING = ", map: ";
-        private static readonly string REPR_MAP_CLOSING = ")";
-
-        private readonly V defaultValue;
-        private readonly IDictionary<string, V> map;
-
-        ImmutableDomainWildcardMapping(V defaultValue, IDictionary<string, V> map) {
-            this.defaultValue = defaultValue;
-            this.map = new LinkedHashMap<string, V>(map);
-        }
-
-        @Override
-        public V map(string hostname) {
-            if (hostname != null) {
-                hostname = normalize(hostname);
-
-                // Let's try an exact match first
-                V value = map.get(hostname);
-                if (value != null) {
-                    return value;
-                }
-
-                // No exact match, let's try a wildcard match.
-                int idx = hostname.indexOf('.');
-                if (idx != -1) {
-                    value = map.get(hostname.substring(idx));
-                    if (value != null) {
-                        return value;
-                    }
-                }
-            }
-
-            return defaultValue;
-        }
-
-        @SuppressWarnings("deprecation")
-        static string normalize(string hostname) {
-            return DomainNameMapping.normalizeHostname(hostname);
-        }
-
-        @Override
-        public string toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append(REPR_HEADER).append(defaultValue).append(REPR_MAP_OPENING).append('{');
-
-            for (Map.Entry<string, V> entry : map.entrySet()) {
-                string hostname = entry.getKey();
-                if (hostname.charAt(0) == '.') {
-                    hostname = '*' + hostname;
-                }
-                sb.append(hostname).append('=').append(entry.getValue()).append(", ");
-            }
-            sb.setLength(sb.length() - 2);
-            return sb.append('}').append(REPR_MAP_CLOSING).toString();
-        }
+    public IMapping<string, T> build()
+    {
+        return new ImmutableDomainWildcardMapping<T>(defaultValue, map);
     }
 }

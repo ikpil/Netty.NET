@@ -22,10 +22,9 @@ namespace Netty.NET.Common;
  * @param <V> concrete type of value objects
  * @deprecated Use {@link DomainWildcardMappingBuilder} instead.
  */
-@Deprecated
-public final class DomainMappingBuilder<V> {
-
-    private readonly DomainNameMappingBuilder<V> builder;
+public class DomainMappingBuilder<T>
+{
+    private readonly DomainNameMappingBuilder<T> builder;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
@@ -33,8 +32,9 @@ public final class DomainMappingBuilder<V> {
      * @param defaultValue the default value for {@link DomainNameMapping#map(string)} to return
      *                     when nothing matches the input
      */
-    public DomainMappingBuilder(V defaultValue) {
-        builder = new DomainNameMappingBuilder<V>(defaultValue);
+    public DomainMappingBuilder(T defaultValue)
+    {
+        builder = new DomainNameMappingBuilder<T>(defaultValue);
     }
 
     /**
@@ -44,8 +44,9 @@ public final class DomainMappingBuilder<V> {
      * @param defaultValue    the default value for {@link DomainNameMapping#map(string)} to return
      *                        when nothing matches the input
      */
-    public DomainMappingBuilder(int initialCapacity, V defaultValue) {
-        builder = new DomainNameMappingBuilder<V>(initialCapacity, defaultValue);
+    public DomainMappingBuilder(int initialCapacity, T defaultValue)
+    {
+        builder = new DomainNameMappingBuilder<T>(initialCapacity, defaultValue);
     }
 
     /**
@@ -60,7 +61,8 @@ public final class DomainMappingBuilder<V> {
      * @param output   the output value that will be returned by {@link DomainNameMapping#map(string)}
      *                 when the specified host name matches the specified input host name
      */
-    public DomainMappingBuilder<V> add(string hostname, V output) {
+    public DomainMappingBuilder<T> add(string hostname, T output)
+    {
         builder.add(hostname, output);
         return this;
     }
@@ -71,7 +73,8 @@ public final class DomainMappingBuilder<V> {
      *
      * @return new {@link DomainNameMapping} instance
      */
-    public DomainNameMapping<V> build() {
+    public DomainNameMapping<T> build()
+    {
         return builder.build();
     }
 }

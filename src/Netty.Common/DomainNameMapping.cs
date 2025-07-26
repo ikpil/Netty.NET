@@ -15,10 +15,11 @@
  */
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Netty.NET.Common.Internal;
+using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common;
-
 
 /**
  * Maps a domain name to its associated value object.
@@ -28,12 +29,11 @@ namespace Netty.NET.Common;
  * </p>
  * @deprecated Use {@link DomainWildcardMappingBuilder}}
  */
-@Deprecated
-public class DomainNameMapping<V> : IMapping<string, V> {
-
-    final V defaultValue;
-    private readonly IDictionary<string, V> map;
-    private readonly IDictionary<string, V> unmodifiableMap;
+public class DomainNameMapping<T> : IMapping<string, T>
+{
+    protected readonly T _defaultValue;
+    private readonly IDictionary<string, T> _map;
+    private readonly IDictionary<string, T> _unmodifiableMap;
 
     /**
      * Creates a default, order-sensitive mapping. If your hostnames are in conflict, the mapping
@@ -42,9 +42,9 @@ public class DomainNameMapping<V> : IMapping<string, V> {
      * @param defaultValue the default value for {@link #map(string)} to return when nothing matches the input
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
-    @Deprecated
-    public DomainNameMapping(V defaultValue) {
-        this(4, defaultValue);
+    public DomainNameMapping(T defaultValue)
+        : this(4, defaultValue)
+    {
     }
 
     /**
@@ -55,16 +55,18 @@ public class DomainNameMapping<V> : IMapping<string, V> {
      * @param defaultValue    the default value for {@link #map(string)} to return when nothing matches the input
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
-    @Deprecated
-    public DomainNameMapping(int initialCapacity, V defaultValue) {
-        this(new LinkedHashMap<string, V>(initialCapacity), defaultValue);
+    public DomainNameMapping(int initialCapacity, T defaultValue)
+        : this(new LinkedHashMap<string, T>(initialCapacity), defaultValue)
+    {
     }
 
-    DomainNameMapping(IDictionary<string, V> map, V defaultValue) {
-        this.defaultValue = checkNotNull(defaultValue, "defaultValue");
-        this.map = map;
-        unmodifiableMap = map != null ? Collections.unmodifiableMap(map)
-                                      : null;
+    public DomainNameMapping(IDictionary<string, T> map, T defaultValue)
+    {
+        _defaultValue = checkNotNull(defaultValue, "defaultValue");
+        _map = map;
+        _unmodifiableMap = map != null
+            ? new ReadOnlyDictionary<string, T>(map)
+            : null;
     }
 
     /**
@@ -79,67 +81,82 @@ public class DomainNameMapping<V> : IMapping<string, V> {
      *                 matches the specified input host name
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
-    @Deprecated
-    public DomainNameMapping<V> add(string hostname, V output) {
-        map.put(normalizeHostname(checkNotNull(hostname, "hostname")), checkNotNull(output, "output"));
+    public virtual DomainNameMapping<T> add(string hostname, T output)
+    {
+        _map.Add(normalizeHostname(checkNotNull(hostname, "hostname")), checkNotNull(output, "output"));
         return this;
     }
 
     /**
      * Simple function to match <a href="https://en.wikipedia.org/wiki/Wildcard_DNS_record">DNS wildcard</a>.
      */
-    static bool matches(string template, string hostName) {
-        if (template.startsWith("*.")) {
-            return template.regionMatches(2, hostName, 0, hostName.length())
-                || commonSuffixOfLength(hostName, template, template.length() - 1);
+    public static bool matches(string template, string hostName)
+    {
+        if (template.StartsWith("*."))
+        {
+            return template.regionMatches(2, hostName, 0, hostName.Length)
+                   || commonSuffixOfLength(hostName, template, template.Length - 1);
         }
-        return template.equals(hostName);
+
+        return template.Equals(hostName);
     }
 
     /**
      * IDNA ASCII conversion and case normalization
      */
-    static string normalizeHostname(string hostname) {
-        if (needsNormalization(hostname)) {
+    public static string normalizeHostname(string hostname)
+    {
+        if (needsNormalization(hostname))
+        {
             hostname = IDN.toASCII(hostname, IDN.ALLOW_UNASSIGNED);
         }
+
         return hostname.toLowerCase(Locale.US);
     }
 
-    private static bool needsNormalization(string hostname) {
-        final int length = hostname.length();
-        for (int i = 0; i < length; i++) {
-            int c = hostname.charAt(i);
-            if (c > 0x7F) {
+    private static bool needsNormalization(string hostname)
+    {
+        int length = hostname.Length;
+        for (int i = 0; i < length; i++)
+        {
+            int c = hostname[i];
+            if (c > 0x7F)
+            {
                 return true;
             }
         }
+
         return false;
     }
 
-    @Override
-    public V map(string hostname) {
-        if (hostname != null) {
+    public virtual T map(string hostname)
+    {
+        if (hostname != null)
+        {
             hostname = normalizeHostname(hostname);
 
-            for (Map.Entry<string, V> entry : map.entrySet()) {
-                if (matches(entry.getKey(), hostname)) {
-                    return entry.getValue();
+            foreach (var entry in _map)
+            {
+                if (matches(entry.Key, hostname))
+                {
+                    return entry.Value;
                 }
             }
         }
-        return defaultValue;
+
+        return _defaultValue;
     }
 
     /**
      * Returns a read-only {@link Map} of the domain mapping patterns and their associated value objects.
      */
-    public IDictionary<string, V> asMap() {
-        return unmodifiableMap;
+    public virtual IDictionary<string, T> asMap()
+    {
+        return _unmodifiableMap;
     }
 
-    @Override
-    public string toString() {
-        return StringUtil.simpleClassName(this) + "(default: " + defaultValue + ", map: " + map + ')';
+    public override string ToString()
+    {
+        return StringUtil.simpleClassName(this) + "(default: " + _defaultValue + ", map: " + map + ')';
     }
 }
