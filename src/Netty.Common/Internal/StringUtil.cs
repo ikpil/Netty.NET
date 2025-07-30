@@ -13,6 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
+
 namespace Netty.NET.Common.Internal;
 
 
@@ -265,7 +272,7 @@ public final class StringUtil {
      * @return The hexadecimal value represented in the ASCII character
      * given, or {@code -1} if the character is invalid.
      */
-    public static int decodeHexNibble(final byte b) {
+    public static int decodeHexNibble(byte b) {
         // Character.digit() is not used here, as it addresses a larger
         // set of characters (both ASCII and full-width latin letters).
         return HEX2B[b];
@@ -282,6 +289,26 @@ public final class StringUtil {
                     "invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
         }
         return (byte) ((hi << 4) + lo);
+    }
+    
+    public static byte decodeHexByte(string str, int index)
+    {
+        if (index + 1 >= str.Length)
+        {
+            throw new ArgumentException($"Cannot decode hex byte at index {index}, string too short.");
+        }
+
+        char c1 = str[index];
+        char c2 = str[index + 1];
+
+        try
+        {
+            return byte.Parse($"{c1}{c2}", NumberStyles.HexNumber);
+        }
+        catch (FormatException)
+        {
+            throw new ArgumentException($"Invalid hex characters at index {index}: '{c1}{c2}'");
+        }
     }
 
     /**

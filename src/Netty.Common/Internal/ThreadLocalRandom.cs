@@ -20,20 +20,12 @@
  * https://creativecommons.org/publicdomain/zero/1.0/
  */
 
+using System;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Internal;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * A random number generator isolated to the current thread.  Like the
@@ -61,7 +53,7 @@ namespace Netty.NET.Common.Internal;
  */
 @Deprecated
 @SuppressWarnings("all")
-public final class ThreadLocalRandom extends Random {
+public class ThreadLocalRandom : Random {
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ThreadLocalRandom));
 
@@ -74,7 +66,8 @@ public final class ThreadLocalRandom extends Random {
     private static readonly long seedGeneratorStartTime;
     private static volatile long seedGeneratorEndTime;
 
-    static {
+    static ThreadLocalRandom
+    {
         initialSeedUniquifier = SystemPropertyUtil.getLong("io.netty.initialSeedUniquifier", 0);
         if (initialSeedUniquifier == 0) {
             bool secureRandom = SystemPropertyUtil.getBoolean("java.util.secureRandomSeed", false);
