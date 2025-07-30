@@ -15,24 +15,24 @@
  */
 
 using System;
-using System.Security;
 using Netty.NET.Common.Internal.Logging;
+using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common.Internal;
-
 
 /**
  * A collection of utility methods to retrieve and parse the values of the Java system properties.
  */
-public final class SystemPropertyUtil {
-
+public static class SystemPropertyUtil
+{
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SystemPropertyUtil));
 
     /**
      * Returns {@code true} if and only if the system property with the specified {@code key}
      * exists.
      */
-    public static bool contains(string key) {
+    public static bool contains(string key)
+    {
         return get(key) != null;
     }
 
@@ -42,7 +42,8 @@ public final class SystemPropertyUtil {
      *
      * @return the property value or {@code null}
      */
-    public static string get(string key) {
+    public static string get(string key)
+    {
         return get(key, null);
     }
 
@@ -55,27 +56,18 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static string get(final string key, string def) {
+    public static string get(string key, string def)
+    {
         checkNonEmpty(key, "key");
 
         string value = null;
-        try {
-            if (System.getSecurityManager() == null) {
-                value = System.getProperty(key);
-            } else {
-                value = AccessController.doPrivileged(new PrivilegedAction<string>() {
-                    @Override
-                    public string run() {
-                        return System.getProperty(key);
-                    }
-                });
-            }
-        } catch (SecurityException e) {
-            logger.warn("Unable to retrieve a system property '{}'; default values will be used.", key, e);
+        try
+        {
+            value = Environment.GetEnvironmentVariable(key) ?? def;
         }
-
-        if (value == null) {
-            return def;
+        catch (Exception e)
+        {
+            logger.warn($"Unable to retrieve a system property '{key}'; default values will be used.", e);
         }
 
         return value;
@@ -90,29 +82,35 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static bool getBoolean(string key, bool def) {
+    public static bool getBoolean(string key, bool def)
+    {
         string value = get(key);
-        if (value == null) {
+        if (value == null)
+        {
             return def;
         }
 
-        value = value.trim().toLowerCase();
-        if (value.isEmpty()) {
+        value = value.Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(value))
+        {
             return def;
         }
 
-        if ("true".equals(value) || "yes".equals(value) || "1".equals(value)) {
+        if ("true".Equals(value, StringComparison.OrdinalIgnoreCase)
+            || "yes".Equals(value, StringComparison.OrdinalIgnoreCase)
+            || "1".Equals(value, StringComparison.OrdinalIgnoreCase))
+        {
             return true;
         }
 
-        if ("false".equals(value) || "no".equals(value) || "0".equals(value)) {
+        if ("false".Equals(value, StringComparison.OrdinalIgnoreCase)
+            || "no".Equals(value, StringComparison.OrdinalIgnoreCase)
+            || "0".Equals(value, StringComparison.OrdinalIgnoreCase))
+        {
             return false;
         }
 
-        logger.warn(
-                "Unable to parse the bool system property '{}':{} - using the default value: {}",
-                key, value, def
-        );
+        logger.warn($"Unable to parse the bool system property '{key}':{value} - using the default value: {def}");
 
         return def;
     }
@@ -126,23 +124,25 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static int getInt(string key, int def) {
+    public static int getInt(string key, int def)
+    {
         string value = get(key);
-        if (value == null) {
+        if (value == null)
+        {
             return def;
         }
 
-        value = value.trim();
-        try {
-            return int.parseInt(value);
-        } catch (Exception e) {
+        value = value.Trim();
+        try
+        {
+            return int.Parse(value);
+        }
+        catch (Exception e)
+        {
             // Ignore
         }
 
-        logger.warn(
-                "Unable to parse the integer system property '{}':{} - using the default value: {}",
-                key, value, def
-        );
+        logger.warn($"Unable to parse the integer system property '{key}':{value} - using the default value: {def}");
 
         return def;
     }
@@ -156,28 +156,26 @@ public final class SystemPropertyUtil {
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static long getLong(string key, long def) {
+    public static long getLong(string key, long def)
+    {
         string value = get(key);
-        if (value == null) {
+        if (value == null)
+        {
             return def;
         }
 
-        value = value.trim();
-        try {
-            return long.parseLong(value);
-        } catch (Exception e) {
+        value = value.Trim();
+        try
+        {
+            return long.Parse(value);
+        }
+        catch (Exception e)
+        {
             // Ignore
         }
 
-        logger.warn(
-                "Unable to parse the long integer system property '{}':{} - using the default value: {}",
-                key, value, def
-        );
+        logger.warn($"Unable to parse the long integer system property '{key}':{value} - using the default value: {def}");
 
         return def;
-    }
-
-    private SystemPropertyUtil() {
-        // Unused
     }
 }
