@@ -112,11 +112,11 @@ public static class SocketUtils
         return socket.getLocalSocketAddress();
     }
 
-    public static InetAddress addressByName(string hostname)
+    public static IPAddress addressByName(string hostname)
     {
         try
         {
-            return InetAddress.getByName(hostname);
+            return IPAddress.getByName(hostname);
         }
         catch (PrivilegedActionException e)
         {
@@ -124,11 +124,11 @@ public static class SocketUtils
         }
     }
 
-    public static InetAddress[] allAddressesByName(string hostname)
+    public static IPAddress[] allAddressesByName(string hostname)
     {
         try
         {
-            return InetAddress.getAllByName(hostname);
+            return IPAddress.getAllByName(hostname);
         }
         catch (PrivilegedActionException e)
         {

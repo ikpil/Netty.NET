@@ -719,21 +719,21 @@ public class NetUtilTest {
     @Test
     public void testIp6AddressToString() throws UnknownHostException {
         for (Entry<byte[], String> testEntry : ipv6ToAddressStrings.entrySet()) {
-            assertEquals(testEntry.getValue(), toAddressString(InetAddress.getByAddress(testEntry.getKey())));
+            assertEquals(testEntry.getValue(), toAddressString(IPAddress.getByAddress(testEntry.getKey())));
         }
     }
 
     @Test
     public void testIp4AddressToString() throws UnknownHostException {
         for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
-            assertEquals(e.getKey(), toAddressString(InetAddress.getByAddress(unhex(e.getValue()))));
+            assertEquals(e.getKey(), toAddressString(IPAddress.getByAddress(unhex(e.getValue()))));
         }
     }
 
     @Test
     public void testIPv4ToInt() throws UnknownHostException {
-        assertEquals(2130706433, ipv4AddressToInt((Inet4Address) InetAddress.getByName("127.0.0.1")));
-        assertEquals(-1062731519, ipv4AddressToInt((Inet4Address) InetAddress.getByName("192.168.1.1")));
+        assertEquals(2130706433, ipv4AddressToInt((IPAddress) IPAddress.getByName("127.0.0.1")));
+        assertEquals(-1062731519, ipv4AddressToInt((IPAddress) IPAddress.getByName("192.168.1.1")));
     }
 
     @Test
@@ -741,7 +741,7 @@ public class NetUtilTest {
         for (Entry<String, String> testEntry : ipv4MappedToIPv6AddressStrings.entrySet()) {
             String srcIp = testEntry.getKey();
             String dstIp = testEntry.getValue();
-            Inet6Address inet6Address = getByName(srcIp, true);
+            IPAddress inet6Address = getByName(srcIp, true);
             assertNotNull(inet6Address, srcIp + ", " + dstIp);
             assertEquals(dstIp, toAddressString(inet6Address, true), srcIp);
         }
@@ -762,7 +762,7 @@ public class NetUtilTest {
     public void testIp6InetSocketAddressToString() throws UnknownHostException {
         for (Entry<byte[], String> testEntry : ipv6ToAddressStrings.entrySet()) {
             assertEquals('[' + testEntry.getValue() + "]:9999",
-                    toSocketAddressString(new InetSocketAddress(InetAddress.getByAddress(testEntry.getKey()), 9999)));
+                    toSocketAddressString(new InetSocketAddress(IPAddress.getByAddress(testEntry.getKey()), 9999)));
         }
     }
 
@@ -770,7 +770,7 @@ public class NetUtilTest {
     public void testIp4SocketAddressToString() throws UnknownHostException {
         for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
             assertEquals(e.getKey() + ":9999",
-                    toSocketAddressString(new InetSocketAddress(InetAddress.getByAddress(unhex(e.getValue())), 9999)));
+                    toSocketAddressString(new InetSocketAddress(IPAddress.getByAddress(unhex(e.getValue())), 9999)));
         }
     }
 
