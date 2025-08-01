@@ -385,16 +385,17 @@ public static class NetUtil
     /**
      * Converts a 32-bit integer into an IPv4 address.
      */
-    public static string intToIpAddress(int i) {
+    public static string intToIpAddress(int i) 
+    {
         StringBuilder buf = new StringBuilder(15);
-        buf.append(i >> 24 & 0xff);
-        buf.append('.');
-        buf.append(i >> 16 & 0xff);
-        buf.append('.');
-        buf.append(i >> 8 & 0xff);
-        buf.append('.');
-        buf.append(i & 0xff);
-        return buf.toString();
+        buf.Append(i >> 24 & 0xff);
+        buf.Append('.');
+        buf.Append(i >> 16 & 0xff);
+        buf.Append('.');
+        buf.Append(i >> 8 & 0xff);
+        buf.Append('.');
+        buf.Append(i & 0xff);
+        return buf.ToString();
     }
 
     /**
@@ -404,7 +405,7 @@ public static class NetUtil
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
     public static string bytesToIpAddress(byte[] bytes) {
-        return bytesToIpAddress(bytes, 0, bytes.length);
+        return bytesToIpAddress(bytes, 0, bytes.Length);
     }
 
     /**
@@ -417,13 +418,13 @@ public static class NetUtil
         switch (length) {
             case 4: {
                 return new StringBuilder(15)
-                        .append(bytes[offset] & 0xff)
-                        .append('.')
-                        .append(bytes[offset + 1] & 0xff)
-                        .append('.')
-                        .append(bytes[offset + 2] & 0xff)
-                        .append('.')
-                        .append(bytes[offset + 3] & 0xff).toString();
+                        .Append(bytes[offset] & 0xff)
+                        .Append('.')
+                        .Append(bytes[offset + 1] & 0xff)
+                        .Append('.')
+                        .Append(bytes[offset + 2] & 0xff)
+                        .Append('.')
+                        .Append(bytes[offset + 3] & 0xff).ToString();
             }
             case 16:
                 return toAddressString(bytes, offset, false);

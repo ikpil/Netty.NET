@@ -15,7 +15,7 @@
  */
 namespace Netty.NET.Common.Internal;
 
-public final class BoundedInputStream : FilterInputStream {
+public class BoundedInputStream : FilterInputStream {
 
     private readonly int maxBytesRead;
     private int numRead;

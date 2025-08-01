@@ -14,25 +14,29 @@
  * under the License.
  */
 
+using System;
+using System.Collections.Generic;
+
 namespace Netty.NET.Common.Internal;
 
+public class NoopTypeParameterMatcher : TypeParameterMatcher
+{
+    public override bool match(object msg) 
+    {
+        return true;
+    }
 
+}
 
+public abstract class TypeParameterMatcher
+{
+    private static readonly TypeParameterMatcher NOOP = new NoopTypeParameterMatcher();
 
-public abstract class TypeParameterMatcher {
-
-    private static readonly TypeParameterMatcher NOOP = new TypeParameterMatcher() {
-        @Override
-        public bool match(object msg) {
-            return true;
-        }
-    };
-
-    public static TypeParameterMatcher get(final Type parameterType) {
-        final IDictionary<Type, TypeParameterMatcher> getCache =
+    public static TypeParameterMatcher get(Type parameterType) {
+        IDictionary<Type, TypeParameterMatcher> getCache =
                 InternalThreadLocalMap.get().typeParameterMatcherGetCache();
 
-        TypeParameterMatcher matcher = getCache.get(parameterType);
+        getCache.TryGetValue(parameterType, out TypeParameterMatcher matcher);
         if (matcher == null) {
             if (parameterType == typeof(object)) {
                 matcher = NOOP;
