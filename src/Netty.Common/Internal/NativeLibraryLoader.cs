@@ -13,41 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.IO;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Internal;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /**
  * Helper class to load JNI resources.
  *
  */
-public final class NativeLibraryLoader {
+public class NativeLibraryLoader {
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(NativeLibraryLoader));
 
