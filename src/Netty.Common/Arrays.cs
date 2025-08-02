@@ -10,6 +10,11 @@ public static class Arrays
         Array.Fill(src, val);
     }
 
+    public static void fill<T>(T[] src, int fromIndex, int toIndex, T val)
+    {
+        Array.Fill(src, val, fromIndex, toIndex - fromIndex);
+    }
+
     public static T[] copyOf<T>(T[] src, int size)
     {
         var dest = new T[size];

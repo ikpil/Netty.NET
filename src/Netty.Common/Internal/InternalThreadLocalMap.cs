@@ -17,29 +17,29 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Internal;
-
 
 /**
  * The internal data structure that stores the thread-local variables for Netty and all {@link FastThreadLocal}s.
  * Note that this class is for internal use only and is subject to change at any time.  Use {@link FastThreadLocal}
  * unless you know what you are doing.
  */
-public sealed class InternalThreadLocalMap
+internal sealed class InternalThreadLocalMap
 {
-    [ThreadStatic]
-    private static readonly InternalThreadLocalMap slowThreadLocalMap = new InternalThreadLocalMap();
-    
+    [ThreadStatic] private static InternalThreadLocalMap _slowThreadLocalMap;
+
     private static readonly AtomicInteger nextIndex = new AtomicInteger();
+
     // Internal use only.
     public static readonly int VARIABLES_TO_REMOVE_INDEX = nextVariableIndex();
 
     private static readonly int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
+
     private static readonly int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
+
     // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/List.java#l229
     private static readonly int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
 
@@ -50,6 +50,7 @@ public sealed class InternalThreadLocalMap
     private static readonly int STRING_BUILDER_MAX_SIZE;
 
     private static readonly IInternalLogger logger;
+
     /** Internal use only. */
     public static readonly object UNSET = new object();
 
@@ -59,17 +60,17 @@ public sealed class InternalThreadLocalMap
     // Core thread-locals
     private int _futureListenerStackDepth;
     private int _localChannelReaderStackDepth;
-    private IDictionary<Type, bool> _handlerSharableCache;
-    private IDictionary<Type, TypeParameterMatcher> _typeParameterMatcherGetCache;
-    private IDictionary<Type, IDictionary<string, TypeParameterMatcher>> _typeParameterMatcherFindCache;
+    private Dictionary<Type, bool> _handlerSharableCache;
+    private Dictionary<Type, TypeParameterMatcher> _typeParameterMatcherGetCache;
+    private Dictionary<Type, IDictionary<string, TypeParameterMatcher>> _typeParameterMatcherFindCache;
 
     // string-related thread-locals
     private StringBuilder _stringBuilder;
-    private IDictionary<Charset, CharsetEncoder> _charsetEncoderCache;
-    private IDictionary<Charset, CharsetDecoder> _charsetDecoderCache;
+    private Dictionary<Encoding, Encoder> _charsetEncoderCache;
+    private Dictionary<Encoding, Decoder> _charsetDecoderCache;
 
     // List-related thread-locals
-    private List<object> _arrayList;
+    private System.Collections.IList _arrayList;
 
     /** @deprecated These padding fields will be removed in the future. */
     public long rp1, rp2, rp3, rp4, rp5, rp6, rp7, rp8;
@@ -77,9 +78,9 @@ public sealed class InternalThreadLocalMap
     static InternalThreadLocalMap()
     {
         STRING_BUILDER_INITIAL_SIZE =
-                SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.initialSize", 1024);
+            SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.initialSize", 1024);
         STRING_BUILDER_MAX_SIZE =
-                SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.maxSize", 1024 * 4);
+            SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.maxSize", 1024 * 4);
 
         // Ensure the InternalLogger is initialized as last field in this class as InternalThreadLocalMap might be used
         // by the InternalLogger itself. For this its important that all the other static fields are correctly
@@ -90,249 +91,291 @@ public sealed class InternalThreadLocalMap
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.initialSize: {}", STRING_BUILDER_INITIAL_SIZE);
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
     }
-    
-    private InternalThreadLocalMap() {
+
+    private InternalThreadLocalMap()
+    {
         indexedVariables = newIndexedVariableTable();
     }
 
     public static InternalThreadLocalMap getIfSet()
     {
-        return slowThreadLocalMap;
+        return _slowThreadLocalMap;
     }
 
     public static InternalThreadLocalMap get()
     {
-        var ret = slowThreadLocalMap;
+        return slowGet();
+    }
+
+    private static InternalThreadLocalMap slowGet()
+    {
+        InternalThreadLocalMap ret = _slowThreadLocalMap;
         if (ret == null)
         {
-        }
-            
-        // ...?
-        Thread thread = Thread.currentThread();
-        if (thread instanceof FastThreadLocalThread) {
-            return fastGet((FastThreadLocalThread) thread);
-        } else {
-            return slowGet();
-        }
-    }
-
-    private static InternalThreadLocalMap fastGet(FastThreadLocalThread thread) {
-        InternalThreadLocalMap threadLocalMap = thread.threadLocalMap();
-        if (threadLocalMap == null) {
-            thread.setThreadLocalMap(threadLocalMap = new InternalThreadLocalMap());
-        }
-        return threadLocalMap;
-    }
-
-    private static InternalThreadLocalMap slowGet() {
-        InternalThreadLocalMap ret = slowThreadLocalMap.get();
-        if (ret == null) {
             ret = new InternalThreadLocalMap();
-            slowThreadLocalMap.set(ret);
+            _slowThreadLocalMap = ret;
         }
+
         return ret;
     }
 
-    public static void remove() {
-        Thread thread = Thread.currentThread();
-        if (thread instanceof FastThreadLocalThread) {
-            ((FastThreadLocalThread) thread).setThreadLocalMap(null);
-        } else {
-            slowThreadLocalMap.remove();
-        }
+    public static void remove()
+    {
+        _slowThreadLocalMap = null;
     }
 
-    public static void destroy() {
-        slowThreadLocalMap.remove();
+    public static void destroy()
+    {
+        _slowThreadLocalMap = null;
     }
 
-    public static int nextVariableIndex() 
+    public static int nextVariableIndex()
     {
         int index = nextIndex.getAndIncrement();
-        if (index >= ARRAY_LIST_CAPACITY_MAX_SIZE || index < 0) {
+        if (index >= ARRAY_LIST_CAPACITY_MAX_SIZE || index < 0)
+        {
             nextIndex.set(ARRAY_LIST_CAPACITY_MAX_SIZE);
             throw new InvalidOperationException("too many thread-local indexed variables");
         }
+
         return index;
     }
 
-    public static int lastVariableIndex() {
+    public static int lastVariableIndex()
+    {
         return nextIndex.get() - 1;
     }
 
 
-    private static object[] newIndexedVariableTable() {
+    private static object[] newIndexedVariableTable()
+    {
         object[] array = new object[INDEXED_VARIABLE_TABLE_INITIAL_SIZE];
         Arrays.fill(array, UNSET);
         return array;
     }
 
-    public int size() {
+    public int size()
+    {
         int count = 0;
 
-        if (_futureListenerStackDepth != 0) {
-            count ++;
+        if (_futureListenerStackDepth != 0)
+        {
+            count++;
         }
-        if (_localChannelReaderStackDepth != 0) {
-            count ++;
+
+        if (_localChannelReaderStackDepth != 0)
+        {
+            count++;
         }
-        if (_handlerSharableCache != null) {
-            count ++;
+
+        if (_handlerSharableCache != null)
+        {
+            count++;
         }
-        if (_typeParameterMatcherGetCache != null) {
-            count ++;
+
+        if (_typeParameterMatcherGetCache != null)
+        {
+            count++;
         }
-        if (_typeParameterMatcherFindCache != null) {
-            count ++;
+
+        if (_typeParameterMatcherFindCache != null)
+        {
+            count++;
         }
-        if (_stringBuilder != null) {
-            count ++;
+
+        if (_stringBuilder != null)
+        {
+            count++;
         }
-        if (_charsetEncoderCache != null) {
-            count ++;
+
+        if (_charsetEncoderCache != null)
+        {
+            count++;
         }
-        if (_charsetDecoderCache != null) {
-            count ++;
+
+        if (_charsetDecoderCache != null)
+        {
+            count++;
         }
-        if (_arrayList != null) {
-            count ++;
+
+        if (_arrayList != null)
+        {
+            count++;
         }
 
         object v = indexedVariable(VARIABLES_TO_REMOVE_INDEX);
-        if (v != null && v != InternalThreadLocalMap.UNSET) {
+        if (v != null && v != UNSET)
+        {
             //@SuppressWarnings("unchecked")
-            ISet<FastThreadLocal<?>> variablesToRemove = (ISet<FastThreadLocal<?>>) v;
-            count += variablesToRemove.size();
+            System.Collections.ICollection variablesToRemove = (System.Collections.ICollection)v;
+            count += variablesToRemove.Count;
         }
 
         return count;
     }
 
-    public StringBuilder stringBuilder() {
-        StringBuilder sb = stringBuilder;
-        if (sb == null) {
-            return stringBuilder = new StringBuilder(STRING_BUILDER_INITIAL_SIZE);
+    public StringBuilder stringBuilder()
+    {
+        StringBuilder sb = _stringBuilder;
+        if (sb == null)
+        {
+            return _stringBuilder = new StringBuilder(STRING_BUILDER_INITIAL_SIZE);
         }
-        if (sb.capacity() > STRING_BUILDER_MAX_SIZE) {
-            sb.setLength(STRING_BUILDER_INITIAL_SIZE);
-            sb.trimToSize();
+
+        if (sb.Capacity > STRING_BUILDER_MAX_SIZE)
+        {
+            sb.Length = STRING_BUILDER_INITIAL_SIZE;
+            //sb.trimToSize();
         }
-        sb.setLength(0);
+
+        sb.Length = 0;
         return sb;
     }
 
-    public IDictionary<Charset, CharsetEncoder> charsetEncoderCache() {
-        IDictionary<Charset, CharsetEncoder> cache = charsetEncoderCache;
-        if (cache == null) {
-            charsetEncoderCache = cache = new IdentityHashMap<>();
+    public Dictionary<Encoding, Encoder> charsetEncoderCache()
+    {
+        var cache = _charsetEncoderCache;
+        if (cache == null)
+        {
+            _charsetEncoderCache = cache = new Dictionary<Encoding, Encoder>();
         }
+
         return cache;
     }
 
-    public IDictionary<Charset, CharsetDecoder> charsetDecoderCache() {
-        IDictionary<Charset, CharsetDecoder> cache = charsetDecoderCache;
-        if (cache == null) {
-            charsetDecoderCache = cache = new IdentityHashMap<>();
+    public Dictionary<Encoding, Decoder> charsetDecoderCache()
+    {
+        var cache = _charsetDecoderCache;
+        if (cache == null)
+        {
+            _charsetDecoderCache = cache = new Dictionary<Encoding, Decoder>();
         }
+
         return cache;
     }
 
-    public <E> List<E> arrayList() {
-        return arrayList(DEFAULT_ARRAY_LIST_INITIAL_CAPACITY);
+    public List<E> arrayList<E>()
+    {
+        return arrayList<E>(DEFAULT_ARRAY_LIST_INITIAL_CAPACITY);
     }
 
-    @SuppressWarnings("unchecked")
-    public <E> List<E> arrayList(int minCapacity) {
-        List<E> list = (List<E>) arrayList;
-        if (list == null) {
-            arrayList = new List<>(minCapacity);
-            return (List<E>) arrayList;
+    //@SuppressWarnings("unchecked")
+    public List<E> arrayList<E>(int minCapacity)
+    {
+        List<E> list = (List<E>)_arrayList;
+        if (list == null)
+        {
+            _arrayList = new List<E>(minCapacity);
+            return (List<E>)_arrayList;
         }
-        list.clear();
-        list.ensureCapacity(minCapacity);
+
+        list.Clear();
+        list.EnsureCapacity(minCapacity);
         return list;
     }
 
-    public int futureListenerStackDepth() {
-        return futureListenerStackDepth;
+    public int futureListenerStackDepth()
+    {
+        return _futureListenerStackDepth;
     }
 
-    public void setFutureListenerStackDepth(int futureListenerStackDepth) {
-        this.futureListenerStackDepth = futureListenerStackDepth;
+    public void setFutureListenerStackDepth(int futureListenerStackDepth)
+    {
+        _futureListenerStackDepth = futureListenerStackDepth;
     }
 
-    public IDictionary<Type, TypeParameterMatcher> typeParameterMatcherGetCache() {
-        IDictionary<Type, TypeParameterMatcher> cache = typeParameterMatcherGetCache;
-        if (cache == null) {
-            typeParameterMatcherGetCache = cache = new IdentityHashMap<>();
+    public IDictionary<Type, TypeParameterMatcher> typeParameterMatcherGetCache()
+    {
+        var cache = _typeParameterMatcherGetCache;
+        if (cache == null)
+        {
+            _typeParameterMatcherGetCache = cache = new Dictionary<Type, TypeParameterMatcher>();
         }
+
         return cache;
     }
 
-    public IDictionary<Type, IDictionary<string, TypeParameterMatcher>> typeParameterMatcherFindCache() {
-        IDictionary<Type, IDictionary<string, TypeParameterMatcher>> cache = typeParameterMatcherFindCache;
-        if (cache == null) {
-            typeParameterMatcherFindCache = cache = new IdentityHashMap<>();
+    public IDictionary<Type, IDictionary<string, TypeParameterMatcher>> typeParameterMatcherFindCache()
+    {
+        var cache = _typeParameterMatcherFindCache;
+        if (cache == null)
+        {
+            _typeParameterMatcherFindCache = cache = new Dictionary<Type, IDictionary<string, TypeParameterMatcher>>();
         }
+
         return cache;
     }
 
-    public IDictionary<Type, bool> handlerSharableCache() {
-        IDictionary<Type, bool> cache = handlerSharableCache;
-        if (cache == null) {
+    public IDictionary<Type, bool> handlerSharableCache()
+    {
+        var cache = _handlerSharableCache;
+        if (cache == null)
+        {
             // Start with small capacity to keep memory overhead as low as possible.
-            handlerSharableCache = cache = new WeakHashMap<>(HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY);
+            _handlerSharableCache = cache = new Dictionary<Type, bool>(HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY);
         }
+
         return cache;
     }
 
-    public int localChannelReaderStackDepth() {
-        return localChannelReaderStackDepth;
+    public int localChannelReaderStackDepth()
+    {
+        return _localChannelReaderStackDepth;
     }
 
-    public void setLocalChannelReaderStackDepth(int localChannelReaderStackDepth) {
-        this.localChannelReaderStackDepth = localChannelReaderStackDepth;
+    public void setLocalChannelReaderStackDepth(int localChannelReaderStackDepth)
+    {
+        _localChannelReaderStackDepth = localChannelReaderStackDepth;
     }
 
-    public object indexedVariable(int index) {
+    public object indexedVariable(int index)
+    {
         object[] lookup = indexedVariables;
-        return index < lookup.Length? lookup[index] : UNSET;
+        return index < lookup.Length ? lookup[index] : UNSET;
     }
 
     /**
      * @return {@code true} if and only if a new thread-local variable has been created
      */
-    public bool setIndexedVariable(int index, object value) {
+    public bool setIndexedVariable(int index, object value)
+    {
         return getAndSetIndexedVariable(index, value) == UNSET;
     }
 
     /**
      * @return {@link InternalThreadLocalMap#UNSET} if and only if a new thread-local variable has been created.
      */
-    public object getAndSetIndexedVariable(int index, object value) {
+    public object getAndSetIndexedVariable(int index, object value)
+    {
         object[] lookup = indexedVariables;
-        if (index < lookup.Length) {
+        if (index < lookup.Length)
+        {
             object oldValue = lookup[index];
             lookup[index] = value;
             return oldValue;
         }
+
         expandIndexedVariableTableAndSet(index, value);
         return UNSET;
     }
 
-    private void expandIndexedVariableTableAndSet(int index, object value) {
+    private void expandIndexedVariableTableAndSet(int index, object value)
+    {
         object[] oldArray = indexedVariables;
         int oldCapacity = oldArray.Length;
         int newCapacity;
-        if (index < ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD) {
+        if (index < ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD)
+        {
             newCapacity = index;
-            newCapacity |= newCapacity >>>  1;
-            newCapacity |= newCapacity >>>  2;
-            newCapacity |= newCapacity >>>  4;
-            newCapacity |= newCapacity >>>  8;
+            newCapacity |= newCapacity >>> 1;
+            newCapacity |= newCapacity >>> 2;
+            newCapacity |= newCapacity >>> 4;
+            newCapacity |= newCapacity >>> 8;
             newCapacity |= newCapacity >>> 16;
-            newCapacity ++;
-        } else {
+            newCapacity++;
+        }
+        else
+        {
             newCapacity = ARRAY_LIST_CAPACITY_MAX_SIZE;
         }
 
@@ -342,18 +385,23 @@ public sealed class InternalThreadLocalMap
         indexedVariables = newArray;
     }
 
-    public object removeIndexedVariable(int index) {
+    public object removeIndexedVariable(int index)
+    {
         object[] lookup = indexedVariables;
-        if (index < lookup.Length) {
+        if (index < lookup.Length)
+        {
             object v = lookup[index];
             lookup[index] = UNSET;
             return v;
-        } else {
+        }
+        else
+        {
             return UNSET;
         }
     }
 
-    public bool isIndexedVariableSet(int index) {
+    public bool isIndexedVariableSet(int index)
+    {
         object[] lookup = indexedVariables;
         return index < lookup.Length && lookup[index] != UNSET;
     }
