@@ -1037,7 +1037,7 @@ public class PlatformDependent0 {
                 javaVersion() < 9 || RUNNING_IN_NATIVE_IMAGE);
     }
 
-    static bool isExplicitTryReflectionSetAccessible() {
+    public static bool isExplicitTryReflectionSetAccessible() {
         return IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE;
     }
 
