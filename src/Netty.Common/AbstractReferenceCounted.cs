@@ -13,83 +13,104 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Runtime.CompilerServices;
+using System.Threading;
+
 namespace Netty.NET.Common;
-
-
-
-
 
 /**
  * Abstract base class for classes wants to implement {@link IReferenceCounted}.
  */
-public abstract class AbstractReferenceCounted : IReferenceCounted {
-    private static readonly long REFCNT_FIELD_OFFSET =
-            ReferenceCountUpdater.getUnsafeOffset(typeof(AbstractReferenceCounted), "refCnt");
-    private static readonly AtomicIntegerFieldUpdater<AbstractReferenceCounted> AIF_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(typeof(AbstractReferenceCounted), "refCnt");
+public abstract class AbstractReferenceCounted : IReferenceCounted
+{
+    private int _refCnt = 1;
 
-    private static readonly ReferenceCountUpdater<AbstractReferenceCounted> updater =
-            new ReferenceCountUpdater<AbstractReferenceCounted>() {
-        @Override
-        protected AtomicIntegerFieldUpdater<AbstractReferenceCounted> updater() {
-            return AIF_UPDATER;
-        }
-        @Override
-        protected long unsafeOffset() {
-            return REFCNT_FIELD_OFFSET;
-        }
-    };
-
-    // Value might not equal "real" reference count, all access should be via the updater
-    @SuppressWarnings({"unused", "FieldMayBeFinal"})
-    private volatile int refCnt = updater.initialValue();
-
-    @Override
-    public int refCnt() {
-        return updater.refCnt(this);
+    public int refCnt()
+    {
+        return _refCnt;
     }
 
     /**
      * An unsafe operation intended for use by a subclass that sets the reference count of the buffer directly
      */
-    protected final void setRefCnt(int refCnt) {
-        updater.setRefCnt(this, refCnt);
+    protected void setRefCnt(int refCnt)
+    {
+        Interlocked.Exchange(ref _refCnt, refCnt);
     }
 
-    @Override
-    public IReferenceCounted retain() {
-        return updater.retain(this);
+    public IReferenceCounted retain()
+    {
+        return retain(1);
     }
 
-    @Override
-    public IReferenceCounted retain(int increment) {
-        return updater.retain(this, increment);
+    public virtual IReferenceCounted retain(int increment)
+    {
+        while (true)
+        {
+            int count = _refCnt;
+            int nextCount = count + increment;
+
+            // check
+            if (nextCount <= increment)
+            {
+                ThrowIllegalReferenceCountException(count, increment);
+            }
+
+            if (Interlocked.CompareExchange(ref _refCnt, nextCount, count) == count)
+            {
+                break;
+            }
+        }
+
+        return this;
     }
 
-    @Override
-    public IReferenceCounted touch() {
+    public IReferenceCounted touch()
+    {
         return touch(null);
     }
 
-    @Override
-    public bool release() {
-        return handleRelease(updater.release(this));
+    public abstract IReferenceCounted touch(object hint);
+
+    public bool release()
+    {
+        return release(1);
     }
 
-    @Override
-    public bool release(int decrement) {
-        return handleRelease(updater.release(this, decrement));
-    }
+    public bool release(int decrement)
+    {
+        while (true)
+        {
+            int count = _refCnt;
+            if (count < decrement)
+            {
+                ThrowIllegalReferenceCountException(count, decrement);
+            }
 
-    private bool handleRelease(bool result) {
-        if (result) {
-            deallocate();
+            if (Interlocked.CompareExchange(ref _refCnt, count - decrement, count) == decrement)
+            {
+                deallocate();
+                return true;
+            }
+
+            return false;
         }
-        return result;
     }
 
     /**
      * Called once {@link #refCnt()} is equals 0.
      */
     protected abstract void deallocate();
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowIllegalReferenceCountException(int count, int increment)
+    {
+        throw GetIllegalReferenceCountException();
+
+        IllegalReferenceCountException GetIllegalReferenceCountException()
+        {
+            return new IllegalReferenceCountException(count, increment);
+        }
+    }
 }

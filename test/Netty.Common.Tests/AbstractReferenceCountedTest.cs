@@ -13,12 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common;
+
 namespace Netty.Common.Tests;
-public class AbstractReferenceCountedTest {
+
+public class AbstractReferenceCountedTest 
+{
 
     @Test
     public void testRetainOverflow() {
-        final AbstractReferenceCounted referenceCounted = newReferenceCounted();
+        AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(Integer.MAX_VALUE);
         assertEquals(Integer.MAX_VALUE, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, referenceCounted::retain);
@@ -26,14 +31,14 @@ public class AbstractReferenceCountedTest {
 
     @Test
     public void testRetainOverflow2() {
-        final AbstractReferenceCounted referenceCounted = newReferenceCounted();
+        AbstractReferenceCounted referenceCounted = newReferenceCounted();
         assertEquals(1, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.retain(Integer.MAX_VALUE));
     }
 
     @Test
     public void testReleaseOverflow() {
-        final AbstractReferenceCounted referenceCounted = newReferenceCounted();
+        AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(0);
         assertEquals(0, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.release(Integer.MAX_VALUE));
@@ -53,7 +58,7 @@ public class AbstractReferenceCountedTest {
 
     @Test
     public void testRetainResurrect() {
-        final AbstractReferenceCounted referenceCounted = newReferenceCounted();
+        AbstractReferenceCounted referenceCounted = newReferenceCounted();
         assertTrue(referenceCounted.release());
         assertEquals(0, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, referenceCounted::retain);
@@ -61,7 +66,7 @@ public class AbstractReferenceCountedTest {
 
     @Test
     public void testRetainResurrect2() {
-        final AbstractReferenceCounted referenceCounted = newReferenceCounted();
+        AbstractReferenceCounted referenceCounted = newReferenceCounted();
         assertTrue(referenceCounted.release());
         assertEquals(0, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.retain(2));
@@ -73,16 +78,16 @@ public class AbstractReferenceCountedTest {
         int threads = 4;
         Queue<Future<?>> futures = new ArrayDeque<>(threads);
         ExecutorService service = Executors.newFixedThreadPool(threads);
-        final AtomicInteger refCountExceptions = new AtomicInteger();
+        AtomicInteger refCountExceptions = new AtomicInteger();
 
         try {
             for (int i = 0; i < 10000; i++) {
-                final AbstractReferenceCounted referenceCounted = newReferenceCounted();
-                final CountDownLatch retainLatch = new CountDownLatch(1);
+                AbstractReferenceCounted referenceCounted = newReferenceCounted();
+                CountDownLatch retainLatch = new CountDownLatch(1);
                 assertTrue(referenceCounted.release());
 
                 for (int a = 0; a < threads; a++) {
-                    final int retainCnt = ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
+                    int retainCnt = ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
                     futures.add(service.submit(() -> {
                         try {
                             retainLatch.await();
@@ -119,16 +124,16 @@ public class AbstractReferenceCountedTest {
         int threads = 4;
         Queue<Future<?>> futures = new ArrayDeque<>(threads);
         ExecutorService service = Executors.newFixedThreadPool(threads);
-        final AtomicInteger refCountExceptions = new AtomicInteger();
+        AtomicInteger refCountExceptions = new AtomicInteger();
 
         try {
             for (int i = 0; i < 10000; i++) {
-                final AbstractReferenceCounted referenceCounted = newReferenceCounted();
-                final CountDownLatch releaseLatch = new CountDownLatch(1);
-                final AtomicInteger releasedCount = new AtomicInteger();
+                AbstractReferenceCounted referenceCounted = newReferenceCounted();
+                CountDownLatch releaseLatch = new CountDownLatch(1);
+                AtomicInteger releasedCount = new AtomicInteger();
 
                 for (int a = 0; a < threads; a++) {
-                    final AtomicInteger releaseCnt = new AtomicInteger(0);
+                    AtomicInteger releaseCnt = new AtomicInteger(0);
 
                     futures.add(service.submit(() -> {
                         try {
@@ -164,7 +169,7 @@ public class AbstractReferenceCountedTest {
         }
     }
 
-    private static AbstractReferenceCounted newReferenceCounted() {
+    public static AbstractReferenceCounted newReferenceCounted() {
         return new AbstractReferenceCounted() {
             @Override
             protected void deallocate() {
