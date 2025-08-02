@@ -14,27 +14,24 @@
  * under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+
 namespace Netty.NET.Common.Internal;
-
-
-
-
-
-
-
-
 
 /**
  * A simple list which is recyclable. This implementation does not allow {@code null} elements to be added.
  */
-public final class RecyclableArrayList extends List<object> {
+public class RecyclableArrayList : List<object> 
+{
 
     private static readonly long serialVersionUID = -8605125654176467947L;
 
     private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
     private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.newPool(
-            new ObjectCreator<RecyclableArrayList>() {
+            new ObjectPool<>.ObjectCreator<RecyclableArrayList>() {
         @Override
         public RecyclableArrayList newObject(Handle<RecyclableArrayList> handle) {
             return new RecyclableArrayList(handle);

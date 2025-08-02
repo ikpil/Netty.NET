@@ -172,7 +172,7 @@ public class AbstractReferenceCountedTest {
             }
 
             @Override
-            public ReferenceCounted touch(Object hint) {
+            public IReferenceCounted touch(Object hint) {
                 return this;
             }
         };

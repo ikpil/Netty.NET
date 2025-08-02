@@ -19,7 +19,7 @@ using System;
 namespace Netty.NET.Common;
 
 /**
- * An {@link InvalidOperationException} which is raised when a user attempts to access a {@link ReferenceCounted} whose
+ * An {@link InvalidOperationException} which is raised when a user attempts to access a {@link IReferenceCounted} whose
  * reference count has been decreased to 0 (and consequently freed).
  */
 public class IllegalReferenceCountException : InvalidOperationException

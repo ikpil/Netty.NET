@@ -13,23 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common;
 
 /**
  * A reference-counted object that requires explicit deallocation.
  * <p>
- * When a new {@link ReferenceCounted} is instantiated, it starts with the reference count of {@code 1}.
+ * When a new {@link IReferenceCounted} is instantiated, it starts with the reference count of {@code 1}.
  * {@link #retain()} increases the reference count, and {@link #release()} decreases the reference count.
  * If the reference count is decreased to {@code 0}, the object will be deallocated explicitly, and accessing
  * the deallocated object will usually result in an access violation.
  * </p>
  * <p>
- * If an object that implements {@link ReferenceCounted} is a container of other objects that implement
- * {@link ReferenceCounted}, the contained objects will also be released via {@link #release()} when the container's
+ * If an object that implements {@link IReferenceCounted} is a container of other objects that implement
+ * {@link IReferenceCounted}, the contained objects will also be released via {@link #release()} when the container's
  * reference count becomes 0.
  * </p>
  */
-public interface ReferenceCounted {
+public interface IReferenceCounted
+{
     /**
      * Returns the reference count of this object.  If {@code 0}, it means this object has been deallocated.
      */
@@ -38,26 +40,26 @@ public interface ReferenceCounted {
     /**
      * Increases the reference count by {@code 1}.
      */
-    ReferenceCounted retain();
+    IReferenceCounted retain();
 
     /**
      * Increases the reference count by the specified {@code increment}.
      */
-    ReferenceCounted retain(int increment);
+    IReferenceCounted retain(int increment);
 
     /**
      * Records the current access location of this object for debugging purposes.
      * If this object is determined to be leaked, the information recorded by this operation will be provided to you
      * via {@link ResourceLeakDetector}.  This method is a shortcut to {@link #touch(object) touch(null)}.
      */
-    ReferenceCounted touch();
+    IReferenceCounted touch();
 
     /**
      * Records the current access location of this object with an additional arbitrary information for debugging
      * purposes.  If this object is determined to be leaked, the information recorded by this operation will be
      * provided to you via {@link ResourceLeakDetector}.
      */
-    ReferenceCounted touch(object hint);
+    IReferenceCounted touch(object hint);
 
     /**
      * Decreases the reference count by {@code 1} and deallocates this object if the reference count reaches at
