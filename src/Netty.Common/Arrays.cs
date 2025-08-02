@@ -5,6 +5,11 @@ namespace Netty.NET.Common;
 
 public static class Arrays
 {
+    public static void fill<T>(T[] src, T val)
+    {
+        Array.Fill(src, val);
+    }
+
     public static T[] copyOf<T>(T[] src, int size)
     {
         var dest = new T[size];

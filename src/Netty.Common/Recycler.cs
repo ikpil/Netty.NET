@@ -15,9 +15,46 @@
  */
 
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
+
+//@SuppressWarnings("ClassNameSameAsAncestorName") // Can't change this due to compatibility.
+public interface Handle<T> : ObjectPool<>.Handle<T>
+{
+    
+}
+
+
+//@UnstableApi
+public abstract class EnhancedHandle<T> : Handle<T> {
+
+    protected EnhancedHandle() 
+    {
+    }
+    
+    public abstract void unguardedRecycle(object obj);
+
+}
+
+
+
+public class NoopRecyclerEnhancedHandle<T> : EnhancedHandle<T>
+{
+    public override void unguardedRecycle(object obj) 
+    {
+        // NOOP
+    }
+
+    public override string ToString() {
+        return "NOOP_HANDLE";
+    }
+};
 
 
 /**
@@ -25,24 +62,11 @@ namespace Netty.NET.Common;
  *
  * @param <T> the type of the pooled object
  */
-public abstract class Recycler<T> {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(Recycler));
-    private static readonly EnhancedHandle<?> NOOP_HANDLE = new EnhancedHandle<object>() {
-        @Override
-        public void recycle(object object) {
-            // NOOP
-        }
+public abstract class Recycler<T>
+{
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<Recycler<T>>();
 
-        @Override
-        public void unguardedRecycle(final object object) {
-            // NOOP
-        }
-
-        @Override
-        public string toString() {
-            return "NOOP_HANDLE";
-        }
-    };
+    private static readonly EnhancedHandle<T> NOOP_HANDLE = new NoopRecyclerEnhancedHandle<T>();
     private static readonly int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
     private static readonly int DEFAULT_MAX_CAPACITY_PER_THREAD;
     private static readonly int RATIO;
@@ -50,7 +74,8 @@ public abstract class Recycler<T> {
     private static readonly bool BLOCKING_POOL;
     private static readonly bool BATCH_FAST_TL_ONLY;
 
-    static {
+    static Recycler() 
+    {
         // In the future, we might have different maxCapacity for different object types.
         // e.g. io.netty.recycler.maxCapacity.writeTask
         //      io.netty.recycler.maxCapacity.outboundBuffer
@@ -211,17 +236,7 @@ public abstract class Recycler<T> {
      */
     protected abstract T newObject(Handle<T> handle);
 
-    @SuppressWarnings("ClassNameSameAsAncestorName") // Can't change this due to compatibility.
-    public interface Handle<T> extends ObjectPool.Handle<T>  { }
 
-    @UnstableApi
-    public abstract static class EnhancedHandle<T> : Handle<T> {
-
-        public abstract void unguardedRecycle(object object);
-
-        private EnhancedHandle() {
-        }
-    }
 
     private static readonly class DefaultHandle<T> extends EnhancedHandle<T> {
         private static readonly int STATE_CLAIMED = 0;

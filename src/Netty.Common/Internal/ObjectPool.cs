@@ -65,25 +65,26 @@ public abstract class ObjectPool<T> {
      * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link object}
      * that should be pooled.
      */
-    public static <T> ObjectPool<T> newPool(final ObjectCreator<T> creator) {
+    public static ObjectPool<T> newPool<T>(ObjectCreator<T> creator) {
         return new RecyclerObjectPool<T>(ObjectUtil.checkNotNull(creator, "creator"));
     }
 
-    private static readonly class RecyclerObjectPool<T> extends ObjectPool<T> {
-        private readonly Recycler<T> recycler;
+}
 
-        RecyclerObjectPool(final ObjectCreator<T> creator) {
-             recycler = new Recycler<T>() {
-                @Override
-                protected T newObject(Handle<T> handle) {
-                    return creator.newObject(handle);
-                }
-            };
-        }
+public class RecyclerObjectPool<T> : ObjectPool<T> 
+{
+    private readonly Recycler<T> recycler;
 
-        @Override
-        public T get() {
-            return recycler.get();
-        }
+    public RecyclerObjectPool(ObjectCreator<T> creator) {
+        recycler = new Recycler<T>() {
+            @Override
+            protected T newObject(Handle<T> handle) {
+                return creator.newObject(handle);
+            }
+        };
+    }
+
+    public override T get() {
+        return recycler.get();
     }
 }

@@ -57,19 +57,19 @@ public sealed class InternalThreadLocalMap
     private object[] indexedVariables;
 
     // Core thread-locals
-    private int futureListenerStackDepth;
-    private int localChannelReaderStackDepth;
-    private IDictionary<Type, bool> handlerSharableCache;
-    private IDictionary<Type, TypeParameterMatcher> typeParameterMatcherGetCache;
-    private IDictionary<Type, IDictionary<string, TypeParameterMatcher>> typeParameterMatcherFindCache;
+    private int _futureListenerStackDepth;
+    private int _localChannelReaderStackDepth;
+    private IDictionary<Type, bool> _handlerSharableCache;
+    private IDictionary<Type, TypeParameterMatcher> _typeParameterMatcherGetCache;
+    private IDictionary<Type, IDictionary<string, TypeParameterMatcher>> _typeParameterMatcherFindCache;
 
     // string-related thread-locals
-    private StringBuilder stringBuilder;
-    private IDictionary<Charset, CharsetEncoder> charsetEncoderCache;
-    private IDictionary<Charset, CharsetDecoder> charsetDecoderCache;
+    private StringBuilder _stringBuilder;
+    private IDictionary<Charset, CharsetEncoder> _charsetEncoderCache;
+    private IDictionary<Charset, CharsetDecoder> _charsetDecoderCache;
 
     // List-related thread-locals
-    private List<object> arrayList;
+    private List<object> _arrayList;
 
     /** @deprecated These padding fields will be removed in the future. */
     public long rp1, rp2, rp3, rp4, rp5, rp6, rp7, rp8;
@@ -89,6 +89,10 @@ public sealed class InternalThreadLocalMap
         logger = InternalLoggerFactory.getInstance(typeof(InternalThreadLocalMap));
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.initialSize: {}", STRING_BUILDER_INITIAL_SIZE);
         logger.debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
+    }
+    
+    private InternalThreadLocalMap() {
+        indexedVariables = newIndexedVariableTable();
     }
 
     public static InternalThreadLocalMap getIfSet()
@@ -142,7 +146,8 @@ public sealed class InternalThreadLocalMap
         slowThreadLocalMap.remove();
     }
 
-    public static int nextVariableIndex() {
+    public static int nextVariableIndex() 
+    {
         int index = nextIndex.getAndIncrement();
         if (index >= ARRAY_LIST_CAPACITY_MAX_SIZE || index < 0) {
             nextIndex.set(ARRAY_LIST_CAPACITY_MAX_SIZE);
@@ -155,9 +160,6 @@ public sealed class InternalThreadLocalMap
         return nextIndex.get() - 1;
     }
 
-    private InternalThreadLocalMap() {
-        indexedVariables = newIndexedVariableTable();
-    }
 
     private static object[] newIndexedVariableTable() {
         object[] array = new object[INDEXED_VARIABLE_TABLE_INITIAL_SIZE];
@@ -168,37 +170,37 @@ public sealed class InternalThreadLocalMap
     public int size() {
         int count = 0;
 
-        if (futureListenerStackDepth != 0) {
+        if (_futureListenerStackDepth != 0) {
             count ++;
         }
-        if (localChannelReaderStackDepth != 0) {
+        if (_localChannelReaderStackDepth != 0) {
             count ++;
         }
-        if (handlerSharableCache != null) {
+        if (_handlerSharableCache != null) {
             count ++;
         }
-        if (typeParameterMatcherGetCache != null) {
+        if (_typeParameterMatcherGetCache != null) {
             count ++;
         }
-        if (typeParameterMatcherFindCache != null) {
+        if (_typeParameterMatcherFindCache != null) {
             count ++;
         }
-        if (stringBuilder != null) {
+        if (_stringBuilder != null) {
             count ++;
         }
-        if (charsetEncoderCache != null) {
+        if (_charsetEncoderCache != null) {
             count ++;
         }
-        if (charsetDecoderCache != null) {
+        if (_charsetDecoderCache != null) {
             count ++;
         }
-        if (arrayList != null) {
+        if (_arrayList != null) {
             count ++;
         }
 
         object v = indexedVariable(VARIABLES_TO_REMOVE_INDEX);
         if (v != null && v != InternalThreadLocalMap.UNSET) {
-            @SuppressWarnings("unchecked")
+            //@SuppressWarnings("unchecked")
             ISet<FastThreadLocal<?>> variablesToRemove = (ISet<FastThreadLocal<?>>) v;
             count += variablesToRemove.size();
         }
@@ -294,7 +296,7 @@ public sealed class InternalThreadLocalMap
 
     public object indexedVariable(int index) {
         object[] lookup = indexedVariables;
-        return index < lookup.length? lookup[index] : UNSET;
+        return index < lookup.Length? lookup[index] : UNSET;
     }
 
     /**
@@ -309,7 +311,7 @@ public sealed class InternalThreadLocalMap
      */
     public object getAndSetIndexedVariable(int index, object value) {
         object[] lookup = indexedVariables;
-        if (index < lookup.length) {
+        if (index < lookup.Length) {
             object oldValue = lookup[index];
             lookup[index] = value;
             return oldValue;
@@ -320,7 +322,7 @@ public sealed class InternalThreadLocalMap
 
     private void expandIndexedVariableTableAndSet(int index, object value) {
         object[] oldArray = indexedVariables;
-        final int oldCapacity = oldArray.length;
+        int oldCapacity = oldArray.Length;
         int newCapacity;
         if (index < ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD) {
             newCapacity = index;
@@ -335,14 +337,14 @@ public sealed class InternalThreadLocalMap
         }
 
         object[] newArray = Arrays.copyOf(oldArray, newCapacity);
-        Arrays.fill(newArray, oldCapacity, newArray.length, UNSET);
+        Arrays.fill(newArray, oldCapacity, newArray.Length, UNSET);
         newArray[index] = value;
         indexedVariables = newArray;
     }
 
     public object removeIndexedVariable(int index) {
         object[] lookup = indexedVariables;
-        if (index < lookup.length) {
+        if (index < lookup.Length) {
             object v = lookup[index];
             lookup[index] = UNSET;
             return v;
@@ -353,6 +355,6 @@ public sealed class InternalThreadLocalMap
 
     public bool isIndexedVariableSet(int index) {
         object[] lookup = indexedVariables;
-        return index < lookup.length && lookup[index] != UNSET;
+        return index < lookup.Length && lookup[index] != UNSET;
     }
 }
