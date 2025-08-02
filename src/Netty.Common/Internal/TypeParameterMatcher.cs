@@ -19,72 +19,56 @@ using System.Collections.Generic;
 
 namespace Netty.NET.Common.Internal;
 
-public class NoopTypeParameterMatcher : TypeParameterMatcher
-{
-    public override bool match(object msg) 
-    {
-        return true;
-    }
-
-}
-
 public abstract class TypeParameterMatcher
 {
     private static readonly TypeParameterMatcher NOOP = new NoopTypeParameterMatcher();
 
-    public static TypeParameterMatcher get(Type parameterType) {
+    public static TypeParameterMatcher get(Type parameterType)
+    {
         IDictionary<Type, TypeParameterMatcher> getCache =
-                InternalThreadLocalMap.get().typeParameterMatcherGetCache();
+            InternalThreadLocalMap.get().typeParameterMatcherGetCache();
 
         getCache.TryGetValue(parameterType, out TypeParameterMatcher matcher);
-        if (matcher == null) {
-            if (parameterType == typeof(object)) {
+        if (matcher == null)
+        {
+            if (parameterType == typeof(object))
+            {
                 matcher = NOOP;
-            } else {
+            }
+            else
+            {
                 matcher = new ReflectiveMatcher(parameterType);
             }
-            getCache.put(parameterType, matcher);
+
+            getCache.Add(parameterType, matcher);
         }
 
         return matcher;
     }
 
     public static TypeParameterMatcher find(
-            final object object, final Type parametrizedSuperclass, final string typeParamName) {
+        object obj, Type parametrizedSuperclass, string typeParamName)
+    {
+        IDictionary<Type, IDictionary<string, TypeParameterMatcher>> findCache =
+            InternalThreadLocalMap.get().typeParameterMatcherFindCache();
+        Type thisClass = obj.GetType();
 
-        final IDictionary<Type, IDictionary<string, TypeParameterMatcher>> findCache =
-                InternalThreadLocalMap.get().typeParameterMatcherFindCache();
-        final Type thisClass = object.getClass();
-
-        IDictionary<string, TypeParameterMatcher> map = findCache.get(thisClass);
-        if (map == null) {
-            map = new HashMap<string, TypeParameterMatcher>();
-            findCache.put(thisClass, map);
+        findCache.TryGetValue(thisClass, out IDictionary<string, TypeParameterMatcher> map);
+        if (map == null)
+        {
+            map = new Dictionary<string, TypeParameterMatcher>();
+            findCache.Add(thisClass, map);
         }
 
-        TypeParameterMatcher matcher = map.get(typeParamName);
-        if (matcher == null) {
-            matcher = get(ReflectionUtil.resolveTypeParameter(object, parametrizedSuperclass, typeParamName));
-            map.put(typeParamName, matcher);
+        map.TryGetValue(typeParamName, out TypeParameterMatcher matcher);
+        if (matcher == null)
+        {
+            matcher = get(ReflectionUtil.resolveTypeParameter(obj, parametrizedSuperclass, typeParamName));
+            map.Add(typeParamName, matcher);
         }
 
         return matcher;
     }
 
     public abstract bool match(object msg);
-
-    private static readonly class ReflectiveMatcher extends TypeParameterMatcher {
-        private readonly Type type;
-
-        ReflectiveMatcher(Type type) {
-            this.type = type;
-        }
-
-        @Override
-        public bool match(object msg) {
-            return type.isInstance(msg);
-        }
-    }
-
-    TypeParameterMatcher() { }
 }

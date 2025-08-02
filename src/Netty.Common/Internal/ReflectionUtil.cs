@@ -13,9 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Internal;
 
-public final class ReflectionUtil {
+public static class ReflectionUtil {
 
     private ReflectionUtil() { }
 
@@ -61,10 +64,11 @@ public final class ReflectionUtil {
      * @return The resolved type parameter
      * @throws InvalidOperationException if the type parameter could not be resolved
      * */
-    public static Type resolveTypeParameter(final object object,
+    public static Type resolveTypeParameter(object obj,
                                                 Type parametrizedSuperclass,
-                                                string typeParamName) {
-        final Type thisClass = object.getClass();
+                                                string typeParamName)
+    {
+        Type thisClass = obj.GetType();
         Type currentClass = thisClass;
         for (;;) {
             if (currentClass.getSuperclass() == parametrizedSuperclass) {
