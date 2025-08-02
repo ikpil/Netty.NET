@@ -15,28 +15,28 @@
  */
 
 using System;
+using System.Threading;
 
 namespace Netty.NET.Common.Concurrent;
 
-
-sealed class SystemTicker : Ticker 
+sealed class SystemTicker : Ticker
 {
     public static readonly SystemTicker INSTANCE = new SystemTicker();
-    private static readonly long START_TIME = System.nanoTime();
+    private static readonly long START_TIME = NanoTimer.nanoTime();
 
-    @Override
-    public long initialNanoTime() {
+    public override long initialNanoTime()
+    {
         return START_TIME;
     }
 
-    @Override
-    public long nanoTime() {
-        return System.nanoTime() - START_TIME;
+    public override long nanoTime()
+    {
+        return NanoTimer.nanoTime() - START_TIME;
     }
 
-    @Override
-    public void sleep(long delay, TimeSpan unit) {
-        Objects.requireNonNull(unit, "unit");
-        unit.sleep(delay);
+    public override void sleep(TimeSpan delay)
+    {
+        //Objects.requireNonNull(unit, "unit");
+        Thread.Sleep(delay);
     }
 }

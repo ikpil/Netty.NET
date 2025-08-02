@@ -211,10 +211,10 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     @Override
     public bool awaitTermination(long timeout, TimeSpan unit)
             throws InterruptedException {
-        long deadline = System.nanoTime() + unit.toNanos(timeout);
+        long deadline = PreciesTimer.nanoTime() + unit.toNanos(timeout);
         loop: for (IEventExecutor l: children) {
             for (;;) {
-                long timeLeft = deadline - System.nanoTime();
+                long timeLeft = deadline - PreciesTimer.nanoTime();
                 if (timeLeft <= 0) {
                     break loop;
                 }

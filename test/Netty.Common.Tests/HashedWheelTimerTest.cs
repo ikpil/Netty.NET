@@ -132,11 +132,11 @@ public class HashedWheelTimerTest {
 
         int scheduledTasks = 100000;
         for (int i = 0; i < scheduledTasks; i++) {
-            final long start = System.nanoTime();
+            final long start = PreciesTimer.nanoTime();
             timer.newTimeout(new ITimerTask() {
                 @Override
                 public void run(final Timeout timeout) throws Exception {
-                    queue.add(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
+                    queue.add(TimeUnit.NANOSECONDS.toMillis(PreciesTimer.nanoTime() - start));
                 }
             }, timeout, TimeUnit.MILLISECONDS);
         }

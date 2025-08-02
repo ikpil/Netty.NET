@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * A nanosecond-based time source, e.g. {@link System#nanoTime()}.
  */
-public interface Ticker
+public abstract class Ticker
 {
     /**
      * Returns the singleton {@link Ticker} that returns the values from the real system clock source.
@@ -47,13 +47,13 @@ public interface Ticker
      * The initial value used for delay and computations based upon a monotonic time source.
      * @return initial value used for delay and computations based upon a monotonic time source.
      */
-    long initialNanoTime();
+    public abstract long initialNanoTime();
 
     /**
      * The time elapsed since initialization of this class in nanoseconds. This may return a negative number just like
      * {@link System#nanoTime()}.
      */
-    long nanoTime();
+    public abstract long nanoTime();
 
     /**
      * Waits until the given amount of time goes by.
@@ -63,7 +63,7 @@ public interface Ticker
      *
      * @see Thread#sleep(long)
      */
-    void sleep(long delay, TimeSpan unit);
+    public abstract void sleep(TimeSpan delay);
 
     /**
      * Waits until the given amount of time goes by.
@@ -72,8 +72,8 @@ public interface Ticker
      *
      * @see Thread#sleep(long)
      */
-    void sleepMillis(long delayMillis)
+    public virtual void sleepMillis(long delayMillis)
     {
-        sleep(delayMillis, TimeSpan.MILLISECONDS);
+        sleep(TimeSpan.FromMilliseconds(delayMillis));
     }
 }

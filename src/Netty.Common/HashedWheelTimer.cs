@@ -427,7 +427,7 @@ public class HashedWheelTimer : Timer {
 
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
-        long deadline = System.nanoTime() + unit.toNanos(delay) - startTime;
+        long deadline = PreciesTimer.nanoTime() + unit.toNanos(delay) - startTime;
 
         // Guard against overflow.
         if (delay > 0 && deadline < 0) {
@@ -462,7 +462,7 @@ public class HashedWheelTimer : Timer {
         @Override
         public void run() {
             // Initialize the startTime.
-            startTime = System.nanoTime();
+            startTime = PreciesTimer.nanoTime();
             if (startTime == 0) {
                 // We use 0 as an indicator for the uninitialized value here, so make sure it's not 0 when initialized.
                 startTime = 1;
@@ -552,7 +552,7 @@ public class HashedWheelTimer : Timer {
             long deadline = tickDuration * (tick + 1);
 
             for (;;) {
-                final long currentTime = System.nanoTime() - startTime;
+                final long currentTime = PreciesTimer.nanoTime() - startTime;
                 long sleepTimeMs = (deadline - currentTime + 999999) / 1000000;
 
                 if (sleepTimeMs <= 0) {
@@ -705,7 +705,7 @@ public class HashedWheelTimer : Timer {
 
         @Override
         public string toString() {
-            final long currentTime = System.nanoTime();
+            final long currentTime = PreciesTimer.nanoTime();
             long remaining = deadline - currentTime + timer.startTime;
 
             StringBuilder buf = new StringBuilder(192)

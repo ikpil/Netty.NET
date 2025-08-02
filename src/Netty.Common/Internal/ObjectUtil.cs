@@ -29,6 +29,14 @@ public static class ObjectUtil
     private static readonly int INT_ZERO = 0;
     private static readonly short SHORT_ZERO = 0;
 
+    public static T requireNonNull<T>(T obj, string message) where T : class
+    {
+        if (obj == null)
+            throw new NullReferenceException(message);
+        
+        return obj;
+    }
+
     /**
      * Checks that the given argument is not null. If it is, throws {@link ArgumentNullException}.
      * Otherwise, returns the argument.
@@ -172,6 +180,16 @@ public static class ObjectUtil
         }
 
         return s;
+    }
+
+    public static TimeSpan checkPositiveOrZero(TimeSpan span, string name)
+    {
+        if (span.Ticks < LONG_ZERO)
+        {
+            throw new ArgumentException(name + " : " + span + " (expected: >= 0)");
+        }
+
+        return span;
     }
 
     /**

@@ -13,82 +13,90 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Concurrent;
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using static Netty.NET.Common.Internal.ObjectUtil;
+
+namespace Netty.NET.Common.Concurrent;
 
 /**
  * The default {@link MockTicker} implementation.
  */
-public sealed class DefaultMockTicker : MockTicker 
+public sealed class DefaultMockTicker : MockTicker
 {
-
     // The lock is fair, so waiters get to process condition signals in the order they (the waiters) queued up.
-    private readonly ReentrantLock lock = new ReentrantLock(true);
-    private readonly Condition tickCondition = lock.newCondition();
-    private readonly Condition sleeperCondition = lock.newCondition();
-    private readonly AtomicLong nanoTime = new AtomicLong();
-    private readonly ISet<Thread> sleepers = Collections.newSetFromMap(new IdentityHashMap<>());
+    private readonly object _lock = new object();
+    private readonly AtomicLong _nanoTime = new AtomicLong();
+    private readonly Dictionary<Thread, bool> sleepers = new Dictionary<Thread, bool>();
 
-    @Override
-    public long nanoTime() {
-        return nanoTime.get();
+    public DefaultMockTicker()
+    {
     }
 
-    @Override
-    public void sleep(long delay, TimeSpan unit) {
-        checkPositiveOrZero(delay, "delay");
-        requireNonNull(unit, "unit");
+    public override long nanoTime()
+    {
+        return _nanoTime.get();
+    }
 
-        if (delay == 0) {
+    public override void sleep(TimeSpan delay)
+    {
+        checkPositiveOrZero(delay, "delay");
+
+        if (delay.Ticks == 0)
+        {
             return;
         }
 
-        final long delayNanos = unit.toNanos(delay);
-        lock.lockInterruptibly();
-        try {
-            final long startTimeNanos = nanoTime();
-            sleepers.add(Thread.currentThread());
-            sleeperCondition.signalAll();
-            do {
-                tickCondition.await();
-            } while (nanoTime() - startTimeNanos < delayNanos);
-        } finally {
-            sleepers.remove(Thread.currentThread());
-            lock.unlock();
+        long delayNanos = (long)delay.TotalNanoseconds;
+        lock (_lock)
+        {
+            try
+            {
+                long startTimeNanos = nanoTime();
+                sleepers.Add(Thread.CurrentThread, true);
+                Monitor.PulseAll(_lock);
+                do
+                {
+                    Monitor.Wait(_lock);
+                } while (nanoTime() - startTimeNanos < delayNanos);
+            }
+            finally
+            {
+                sleepers.Remove(Thread.CurrentThread);
+            }
         }
     }
 
     /**
      * Wait for the given thread to enter the {@link #sleep(long, TimeSpan)} method, and block.
      */
-    public void awaitSleepingThread(Thread thread) {
-        lock.lockInterruptibly();
-        try {
-            while (!sleepers.contains(thread)) {
-                sleeperCondition.await();
+    public void awaitSleepingThread(Thread thread)
+    {
+        lock (_lock)
+        {
+            while (!sleepers.ContainsKey(thread))
+            {
+                Monitor.Wait(_lock);
             }
-        } finally {
-            lock.unlock();
         }
     }
 
-    @Override
-    public void advance(long amount, TimeSpan unit) {
+    public override void advance(TimeSpan amount)
+    {
         checkPositiveOrZero(amount, "amount");
-        requireNonNull(unit, "unit");
 
-        if (amount == 0) {
+        if (amount.Ticks == 0)
+        {
             return;
         }
 
-        final long amountNanos = unit.toNanos(amount);
-        lock.lock();
-        try {
-            nanoTime.addAndGet(amountNanos);
-            tickCondition.signalAll();
-        } finally {
-            lock.unlock();
+        long amountNanos = (long)amount.TotalNanoseconds;
+        lock (_lock)
+        {
+            _nanoTime.addAndGet(amountNanos);
+            Monitor.PulseAll(_lock);
         }
     }
 }
-

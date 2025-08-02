@@ -31,6 +31,11 @@ public class AtomicLong
         return Interlocked.Decrement(ref _location);
     }
 
+    public long get()
+    {
+        return _location;
+    }
+
     public long read()
     {
         return Volatile.Read(ref _location);
@@ -52,7 +57,7 @@ public class AtomicLong
         return original == expectedValue;
     }
 
-    public long add(long value)
+    public long addAndGet(long value)
     {
         return Interlocked.Add(ref _location, value);
     }

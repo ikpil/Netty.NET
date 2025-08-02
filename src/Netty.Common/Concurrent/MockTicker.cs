@@ -13,19 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Concurrent;
-
-
 
 /**
  * A fake {@link Ticker} that allows the caller control the flow of time.
  * This can be useful when you test time-sensitive logic without waiting for too long
  * or introducing flakiness due to non-deterministic nature of system clock.
  */
-public interface MockTicker : Ticker {
-
-    @Override
-    default long initialNanoTime() {
+public abstract class MockTicker : Ticker
+{
+    public override long initialNanoTime()
+    {
         return 0;
     }
 
@@ -35,14 +36,15 @@ public interface MockTicker : Ticker {
      * @param amount the amount of time to advance this ticker by.
      * @param unit the {@link TimeSpan} of {@code amount}.
      */
-    void advance(long amount, TimeSpan unit);
+    public abstract void advance(TimeSpan amount);
 
     /**
      * Advances the current {@link #nanoTime()} by the given amount of time.
      *
      * @param amountMillis the number of milliseconds to advance this ticker by.
      */
-    default void advanceMillis(long amountMillis) {
-        advance(amountMillis, TimeSpan.MILLISECONDS);
+    public virtual void advanceMillis(long amountMillis)
+    {
+        advance(TimeSpan.FromMilliseconds(amountMillis));
     }
 }
