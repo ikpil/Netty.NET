@@ -68,8 +68,8 @@ public class FastThreadLocal<V> where V : class
             if (v != null && v != InternalThreadLocalMap.UNSET)
             {
                 //@SuppressWarnings("unchecked")
-                HashSet<FastThreadLocal<V>> variablesToRemove = (HashSet<FastThreadLocal<V>>)v;
-                FastThreadLocal<V>[] variablesToRemoveArray = variablesToRemove.ToArray();
+                Dictionary<FastThreadLocal<V>, bool> variablesToRemove = (Dictionary<FastThreadLocal<V>, bool>)v;
+                FastThreadLocal<V>[] variablesToRemoveArray = variablesToRemove.Keys.ToArray();
                 foreach (FastThreadLocal<V> tlv in variablesToRemoveArray)
                 {
                     tlv.remove(threadLocalMap);
@@ -113,18 +113,18 @@ public class FastThreadLocal<V> where V : class
     private static void addToVariablesToRemove(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable)
     {
         object v = threadLocalMap.indexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX);
-        HashSet<FastThreadLocal<V>> variablesToRemove;
+        Dictionary<FastThreadLocal<V>, bool> variablesToRemove;
         if (v == InternalThreadLocalMap.UNSET || v == null)
         {
-            variablesToRemove = new HashSet<FastThreadLocal<V>>();
+            variablesToRemove = new Dictionary<FastThreadLocal<V>, bool>();
             threadLocalMap.setIndexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX, variablesToRemove);
         }
         else
         {
-            variablesToRemove = (HashSet<FastThreadLocal<V>>)v;
+            variablesToRemove = (Dictionary<FastThreadLocal<V>, bool>)v;
         }
 
-        variablesToRemove.Add(variable);
+        variablesToRemove.Add(variable, true);
     }
 
     private static void removeFromVariablesToRemove(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable)
@@ -137,7 +137,7 @@ public class FastThreadLocal<V> where V : class
         }
 
         //@SuppressWarnings("unchecked")
-        HashSet<FastThreadLocal<V>> variablesToRemove = (HashSet<FastThreadLocal<V>>)v;
+        Dictionary<FastThreadLocal<V>, bool> variablesToRemove = (Dictionary<FastThreadLocal<V>, bool>)v;
         variablesToRemove.Remove(variable);
     }
 
