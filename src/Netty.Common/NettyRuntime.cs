@@ -16,17 +16,16 @@
 
 namespace Netty.NET.Common;
 
-
 /**
  * A utility class for wrapping calls to {@link Runtime}.
  */
-public final class NettyRuntime {
-
+public static class NettyRuntime
+{
     /**
      * Holder class for available processors to enable testing.
      */
-    static class AvailableProcessorsHolder {
-
+    static class AvailableProcessorsHolder
+    {
         private int availableProcessors;
 
         /**
@@ -36,16 +35,19 @@ public final class NettyRuntime {
          * @throws ArgumentException if the specified number of available processors is non-positive
          * @throws InvalidOperationException    if the number of available processors is already configured
          */
-        synchronized void setAvailableProcessors(final int availableProcessors) {
+        synchronized void setAvailableProcessors(final int availableProcessors)
+        {
             ObjectUtil.checkPositive(availableProcessors, "availableProcessors");
-            if (this.availableProcessors != 0) {
+            if (this.availableProcessors != 0)
+            {
                 final string message = string.format(
-                        Locale.ROOT,
-                        "availableProcessors is already set to [%d], rejecting [%d]",
-                        this.availableProcessors,
-                        availableProcessors);
+                    Locale.ROOT,
+                    "availableProcessors is already set to [%d], rejecting [%d]",
+                    this.availableProcessors,
+                    availableProcessors);
                 throw new InvalidOperationException(message);
             }
+
             this.availableProcessors = availableProcessors;
         }
 
@@ -57,14 +59,18 @@ public final class NettyRuntime {
          * @return the configured number of available processors
          */
         @SuppressForbidden(reason = "to obtain default number of available processors")
-        synchronized int availableProcessors() {
-            if (this.availableProcessors == 0) {
+
+        synchronized int availableProcessors()
+        {
+            if (this.availableProcessors == 0)
+            {
                 final int availableProcessors =
-                        SystemPropertyUtil.getInt(
-                                "io.netty.availableProcessors",
-                                Runtime.getRuntime().availableProcessors());
+                    SystemPropertyUtil.getInt(
+                        "io.netty.availableProcessors",
+                        Runtime.getRuntime().availableProcessors());
                 setAvailableProcessors(availableProcessors);
             }
+
             return this.availableProcessors;
         }
     }
@@ -79,7 +85,9 @@ public final class NettyRuntime {
      * @throws InvalidOperationException    if the number of available processors is already configured
      */
     @SuppressWarnings("unused,WeakerAccess") // this method is part of the public API
-    public static void setAvailableProcessors(final int availableProcessors) {
+
+    public static void setAvailableProcessors(final int availableProcessors)
+    {
         holder.setAvailableProcessors(availableProcessors);
     }
 
@@ -90,13 +98,8 @@ public final class NettyRuntime {
      *
      * @return the configured number of available processors
      */
-    public static int availableProcessors() {
+    public static int availableProcessors()
+    {
         return holder.availableProcessors();
-    }
-
-    /**
-     * No public constructor to prevent instances from being created.
-     */
-    private NettyRuntime() {
     }
 }
