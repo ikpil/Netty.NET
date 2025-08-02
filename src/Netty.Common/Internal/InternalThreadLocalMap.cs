@@ -29,7 +29,8 @@ namespace Netty.NET.Common.Internal;
  */
 internal sealed class InternalThreadLocalMap
 {
-    [ThreadStatic] private static InternalThreadLocalMap _slowThreadLocalMap;
+    [ThreadStatic]
+    private static InternalThreadLocalMap _slowThreadLocalMap;
 
     private static readonly AtomicInteger nextIndex = new AtomicInteger();
 
