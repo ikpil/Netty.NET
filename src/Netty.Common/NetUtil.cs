@@ -1067,11 +1067,11 @@ public static class NetUtil
         if (shortestEnd < 0)
         {
             // Optimization when there is no compressing needed
-            b.Append(words[0].ToString("X"));
+            b.Append(words[0].ToString("X2"));
             for (int i = 1; i < words.Length; ++i)
             {
                 b.Append(':');
-                b.Append(words[i].ToString("X"));
+                b.Append(words[i].ToString("X2"));
                 ;
             }
         }
@@ -1087,7 +1087,7 @@ public static class NetUtil
             }
             else
             {
-                b.Append(words[0].ToString("X"));
+                b.Append(words[0].ToString("X2"));
                 isIpv4Mapped = false;
             }
 
@@ -1116,7 +1116,7 @@ public static class NetUtil
                     }
                     else
                     {
-                        b.Append(words[i].ToString("X"));
+                        b.Append(words[i].ToString("X2"));
                     }
                 }
                 else if (!inRangeEndExclusive(i - 1, shortestStart, shortestEnd))

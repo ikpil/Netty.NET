@@ -95,7 +95,7 @@ public class DomainNameMapping<T> : IMapping<string, T>
         if (template.StartsWith("*."))
         {
             return template.regionMatches(2, hostName, 0, hostName.Length)
-                   || commonSuffixOfLength(hostName, template, template.Length - 1);
+                   || StringUtil.commonSuffixOfLength(hostName, template, template.Length - 1);
         }
 
         return template.Equals(hostName);

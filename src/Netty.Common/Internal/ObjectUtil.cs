@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Netty.NET.Common.Internal;
 
@@ -49,6 +51,36 @@ public static class ObjectUtil
         }
 
         return arg;
+    }
+    
+    public static IEnumerable<T> checkNotNull<T>(IEnumerable<T> args, string text)
+    {
+        if (args == null)
+        {
+            throw new ArgumentNullException(text);
+        }
+        
+        if (args is IList<T> list && list.Any(x => x == null))
+        {
+            throw new ArgumentNullException(text);
+        }
+        else if (args is ICollection<T> collection && collection.Any(x => x == null))
+        {
+            throw new ArgumentNullException(text);
+        }
+        else if (args is IReadOnlyCollection<T> readOnlyCollection && readOnlyCollection.Any(x => x == null))
+        {
+            throw new ArgumentNullException(text);
+        }
+        else
+        {
+            if (args.Any(x => x == null))
+            {
+                throw new ArgumentNullException(text);
+            }
+        }
+
+        return args;
     }
 
     /**

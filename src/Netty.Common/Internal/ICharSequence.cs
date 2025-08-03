@@ -6,21 +6,21 @@ public interface ICharSequence : IReadOnlyList<char>
 {
     /// Start is the inclusive start index to begin the subsequence.
     /// End is the exclusive end index to end the subsequence.
-    ICharSequence SubSequence(int start, int end);
+    ICharSequence subSequence(int start, int end);
 
-    ICharSequence SubSequence(int start);
+    ICharSequence subSequence(int start);
 
     char charAt(int index);
     int length();
-    int IndexOf(char ch, int start = 0);
+    int indexOf(char ch, int start = 0);
 
-    bool RegionMatches(int thisStart, ICharSequence seq, int start, int length);
+    bool regionMatches(int thisStart, ICharSequence seq, int start, int length);
 
-    bool RegionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length);
+    bool regionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length);
 
-    bool ContentEquals(ICharSequence other);
+    bool contentEquals(ICharSequence other);
 
-    bool ContentEqualsIgnoreCase(ICharSequence other);
+    bool contentEqualsIgnoreCase(ICharSequence other);
 
     int HashCode(bool ignoreCase);
 
