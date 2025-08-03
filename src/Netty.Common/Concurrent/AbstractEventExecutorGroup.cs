@@ -15,17 +15,6 @@
  */
 namespace Netty.NET.Common.Concurrent;
 
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Abstract base class for {@link IEventExecutorGroup} implementations.
  */

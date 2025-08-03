@@ -40,7 +40,8 @@ public class NativeLibraryLoader {
     private static readonly byte[] UNIQUE_ID_BYTES =
             "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(CharsetUtil.US_ASCII);
 
-    static {
+    static NativeLibraryLoader()
+    {
         string workdir = SystemPropertyUtil.get("io.netty.native.workdir");
         if (workdir != null) {
             File f = new File(workdir);

@@ -13,13 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Internal;
-
-
-
-
-
-
 
 /**
  * Indicates a public API that can change at any time (even in minor/bugfix releases).
@@ -33,15 +30,18 @@ namespace Netty.NET.Common.Internal;
  *         broken in a non-major release!</li>
  * </ol>
  */
-@Retention(RetentionPolicy.SOURCE) // TODO Retention policy needs to be CLASS in Netty 5.
-@Target({
-        ElementType.ANNOTATION_TYPE,
-        ElementType.CONSTRUCTOR,
-        ElementType.FIELD,
-        ElementType.METHOD,
-        ElementType.PACKAGE,
-        ElementType.TYPE
-})
-@Documented
-public @interface UnstableApi {
+//@Retention(RetentionPolicy.SOURCE) // TODO Retention policy needs to be CLASS in Netty 5.
+[AttributeUsage(
+    AttributeTargets.Class |
+    AttributeTargets.Struct |
+    AttributeTargets.Interface |
+    AttributeTargets.Enum |
+    AttributeTargets.Constructor |
+    AttributeTargets.Method |
+    AttributeTargets.Property |
+    AttributeTargets.Field |
+    AttributeTargets.Delegate,
+    Inherited = false)]
+public sealed class UnstableApiAttribute : Attribute
+{
 }

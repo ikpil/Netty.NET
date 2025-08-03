@@ -84,14 +84,14 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      */
     public AsciiString(byte[] value, int start, int length, bool copy) {
         if (copy) {
-            final byte[] rangedCopy = new byte[length];
-            Arrays.arraycopy(value, start, rangedCopy, 0, rangedCopy.length);
+            byte[] rangedCopy = new byte[length];
+            Arrays.arraycopy(value, start, rangedCopy, 0, rangedCopy.Length);
             this.value = rangedCopy;
             this.offset = 0;
         } else {
-            if (isOutOfBounds(start, length, value.length)) {
+            if (isOutOfBounds(start, length, value.Length)) {
                 throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" +
-                        length + ") <= " + "value.length(" + value.length + ')');
+                        length + ") <= " + "value.length(" + value.Length + ')');
             }
             this.value = value;
             this.offset = start;

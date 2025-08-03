@@ -16,9 +16,10 @@
 
 namespace Netty.NET.Common.Internal;
 
-public class NoOpTypeParameterMatcher : TypeParameterMatcher {
-    @Override
-    public bool match(object msg) {
+public class NoOpTypeParameterMatcher : TypeParameterMatcher
+{
+    public override bool match(object msg)
+    {
         return true;
     }
 }
