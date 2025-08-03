@@ -64,13 +64,12 @@ public static class MacAddressUtil
         {
             NetworkInterface iface = entry.Key;
             IPAddress inetAddr = entry.Value;
-            var physicalAddress = iface.GetPhysicalAddress();
-            physicalAddress.GetAddressBytes();
-            if ()
-            {
-                continue;
-            }
-
+            
+            // Cannot reliably detect virtual interfaces in .NET; no built-in API exists.
+            // if (iface.isVirtual()) {
+            //     continue;
+            // }
+            
             byte[] macAddr;
             try
             {
