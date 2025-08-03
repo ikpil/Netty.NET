@@ -23,17 +23,11 @@ using System.Text;
 namespace Netty.NET.Common.Internal;
 
 
-
-
-
-
-
-
-
 /**
  * string utility class.
  */
-public final class StringUtil {
+public static class StringUtil 
+{
 
     public static readonly string EMPTY_STRING = "";
     public static readonly string NEWLINE = SystemPropertyUtil.get("line.separator", "\n");

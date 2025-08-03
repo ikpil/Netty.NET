@@ -272,15 +272,7 @@ public static class NetUtil
         if (isValidIpV4Address(ipAddressString))
         {
             byte[] bytes = validIpV4ToBytes(ipAddressString);
-            try
-            {
-                return new IPAddress(bytes);
-            }
-            catch (Exception e)
-            {
-                // Should never happen!
-                throw new InvalidOperationException(e.Message);
-            }
+            return new IPAddress(bytes);
         }
 
         if (isValidIpV6Address(ipAddressString))
@@ -293,30 +285,15 @@ public static class NetUtil
             int percentPos = ipAddressString.indexOf('%');
             if (percentPos >= 0)
             {
-                try
-                {
-                    int scopeId = int.Parse(ipAddressString.substring(percentPos + 1));
-                    ipAddressString = ipAddressString.substring(0, percentPos);
-                    byte[] bytes = getIPv6ByName(ipAddressString, true);
-                    if (bytes == null)
-                    {
-                        return null;
-                    }
-
-                    try
-                    {
-                        return new IPAddress(bytes, scopeId);
-                    }
-                    catch (Exception e)
-                    {
-                        // Should never happen!
-                        throw new InvalidOperationException(e.Message);
-                    }
-                }
-                catch (ArgumentException e)
+                int scopeId = int.Parse(ipAddressString.substring(percentPos + 1));
+                ipAddressString = ipAddressString.substring(0, percentPos);
+                byte[] bytes = getIPv6ByName(ipAddressString, true);
+                if (bytes == null)
                 {
                     return null;
                 }
+
+                return new IPAddress(bytes, scopeId);
             }
 
             {
@@ -326,15 +303,7 @@ public static class NetUtil
                     return null;
                 }
 
-                try
-                {
-                    return new IPAddress(bytes);
-                }
-                catch (Exception e)
-                {
-                    // Should never happen!
-                    throw new InvalidOperationException(e.Message);
-                }
+                return new IPAddress(bytes);
             }
         }
 
@@ -1223,7 +1192,7 @@ internal static class SoMaxConnAction
             if (exists)
             {
                 using var fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var reader = new StreamReader(fs);
+                using var reader = new StreamReader(new BoundedStream(fs));
                 var line = reader.ReadLine();
                 somaxconn = int.Parse(line);
                 if (logger.isDebugEnabled())

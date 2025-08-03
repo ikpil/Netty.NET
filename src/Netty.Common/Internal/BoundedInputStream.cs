@@ -13,51 +13,109 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.IO;
+
 namespace Netty.NET.Common.Internal;
 
-public class BoundedInputStream : FilterInputStream {
+public class BoundedStream : Stream
+{
+    private readonly Stream _innerStream;
+    private readonly int _maxBytesRead;
+    private int _numRead;
 
-    private readonly int maxBytesRead;
-    private int numRead;
+    public BoundedStream(Stream innerStream, int maxBytesRead)
+    {
+        if (innerStream == null)
+            throw new ArgumentNullException(nameof(innerStream));
+        if (maxBytesRead <= 0)
+            throw new ArgumentException("maxBytesRead must be positive.", nameof(maxBytesRead));
 
-    public BoundedInputStream(@NotNull InputStream in, int maxBytesRead) {
-        super(in);
-        this.maxBytesRead = ObjectUtil.checkPositive(maxBytesRead, "maxRead");
+        _innerStream = innerStream;
+        _maxBytesRead = maxBytesRead;
+        _numRead = 0;
     }
 
-    public BoundedInputStream(@NotNull InputStream in) {
-        this(in, 8 * 1024);
+    public BoundedStream(Stream innerStream)
+        : this(innerStream, 8 * 1024)
+    {
     }
 
-    @Override
-    public int read() {
-        checkMaxBytesRead();
+    public override bool CanRead => _innerStream.CanRead;
+    public override bool CanSeek => false;
+    public override bool CanWrite => false;
+    public override long Length => throw new NotSupportedException();
 
-        int b = super.read();
-        if (b != -1) {
-            numRead++;
+    public override long Position
+    {
+        get => throw new NotSupportedException();
+        set => throw new NotSupportedException();
+    }
+
+    public override void Flush()
+    {
+        throw new NotSupportedException();
+    }
+
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override void SetLength(long value)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        CheckMaxBytesRead();
+        
+        int num = Math.Min(count, _maxBytesRead - _numRead + 1);
+
+        int bytesRead = _innerStream.Read(buffer, offset, num);
+        if (bytesRead != -1)
+        {
+            _numRead += bytesRead;
         }
+
+        return bytesRead;
+    }
+
+    public override int ReadByte()
+    {
+        CheckMaxBytesRead();
+
+        int b = _innerStream.ReadByte();
+        if (b != -1)
+        {
+            _numRead++;
+        }
+
         return b;
     }
 
-    @Override
-    public int read(byte[] buf, int off, int len) {
-        checkMaxBytesRead();
-
-        // Calculate the maximum number of bytes that we should try to read.
-        int num = Math.Min(len, maxBytesRead - numRead + 1);
-
-        int b = super.read(buf, off, num);
-
-        if (b != -1) {
-            numRead += b;
+    private void CheckMaxBytesRead()
+    {
+        if (_numRead > _maxBytesRead)
+        {
+            throw new IOException($"Maximum number of bytes read: {_numRead}");
         }
-        return b;
     }
 
-    private void checkMaxBytesRead() {
-        if (numRead > maxBytesRead) {
-            throw new IOException("Maximum number of bytes read: " + numRead);
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _innerStream.Dispose();
         }
+
+        base.Dispose(disposing);
     }
 }
