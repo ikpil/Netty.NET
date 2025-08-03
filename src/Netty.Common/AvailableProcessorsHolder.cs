@@ -37,7 +37,7 @@ internal class AvailableProcessorsHolder
      *
      * @return the configured number of available processors
      */
-    //@SuppressForbidden(reason = "to obtain default number of available processors")
+    [SuppressForbidden("to obtain default number of available processors")]
     public int availableProcessors()
     {
         lock (_lock)

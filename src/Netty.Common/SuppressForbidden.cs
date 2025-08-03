@@ -14,19 +14,20 @@
  * under the License.
  */
 
+using System;
+
 namespace Netty.NET.Common;
-
-
-
-
-
 
 /**
  * Annotation to suppress forbidden-apis errors inside a whole class, a method, or a field.
  */
-@Retention(RetentionPolicy.CLASS)
-@Target({ ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.METHOD, ElementType.TYPE })
-public @interface SuppressForbidden {
+[AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Class, Inherited = false)]
+public class SuppressForbiddenAttribute : Attribute
+{
+    public readonly string Reason;
 
-    string reason();
+    public SuppressForbiddenAttribute(string reason)
+    {
+        Reason = reason;
+    }
 }

@@ -14,8 +14,11 @@
  * under the License.
  */
 
-namespace Netty.Common.Tests;
+using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
+namespace Netty.Common.Tests;
 
 public class NettyRuntimeTests {
 
@@ -164,7 +167,7 @@ public class NettyRuntimeTests {
     }
 
     @Test
-    @SuppressForbidden(reason = "testing fallback to Runtime#availableProcessors")
+    [SuppressForbidden("testing fallback to Runtime#availableProcessors")]
     public void testGet() {
         final String availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
         try {
