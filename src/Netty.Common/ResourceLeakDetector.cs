@@ -67,7 +67,7 @@ public class ResourceLeakDetector<T> {
         static Level parseLevel(string levelStr) {
             string trimmedLevelStr = levelStr.trim();
             for (Level l : values()) {
-                if (trimmedLevelStr.equalsIgnoreCase(l.name()) || trimmedLevelStr.equals(string.valueOf(l.ordinal()))) {
+                if (trimmedLevelStr.EqualsIgnoreCase(l.name()) || trimmedLevelStr.equals(string.valueOf(l.ordinal()))) {
                     return l;
                 }
             }

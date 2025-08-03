@@ -1419,7 +1419,7 @@ public class PlatformDependent
         Pattern bitPattern = Pattern.compile("([1-9][0-9]+)-?bit");
         Matcher m = bitPattern.matcher(vm);
         if (m.find()) {
-            return int.parseInt(m.group(1));
+            return int.Parse(m.group(1));
         } else {
             return 64;
         }

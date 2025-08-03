@@ -259,7 +259,7 @@ public final class StringUtil {
      * @return The hexadecimal value represented in the ASCII character
      * given, or {@code -1} if the character is invalid.
      */
-    public static int decodeHexNibble(final char c) {
+    public static int decodeHexNibble(char c) {
         // Character.digit() is not used here, as it addresses a larger
         // set of characters (both ASCII and full-width latin letters).
         return HEX2B[c];

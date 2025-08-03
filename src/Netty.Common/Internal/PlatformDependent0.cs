@@ -1069,7 +1069,7 @@ public class PlatformDependent0 {
         final string[] components = javaSpecVersion.split("\\.");
         final int[] version = new int[components.length];
         for (int i = 0; i < components.length; i++) {
-            version[i] = int.parseInt(components[i]);
+            version[i] = int.Parse(components[i]);
         }
 
         if (version[0] == 1) {

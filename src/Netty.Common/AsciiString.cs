@@ -30,9 +30,10 @@ namespace Netty.NET.Common;
  * {@link #array()}. If any changes are made to the underlying byte array it is the user's responsibility to call
  * {@link #arrayChanged()} so the state of this class can be reset.
  */
-public class AsciiString : ICharSequence, Comparable<ICharSequence> {
+public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<AsciiString>, IComparable 
+{
     public static readonly AsciiString EMPTY_STRING = cached("");
-    private static readonly char MAX_CHAR_VALUE = 255;
+    private static readonly char MAX_CHAR_VALUE = (char)255;
 
     public static readonly int INDEX_NOT_FOUND = -1;
 
@@ -59,7 +60,7 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
     /**
      * Used to cache the {@link #toString()} value.
      */
-    private string string;
+    private string _string;
 
     /**
      * Initialize this byte string based upon a byte array. A copy will be made.
@@ -732,8 +733,8 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
             start = 0;
         }
 
-        final byte chAsByte = c2b0(ch);
-        final int len = offset + length;
+        byte chAsByte = c2b0(ch);
+        int len = offset + length;
         for (int i = start + offset; i < len; ++i) {
             if (value[i] == chAsByte) {
                 return i - offset;
@@ -1755,7 +1756,7 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
      * -1 if char {@code searchChar} is not found or {@code cs == null}
      */
     //-----------------------------------------------------------------------
-    public static int indexOf(final ICharSequence cs, final char searchChar, int start) {
+    public static int indexOf(string cs, char searchChar, int start) {
         if (cs instanceof string) {
             return ((string) cs).indexOf(searchChar, start);
         } else if (cs instanceof AsciiString) {
@@ -1764,7 +1765,7 @@ public class AsciiString : ICharSequence, Comparable<ICharSequence> {
         if (cs == null) {
             return INDEX_NOT_FOUND;
         }
-        final int sz = cs.length();
+        int sz = cs.length();
         for (int i = start < 0 ? 0 : start; i < sz; i++) {
             if (cs.charAt(i) == searchChar) {
                 return i;
