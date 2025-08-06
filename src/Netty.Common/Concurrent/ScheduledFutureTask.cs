@@ -17,14 +17,8 @@
 namespace Netty.NET.Common.Concurrent;
 
 
-
-
-
-
-
-
-@SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
-final class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, PriorityQueueNode {
+//@SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
+class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, PriorityQueueNode {
     // set once when added to priority queue
     private long id;
 
@@ -51,7 +45,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, 
     }
 
     ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Callable<V> callable, long nanoTime, long period) {
+            Func<V> callable, long nanoTime, long period) {
 
         super(executor, callable);
         deadlineNanos = nanoTime;
@@ -59,7 +53,7 @@ final class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, 
     }
 
     ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Callable<V> callable, long nanoTime) {
+            Func<V> callable, long nanoTime) {
 
         super(executor, callable);
         deadlineNanos = nanoTime;

@@ -177,7 +177,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    protected <V> RunnableScheduledFuture<V> decorateTask(Callable<V> callable, RunnableScheduledFuture<V> task) {
+    protected <V> RunnableScheduledFuture<V> decorateTask(Func<V> callable, RunnableScheduledFuture<V> task) {
         return new RunnableScheduledFutureTask<V>(this, task, true);
     }
 
@@ -187,7 +187,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit) {
+    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
         return (ScheduledFuture<V>) super.schedule(callable, delay, unit);
     }
 
@@ -207,12 +207,12 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public <T> Future<T> submit(Runnable task, T result) {
+    public Task<T> submit(Runnable task, T result) {
         return (Future<T>) super.submit(task, result);
     }
 
     @Override
-    public <T> Future<T> submit(Callable<T> task) {
+    public Task<T> submit(Func<T> task) {
         return (Future<T>) super.submit(task);
     }
 

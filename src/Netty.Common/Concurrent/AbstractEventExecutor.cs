@@ -85,12 +85,12 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     @Override
-    public <T> Future<T> submit(Runnable task, T result) {
+    public Task<T> submit(Runnable task, T result) {
         return (Future<T>) super.submit(task, result);
     }
 
     @Override
-    public <T> Future<T> submit(Callable<T> task) {
+    public Task<T> submit(Func<T> task) {
         return (Future<T>) super.submit(task);
     }
 
@@ -100,7 +100,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     @Override
-    protected final <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
+    protected final <T> RunnableFuture<T> newTaskFor(Func<T> callable) {
         return new PromiseTask<T>(this, callable);
     }
 
@@ -111,7 +111,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit) {
+    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
         throw new UnsupportedOperationException();
     }
 

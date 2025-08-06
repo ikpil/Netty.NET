@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Concurrent;
  * Abstract base class for {@link OrderedEventExecutor}'s that execute all its submitted tasks in a single thread.
  *
  */
-public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor , OrderedEventExecutor 
+public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor, OrderedEventExecutor 
 {
     static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
@@ -908,20 +908,20 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws InterruptedException, ExecutionException {
         throwIfInEventLoop("invokeAny");
         return super.invokeAny(tasks);
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit)
+    public <T> T invokeAny(Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit)
             throws InterruptedException, ExecutionException, TimeoutException {
         throwIfInEventLoop("invokeAny");
         return super.invokeAny(tasks, timeout, unit);
     }
 
     @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
+    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Func<T>> tasks)
             throws InterruptedException {
         throwIfInEventLoop("invokeAll");
         return super.invokeAll(tasks);
@@ -929,7 +929,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) {
+            Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit) {
         throwIfInEventLoop("invokeAll");
         return super.invokeAll(tasks, timeout, unit);
     }

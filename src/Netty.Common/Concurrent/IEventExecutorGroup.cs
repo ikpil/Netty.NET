@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Concurrent;
  * life-cycle and allows shutting them down in a global fashion.
  *
  */
-public interface IEventExecutorGroup : ScheduledExecutorService, Iterable<IEventExecutor> {
+public interface IEventExecutorGroup : IScheduledExecutorService, Iterable<IEventExecutor> {
 
     /**
      * Returns {@code true} if and only if all {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}
@@ -84,10 +84,10 @@ public interface IEventExecutorGroup : ScheduledExecutorService, Iterable<IEvent
     Future<?> submit(Runnable task);
 
     @Override
-    <T> Future<T> submit(Runnable task, T result);
+    Task<T> submit(Runnable task, T result);
 
     @Override
-    <T> Future<T> submit(Callable<T> task);
+    Task<T> submit(Func<T> task);
 
     /**
      * The ticker for this executor. Usually the {@link #schedule} methods will follow the
@@ -106,7 +106,7 @@ public interface IEventExecutorGroup : ScheduledExecutorService, Iterable<IEvent
     ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit);
 
     @Override
-    <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit);
+    <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit);
 
     @Override
     ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit);

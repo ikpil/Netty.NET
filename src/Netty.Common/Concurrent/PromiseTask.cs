@@ -20,7 +20,7 @@ namespace Netty.NET.Common.Concurrent;
 
 class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
 
-    private static readonly class RunnableAdapter<T> : Callable<T> {
+    private static readonly class RunnableAdapter<T> : Func<T> {
         final Runnable task;
         final T result;
 
@@ -61,7 +61,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
         }
     }
 
-    // Strictly of type Callable<V> or Runnable
+    // Strictly of type Func<V> or Runnable
     private object task;
 
     PromiseTask(IEventExecutor executor, Runnable runnable, V result) {
@@ -74,7 +74,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
         task = runnable;
     }
 
-    PromiseTask(IEventExecutor executor, Callable<V> callable) {
+    PromiseTask(IEventExecutor executor, Func<V> callable) {
         super(executor);
         task = callable;
     }
@@ -93,7 +93,7 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
     V runTask() {
         final object task = this.task;
         if (task instanceof Callable) {
-            return ((Callable<V>) task).call();
+            return ((Func<V>) task).call();
         }
         ((Runnable) task).run();
         return null;

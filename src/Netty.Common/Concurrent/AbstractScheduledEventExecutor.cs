@@ -257,7 +257,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor {
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit) {
+    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(callable, "callable");
         ObjectUtil.checkNotNull(unit, "unit");
         if (delay < 0) {

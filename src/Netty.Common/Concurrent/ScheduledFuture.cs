@@ -18,6 +18,6 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * The result of a scheduled asynchronous operation.
  */
-@SuppressWarnings("ClassNameSameAsAncestorName")
-public interface ScheduledFuture<V> extends Future<V>, java.util.concurrent.ScheduledFuture<V> {
+[SuppressWarnings("ClassNameSameAsAncestorName")]
+public interface ScheduledFuture<V> : Future<V>, java.util.concurrent.ScheduledFuture<V> {
 }

@@ -25,12 +25,12 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public <T> Future<T> submit(Runnable task, T result) {
+    public Task<T> submit(Runnable task, T result) {
         return next().submit(task, result);
     }
 
     @Override
-    public <T> Future<T> submit(Callable<T> task) {
+    public Task<T> submit(Func<T> task) {
         return next().submit(task);
     }
 
@@ -40,7 +40,7 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeSpan unit) {
+    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
         return next().schedule(callable, delay, unit);
     }
 
@@ -77,24 +77,24 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
+    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Func<T>> tasks)
             throws InterruptedException {
         return next().invokeAll(tasks);
     }
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit) {
+            Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit) {
         return next().invokeAll(tasks, timeout, unit);
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws InterruptedException, ExecutionException {
         return next().invokeAny(tasks);
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeSpan unit)
+    public <T> T invokeAny(Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit)
             throws InterruptedException, ExecutionException, TimeoutException {
         return next().invokeAny(tasks, timeout, unit);
     }
