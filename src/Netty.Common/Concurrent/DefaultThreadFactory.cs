@@ -15,121 +15,97 @@
  */
 
 using System;
-using System.Diagnostics;
-using System.Globalization;
 using System.Threading;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
-public class ThreadGroup
-{
-}
-
 /**
  * A {@link IThreadFactory} implementation with a simple naming rule.
  */
-public class DefaultThreadFactory : IThreadFactory 
+public class DefaultThreadFactory : IThreadFactory
 {
-    private static readonly AtomicInteger poolId = new AtomicInteger();
+    private static readonly AtomicInteger _poolId = new AtomicInteger();
 
-    private readonly AtomicInteger nextId = new AtomicInteger();
-    private readonly string prefix;
-    private readonly bool daemon;
-    private readonly ThreadPriority priority;
-    protected readonly ThreadGroup threadGroup;
+    private readonly AtomicInteger _nextId = new AtomicInteger();
+    private readonly string _prefix;
+    private readonly bool _daemon;
+    private readonly ThreadPriority _priority;
+    //protected readonly ThreadGroup _threadGroup;
 
-    public DefaultThreadFactory(Type poolType) 
-        : this(poolType, false, ThreadPriority.Normal)
-    {
-    }
-
-    public DefaultThreadFactory(string poolName) 
-        : this(poolName, false, ThreadPriority.Normal)
-    {
-    }
-
-    public DefaultThreadFactory(Type poolType, bool daemon) 
-        : this(poolType, daemon, ThreadPriority.Normal)
-    {
-    }
-
-    public DefaultThreadFactory(string poolName, bool daemon) 
-        : this(poolName, daemon, ThreadPriority.Normal)
-    {
-    }
-
-    public DefaultThreadFactory(Type poolType, ThreadPriority priority) 
-        : this(poolType, false, priority)
-    {
-    }
-
-    public DefaultThreadFactory(string poolName, ThreadPriority priority) 
-        : this(poolName, false, priority)
-    {
-    }
-
-    public DefaultThreadFactory(Type poolType, bool daemon, ThreadPriority priority) 
+    public DefaultThreadFactory(Type poolType, bool daemon = false, ThreadPriority priority = ThreadPriority.Normal)
         : this(toPoolName(poolType), daemon, priority)
     {
     }
-
-    public static string toPoolName(Type poolType) 
+    
+    public static string toPoolName(Type poolType)
     {
         ObjectUtil.checkNotNull(poolType, "poolType");
 
         string poolName = StringUtil.simpleClassName(poolType);
-        switch (poolName.length()) {
+        switch (poolName.length())
+        {
             case 0:
                 return "unknown";
             case 1:
                 return poolName.ToLowerInvariant();
             default:
-                if (char.IsUpper(poolName.charAt(0)) && char.IsLower(poolName.charAt(1))) {
+                if (char.IsUpper(poolName.charAt(0)) && char.IsLower(poolName.charAt(1)))
+                {
                     return char.ToLowerInvariant(poolName.charAt(0)) + poolName.substring(1);
-                } else {
+                }
+                else
+                {
                     return poolName;
                 }
         }
     }
 
-    public DefaultThreadFactory(string poolName, bool daemon, ThreadPriority priority) 
-        : this(poolName, daemon, priority, null)
+
+    public DefaultThreadFactory(string poolName, bool daemon, ThreadPriority priority)
     {
-    }
-    
-    public DefaultThreadFactory(string poolName, bool daemon, ThreadPriority priority, ThreadGroup threadGroup) {
         ObjectUtil.checkNotNull(poolName, "poolName");
 
-        if (priority < ThreadPriority.Lowest || priority > ThreadPriority.Highest) {
+        if (priority < ThreadPriority.Lowest || priority > ThreadPriority.Highest)
+        {
             throw new ArgumentException(
-                    "priority: " + priority + " (expected: Thread.MIN_PRIORITY <= priority <= Thread.MAX_PRIORITY)");
+                "priority: " + priority + " (expected: ThreadPriority.Lowest <= priority <= ThreadPriority.Highest)");
         }
 
-        prefix = poolName + '-' + poolId.incrementAndGet() + '-';
-        this.daemon = daemon;
-        this.priority = priority;
-        this.threadGroup = threadGroup;
+        _prefix = poolName + '-' + _poolId.incrementAndGet() + '-';
+        _daemon = daemon;
+        _priority = priority;
+        //_threadGroup = threadGroup;
     }
 
 
-    public Thread newThread(IRunnable r) {
-        Thread t = newThread(FastThreadLocalRunnable.wrap(r), prefix + nextId.incrementAndGet());
-        try {
-            if (t.isDaemon() != daemon) {
-                t.setDaemon(daemon);
+    public Thread newThread(IRunnable r)
+    {
+        Thread t = newThread(FastThreadLocalRunnable.wrap(r), _prefix + _nextId.incrementAndGet());
+        try
+        {
+            if (t.IsBackground != _daemon)
+            {
+                t.IsBackground = _daemon;
             }
 
-            if (t.getPriority() != priority) {
-                t.setPriority(priority);
+            if (t.Priority != _priority)
+            {
+                t.Priority = _priority;
             }
-        } catch (Exception ignored) {
+        }
+        catch (Exception ignored)
+        {
             // Doesn't matter even if failed to set.
         }
+
         return t;
     }
 
-    protected Thread newThread(Runnable r, string name) {
-        return new FastThreadLocalThread(threadGroup, r, name);
+    private Thread newThread(IRunnable r, string name)
+    {
+        var t = new Thread(r.run);
+        t.Name = name;
+        return t;
     }
 }
