@@ -182,23 +182,23 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit) {
-        return (ScheduledFuture<?>) super.schedule(command, delay, unit);
+    public IScheduledTask<?> schedule(Runnable command, long delay, TimeSpan unit) {
+        return (IScheduledTask<> <?>) super.schedule(command, delay, unit);
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
-        return (ScheduledFuture<V>) super.schedule(callable, delay, unit);
+    public <V> IScheduledTask<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
+        return (IScheduledTask<V>) super.schedule(callable, delay, unit);
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
-        return (ScheduledFuture<?>) super.scheduleAtFixedRate(command, initialDelay, period, unit);
+    public IScheduledTask<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
+        return (IScheduledTask<> <?>) super.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
-        return (ScheduledFuture<?>) super.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+    public IScheduledTask<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
+        return (IScheduledTask<> <?>) super.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
     @Override
@@ -222,7 +222,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     private static readonly class RunnableScheduledFutureTask<V> extends PromiseTask<V>
-            implements RunnableScheduledFuture<V>, ScheduledFuture<V> {
+            implements RunnableScheduledFuture<V>, IScheduledTask<V> {
         private readonly RunnableScheduledFuture<V> future;
         private readonly bool wasCallable;
 

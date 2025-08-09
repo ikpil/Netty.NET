@@ -13,11 +13,29 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
  * The result of a scheduled asynchronous operation.
  */
-[SuppressWarnings("ClassNameSameAsAncestorName")]
-public interface ScheduledFuture<V> : Future<V>, java.util.concurrent.ScheduledFuture<V> {
+//[SuppressWarnings("ClassNameSameAsAncestorName")]
+public interface IScheduledTask
+{
+    bool Cancel();
+
+    long Deadline { get; }
+
+    Task Completion { get; }
+
+    TaskAwaiter GetAwaiter();
+}
+
+public interface IScheduledTask<T> : IScheduledTask
+{
+    T Result { get; }    
 }

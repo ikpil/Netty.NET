@@ -242,7 +242,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor {
     }
 
     @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit) {
+    public IScheduledTask<> <?> schedule(Runnable command, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (delay < 0) {
@@ -257,7 +257,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor {
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
+    public <V> IScheduledTask<> <V> schedule(Func<V> callable, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(callable, "callable");
         ObjectUtil.checkNotNull(unit, "unit");
         if (delay < 0) {
@@ -270,7 +270,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor {
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<> <?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
@@ -289,7 +289,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor {
     }
 
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<> <?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
@@ -328,7 +328,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor {
         scheduledTaskQueue().add(task.setId(++nextTaskId));
     }
 
-    private <V> ScheduledFuture<V> schedule(final ScheduledFutureTask<V> task) {
+    private <V> IScheduledTask<> <V> schedule(final ScheduledFutureTask<V> task) {
         if (inEventLoop()) {
             scheduleFromEventLoop(task);
         } else {

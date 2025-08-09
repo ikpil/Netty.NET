@@ -28,8 +28,8 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(AbstractEventExecutor));
 
-    static readonly long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;
-    static readonly long DEFAULT_SHUTDOWN_TIMEOUT = 15;
+    public static readonly TimeSpan DEFAULT_SHUTDOWN_QUIET_PERIOD = TimeSpan.FromSeconds(2);
+    public static readonly TimeSpan DEFAULT_SHUTDOWN_TIMEOUT = TimeSpan.FromSeconds(15);
 
     private readonly IEventExecutorGroup parent;
     private readonly Collection<IEventExecutor> selfCollection = Collections.<IEventExecutor>singleton(this);
@@ -63,14 +63,14 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeSpan)} or {@link #shutdownGracefully()} instead.
+     * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
     @Override
     @Deprecated
     public abstract void shutdown();
 
     /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeSpan)} or {@link #shutdownGracefully()} instead.
+     * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
     @Override
     @Deprecated
@@ -105,23 +105,23 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay,
+    public IScheduledTask<?> schedule(Runnable command, long delay,
                                        TimeSpan unit) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
+    public <V> IScheduledTask<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
         throw new UnsupportedOperationException();
     }
 

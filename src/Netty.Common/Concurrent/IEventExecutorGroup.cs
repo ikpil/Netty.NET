@@ -13,6 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Threading.Tasks;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
@@ -21,20 +25,20 @@ namespace Netty.NET.Common.Concurrent;
  * life-cycle and allows shutting them down in a global fashion.
  *
  */
-public interface IEventExecutorGroup : IScheduledExecutorService, Iterable<IEventExecutor> {
-
+public interface IEventExecutorGroup : IScheduledExecutorService
+{
     /**
      * Returns {@code true} if and only if all {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}
-     * are being {@linkplain #shutdownGracefully() shut down gracefully} or was {@linkplain #isShutdown() shut down}.
+     * are being {@linkplain #shutdownGracefullyAsync() shut down gracefully} or was {@linkplain #isShutdown() shut down}.
      */
     bool isShuttingDown();
 
     /**
-     * Shortcut method for {@link #shutdownGracefully(long, long, TimeSpan)} with sensible default values.
+     * Shortcut method for {@link #shutdownGracefullyAsync(long, long, TimeSpan)} with sensible default values.
      *
-     * @return the {@link #terminationFuture()}
+     * @return the {@link #terminationAsync()}
      */
-    Future<?> shutdownGracefully();
+    Task shutdownGracefullyAsync();
 
     /**
      * Signals this executor that the caller wants the executor to be shut down.  Once this method is called,
@@ -48,69 +52,18 @@ public interface IEventExecutorGroup : IScheduledExecutorService, Iterable<IEven
      *                    regardless if a task was submitted during the quiet period
      * @param unit        the unit of {@code quietPeriod} and {@code timeout}
      *
-     * @return the {@link #terminationFuture()}
+     * @return the {@link #terminationAsync()}
      */
-    Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit);
+    Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
 
     /**
      * Returns the {@link Future} which is notified when all {@link IEventExecutor}s managed by this
      * {@link IEventExecutorGroup} have been terminated.
      */
-    Future<?> terminationFuture();
-
-    /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeSpan)} or {@link #shutdownGracefully()} instead.
-     */
-    @Override
-    @Deprecated
-    void shutdown();
-
-    /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeSpan)} or {@link #shutdownGracefully()} instead.
-     */
-    @Override
-    @Deprecated
-    List<Runnable> shutdownNow();
+    Task terminationAsync();
 
     /**
      * Returns one of the {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}.
      */
     IEventExecutor next();
-
-    @Override
-    Iterator<IEventExecutor> iterator();
-
-    @Override
-    Future<?> submit(Runnable task);
-
-    @Override
-    Task<T> submit(Runnable task, T result);
-
-    @Override
-    Task<T> submit(Func<T> task);
-
-    /**
-     * The ticker for this executor. Usually the {@link #schedule} methods will follow the
-     * {@link Ticker#systemTicker() system ticker} (i.e. {@link System#nanoTime()}), but especially for testing it is
-     * sometimes useful to have more control over the ticker. In that case, this method will be overridden. Code that
-     * schedules tasks on this executor should use this ticker in order to stay consistent with the executor (e.g. not
-     * be surprised by scheduled tasks running "early").
-     *
-     * @return The ticker for this scheduler
-     */
-    default Ticker ticker() {
-        return Ticker.systemTicker();
-    }
-
-    @Override
-    ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit);
-
-    @Override
-    <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit);
-
-    @Override
-    ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit);
-
-    @Override
-    ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit);
 }

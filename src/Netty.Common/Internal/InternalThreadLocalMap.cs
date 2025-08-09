@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Internal;
  * Note that this class is for internal use only and is subject to change at any time.  Use {@link FastThreadLocal}
  * unless you know what you are doing.
  */
-internal sealed class InternalThreadLocalMap
+public sealed class InternalThreadLocalMap
 {
     [ThreadStatic]
     private static InternalThreadLocalMap _slowThreadLocalMap;

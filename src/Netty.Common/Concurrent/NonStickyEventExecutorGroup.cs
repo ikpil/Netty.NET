@@ -71,7 +71,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
     @Override
     public Future<?> shutdownGracefully() {
-        return group.shutdownGracefully();
+        return group.shutdownGracefullyAsync();
     }
 
     @Override
@@ -81,7 +81,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
     @Override
     public Future<?> terminationFuture() {
-        return group.terminationFuture();
+        return group.terminationAsync();
     }
 
     @SuppressWarnings("deprecation")
@@ -138,22 +138,22 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit) {
+    public IScheduledTask<?> schedule(Runnable command, long delay, TimeSpan unit) {
         return group.schedule(command, delay, unit);
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
+    public <V> IScheduledTask<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
         return group.schedule(callable, delay, unit);
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
         return group.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
         return group.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
@@ -296,7 +296,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
         @Override
         public Future<?> terminationFuture() {
-            return executor.terminationFuture();
+            return executor.terminationAsync();
         }
 
         @Override

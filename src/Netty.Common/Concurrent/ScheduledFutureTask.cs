@@ -18,7 +18,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 //@SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
-class ScheduledFutureTask<V> extends PromiseTask<V> : ScheduledFuture<V>, PriorityQueueNode {
+class ScheduledFutureTask<V> extends PromiseTask<V> : IScheduledTask<V>, PriorityQueueNode {
     // set once when added to priority queue
     private long id;
 

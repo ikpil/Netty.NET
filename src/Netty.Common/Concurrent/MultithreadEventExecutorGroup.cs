@@ -16,21 +16,12 @@
 namespace Netty.NET.Common.Concurrent;
 
 
-
-
-
-
-
-
-
-
-
-
 /**
  * Abstract base class for {@link IEventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
  */
-public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
+public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup 
+{
 
     private readonly IEventExecutor[] children;
     private readonly ISet<IEventExecutor> readonlyChildren;

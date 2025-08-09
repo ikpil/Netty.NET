@@ -13,16 +13,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Threading;
+
 namespace Netty.NET.Common.Concurrent;
-
-
 
 /**
  * Executor that is aware its execution thread.
  */
-public interface ThreadAwareExecutor : Executor {
+public interface IThreadAwareExecutor : IExecutor
+{
     /**
-     * Return {@code true} if the given {@link Thread} is used by this {@link ThreadAwareExecutor} to execute
+     * Return {@code true} if the given {@link Thread} is used by this {@link IThreadAwareExecutor} to execute
      * work.
      */
     bool isExecutorThread(Thread thread);

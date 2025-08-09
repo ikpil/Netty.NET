@@ -77,7 +77,7 @@ public final class GlobalEventExecutor : AbstractScheduledEventExecutor : Ordere
                 DefaultThreadFactory.toPoolName(getClass()), false, Thread.NORM_PRIORITY, null), this);
 
         UnsupportedOperationException terminationFailure = new UnsupportedOperationException();
-        ThrowableUtil.unknownStackTrace(terminationFailure, typeof(GlobalEventExecutor), "terminationFuture");
+        ThrowableUtil.unknownStackTrace(terminationFailure, typeof(GlobalEventExecutor), "terminationAsync");
         terminationFuture = new FailedFuture<object>(this, terminationFailure);
     }
 

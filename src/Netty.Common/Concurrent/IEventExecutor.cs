@@ -25,8 +25,8 @@ namespace Netty.NET.Common.Concurrent;
  * Besides this, it also extends the {@link IEventExecutorGroup} to allow for a generic
  * way to access methods.
  */
-public interface IEventExecutor : IEventExecutorGroup, ThreadAwareExecutor {
-
+public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor 
+{
     /**
      * Return the {@link IEventExecutorGroup} which is the parent of this {@link IEventExecutor},
      */

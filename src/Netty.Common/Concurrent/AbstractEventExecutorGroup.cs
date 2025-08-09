@@ -13,94 +13,93 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
  * Abstract base class for {@link IEventExecutorGroup} implementations.
  */
-public abstract class AbstractEventExecutorGroup : IEventExecutorGroup {
-    @Override
-    public Future<?> submit(Runnable task) {
-        return next().submit(task);
-    }
-
-    @Override
-    public Task<T> submit(Runnable task, T result) {
-        return next().submit(task, result);
-    }
-
-    @Override
-    public Task<T> submit(Func<T> task) {
-        return next().submit(task);
-    }
-
-    @Override
-    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeSpan unit) {
-        return next().schedule(command, delay, unit);
-    }
-
-    @Override
-    public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
-        return next().schedule(callable, delay, unit);
-    }
-
-    @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
-        return next().scheduleAtFixedRate(command, initialDelay, period, unit);
-    }
-
-    @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
-        return next().scheduleWithFixedDelay(command, initialDelay, delay, unit);
-    }
-
-    @Override
-    public Future<?> shutdownGracefully() {
-        return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeSpan.SECONDS);
-    }
-
-    /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeSpan)} or {@link #shutdownGracefully()} instead.
-     */
-    @Override
-    @Deprecated
+public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
+{
     public abstract void shutdown();
 
-    /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeSpan)} or {@link #shutdownGracefully()} instead.
-     */
-    @Override
-    @Deprecated
-    public List<Runnable> shutdownNow() {
-        shutdown();
-        return Collections.emptyList();
+    public abstract List<IRunnable> shutdownNow();
+    public abstract bool isShutdown();
+    public abstract bool isShuttingDown();
+    public abstract bool isTerminated();
+    public abstract bool awaitTermination(TimeSpan timeout);
+    public abstract Task terminationAsync();
+    public abstract Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
+    public abstract IEventExecutor next();
+
+
+    public Task<T> submitAsync<T>(Func<T> task)
+    {
+        return next().submitAsync(task);
     }
 
-    @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Func<T>> tasks)
-            throws InterruptedException {
+    public Task<T> submitAsync<T>(IRunnable task, T result)
+    {
+        return next().submitAsync(task, result);
+    }
+
+    public Task submitAsync(IRunnable task)
+    {
+        return next().submitAsync(task);
+    }
+
+    public IScheduledTask schedule(IRunnable command, TimeSpan delay)
+    {
+        return next().schedule(command, delay);
+    }
+
+    public IScheduledTask<V> schedule<V>(Func<V> callable, TimeSpan delay)
+    {
+        return next().schedule(callable, delay);
+    }
+
+    public IScheduledTask scheduleAtFixedRate(IRunnable command, long initialDelay, TimeSpan period)
+    {
+        return next().scheduleAtFixedRate(command, initialDelay, period);
+    }
+
+    public IScheduledTask scheduleWithFixedDelay(IRunnable command, long initialDelay, TimeSpan delay)
+    {
+        return next().scheduleWithFixedDelay(command, initialDelay, delay);
+    }
+
+    public Task shutdownGracefullyAsync()
+    {
+        return shutdownGracefullyAsync(AbstractEventExecutor.DEFAULT_SHUTDOWN_QUIET_PERIOD, AbstractEventExecutor.DEFAULT_SHUTDOWN_TIMEOUT);
+    }
+
+    public List<Task<T>> invokeAll<T>(Collection<Func<T>> tasks)
+    {
         return next().invokeAll(tasks);
     }
 
-    @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit) {
-        return next().invokeAll(tasks, timeout, unit);
+    public List<Task<T>> invokeAll<T>(Collection<Func<T>> tasks, TimeSpan timeout)
+    {
+        return next().invokeAll(tasks, timeout);
     }
 
-    @Override
-    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws InterruptedException, ExecutionException {
+    public T invokeAny<T>(Collection<Func<T>> tasks)
+    {
         return next().invokeAny(tasks);
     }
 
-    @Override
-    public <T> T invokeAny(Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
-        return next().invokeAny(tasks, timeout, unit);
+    public T invokeAny<T>(Collection<Func<T>> tasks, TimeSpan timeout)
+    {
+        return next().invokeAny(tasks, timeout);
     }
 
-    @Override
-    public void execute(Runnable command) {
+    public void execute(IRunnable command)
+    {
         next().execute(command);
     }
 }

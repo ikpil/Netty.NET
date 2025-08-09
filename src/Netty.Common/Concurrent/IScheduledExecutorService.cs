@@ -10,14 +10,14 @@ public interface IScheduledExecutorService : IExecutorService
      * @param command the task to execute
      * @param delay the time from now to delay execution
      * @param unit the time unit of the delay parameter
-     * @return a ScheduledFuture representing pending completion of
+     * @return a IScheduledTask representing pending completion of
      *         the task and whose {@code get()} method will return
      *         {@code null} upon completion
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
      * @throws NullPointerException if command or unit is null
      */
-    public ScheduledFuture schedule(IRunnable command, TimeSpan delay);
+    public IScheduledTask schedule(IRunnable command, TimeSpan delay);
 
     /**
      * Submits a value-returning one-shot task that becomes enabled
@@ -27,12 +27,12 @@ public interface IScheduledExecutorService : IExecutorService
      * @param delay the time from now to delay execution
      * @param unit the time unit of the delay parameter
      * @param <V> the type of the callable's result
-     * @return a ScheduledFuture that can be used to extract result or cancel
+     * @return a IScheduledTask that can be used to extract result or cancel
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
      * @throws NullPointerException if callable or unit is null
      */
-    public ScheduledFuture<V> schedule<V>(Func<V> callable, TimeSpan delay);
+    public IScheduledTask<V> schedule<V>(Func<V> callable, TimeSpan delay);
 
     /**
      * Submits a periodic action that becomes enabled first after the
@@ -63,7 +63,7 @@ public interface IScheduledExecutorService : IExecutorService
      * @param initialDelay the time to delay first execution
      * @param period the period between successive executions
      * @param unit the time unit of the initialDelay and period parameters
-     * @return a ScheduledFuture representing pending completion of
+     * @return a IScheduledTask representing pending completion of
      *         the series of repeated tasks.  The future's {@link
      *         Future#get() get()} method will never return normally,
      *         and will throw an exception upon task cancellation or
@@ -73,7 +73,7 @@ public interface IScheduledExecutorService : IExecutorService
      * @throws NullPointerException if command or unit is null
      * @throws IllegalArgumentException if period less than or equal to zero
      */
-    public ScheduledFuture scheduleAtFixedRate(IRunnable command, long initialDelay, TimeSpan period);
+    public IScheduledTask scheduleAtFixedRate(IRunnable command, long initialDelay, TimeSpan period);
 
     /**
      * Submits a periodic action that becomes enabled first after the
@@ -100,7 +100,7 @@ public interface IScheduledExecutorService : IExecutorService
      * @param delay the delay between the termination of one
      * execution and the commencement of the next
      * @param unit the time unit of the initialDelay and delay parameters
-     * @return a ScheduledFuture representing pending completion of
+     * @return a IScheduledTask representing pending completion of
      *         the series of repeated tasks.  The future's {@link
      *         Future#get() get()} method will never return normally,
      *         and will throw an exception upon task cancellation or
@@ -110,5 +110,5 @@ public interface IScheduledExecutorService : IExecutorService
      * @throws NullPointerException if command or unit is null
      * @throws IllegalArgumentException if delay less than or equal to zero
      */
-    public ScheduledFuture scheduleWithFixedDelay(IRunnable command, long initialDelay, TimeSpan delay);
+    public IScheduledTask scheduleWithFixedDelay(IRunnable command, long initialDelay, TimeSpan delay);
 }
