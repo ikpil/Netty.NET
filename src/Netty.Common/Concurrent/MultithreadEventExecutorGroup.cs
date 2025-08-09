@@ -36,7 +36,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, ThreadFactory threadFactory, params object[] args) {
+    protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args) {
         this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args);
     }
 

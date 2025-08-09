@@ -13,22 +13,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Concurrent;
 
+public class ThreadPerTaskExecutor : IExecutor
+{
+    private readonly IThreadFactory _threadFactory;
 
-
-
-
-
-public final class ThreadPerTaskExecutor : Executor {
-    private readonly ThreadFactory threadFactory;
-
-    public ThreadPerTaskExecutor(ThreadFactory threadFactory) {
-        this.threadFactory = ObjectUtil.checkNotNull(threadFactory, "threadFactory");
+    public ThreadPerTaskExecutor(IThreadFactory threadFactory)
+    {
+        _threadFactory = ObjectUtil.checkNotNull(threadFactory, "threadFactory");
     }
 
-    @Override
-    public void execute(Runnable command) {
-        threadFactory.newThread(command).start();
+    public void execute(IRunnable command)
+    {
+        _threadFactory.newThread(command).Start();
     }
 }

@@ -24,7 +24,7 @@ namespace Netty.NET.Common.Concurrent;
  * {@link IEventExecutor} (and therefore {@link Thread}) will be used to execute the {@link Runnable}s.
  *
  * <p>The {@link IEventExecutorGroup#next()} for the wrapped {@link IEventExecutorGroup} must <strong>NOT</strong> return
- * executors of type {@link OrderedEventExecutor}.
+ * executors of type {@link IOrderedEventExecutor}.
  */
 @UnstableApi
 public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
@@ -33,7 +33,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
     /**
      * Creates a new instance. Be aware that the given {@link IEventExecutorGroup} <strong>MUST NOT</strong> contain
-     * any {@link OrderedEventExecutor}s.
+     * any {@link IOrderedEventExecutor}s.
      */
     public NonStickyEventExecutorGroup(IEventExecutorGroup group) {
         this(group, 1024);
@@ -41,7 +41,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
     /**
      * Creates a new instance. Be aware that the given {@link IEventExecutorGroup} <strong>MUST NOT</strong> contain
-     * any {@link OrderedEventExecutor}s.
+     * any {@link IOrderedEventExecutor}s.
      */
     public NonStickyEventExecutorGroup(IEventExecutorGroup group, int maxTaskExecutePerRun) {
         this.group = verify(group);

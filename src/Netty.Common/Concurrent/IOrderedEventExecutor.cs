@@ -19,6 +19,6 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * Marker interface for {@link IEventExecutor}s that will process all submitted tasks in an ordered / serial fashion.
  */
-public interface OrderedEventExecutor : IEventExecutor
+public interface IOrderedEventExecutor : IEventExecutor
 {
 }
