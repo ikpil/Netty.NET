@@ -13,26 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Factory that creates new {@link EventExecutorChooser}s.
+ * Factory that creates new {@link IEventExecutorChooser}s.
  */
-public interface EventExecutorChooserFactory {
-
+public interface IEventExecutorChooserFactory
+{
     /**
-     * Returns a new {@link EventExecutorChooser}.
+     * Returns a new {@link IEventExecutorChooser}.
      */
-    EventExecutorChooser newChooser(IEventExecutor[] executors);
-
-    /**
-     * Chooses the next {@link IEventExecutor} to use.
-     */
-    interface EventExecutorChooser {
-
-        /**
-         * Returns the new {@link IEventExecutor} to use.
-         */
-        IEventExecutor next();
-    }
+    IEventExecutorChooser newChooser(IEventExecutor[] executors);
 }

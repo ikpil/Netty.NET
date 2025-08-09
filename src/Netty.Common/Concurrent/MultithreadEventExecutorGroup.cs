@@ -13,6 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Concurrent;
 
 
@@ -27,7 +33,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     private readonly ISet<IEventExecutor> readonlyChildren;
     private readonly AtomicInteger terminatedChildren = new AtomicInteger();
     private readonly Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
-    private readonly EventExecutorChooserFactory.EventExecutorChooser chooser;
+    private readonly IEventExecutorChooser chooser;
 
     /**
      * Create a new instance.
@@ -36,8 +42,9 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args) {
-        this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args);
+    protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args) 
+        : this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args)
+    {
     }
 
     /**
@@ -47,8 +54,9 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param executor          the Executor to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, Executor executor, params object[] args) {
-        this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);
+    protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor, params object[] args) 
+        : this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args)
+    {
     }
 
     /**
@@ -56,12 +64,12 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      *
      * @param nThreads          the number of threads that will be used by this instance.
      * @param executor          the Executor to use, or {@code null} if the default should be used.
-     * @param chooserFactory    the {@link EventExecutorChooserFactory} to use.
+     * @param chooserFactory    the {@link IEventExecutorChooserFactory} to use.
      * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, Executor executor,
-                                            EventExecutorChooserFactory chooserFactory, params object[] args) {
-        checkPositive(nThreads, "nThreads");
+    protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor,
+                                            IEventExecutorChooserFactory chooserFactory, params object[] args) {
+        ObjectUtil.checkPositive(nThreads, "nThreads");
 
         if (executor == null) {
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
