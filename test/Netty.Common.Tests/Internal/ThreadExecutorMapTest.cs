@@ -104,7 +104,7 @@ public class ThreadExecutorMapTest {
 
     @Test
     public void testDecorateThreadFactory() throws InterruptedException {
-        ThreadFactory threadFactory =
+        IThreadFactory threadFactory =
                 ThreadExecutorMap.apply(Executors.defaultThreadFactory(), ImmediateEventExecutor.INSTANCE);
         Thread thread = threadFactory.newThread(new Runnable() {
             @Override

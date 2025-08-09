@@ -40,15 +40,8 @@ namespace Netty.NET.Common.Concurrent;
  * @param <V> the type of the thread-local variable
  * @see ThreadLocal
  */
-public class FastThreadLocal<V> where V : class
+public static class FastThreadLocal
 {
-    private readonly int index;
-
-    public FastThreadLocal()
-    {
-        index = InternalThreadLocalMap.nextVariableIndex();
-    }
-
     /**
      * Removes all {@link FastThreadLocal} variables bound to the current thread.  This operation is useful when you
      * are in a container environment, and you don't want to leave the thread local variables in the threads you do not
@@ -68,9 +61,9 @@ public class FastThreadLocal<V> where V : class
             if (v != null && v != InternalThreadLocalMap.UNSET)
             {
                 //@SuppressWarnings("unchecked")
-                Dictionary<FastThreadLocal<V>, bool> variablesToRemove = (Dictionary<FastThreadLocal<V>, bool>)v;
-                FastThreadLocal<V>[] variablesToRemoveArray = variablesToRemove.Keys.ToArray();
-                foreach (FastThreadLocal<V> tlv in variablesToRemoveArray)
+                Dictionary<IFastThreadLocal, bool> variablesToRemove = (Dictionary<IFastThreadLocal, bool>)v;
+                IFastThreadLocal[] variablesToRemoveArray = variablesToRemove.Keys.ToArray();
+                foreach (IFastThreadLocal tlv in variablesToRemoveArray)
                 {
                     tlv.remove(threadLocalMap);
                 }
@@ -83,8 +76,8 @@ public class FastThreadLocal<V> where V : class
     }
 
     /**
-     * Returns the number of thread local variables bound to the current thread.
-     */
+ * Returns the number of thread local variables bound to the current thread.
+ */
     public static int size()
     {
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.getIfSet();
@@ -110,24 +103,24 @@ public class FastThreadLocal<V> where V : class
     }
 
     //@SuppressWarnings("unchecked")
-    private static void addToVariablesToRemove(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable)
+    internal static void addToVariablesToRemove<V>(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable) where V : class
     {
         object v = threadLocalMap.indexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX);
-        Dictionary<FastThreadLocal<V>, bool> variablesToRemove;
+        Dictionary<IFastThreadLocal, bool> variablesToRemove;
         if (v == InternalThreadLocalMap.UNSET || v == null)
         {
-            variablesToRemove = new Dictionary<FastThreadLocal<V>, bool>();
+            variablesToRemove = new Dictionary<IFastThreadLocal, bool>();
             threadLocalMap.setIndexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX, variablesToRemove);
         }
         else
         {
-            variablesToRemove = (Dictionary<FastThreadLocal<V>, bool>)v;
+            variablesToRemove = (Dictionary<IFastThreadLocal, bool>)v;
         }
 
         variablesToRemove.Add(variable, true);
     }
 
-    private static void removeFromVariablesToRemove(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable)
+    internal static void removeFromVariablesToRemove<V>(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable) where V : class
     {
         object v = threadLocalMap.indexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX);
 
@@ -137,10 +130,24 @@ public class FastThreadLocal<V> where V : class
         }
 
         //@SuppressWarnings("unchecked")
-        Dictionary<FastThreadLocal<V>, bool> variablesToRemove = (Dictionary<FastThreadLocal<V>, bool>)v;
+        Dictionary<IFastThreadLocal, bool> variablesToRemove = (Dictionary<IFastThreadLocal, bool>)v;
         variablesToRemove.Remove(variable);
     }
+}
 
+public interface IFastThreadLocal
+{
+    void remove(InternalThreadLocalMap threadLocalMap);
+}
+
+public class FastThreadLocal<V> : IFastThreadLocal where V : class
+{
+    private readonly int _index;
+
+    public FastThreadLocal()
+    {
+        _index = InternalThreadLocalMap.nextVariableIndex();
+    }
 
     /**
      * Returns the current value for the current thread
@@ -149,7 +156,7 @@ public class FastThreadLocal<V> where V : class
     public V get()
     {
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
-        object v = threadLocalMap.indexedVariable(index);
+        object v = threadLocalMap.indexedVariable(_index);
         if (v != InternalThreadLocalMap.UNSET)
         {
             return (V)v;
@@ -167,7 +174,7 @@ public class FastThreadLocal<V> where V : class
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.getIfSet();
         if (threadLocalMap != null)
         {
-            object v = threadLocalMap.indexedVariable(index);
+            object v = threadLocalMap.indexedVariable(_index);
             if (v != InternalThreadLocalMap.UNSET)
             {
                 return (V)v;
@@ -184,7 +191,7 @@ public class FastThreadLocal<V> where V : class
     //@SuppressWarnings("unchecked")
     public V get(InternalThreadLocalMap threadLocalMap)
     {
-        object v = threadLocalMap.indexedVariable(index);
+        object v = threadLocalMap.indexedVariable(_index);
         if (v != InternalThreadLocalMap.UNSET)
         {
             return (V)v;
@@ -209,8 +216,8 @@ public class FastThreadLocal<V> where V : class
             PlatformDependent.throwException(e);
         }
 
-        threadLocalMap.setIndexedVariable(index, v);
-        addToVariablesToRemove(threadLocalMap, this);
+        threadLocalMap.setIndexedVariable(_index, v);
+        FastThreadLocal.addToVariablesToRemove(threadLocalMap, this);
         return v;
     }
 
@@ -263,10 +270,10 @@ public class FastThreadLocal<V> where V : class
     //@SuppressWarnings("unchecked")
     private V setKnownNotUnset(InternalThreadLocalMap threadLocalMap, V value)
     {
-        V old = (V)threadLocalMap.getAndSetIndexedVariable(index, value);
+        V old = (V)threadLocalMap.getAndSetIndexedVariable(_index, value);
         if (old == InternalThreadLocalMap.UNSET)
         {
-            addToVariablesToRemove(threadLocalMap, this);
+            FastThreadLocal.addToVariablesToRemove(threadLocalMap, this);
             return null;
         }
 
@@ -287,7 +294,7 @@ public class FastThreadLocal<V> where V : class
      */
     public bool isSet(InternalThreadLocalMap threadLocalMap)
     {
-        return threadLocalMap != null && threadLocalMap.isIndexedVariableSet(index);
+        return threadLocalMap != null && threadLocalMap.isIndexedVariableSet(_index);
     }
 
     /**
@@ -323,10 +330,10 @@ public class FastThreadLocal<V> where V : class
             return null;
         }
 
-        object v = threadLocalMap.removeIndexedVariable(index);
+        object v = threadLocalMap.removeIndexedVariable(_index);
         if (v != InternalThreadLocalMap.UNSET)
         {
-            removeFromVariablesToRemove(threadLocalMap, this);
+            FastThreadLocal.removeFromVariablesToRemove(threadLocalMap, this);
             try
             {
                 onRemoval((V)v);

@@ -24,7 +24,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public class DefaultEventExecutorGroup extends MultithreadEventExecutorGroup {
     /**
-     * @see #DefaultEventExecutorGroup(int, ThreadFactory)
+     * @see #DefaultEventExecutorGroup(int, IThreadFactory)
      */
     public DefaultEventExecutorGroup(int nThreads) {
         this(nThreads, null);
@@ -34,9 +34,9 @@ public class DefaultEventExecutorGroup extends MultithreadEventExecutorGroup {
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
+     * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
      */
-    public DefaultEventExecutorGroup(int nThreads, ThreadFactory threadFactory) {
+    public DefaultEventExecutorGroup(int nThreads, IThreadFactory threadFactory) {
         this(nThreads, threadFactory, SingleThreadEventExecutor.DEFAULT_MAX_PENDING_EXECUTOR_TASKS,
                 RejectedExecutionHandlers.reject());
     }
@@ -45,11 +45,11 @@ public class DefaultEventExecutorGroup extends MultithreadEventExecutorGroup {
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
+     * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
-    public DefaultEventExecutorGroup(int nThreads, ThreadFactory threadFactory, int maxPendingTasks,
+    public DefaultEventExecutorGroup(int nThreads, IThreadFactory threadFactory, int maxPendingTasks,
                                      RejectedExecutionHandler rejectedHandler) {
         super(nThreads, threadFactory, maxPendingTasks, rejectedHandler);
     }

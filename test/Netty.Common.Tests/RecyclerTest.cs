@@ -317,7 +317,7 @@ public void testRecycleAtTwoThreadsMulti() throws Exception {
     final Recycler<HandledObject> recycler = newRecycler(256);
     final HandledObject o = recycler.get();
 
-    ExecutorService single = Executors.newSingleThreadExecutor(new ThreadFactory() {
+    ExecutorService single = Executors.newSingleThreadExecutor(new IThreadFactory() {
         @Override
         public Thread newThread(@NotNull Runnable r) {
         return RecyclerTest.this.newThread(r);

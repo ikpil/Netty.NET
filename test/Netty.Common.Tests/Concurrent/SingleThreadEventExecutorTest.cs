@@ -46,7 +46,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    private static final class TestThreadFactory implements ThreadFactory {
+    private static final class TestThreadFactory implements IThreadFactory {
         final LinkedBlockingQueue<TestThread> threads = new LinkedBlockingQueue<>();
         @Override
         public Thread newThread(@NotNull Runnable r) {
@@ -58,7 +58,7 @@ public class SingleThreadEventExecutorTest {
 
     private static final class SuspendingSingleThreadEventExecutor extends SingleThreadEventExecutor {
 
-        SuspendingSingleThreadEventExecutor(ThreadFactory threadFactory) {
+        SuspendingSingleThreadEventExecutor(IThreadFactory threadFactory) {
             super(null, threadFactory, false, true,
                     Integer.MAX_VALUE, RejectedExecutionHandlers.reject());
         }

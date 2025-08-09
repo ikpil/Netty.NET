@@ -57,7 +57,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     private readonly ISet<Thread> eventLoopThreads = ConcurrentDictionary.newKeySet();
 
     /**
-     * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int, ThreadFactory)}
+     * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int, IThreadFactory)}
      * using {@link DefaultThreadFactory}.
      */
     public UnorderedThreadPoolEventExecutor(int corePoolSize) {
@@ -65,25 +65,25 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     /**
-     * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)}
+     * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, IThreadFactory)}
      */
-    public UnorderedThreadPoolEventExecutor(int corePoolSize, ThreadFactory threadFactory) {
+    public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory) {
         super(corePoolSize, threadFactory);
         setThreadFactory(new AccountingThreadFactory(threadFactory, eventLoopThreads));
     }
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int,
-     * ThreadFactory, java.util.concurrent.RejectedExecutionHandler)} using {@link DefaultThreadFactory}.
+     * IThreadFactory, java.util.concurrent.RejectedExecutionHandler)} using {@link DefaultThreadFactory}.
      */
     public UnorderedThreadPoolEventExecutor(int corePoolSize, RejectedExecutionHandler handler) {
         this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler);
     }
 
     /**
-     * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory, RejectedExecutionHandler)}
+     * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, IThreadFactory, RejectedExecutionHandler)}
      */
-    public UnorderedThreadPoolEventExecutor(int corePoolSize, ThreadFactory threadFactory,
+    public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory,
                                             RejectedExecutionHandler handler) {
         super(corePoolSize, threadFactory, handler);
         setThreadFactory(new AccountingThreadFactory(threadFactory, eventLoopThreads));
@@ -304,11 +304,11 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         }
     }
 
-    private static readonly class AccountingThreadFactory : ThreadFactory {
-        private readonly ThreadFactory delegate;
+    private static readonly class AccountingThreadFactory : IThreadFactory {
+        private readonly IThreadFactory delegate;
         private readonly ISet<Thread> threads;
 
-        private AccountingThreadFactory(ThreadFactory delegate, ISet<Thread> threads) {
+        private AccountingThreadFactory(IThreadFactory delegate, ISet<Thread> threads) {
             this.delegate = delegate;
             this.threads = threads;
         }

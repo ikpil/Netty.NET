@@ -142,19 +142,19 @@ public class HashedWheelTimer : Timer {
      * Creates a new timer with the default tick duration and default number of
      * ticks per wheel.
      *
-     * @param threadFactory a {@link ThreadFactory} that creates a
+     * @param threadFactory a {@link IThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
      *                      {@link ITimerTask} execution.
      * @throws NullPointerException if {@code threadFactory} is {@code null}
      */
-    public HashedWheelTimer(ThreadFactory threadFactory) {
+    public HashedWheelTimer(IThreadFactory threadFactory) {
         this(threadFactory, 100, TimeSpan.MILLISECONDS);
     }
 
     /**
      * Creates a new timer with the default number of ticks per wheel.
      *
-     * @param threadFactory a {@link ThreadFactory} that creates a
+     * @param threadFactory a {@link IThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
      *                      {@link ITimerTask} execution.
      * @param tickDuration  the duration between tick
@@ -163,14 +163,14 @@ public class HashedWheelTimer : Timer {
      * @throws ArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(
-            ThreadFactory threadFactory, long tickDuration, TimeSpan unit) {
+            IThreadFactory threadFactory, long tickDuration, TimeSpan unit) {
         this(threadFactory, tickDuration, unit, 512);
     }
 
     /**
      * Creates a new timer.
      *
-     * @param threadFactory a {@link ThreadFactory} that creates a
+     * @param threadFactory a {@link IThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
      *                      {@link ITimerTask} execution.
      * @param tickDuration  the duration between tick
@@ -180,7 +180,7 @@ public class HashedWheelTimer : Timer {
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
-            ThreadFactory threadFactory,
+            IThreadFactory threadFactory,
             long tickDuration, TimeSpan unit, int ticksPerWheel) {
         this(threadFactory, tickDuration, unit, ticksPerWheel, true);
     }
@@ -188,7 +188,7 @@ public class HashedWheelTimer : Timer {
     /**
      * Creates a new timer.
      *
-     * @param threadFactory a {@link ThreadFactory} that creates a
+     * @param threadFactory a {@link IThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
      *                      {@link ITimerTask} execution.
      * @param tickDuration  the duration between tick
@@ -201,7 +201,7 @@ public class HashedWheelTimer : Timer {
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
-            ThreadFactory threadFactory,
+            IThreadFactory threadFactory,
             long tickDuration, TimeSpan unit, int ticksPerWheel, bool leakDetection) {
         this(threadFactory, tickDuration, unit, ticksPerWheel, leakDetection, -1);
     }
@@ -209,7 +209,7 @@ public class HashedWheelTimer : Timer {
     /**
      * Creates a new timer.
      *
-     * @param threadFactory        a {@link ThreadFactory} that creates a
+     * @param threadFactory        a {@link IThreadFactory} that creates a
      *                             background {@link Thread} which is dedicated to
      *                             {@link ITimerTask} execution.
      * @param tickDuration         the duration between tick
@@ -227,7 +227,7 @@ public class HashedWheelTimer : Timer {
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
-            ThreadFactory threadFactory,
+            IThreadFactory threadFactory,
             long tickDuration, TimeSpan unit, int ticksPerWheel, bool leakDetection,
             long maxPendingTimeouts) {
         this(threadFactory, tickDuration, unit, ticksPerWheel, leakDetection,
@@ -236,7 +236,7 @@ public class HashedWheelTimer : Timer {
     /**
      * Creates a new timer.
      *
-     * @param threadFactory        a {@link ThreadFactory} that creates a
+     * @param threadFactory        a {@link IThreadFactory} that creates a
      *                             background {@link Thread} which is dedicated to
      *                             {@link ITimerTask} execution.
      * @param tickDuration         the duration between tick
@@ -257,7 +257,7 @@ public class HashedWheelTimer : Timer {
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
-            ThreadFactory threadFactory,
+            IThreadFactory threadFactory,
             long tickDuration, TimeSpan unit, int ticksPerWheel, bool leakDetection,
             long maxPendingTimeouts, Executor taskExecutor) {
 

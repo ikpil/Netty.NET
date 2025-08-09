@@ -86,12 +86,12 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Create a new instance
      *
      * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
-     * @param threadFactory     the {@link ThreadFactory} which will be used for the used {@link Thread}
+     * @param threadFactory     the {@link IThreadFactory} which will be used for the used {@link Thread}
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      */
     protected SingleThreadEventExecutor(
-            IEventExecutorGroup parent, ThreadFactory threadFactory, bool addTaskWakesUp) {
+            IEventExecutorGroup parent, IThreadFactory threadFactory, bool addTaskWakesUp) {
         this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp);
     }
 
@@ -99,14 +99,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Create a new instance
      *
      * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
-     * @param threadFactory     the {@link ThreadFactory} which will be used for the used {@link Thread}
+     * @param threadFactory     the {@link IThreadFactory} which will be used for the used {@link Thread}
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
     protected SingleThreadEventExecutor(
-            IEventExecutorGroup parent, ThreadFactory threadFactory,
+            IEventExecutorGroup parent, IThreadFactory threadFactory,
             bool addTaskWakesUp, int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
         this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp, maxPendingTasks, rejectedHandler);
     }
@@ -115,7 +115,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Create a new instance
      *
      * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
-     * @param threadFactory     the {@link ThreadFactory} which will be used for the used {@link Thread}
+     * @param threadFactory     the {@link IThreadFactory} which will be used for the used {@link Thread}
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      * @param supportSuspension {@code true} if suspension of this {@link SingleThreadEventExecutor} is supported.
@@ -123,7 +123,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
     protected SingleThreadEventExecutor(
-            IEventExecutorGroup parent, ThreadFactory threadFactory,
+            IEventExecutorGroup parent, IThreadFactory threadFactory,
             bool addTaskWakesUp, bool supportSuspension,
             int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
         this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp, supportSuspension,

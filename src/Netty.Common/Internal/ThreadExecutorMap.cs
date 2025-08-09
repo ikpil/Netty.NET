@@ -80,13 +80,13 @@ public final class ThreadExecutorMap {
     }
 
     /**
-     * Decorate the given {@link ThreadFactory} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
+     * Decorate the given {@link IThreadFactory} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static ThreadFactory apply(final ThreadFactory threadFactory, final IEventExecutor eventExecutor) {
+    public static IThreadFactory apply(final IThreadFactory threadFactory, final IEventExecutor eventExecutor) {
         ObjectUtil.checkNotNull(threadFactory, "threadFactory");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
-        return new ThreadFactory() {
+        return new IThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
                 return threadFactory.newThread(apply(r, eventExecutor));

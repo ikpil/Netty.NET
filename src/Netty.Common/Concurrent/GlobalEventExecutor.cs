@@ -64,7 +64,7 @@ public final class GlobalEventExecutor : AbstractScheduledEventExecutor : Ordere
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
     // be sticky about its thread group
     // visible for testing
-    final ThreadFactory threadFactory;
+    final IThreadFactory threadFactory;
     private readonly TaskRunner taskRunner = new TaskRunner();
     private readonly AtomicBoolean started = new AtomicBoolean();
     volatile Thread thread;

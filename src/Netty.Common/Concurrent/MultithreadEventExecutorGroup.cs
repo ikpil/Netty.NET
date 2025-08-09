@@ -39,7 +39,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
+     * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args) 
@@ -88,7 +88,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
             } finally {
                 if (!success) {
                     for (int j = 0; j < i; j ++) {
-                        children[j].shutdownGracefully();
+                        children[j].shutdownGracefullyAsync();
                     }
 
                     for (int j = 0; j < i; j ++) {
@@ -127,8 +127,8 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         readonlyChildren = Collections.unmodifiableSet(childrenSet);
     }
 
-    protected ThreadFactory newDefaultThreadFactory() {
-        return new DefaultThreadFactory(getClass());
+    protected IThreadFactory newDefaultThreadFactory() {
+        return new DefaultThreadFactory(GetType());
     }
 
     @Override

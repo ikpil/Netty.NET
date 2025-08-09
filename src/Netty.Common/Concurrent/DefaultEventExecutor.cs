@@ -28,7 +28,7 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
         this((IEventExecutorGroup) null);
     }
 
-    public DefaultEventExecutor(ThreadFactory threadFactory) {
+    public DefaultEventExecutor(IThreadFactory threadFactory) {
         this(null, threadFactory);
     }
 
@@ -40,7 +40,7 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
         this(parent, new DefaultThreadFactory(typeof(DefaultEventExecutor)));
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, ThreadFactory threadFactory) {
+    public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory) {
         super(parent, threadFactory, true);
     }
 
@@ -48,7 +48,7 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
         super(parent, executor, true);
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, ThreadFactory threadFactory, int maxPendingTasks,
+    public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory, int maxPendingTasks,
                                 RejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, threadFactory, true, maxPendingTasks, rejectedExecutionHandler);
     }
