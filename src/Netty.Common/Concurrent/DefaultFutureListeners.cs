@@ -19,14 +19,14 @@ namespace Netty.NET.Common.Concurrent;
 
 final class DefaultFutureListeners {
 
-    private GenericFutureListener<? extends Future<?>>[] listeners;
+    private IGenericFutureListener<? extends Future<?>>[] listeners;
     private int size;
     private int progressiveSize; // the number of progressive listeners
 
     @SuppressWarnings("unchecked")
     DefaultFutureListeners(
-            GenericFutureListener<? extends Future<?>> first, GenericFutureListener<? extends Future<?>> second) {
-        listeners = new GenericFutureListener[2];
+            IGenericFutureListener<? extends Future<?>> first, IGenericFutureListener<? extends Future<?>> second) {
+        listeners = new IGenericFutureListener<>[2];
         listeners[0] = first;
         listeners[1] = second;
         size = 2;
@@ -38,8 +38,8 @@ final class DefaultFutureListeners {
         }
     }
 
-    public void add(GenericFutureListener<? extends Future<?>> l) {
-        GenericFutureListener<? extends Future<?>>[] listeners = this.listeners;
+    public void add(IGenericFutureListener<? extends Future<?>> l) {
+        IGenericFutureListener<> <? extends Future<?>>[] listeners = this.listeners;
         final int size = this.size;
         if (size == listeners.length) {
             this.listeners = listeners = Arrays.copyOf(listeners, size << 1);
@@ -52,7 +52,7 @@ final class DefaultFutureListeners {
         }
     }
 
-    public void remove(GenericFutureListener<? extends Future<?>> l) {
+    public void remove(IGenericFutureListener<? extends Future<?>> l) {
         final GenericFutureListener<? extends Future<?>>[] listeners = this.listeners;
         int size = this.size;
         for (int i = 0; i < size; i ++) {
@@ -72,7 +72,7 @@ final class DefaultFutureListeners {
         }
     }
 
-    public GenericFutureListener<? extends Future<?>>[] listeners() {
+    public IGenericFutureListener<? extends Future<?>>[] listeners() {
         return listeners;
     }
 

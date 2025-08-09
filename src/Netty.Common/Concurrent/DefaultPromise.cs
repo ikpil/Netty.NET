@@ -54,12 +54,12 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     private readonly IEventExecutor executor;
 
     /**
-     * One or more listeners. Can be a {@link GenericFutureListener} or a {@link DefaultFutureListeners}.
+     * One or more listeners. Can be a {@link IGenericFutureListener} or a {@link DefaultFutureListeners}.
      * If {@code null}, it means either 1) no listeners were added yet or 2) all listeners were notified.
      * <p>
      * Threading - synchronized(this). We must support adding listeners when there is no IEventExecutor.
      */
-    private GenericFutureListener<? extends Future<?>> listener;
+    private IGenericFutureListener<? extends Future<?>> listener;
     private DefaultFutureListeners listeners;
     /**
      * Threading - synchronized(this). We are required to hold the monitor to use Java's underlying wait()/notifyAll().
@@ -178,7 +178,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public Promise<V> addListener(GenericFutureListener<? extends Future<? super V>> listener) {
+    public Promise<V> addListener(IGenericFutureListener<? extends Future<? super V>> listener) {
         checkNotNull(listener, "listener");
 
         synchronized (this) {
@@ -193,7 +193,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     }
 
     @Override
-    public Promise<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners) {
+    public Promise<V> addListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
         checkNotNull(listeners, "listeners");
 
         synchronized (this) {
@@ -599,7 +599,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         }
     }
 
-    private void addListener0(GenericFutureListener<? extends Future<? super V>> listener) {
+    private void addListener0(IGenericFutureListener<? extends Future<? super V>> listener) {
         if (this.listener == null) {
             if (listeners == null) {
                 this.listener = listener;
@@ -613,7 +613,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         }
     }
 
-    private void removeListener0(GenericFutureListener<? extends Future<? super V>> toRemove) {
+    private void removeListener0(IGenericFutureListener<? extends Future<? super V>> toRemove) {
         if (listener == toRemove) {
             listener = null;
         } else if (listeners != null) {
@@ -786,7 +786,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
      * {@code null}.
      */
     private synchronized object progressiveListeners() {
-        final GenericFutureListener listener = this.listener;
+        final IGenericFutureListener<> listener = this.listener;
         final DefaultFutureListeners listeners = this.listeners;
         if (listener == null && listeners == null) {
             // No listeners added
@@ -801,7 +801,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
                 case 0:
                     return null;
                 case 1:
-                    for (GenericFutureListener<?> l: dfl.listeners()) {
+                    for (IGenericFutureListener<> <?> l: dfl.listeners()) {
                         if (l instanceof GenericProgressiveFutureListener) {
                             return l;
                         }
@@ -809,10 +809,10 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
                     return null;
             }
 
-            GenericFutureListener<?>[] array = dfl.listeners();
+            IGenericFutureListener<> <?>[] array = dfl.listeners();
             GenericProgressiveFutureListener<?>[] copy = new GenericProgressiveFutureListener[progressiveSize];
             for (int i = 0, j = 0; j < progressiveSize; i ++) {
-                GenericFutureListener<?> l = array[i];
+                IGenericFutureListener<> <?> l = array[i];
                 if (l instanceof GenericProgressiveFutureListener) {
                     copy[j ++] = (GenericProgressiveFutureListener<?>) l;
                 }

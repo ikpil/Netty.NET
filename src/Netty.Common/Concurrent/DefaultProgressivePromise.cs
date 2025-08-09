@@ -69,25 +69,25 @@ public class DefaultProgressivePromise<V> extends DefaultPromise<V> : Progressiv
     }
 
     @Override
-    public ProgressivePromise<V> addListener(GenericFutureListener<? extends Future<? super V>> listener) {
+    public ProgressivePromise<V> addListener(IGenericFutureListener<? extends Future<? super V>> listener) {
         super.addListener(listener);
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners) {
+    public ProgressivePromise<V> addListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
         super.addListeners(listeners);
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> removeListener(GenericFutureListener<? extends Future<? super V>> listener) {
+    public ProgressivePromise<V> removeListener(IGenericFutureListener<? extends Future<? super V>> listener) {
         super.removeListener(listener);
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners) {
+    public ProgressivePromise<V> removeListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
         super.removeListeners(listeners);
         return this;
     }

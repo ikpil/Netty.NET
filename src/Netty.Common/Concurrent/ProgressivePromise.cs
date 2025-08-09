@@ -40,16 +40,16 @@ public interface ProgressivePromise<V> extends Promise<V>, ProgressiveFuture<V> 
     ProgressivePromise<V> setFailure(Exception cause);
 
     @Override
-    ProgressivePromise<V> addListener(GenericFutureListener<? extends Future<? super V>> listener);
+    ProgressivePromise<V> addListener(IGenericFutureListener<> <? extends Future<? super V>> listener);
 
     @Override
-    ProgressivePromise<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
+    ProgressivePromise<V> addListeners(IGenericFutureListener<> <? extends Future<? super V>>... listeners);
 
     @Override
-    ProgressivePromise<V> removeListener(GenericFutureListener<? extends Future<? super V>> listener);
+    ProgressivePromise<V> removeListener(IGenericFutureListener<> <? extends Future<? super V>> listener);
 
     @Override
-    ProgressivePromise<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
+    ProgressivePromise<V> removeListeners(IGenericFutureListener<> <? extends Future<? super V>>... listeners);
 
     @Override
     ProgressivePromise<V> await();

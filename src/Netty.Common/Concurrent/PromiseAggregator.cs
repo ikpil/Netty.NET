@@ -19,7 +19,7 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * @deprecated Use {@link PromiseCombiner#PromiseCombiner(IEventExecutor)}.
  *
- * {@link GenericFutureListener} implementation which consolidates multiple {@link Future}s
+ * {@link IGenericFutureListener} implementation which consolidates multiple {@link Future}s
  * into one, by listening to individual {@link Future}s and producing an aggregated result
  * (success/failure) when all {@link Future}s have completed.
  *
@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Concurrent;
  * @param <F> the type of {@link Future}
  */
 @Deprecated
-public class PromiseAggregator<V, F extends Future<V>> : GenericFutureListener<F> {
+public class PromiseAggregator<V, F extends Future<V>> : IGenericFutureListener<> <F> {
 
     private readonly Promise<?> aggregatePromise;
     private readonly bool failPending;

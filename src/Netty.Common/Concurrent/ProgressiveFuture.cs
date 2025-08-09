@@ -22,16 +22,16 @@ namespace Netty.NET.Common.Concurrent;
 public interface ProgressiveFuture<V> extends Future<V> {
 
     @Override
-    ProgressiveFuture<V> addListener(GenericFutureListener<? extends Future<? super V>> listener);
+    ProgressiveFuture<V> addListener(IGenericFutureListener<> <? extends Future<? super V>> listener);
 
     @Override
-    ProgressiveFuture<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
+    ProgressiveFuture<V> addListeners(IGenericFutureListener<> <? extends Future<? super V>>... listeners);
 
     @Override
-    ProgressiveFuture<V> removeListener(GenericFutureListener<? extends Future<? super V>> listener);
+    ProgressiveFuture<V> removeListener(IGenericFutureListener<> <? extends Future<? super V>> listener);
 
     @Override
-    ProgressiveFuture<V> removeListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
+    ProgressiveFuture<V> removeListeners(IGenericFutureListener<> <? extends Future<? super V>>... listeners);
 
     @Override
     ProgressiveFuture<V> sync();

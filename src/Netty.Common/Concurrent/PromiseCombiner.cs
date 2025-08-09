@@ -38,7 +38,7 @@ public class PromiseCombiner
     private int doneCount;
     private Promise<Void> aggregatePromise;
     private Exception cause;
-    private readonly GenericFutureListener<Future<?>> listener = new GenericFutureListener<Future<?>>() {
+    private readonly IGenericFutureListener<Future<?>> listener = new IGenericFutureListener<Future<?>>() {
         @Override
         public void operationComplete(final Future<?> future) {
             if (executor.inEventLoop()) {

@@ -23,13 +23,13 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * {@link GenericFutureListener} implementation which takes other {@link Promise}s
+ * {@link IGenericFutureListener} implementation which takes other {@link Promise}s
  * and notifies them on completion.
  *
  * @param <V> the type of value returned by the future
  * @param <F> the type of future
  */
-public class PromiseNotifier<V, F extends Future<V>> : GenericFutureListener<F> {
+public class PromiseNotifier<V, F extends Future<V>> : IGenericFutureListener<> <F> {
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PromiseNotifier));
     private readonly Promise<? super V>[] promises;
@@ -38,7 +38,7 @@ public class PromiseNotifier<V, F extends Future<V>> : GenericFutureListener<F> 
     /**
      * Create a new instance.
      *
-     * @param promises  the {@link Promise}s to notify once this {@link GenericFutureListener} is notified.
+     * @param promises  the {@link Promise}s to notify once this {@link IGenericFutureListener} is notified.
      */
     @SafeVarargs
     public PromiseNotifier(Promise<? super V>... promises) {
@@ -49,7 +49,7 @@ public class PromiseNotifier<V, F extends Future<V>> : GenericFutureListener<F> 
      * Create a new instance.
      *
      * @param logNotifyFailure {@code true} if logging should be done in case notification fails.
-     * @param promises  the {@link Promise}s to notify once this {@link GenericFutureListener} is notified.
+     * @param promises  the {@link Promise}s to notify once this {@link IGenericFutureListener} is notified.
      */
     @SafeVarargs
     public PromiseNotifier(bool logNotifyFailure, Promise<? super V>... promises) {
