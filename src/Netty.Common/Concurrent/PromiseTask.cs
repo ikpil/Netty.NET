@@ -13,93 +13,51 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Text;
+
 namespace Netty.NET.Common.Concurrent;
 
+public interface IRunnableFuture<V> : IRunnable, IFuture<V> {
+}
 
 
+public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V> {
 
-class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
 
-    private static readonly class RunnableAdapter<T> : Func<T> {
-        final Runnable task;
-        final T result;
+    private static readonly IRunnable COMPLETED = new SentinelRunnable("COMPLETED");
+    private static readonly IRunnable CANCELLED = new SentinelRunnable("CANCELLED");
+    private static readonly IRunnable FAILED = new SentinelRunnable("FAILED");
 
-        RunnableAdapter(Runnable task, T result) {
-            this.task = task;
-            this.result = result;
-        }
-
-        @Override
-        public T call() {
-            task.run();
-            return result;
-        }
-
-        @Override
-        public string toString() {
-            return "Callable(task: " + task + ", result: " + result + ')';
-        }
-    }
-
-    private static readonly Runnable COMPLETED = new SentinelRunnable("COMPLETED");
-    private static readonly Runnable CANCELLED = new SentinelRunnable("CANCELLED");
-    private static readonly Runnable FAILED = new SentinelRunnable("FAILED");
-
-    private static class SentinelRunnable : Runnable {
-        private readonly string name;
-
-        SentinelRunnable(string name) {
-            this.name = name;
-        }
-
-        @Override
-        public void run() { } // no-op
-
-        @Override
-        public string toString() {
-            return name;
-        }
-    }
 
     // Strictly of type Func<V> or Runnable
-    private object task;
+    private ICallable<V> task;
 
-    PromiseTask(IEventExecutor executor, Runnable runnable, V result) {
-        super(executor);
-        task = result == null ? runnable : new RunnableAdapter<V>(runnable, result);
+    PromiseTask(IEventExecutor executor, IRunnable runnable, V result) 
+        : base(executor)
+    {
+        task = new CallableAdapter<V>(runnable, result);
     }
 
-    PromiseTask(IEventExecutor executor, Runnable runnable) {
-        super(executor);
-        task = runnable;
+    PromiseTask(IEventExecutor executor, IRunnable runnable) 
+        : base(executor)
+    {
+        task = new CallableAdapter<V>(runnable, default);
     }
 
-    PromiseTask(IEventExecutor executor, Func<V> callable) {
-        super(executor);
-        task = callable;
+    PromiseTask(IEventExecutor executor, Func<V> callable) 
+    : base(executor)
+    {
+        task = new AnonymousCallable<V>(callable);
     }
 
-    @Override
-    public final int hashCode() {
-        return System.identityHashCode(this);
+    //@SuppressWarnings("unchecked")
+    public V runTask()
+    {
+        return task.call();
     }
 
-    @Override
-    public final bool equals(object obj) {
-        return this == obj;
-    }
-
-    @SuppressWarnings("unchecked")
-    V runTask() {
-        final object task = this.task;
-        if (task instanceof Callable) {
-            return ((Func<V>) task).call();
-        }
-        ((Runnable) task).run();
-        return null;
-    }
-
-    @Override
     public void run() {
         try {
             if (setUncancellableInternal()) {
@@ -111,13 +69,13 @@ class PromiseTask<V> extends DefaultPromise<V> : RunnableFuture<V> {
         }
     }
 
-    private bool clearTaskAfterCompletion(bool done, Runnable result) {
+    private bool clearTaskAfterCompletion(bool done, IRunnable result) {
         if (done) {
             // The only time where it might be possible for the sentinel task
             // to be called is in the case of a periodic ScheduledFutureTask,
             // in which case it's a benign race with cancellation and the (null)
             // return value is not used.
-            task = result;
+            task = new CallableAdapter<V>(result, default);
         }
         return done;
     }

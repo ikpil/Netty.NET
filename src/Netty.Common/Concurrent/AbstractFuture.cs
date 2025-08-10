@@ -16,7 +16,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 

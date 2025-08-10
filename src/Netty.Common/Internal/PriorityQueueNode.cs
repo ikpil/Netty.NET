@@ -19,7 +19,8 @@ namespace Netty.NET.Common.Internal;
  * Provides methods for {@link DefaultPriorityQueue} to maintain internal state. These methods should generally not be
  * used outside the scope of {@link DefaultPriorityQueue}.
  */
-public interface PriorityQueueNode {
+public interface PriorityQueueNode 
+{
     /**
      * This should be used to initialize the storage returned by {@link #priorityQueueIndex(DefaultPriorityQueue)}.
      */
