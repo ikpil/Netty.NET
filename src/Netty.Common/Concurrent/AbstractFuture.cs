@@ -16,7 +16,7 @@
 namespace Netty.NET.Common.Concurrent;
 
 
-public class Future<V>
+public interface IFuture<V>
 {
     
 }
@@ -26,7 +26,7 @@ public class Future<V>
  *
  * @param <V>
  */
-public abstract class AbstractFuture<V> : Future<V> {
+public abstract class AbstractFuture<V> : IFuture<V> {
 
     @Override
     public V get() throws ThreadInterruptedException, ExecutionException {

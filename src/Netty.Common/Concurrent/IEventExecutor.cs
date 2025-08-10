@@ -25,23 +25,24 @@ namespace Netty.NET.Common.Concurrent;
  * Besides this, it also extends the {@link IEventExecutorGroup} to allow for a generic
  * way to access methods.
  */
-public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor 
+public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
 {
     /**
      * Return the {@link IEventExecutorGroup} which is the parent of this {@link IEventExecutor},
      */
     IEventExecutorGroup parent();
 
-    @Override
-    default bool isExecutorThread(Thread thread) {
+    bool isExecutorThread(Thread thread)
+    {
         return inEventLoop(thread);
     }
 
     /**
      * Calls {@link #inEventLoop(Thread)} with {@link Thread#currentThread()} as argument
      */
-    default bool inEventLoop() {
-        return inEventLoop(Thread.currentThread());
+    bool inEventLoop()
+    {
+        return inEventLoop(Thread.CurrentThread);
     }
 
     /**
@@ -53,15 +54,17 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
     /**
      * Return a new {@link Promise}.
      */
-    default <V> Promise<V> newPromise() {
-        return new DefaultPromise<>(this);
+    Promise<V> newPromise<V>()
+    {
+        return new DefaultPromise<V>(this);
     }
 
     /**
      * Create a new {@link ProgressivePromise}.
      */
-    default <V> ProgressivePromise<V> newProgressivePromise() {
-        return new DefaultProgressivePromise<>(this);
+    ProgressivePromise<V> newProgressivePromise<V>()
+    {
+        return new DefaultProgressivePromise<V>(this);
     }
 
     /**
@@ -69,8 +72,9 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      * will return {@code true}. All {@link FutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
-    default <V> Future<V> newSucceededFuture(V result) {
-        return new SucceededFuture<>(this, result);
+    IFuture<V> newSucceededFuture<V>(V result)
+    {
+        return new SucceededFuture<V>(this, result);
     }
 
     /**
@@ -78,8 +82,9 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      * will return {@code false}. All {@link FutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
-    default <V> Future<V> newFailedFuture(Exception cause) {
-        return new FailedFuture<>(this, cause);
+    IFuture<V> newFailedFuture<V>(Exception cause)
+    {
+        return new FailedFuture<V>(this, cause);
     }
 
     /**
@@ -87,7 +92,8 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      *
      * @return {@code true} if suspended, {@code false} otherwise.
      */
-    default bool isSuspended() {
+    bool isSuspended()
+    {
         return false;
     }
 
@@ -109,7 +115,8 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      *
      * @return {@code true} if suspension was successful, otherwise {@code false}.
      */
-    default bool trySuspend() {
+    bool trySuspend()
+    {
         return false;
     }
 }

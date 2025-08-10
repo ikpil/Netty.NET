@@ -20,7 +20,7 @@ namespace Netty.NET.Common.Concurrent;
  * recommended to use {@link IEventExecutor#newSucceededFuture(object)} instead of
  * calling the constructor of this future.
  */
-public final class SucceededFuture<V> extends CompleteFuture<V> {
+public sealed class SucceededFuture<V> : CompleteFuture<V> {
     private readonly V result;
 
     /**

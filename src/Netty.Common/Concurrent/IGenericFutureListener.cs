@@ -27,7 +27,6 @@ public interface IEventListener
  * is added by calling {@link Future#addListener(IGenericFutureListener)}.
  */
 public interface IGenericFutureListener<F> : IEventListener
-    where F : Task
 {
     /**
      * Invoked when the operation associated with the {@link Future} has been completed.

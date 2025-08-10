@@ -13,13 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
  * Special {@link ProgressiveFuture} which is writable.
  */
-public interface ProgressivePromise<V> extends Promise<V>, ProgressiveFuture<V> {
-
+public interface ProgressivePromise<V> : Promise<V>, ProgressiveFuture<V>
+{
     /**
      * Sets the current progress of the operation and notifies the listeners that implement
      * {@link GenericProgressiveFutureListener}.
@@ -33,33 +36,22 @@ public interface ProgressivePromise<V> extends Promise<V>, ProgressiveFuture<V> 
      */
     bool tryProgress(long progress, long total);
 
-    @Override
     ProgressivePromise<V> setSuccess(V result);
 
-    @Override
     ProgressivePromise<V> setFailure(Exception cause);
 
-    @Override
-    ProgressivePromise<V> addListener(IGenericFutureListener<> <? extends Future<? super V>> listener);
+    ProgressivePromise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
 
-    @Override
-    ProgressivePromise<V> addListeners(IGenericFutureListener<> <? extends Future<? super V>>... listeners);
+    ProgressivePromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    @Override
-    ProgressivePromise<V> removeListener(IGenericFutureListener<> <? extends Future<? super V>> listener);
+    ProgressivePromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
 
-    @Override
-    ProgressivePromise<V> removeListeners(IGenericFutureListener<> <? extends Future<? super V>>... listeners);
+    ProgressivePromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    @Override
     ProgressivePromise<V> await();
-
-    @Override
     ProgressivePromise<V> awaitUninterruptibly();
 
-    @Override
     ProgressivePromise<V> sync();
 
-    @Override
     ProgressivePromise<V> syncUninterruptibly();
 }

@@ -24,7 +24,7 @@ using Netty.NET.Common.Internal.Logging;
 namespace Netty.NET.Common.Concurrent;
 
 
-public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
+public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     /**
      * System property with integer type value, that determine the max reentrancy/recursion level for when
      * listener notifications prompt other listeners to be notified.

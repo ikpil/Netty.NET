@@ -13,13 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
  * Special {@link Future} which is writable.
  */
-public interface Promise<V> extends Future<V> {
-
+public interface Promise<V> : IFuture<V>
+{
     /**
      * Marks this future as a success and notifies all
      * listeners.
@@ -64,27 +67,19 @@ public interface Promise<V> extends Future<V> {
      */
     bool setUncancellable();
 
-    @Override
-    Promise<V> addListener(IGenericFutureListener<> <? extends Future<? super V>> listener);
+    Promise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
 
-    @Override
-    Promise<V> addListeners(IGenericFutureListener<> <? extends Future<? super V>>... listeners);
+    Promise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    @Override
-    Promise<V> removeListener(IGenericFutureListener<> <? extends Future<? super V>> listener);
+    Promise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
 
-    @Override
-    Promise<V> removeListeners(IGenericFutureListener<> <? extends Future<? super V>>... listeners);
+    Promise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    @Override
     Promise<V> await();
 
-    @Override
     Promise<V> awaitUninterruptibly();
 
-    @Override
     Promise<V> sync();
 
-    @Override
     Promise<V> syncUninterruptibly();
 }
