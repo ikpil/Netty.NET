@@ -49,11 +49,12 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     private static readonly object SUCCESS = new object();
     private static readonly object UNCANCELLABLE = new object();
     private static readonly CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(
-            StacklessCancellationException.newInstance(typeof(DefaultPromise), "cancel(...)"));
-    private static readonly StackTraceElement[] CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.getStackTrace();
+            StacklessCancellationException.newInstance(typeof(DefaultPromise<V>), "cancel(...)"));
+
+    private static readonly string CANCELLATION_STACK = CANCELLATION_CAUSE_HOLDER.cause.Message;
 
     private volatile object result;
-    private readonly IEventExecutor executor;
+    private readonly IEventExecutor _executor;
 
     /**
      * One or more listeners. Can be a {@link IGenericFutureListener} or a {@link DefaultFutureListeners}.
@@ -144,21 +145,6 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         return result == null;
     }
 
-    private static readonly class LeanCancellationException extends TaskCanceledException {
-        private static readonly long serialVersionUID = 2794674970981187807L;
-
-        // Suppress a warning since the method doesn't need synchronization
-        @Override
-        public Exception fillInStackTrace() {
-            setStackTrace(CANCELLATION_STACK);
-            return this;
-        }
-
-        @Override
-        public string toString() {
-            return typeof(TaskCanceledException).getName();
-        }
-    }
 
     @Override
     public Exception cause() {
