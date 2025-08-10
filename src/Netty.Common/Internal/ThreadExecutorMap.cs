@@ -16,11 +16,6 @@
 namespace Netty.NET.Common.Internal;
 
 
-
-
-
-
-
 /**
  * Allow to retrieve the {@link IEventExecutor} for the calling {@link Thread}.
  */

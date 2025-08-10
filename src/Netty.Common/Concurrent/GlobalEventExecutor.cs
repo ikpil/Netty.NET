@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -29,19 +30,21 @@ namespace Netty.NET.Common.Concurrent;
  * (default is 1 second).  Please note it is not scalable to schedule large number of tasks to this executor;
  * use a dedicated executor.
  */
-public final class GlobalEventExecutor : AbstractScheduledEventExecutor : OrderedEventExecutor {
+public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor 
+{
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(GlobalEventExecutor));
 
     private static readonly long SCHEDULE_QUIET_PERIOD_INTERVAL;
 
-    static {
+    static GlobalEventExecutor()
+    {
         int quietPeriod = SystemPropertyUtil.getInt("io.netty.globalEventExecutor.quietPeriodSeconds", 1);
         if (quietPeriod <= 0) {
             quietPeriod = 1;
         }
         logger.debug("-Dio.netty.globalEventExecutor.quietPeriodSeconds: {}", quietPeriod);
 
-        SCHEDULE_QUIET_PERIOD_INTERVAL = TimeSpan.SECONDS.toNanos(quietPeriod);
+        SCHEDULE_QUIET_PERIOD_INTERVAL = quietPeriod * PreciseTimer.NanosecondsPerSecond;
     }
 
     public static readonly GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
@@ -64,14 +67,15 @@ public final class GlobalEventExecutor : AbstractScheduledEventExecutor : Ordere
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
     // be sticky about its thread group
     // visible for testing
-    final IThreadFactory threadFactory;
+    private IThreadFactory threadFactory;
     private readonly TaskRunner taskRunner = new TaskRunner();
     private readonly AtomicBoolean started = new AtomicBoolean();
     volatile Thread thread;
 
-    private readonly Future<?> terminationFuture;
+    private readonly Task terminationFuture;
 
-    private GlobalEventExecutor() {
+    private GlobalEventExecutor() 
+    {
         scheduledTaskQueue().add(quietPeriodTask);
         threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
                 DefaultThreadFactory.toPoolName(getClass()), false, Thread.NORM_PRIORITY, null), this);
