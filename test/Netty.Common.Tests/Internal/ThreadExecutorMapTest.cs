@@ -18,7 +18,7 @@ public class ThreadExecutorMapTest {
     private static final EventExecutor EVENT_EXECUTOR = new AbstractEventExecutor() {
         @Override
         public void shutdown() {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
@@ -33,12 +33,12 @@ public class ThreadExecutorMapTest {
 
         @Override
         public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
         public Future<?> terminationFuture() {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
@@ -58,7 +58,7 @@ public class ThreadExecutorMapTest {
 
         @Override
         public void execute(@NotNull Runnable command) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
     };
 
@@ -103,7 +103,7 @@ public class ThreadExecutorMapTest {
     }
 
     @Test
-    public void testDecorateThreadFactory() throws InterruptedException {
+    public void testDecorateThreadFactory() throws ThreadInterruptedException {
         IThreadFactory threadFactory =
                 ThreadExecutorMap.apply(Executors.defaultThreadFactory(), ImmediateEventExecutor.INSTANCE);
         Thread thread = threadFactory.newThread(new Runnable() {

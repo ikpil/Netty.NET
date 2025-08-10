@@ -350,7 +350,7 @@ public class HashedWheelTimer : Timer {
         while (startTime == 0) {
             try {
                 startTimeInitialized.await();
-            } catch (InterruptedException ignore) {
+            } catch (ThreadInterruptedException ignore) {
                 // Ignore - it will be ready very soon.
             }
         }
@@ -384,7 +384,7 @@ public class HashedWheelTimer : Timer {
                 workerThread.interrupt();
                 try {
                     workerThread.join(100);
-                } catch (InterruptedException ignored) {
+                } catch (ThreadInterruptedException ignored) {
                     interrupted = true;
                 }
             }
@@ -577,7 +577,7 @@ public class HashedWheelTimer : Timer {
 
                 try {
                     Thread.sleep(sleepTimeMs);
-                } catch (InterruptedException ignored) {
+                } catch (ThreadInterruptedException ignored) {
                     if (WORKER_STATE_UPDATER.get(HashedWheelTimer.this) == WORKER_STATE_SHUTDOWN) {
                         return long.MIN_VALUE;
                     }

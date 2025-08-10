@@ -107,22 +107,22 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     @Override
     public IScheduledTask<?> schedule(Runnable command, long delay,
                                        TimeSpan unit) {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     @Override
     public <V> IScheduledTask<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     @Override
     public IScheduledTask<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     @Override
     public IScheduledTask<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     /**

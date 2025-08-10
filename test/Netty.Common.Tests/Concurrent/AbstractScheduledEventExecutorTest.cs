@@ -130,12 +130,12 @@ public class AbstractScheduledEventExecutorTest {
 
         @Override
         public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
         public Future<?> terminationFuture() {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
@@ -155,7 +155,7 @@ public class AbstractScheduledEventExecutorTest {
 
         @Override
         public void execute(Runnable command) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
     }
 }

@@ -74,7 +74,7 @@ public class DomainNameMappingBuilder<T>
 
     /**
      * Creates a new instance of immutable {@link DomainNameMapping}
-     * Attempts to add new mappings to the result object will cause {@link UnsupportedOperationException} to be thrown
+     * Attempts to add new mappings to the result object will cause {@link NotSupportedException} to be thrown
      *
      * @return new {@link DomainNameMapping} instance
      */

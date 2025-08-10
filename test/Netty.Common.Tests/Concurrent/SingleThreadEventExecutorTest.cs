@@ -37,11 +37,11 @@ public class SingleThreadEventExecutorTest {
             super.run();
         }
 
-        void awaitStarted() throws InterruptedException {
+        void awaitStarted() throws ThreadInterruptedException {
             startedLatch.await();
         }
 
-        void awaitRunnableExecution() throws InterruptedException {
+        void awaitRunnableExecution() throws ThreadInterruptedException {
             runLatch.await();
         }
     }
@@ -164,7 +164,7 @@ public class SingleThreadEventExecutorTest {
         Future<?> future = executor.schedule(() -> {
             try {
                 latch.await();
-            } catch (InterruptedException ignore) {
+            } catch (ThreadInterruptedException ignore) {
                 // ignore
             }
         }, 100, TimeUnit.MILLISECONDS);
@@ -433,7 +433,7 @@ public class SingleThreadEventExecutorTest {
         LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>() {
             @Override
             public boolean remove(Object o) {
-                throw new UnsupportedOperationException();
+                throw new NotSupportedException();
             }
         };
 

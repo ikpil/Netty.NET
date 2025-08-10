@@ -167,13 +167,13 @@ public class PlatformDependent0 {
                             }
                             if (javaVersion() >= 23) {
                                 // The following tests the methods are usable.
-                                // Will throw UnsupportedOperationException if unsafe memory access is denied:
+                                // Will throw NotSupportedException if unsafe memory access is denied:
                                 long address = finalUnsafe.allocateMemory(8);
                                 finalUnsafe.putLong(address, 42);
                                 finalUnsafe.freeMemory(address);
                             }
                             return null;
-                        } catch (UnsupportedOperationException | SecurityException | NoSuchMethodException e) {
+                        } catch (NotSupportedException | SecurityException | NoSuchMethodException e) {
                             return e;
                         }
                     }
@@ -242,7 +242,7 @@ public class PlatformDependent0 {
                 long byteArrayIndexScale = unsafe.arrayIndexScale(byte[].class);
                 if (byteArrayIndexScale != 1) {
                     logger.debug("unsafe.arrayIndexScale is {} (expected: 1). Not using unsafe.", byteArrayIndexScale);
-                    unsafeUnavailabilityCause = new UnsupportedOperationException("Unexpected unsafe.arrayIndexScale");
+                    unsafeUnavailabilityCause = new NotSupportedException("Unexpected unsafe.arrayIndexScale");
                     unsafe = null;
                 }
             }
@@ -538,7 +538,7 @@ public class PlatformDependent0 {
         if (noUnsafe) {
             string msg = "sun.misc.Unsafe: unavailable (" + reason + ')';
             logger.debug(msg);
-            return new UnsupportedOperationException(msg);
+            return new NotSupportedException(msg);
         }
 
         // Legacy properties
@@ -552,7 +552,7 @@ public class PlatformDependent0 {
         if (!SystemPropertyUtil.getBoolean(unsafePropName, true)) {
             string msg = "sun.misc.Unsafe: unavailable (" + unsafePropName + ')';
             logger.debug(msg);
-            return new UnsupportedOperationException(msg);
+            return new NotSupportedException(msg);
         }
 
         return null;

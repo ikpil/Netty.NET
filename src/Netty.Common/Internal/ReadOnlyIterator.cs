@@ -37,6 +37,6 @@ public final class ReadOnlyIterator<T> : Iterator<T> {
 
     @Override
     public void remove() {
-        throw new UnsupportedOperationException("read-only");
+        throw new NotSupportedException("read-only");
     }
 }

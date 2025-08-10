@@ -249,7 +249,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * Take the next {@link Runnable} from the task queue and so will block if no task is currently present.
      * <p>
-     * Be aware that this method will throw an {@link UnsupportedOperationException} if the task queue, which was
+     * Be aware that this method will throw an {@link NotSupportedException} if the task queue, which was
      * created via {@link #newTaskQueue()}, does not implement {@link BlockingQueue}.
      * </p>
      *
@@ -258,7 +258,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected Runnable takeTask() {
         assert inEventLoop();
         if (!(taskQueue instanceof BlockingQueue)) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         BlockingQueue<Runnable> taskQueue = (BlockingQueue<Runnable>) this.taskQueue;
@@ -271,7 +271,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     if (task == WAKEUP_TASK) {
                         task = null;
                     }
-                } catch (InterruptedException e) {
+                } catch (ThreadInterruptedException e) {
                     // Ignore
                 }
                 return task;
@@ -281,7 +281,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 if (delayNanos > 0) {
                     try {
                         task = taskQueue.poll(delayNanos, TimeSpan.NANOSECONDS);
-                    } catch (InterruptedException e) {
+                    } catch (ThreadInterruptedException e) {
                         // Waken up.
                         return null;
                     }
@@ -812,7 +812,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             taskQueue.offer(WAKEUP_TASK);
             try {
                 Thread.sleep(100);
-            } catch (InterruptedException e) {
+            } catch (ThreadInterruptedException e) {
                 // Ignore
             }
 
@@ -891,7 +891,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     if (removeTask(task)) {
                         reject = true;
                     }
-                } catch (UnsupportedOperationException e) {
+                } catch (NotSupportedException e) {
                     // The task queue does not support removal so the best thing we can do is to just move on and
                     // hope we will be able to pick-up the task before its completely terminated.
                     // In worst case we will log on termination.
@@ -908,21 +908,21 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws InterruptedException, ExecutionException {
+    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws ThreadInterruptedException, ExecutionException {
         throwIfInEventLoop("invokeAny");
         return super.invokeAny(tasks);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
+            throws ThreadInterruptedException, ExecutionException, TimeoutException {
         throwIfInEventLoop("invokeAny");
         return super.invokeAny(tasks, timeout, unit);
     }
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Func<T>> tasks)
-            throws InterruptedException {
+            throws ThreadInterruptedException {
         throwIfInEventLoop("invokeAll");
         return super.invokeAll(tasks);
     }

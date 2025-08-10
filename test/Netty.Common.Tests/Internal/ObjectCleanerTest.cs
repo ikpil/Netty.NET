@@ -32,7 +32,7 @@ namespace Netty.Common.Tests.Internal
             public void run() {
             try {
                 latch.await();
-            } catch (InterruptedException ignore) {
+            } catch (ThreadInterruptedException ignore) {
                 // just ignore
             }
         }
@@ -63,7 +63,7 @@ namespace Netty.Common.Tests.Internal
 
     @Test
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testCleanupContinuesDespiteThrowing() throws InterruptedException {
+    public void testCleanupContinuesDespiteThrowing() throws ThreadInterruptedException {
         final AtomicInteger freeCalledCount = new AtomicInteger();
         final CountDownLatch latch = new CountDownLatch(1);
         temporaryThread = new Thread(new Runnable() {
@@ -71,7 +71,7 @@ namespace Netty.Common.Tests.Internal
             public void run() {
                 try {
                     latch.await();
-                } catch (InterruptedException ignore) {
+                } catch (ThreadInterruptedException ignore) {
                     // just ignore
                 }
             }

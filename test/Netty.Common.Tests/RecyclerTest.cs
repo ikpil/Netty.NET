@@ -95,7 +95,7 @@ public void testMultipleRecycle() {
 }
 
 @Test
-public void testMultipleRecycleAtDifferentThread() throws InterruptedException {
+public void testMultipleRecycleAtDifferentThread() throws ThreadInterruptedException {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
@@ -128,7 +128,7 @@ public void testMultipleRecycleAtDifferentThread() throws InterruptedException {
 }
 
 @Test
-public void testMultipleRecycleAtDifferentThreadRacing() throws InterruptedException {
+public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterruptedException {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
@@ -185,7 +185,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() throws InterruptedExcep
 }
 
 @Test
-public void testMultipleRecycleRacing() throws InterruptedException {
+public void testMultipleRecycleRacing() throws ThreadInterruptedException {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();

@@ -328,7 +328,7 @@ public class NativeLibraryLoader {
             }
             logger.debug("Execution of '{}' succeed: {}", cmd, exitValue);
             return true;
-        } catch (InterruptedException e) {
+        } catch (ThreadInterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (IOException e) {
             logger.info("Execution of '{}' failed.", cmd, e);

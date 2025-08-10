@@ -14,18 +14,18 @@
  * under the License.
  */
 
+using System;
+using System.Threading;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Concurrent;
-
-
-
-
 
 /**
  * A skeletal {@link Future} implementation which represents a {@link Future} which has been completed already.
  */
-public abstract class CompleteFuture<V> extends AbstractFuture<V> {
+public abstract class CompleteFuture<V> : AbstractFuture<V> {
 
-    private readonly IEventExecutor executor;
+    private readonly IEventExecutor _executor;
 
     /**
      * Creates a new instance.
@@ -33,14 +33,14 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
      * @param executor the {@link IEventExecutor} associated with this future
      */
     protected CompleteFuture(IEventExecutor executor) {
-        this.executor = executor;
+        _executor = executor;
     }
 
     /**
      * Return the {@link IEventExecutor} which is used by this {@link CompleteFuture}.
      */
     protected IEventExecutor executor() {
-        return executor;
+        return _executor;
     }
 
     @Override
@@ -77,7 +77,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     @Override
     public Future<V> await() {
         if (Thread.interrupted()) {
-            throw new InterruptedException();
+            throw new ThreadInterruptedException();
         }
         return this;
     }
@@ -85,7 +85,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     @Override
     public bool await(long timeout, TimeSpan unit) {
         if (Thread.interrupted()) {
-            throw new InterruptedException();
+            throw new ThreadInterruptedException();
         }
         return true;
     }
@@ -103,7 +103,7 @@ public abstract class CompleteFuture<V> extends AbstractFuture<V> {
     @Override
     public bool await(long timeoutMillis) {
         if (Thread.interrupted()) {
-            throw new InterruptedException();
+            throw new ThreadInterruptedException();
         }
         return true;
     }

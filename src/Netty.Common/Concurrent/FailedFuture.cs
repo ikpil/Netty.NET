@@ -13,6 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Concurrent;
 
 
@@ -21,9 +25,9 @@ namespace Netty.NET.Common.Concurrent;
  * recommended to use {@link IEventExecutor#newFailedFuture(Exception)}
  * instead of calling the constructor of this future.
  */
-public final class FailedFuture<V> extends CompleteFuture<V> {
+public class FailedFuture<V> : CompleteFuture<V> {
 
-    private readonly Exception cause;
+    private readonly Exception _cause;
 
     /**
      * Creates a new instance.
@@ -38,7 +42,7 @@ public final class FailedFuture<V> extends CompleteFuture<V> {
 
     @Override
     public Exception cause() {
-        return cause;
+        return _cause;
     }
 
     @Override
@@ -48,13 +52,13 @@ public final class FailedFuture<V> extends CompleteFuture<V> {
 
     @Override
     public Future<V> sync() {
-        PlatformDependent.throwException(cause);
+        PlatformDependent.throwException(_cause);
         return this;
     }
 
     @Override
     public Future<V> syncUninterruptibly() {
-        PlatformDependent.throwException(cause);
+        PlatformDependent.throwException(_cause);
         return this;
     }
 

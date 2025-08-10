@@ -172,7 +172,7 @@ public void testWrappedProperties() {
 }
 
 @Test
-public void testWrapMany() throws ExecutionException, InterruptedException {
+public void testWrapMany() throws ExecutionException, ThreadInterruptedException {
 class Worker implements Runnable {
     final Semaphore semaphore = new Semaphore(0);
     final FutureTask<?> task = new FutureTask<>(this, null);

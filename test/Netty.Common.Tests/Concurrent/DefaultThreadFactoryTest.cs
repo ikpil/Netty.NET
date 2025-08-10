@@ -20,7 +20,7 @@ namespace Netty.Common.Tests.Concurrent
 
         @Test
             @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-        public void testDescendantThreadGroups() throws InterruptedException {
+        public void testDescendantThreadGroups() throws ThreadInterruptedException {
             final SecurityManager current = System.getSecurityManager();
 
             boolean securityManagerSet = false;
@@ -47,7 +47,7 @@ namespace Netty.Common.Tests.Concurrent
     });
 }
 
-} catch (UnsupportedOperationException e) {
+} catch (NotSupportedException e) {
                 Assumptions.assumeFalse(true, "Setting SecurityManager not supported");
             }
             securityManagerSet = true;
@@ -75,7 +75,7 @@ namespace Netty.Common.Tests.Concurrent
                     t.start();
                     try {
                         t.join();
-                    } catch (InterruptedException e) {
+                    } catch (ThreadInterruptedException e) {
                         interrupted.set(e);
                         Thread.currentThread().interrupt();
                     }
@@ -96,7 +96,7 @@ namespace Netty.Common.Tests.Concurrent
                     t.start();
                     try {
                         t.join();
-                    } catch (InterruptedException e) {
+                    } catch (ThreadInterruptedException e) {
                         interrupted.set(e);
                         Thread.currentThread().interrupt();
                     }
@@ -119,7 +119,7 @@ namespace Netty.Common.Tests.Concurrent
     // created by it have the sticky thread group
     @Test
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testDefaultThreadFactoryStickyThreadGroupConstructor() throws InterruptedException {
+    public void testDefaultThreadFactoryStickyThreadGroupConstructor() throws ThreadInterruptedException {
         final ThreadGroup sticky = new ThreadGroup("sticky");
         runStickyThreadGroupTest(
                 new Callable<DefaultThreadFactory>() {
@@ -135,7 +135,7 @@ namespace Netty.Common.Tests.Concurrent
     // the security manager
     @Test
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testDefaultThreadFactoryInheritsThreadGroupFromSecurityManager() throws InterruptedException {
+    public void testDefaultThreadFactoryInheritsThreadGroupFromSecurityManager() throws ThreadInterruptedException {
         final SecurityManager current = System.getSecurityManager();
 
         boolean securityManagerSet = false;
@@ -153,7 +153,7 @@ namespace Netty.Common.Tests.Concurrent
                     public void checkPermission(Permission perm) {
                     }
                 });
-            } catch (UnsupportedOperationException e) {
+            } catch (NotSupportedException e) {
                 Assumptions.assumeFalse(true, "Setting SecurityManager not supported");
             }
             securityManagerSet = true;
@@ -175,7 +175,7 @@ namespace Netty.Common.Tests.Concurrent
 
     private static void runStickyThreadGroupTest(
             final Callable<DefaultThreadFactory> callable,
-            final ThreadGroup expected) throws InterruptedException {
+            final ThreadGroup expected) throws ThreadInterruptedException {
         final AtomicReference<ThreadGroup> captured = new AtomicReference<ThreadGroup>();
         final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
 
@@ -209,7 +209,7 @@ namespace Netty.Common.Tests.Concurrent
     // created by it inherit the correct thread group
     @Test
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testDefaultThreadFactoryNonStickyThreadGroupConstructor() throws InterruptedException {
+    public void testDefaultThreadFactoryNonStickyThreadGroupConstructor() throws ThreadInterruptedException {
 
         final AtomicReference<DefaultThreadFactory> factory = new AtomicReference<DefaultThreadFactory>();
         final AtomicReference<ThreadGroup> firstCaptured = new AtomicReference<ThreadGroup>();
@@ -256,7 +256,7 @@ namespace Netty.Common.Tests.Concurrent
     // created by it inherit the correct thread group
     @Test
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testCurrentThreadGroupIsUsed() throws InterruptedException {
+    public void testCurrentThreadGroupIsUsed() throws ThreadInterruptedException {
         final AtomicReference<DefaultThreadFactory> factory = new AtomicReference<DefaultThreadFactory>();
         final AtomicReference<ThreadGroup> firstCaptured = new AtomicReference<ThreadGroup>();
 

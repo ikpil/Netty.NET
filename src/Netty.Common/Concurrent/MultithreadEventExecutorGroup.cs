@@ -97,7 +97,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
                             while (!e.isTerminated()) {
                                 e.awaitTermination(int.MaxValue, TimeSpan.SECONDS);
                             }
-                        } catch (InterruptedException interrupted) {
+                        } catch (ThreadInterruptedException interrupted) {
                             // Let the caller handle the interruption.
                             Thread.currentThread().interrupt();
                             break;
@@ -209,7 +209,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
     @Override
     public bool awaitTermination(long timeout, TimeSpan unit)
-            throws InterruptedException {
+            throws ThreadInterruptedException {
         long deadline = PreciesTimer.nanoTime() + unit.toNanos(timeout);
         loop: for (IEventExecutor l: children) {
             for (;;) {

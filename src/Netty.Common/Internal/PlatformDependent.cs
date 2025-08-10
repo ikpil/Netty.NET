@@ -520,7 +520,7 @@ public class PlatformDependent
         if (PlatformDependent0.hasDirectBufferNoCleanerConstructor()) {
             return PlatformDependent0.newDirectBuffer(memoryAddress, size);
         }
-        throw new UnsupportedOperationException(
+        throw new NotSupportedException(
                 "sun.misc.Unsafe or java.nio.DirectByteBuffer.<init>(long, int) not available");
     }
 
@@ -848,7 +848,7 @@ public class PlatformDependent
             return buffer.slice();
         }
         // We don't have enough information to be able to align any buffers.
-        throw new UnsupportedOperationException("Cannot align direct buffer. " +
+        throw new NotSupportedException("Cannot align direct buffer. " +
                 "Needs either Unsafe or ByteBuffer.alignSlice method available.");
     }
 
@@ -1174,12 +1174,12 @@ public class PlatformDependent
     private static Exception unsafeUnavailabilityCause0() {
         if (isAndroid()) {
             logger.debug("sun.misc.Unsafe: unavailable (Android)");
-            return new UnsupportedOperationException("sun.misc.Unsafe: unavailable (Android)");
+            return new NotSupportedException("sun.misc.Unsafe: unavailable (Android)");
         }
 
         if (isIkvmDotNet()) {
             logger.debug("sun.misc.Unsafe: unavailable (IKVM.NET)");
-            return new UnsupportedOperationException("sun.misc.Unsafe: unavailable (IKVM.NET)");
+            return new NotSupportedException("sun.misc.Unsafe: unavailable (IKVM.NET)");
         }
 
         Exception cause = PlatformDependent0.getUnsafeUnavailabilityCause();
@@ -1194,7 +1194,7 @@ public class PlatformDependent
         } catch (Exception t) {
             logger.trace("Could not determine if Unsafe is available", t);
             // Probably failed to initialize PlatformDependent0.
-            return new UnsupportedOperationException("Could not determine if Unsafe is available", t);
+            return new NotSupportedException("Could not determine if Unsafe is available", t);
         }
     }
 

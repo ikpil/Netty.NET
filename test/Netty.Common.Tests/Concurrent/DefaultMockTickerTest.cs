@@ -63,7 +63,7 @@ namespace Netty.Common.Tests.Concurrent
             FutureTask<Void> task = new FutureTask<>(() -> {
                 try {
                 ticker.sleep(1, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
+            } catch (ThreadInterruptedException e) {
                 throw new CompletionException(e);
             }
             return null;
@@ -109,13 +109,13 @@ namespace Netty.Common.Tests.Concurrent
         for (int i = 0; i < numWaiters; i++) {
             futures.get(i).get();
         }
-    } catch (InterruptedException ie) {
+    } catch (ThreadInterruptedException ie) {
         for (Thread thread : threads) {
             String name = thread.getName();
             Thread.State state = thread.getState();
             StackTraceElement[] stackTrace = thread.getStackTrace();
             thread.interrupt();
-            InterruptedException threadStackTrace = new InterruptedException(name + ": " + state);
+            ThreadInterruptedException threadStackTrace = new ThreadInterruptedException(name + ": " + state);
             threadStackTrace.setStackTrace(stackTrace);
             ie.addSuppressed(threadStackTrace);
         }
@@ -126,7 +126,7 @@ namespace Netty.Common.Tests.Concurrent
 }
 
     @Test
-    void sleepZero() throws InterruptedException {
+    void sleepZero() throws ThreadInterruptedException {
         final MockTicker ticker = Ticker.newMockTicker();
         // All sleep calls with 0 delay should return immediately.
         ticker.sleep(0, TimeUnit.SECONDS);

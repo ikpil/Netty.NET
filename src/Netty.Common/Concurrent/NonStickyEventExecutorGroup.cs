@@ -185,13 +185,13 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws InterruptedException, ExecutionException {
+    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws ThreadInterruptedException, ExecutionException {
         return group.invokeAny(tasks);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
+            throws ThreadInterruptedException, ExecutionException, TimeoutException {
         return group.invokeAny(tasks, timeout, unit);
     }
 

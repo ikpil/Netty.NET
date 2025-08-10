@@ -53,7 +53,7 @@ public final class ImmediateEventExecutor extends AbstractEventExecutor {
     };
 
     private readonly Future<?> terminationFuture = new FailedFuture<object>(
-            GlobalEventExecutor.INSTANCE, new UnsupportedOperationException());
+            GlobalEventExecutor.INSTANCE, new NotSupportedException());
 
     private ImmediateEventExecutor() { }
 

@@ -71,7 +71,7 @@ public class DefaultPromiseTest {
     }
 
     @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+    public boolean awaitTermination(long timeout, TimeUnit unit) throws ThreadInterruptedException {
         return false;
 }
 
@@ -290,13 +290,13 @@ public void testPromiseListenerAddWhenCompleteSuccess() throws Exception {
 
 @Test
 @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-public void testLateListenerIsOrderedCorrectlySuccess() throws InterruptedException {
+public void testLateListenerIsOrderedCorrectlySuccess() throws ThreadInterruptedException {
     testLateListenerIsOrderedCorrectly(null);
 }
 
 @Test
 @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-public void testLateListenerIsOrderedCorrectlyFailure() throws InterruptedException {
+public void testLateListenerIsOrderedCorrectlyFailure() throws ThreadInterruptedException {
     testLateListenerIsOrderedCorrectly(fakeException());
 }
 
@@ -367,7 +367,7 @@ public void setUncancellableGetNow() {
 
 private static void testStackOverFlowChainedFuturesA(int promiseChainLength, final EventExecutor executor,
 boolean runTestInExecutorThread)
-throws InterruptedException {
+throws ThreadInterruptedException {
     final Promise<Void>[] p = new DefaultPromise[promiseChainLength];
     final CountDownLatch latch = new CountDownLatch(promiseChainLength);
 
@@ -409,7 +409,7 @@ final CountDownLatch latch) {
 
 private static void testStackOverFlowChainedFuturesB(int promiseChainLength, final EventExecutor executor,
 boolean runTestInExecutorThread)
-throws InterruptedException {
+throws ThreadInterruptedException {
     final Promise<Void>[] p = new DefaultPromise[promiseChainLength];
     final CountDownLatch latch = new CountDownLatch(promiseChainLength);
 
@@ -464,7 +464,7 @@ final CountDownLatch latch) {
      * <li>The write operation</li>
      * </ol>
      */
-private static void testLateListenerIsOrderedCorrectly(Throwable cause) throws InterruptedException {
+private static void testLateListenerIsOrderedCorrectly(Throwable cause) throws ThreadInterruptedException {
     final EventExecutor executor = new TestEventExecutor();
     try {
         final AtomicInteger state = new AtomicInteger();
@@ -531,7 +531,7 @@ private static void testLateListenerIsOrderedCorrectly(Throwable cause) throws I
     }
 }
 
-private static void testPromiseListenerAddWhenComplete(Throwable cause) throws InterruptedException {
+private static void testPromiseListenerAddWhenComplete(Throwable cause) throws ThreadInterruptedException {
     final CountDownLatch latch = new CountDownLatch(1);
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     promise.addListener(new FutureListener<Void>() {

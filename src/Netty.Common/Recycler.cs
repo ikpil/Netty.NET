@@ -469,27 +469,27 @@ public abstract class Recycler<T>
 
         @Override
         public int fill(Supplier<T> s, int limit) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
         public int drain(Consumer<T> c) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
         public int fill(Supplier<T> s) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
         public void drain(Consumer<T> c, WaitStrategy wait, ExitCondition exit) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
 
         @Override
         public void fill(Supplier<T> s, WaitStrategy wait, ExitCondition exit) {
-            throw new UnsupportedOperationException();
+            throw new NotSupportedException();
         }
     }
 }

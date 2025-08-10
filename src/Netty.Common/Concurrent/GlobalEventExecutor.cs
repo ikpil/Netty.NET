@@ -22,8 +22,6 @@ using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Concurrent;
 
-
-
 /**
  * Single-thread singleton {@link IEventExecutor}.  It starts the thread automatically and stops it when there is no
  * task pending in the task queue for {@code io.netty.globalEventExecutor.quietPeriodSeconds} second
@@ -49,9 +47,9 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     public static readonly GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
 
-    final BlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>();
+    final BlockingQueue<IRunnable> taskQueue = new LinkedBlockingQueue<IRunnable>();
     final ScheduledFutureTask<Void> quietPeriodTask = new ScheduledFutureTask<Void>(
-            this, Executors.<Void>callable(new Runnable() {
+            this, Executors.<Void>callable(new IRunnable() {
         @Override
         public void run() {
             // NOOP
@@ -72,43 +70,44 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     private readonly AtomicBoolean started = new AtomicBoolean();
     volatile Thread thread;
 
-    private readonly Task terminationFuture;
+    private readonly Future<object> terminationFuture;
 
     private GlobalEventExecutor() 
     {
         scheduledTaskQueue().add(quietPeriodTask);
         threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
-                DefaultThreadFactory.toPoolName(getClass()), false, Thread.NORM_PRIORITY, null), this);
+                DefaultThreadFactory.toPoolName(GetType()), false, ThreadPriority.Normal), this);
+        
 
-        UnsupportedOperationException terminationFailure = new UnsupportedOperationException();
-        ThrowableUtil.unknownStackTrace(terminationFailure, typeof(GlobalEventExecutor), "terminationAsync");
+        NotSupportedException terminationFailure = new NotSupportedException();
+        ThrowableUtil.unknownStackTrace(msg => new NotSupportedException(msg), typeof(GlobalEventExecutor), "terminationAsync");
         terminationFuture = new FailedFuture<object>(this, terminationFailure);
     }
 
     /**
-     * Take the next {@link Runnable} from the task queue and so will block if no task is currently present.
+     * Take the next {@link IRunnable} from the task queue and so will block if no task is currently present.
      *
      * @return {@code null} if the executor thread has been interrupted or waken up.
      */
-    Runnable takeTask() {
-        BlockingQueue<Runnable> taskQueue = this.taskQueue;
+    IRunnable takeTask() {
+        BlockingQueue<IRunnable> taskQueue = this.taskQueue;
         for (;;) {
             ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
             if (scheduledTask == null) {
-                Runnable task = null;
+                IRunnable task = null;
                 try {
                     task = taskQueue.take();
-                } catch (InterruptedException e) {
+                } catch (ThreadInterruptedException e) {
                     // Ignore
                 }
                 return task;
             } else {
                 long delayNanos = scheduledTask.delayNanos();
-                Runnable task = null;
+                IRunnable task = null;
                 if (delayNanos > 0) {
                     try {
                         task = taskQueue.poll(delayNanos, TimeSpan.NANOSECONDS);
-                    } catch (InterruptedException e) {
+                    } catch (ThreadInterruptedException e) {
                         // Waken up.
                         return null;
                     }
@@ -131,7 +130,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     private void fetchFromScheduledTaskQueue() {
         long nanoTime = getCurrentTimeNanos();
-        Runnable scheduledTask = pollScheduledTask(nanoTime);
+        IRunnable scheduledTask = pollScheduledTask(nanoTime);
         while (scheduledTask != null) {
             taskQueue.add(scheduledTask);
             scheduledTask = pollScheduledTask(nanoTime);
@@ -149,7 +148,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
      * Add a task to the task queue, or throws a {@link RejectedExecutionException} if this instance was shutdown
      * before.
      */
-    private void addTask(Runnable task) {
+    private void addTask(IRunnable task) {
         taskQueue.add(ObjectUtil.checkNotNull(task, "task"));
     }
 
@@ -171,7 +170,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     @Override
     @Deprecated
     public void shutdown() {
-        throw new UnsupportedOperationException();
+        throw new NotSupportedException();
     }
 
     @Override
@@ -214,11 +213,11 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     }
 
     @Override
-    public void execute(Runnable task) {
+    public void execute(IRunnable task) {
         execute0(task);
     }
 
-    private void execute0(@Schedule Runnable task) {
+    private void execute0(@Schedule IRunnable task) {
         addTask(ObjectUtil.checkNotNull(task, "task"));
         if (!inEventLoop()) {
             startThread();
@@ -266,11 +265,11 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         });
     }
 
-    final class TaskRunner : Runnable {
+    final class TaskRunner : IRunnable {
         @Override
         public void run() {
             for (;;) {
-                Runnable task = takeTask();
+                IRunnable task = takeTask();
                 if (task != null) {
                     try {
                         runTask(task);

@@ -246,7 +246,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         }
 
         if (Thread.interrupted()) {
-            throw new InterruptedException(toString());
+            throw new ThreadInterruptedException(toString());
         }
 
         checkDeadLock();
@@ -278,7 +278,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
                 incWaiters();
                 try {
                     wait();
-                } catch (InterruptedException e) {
+                } catch (ThreadInterruptedException e) {
                     // Interrupted while waiting.
                     interrupted = true;
                 } finally {
@@ -308,7 +308,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     public bool awaitUninterruptibly(long timeout, TimeSpan unit) {
         try {
             return await0(unit.toNanos(timeout), false);
-        } catch (InterruptedException e) {
+        } catch (ThreadInterruptedException e) {
             // Should not be raised at all.
             throw new InternalError();
         }
@@ -318,7 +318,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
     public bool awaitUninterruptibly(long timeoutMillis) {
         try {
             return await0(MILLISECONDS.toNanos(timeoutMillis), false);
-        } catch (InterruptedException e) {
+        } catch (ThreadInterruptedException e) {
             // Should not be raised at all.
             throw new InternalError();
         }
@@ -336,7 +336,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public V get() throws InterruptedException, ExecutionException {
+    public V get() throws ThreadInterruptedException, ExecutionException {
         object result = this.result;
         if (!isDone0(result)) {
             await();
@@ -357,7 +357,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public V get(long timeout, TimeSpan unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public V get(long timeout, TimeSpan unit) throws ThreadInterruptedException, ExecutionException, TimeoutException {
         object result = this.result;
         if (!isDone0(result)) {
             if (!await(timeout, unit)) {
@@ -688,7 +688,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
         }
 
         if (interruptable && Thread.interrupted()) {
-            throw new InterruptedException(toString());
+            throw new ThreadInterruptedException(toString());
         }
 
         checkDeadLock();
@@ -704,7 +704,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> : Promise<V> {
                     incWaiters();
                     try {
                         wait(waitTime / 1000000, (int) (waitTime % 1000000));
-                    } catch (InterruptedException e) {
+                    } catch (ThreadInterruptedException e) {
                         if (interruptable) {
                             throw e;
                         } else {

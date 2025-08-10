@@ -60,7 +60,7 @@ public class NettyRuntimeTests {
     }
 
     @Test
-    public void testRacingGetAndGet() throws InterruptedException {
+    public void testRacingGetAndGet() throws ThreadInterruptedException {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         final CyclicBarrier barrier = new CyclicBarrier(3);
 
@@ -106,7 +106,7 @@ public class NettyRuntimeTests {
     }
 
     @Test
-    public void testRacingGetAndSet() throws InterruptedException {
+    public void testRacingGetAndSet() throws ThreadInterruptedException {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         final CyclicBarrier barrier = new CyclicBarrier(3);
         final Thread get = new Thread(new Runnable() {
@@ -186,7 +186,7 @@ public class NettyRuntimeTests {
     private static void await(final CyclicBarrier barrier) {
         try {
             barrier.await();
-        } catch (InterruptedException | BrokenBarrierException e) {
+        } catch (ThreadInterruptedException | BrokenBarrierException e) {
             fail(e.toString());
         }
     }

@@ -34,7 +34,7 @@ namespace Netty.Common.Tests.Concurrent
             public void run() {
             try {
                 exchanger.exchange(null);
-            } catch (InterruptedException e) {
+            } catch (ThreadInterruptedException e) {
                 throw new RuntimeException(e);
             }
             latch.countDown();
@@ -70,7 +70,7 @@ namespace Netty.Common.Tests.Concurrent
 
     @Test
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void scheduledAtFixedRateMustRunTaskRepeatedly() throws InterruptedException {
+    public void scheduledAtFixedRateMustRunTaskRepeatedly() throws ThreadInterruptedException {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         final CountDownLatch latch = new CountDownLatch(3);
         Future<?> future = executor.scheduleAtFixedRate(new Runnable() {

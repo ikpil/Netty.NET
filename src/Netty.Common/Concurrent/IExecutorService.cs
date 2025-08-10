@@ -76,7 +76,7 @@ public interface IExecutorService : IExecutor
      * @param unit the time unit of the timeout argument
      * @return {@code true} if this executor terminated and
      *         {@code false} if the timeout elapsed before termination
-     * @throws InterruptedException if interrupted while waiting
+     * @throws ThreadInterruptedException if interrupted while waiting
      */
     bool awaitTermination(TimeSpan timeout);
 
@@ -148,7 +148,7 @@ public interface IExecutorService : IExecutor
      * @return a list of Futures representing the tasks, in the same
      *         sequential order as produced by the iterator for the
      *         given task list, each of which has completed
-     * @throws InterruptedException if interrupted while waiting, in
+     * @throws ThreadInterruptedException if interrupted while waiting, in
      *         which case unfinished tasks are cancelled
      * @throws NullPointerException if tasks or any of its elements are {@code null}
      * @throws RejectedExecutionException if any task cannot be
@@ -177,7 +177,7 @@ public interface IExecutorService : IExecutor
      *         given task list. If the operation did not time out,
      *         each task will have completed. If it did time out, some
      *         of these tasks will not have completed.
-     * @throws InterruptedException if interrupted while waiting, in
+     * @throws ThreadInterruptedException if interrupted while waiting, in
      *         which case unfinished tasks are cancelled
      * @throws NullPointerException if tasks, any of its elements, or
      *         unit are {@code null}
@@ -197,7 +197,7 @@ public interface IExecutorService : IExecutor
      * @param tasks the collection of tasks
      * @param <T> the type of the values returned from the tasks
      * @return the result returned by one of the tasks
-     * @throws InterruptedException if interrupted while waiting
+     * @throws ThreadInterruptedException if interrupted while waiting
      * @throws NullPointerException if tasks or any element task
      *         subject to execution is {@code null}
      * @throws IllegalArgumentException if tasks is empty
@@ -221,7 +221,7 @@ public interface IExecutorService : IExecutor
      * @param unit the time unit of the timeout argument
      * @param <T> the type of the values returned from the tasks
      * @return the result returned by one of the tasks
-     * @throws InterruptedException if interrupted while waiting
+     * @throws ThreadInterruptedException if interrupted while waiting
      * @throws NullPointerException if tasks, or unit, or any element
      *         task subject to execution is {@code null}
      * @throws TimeoutException if the given timeout elapses before

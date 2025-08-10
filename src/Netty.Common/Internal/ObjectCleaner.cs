@@ -60,7 +60,7 @@ public final class ObjectCleaner {
                     final AutomaticCleanerReference reference;
                     try {
                         reference = (AutomaticCleanerReference) REFERENCE_QUEUE.remove(REFERENCE_QUEUE_POLL_TIMEOUT_MS);
-                    } catch (InterruptedException ex) {
+                    } catch (ThreadInterruptedException ex) {
                         // Just consume and move on
                         interrupted = true;
                         continue;
@@ -86,7 +86,7 @@ public final class ObjectCleaner {
                 }
             }
             if (interrupted) {
-                // As we caught the InterruptedException above we should mark the Thread as interrupted.
+                // As we caught the ThreadInterruptedException above we should mark the Thread as interrupted.
                 Thread.currentThread().interrupt();
             }
         }

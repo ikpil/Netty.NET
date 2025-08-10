@@ -16,9 +16,10 @@
 namespace Netty.NET.Common.Concurrent;
 
 
-
-
-
+public class Future<V>
+{
+    
+}
 
 /**
  * Abstract {@link Future} implementation which does not allow for cancellation.
@@ -28,7 +29,7 @@ namespace Netty.NET.Common.Concurrent;
 public abstract class AbstractFuture<V> : Future<V> {
 
     @Override
-    public V get() throws InterruptedException, ExecutionException {
+    public V get() throws ThreadInterruptedException, ExecutionException {
         await();
 
         Exception cause = cause();
@@ -42,7 +43,7 @@ public abstract class AbstractFuture<V> : Future<V> {
     }
 
     @Override
-    public V get(long timeout, TimeSpan unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public V get(long timeout, TimeSpan unit) throws ThreadInterruptedException, ExecutionException, TimeoutException {
         if (await(timeout, unit)) {
             Exception cause = cause();
             if (cause == null) {

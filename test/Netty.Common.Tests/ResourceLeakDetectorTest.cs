@@ -51,7 +51,7 @@ public class ResourceLeakDetectorTest {
             finished.set(true);
         }
         }
-        } catch (InterruptedException e) {
+        } catch (ThreadInterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (Throwable e) {
             error.compareAndSet(null, e);
