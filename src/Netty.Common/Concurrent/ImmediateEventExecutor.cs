@@ -150,14 +150,5 @@ public class ImmediateEventExecutor : AbstractEventExecutor
         }
     }
 
-    static class ImmediateProgressivePromise<V> extends DefaultProgressivePromise<V> {
-        ImmediateProgressivePromise(IEventExecutor executor) {
-            super(executor);
-        }
-
-        @Override
-        protected void checkDeadLock() {
-            // No check
-        }
-    }
 }
+

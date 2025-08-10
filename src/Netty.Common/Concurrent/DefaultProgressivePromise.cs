@@ -16,8 +16,6 @@
 
 namespace Netty.NET.Common.Concurrent;
 
-
-
 public class DefaultProgressivePromise<V> : DefaultPromise<V>, ProgressivePromise<V> {
 
     /**
@@ -28,8 +26,9 @@ public class DefaultProgressivePromise<V> : DefaultPromise<V>, ProgressivePromis
      * @param executor
      *        the {@link IEventExecutor} which is used to notify the promise when it progresses or it is complete
      */
-    public DefaultProgressivePromise(IEventExecutor executor) {
-        super(executor);
+    public DefaultProgressivePromise(IEventExecutor executor) 
+    : base(executor)
+    {
     }
 
     protected DefaultProgressivePromise() { /* only for subclasses */ }

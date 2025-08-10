@@ -17,6 +17,8 @@
 using System;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -85,7 +87,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      *
      */
     public DefaultPromise(IEventExecutor executor) {
-        this.executor = checkNotNull(executor, "executor");
+        this.executor = ObjectUtil.checkNotNull(executor, "executor");
     }
 
     /**
@@ -458,10 +460,10 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      * @return The executor used to notify listeners when this promise is complete.
      */
     protected IEventExecutor executor() {
-        return executor;
+        return _executor;
     }
 
-    protected void checkDeadLock() {
+    protected virtual void checkDeadLock() {
         IEventExecutor e = executor();
         if (e != null && e.inEventLoop()) {
             throw new BlockingOperationException(toString());
@@ -850,19 +852,13 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     private static bool isCancelled0(object result) {
-        return result instanceof CauseHolder && ((CauseHolder) result).cause instanceof TaskCanceledException;
+        return result is CauseHolder && ((CauseHolder) result).cause is TaskCanceledException;
     }
 
     private static bool isDone0(object result) {
         return result != null && result != UNCANCELLABLE;
     }
 
-    private static readonly class CauseHolder {
-        final Exception cause;
-        CauseHolder(Exception cause) {
-            this.cause = cause;
-        }
-    }
 
     private static void safeExecute(IEventExecutor executor, Runnable task) {
         try {
