@@ -19,7 +19,8 @@ namespace Netty.NET.Common;
  * A utility class that provides various common operations and constants
  * related with {@link Charset} and its relevant classes.
  */
-public final class CharsetUtil {
+public static class CharsetUtil 
+{
 
     /**
      * 16-bit UTF (UCS Transformation Format) whose byte order is identified by
@@ -171,6 +172,4 @@ public final class CharsetUtil {
         map.put(charset, d);
         return d;
     }
-
-    private CharsetUtil() { }
 }

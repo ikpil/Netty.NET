@@ -423,7 +423,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         return toStringBuilder().toString();
     }
 
-    protected StringBuilder toStringBuilder() {
+    protected virtual StringBuilder toStringBuilder() {
         StringBuilder buf = new StringBuilder(64)
                 .append(StringUtil.simpleClassName(this))
                 .append('@')
@@ -871,4 +871,5 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             rejectedExecutionLogger.error("Failed to submit a listener notification task. Event loop shut down?", t);
         }
     }
+
 }
