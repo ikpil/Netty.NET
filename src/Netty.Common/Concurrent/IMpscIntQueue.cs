@@ -22,7 +22,7 @@ namespace Netty.NET.Common.Concurrent;
  * A multi-producer (concurrent and thread-safe {@code offer} and {@code fill}),
  * single-consumer (single-threaded {@code poll} and {@code drain}) queue of primitive integers.
  */
-public interface MpscIntQueue {
+public interface IMpscIntQueue {
     /**
      * Create a new queue instance of the given size.
      * <p>
@@ -34,7 +34,7 @@ public interface MpscIntQueue {
      * and giving this value to {@link #offer(int)} will cause an exception to be thrown.
      * @return The queue instance.
      */
-    static MpscIntQueue create(int size, int emptyValue) {
+    static IMpscIntQueue create(int size, int emptyValue) {
         return new MpscAtomicIntegerArrayQueue(size, emptyValue);
     }
 
@@ -66,7 +66,7 @@ public interface MpscIntQueue {
      * @param supplier The supplier to obtain the elements from.
      * @return The actual number of elements added.
      */
-    int fill(int limit, IntSupplier supplier);
+    int fill(int limit, Func<int> supplier);
 
     /**
      * Query if the queue is empty or not.
