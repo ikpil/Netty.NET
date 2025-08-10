@@ -13,9 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common.Concurrent;
+
 namespace Netty.NET.Common;
-
-
 
 
 public interface AsyncMapping<IN, OUT> {
@@ -24,5 +25,5 @@ public interface AsyncMapping<IN, OUT> {
      * Returns the {@link Future} that will provide the result of the mapping. The given {@link Promise} will
      * be fulfilled when the result is available.
      */
-    Future<OUT> map(IN input, Promise<OUT> promise);
+    IFuture<OUT> map(IN input, Promise<OUT> promise);
 }

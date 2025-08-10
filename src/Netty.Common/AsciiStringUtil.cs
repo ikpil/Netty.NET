@@ -15,13 +15,11 @@
  */
 namespace Netty.NET.Common;
 
-
-
-
 /**
  * A collection of utility methods that is related with handling {@link AsciiString}.
  */
-final class AsciiStringUtil {
+public static class AsciiStringUtil 
+{
 
     /**
      * Convert the {@link AsciiString} to a lower case.
@@ -283,9 +281,5 @@ final class AsciiStringUtil {
      */
     static byte toUpperCase(final byte value) {
         return isLowerCase(value)? (byte) (value - 32) : value;
-    }
-
-    private AsciiStringUtil() {
-        // Utility
     }
 }
