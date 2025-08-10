@@ -41,8 +41,9 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     protected AbstractScheduledEventExecutor() {
     }
 
-    protected AbstractScheduledEventExecutor(IEventExecutorGroup parent) {
-        super(parent);
+    protected AbstractScheduledEventExecutor(IEventExecutorGroup parent) 
+        : base(parent)
+    {
     }
 
     @Override
@@ -63,7 +64,6 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @deprecated Please use (or override) {@link #ticker()} instead. This method delegates to {@link #ticker()}. Old
      * code may still call this method for compatibility.
      */
-    @Deprecated
     protected long getCurrentTimeNanos() {
         return ticker().nanoTime();
     }
@@ -71,7 +71,6 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * @deprecated Use the non-static {@link #ticker()} instead.
      */
-    @Deprecated
     protected static long nanoTime() {
         return Ticker.systemTicker().nanoTime();
     }

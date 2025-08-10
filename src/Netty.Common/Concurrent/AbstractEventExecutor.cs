@@ -31,15 +31,16 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     public static readonly TimeSpan DEFAULT_SHUTDOWN_QUIET_PERIOD = TimeSpan.FromSeconds(2);
     public static readonly TimeSpan DEFAULT_SHUTDOWN_TIMEOUT = TimeSpan.FromSeconds(15);
 
-    private readonly IEventExecutorGroup parent;
-    private readonly Collection<IEventExecutor> selfCollection = Collections.<IEventExecutor>singleton(this);
-
-    protected AbstractEventExecutor() {
-        this(null);
+    private readonly IEventExecutorGroup _parent;
+    private readonly IReadOnlyCollection<IEventExecutor> selfCollection;
+    
+    protected AbstractEventExecutor() : this(null)
+    {
     }
 
     protected AbstractEventExecutor(IEventExecutorGroup parent) {
-        this.parent = parent;
+        selfCollection = new List<IEventExecutor> { this }.AsReadOnly(); 
+        _parent = parent;
     }
 
     @Override

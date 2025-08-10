@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Internal;
@@ -47,7 +48,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     public static readonly GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
 
-    final BlockingQueue<IRunnable> taskQueue = new LinkedBlockingQueue<IRunnable>();
+    private readonly BlockingCollection<IRunnable> taskQueue = new BlockingCollection<IRunnable>();
     final ScheduledFutureTask<Void> quietPeriodTask = new ScheduledFutureTask<Void>(
             this, Executors.<Void>callable(new IRunnable() {
         @Override
@@ -90,9 +91,9 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
      * @return {@code null} if the executor thread has been interrupted or waken up.
      */
     IRunnable takeTask() {
-        BlockingQueue<IRunnable> taskQueue = this.taskQueue;
+        BlockingCollection<IRunnable> taskQueue = this.taskQueue;
         for (;;) {
-            ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+            Concurrent.ScheduledFutureTask<> ?> scheduledTask = peekScheduledTask();
             if (scheduledTask == null) {
                 IRunnable task = null;
                 try {
@@ -282,7 +283,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
                     }
                 }
 
-                Queue<ScheduledFutureTask<?>> scheduledTaskQueue = GlobalEventExecutor.this.scheduledTaskQueue;
+                Queue< Concurrent.ScheduledFutureTask<> ?>> scheduledTaskQueue = GlobalEventExecutor.this.scheduledTaskQueue;
                 // Terminate if there is no task in the queue (except the noop task).
                 if (taskQueue.isEmpty() && (scheduledTaskQueue == null || scheduledTaskQueue.size() == 1)) {
                     // Mark the current thread as stopped.
