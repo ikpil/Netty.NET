@@ -97,7 +97,7 @@ public class HashedWheelTimer : Timer {
     private readonly Queue<HashedWheelTimeout> cancelledTimeouts = PlatformDependent.newMpscQueue();
     private readonly AtomicLong pendingTimeouts = new AtomicLong(0);
     private readonly long maxPendingTimeouts;
-    private readonly Executor taskExecutor;
+    private readonly IExecutor taskExecutor;
 
     private volatile long startTime;
 
@@ -250,8 +250,8 @@ public class HashedWheelTimer : Timer {
      *                             {@link java.util.concurrent.RejectedExecutionException}
      *                             being thrown. No maximum pending timeouts limit is assumed if
      *                             this value is 0 or negative.
-     * @param taskExecutor         The {@link Executor} that is used to execute the submitted {@link ITimerTask}s.
-     *                             The caller is responsible to shutdown the {@link Executor} once it is not needed
+     * @param taskExecutor         The {@link IExecutor} that is used to execute the submitted {@link ITimerTask}s.
+     *                             The caller is responsible to shutdown the {@link IExecutor} once it is not needed
      *                             anymore.
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
@@ -259,7 +259,7 @@ public class HashedWheelTimer : Timer {
     public HashedWheelTimer(
             IThreadFactory threadFactory,
             long tickDuration, TimeSpan unit, int ticksPerWheel, bool leakDetection,
-            long maxPendingTimeouts, Executor taskExecutor) {
+            long maxPendingTimeouts, IExecutor taskExecutor) {
 
         checkNotNull(threadFactory, "threadFactory");
         checkNotNull(unit, "unit");

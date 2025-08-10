@@ -20,9 +20,9 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * {@link Executor} which execute tasks in the callers thread.
+ * {@link IExecutor} which execute tasks in the callers thread.
  */
-public final class ImmediateExecutor : Executor {
+public final class ImmediateExecutor : IExecutor {
     public static readonly ImmediateExecutor INSTANCE = new ImmediateExecutor();
 
     private ImmediateExecutor() {

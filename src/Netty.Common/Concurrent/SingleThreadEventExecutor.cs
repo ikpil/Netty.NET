@@ -60,7 +60,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private volatile Thread thread;
     @SuppressWarnings("unused")
     private volatile ThreadProperties threadProperties;
-    private readonly Executor executor;
+    private readonly IExecutor executor;
     private volatile bool interrupted;
 
     private readonly Lock processingLock = new ReentrantLock();
@@ -134,11 +134,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Create a new instance
      *
      * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
-     * @param executor          the {@link Executor} which will be used for executing
+     * @param executor          the {@link IExecutor} which will be used for executing
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      */
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor, bool addTaskWakesUp) {
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor, bool addTaskWakesUp) {
         this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.reject());
     }
 
@@ -146,13 +146,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Create a new instance
      *
      * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
-     * @param executor          the {@link Executor} which will be used for executing
+     * @param executor          the {@link IExecutor} which will be used for executing
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
                                         bool addTaskWakesUp, int maxPendingTasks,
                                         RejectedExecutionHandler rejectedHandler) {
         this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler);
@@ -162,14 +162,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Create a new instance
      *
      * @param parent            the {@link IEventExecutorGroup} which is the parent of this instance and belongs to it
-     * @param executor          the {@link Executor} which will be used for executing
+     * @param executor          the {@link IExecutor} which will be used for executing
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      * @param supportSuspension {@code true} if suspension of this {@link SingleThreadEventExecutor} is supported.
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
                                         bool addTaskWakesUp, bool supportSuspension,
                                         int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
         super(parent);
@@ -181,13 +181,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
     }
 
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
                                         bool addTaskWakesUp, Queue<Runnable> taskQueue,
                                         RejectedExecutionHandler rejectedHandler) {
         this(parent, executor, addTaskWakesUp, false, taskQueue, rejectedHandler);
     }
 
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Executor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
                                         bool addTaskWakesUp, bool supportSuspension,
                                         Queue<Runnable> taskQueue, RejectedExecutionHandler rejectedHandler) {
         super(parent);
@@ -786,7 +786,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         if (runAllTasks() || runShutdownHooks()) {
             if (isShutdown()) {
-                // Executor shut down - no new tasks anymore.
+                // IExecutor shut down - no new tasks anymore.
                 return true;
             }
 

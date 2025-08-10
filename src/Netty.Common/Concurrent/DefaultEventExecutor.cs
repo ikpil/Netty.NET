@@ -32,7 +32,7 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
         this(null, threadFactory);
     }
 
-    public DefaultEventExecutor(Executor executor) {
+    public DefaultEventExecutor(IExecutor executor) {
         this(null, executor);
     }
 
@@ -44,7 +44,7 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
         super(parent, threadFactory, true);
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, Executor executor) {
+    public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor) {
         super(parent, executor, true);
     }
 
@@ -53,7 +53,7 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
         super(parent, threadFactory, true, maxPendingTasks, rejectedExecutionHandler);
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, Executor executor, int maxPendingTasks,
+    public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor, int maxPendingTasks,
                                 RejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, executor, true, maxPendingTasks, rejectedExecutionHandler);
     }

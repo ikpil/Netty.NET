@@ -13,79 +13,79 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Internal;
 
+using Netty.NET.Common.Concurrent;
+
+namespace Netty.NET.Common.Internal;
 
 /**
  * Allow to retrieve the {@link IEventExecutor} for the calling {@link Thread}.
  */
-public final class ThreadExecutorMap {
-
-    private static readonly FastThreadLocal<IEventExecutor> mappings = new FastThreadLocal<IEventExecutor>();
-
-    private ThreadExecutorMap() { }
+public static class ThreadExecutorMap
+{
+    private static readonly FastThreadLocal<IEventExecutor> _mappings = new FastThreadLocal<IEventExecutor>();
 
     /**
      * Returns the current {@link IEventExecutor} that uses the {@link Thread}, or {@code null} if none / unknown.
      */
-    public static IEventExecutor currentExecutor() {
-        return mappings.get();
+    public static IEventExecutor currentExecutor()
+    {
+        return _mappings.get();
     }
 
     /**
      * Set the current {@link IEventExecutor} that is used by the {@link Thread}.
      */
-    public static IEventExecutor setCurrentExecutor(IEventExecutor executor) {
-        return mappings.getAndSet(executor);
+    public static IEventExecutor setCurrentExecutor(IEventExecutor executor)
+    {
+        return _mappings.getAndSet(executor);
     }
 
     /**
-     * Decorate the given {@link Executor} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
+     * Decorate the given {@link IExecutor} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static Executor apply(final Executor executor, final IEventExecutor eventExecutor) {
+    public static IExecutor apply(IExecutor executor, IEventExecutor eventExecutor)
+    {
         ObjectUtil.checkNotNull(executor, "executor");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
-        return new Executor() {
-            @Override
-            public void execute(final Runnable command) {
-                executor.execute(apply(command, eventExecutor));
-            }
-        };
+        return new AnonymousExecutor(command =>
+            executor.execute(apply(command, eventExecutor))
+        );
     }
 
     /**
      * Decorate the given {@link Runnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static Runnable apply(final Runnable command, final IEventExecutor eventExecutor) {
+    public static IRunnable apply(IRunnable command, IEventExecutor eventExecutor)
+    {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
-        return new Runnable() {
-            @Override
-            public void run() {
-                IEventExecutor old = setCurrentExecutor(eventExecutor);
-                try {
-                    command.run();
-                } finally {
-                    setCurrentExecutor(old);
-                }
+        return new AnonymousRunnable(() =>
+        {
+            IEventExecutor old = setCurrentExecutor(eventExecutor);
+            try
+            {
+                command.run();
             }
-        };
+            finally
+            {
+                setCurrentExecutor(old);
+            }
+        });
     }
 
     /**
      * Decorate the given {@link IThreadFactory} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static IThreadFactory apply(final IThreadFactory threadFactory, final IEventExecutor eventExecutor) {
+    public static IThreadFactory apply(IThreadFactory threadFactory, IEventExecutor eventExecutor)
+    {
         ObjectUtil.checkNotNull(threadFactory, "threadFactory");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
-        return new IThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                return threadFactory.newThread(apply(r, eventExecutor));
-            }
-        };
+        return new AnonymousThreadFactory(r =>
+            threadFactory.newThread(apply(r, eventExecutor))
+        );
     }
 }

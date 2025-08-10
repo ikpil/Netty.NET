@@ -223,7 +223,7 @@ public class SingleThreadEventExecutorTest {
         assertTrue(executor.isShutdown());
     }
 
-    private static void executeShouldFail(final Executor executor) {
+    private static void executeShouldFail(final IExecutor executor) {
         assertThrows(RejectedExecutionException.class, new Executable() {
             @Override
             public void execute() {

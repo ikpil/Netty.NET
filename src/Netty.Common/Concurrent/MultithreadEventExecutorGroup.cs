@@ -40,7 +40,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      *
      * @param nThreads          the number of threads that will be used by this instance.
      * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
-     * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
+     * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args) 
         : this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args)
@@ -51,8 +51,8 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param executor          the Executor to use, or {@code null} if the default should be used.
-     * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
+     * @param executor          the IExecutor to use, or {@code null} if the default should be used.
+     * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor, params object[] args) 
         : this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args)
@@ -63,9 +63,9 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param executor          the Executor to use, or {@code null} if the default should be used.
+     * @param executor          the IExecutor to use, or {@code null} if the default should be used.
      * @param chooserFactory    the {@link IEventExecutorChooserFactory} to use.
-     * @param args              arguments which will passed to each {@link #newChild(Executor, object...)} call
+     * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor,
                                             IEventExecutorChooserFactory chooserFactory, params object[] args) {
@@ -154,7 +154,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
      */
-    protected abstract IEventExecutor newChild(Executor executor, params object[] args);
+    protected abstract IEventExecutor newChild(IExecutor executor, params object[] args);
 
     @Override
     public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {

@@ -19,7 +19,7 @@ using System.Threading;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Executor that is aware its execution thread.
+ * IExecutor that is aware its execution thread.
  */
 public interface IThreadAwareExecutor : IExecutor
 {

@@ -70,7 +70,7 @@ namespace Netty.Common.Tests.Concurrent
             final Thread first = new Thread(new ThreadGroup("brother"), new Runnable() {
                 @Override
                 public void run() {
-                    factory.set(new DefaultThreadFactory("test", false, Thread.NORM_PRIORITY, null));
+                    factory.set(new DefaultThreadFactory("test", false, ThreadPriority.Normal, null));
                     final Thread t = factory.get().newThread(task);
                     t.start();
                     try {
@@ -125,7 +125,7 @@ namespace Netty.Common.Tests.Concurrent
                 new Callable<DefaultThreadFactory>() {
                     @Override
                     public DefaultThreadFactory call() throws Exception {
-                        return new DefaultThreadFactory("test", false, Thread.NORM_PRIORITY, sticky);
+                        return new DefaultThreadFactory("test", false, ThreadPriority.Normal, sticky);
                     }
                 },
                 sticky);
@@ -218,7 +218,7 @@ namespace Netty.Common.Tests.Concurrent
         final Thread first = new Thread(firstGroup, new Runnable() {
             @Override
             public void run() {
-                factory.set(new DefaultThreadFactory("sticky", false, Thread.NORM_PRIORITY, null));
+                factory.set(new DefaultThreadFactory("sticky", false, ThreadPriority.Normal, null));
                 final Thread t = factory.get().newThread(new Runnable() {
                     @Override
                     public void run() {
