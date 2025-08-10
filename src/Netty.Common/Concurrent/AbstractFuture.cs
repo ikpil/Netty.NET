@@ -13,12 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Concurrent;
 
+using System;
+using System.Threading.Tasks;
+using Netty.NET.Common.Internal;
+
+namespace Netty.NET.Common.Concurrent;
 
 public interface IFuture<V>
 {
-    
+    AggregateException cause();
 }
 
 /**
@@ -26,34 +30,53 @@ public interface IFuture<V>
  *
  * @param <V>
  */
-public abstract class AbstractFuture<V> : IFuture<V> {
-
-    @Override
-    public V get() throws ThreadInterruptedException, ExecutionException {
-        await();
-
-        Exception cause = cause();
-        if (cause == null) {
-            return getNow();
-        }
-        if (cause instanceof CancellationException) {
-            throw (CancellationException) cause;
-        }
-        throw new ExecutionException(cause);
+public abstract class AbstractFuture<V> : Task<V>, IFuture<V>
+{
+    public AbstractFuture() : base(() => default)
+    {
     }
 
-    @Override
-    public V get(long timeout, TimeSpan unit) throws ThreadInterruptedException, ExecutionException, TimeoutException {
-        if (await(timeout, unit)) {
-            Exception cause = cause();
-            if (cause == null) {
-                return getNow();
-            }
-            if (cause instanceof CancellationException) {
-                throw (CancellationException) cause;
-            }
-            throw new ExecutionException(cause);
+    public virtual AggregateException cause()
+    {
+        return Exception;
+    }
+
+    public virtual V get()
+    {
+        Wait();
+
+        AggregateException cause = this.cause();
+        if (cause == null)
+        {
+            return Result;
         }
+
+        if (cause.GetBaseException() is TaskCanceledException)
+        {
+            throw (TaskCanceledException)cause.GetBaseException();
+        }
+
+        throw cause;
+    }
+
+    public virtual V get(TimeSpan timeout)
+    {
+        if (Wait(timeout))
+        {
+            AggregateException cause = this.cause();
+            if (cause == null)
+            {
+                return Result;
+            }
+
+            if (cause.GetBaseException() is TaskCanceledException)
+            {
+                throw (TaskCanceledException)cause.GetBaseException();
+            }
+
+            throw cause;
+        }
+
         throw new TimeoutException();
     }
 }

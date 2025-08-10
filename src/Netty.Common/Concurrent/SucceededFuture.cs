@@ -13,6 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
@@ -20,7 +23,8 @@ namespace Netty.NET.Common.Concurrent;
  * recommended to use {@link IEventExecutor#newSucceededFuture(object)} instead of
  * calling the constructor of this future.
  */
-public sealed class SucceededFuture<V> : CompleteFuture<V> {
+public sealed class SucceededFuture<V> : CompleteFuture<V>
+{
     private readonly V result;
 
     /**
@@ -28,23 +32,26 @@ public sealed class SucceededFuture<V> : CompleteFuture<V> {
      *
      * @param executor the {@link IEventExecutor} associated with this future
      */
-    public SucceededFuture(IEventExecutor executor, V result) {
-        super(executor);
+    public SucceededFuture(IEventExecutor executor, V result)
+        : base(executor)
+    {
         this.result = result;
     }
 
-    @Override
-    public Exception cause() {
+    public override Exception cause()
+    {
         return null;
     }
 
-    @Override
-    public bool isSuccess() {
+    public bool isSuccess()
+    {
         return true;
     }
 
     @Override
-    public V getNow() {
+
+    public V getNow()
+    {
         return result;
     }
 }

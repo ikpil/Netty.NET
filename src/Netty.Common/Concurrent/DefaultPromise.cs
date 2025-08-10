@@ -142,7 +142,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         return result == null;
     }
 
-    private static readonly class LeanCancellationException extends CancellationException {
+    private static readonly class LeanCancellationException extends TaskCanceledException {
         private static readonly long serialVersionUID = 2794674970981187807L;
 
         // Suppress a warning since the method doesn't need synchronization
@@ -154,7 +154,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
 
         @Override
         public string toString() {
-            return typeof(CancellationException).getName();
+            return typeof(TaskCanceledException).getName();
         }
     }
 
@@ -168,7 +168,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             return null;
         }
         if (result == CANCELLATION_CAUSE_HOLDER) {
-            CancellationException ce = new Concurrent.LeanCancellationException();
+            TaskCanceledException ce = new Concurrent.LeanCancellationException();
             if (RESULT_UPDATER.compareAndSet(this, CANCELLATION_CAUSE_HOLDER, new CauseHolder(ce))) {
                 return ce;
             }
@@ -349,8 +349,8 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         if (cause == null) {
             return (V) result;
         }
-        if (cause instanceof CancellationException) {
-            throw (CancellationException) cause;
+        if (cause instanceof TaskCanceledException) {
+            throw (TaskCanceledException) cause;
         }
         throw new ExecutionException(cause);
     }
@@ -372,8 +372,8 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         if (cause == null) {
             return (V) result;
         }
-        if (cause instanceof CancellationException) {
-            throw (CancellationException) cause;
+        if (cause instanceof TaskCanceledException) {
+            throw (TaskCanceledException) cause;
         }
         throw new ExecutionException(cause);
     }
@@ -672,7 +672,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             return;
         }
 
-        if (!(cause instanceof CancellationException) && cause.getSuppressed().length == 0) {
+        if (!(cause instanceof TaskCanceledException) && cause.getSuppressed().length == 0) {
             cause.addSuppressed(new CompletionException("Rethrowing promise failure cause", null));
         }
         PlatformDependent.throwException(cause);
@@ -850,7 +850,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     private static bool isCancelled0(object result) {
-        return result instanceof CauseHolder && ((CauseHolder) result).cause instanceof CancellationException;
+        return result instanceof CauseHolder && ((CauseHolder) result).cause instanceof TaskCanceledException;
     }
 
     private static bool isDone0(object result) {
@@ -872,7 +872,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         }
     }
 
-    private static readonly class StacklessCancellationException extends CancellationException {
+    private static readonly class StacklessCancellationException extends TaskCanceledException {
 
         private static readonly long serialVersionUID = -2974906711413716191L;
 

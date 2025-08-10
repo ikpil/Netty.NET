@@ -141,7 +141,7 @@ public void testFailureDoesNotScheduleWhenNoListeners() {
 public void testCancellationExceptionIsThrownWhenBlockingGet() {
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     assertTrue(promise.cancel(false));
-    assertThrows(CancellationException.class, new Executable() {
+    assertThrows(TaskCanceledException.class, new Executable() {
         @Override
         public void execute() throws Throwable {
         promise.get();
@@ -153,7 +153,7 @@ public void testCancellationExceptionIsThrownWhenBlockingGet() {
 public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout() {
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     assertTrue(promise.cancel(false));
-    assertThrows(CancellationException.class, new Executable() {
+    assertThrows(TaskCanceledException.class, new Executable() {
         @Override
         public void execute() throws Throwable {
         promise.get(1, TimeUnit.SECONDS);
@@ -165,7 +165,7 @@ public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout() {
 public void testCancellationExceptionIsReturnedAsCause() {
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     assertTrue(promise.cancel(false));
-    assertThat(promise.cause()).isInstanceOf(CancellationException.class);
+    assertThat(promise.cause()).isInstanceOf(TaskCanceledException.class);
 }
 
 @Test
