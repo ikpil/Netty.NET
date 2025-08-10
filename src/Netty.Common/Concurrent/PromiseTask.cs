@@ -22,10 +22,8 @@ namespace Netty.NET.Common.Concurrent;
 public interface IRunnableFuture<V> : IRunnable, IFuture<V> {
 }
 
-
-public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V> {
-
-
+public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V> 
+{
     private static readonly IRunnable COMPLETED = new SentinelRunnable("COMPLETED");
     private static readonly IRunnable CANCELLED = new SentinelRunnable("CANCELLED");
     private static readonly IRunnable FAILED = new SentinelRunnable("FAILED");

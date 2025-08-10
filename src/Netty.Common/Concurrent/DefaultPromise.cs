@@ -871,22 +871,4 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             rejectedExecutionLogger.error("Failed to submit a listener notification task. Event loop shut down?", t);
         }
     }
-
-    private static readonly class StacklessCancellationException extends TaskCanceledException {
-
-        private static readonly long serialVersionUID = -2974906711413716191L;
-
-        private StacklessCancellationException() { }
-
-        // Override fillInStackTrace() so we not populate the backtrace via a native call and so leak the
-        // Classloader.
-        @Override
-        public Exception fillInStackTrace() {
-            return this;
-        }
-
-        static StacklessCancellationException newInstance(Type clazz, string method) {
-            return ThrowableUtil.unknownStackTrace(new StacklessCancellationException(), clazz, method);
-        }
-    }
 }
