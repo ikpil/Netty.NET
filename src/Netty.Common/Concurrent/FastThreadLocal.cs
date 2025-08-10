@@ -352,7 +352,7 @@ public class FastThreadLocal<V> : IFastThreadLocal where V : class
     /**
      * Returns the initial value for this thread-local variable.
      */
-    protected V initialValue()
+    protected virtual V initialValue()
     {
         return null;
     }

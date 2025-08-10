@@ -13,15 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+
+
 namespace Netty.NET.Common.Concurrent;
-
-
-
-
-
-
-
-
 
 /**
  * Executes {@link Runnable} objects in the caller's thread. If the {@link #execute(Runnable)} is reentrant it will be
@@ -30,13 +31,14 @@ namespace Netty.NET.Common.Concurrent;
  * All {@link Exception} objects thrown from {@link #execute(Runnable)} will be swallowed and logged. This is to ensure
  * that all queued {@link Runnable} objects have the chance to be run.
  */
-public final class ImmediateEventExecutor extends AbstractEventExecutor {
+public class ImmediateEventExecutor : AbstractEventExecutor 
+{
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ImmediateEventExecutor));
     public static readonly ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
     /**
      * A Runnable will be queued if we are executing a Runnable. This is to prevent a {@link StackOverflowError}.
      */
-    private static readonly FastThreadLocal<Queue<Runnable>> DELAYED_RUNNABLES = new FastThreadLocal<Queue<Runnable>>() {
+    private static readonly FastThreadLocal<Queue<IRunnable>> DELAYED_RUNNABLES = new FastThreadLocal<Queue<IRunnable>>() {
         @Override
         protected Queue<Runnable> initialValue() {
             return new ArrayDeque<Runnable>();
