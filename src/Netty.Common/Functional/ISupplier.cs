@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 The Netty Project
+ * Copyright 2016 The Netty Project
  *
  * The Netty Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -14,29 +14,17 @@
  * under the License.
  */
 
-namespace Netty.NET.Common.Internal;
+namespace Netty.NET.Common.Functional;
 
-
-
-public final class ReadOnlyIterator<T> : Iterator<T> {
-    private readonly Iterator<? extends T> iterator;
-
-    public ReadOnlyIterator(Iterator<? extends T> iterator) {
-        this.iterator = ObjectUtil.checkNotNull(iterator, "iterator");
-    }
-
-    @Override
-    public bool hasNext() {
-        return iterator.hasNext();
-    }
-
-    @Override
-    public T next() {
-        return iterator.next();
-    }
-
-    @Override
-    public void remove() {
-        throw new NotSupportedException("read-only");
-    }
+/**
+ * Represents a supplier of {@code bool}-valued results.
+ */
+public interface ISupplier<out T>
+{
+    /**
+     * Gets a bool value.
+     * @return a bool value.
+     * @throws Exception If an exception occurs.
+     */
+    T get();
 }

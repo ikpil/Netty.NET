@@ -17,45 +17,322 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
 //@SuppressWarnings("ClassNameSameAsAncestorName") // Can't change this due to compatibility.
-public interface Handle<T> : ObjectPool<>.Handle<T>
+public interface IRecycleHandle<T> : IObjectPoolHandle<T>
 {
     
 }
 
 
 //@UnstableApi
-public abstract class EnhancedHandle<T> : Handle<T> {
+public abstract class RecycleEnhancedHandle<T> : IRecycleHandle<T> 
+{
 
-    protected EnhancedHandle() 
-    {
-    }
-    
     public abstract void unguardedRecycle(object obj);
-
+    public abstract void recycle(T self);
 }
 
 
 
-public class NoopRecyclerEnhancedHandle<T> : EnhancedHandle<T>
+public class NoopRecyclerEnhancedHandle<T> : RecycleEnhancedHandle<T>
 {
     public override void unguardedRecycle(object obj) 
     {
         // NOOP
     }
 
-    public override string ToString() {
+    public override void recycle(T self)
+    {
+        // NOOP
+    }
+
+    public override string ToString() 
+    {
         return "NOOP_HANDLE";
     }
-};
+}
 
+public interface IExitCondition 
+{
+    bool keepRunning();
+}
+
+public interface IWaitStrategy 
+{
+    int idle(int var1);
+}
+
+
+
+public class LocalPool<T> : IConsumer<DefaultHandle<T>> 
+{
+    private readonly int ratioInterval;
+    private readonly int chunkSize;
+    private readonly ArrayDeque<DefaultHandle<T>> batch;
+    private volatile Thread owner;
+    private volatile MessagePassingQueue<DefaultHandle<T>> pooledHandles;
+    private int ratioCounter;
+
+    @SuppressWarnings("unchecked")
+    public LocalPool(int maxCapacity, int ratioInterval, int chunkSize) {
+        this.ratioInterval = ratioInterval;
+        this.chunkSize = chunkSize;
+        batch = new ArrayDeque<DefaultHandle<T>>(chunkSize);
+        Thread currentThread = Thread.currentThread();
+        owner = !BATCH_FAST_TL_ONLY || FastThreadLocalThread.currentThreadHasFastThreadLocal()
+                ? currentThread : null;
+        if (BLOCKING_POOL) {
+            pooledHandles = new Common.BlockingMessageQueue<DefaultHandle<T>>(maxCapacity);
+        } else {
+            pooledHandles = (MessagePassingQueue<DefaultHandle<T>>) newMpscQueue(chunkSize, maxCapacity);
+        }
+        ratioCounter = ratioInterval; // Start at interval so the first one will be recycled.
+    }
+
+    DefaultHandle<T> claim() {
+        MessagePassingQueue<DefaultHandle<T>> handles = pooledHandles;
+        if (handles == null) {
+            return null;
+        }
+        if (batch.isEmpty()) {
+            handles.drain(this, chunkSize);
+        }
+        DefaultHandle<T> handle = batch.pollLast();
+        if (null != handle) {
+            handle.toClaimed();
+        }
+        return handle;
+    }
+
+    public void release(DefaultHandle<T> handle, bool guarded) {
+        if (guarded) {
+            handle.toAvailable();
+        } else {
+            handle.unguardedToAvailable();
+        }
+        Thread owner = this.owner;
+        if (owner != null && Thread.currentThread() == owner && batch.size() < chunkSize) {
+            accept(handle);
+        } else if (owner != null && isTerminated(owner)) {
+            this.owner = null;
+            pooledHandles = null;
+        } else {
+            MessagePassingQueue<DefaultHandle<T>> handles = pooledHandles;
+            if (handles != null) {
+                handles.relaxedOffer(handle);
+            }
+        }
+    }
+
+    private static bool isTerminated(Thread owner) {
+        // Do not use `Thread.getState()` in J9 JVM because it's known to have a performance issue.
+        // See: https://github.com/netty/netty/issues/13347#issuecomment-1518537895
+        return PlatformDependent.isJ9Jvm() ? !owner.isAlive() : owner.getState() == Thread.State.TERMINATED;
+    }
+
+    DefaultHandle<T> newHandle() {
+        if (++ratioCounter >= ratioInterval) {
+            ratioCounter = 0;
+            return new DefaultHandle<T>(this);
+        }
+        return null;
+    }
+
+    @Override
+    public void accept(DefaultHandle<T> e) {
+        batch.addLast(e);
+    }
+}
+
+
+public class DefaultHandle<T> : RecycleEnhancedHandle<T> 
+{
+    private static readonly int STATE_CLAIMED = 0;
+    private static readonly int STATE_AVAILABLE = 1;
+    private static readonly AtomicIntegerFieldUpdater<DefaultHandle<?>> STATE_UPDATER;
+    static {
+        AtomicIntegerFieldUpdater<?> updater = AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultHandle), "state");
+        //noinspection unchecked
+        STATE_UPDATER = (AtomicIntegerFieldUpdater<DefaultHandle<?>>) updater;
+    }
+
+    private volatile int state; // State is initialised to STATE_CLAIMED (aka. 0) so they can be released.
+    private readonly LocalPool<T> localPool;
+    private T value;
+
+    DefaultHandle(LocalPool<T> localPool) {
+        this.localPool = localPool;
+    }
+
+    public override void recycle(T obj) {
+        if (!obj.Equals(value)) {
+            throw new ArgumentException("object does not belong to handle");
+        }
+        localPool.release(this, true);
+    }
+
+    public override void unguardedRecycle(object obj) {
+        if (!obj.Equals(value)) {
+            throw new ArgumentException("object does not belong to handle");
+        }
+        localPool.release(this, false);
+    }
+
+    public T get() {
+        return value;
+    }
+
+    public void set(T value) {
+        this.value = value;
+    }
+
+    public void toClaimed()
+    {
+        Debug.Assert(state == STATE_AVAILABLE);
+        STATE_UPDATER.lazySet(this, STATE_CLAIMED);
+    }
+
+    public void toAvailable() {
+        int prev = STATE_UPDATER.getAndSet(this, STATE_AVAILABLE);
+        if (prev == STATE_AVAILABLE) {
+            throw new InvalidOperationException("object has been recycled already.");
+        }
+    }
+
+    public void unguardedToAvailable() {
+        int prev = state;
+        if (prev == STATE_AVAILABLE) {
+            throw new InvalidOperationException("object has been recycled already.");
+        }
+        STATE_UPDATER.lazySet(this, STATE_AVAILABLE);
+    }
+}
+    
+
+/**
+ * This is an implementation of {@link MessagePassingQueue}, similar to what might be returned from
+ * {@link PlatformDependent#newMpscQueue(int)}, but intended to be used for debugging purpose.
+ * The implementation relies on synchronised monitor locks for thread-safety.
+ * The {@code fill} bulk operation is not supported by this implementation.
+ */
+public class BlockingMessageQueue<T>
+{
+    private readonly object _lock;
+    private readonly Queue<T> deque;
+    private readonly int maxCapacity;
+
+    BlockingMessageQueue(int maxCapacity) {
+        _lock = new object();
+        this.maxCapacity = maxCapacity;
+        // This message passing queue is backed by an ArrayDeque instance,
+        // made thread-safe by synchronising on `this` BlockingMessageQueue instance.
+        // Why ArrayDeque?
+        // We use ArrayDeque instead of LinkedList or LinkedBlockingQueue because it's more space efficient.
+        // We use ArrayDeque instead of List because we need the queue APIs.
+        // We use ArrayDeque instead of ConcurrentLinkedQueue because CLQ is unbounded and has O(n) size().
+        // We use ArrayDeque instead of ArrayBlockingQueue because ABQ allocates its max capacity up-front,
+        // and these queues will usually have large capacities, in potentially great numbers (one per thread),
+        // but often only have comparatively few items in them.
+        deque = new Queue<T>(maxCapacity);
+    }
+
+    public bool offer(T e) {
+        lock (_lock)
+        {
+            if (deque.Count == maxCapacity)
+            {
+                return false;
+            }
+
+            deque.Enqueue(e);
+            return true;
+        }
+    }
+
+    public T poll() 
+    {
+        lock (_lock)
+        {
+            return deque.Dequeue();
+        }
+    }
+
+    public T peek() {
+        lock (_lock)
+        {
+            deque.TryPeek(out var result);
+            return result;
+        }
+    }
+
+    public int size() 
+    {
+        lock (_lock)
+        {
+            return deque.Count;
+        }
+    }
+
+    public void clear() {
+        lock (_lock)
+        {
+            deque.Clear();
+        }
+    }
+
+    public bool isEmpty() {
+        lock (_lock)
+        {
+            return 0 == deque.Count;
+        }
+    }
+
+    public int capacity() 
+    {
+        return maxCapacity;
+    }
+
+    public int drain(Action<T> c, int limit) {
+        T obj;
+        int i = 0;
+        for (; i < limit && (obj = poll()) != null; i++) {
+            c.Invoke(obj);
+        }
+        return i;
+    }
+
+    public int fill(Func<T> s, int limit) {
+        throw new NotSupportedException();
+    }
+
+    public int drain(Action<T> c) {
+        throw new NotSupportedException();
+    }
+
+    public int fill(Func<T> s) {
+        throw new NotSupportedException();
+    }
+    
+    public void drain(Action<T> c, IWaitStrategy wait, IExitCondition exit) 
+    {
+        throw new NotSupportedException();
+    }
+    
+    public void fill(Func<T> s, IWaitStrategy wait, IExitCondition exit) 
+    {
+        throw new NotSupportedException();
+    }
+}
 
 /**
  * Light-weight object pool based on a thread-local stack.
@@ -66,7 +343,7 @@ public abstract class Recycler<T>
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<Recycler<T>>();
 
-    private static readonly EnhancedHandle<T> NOOP_HANDLE = new NoopRecyclerEnhancedHandle<T>();
+    private static readonly RecycleEnhancedHandle<T> NOOP_HANDLE = new NoopRecyclerEnhancedHandle<T>();
     private static readonly int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
     private static readonly int DEFAULT_MAX_CAPACITY_PER_THREAD;
     private static readonly int RATIO;
@@ -238,258 +515,4 @@ public abstract class Recycler<T>
 
 
 
-    private static readonly class DefaultHandle<T> extends EnhancedHandle<T> {
-        private static readonly int STATE_CLAIMED = 0;
-        private static readonly int STATE_AVAILABLE = 1;
-        private static readonly AtomicIntegerFieldUpdater<DefaultHandle<?>> STATE_UPDATER;
-        static {
-            AtomicIntegerFieldUpdater<?> updater = AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultHandle), "state");
-            //noinspection unchecked
-            STATE_UPDATER = (AtomicIntegerFieldUpdater<DefaultHandle<?>>) updater;
-        }
-
-        private volatile int state; // State is initialised to STATE_CLAIMED (aka. 0) so they can be released.
-        private readonly LocalPool<T> localPool;
-        private T value;
-
-        DefaultHandle(LocalPool<T> localPool) {
-            this.localPool = localPool;
-        }
-
-        @Override
-        public void recycle(object object) {
-            if (object != value) {
-                throw new ArgumentException("object does not belong to handle");
-            }
-            localPool.release(this, true);
-        }
-
-        @Override
-        public void unguardedRecycle(object object) {
-            if (object != value) {
-                throw new ArgumentException("object does not belong to handle");
-            }
-            localPool.release(this, false);
-        }
-
-        T get() {
-            return value;
-        }
-
-        void set(T value) {
-            this.value = value;
-        }
-
-        void toClaimed() {
-            assert state == STATE_AVAILABLE;
-            STATE_UPDATER.lazySet(this, STATE_CLAIMED);
-        }
-
-        void toAvailable() {
-            int prev = STATE_UPDATER.getAndSet(this, STATE_AVAILABLE);
-            if (prev == STATE_AVAILABLE) {
-                throw new InvalidOperationException("object has been recycled already.");
-            }
-        }
-
-        void unguardedToAvailable() {
-            int prev = state;
-            if (prev == STATE_AVAILABLE) {
-                throw new InvalidOperationException("object has been recycled already.");
-            }
-            STATE_UPDATER.lazySet(this, STATE_AVAILABLE);
-        }
-    }
-
-    private static readonly class LocalPool<T> : MessagePassingQueue.Consumer<DefaultHandle<T>> {
-        private readonly int ratioInterval;
-        private readonly int chunkSize;
-        private readonly ArrayDeque<DefaultHandle<T>> batch;
-        private volatile Thread owner;
-        private volatile MessagePassingQueue<DefaultHandle<T>> pooledHandles;
-        private int ratioCounter;
-
-        @SuppressWarnings("unchecked")
-        LocalPool(int maxCapacity, int ratioInterval, int chunkSize) {
-            this.ratioInterval = ratioInterval;
-            this.chunkSize = chunkSize;
-            batch = new ArrayDeque<DefaultHandle<T>>(chunkSize);
-            Thread currentThread = Thread.currentThread();
-            owner = !BATCH_FAST_TL_ONLY || FastThreadLocalThread.currentThreadHasFastThreadLocal()
-                    ? currentThread : null;
-            if (BLOCKING_POOL) {
-                pooledHandles = new BlockingMessageQueue<DefaultHandle<T>>(maxCapacity);
-            } else {
-                pooledHandles = (MessagePassingQueue<DefaultHandle<T>>) newMpscQueue(chunkSize, maxCapacity);
-            }
-            ratioCounter = ratioInterval; // Start at interval so the first one will be recycled.
-        }
-
-        DefaultHandle<T> claim() {
-            MessagePassingQueue<DefaultHandle<T>> handles = pooledHandles;
-            if (handles == null) {
-                return null;
-            }
-            if (batch.isEmpty()) {
-                handles.drain(this, chunkSize);
-            }
-            DefaultHandle<T> handle = batch.pollLast();
-            if (null != handle) {
-                handle.toClaimed();
-            }
-            return handle;
-        }
-
-        void release(DefaultHandle<T> handle, bool guarded) {
-            if (guarded) {
-                handle.toAvailable();
-            } else {
-                handle.unguardedToAvailable();
-            }
-            Thread owner = this.owner;
-            if (owner != null && Thread.currentThread() == owner && batch.size() < chunkSize) {
-                accept(handle);
-            } else if (owner != null && isTerminated(owner)) {
-                this.owner = null;
-                pooledHandles = null;
-            } else {
-                MessagePassingQueue<DefaultHandle<T>> handles = pooledHandles;
-                if (handles != null) {
-                    handles.relaxedOffer(handle);
-                }
-            }
-        }
-
-        private static bool isTerminated(Thread owner) {
-            // Do not use `Thread.getState()` in J9 JVM because it's known to have a performance issue.
-            // See: https://github.com/netty/netty/issues/13347#issuecomment-1518537895
-            return PlatformDependent.isJ9Jvm() ? !owner.isAlive() : owner.getState() == Thread.State.TERMINATED;
-        }
-
-        DefaultHandle<T> newHandle() {
-            if (++ratioCounter >= ratioInterval) {
-                ratioCounter = 0;
-                return new DefaultHandle<T>(this);
-            }
-            return null;
-        }
-
-        @Override
-        public void accept(DefaultHandle<T> e) {
-            batch.addLast(e);
-        }
-    }
-
-    /**
-     * This is an implementation of {@link MessagePassingQueue}, similar to what might be returned from
-     * {@link PlatformDependent#newMpscQueue(int)}, but intended to be used for debugging purpose.
-     * The implementation relies on synchronised monitor locks for thread-safety.
-     * The {@code fill} bulk operation is not supported by this implementation.
-     */
-    private static readonly class BlockingMessageQueue<T> : MessagePassingQueue<T> {
-        private readonly Queue<T> deque;
-        private readonly int maxCapacity;
-
-        BlockingMessageQueue(int maxCapacity) {
-            this.maxCapacity = maxCapacity;
-            // This message passing queue is backed by an ArrayDeque instance,
-            // made thread-safe by synchronising on `this` BlockingMessageQueue instance.
-            // Why ArrayDeque?
-            // We use ArrayDeque instead of LinkedList or LinkedBlockingQueue because it's more space efficient.
-            // We use ArrayDeque instead of List because we need the queue APIs.
-            // We use ArrayDeque instead of ConcurrentLinkedQueue because CLQ is unbounded and has O(n) size().
-            // We use ArrayDeque instead of ArrayBlockingQueue because ABQ allocates its max capacity up-front,
-            // and these queues will usually have large capacities, in potentially great numbers (one per thread),
-            // but often only have comparatively few items in them.
-            deque = new ArrayDeque<T>();
-        }
-
-        @Override
-        public synchronized bool offer(T e) {
-            if (deque.size() == maxCapacity) {
-                return false;
-            }
-            return deque.offer(e);
-        }
-
-        @Override
-        public synchronized T poll() {
-            return deque.poll();
-        }
-
-        @Override
-        public synchronized T peek() {
-            return deque.peek();
-        }
-
-        @Override
-        public synchronized int size() {
-            return deque.size();
-        }
-
-        @Override
-        public synchronized void clear() {
-            deque.clear();
-        }
-
-        @Override
-        public synchronized bool isEmpty() {
-            return deque.isEmpty();
-        }
-
-        @Override
-        public int capacity() {
-            return maxCapacity;
-        }
-
-        @Override
-        public bool relaxedOffer(T e) {
-            return offer(e);
-        }
-
-        @Override
-        public T relaxedPoll() {
-            return poll();
-        }
-
-        @Override
-        public T relaxedPeek() {
-            return peek();
-        }
-
-        @Override
-        public int drain(Consumer<T> c, int limit) {
-            T obj;
-            int i = 0;
-            for (; i < limit && (obj = poll()) != null; i++) {
-                c.accept(obj);
-            }
-            return i;
-        }
-
-        @Override
-        public int fill(Supplier<T> s, int limit) {
-            throw new NotSupportedException();
-        }
-
-        @Override
-        public int drain(Consumer<T> c) {
-            throw new NotSupportedException();
-        }
-
-        @Override
-        public int fill(Supplier<T> s) {
-            throw new NotSupportedException();
-        }
-
-        @Override
-        public void drain(Consumer<T> c, WaitStrategy wait, ExitCondition exit) {
-            throw new NotSupportedException();
-        }
-
-        @Override
-        public void fill(Supplier<T> s, WaitStrategy wait, ExitCondition exit) {
-            throw new NotSupportedException();
-        }
-    }
 }

@@ -1,4 +1,4 @@
-﻿namespace Netty.NET.Common;
+﻿namespace Netty.NET.Common.Functional;
 
 public interface IRunnable
 {
