@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Threading;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
@@ -8,7 +10,7 @@ public class RecyclerLocalPool<T> : IConsumer<RecyclerDefaultHandle<T>>
 {
     private readonly int ratioInterval;
     private readonly int chunkSize;
-    private readonly ArrayDeque<RecyclerDefaultHandle<T>> batch;
+    internal readonly Queue<RecyclerDefaultHandle<T>> batch;
     internal volatile Thread owner;
     internal volatile IMessagePassingQueue<RecyclerDefaultHandle<T>> pooledHandles;
     private int ratioCounter;

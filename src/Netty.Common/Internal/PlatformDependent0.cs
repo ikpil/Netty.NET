@@ -16,7 +16,7 @@
 
 
 using System;
-using System.Runtime.Loader;
+using System.Threading;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Internal;
@@ -492,7 +492,7 @@ public class PlatformDependent0 {
      * @param thread The thread to be checked.
      * @return {@code true} if this {@link Thread} is a virtual thread, {@code false} otherwise.
      */
-    static bool isVirtualThread(Thread thread) {
+    public static bool isVirtualThread(Thread thread) {
         if (thread == null || IS_VIRTUAL_THREAD_METHOD_HANDLE == null) {
             return false;
         }

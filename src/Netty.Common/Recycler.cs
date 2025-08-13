@@ -17,7 +17,6 @@
 
 using System;
 using System.Threading;
-using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -41,14 +40,15 @@ public abstract class Recycler<T>
     private static readonly bool BLOCKING_POOL;
     private static readonly bool BATCH_FAST_TL_ONLY;
 
-    static Recycler() 
+    static Recycler()
     {
         // In the future, we might have different maxCapacity for different object types.
         // e.g. io.netty.recycler.maxCapacity.writeTask
         //      io.netty.recycler.maxCapacity.outboundBuffer
         int maxCapacityPerThread = SystemPropertyUtil.getInt("io.netty.recycler.maxCapacityPerThread",
-                SystemPropertyUtil.getInt("io.netty.recycler.maxCapacity", DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD));
-        if (maxCapacityPerThread < 0) {
+            SystemPropertyUtil.getInt("io.netty.recycler.maxCapacity", DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD));
+        if (maxCapacityPerThread < 0)
+        {
             maxCapacityPerThread = DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD;
         }
 
@@ -63,14 +63,18 @@ public abstract class Recycler<T>
         BLOCKING_POOL = SystemPropertyUtil.getBoolean("io.netty.recycler.blocking", false);
         BATCH_FAST_TL_ONLY = SystemPropertyUtil.getBoolean("io.netty.recycler.batchFastThreadLocalOnly", true);
 
-        if (logger.isDebugEnabled()) {
-            if (DEFAULT_MAX_CAPACITY_PER_THREAD == 0) {
+        if (logger.isDebugEnabled())
+        {
+            if (DEFAULT_MAX_CAPACITY_PER_THREAD == 0)
+            {
                 logger.debug("-Dio.netty.recycler.maxCapacityPerThread: disabled");
                 logger.debug("-Dio.netty.recycler.ratio: disabled");
                 logger.debug("-Dio.netty.recycler.chunkSize: disabled");
                 logger.debug("-Dio.netty.recycler.blocking: disabled");
                 logger.debug("-Dio.netty.recycler.batchFastThreadLocalOnly: disabled");
-            } else {
+            }
+            else
+            {
                 logger.debug("-Dio.netty.recycler.maxCapacityPerThread: {}", DEFAULT_MAX_CAPACITY_PER_THREAD);
                 logger.debug("-Dio.netty.recycler.ratio: {}", RATIO);
                 logger.debug("-Dio.netty.recycler.chunkSize: {}", DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD);
@@ -89,18 +93,7 @@ public abstract class Recycler<T>
     {
     }
 
-    protected Recycler(int maxCapacityPerThread) 
-        : this(maxCapacityPerThread, RATIO, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
-    {
-    }
-
-    /**
-     * @deprecated Use one of the following instead:
-     * {@link #Recycler()}, {@link #Recycler(int)}, {@link #Recycler(int, int, int)}.
-     */
-    [Obsolete] 
-    //@SuppressWarnings("unused") // Parameters we can't remove due to compatibility.
-    protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor) 
+    protected Recycler(int maxCapacityPerThread)
         : this(maxCapacityPerThread, RATIO, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
     {
     }
@@ -111,7 +104,18 @@ public abstract class Recycler<T>
      */
     [Obsolete]
     //@SuppressWarnings("unused") // Parameters we can't remove due to compatibility.
-    protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor, int ratio, int maxDelayedQueuesPerThread) 
+    protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor)
+        : this(maxCapacityPerThread, RATIO, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+    {
+    }
+
+    /**
+     * @deprecated Use one of the following instead:
+     * {@link #Recycler()}, {@link #Recycler(int)}, {@link #Recycler(int, int, int)}.
+     */
+    [Obsolete]
+    //@SuppressWarnings("unused") // Parameters we can't remove due to compatibility.
+    protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor, int ratio, int maxDelayedQueuesPerThread)
         : this(maxCapacityPerThread, ratio, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
     {
     }
@@ -123,44 +127,54 @@ public abstract class Recycler<T>
     [Obsolete]
     //@SuppressWarnings("unused") // Parameters we can't remove due to compatibility.
     protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor,
-                       int ratio, int maxDelayedQueuesPerThread, int delayedQueueRatio) 
+        int ratio, int maxDelayedQueuesPerThread, int delayedQueueRatio)
         : this(maxCapacityPerThread, ratio, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
     {
     }
 
-    protected Recycler(int maxCapacityPerThread, int ratio, int chunkSize) 
+    protected Recycler(int maxCapacityPerThread, int ratio, int chunkSize)
     {
         interval = Math.Max(0, ratio);
-        if (maxCapacityPerThread <= 0) {
+        if (maxCapacityPerThread <= 0)
+        {
             this.maxCapacityPerThread = 0;
             this.chunkSize = 0;
-        } else {
+        }
+        else
+        {
             this.maxCapacityPerThread = Math.Max(4, maxCapacityPerThread);
             this.chunkSize = Math.Max(2, Math.Min(chunkSize, this.maxCapacityPerThread >> 1));
         }
-        
-        threadLocal = new RecyclerFastThreadLocal<T>(this.maxCapacityPerThread, this.interval, this.chunkSize); 
+
+        threadLocal = new RecyclerFastThreadLocal<T>(this.maxCapacityPerThread, this.interval, this.chunkSize);
     }
 
     //@SuppressWarnings("unchecked")
-    public T get() {
-        if (maxCapacityPerThread == 0 ||
-                (PlatformDependent.isVirtualThread(Thread.CurrentThread) &&
-                        !FastThreadLocalThread<T>.currentThreadHasFastThreadLocal())) {
+    public T get()
+    {
+        if (maxCapacityPerThread == 0 || !FastThreadLocalThread.currentThreadHasFastThreadLocal())
+        {
             return newObject(NOOP_HANDLE);
         }
+
         RecyclerLocalPool<T> localPool = threadLocal.get();
         RecyclerDefaultHandle<T> handle = localPool.claim();
         T obj;
-        if (handle == null) {
+        if (handle == null)
+        {
             handle = localPool.newHandle();
-            if (handle != null) {
+            if (handle != null)
+            {
                 obj = newObject(handle);
                 handle.set(obj);
-            } else {
+            }
+            else
+            {
                 obj = newObject(NOOP_HANDLE);
             }
-        } else {
+        }
+        else
+        {
             obj = handle.get();
         }
 
@@ -171,8 +185,10 @@ public abstract class Recycler<T>
      * @deprecated use {@link Handle#recycle(object)}.
      */
     [Obsolete]
-    public bool recycle(T o, IRecyclerHandle<T> handle) {
-        if (handle == NOOP_HANDLE) {
+    public bool recycle(T o, IRecyclerHandle<T> handle)
+    {
+        if (handle == NOOP_HANDLE)
+        {
             return false;
         }
 
@@ -181,21 +197,20 @@ public abstract class Recycler<T>
     }
 
     //@VisibleForTesting
-    public int threadLocalSize() 
+    public int threadLocalSize()
     {
         if (PlatformDependent.isVirtualThread(Thread.CurrentThread) &&
-                !FastThreadLocalThread.currentThreadHasFastThreadLocal()) {
+            !FastThreadLocalThread.currentThreadHasFastThreadLocal())
+        {
             return 0;
         }
+
         RecyclerLocalPool<T> localPool = threadLocal.getIfExists();
-        return localPool == null ? 0 : localPool.pooledHandles.size() + localPool.batch.size();
+        return localPool == null ? 0 : localPool.pooledHandles.size() + localPool.batch.Count;
     }
 
     /**
      * @param handle can NOT be null.
      */
     protected abstract T newObject(IRecyclerHandle<T> handle);
-
-
-
 }
