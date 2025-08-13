@@ -29,9 +29,9 @@ namespace Netty.NET.Common;
  * @param <T> the type of the pooled object
  */
 
-public class Recycler
+public static class Recycler
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<Recycler>();
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(Recycler));
     
     public static readonly int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
     public static readonly int DEFAULT_MAX_CAPACITY_PER_THREAD;
@@ -82,11 +82,6 @@ public class Recycler
                 logger.debug("-Dio.netty.recycler.batchFastThreadLocalOnly: {}", BATCH_FAST_TL_ONLY);
             }
         }
-    }
-
-    private Recycler()
-    {
-        // ..
     }
 }
 
@@ -219,7 +214,7 @@ public abstract class Recycler<T>
         }
 
         RecyclerLocalPool<T> localPool = threadLocal.getIfExists();
-        return localPool == null ? 0 : localPool._pooledHandles.size() + localPool._batch.Count;
+        return localPool == null ? 0 : localPool._pooledHandles.Count + localPool._batch.Count;
     }
 
     /**

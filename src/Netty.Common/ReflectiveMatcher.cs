@@ -5,15 +5,15 @@ namespace Netty.NET.Common;
 
 public class ReflectiveMatcher : TypeParameterMatcher
 {
-    private readonly Type type;
+    private readonly Type _type;
 
     public ReflectiveMatcher(Type type)
     {
-        this.type = type;
+        _type = type;
     }
 
     public override bool match(object msg)
     {
-        return type.IsInstanceOfType(msg);
+        return _type.IsInstanceOfType(msg);
     }
 }

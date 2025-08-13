@@ -23,9 +23,9 @@ public class RecyclerFastThreadLocal<T> : FastThreadLocal<RecyclerLocalPool<T>>
     protected override void onRemoval(RecyclerLocalPool<T> value)
     {
         base.onRemoval(value);
-        IMessagePassingQueue<RecyclerDefaultHandle<T>> handles = value._pooledHandles;
+        var handles = value._pooledHandles;
         value._pooledHandles = null;
         value._owner = null;
-        handles.clear();
+        handles.Clear();
     }
 }
