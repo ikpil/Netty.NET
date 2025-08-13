@@ -147,7 +147,7 @@ public sealed class ReferenceCountUtil
      *
      * @deprecated this may introduce a lot of memory usage so it is generally preferable to manually release objects.
      */
-    @Deprecated
+    [Obsolete]
     public static <T> T releaseLater(T msg) {
         return releaseLater(msg, 1);
     }
@@ -159,7 +159,7 @@ public sealed class ReferenceCountUtil
      *
      * @deprecated this may introduce a lot of memory usage so it is generally preferable to manually release objects.
      */
-    @Deprecated
+    [Obsolete]
     public static <T> T releaseLater(T msg, int decrement) {
         ObjectUtil.checkPositive(decrement, "decrement");
         if (msg instanceof IReferenceCounted) {

@@ -80,7 +80,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    @Deprecated
+    [Obsolete]
     public void shutdown() { }
 
     @Override

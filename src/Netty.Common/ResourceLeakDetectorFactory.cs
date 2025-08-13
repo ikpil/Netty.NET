@@ -71,7 +71,7 @@ public abstract class ResourceLeakDetectorFactory {
      * @param <T> the type of the resource class
      * @return a new instance of {@link ResourceLeakDetector}
      */
-    @Deprecated
+    [Obsolete]
     public abstract <T> ResourceLeakDetector<T> newResourceLeakDetector(
             Class<T> resource, int samplingInterval, long maxActive);
 

@@ -363,7 +363,7 @@ public class FastThreadLocal<V> : IFastThreadLocal where V : class
      * cleanup of the resources in the case of `Thread` completion.
      */
     //@SuppressWarnings("UnusedParameters")
-    protected void onRemoval(V value)
+    protected virtual void onRemoval(V value)
     {
     }
 }

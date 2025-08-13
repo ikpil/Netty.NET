@@ -448,7 +448,7 @@ public class PlatformDependent
      * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
-    @Deprecated
+    [Obsolete]
     public static <K, V> ConcurrentDictionary<,> K, V> newConcurrentHashMap() {
         return new ConcurrentDictionary<>();
     }
@@ -457,7 +457,7 @@ public class PlatformDependent
      * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
-    @Deprecated
+    [Obsolete]
     public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(int initialCapacity) {
         return new ConcurrentDictionary<>(initialCapacity);
     }
@@ -466,7 +466,7 @@ public class PlatformDependent
      * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
-    @Deprecated
+    [Obsolete]
     public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(int initialCapacity, float loadFactor) {
         return new ConcurrentDictionary<>(initialCapacity, loadFactor);
     }
@@ -475,7 +475,7 @@ public class PlatformDependent
      * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
-    @Deprecated
+    [Obsolete]
     public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(
             int initialCapacity, float loadFactor, int concurrencyLevel) {
         return new ConcurrentDictionary<>(initialCapacity, loadFactor, concurrencyLevel);
@@ -485,7 +485,7 @@ public class PlatformDependent
      * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
-    @Deprecated
+    [Obsolete]
     public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(IDictionary<? extends K, ? extends V> map) {
         return new ConcurrentDictionary<>(map);
     }
@@ -505,7 +505,7 @@ public class PlatformDependent
      *
      * @deprecated Use the {@link ICleanableDirectBuffer#clean()} from {@link #allocateDirect(int)} instead.
      */
-    @Deprecated
+    [Obsolete]
     public static void freeDirectBuffer(ByteBuffer buffer) {
         // Use the LEGACY_CLEANER reference to avoid using the DIRECT_CLEANER implementation
         // that just calls #freeDirectNoCleaner(ByteBuffer).
@@ -1141,7 +1141,7 @@ public class PlatformDependent
      * Return a {@link Random} which is not-threadsafe and so can only be used from the same thread.
      * @deprecated Use ThreadLocalRandom.current() instead.
      */
-    @Deprecated
+    [Obsolete]
     public static Random threadLocalRandom() {
         return ThreadLocalRandom.current();
     }

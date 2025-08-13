@@ -70,7 +70,7 @@ public class PromiseCombiner
     /**
      * Deprecated use {@link PromiseCombiner#PromiseCombiner(IEventExecutor)}.
      */
-    @Deprecated
+    [Obsolete]
     public PromiseCombiner() {
         this(ImmediateEventExecutor.INSTANCE);
     }
@@ -93,7 +93,7 @@ public class PromiseCombiner
      *
      * @deprecated Replaced by {@link PromiseCombiner#add(Future)}.
      */
-    @Deprecated
+    [Obsolete]
     public void add(Promise promise) {
         add((Future) promise);
     }
@@ -120,7 +120,7 @@ public class PromiseCombiner
      *
      * @deprecated Replaced by {@link PromiseCombiner#addAll(Future[])}
      */
-    @Deprecated
+    [Obsolete]
     public void addAll(Promise... promises) {
         addAll((Future[]) promises);
     }

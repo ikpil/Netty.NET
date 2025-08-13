@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Concurrent;
  * @param <V> the type of value returned by the {@link Future}
  * @param <F> the type of {@link Future}
  */
-@Deprecated
+[Obsolete]
 public class PromiseAggregator<V, F extends Future<V>> : IGenericFutureListener<> <F> {
 
     private readonly Promise<?> aggregatePromise;

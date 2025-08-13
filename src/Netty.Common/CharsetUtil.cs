@@ -64,7 +64,7 @@ public static class CharsetUtil
     /**
      * @deprecated Use {@link #encoder(Charset)}.
      */
-    @Deprecated
+    [Obsolete]
     public static CharsetEncoder getEncoder(Charset charset) {
         return encoder(charset);
     }
@@ -120,7 +120,7 @@ public static class CharsetUtil
     /**
      * @deprecated Use {@link #decoder(Charset)}.
      */
-    @Deprecated
+    [Obsolete]
     public static CharsetDecoder getDecoder(Charset charset) {
         return decoder(charset);
     }

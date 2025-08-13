@@ -202,7 +202,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * @deprecated Please use and override {@link #newTaskQueue(int)}.
      */
-    @Deprecated
+    [Obsolete]
     protected Queue<Runnable> newTaskQueue() {
         return newTaskQueue(maxPendingTasks);
     }
@@ -702,7 +702,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     @Override
-    @Deprecated
+    [Obsolete]
     public void shutdown() {
         shutdown0(-1, -1, ST_SHUTDOWN);
     }
@@ -968,7 +968,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
      */
-    @Deprecated
+    [Obsolete]
     protected interface NonWakeupRunnable extends LazyRunnable { }
 
     /**

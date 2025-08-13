@@ -169,7 +169,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     }
 
     @Override
-    @Deprecated
+    [Obsolete]
     public void shutdown() {
         throw new NotSupportedException();
     }

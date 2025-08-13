@@ -170,7 +170,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     }
 
     @Override
-    @Deprecated
+    [Obsolete]
     public void shutdown() {
         for (IEventExecutor l: children) {
             l.shutdown();

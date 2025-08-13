@@ -113,7 +113,7 @@ public class ResourceLeakDetector<T> {
     /**
      * @deprecated Use {@link #setLevel(Level)} instead.
      */
-    @Deprecated
+    [Obsolete]
     public static void setEnabled(bool enabled) {
         setLevel(enabled? Level.SIMPLE : Level.DISABLED);
     }
@@ -156,7 +156,7 @@ public class ResourceLeakDetector<T> {
     /**
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
-    @Deprecated
+    [Obsolete]
     public ResourceLeakDetector(Type resourceType) {
         this(simpleClassName(resourceType));
     }
@@ -164,7 +164,7 @@ public class ResourceLeakDetector<T> {
     /**
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
-    @Deprecated
+    [Obsolete]
     public ResourceLeakDetector(string resourceType) {
         this(resourceType, DEFAULT_SAMPLING_INTERVAL, long.MaxValue);
     }
@@ -178,7 +178,7 @@ public class ResourceLeakDetector<T> {
      *
      * @param maxActive This is deprecated and will be ignored.
      */
-    @Deprecated
+    [Obsolete]
     public ResourceLeakDetector(Type resourceType, int samplingInterval, long maxActive) {
         this(resourceType, samplingInterval);
     }
@@ -198,7 +198,7 @@ public class ResourceLeakDetector<T> {
      * <p>
      * @param maxActive This is deprecated and will be ignored.
      */
-    @Deprecated
+    [Obsolete]
     public ResourceLeakDetector(string resourceType, int samplingInterval, long maxActive) {
         this.resourceType = ObjectUtil.checkNotNull(resourceType, "resourceType");
         this.samplingInterval = samplingInterval;
@@ -211,7 +211,7 @@ public class ResourceLeakDetector<T> {
      * @return the {@link ResourceLeak} or {@code null}
      * @deprecated use {@link #track(object)}
      */
-    @Deprecated
+    [Obsolete]
     public final ResourceLeak open(T obj) {
         return track0(obj, false);
     }
@@ -333,7 +333,7 @@ public class ResourceLeakDetector<T> {
     /**
      * @deprecated This method will no longer be invoked by {@link ResourceLeakDetector}.
      */
-    @Deprecated
+    [Obsolete]
     protected void reportInstancesLeak(string resourceType) {
     }
 

@@ -78,7 +78,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * @deprecated Use the non-static {@link #ticker()} instead.
      */
-    @Deprecated
+    [Obsolete]
     static long defaultCurrentTimeNanos() {
         return Ticker.systemTicker().nanoTime();
     }
@@ -96,7 +96,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @return the number of nano seconds from now {@code deadlineNanos} would expire.
      * @deprecated Use {@link #ticker()} instead
      */
-    @Deprecated
+    [Obsolete]
     protected static long deadlineToDelayNanos(long deadlineNanos) {
         return ScheduledFutureTask.deadlineToDelayNanos(defaultCurrentTimeNanos(), deadlineNanos);
     }
@@ -120,7 +120,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @return initial value used for delay and computations based upon a monatomic time source.
      * @deprecated Use {@link #ticker()} instead
      */
-    @Deprecated
+    [Obsolete]
     protected static long initialNanoTime() {
         return Ticker.systemTicker().initialNanoTime();
     }
@@ -318,7 +318,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      *
      * @deprecated will be removed in the future.
      */
-    @Deprecated
+    [Obsolete]
     protected void validateScheduled(long amount, TimeSpan unit) {
         // NOOP
     }

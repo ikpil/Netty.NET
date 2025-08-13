@@ -47,7 +47,7 @@ namespace Netty.NET.Common.Concurrent;
  * Applications that wish to process messages with greater parallelism, should instead do explicit
  * off-loading to their own thread-pools.
  */
-@Deprecated
+[Obsolete]
 public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor : IEventExecutor {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(
             typeof(UnorderedThreadPoolEventExecutor));

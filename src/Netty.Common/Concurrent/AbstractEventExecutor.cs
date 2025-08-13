@@ -67,14 +67,14 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
     @Override
-    @Deprecated
+    [Obsolete]
     public abstract void shutdown();
 
     /**
      * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
     @Override
-    @Deprecated
+    [Obsolete]
     public List<Runnable> shutdownNow() {
         shutdown();
         return Collections.emptyList();
@@ -157,6 +157,6 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      *  @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
      *
      */
-    @Deprecated
+    [Obsolete]
     public interface LazyRunnable extends Runnable { }
 }
