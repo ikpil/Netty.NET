@@ -65,7 +65,8 @@ namespace Netty.NET.Common;
  * timer facility'</a>.  More comprehensive slides are located
  * <a href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt">here</a>.
  */
-public class HashedWheelTimer : Timer {
+public class HashedWheelTimer : Timer 
+{
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
