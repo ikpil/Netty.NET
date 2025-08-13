@@ -28,17 +28,17 @@ namespace Netty.NET.Common;
  *
  * @param <T> the type of the pooled object
  */
-public abstract class Recycler<T>
-{
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<Recycler<T>>();
 
-    private static readonly RecyclerEnhancedHandle<T> NOOP_HANDLE = new NoopRecyclerEnhancedHandle<T>();
-    private static readonly int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
-    private static readonly int DEFAULT_MAX_CAPACITY_PER_THREAD;
-    private static readonly int RATIO;
-    private static readonly int DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD;
-    private static readonly bool BLOCKING_POOL;
-    private static readonly bool BATCH_FAST_TL_ONLY;
+public class Recycler
+{
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<Recycler>();
+    
+    public static readonly int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
+    public static readonly int DEFAULT_MAX_CAPACITY_PER_THREAD;
+    public static readonly int RATIO;
+    public static readonly int DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD;
+    public static readonly bool BLOCKING_POOL;
+    public static readonly bool BATCH_FAST_TL_ONLY;
 
     static Recycler()
     {
@@ -84,17 +84,30 @@ public abstract class Recycler<T>
         }
     }
 
+    private Recycler()
+    {
+        // ..
+    }
+}
+
+public abstract class Recycler<T>
+{
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<Recycler<T>>();
+
+    private static readonly RecyclerEnhancedHandle<T> NOOP_HANDLE = new NoopRecyclerEnhancedHandle<T>();
+
+
     private readonly int maxCapacityPerThread;
     private readonly int interval;
     private readonly int chunkSize;
     private readonly RecyclerFastThreadLocal<T> threadLocal;
 
-    protected Recycler() : this(DEFAULT_MAX_CAPACITY_PER_THREAD)
+    protected Recycler() : this(Recycler.DEFAULT_MAX_CAPACITY_PER_THREAD)
     {
     }
 
     protected Recycler(int maxCapacityPerThread)
-        : this(maxCapacityPerThread, RATIO, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+        : this(maxCapacityPerThread, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
     {
     }
 
@@ -105,7 +118,7 @@ public abstract class Recycler<T>
     [Obsolete]
     //@SuppressWarnings("unused") // Parameters we can't remove due to compatibility.
     protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor)
-        : this(maxCapacityPerThread, RATIO, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+        : this(maxCapacityPerThread, Recycler.RATIO, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
     {
     }
 
@@ -116,7 +129,7 @@ public abstract class Recycler<T>
     [Obsolete]
     //@SuppressWarnings("unused") // Parameters we can't remove due to compatibility.
     protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor, int ratio, int maxDelayedQueuesPerThread)
-        : this(maxCapacityPerThread, ratio, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+        : this(maxCapacityPerThread, ratio, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
     {
     }
 
@@ -128,7 +141,7 @@ public abstract class Recycler<T>
     //@SuppressWarnings("unused") // Parameters we can't remove due to compatibility.
     protected Recycler(int maxCapacityPerThread, int maxSharedCapacityFactor,
         int ratio, int maxDelayedQueuesPerThread, int delayedQueueRatio)
-        : this(maxCapacityPerThread, ratio, DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
+        : this(maxCapacityPerThread, ratio, Recycler.DEFAULT_QUEUE_CHUNK_SIZE_PER_THREAD)
     {
     }
 
@@ -206,7 +219,7 @@ public abstract class Recycler<T>
         }
 
         RecyclerLocalPool<T> localPool = threadLocal.getIfExists();
-        return localPool == null ? 0 : localPool.pooledHandles.size() + localPool.batch.Count;
+        return localPool == null ? 0 : localPool._pooledHandles.size() + localPool._batch.Count;
     }
 
     /**

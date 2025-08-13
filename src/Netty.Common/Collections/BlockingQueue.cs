@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using Netty.NET.Common.Functional;
 
-namespace Netty.NET.Common;
+namespace Netty.NET.Common.Collections;
 
 /**
  * This is an implementation of {@link MessagePassingQueue}, similar to what might be returned from
@@ -10,19 +9,19 @@ namespace Netty.NET.Common;
  * The implementation relies on synchronised monitor locks for thread-safety.
  * The {@code fill} bulk operation is not supported by this implementation.
  */
-public class BlockingMessageQueue<T> : IMessagePassingQueue<T>
+public class BlockingQueue<T> : IQueue<T>
 {
     private readonly object _lock;
     private readonly Queue<T> _deque;
     private readonly int _maxCapacity;
 
-    public BlockingMessageQueue(int maxCapacity)
+    public BlockingQueue(int maxCapacity)
     {
         _lock = new object();
         _maxCapacity = maxCapacity;
-        
+
         // This message passing queue is backed by an ArrayDeque instance,
-        // made thread-safe by synchronising on `this` BlockingMessageQueue instance.
+        // made thread-safe by synchronising on `this` BlockingQueue instance.
         // Why ArrayDeque?
         // We use ArrayDeque instead of LinkedList or LinkedBlockingQueue because it's more space efficient.
         // We use ArrayDeque instead of List because we need the queue APIs.
@@ -33,7 +32,11 @@ public class BlockingMessageQueue<T> : IMessagePassingQueue<T>
         _deque = new Queue<T>(maxCapacity);
     }
 
-    public bool offer(T e)
+
+    public int Count => CountInternal();
+    public bool IsEmpty => IsEmptyInternal();
+
+    public bool TryEnqueue(T item)
     {
         lock (_lock)
         {
@@ -42,37 +45,42 @@ public class BlockingMessageQueue<T> : IMessagePassingQueue<T>
                 return false;
             }
 
-            _deque.Enqueue(e);
+            _deque.Enqueue(item);
             return true;
         }
     }
 
-    public T poll()
+
+    public bool TryDequeue(out T item)
     {
         lock (_lock)
         {
-            return _deque.Dequeue();
+            item = _deque.Dequeue();
+            return true;
         }
     }
 
-    public T peek()
+    public bool TryPeek(out T item)
     {
         lock (_lock)
         {
-            _deque.TryPeek(out var result);
-            return result;
+            return _deque.TryPeek(out item);
         }
     }
 
-    public int size()
+    public int Drain(IConsumer<T> c, int limit)
     {
-        lock (_lock)
+        T item;
+        int i = 0;
+        for (; i < limit && TryDequeue(out item); i++)
         {
-            return _deque.Count;
+            c.accept(item);
         }
+
+        return i;
     }
 
-    public void clear()
+    public void Clear()
     {
         lock (_lock)
         {
@@ -80,69 +88,21 @@ public class BlockingMessageQueue<T> : IMessagePassingQueue<T>
         }
     }
 
-    public bool isEmpty()
+
+    private int CountInternal()
     {
         lock (_lock)
         {
-            return 0 == _deque.Count;
+            return _deque.Count;
         }
     }
 
-    public int capacity()
-    {
-        return _maxCapacity;
-    }
 
-    public int drain(IConsumer<T> c, int limit)
+    private bool IsEmptyInternal()
     {
-        T obj;
-        int i = 0;
-        for (; i < limit && (obj = poll()) != null; i++)
+        lock (_lock)
         {
-            c.accept(obj);
+            return 0 >= _deque.Count;
         }
-
-        return i;
-    }
-    
-    public bool relaxedOffer(T var1)
-    {
-        return offer(var1);
-    }
-    
-    public T relaxedPoll()
-    {
-        return poll();
-    }
-    
-    public T relaxedPeek()
-    {
-        return peek();
-    }
-
-
-    public int fill(Func<T> s, int limit)
-    {
-        throw new NotSupportedException();
-    }
-
-    public int drain(Action<T> c)
-    {
-        throw new NotSupportedException();
-    }
-
-    public int fill(Func<T> s)
-    {
-        throw new NotSupportedException();
-    }
-
-    public void drain(Action<T> c, IWaitStrategy wait, IExitCondition exit)
-    {
-        throw new NotSupportedException();
-    }
-
-    public void fill(Func<T> s, IWaitStrategy wait, IExitCondition exit)
-    {
-        throw new NotSupportedException();
     }
 }

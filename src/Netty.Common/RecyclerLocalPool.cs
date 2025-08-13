@@ -1,87 +1,117 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
-using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common;
 
-public class RecyclerLocalPool<T> : IConsumer<RecyclerDefaultHandle<T>> 
+public class RecyclerLocalPool<T> : IConsumer<RecyclerDefaultHandle<T>>
 {
-    private readonly int ratioInterval;
-    private readonly int chunkSize;
-    internal readonly Queue<RecyclerDefaultHandle<T>> batch;
-    internal volatile Thread owner;
-    internal volatile IMessagePassingQueue<RecyclerDefaultHandle<T>> pooledHandles;
-    private int ratioCounter;
+    private readonly int _ratioInterval;
+    private readonly int _chunkSize;
+    internal readonly Queue<RecyclerDefaultHandle<T>> _batch;
+    internal volatile Thread _owner;
+    internal volatile IQueue<RecyclerDefaultHandle<T>> _pooledHandles;
+    private int _ratioCounter;
 
-    RecyclerLocalPool("unchecked")
-    public RecyclerLocalPool(int maxCapacity, int ratioInterval, int chunkSize) {
-        this.ratioInterval = ratioInterval;
-        this.chunkSize = chunkSize;
-        batch = new ArrayDeque<RecyclerDefaultHandle<T>>(chunkSize);
-        Thread currentThread = Thread.currentThread();
-        owner = !BATCH_FAST_TL_ONLY || FastThreadLocalThread.currentThreadHasFastThreadLocal()
-                ? currentThread : null;
-        if (BLOCKING_POOL) {
-            pooledHandles = new Common.BlockingMessageQueue<RecyclerDefaultHandle<T>>(maxCapacity);
-        } else {
-            pooledHandles = (MessagePassingQueue<RecyclerDefaultHandle<T>>) newMpscQueue(chunkSize, maxCapacity);
+    //("unchecked")
+    public RecyclerLocalPool(int maxCapacity, int ratioInterval, int chunkSize)
+    {
+        _ratioInterval = ratioInterval;
+        _chunkSize = chunkSize;
+        _batch = new Queue<RecyclerDefaultHandle<T>>(chunkSize);
+        Thread currentThread = Thread.CurrentThread;
+        _owner = !Recycler.BATCH_FAST_TL_ONLY || FastThreadLocalThread.currentThreadHasFastThreadLocal()
+            ? currentThread
+            : null;
+
+        if (Recycler.BLOCKING_POOL)
+        {
+            _pooledHandles = new BlockingQueue<RecyclerDefaultHandle<T>>(maxCapacity);
         }
-        ratioCounter = ratioInterval; // Start at interval so the first one will be recycled.
+        else
+        {
+            _pooledHandles = new MpscArrayQueue<RecyclerDefaultHandle<T>>(maxCapacity);
+        }
+
+        _ratioCounter = ratioInterval; // Start at interval so the first one will be recycled.
     }
 
-    public RecyclerDefaultHandle<T> claim() {
-        IMessagePassingQueue<RecyclerDefaultHandle<T>> handles = pooledHandles;
-        if (handles == null) {
+    public RecyclerDefaultHandle<T> claim()
+    {
+        var handles = _pooledHandles;
+        if (handles == null)
+        {
             return null;
         }
-        if (batch.isEmpty()) {
-            handles.drain(this, chunkSize);
+
+        if (0 >= _batch.Count)
+        {
+            handles.Drain(this, _chunkSize);
         }
-        RecyclerDefaultHandle<T> handle = batch.pollLast();
-        if (null != handle) {
+
+        RecyclerDefaultHandle<T> handle = _batch.Dequeue();
+        if (null != handle)
+        {
             handle.toClaimed();
         }
+
         return handle;
     }
 
-    public void release(RecyclerDefaultHandle<T> handle, bool guarded) {
-        if (guarded) {
+    public void release(RecyclerDefaultHandle<T> handle, bool guarded)
+    {
+        if (guarded)
+        {
             handle.toAvailable();
-        } else {
+        }
+        else
+        {
             handle.unguardedToAvailable();
         }
-        Thread owner = this.owner;
-        if (owner != null && Thread.CurrentThread == owner && batch.size() < chunkSize) {
+
+        var owner = _owner;
+        if (owner != null && Thread.CurrentThread == owner && _batch.Count < _chunkSize)
+        {
             accept(handle);
-        } else if (owner != null && isTerminated(owner)) {
-            this.owner = null;
-            pooledHandles = null;
-        } else {
-            IMessagePassingQueue<RecyclerDefaultHandle<T>> handles = pooledHandles;
-            if (handles != null) {
-                handles.relaxedOffer(handle);
+        }
+        else if (owner != null && isTerminated(owner))
+        {
+            _owner = null;
+            _pooledHandles = null;
+        }
+        else
+        {
+            var handles = _pooledHandles;
+            if (handles != null)
+            {
+                handles.TryEnqueue(handle);
             }
         }
     }
 
-    private static bool isTerminated(Thread owner) {
+    private static bool isTerminated(Thread owner)
+    {
         // Do not use `Thread.getState()` in J9 JVM because it's known to have a performance issue.
         // See: https://github.com/netty/netty/issues/13347#issuecomment-1518537895
-        return PlatformDependent.isJ9Jvm() ? !owner.isAlive() : owner.getState() == Thread.State.TERMINATED;
+        return !owner.IsAlive;
     }
 
-    public RecyclerDefaultHandle<T> newHandle() {
-        if (++ratioCounter >= ratioInterval) {
-            ratioCounter = 0;
+    public RecyclerDefaultHandle<T> newHandle()
+    {
+        if (++_ratioCounter >= _ratioInterval)
+        {
+            _ratioCounter = 0;
             return new RecyclerDefaultHandle<T>(this);
         }
+
         return null;
     }
 
-    @Override
-    public void accept(RecyclerDefaultHandle<T> e) {
-        batch.addLast(e);
+    public void accept(RecyclerDefaultHandle<T> e)
+    {
+        _batch.Enqueue(e);
     }
 }

@@ -9,7 +9,8 @@ public class RecyclerDefaultHandle<T> : RecyclerEnhancedHandle<T>
     private static readonly int STATE_AVAILABLE = 1;
     private static readonly AtomicIntegerFieldUpdater<RecyclerDefaultHandle<?>> STATE_UPDATER;
 
-    static {
+    static RecyclerDefaultHandle()
+    {
         AtomicIntegerFieldUpdater < ?> updater = AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultHandle), "state");
         //noinspection unchecked
         STATE_UPDATER = (AtomicIntegerFieldUpdater < DefaultHandle < ?>>) updater;
@@ -19,7 +20,7 @@ public class RecyclerDefaultHandle<T> : RecyclerEnhancedHandle<T>
     private readonly RecyclerLocalPool<T> localPool;
     private T value;
 
-    RecyclerDefaultHandle(RecyclerLocalPool<T> localPool)
+    public RecyclerDefaultHandle(RecyclerLocalPool<T> localPool)
     {
         this.localPool = localPool;
     }
