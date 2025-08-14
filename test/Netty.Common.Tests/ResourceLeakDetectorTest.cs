@@ -17,7 +17,7 @@
 namespace Netty.Common.Tests;
 
 public class ResourceLeakDetectorTest {
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private static volatile int sink;
 
     @Test
@@ -43,7 +43,7 @@ public class ResourceLeakDetectorTest {
             // Allocate 100 LeakAwareResource per run and close them after it.
             for (int a = 0; a < 100; a++) {
             DefaultResource resource = new DefaultResource();
-            ResourceLeakTracker<Resource> leak = DefaultResource.detector.track(resource);
+            IResourceLeakTracker<Resource> leak = DefaultResource.detector.track(resource);
             LeakAwareResource leakAwareResource = new LeakAwareResource(resource, leak);
             resources.add(leakAwareResource);
         }
@@ -70,7 +70,7 @@ public class ResourceLeakDetectorTest {
                 boolean closed = r.close();
                 if (checkClosed && !closed) {
                     error.compareAndSet(null,
-                        new AssertionError("ResourceLeak.close() returned 'false' but expected 'true'"));
+                        new AssertionError("IResourceLeak.close() returned 'false' but expected 'true'"));
                     return true;
                 }
             }
@@ -152,16 +152,16 @@ public void testLeakBrokenHint() throws Throwable {
 
 private static void leakResource() {
     Resource resource = new DefaultResource();
-    // We'll never close this ResourceLeakTracker.
+    // We'll never close this IResourceLeakTracker.
     DefaultResource.detectorWithSetupHint.track(resource);
 }
 
 // Mimic the way how we implement our classes that should help with leak detection
 private static final  class LeakAwareResource implements Resource {
 private final Resource resource;
-private final ResourceLeakTracker<Resource> leak;
+private final IResourceLeakTracker<Resource> leak;
 
-LeakAwareResource(Resource resource, ResourceLeakTracker<Resource> leak) {
+LeakAwareResource(Resource resource, IResourceLeakTracker<Resource> leak) {
     this.resource = resource;
     this.leak = leak;
 }

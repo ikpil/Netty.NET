@@ -58,7 +58,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private readonly Queue<Runnable> taskQueue;
 
     private volatile Thread thread;
-    @SuppressWarnings("unused")
+    //@SuppressWarnings("unused")
     private volatile ThreadProperties threadProperties;
     private readonly IExecutor executor;
     private volatile bool interrupted;

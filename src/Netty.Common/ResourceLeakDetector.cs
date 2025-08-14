@@ -17,32 +17,33 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
-public class ResourceLeakDetector 
+public static class ResourceLeakDetector
 {
-    private static readonly string PROP_LEVEL_OLD = "io.netty.leakDetectionLevel";
-    private static readonly string PROP_LEVEL = "io.netty.leakDetection.level";
-    private static readonly ResourceLeakDetectorLevel DEFAULT_LEVEL = ResourceLeakDetectorLevel.SIMPLE;
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetector));
+    
+    public static readonly string PROP_LEVEL_OLD = "io.netty.leakDetectionLevel";
+    public static readonly string PROP_LEVEL = "io.netty.leakDetection.level";
+    public static readonly ResourceLeakDetectorLevel DEFAULT_LEVEL = ResourceLeakDetectorLevel.SIMPLE;
 
-    private static readonly string PROP_TARGET_RECORDS = "io.netty.leakDetection.targetRecords";
-    private static readonly int DEFAULT_TARGET_RECORDS = 4;
+    public static readonly string PROP_TARGET_RECORDS = "io.netty.leakDetection.targetRecords";
+    public static readonly int DEFAULT_TARGET_RECORDS = 4;
 
-    private static readonly string PROP_SAMPLING_INTERVAL = "io.netty.leakDetection.samplingInterval";
+    public static readonly string PROP_SAMPLING_INTERVAL = "io.netty.leakDetection.samplingInterval";
     // There is a minor performance benefit in TLR if this is a power of 2.
-    private static readonly int DEFAULT_SAMPLING_INTERVAL = 128;
+    public static readonly int DEFAULT_SAMPLING_INTERVAL = 128;
 
-    private static readonly int TARGET_RECORDS;
+    public static readonly int TARGET_RECORDS;
     public static readonly int SAMPLING_INTERVAL;
 
-
-    private static ResourceLeakDetectorLevel level;
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetector));
-
+    private static ResourceLeakDetectorLevel _level;
+    
     static ResourceLeakDetector()
     {
         bool disabled;
@@ -50,8 +51,8 @@ public class ResourceLeakDetector
             disabled = SystemPropertyUtil.getBoolean("io.netty.noResourceLeakDetection", false);
             logger.debug("-Dio.netty.noResourceLeakDetection: {}", disabled);
             logger.warn(
-                    "-Dio.netty.noResourceLeakDetection is deprecated. Use '-D{}={}' instead.",
-                    PROP_LEVEL, nameof(ResourceLeakDetectorLevel.DISABLED).ToLowerInvariant());
+                "-Dio.netty.noResourceLeakDetection is deprecated. Use '-D{}={}' instead.",
+                PROP_LEVEL, nameof(ResourceLeakDetectorLevel.DISABLED).ToLowerInvariant());
         } else {
             disabled = false;
         }
@@ -68,7 +69,7 @@ public class ResourceLeakDetector
         TARGET_RECORDS = SystemPropertyUtil.getInt(PROP_TARGET_RECORDS, DEFAULT_TARGET_RECORDS);
         SAMPLING_INTERVAL = SystemPropertyUtil.getInt(PROP_SAMPLING_INTERVAL, DEFAULT_SAMPLING_INTERVAL);
 
-        ResourceLeakDetector.level = level;
+        _level = level;
         if (logger.isDebugEnabled()) {
             logger.debug("-D{}: {}", PROP_LEVEL, level.ToString().ToLowerInvariant());
             logger.debug("-D{}: {}", PROP_TARGET_RECORDS, TARGET_RECORDS);
@@ -91,6 +92,7 @@ public class ResourceLeakDetector
         return level;
     }
     
+    
     /**
      * @deprecated Use {@link #setLevel(ResourceLeakDetectorLevel)} instead.
      */
@@ -102,29 +104,35 @@ public class ResourceLeakDetector
     /**
      * Returns {@code true} if resource leak detection is enabled.
      */
-    public static bool isEnabled() {
-        return getLevel().ordinal() > ResourceLeakDetectorLevel.DISABLED.ordinal();
+    public static bool isEnabled()
+    {
+        return getLevel() > ResourceLeakDetectorLevel.DISABLED;
     }
 
     /**
      * Sets the resource leak detection level.
      */
     public static void setLevel(ResourceLeakDetectorLevel level) {
-        ResourceLeakDetector.level = ObjectUtil.checkNotNull(level, "level");
+        _level = ObjectUtil.checkNotNull(level, "level");
     }
 
     /**
      * Returns the current resource leak detection level.
      */
     public static ResourceLeakDetectorLevel getLevel() {
-        return level;
+        return _level;
     }
+}
+
+public class ResourceLeakDetector<T>
+{
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<ResourceLeakDetector<T>>();
 
     /** the collection of active resources */
-    private readonly ISet<DefaultResourceLeak<?>> allLeaks = ConcurrentDictionary<,>.newKeySet();
+    private readonly ConcurrentHashSet<DefaultResourceLeak<object>> allLeaks = new ConcurrentHashSet<DefaultResourceLeak<object>>();
 
-    private readonly ReferenceQueue<object> refQueue = new ReferenceQueue<>();
-    private readonly ISet<string> reportedLeaks = ConcurrentDictionary.newKeySet();
+    private readonly ReferenceQueue<object> refQueue = new ReferenceQueue<object>();
+    private readonly ConcurrentHashSet<string> reportedLeaks = new ConcurrentHashSet<string>();
 
     private readonly string resourceType;
     private readonly int samplingInterval;
@@ -138,16 +146,18 @@ public class ResourceLeakDetector
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
     [Obsolete]
-    public ResourceLeakDetector(Type resourceType) {
-        this(simpleClassName(resourceType));
+    public ResourceLeakDetector(Type resourceType) 
+        : this(resourceType.Name)
+    {
     }
 
     /**
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
     [Obsolete]
-    public ResourceLeakDetector(string resourceType) {
-        this(resourceType, DEFAULT_SAMPLING_INTERVAL, long.MaxValue);
+    public ResourceLeakDetector(string resourceType) 
+        : this(resourceType, ResourceLeakDetector.DEFAULT_SAMPLING_INTERVAL, long.MaxValue)
+    {
     }
 
     /**
@@ -160,8 +170,9 @@ public class ResourceLeakDetector
      * @param maxActive This is deprecated and will be ignored.
      */
     [Obsolete]
-    public ResourceLeakDetector(Type resourceType, int samplingInterval, long maxActive) {
-        this(resourceType, samplingInterval);
+    public ResourceLeakDetector(Type resourceType, int samplingInterval, long maxActive) 
+        : this(resourceType, samplingInterval)
+    {
     }
 
     /**
@@ -169,9 +180,10 @@ public class ResourceLeakDetector
      * Please use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class)}
      * or {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}
      */
-    @SuppressWarnings("deprecation")
-    public ResourceLeakDetector(Type resourceType, int samplingInterval) {
-        this(simpleClassName(resourceType), samplingInterval, long.MaxValue);
+    //@SuppressWarnings("deprecation")
+    public ResourceLeakDetector(Type resourceType, int samplingInterval) 
+        : this(resourceType.Name, samplingInterval, long.MaxValue)
+    {
     }
 
     /**
@@ -186,50 +198,51 @@ public class ResourceLeakDetector
     }
 
     /**
-     * Creates a new {@link ResourceLeak} which is expected to be closed via {@link ResourceLeak#close()} when the
+     * Creates a new {@link IResourceLeak} which is expected to be closed via {@link IResourceLeak#close()} when the
      * related resource is deallocated.
      *
-     * @return the {@link ResourceLeak} or {@code null}
+     * @return the {@link IResourceLeak} or {@code null}
      * @deprecated use {@link #track(object)}
      */
     [Obsolete]
-    public final ResourceLeak open(T obj) {
+    public IResourceLeak open(T obj) {
         return track0(obj, false);
     }
 
     /**
-     * Creates a new {@link ResourceLeakTracker} which is expected to be closed via
-     * {@link ResourceLeakTracker#close(object)} when the related resource is deallocated.
+     * Creates a new {@link IResourceLeakTracker} which is expected to be closed via
+     * {@link IResourceLeakTracker#close(object)} when the related resource is deallocated.
      *
-     * @return the {@link ResourceLeakTracker} or {@code null}
+     * @return the {@link IResourceLeakTracker} or {@code null}
      */
-    @SuppressWarnings("unchecked")
-    public final ResourceLeakTracker<T> track(T obj) {
+    //@SuppressWarnings("unchecked")
+    public IResourceLeakTracker<T> track(T obj) {
         return track0(obj, false);
     }
 
     /**
-     * Creates a new {@link ResourceLeakTracker} which is expected to be closed via
-     * {@link ResourceLeakTracker#close(object)} when the related resource is deallocated.
+     * Creates a new {@link IResourceLeakTracker} which is expected to be closed via
+     * {@link IResourceLeakTracker#close(object)} when the related resource is deallocated.
      *
      * Unlike {@link #track(object)}, this method always returns a tracker, regardless
      * of the detection settings.
      *
-     * @return the {@link ResourceLeakTracker}
+     * @return the {@link IResourceLeakTracker}
      */
-    @SuppressWarnings("unchecked")
-    public ResourceLeakTracker<T> trackForcibly(T obj) {
+    //@SuppressWarnings("unchecked")
+    public IResourceLeakTracker<T> trackForcibly(T obj) {
         return track0(obj, true);
     }
 
-    @SuppressWarnings("unchecked")
-    private DefaultResourceLeak track0(T obj, bool force) {
-        ResourceLeakDetectorLevel level = ResourceLeakDetector.level;
+    //@SuppressWarnings("unchecked")
+    private DefaultResourceLeak<T> track0(T obj, bool force)
+    {
+        ResourceLeakDetectorLevel level = ResourceLeakDetector.getLevel();
         if (force ||
                 level == ResourceLeakDetectorLevel.PARANOID ||
-                (level != ResourceLeakDetectorLevel.DISABLED && ThreadLocalRandom.current().nextInt(samplingInterval) == 0)) {
+                (level != ResourceLeakDetectorLevel.DISABLED && ThreadLocalRandom.current().Next(samplingInterval) == 0)) {
             reportLeak();
-            return new DefaultResourceLeak(obj, refQueue, allLeaks, getInitialHint(resourceType));
+            return new DefaultResourceLeak<T>(obj, refQueue, allLeaks, getInitialHint(resourceType));
         }
         return null;
     }
@@ -320,7 +333,7 @@ public class ResourceLeakDetector
 
     /**
      * Create a hint object to be attached to an object tracked by this record. Similar to the additional information
-     * supplied to {@link ResourceLeakTracker#record(object)}, will be printed alongside the stack trace of the
+     * supplied to {@link IResourceLeakTracker#record(object)}, will be printed alongside the stack trace of the
      * creation of the resource.
      */
     protected object getInitialHint(string resourceType) {

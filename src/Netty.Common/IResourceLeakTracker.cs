@@ -13,10 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common;
 
-public interface ResourceLeakTracker<T>  {
-
+public interface IResourceLeakTracker<T>
+{
     /**
      * Records the caller's current stack trace so that the {@link ResourceLeakDetector} can tell where the leaked
      * resource was accessed lastly. This method is a shortcut to {@link #record(object) record(null)}.
@@ -30,8 +31,8 @@ public interface ResourceLeakTracker<T>  {
     void record(object hint);
 
     /**
-     * Close the leak so that {@link ResourceLeakTracker} does not warn about leaked resources.
-     * After this method is called a leak associated with this ResourceLeakTracker should not be reported.
+     * Close the leak so that {@link IResourceLeakTracker} does not warn about leaked resources.
+     * After this method is called a leak associated with this IResourceLeakTracker should not be reported.
      *
      * @return {@code true} if called first time, {@code false} if called already
      */

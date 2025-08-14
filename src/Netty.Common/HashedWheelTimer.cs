@@ -80,7 +80,7 @@ public class HashedWheelTimer : Timer
     private static readonly AtomicIntegerFieldUpdater<HashedWheelTimer> WORKER_STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(typeof(HashedWheelTimer), "workerState");
 
-    private readonly ResourceLeakTracker<HashedWheelTimer> leak;
+    private readonly IResourceLeakTracker<HashedWheelTimer> leak;
     private readonly Worker worker = new Worker();
     private readonly Thread workerThread;
 

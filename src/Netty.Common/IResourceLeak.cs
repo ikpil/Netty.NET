@@ -14,13 +14,16 @@
  * under the License.
  */
 
+using System;
+
 namespace Netty.NET.Common;
 
 /**
- * @deprecated please use {@link ResourceLeakTracker} as it may lead to false-positives.
+ * @deprecated please use {@link IResourceLeakTracker} as it may lead to false-positives.
  */
 [Obsolete]
-public interface ResourceLeak {
+public interface IResourceLeak
+{
     /**
      * Records the caller's current stack trace so that the {@link ResourceLeakDetector} can tell where the leaked
      * resource was accessed lastly. This method is a shortcut to {@link #record(object) record(null)}.

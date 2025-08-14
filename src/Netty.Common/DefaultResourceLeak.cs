@@ -1,30 +1,38 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common;
 
-@SuppressWarnings("deprecation")
-internal class DefaultResourceLeak<T> extends WeakReference<object> : ResourceLeakTracker<T>, ResourceLeak {
-
-    @SuppressWarnings("unchecked") // generics and updaters do not mix.
+//@SuppressWarnings("deprecation")
+internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTracker<T>, IResourceLeak
+{
+    //@SuppressWarnings("unchecked") // generics and updaters do not mix.
     private static readonly AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater =
-            (AtomicReferenceFieldUpdater)
-                    AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultResourceLeak), typeof(TraceRecord), "head");
+
+    (AtomicReferenceFieldUpdater)
+        AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultResourceLeak), typeof(TraceRecord), "head");
 
     @SuppressWarnings("unchecked") // generics and updaters do not mix.
     private static readonly AtomicIntegerFieldUpdater<DefaultResourceLeak<?>> droppedRecordsUpdater =
-            (AtomicIntegerFieldUpdater)
-                    AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultResourceLeak), "droppedRecords");
 
-    @SuppressWarnings("unused")
+    (AtomicIntegerFieldUpdater)
+        AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultResourceLeak), "droppedRecords");
+
+    //@SuppressWarnings("unused")
     private volatile TraceRecord head;
-    @SuppressWarnings("unused")
+
+    //@SuppressWarnings("unused")
     private volatile int droppedRecords;
 
-    private readonly ISet<DefaultResourceLeak<?>> allLeaks;
+    private readonly ISet<DefaultResourceLeak<object>> allLeaks;
     private readonly int trackedHash;
 
-    DefaultResourceLeak(
+    public DefaultResourceLeak(
             object referent,
             ReferenceQueue<object> refQueue,
-            ISet<DefaultResourceLeak<?>> allLeaks,
+            ISet<DefaultResourceLeak<object>> allLeaks,
             object initialHint) {
         super(referent, refQueue);
 
