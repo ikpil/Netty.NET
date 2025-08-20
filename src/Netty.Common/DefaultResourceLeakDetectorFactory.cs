@@ -1,3 +1,6 @@
+using System;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common;
 
 
@@ -9,7 +12,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
     private readonly Constructor<?> obsoleteCustomClassConstructor;
     private readonly Constructor<?> customClassConstructor;
 
-    DefaultResourceLeakDetectorFactory() {
+    public DefaultResourceLeakDetectorFactory() {
         string customLeakDetector;
         try {
             customLeakDetector = SystemPropertyUtil.get("io.netty.customResourceLeakDetector");
