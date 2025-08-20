@@ -19,7 +19,8 @@ namespace Netty.NET.Common;
 /**
  * A hint object that provides human-readable message for easier resource leak tracking.
  */
-public interface ResourceLeakHint {
+public interface IResourceLeakHint
+{
     /**
      * Returns a human-readable message that potentially enables easier resource leak tracking.
      */

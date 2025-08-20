@@ -15,8 +15,8 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
@@ -43,6 +43,9 @@ public static class ResourceLeakDetector
     public static readonly int SAMPLING_INTERVAL;
 
     private static ResourceLeakDetectorLevel _level;
+    
+    internal static readonly AtomicReference<string[]> excludedMethods = new AtomicReference<string[]>(EmptyArrays.EMPTY_STRINGS);
+
     
     static ResourceLeakDetector()
     {
@@ -122,6 +125,38 @@ public static class ResourceLeakDetector
     public static ResourceLeakDetectorLevel getLevel() {
         return _level;
     }
+    
+    public static void addExclusions(Type clz, params string[] methodNames) 
+    {
+        ISet<string> nameSet = new HashSet<string>(methodNames);
+        // Use loop rather than lookup. This avoids knowing the parameters, and doesn't have to handle
+        // NoSuchMethodException.
+        var flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+        foreach (MethodInfo method in clz.GetMethods(flags))
+        {
+            if (nameSet.Remove(method.Name) && nameSet.Count == 0)
+            {
+                break;
+            }
+        }
+        
+        if (0 < nameSet.Count) {
+            throw new ArgumentException("Can't find '" + nameSet + "' in " + clz.Name);
+        }
+        
+        string[] oldMethods;
+        string[] newMethods;
+        do {
+            oldMethods = excludedMethods.get();
+            newMethods = Arrays.copyOf(oldMethods, oldMethods.Length + 2 * methodNames.Length);
+            for (int i = 0; i < methodNames.Length; i++)
+            {
+                newMethods[oldMethods.Length + i * 2] = clz.Name;
+                newMethods[oldMethods.Length + i * 2 + 1] = methodNames[i];
+            }
+        } while (!excludedMethods.compareAndSet(oldMethods, newMethods));
+    }
+
 }
 
 public class ResourceLeakDetector<T>
@@ -249,8 +284,8 @@ public class ResourceLeakDetector<T>
 
     private void clearRefQueue() {
         for (;;) {
-            DefaultResourceLeak ref = (DefaultResourceLeak) refQueue.poll();
-            if (ref == null) {
+            DefaultResourceLeak<T> @ref = (DefaultResourceLeak<T>) refQueue.poll();
+            if (@ref == null) {
                 break;
             }
             ref.dispose();
@@ -356,32 +391,7 @@ public class ResourceLeakDetector<T>
     }
 
  
-    private static readonly AtomicReference<string[]> excludedMethods =
-            new AtomicReference<string[]>(EmptyArrays.EMPTY_STRINGS);
 
-    public static void addExclusions(Class clz, string ... methodNames) {
-        ISet<string> nameSet = new HashSet<string>(Arrays.asList(methodNames));
-        // Use loop rather than lookup. This avoids knowing the parameters, and doesn't have to handle
-        // NoSuchMethodException.
-        for (Method method : clz.getDeclaredMethods()) {
-            if (nameSet.remove(method.getName()) && nameSet.isEmpty()) {
-                break;
-            }
-        }
-        if (!nameSet.isEmpty()) {
-            throw new ArgumentException("Can't find '" + nameSet + "' in " + clz.getName());
-        }
-        string[] oldMethods;
-        string[] newMethods;
-        do {
-            oldMethods = excludedMethods.get();
-            newMethods = Arrays.copyOf(oldMethods, oldMethods.length + 2 * methodNames.length);
-            for (int i = 0; i < methodNames.length; i++) {
-                newMethods[oldMethods.length + i * 2] = clz.getName();
-                newMethods[oldMethods.length + i * 2 + 1] = methodNames[i];
-            }
-        } while (!excludedMethods.compareAndSet(oldMethods, newMethods));
-    }
 
     
 }

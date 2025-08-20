@@ -6,12 +6,10 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Common;
 
 //@SuppressWarnings("deprecation")
-internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTracker<T>, IResourceLeak
+internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTracker<T>
 {
     //@SuppressWarnings("unchecked") // generics and updaters do not mix.
-    private static readonly AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater =
-
-    (AtomicReferenceFieldUpdater)
+    private static readonly AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater = (AtomicReferenceFieldUpdater)
         AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultResourceLeak), typeof(TraceRecord), "head");
 
     @SuppressWarnings("unchecked") // generics and updaters do not mix.
@@ -50,12 +48,10 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
                 new TraceRecord(TraceRecord.BOTTOM) : new TraceRecord(TraceRecord.BOTTOM, initialHint));
     }
 
-    @Override
     public void record() {
         record0(null);
     }
 
-    @Override
     public void record(object hint) {
         record0(hint);
     }
