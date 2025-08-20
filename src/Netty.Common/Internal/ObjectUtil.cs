@@ -157,6 +157,17 @@ public static class ObjectUtil
 
         return i;
     }
+    
+    public static TimeSpan checkPositive(TimeSpan span, string name)
+    {
+        if (span.Ticks <= INT_ZERO)
+        {
+            throw new ArgumentException(name + " : " + span.Ticks + " (expected: > 0)");
+        }
+
+        return span;
+    }
+
 
     /**
      * Checks that the given argument is strictly positive. If it is not, throws {@link ArgumentException}.
