@@ -434,8 +434,8 @@ public class HashedWheelTimer : ITimer
             }
         }
 
-        ISet<ITimeout> unprocessed = _worker.unprocessedTimeouts();
-        ISet<ITimeout> cancelled = new HashSet<ITimeout>(unprocessed.Count);
+        var unprocessed = _worker.unprocessedTimeouts();
+        var cancelled = new HashSet<ITimeout>(unprocessed.Count);
         foreach (ITimeout timeout in unprocessed)
         {
             if (timeout.cancel())

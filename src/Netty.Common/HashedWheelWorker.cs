@@ -11,7 +11,7 @@ public class HashedWheelWorker : IRunnable
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
-    private readonly ISet<ITimeout> _unprocessedTimeouts = new HashSet<ITimeout>();
+    private readonly HashSet<ITimeout> _unprocessedTimeouts = new HashSet<ITimeout>();
 
     private readonly HashedWheelTimer _timer;
     private long _tick;
@@ -182,8 +182,8 @@ public class HashedWheelWorker : IRunnable
         }
     }
 
-    public ISet<ITimeout> unprocessedTimeouts()
+    public IReadOnlyCollection<ITimeout> unprocessedTimeouts()
     {
-        return Collections.unmodifiableSet(_unprocessedTimeouts);
+        return _unprocessedTimeouts;
     }
 }
