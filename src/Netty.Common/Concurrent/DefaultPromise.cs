@@ -682,8 +682,8 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         checkDeadLock();
 
         // Start counting time from here instead of the first line of this method,
-        // to avoid/postpone performance cost of PreciesTimer.nanoTime().
-        final long startTime = PreciesTimer.nanoTime();
+        // to avoid/postpone performance cost of PreciseTimer.nanoTime().
+        final long startTime = PreciseTimer.nanoTime();
         synchronized (this) {
             bool interrupted = false;
             try {
@@ -706,8 +706,8 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
                         return true;
                     }
                     // Calculate the elapsed time here instead of in the while condition,
-                    // try to avoid performance cost of PreciesTimer.nanoTime() in the first loop of while.
-                    waitTime = timeoutNanos - (PreciesTimer.nanoTime() - startTime);
+                    // try to avoid performance cost of PreciseTimer.nanoTime() in the first loop of while.
+                    waitTime = timeoutNanos - (PreciseTimer.nanoTime() - startTime);
                 }
                 return isDone();
             } finally {

@@ -429,7 +429,7 @@ public class HashedWheelTimer : ITimer
 
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
-        long deadline = PreciesTimer.nanoTime() + unit.toNanos(delay) - startTime;
+        long deadline = PreciseTimer.nanoTime() + unit.toNanos(delay) - startTime;
 
         // Guard against overflow.
         if (delay > 0 && deadline < 0) {

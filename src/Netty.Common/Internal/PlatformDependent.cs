@@ -1044,7 +1044,7 @@ public class PlatformDependent
                     : new MpscChunkedAtomicArrayQueue<T>(chunkSize, capacity);
         }
 
-        static <T> Queue<T> newMpscQueue() {
+        static Queue<T> newMpscQueue() {
             return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscUnboundedArrayQueue<T>(MPSC_CHUNK_SIZE)
                                                 : new MpscUnboundedAtomicArrayQueue<T>(MPSC_CHUNK_SIZE);
         }
@@ -1055,7 +1055,7 @@ public class PlatformDependent
      * consumer (one thread!).
      * @return A MPSC queue which may be unbounded.
      */
-    public static <T> Queue<T> newMpscQueue() {
+    public static Queue<T> newMpscQueue<T>() {
         return Mpsc.newMpscQueue();
     }
 

@@ -322,9 +322,9 @@ public void testSignalRace() {
 
         for (final Map.Entry<Thread, DefaultPromise<Void>> promise : promises.entrySet()) {
             promise.getKey().start();
-            final long start = PreciesTimer.nanoTime();
+            final long start = PreciseTimer.nanoTime();
             promise.getValue().awaitUninterruptibly(wait, TimeUnit.NANOSECONDS);
-            assertThat(PreciesTimer.nanoTime() - start).isLessThan(wait);
+            assertThat(PreciseTimer.nanoTime() - start).isLessThan(wait);
         }
     } finally {
         if (executor != null) {

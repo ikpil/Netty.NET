@@ -29,4 +29,6 @@ public interface ITimerTask
      * @param timeout a handle which is associated with this task
      */
     void run(ITimeout timeout);
+
+    void cancelled(ITimeout timeout);
 }

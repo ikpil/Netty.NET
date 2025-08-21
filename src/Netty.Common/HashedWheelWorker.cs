@@ -16,7 +16,7 @@ public class HashedWheelWorker : IRunnable
     @Override
     public void run() {
         // Initialize the startTime.
-        startTime = PreciesTimer.nanoTime();
+        startTime = PreciseTimer.nanoTime();
         if (startTime == 0) {
             // We use 0 as an indicator for the uninitialized value here, so make sure it's not 0 when initialized.
             startTime = 1;
@@ -106,7 +106,7 @@ public class HashedWheelWorker : IRunnable
         long deadline = tickDuration * (tick + 1);
 
         for (;;) {
-            final long currentTime = PreciesTimer.nanoTime() - startTime;
+            final long currentTime = PreciseTimer.nanoTime() - startTime;
             long sleepTimeMs = (deadline - currentTime + 999999) / 1000000;
 
             if (sleepTimeMs <= 0) {
