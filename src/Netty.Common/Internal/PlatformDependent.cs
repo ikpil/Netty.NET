@@ -1064,8 +1064,8 @@ public class PlatformDependent
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!).
      */
-    public static <T> Queue<T> newMpscQueue(final int maxCapacity) {
-        return Mpsc.newMpscQueue(maxCapacity);
+    public static Queue<T> newMpscQueue<T>(int maxCapacity) {
+        return Mpsc.newMpscQueue<T>(maxCapacity);
     }
 
     /**
@@ -1073,15 +1073,15 @@ public class PlatformDependent
      * consumer (one thread!).
      * The queue will grow and shrink its capacity in units of the given chunk size.
      */
-    public static <T> Queue<T> newMpscQueue(final int chunkSize, final int maxCapacity) {
-        return Mpsc.newChunkedMpscQueue(chunkSize, maxCapacity);
+    public static Queue<T> newMpscQueue<T>(int chunkSize, int maxCapacity) {
+        return Mpsc.newChunkedMpscQueue<T>(chunkSize, maxCapacity);
     }
 
     /**
      * Create a new {@link Queue} which is safe to use for single producer (one thread!) and a single
      * consumer (one thread!).
      */
-    public static <T> Queue<T> newSpscQueue() {
+    public static Queue<T> newSpscQueue<T>() {
         return hasUnsafe() ? new SpscLinkedQueue<T>() : new SpscLinkedAtomicQueue<T>();
     }
 
@@ -1089,7 +1089,7 @@ public class PlatformDependent
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!) with the given fixes {@code capacity}.
      */
-    public static <T> Queue<T> newFixedMpscQueue(int capacity) {
+    public static Queue<T> newFixedMpscQueue<T>(int capacity) {
         return hasUnsafe() ? new MpscArrayQueue<T>(capacity) : new MpscAtomicArrayQueue<T>(capacity);
     }
 
@@ -1098,7 +1098,7 @@ public class PlatformDependent
      * consumer (one thread!) with the given fixes {@code capacity}.<br>
      * This should be preferred to {@link #newFixedMpscQueue(int)} when the queue is not to be heavily contended.
      */
-    public static <T> Queue<T> newFixedMpscUnpaddedQueue(int capacity) {
+    public static Queue<T> newFixedMpscUnpaddedQueue<T>(int capacity) {
         return hasUnsafe() ? new MpscUnpaddedArrayQueue<T>(capacity) : new MpscAtomicUnpaddedArrayQueue<T>(capacity);
     }
 
@@ -1106,7 +1106,7 @@ public class PlatformDependent
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and multiple
      * consumers with the given fixes {@code capacity}.
      */
-    public static <T> Queue<T> newFixedMpmcQueue(int capacity) {
+    public static Queue<T> newFixedMpmcQueue<T>(int capacity) {
         return hasUnsafe() ? new MpmcArrayQueue<T>(capacity) : new MpmcAtomicArrayQueue<T>(capacity);
     }
 

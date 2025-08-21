@@ -1,4 +1,6 @@
-﻿namespace Netty.NET.Common.Concurrent;
+﻿using Netty.NET.Common.Functional;
+
+namespace Netty.NET.Common.Concurrent;
 
 public interface IExecutor
 {

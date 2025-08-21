@@ -93,12 +93,12 @@ public class HashedWheelTimer : ITimer
     private readonly int _mask;
     private readonly CountdownEvent _startTimeInitialized = new CountdownEvent(1);
     private readonly Queue<HashedWheelTimeout> _timeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
-    private readonly Queue<HashedWheelTimeout> _cancelledTimeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
-    private readonly AtomicLong _pendingTimeouts = new AtomicLong(0);
+    internal readonly Queue<HashedWheelTimeout> _cancelledTimeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
+    internal readonly AtomicLong _pendingTimeouts = new AtomicLong(0);
     private readonly long _maxPendingTimeouts;
-    private readonly IExecutor _taskExecutor;
+    internal readonly IExecutor _taskExecutor;
 
-    private readonly AtomicLong _startTime;
+    internal readonly AtomicLong _startTime;
 
     /**
      * Creates a new timer with the default thread factory

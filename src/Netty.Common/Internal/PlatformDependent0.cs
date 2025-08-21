@@ -728,28 +728,28 @@ public class PlatformDependent0 {
         return UNSAFE.getLong(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    static long getLong(long[] data, long index) {
+    public static long getLong(long[] data, long index) {
         return UNSAFE.getLong(data, LONG_ARRAY_BASE_OFFSET + LONG_ARRAY_INDEX_SCALE * index);
     }
 
-    static void putByte(long address, byte value) {
+    public static void putByte(long address, byte value) {
         UNSAFE.putByte(address, value);
     }
 
-    static void putShort(long address, short value) {
+    public static void putShort(long address, short value) {
         UNSAFE.putShort(address, value);
     }
 
-    static void putShortOrdered(long address, short newValue) {
+    public static void putShortOrdered(long address, short newValue) {
         UNSAFE.storeFence();
         UNSAFE.putShort(null, address, newValue);
     }
 
-    static void putInt(long address, int value) {
+    public static void putInt(long address, int value) {
         UNSAFE.putInt(address, value);
     }
 
-    static void putLong(long address, long value) {
+    public static void putLong(long address, long value) {
         UNSAFE.putLong(address, value);
     }
 

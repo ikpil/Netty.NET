@@ -1,6 +1,8 @@
 using System;
 using System.Text;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
@@ -13,27 +15,24 @@ public class HashedWheelTimeout : ITimeout, IRunnable
     private const int ST_CANCELLED = 1;
     private const int ST_EXPIRED = 2;
 
-    private static readonly AtomicIntegerFieldUpdater<HashedWheelTimeout> STATE_UPDATER =
-        AtomicIntegerFieldUpdater.newUpdater(typeof(HashedWheelTimeout), "state");
-
     private readonly HashedWheelTimer _timer;
     private readonly ITimerTask _task;
     private readonly long _deadline;
 
     //@SuppressWarnings({"unused", "FieldMayBeFinal", "RedundantFieldInitialization" })
-    private volatile int _state = ST_INIT;
+    private readonly AtomicInteger _state = new AtomicInteger(ST_INIT);
 
     // remainingRounds will be calculated and set by Worker.transferTimeoutsToBuckets() before the
     // HashedWheelTimeout will be added to the correct HashedWheelBucket.
-    long remainingRounds;
+    private long _remainingRounds;
 
     // This will be used to chain timeouts in HashedWheelTimerBucket via a double-linked-list.
     // As only the workerThread will act on it there is no need for synchronization / volatile.
-    private HashedWheelTimeout next;
-    private HashedWheelTimeout prev;
+    private HashedWheelTimeout _next;
+    private HashedWheelTimeout _prev;
 
     // The bucket to which the timeout was added
-    private HashedWheelBucket bucket;
+    private HashedWheelBucket _bucket;
 
     public HashedWheelTimeout(HashedWheelTimer timer, ITimerTask task, long deadline)
     {
@@ -63,13 +62,13 @@ public class HashedWheelTimeout : ITimeout, IRunnable
         // If a task should be canceled we put this to another queue which will be processed on each tick.
         // So this means that we will have a GC latency of max. 1 tick duration which is good enough. This way
         // we can make again use of our MpscLinkedQueue and so minimize the locking / overhead as much as possible.
-        _timer._cancelledTimeouts.add(this);
+        _timer._cancelledTimeouts.Enqueue(this);
         return true;
     }
 
     private void remove()
     {
-        HashedWheelBucket bucket = this.bucket;
+        HashedWheelBucket bucket = this._bucket;
         if (bucket != null)
         {
             bucket.remove(this);
@@ -86,12 +85,12 @@ public class HashedWheelTimeout : ITimeout, IRunnable
 
     public bool compareAndSetState(int expected, int state)
     {
-        return STATE_UPDATER.compareAndSet(this, expected, state);
+        return _state.compareAndSet(expected, state);
     }
 
     public int state()
     {
-        return _state;
+        return _state.read();
     }
 
     public bool isCancelled()
@@ -144,10 +143,10 @@ public class HashedWheelTimeout : ITimeout, IRunnable
     public override string ToString()
     {
         long currentTime = PreciseTimer.nanoTime();
-        long remaining = _deadline - currentTime + _timer.startTime;
+        long remaining = _deadline - currentTime + _timer._startTime.read();
 
         StringBuilder buf = new StringBuilder(192)
-            .Append(simpleClassName(this))
+            .Append(StringUtil.simpleClassName(this))
             .Append('(')
             .Append("deadline: ");
         if (remaining > 0)
