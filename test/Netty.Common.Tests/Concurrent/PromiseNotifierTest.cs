@@ -28,7 +28,7 @@ public class PromiseNotifierTest {
         });
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Test
     public void testNullPromiseInArray() {
         assertThrows(IllegalArgumentException.class, new Executable() {
@@ -41,16 +41,16 @@ public class PromiseNotifierTest {
 
     @Test
     public void testListenerSuccess() throws Exception {
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         Promise<Void> p1 = mock(Promise.class);
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         Promise<Void> p2 = mock(Promise.class);
 
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         PromiseNotifier<Void, Future<Void>> notifier =
                 new PromiseNotifier<Void, Future<Void>>(p1, p2);
 
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         Future<Void> future = mock(Future.class);
         when(future.isSuccess()).thenReturn(true);
         when(future.get()).thenReturn(null);
@@ -64,16 +64,16 @@ public class PromiseNotifierTest {
 
     @Test
     public void testListenerFailure() throws Exception {
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         Promise<Void> p1 = mock(Promise.class);
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         Promise<Void> p2 = mock(Promise.class);
 
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         PromiseNotifier<Void, Future<Void>> notifier =
                 new PromiseNotifier<Void, Future<Void>>(p1, p2);
 
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         Future<Void> future = mock(Future.class);
         Throwable t = mock(Throwable.class);
         when(future.isSuccess()).thenReturn(false);

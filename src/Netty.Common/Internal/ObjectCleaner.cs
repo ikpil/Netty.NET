@@ -99,7 +99,7 @@ public final class ObjectCleaner {
      * This should only be used if there are no other ways to execute some cleanup once the object is not reachable
      * anymore because it is not a cheap way to handle the cleanup.
      */
-    public static void register(object object, Runnable cleanupTask) {
+    public static void register(object obj, Runnable cleanupTask) {
         AutomaticCleanerReference reference = new AutomaticCleanerReference(object,
                 ObjectUtil.checkNotNull(cleanupTask, "cleanupTask"));
         // Its important to add the reference to the LIVE_SET before we access CLEANER_RUNNING to ensure correct

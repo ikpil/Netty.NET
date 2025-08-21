@@ -42,7 +42,7 @@ public class ConstantPoolTest {
     }
 
     @Test
-    @SuppressWarnings("RedundantStringConstructorCall")
+    //@SuppressWarnings("RedundantStringConstructorCall")
     public void testUniqueness() {
         TestConstant a = pool.valueOf(new String("Leroy"));
         TestConstant b = pool.valueOf(new String("Leroy"));

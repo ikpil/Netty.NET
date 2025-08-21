@@ -30,7 +30,7 @@ public class DefaultPromiseTest {
         }
     }
 
-    @SuppressWarnings("InfiniteRecursion")
+    //@SuppressWarnings("InfiniteRecursion")
     private static void findStackOverflowDepth() {
         ++stackOverflowDepth;
         findStackOverflowDepth();

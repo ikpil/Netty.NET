@@ -16,7 +16,7 @@
 
 namespace Netty.Common.Tests;
 
-@SuppressWarnings("deprecation")
+//@SuppressWarnings("deprecation")
 public class DomainNameMappingTest {
 
     // Deprecated API

@@ -70,7 +70,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
                                                                long maxActive) {
         if (obsoleteCustomClassConstructor != null) {
             try {
-                @SuppressWarnings("unchecked")
+                //@SuppressWarnings("unchecked")
                 ResourceLeakDetector<T> leakDetector =
                         (ResourceLeakDetector<T>) obsoleteCustomClassConstructor.newInstance(
                                 resource, samplingInterval, maxActive);
@@ -93,7 +93,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
     public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval) {
         if (customClassConstructor != null) {
             try {
-                @SuppressWarnings("unchecked")
+                //@SuppressWarnings("unchecked")
                 ResourceLeakDetector<T> leakDetector =
                         (ResourceLeakDetector<T>) customClassConstructor.newInstance(resource, samplingInterval);
                 logger.debug("Loaded custom ResourceLeakDetector: {}",

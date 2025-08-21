@@ -12,7 +12,7 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
     private static readonly AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater = (AtomicReferenceFieldUpdater)
         AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultResourceLeak), typeof(TraceRecord), "head");
 
-    @SuppressWarnings("unchecked") // generics and updaters do not mix.
+    //@SuppressWarnings("unchecked") // generics and updaters do not mix.
     private static readonly AtomicIntegerFieldUpdater<DefaultResourceLeak<?>> droppedRecordsUpdater =
 
     (AtomicIntegerFieldUpdater)

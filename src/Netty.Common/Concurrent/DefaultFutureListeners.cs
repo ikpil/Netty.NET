@@ -23,7 +23,7 @@ final class DefaultFutureListeners {
     private int size;
     private int progressiveSize; // the number of progressive listeners
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     DefaultFutureListeners(
             IGenericFutureListener<? extends Future<?>> first, IGenericFutureListener<? extends Future<?>> second) {
         listeners = new IGenericFutureListener<>[2];

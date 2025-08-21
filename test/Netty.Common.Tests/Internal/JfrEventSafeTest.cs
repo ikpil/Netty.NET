@@ -15,7 +15,7 @@
  */
 namespace Netty.Common.Tests.Internal;
 
-@SuppressWarnings("Since15")
+//@SuppressWarnings("Since15")
 public class JfrEventSafeTest {
     @Test
     public void test() {

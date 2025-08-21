@@ -84,13 +84,13 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
         return group.terminationAsync();
     }
 
-    @SuppressWarnings("deprecation")
+    //@SuppressWarnings("deprecation")
     @Override
     public void shutdown() {
         group.shutdown();
     }
 
-    @SuppressWarnings("deprecation")
+    //@SuppressWarnings("deprecation")
     @Override
     public List<Runnable> shutdownNow() {
         return group.shutdownNow();

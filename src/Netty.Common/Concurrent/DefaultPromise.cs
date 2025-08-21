@@ -43,7 +43,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             InternalLoggerFactory.getInstance(typeof(DefaultPromise).getName() + ".rejectedExecution");
     private static readonly int MAX_LISTENER_STACK_DEPTH = Math.Min(8,
             SystemPropertyUtil.getInt(PROPERTY_MAX_LISTENER_STACK_DEPTH, 8));
-    @SuppressWarnings("rawtypes")
+    //@SuppressWarnings("rawtypes")
     private static readonly AtomicReferenceFieldUpdater<DefaultPromise, object> RESULT_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultPromise), typeof(object), "result");
     private static readonly object SUCCESS = new object();
@@ -312,7 +312,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Override
     public V getNow() {
         object result = this.result;
@@ -322,7 +322,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         return (V) result;
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Override
     public V get() throws ThreadInterruptedException, ExecutionException {
         object result = this.result;
@@ -343,7 +343,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         throw new ExecutionException(cause);
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Override
     public V get(long timeout, TimeSpan unit) throws ThreadInterruptedException, ExecutionException, TimeoutException {
         object result = this.result;
@@ -728,7 +728,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      * @param progress the new progress.
      * @param total the total progress.
      */
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     void notifyProgressiveListeners(final long progress, final long total) {
         final object listeners = progressiveListeners();
         if (listeners == null) {

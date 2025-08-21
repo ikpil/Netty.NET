@@ -50,14 +50,14 @@ public class PlatformDependent0 {
     private static readonly bool IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = explicitTryReflectionSetAccessible0();
 
     // Package-private for testing.
-    static readonly MethodHandle IS_VIRTUAL_THREAD_METHOD_HANDLE = getIsVirtualThreadMethodHandle();
+    public static readonly MethodHandle IS_VIRTUAL_THREAD_METHOD_HANDLE = getIsVirtualThreadMethodHandle();
 
-    static readonly Unsafe UNSAFE;
+    public static readonly Unsafe UNSAFE;
 
     // constants borrowed from murmur3
-    static readonly int HASH_CODE_ASCII_SEED = 0xc2b2ae35;
-    static readonly int HASH_CODE_C1 = 0xcc9e2d51;
-    static readonly int HASH_CODE_C2 = 0x1b873593;
+    public static readonly int HASH_CODE_ASCII_SEED = 0xc2b2ae35;
+    public static readonly int HASH_CODE_C1 = 0xcc9e2d51;
+    public static readonly int HASH_CODE_C2 = 0x1b873593;
 
     /**
      * Limits the number of bytes to copy per {@link Unsafe#copyMemory(long, long, long)} to allow safepoint polling
@@ -69,7 +69,8 @@ public class PlatformDependent0 {
 
     private static readonly long BITS_MAX_DIRECT_MEMORY;
 
-    static {
+    static PlatformDependent0() 
+    {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
         final ByteBuffer direct;
         Field addressField = null;
@@ -338,7 +339,7 @@ public class PlatformDependent0 {
                                 Field maxMemoryField = bitsClass.getDeclaredField(fieldName);
                                 if (maxMemoryField.getType() == typeof(long)) {
                                     long offset = UNSAFE.staticFieldOffset(maxMemoryField);
-                                    object object = UNSAFE.staticFieldBase(maxMemoryField);
+                                    object obj = UNSAFE.staticFieldBase(maxMemoryField);
                                     maybeMaxMemory.lazySet(UNSAFE.getLong(object, offset));
                                 }
                             } catch (Exception ignore) {
@@ -349,7 +350,7 @@ public class PlatformDependent0 {
                                 Field unalignedField = bitsClass.getDeclaredField(fieldName);
                                 if (unalignedField.getType() == typeof(bool)) {
                                     long offset = UNSAFE.staticFieldOffset(unalignedField);
-                                    object object = UNSAFE.staticFieldBase(unalignedField);
+                                    object obj = UNSAFE.staticFieldBase(unalignedField);
                                     return UNSAFE.getBoolean(object, offset);
                                 }
                                 // There is something unexpected stored in the field,
@@ -511,7 +512,7 @@ public class PlatformDependent0 {
         return !RUNNING_IN_NATIVE_IMAGE;
     }
 
-    static bool isExplicitNoUnsafe() {
+    public static bool isExplicitNoUnsafe() {
         return EXPLICIT_NO_UNSAFE_CAUSE != null;
     }
 
@@ -558,34 +559,34 @@ public class PlatformDependent0 {
         return null;
     }
 
-    static bool isUnaligned() {
+    public static bool isUnaligned() {
         return UNALIGNED;
     }
 
     /**
      * Any value >= 0 should be considered as a valid max direct memory value.
      */
-    static long bitsMaxDirectMemory() {
+    public static long bitsMaxDirectMemory() {
         return BITS_MAX_DIRECT_MEMORY;
     }
 
-    static bool hasUnsafe() {
+    public static bool hasUnsafe() {
         return UNSAFE != null;
     }
 
-    static Exception getUnsafeUnavailabilityCause() {
+    public static Exception getUnsafeUnavailabilityCause() {
         return UNSAFE_UNAVAILABILITY_CAUSE;
     }
 
-    static bool unalignedAccess() {
+    public static bool unalignedAccess() {
         return UNALIGNED;
     }
 
-    static void throwException(Exception cause) {
+    public static void throwException(Exception cause) {
         throwException0(cause);
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     private static <E extends Exception> void throwException0(Exception t) {
         throw (E) t;
     }
@@ -594,22 +595,22 @@ public class PlatformDependent0 {
         return DIRECT_BUFFER_CONSTRUCTOR != null;
     }
 
-    static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity) {
+    public static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity) {
         return newDirectBuffer(UNSAFE.reallocateMemory(directBufferAddress(buffer), capacity), capacity);
     }
 
-    static ByteBuffer allocateDirectNoCleaner(int capacity) {
+    public static ByteBuffer allocateDirectNoCleaner(int capacity) {
         // Calling malloc with capacity of 0 may return a null ptr or a memory address that can be used.
         // Just use 1 to make it safe to use in all cases:
         // See: https://pubs.opengroup.org/onlinepubs/009695399/functions/malloc.html
         return newDirectBuffer(UNSAFE.allocateMemory(Math.Max(1, capacity)), capacity);
     }
 
-    static bool hasAlignSliceMethod() {
+    public static bool hasAlignSliceMethod() {
         return ALIGN_SLICE != null;
     }
 
-    static ByteBuffer alignSlice(ByteBuffer buffer, int alignment) {
+    public static ByteBuffer alignSlice(ByteBuffer buffer, int alignment) {
         try {
             return (ByteBuffer) ALIGN_SLICE.invokeExact(buffer, alignment);
         } catch (Exception e) {
@@ -618,11 +619,11 @@ public class PlatformDependent0 {
         }
     }
 
-    static bool hasAllocateArrayMethod() {
+    public static bool hasAllocateArrayMethod() {
         return ALLOCATE_ARRAY_METHOD != null;
     }
 
-    static byte[] allocateUninitializedArray(int size) {
+    public static byte[] allocateUninitializedArray(int size) {
         try {
             return (byte[]) (object) ALLOCATE_ARRAY_METHOD.invokeExact(typeof(byte), size);
         } catch (Exception e) {
@@ -631,7 +632,7 @@ public class PlatformDependent0 {
         }
     }
 
-    static ByteBuffer newDirectBuffer(long address, int capacity) {
+    public static ByteBuffer newDirectBuffer(long address, int capacity) {
         ObjectUtil.checkPositiveOrZero(capacity, "capacity");
 
         try {
@@ -651,80 +652,80 @@ public class PlatformDependent0 {
         }
     }
 
-    static long directBufferAddress(ByteBuffer buffer) {
+    public static long directBufferAddress(ByteBuffer buffer) {
         return getLong(buffer, ADDRESS_FIELD_OFFSET);
     }
 
-    static long byteArrayBaseOffset() {
+    public static long byteArrayBaseOffset() {
         return BYTE_ARRAY_BASE_OFFSET;
     }
 
-    static object getObject(object object, long fieldOffset) {
+    public static object getObject(object obj, long fieldOffset) {
         return UNSAFE.getObject(object, fieldOffset);
     }
 
-    static int getInt(object object, long fieldOffset) {
-        return UNSAFE.getInt(object, fieldOffset);
+    public static int getInt(object obj, long fieldOffset) {
+        return UNSAFE.getInt(obj, fieldOffset);
     }
 
-    static void safeConstructPutInt(object object, long fieldOffset, int value) {
-        UNSAFE.putInt(object, fieldOffset, value);
+    public static void safeConstructPutInt(object obj, long fieldOffset, int value) {
+        UNSAFE.putInt(obj, fieldOffset, value);
         UNSAFE.storeFence();
     }
 
-    private static long getLong(object object, long fieldOffset) {
-        return UNSAFE.getLong(object, fieldOffset);
+    private static long getLong(object obj, long fieldOffset) {
+        return UNSAFE.getLong(obj, fieldOffset);
     }
 
-    static long objectFieldOffset(Field field) {
+    public static long objectFieldOffset(Field field) {
         return UNSAFE.objectFieldOffset(field);
     }
 
-    static byte getByte(long address) {
+    public static byte getByte(long address) {
         return UNSAFE.getByte(address);
     }
 
-    static short getShort(long address) {
+    public static short getShort(long address) {
         return UNSAFE.getShort(address);
     }
 
-    static int getInt(long address) {
+    public static int getInt(long address) {
         return UNSAFE.getInt(address);
     }
 
-    static long getLong(long address) {
+    public static long getLong(long address) {
         return UNSAFE.getLong(address);
     }
 
-    static byte getByte(byte[] data, int index) {
+    public static byte getByte(byte[] data, int index) {
         return UNSAFE.getByte(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    static byte getByte(byte[] data, long index) {
+    public static byte getByte(byte[] data, long index) {
         return UNSAFE.getByte(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    static short getShort(byte[] data, int index) {
+    public static short getShort(byte[] data, int index) {
         return UNSAFE.getShort(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    static int getInt(byte[] data, int index) {
+    public static int getInt(byte[] data, int index) {
         return UNSAFE.getInt(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    static int getInt(int[] data, long index) {
+    public static int getInt(int[] data, long index) {
         return UNSAFE.getInt(data, INT_ARRAY_BASE_OFFSET + INT_ARRAY_INDEX_SCALE * index);
     }
 
-    static int getIntVolatile(long address) {
+    public static int getIntVolatile(long address) {
         return UNSAFE.getIntVolatile(null, address);
     }
 
-    static void putIntOrdered(long address, int newValue) {
+    public static void putIntOrdered(long address, int newValue) {
         UNSAFE.putOrderedInt(null, address, newValue);
     }
 
-    static long getLong(byte[] data, int index) {
+    public static long getLong(byte[] data, int index) {
         return UNSAFE.getLong(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
@@ -753,31 +754,31 @@ public class PlatformDependent0 {
         UNSAFE.putLong(address, value);
     }
 
-    static void putByte(byte[] data, int index, byte value) {
+    public static void putByte(byte[] data, int index, byte value) {
         UNSAFE.putByte(data, BYTE_ARRAY_BASE_OFFSET + index, value);
     }
 
-    static void putByte(object data, long offset, byte value) {
+    public static void putByte(object data, long offset, byte value) {
         UNSAFE.putByte(data, offset, value);
     }
 
-    static void putShort(byte[] data, int index, short value) {
+    public static void putShort(byte[] data, int index, short value) {
         UNSAFE.putShort(data, BYTE_ARRAY_BASE_OFFSET + index, value);
     }
 
-    static void putInt(byte[] data, int index, int value) {
+    public static void putInt(byte[] data, int index, int value) {
         UNSAFE.putInt(data, BYTE_ARRAY_BASE_OFFSET + index, value);
     }
 
-    static void putLong(byte[] data, int index, long value) {
+    public static void putLong(byte[] data, int index, long value) {
         UNSAFE.putLong(data, BYTE_ARRAY_BASE_OFFSET + index, value);
     }
 
-    static void putObject(object o, long offset, object x) {
+    public static void putObject(object o, long offset, object x) {
         UNSAFE.putObject(o, offset, x);
     }
 
-    static void copyMemory(long srcAddr, long dstAddr, long length) {
+    public static void copyMemory(long srcAddr, long dstAddr, long length) {
         // Manual safe-point polling is only needed prior Java9:
         // See https://bugs.openjdk.java.net/browse/JDK-8149596
         if (javaVersion() <= 8) {
@@ -797,7 +798,7 @@ public class PlatformDependent0 {
         }
     }
 
-    static void copyMemory(object src, long srcOffset, object dst, long dstOffset, long length) {
+    public static void copyMemory(object src, long srcOffset, object dst, long dstOffset, long length) {
         // Manual safe-point polling is only needed prior Java9:
         // See https://bugs.openjdk.java.net/browse/JDK-8149596
         if (javaVersion() <= 8) {
@@ -818,15 +819,15 @@ public class PlatformDependent0 {
         }
     }
 
-    static void setMemory(long address, long bytes, byte value) {
+    public static void setMemory(long address, long bytes, byte value) {
         UNSAFE.setMemory(address, bytes, value);
     }
 
-    static void setMemory(object o, long offset, long bytes, byte value) {
+    public static void setMemory(object o, long offset, long bytes, byte value) {
         UNSAFE.setMemory(o, offset, bytes, value);
     }
 
-    static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    public static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         int remainingBytes = length & 7;
         final long baseOffset1 = BYTE_ARRAY_BASE_OFFSET + startPos1;
         final long diff = startPos2 - startPos1;
@@ -855,7 +856,7 @@ public class PlatformDependent0 {
                 UNSAFE.getByte(bytes1, baseOffset1) == UNSAFE.getByte(bytes2, baseOffset2);
     }
 
-    static int equalsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    public static int equalsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         long result = 0;
         long remainingBytes = length & 7;
         final long baseOffset1 = BYTE_ARRAY_BASE_OFFSET + startPos1;
@@ -880,7 +881,7 @@ public class PlatformDependent0 {
         return ConstantTimeUtils.equalsConstantTime(result, 0);
     }
 
-    static bool isZero(byte[] bytes, int startPos, int length) {
+    public static bool isZero(byte[] bytes, int startPos, int length) {
         if (length <= 0) {
             return true;
         }
@@ -906,7 +907,7 @@ public class PlatformDependent0 {
         return bytes[startPos] == 0;
     }
 
-    static int hashCodeAscii(byte[] bytes, int startPos, int length) {
+    public static int hashCodeAscii(byte[] bytes, int startPos, int length) {
         int hash = HASH_CODE_ASCII_SEED;
         long baseOffset = BYTE_ARRAY_BASE_OFFSET + startPos;
         final int remainingBytes = length & 7;
@@ -934,7 +935,7 @@ public class PlatformDependent0 {
         return hash;
     }
 
-    static int hashCodeAsciiCompute(long value, int hash) {
+    public static int hashCodeAsciiCompute(long value, int hash) {
         // masking with 0x1f reduces the number of overall bits that impact the hash code but makes the hash
         // code the same regardless of character case (upper case or lower case hash is the same).
         return hash * HASH_CODE_C1 +
@@ -944,19 +945,19 @@ public class PlatformDependent0 {
                 (int) ((value & 0x1f1f1f1f00000000L) >>> 32);
     }
 
-    static int hashCodeAsciiSanitize(int value) {
+    public static int hashCodeAsciiSanitize(int value) {
         return value & 0x1f1f1f1f;
     }
 
-    static int hashCodeAsciiSanitize(short value) {
+    public static int hashCodeAsciiSanitize(short value) {
         return value & 0x1f1f;
     }
 
-    static int hashCodeAsciiSanitize(byte value) {
+    public static int hashCodeAsciiSanitize(byte value) {
         return value & 0x1f;
     }
 
-    static ClassLoader getClassLoader(Type clazz) {
+    public static ClassLoader getClassLoader(Type clazz) {
         if (System.getSecurityManager() == null) {
             return clazz.getClassLoader();
         } else {
@@ -969,7 +970,7 @@ public class PlatformDependent0 {
         }
     }
 
-    static ClassLoader getContextClassLoader() {
+    public static ClassLoader getContextClassLoader() {
         if (System.getSecurityManager() == null) {
             return Thread.CurrentThread.getContextClassLoader();
         } else {
@@ -982,7 +983,7 @@ public class PlatformDependent0 {
         }
     }
 
-    static ClassLoader getSystemClassLoader() {
+    public static ClassLoader getSystemClassLoader() {
         if (System.getSecurityManager() == null) {
             return ClassLoader.getSystemClassLoader();
         } else {
@@ -995,23 +996,23 @@ public class PlatformDependent0 {
         }
     }
 
-    static int addressSize() {
+    public static int addressSize() {
         return UNSAFE.addressSize();
     }
 
-    static long allocateMemory(long size) {
+    public static long allocateMemory(long size) {
         return UNSAFE.allocateMemory(size);
     }
 
-    static void freeMemory(long address) {
+    public static void freeMemory(long address) {
         UNSAFE.freeMemory(address);
     }
 
-    static long reallocateMemory(long address, long newSize) {
+    public static long reallocateMemory(long address, long newSize) {
         return UNSAFE.reallocateMemory(address, newSize);
     }
 
-    static bool isAndroid() {
+    public static bool isAndroid() {
         return IS_ANDROID;
     }
 
@@ -1041,7 +1042,7 @@ public class PlatformDependent0 {
         return IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE;
     }
 
-    static int javaVersion() {
+    public static int javaVersion() {
         return JAVA_VERSION;
     }
 
@@ -1060,12 +1061,12 @@ public class PlatformDependent0 {
     }
 
     // Package-private for testing only
-    static int majorVersionFromJavaSpecificationVersion() {
+    public static int majorVersionFromJavaSpecificationVersion() {
         return majorVersion(SystemPropertyUtil.get("java.specification.version", "1.6"));
     }
 
     // Package-private for testing only
-    static int majorVersion(final string javaSpecVersion) {
+    public static int majorVersion(final string javaSpecVersion) {
         final string[] components = javaSpecVersion.split("\\.");
         final int[] version = new int[components.length];
         for (int i = 0; i < components.length; i++) {

@@ -91,7 +91,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         });
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Test
     public void testAddAllAfterFinish() {
         combiner.finish(p1);
@@ -103,7 +103,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         });
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Test
     public void testFinishCalledTwiceThrows() {
         combiner.finish(p1);
@@ -191,7 +191,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
             // expected
         }
 
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         Promise<Void> promise = (Promise<Void>) mock(Promise.class);
         try {
             combiner.finish(promise);
@@ -229,7 +229,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         mockListener(p, consumer);
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     private static void mockListener(final Promise<Void> p, final GenericFutureListenerConsumer consumer) {
         doAnswer(new Answer<Promise<Void>>() {
             @SuppressWarnings({ "unchecked", "raw-types" })

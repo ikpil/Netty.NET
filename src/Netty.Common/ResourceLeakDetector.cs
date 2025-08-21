@@ -356,7 +356,7 @@ public class ResourceLeakDetector<T>
                 "To enable advanced leak reporting, " +
                 "specify the JVM option '-D{}={}' or call {}.setLevel() " +
                 "See https://netty.io/wiki/reference-counted-objects.html for more information.",
-                resourceType, PROP_LEVEL, ResourceLeakDetectorLevel.ADVANCED.name().toLowerCase(), simpleClassName(this));
+                resourceType, PROP_LEVEL, ResourceLeakDetectorLevel.ADVANCED.name().ToLower(), simpleClassName(this));
     }
 
     /**

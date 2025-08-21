@@ -38,7 +38,7 @@ public sealed class ReferenceCountUtil
      * Try to call {@link IReferenceCounted#retain()} if the specified message implements {@link IReferenceCounted}.
      * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
      */
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     public static <T> T retain(T msg) {
         if (msg instanceof IReferenceCounted) {
             return (T) ((IReferenceCounted) msg).retain();
@@ -50,7 +50,7 @@ public sealed class ReferenceCountUtil
      * Try to call {@link IReferenceCounted#retain(int)} if the specified message implements {@link IReferenceCounted}.
      * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
      */
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     public static <T> T retain(T msg, int increment) {
         ObjectUtil.checkPositive(increment, "increment");
         if (msg instanceof IReferenceCounted) {
@@ -63,7 +63,7 @@ public sealed class ReferenceCountUtil
      * Tries to call {@link IReferenceCounted#touch()} if the specified message implements {@link IReferenceCounted}.
      * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
      */
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     public static <T> T touch(T msg) {
         if (msg instanceof IReferenceCounted) {
             return (T) ((IReferenceCounted) msg).touch();
@@ -76,7 +76,7 @@ public sealed class ReferenceCountUtil
      * {@link IReferenceCounted}.  If the specified message doesn't implement {@link IReferenceCounted},
      * this method does nothing.
      */
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     public static <T> T touch(T msg, object hint) {
         if (msg instanceof IReferenceCounted) {
             return (T) ((IReferenceCounted) msg).touch(hint);

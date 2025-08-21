@@ -28,7 +28,7 @@ namespace Netty.Common.Tests.Internal.Logging
         protected InternalLogger logger;
         protected final Map<String, Object> result = new HashMap<String, Object>();
 
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         protected <V> V getResult(String key) {
             return (V) result.get(key);
         }
@@ -55,9 +55,9 @@ namespace Netty.Common.Tests.Internal.Logging
             Exception ex = new Exception("a test Exception from Junit");
 
             Class<InternalLogger> clazz = InternalLogger.class;
-            String levelName = level.name(), logMethod = levelName.toLowerCase();
+            String levelName = level.name(), logMethod = levelName.ToLower();
             Method isXXEnabled = clazz
-            .getMethod("is" + levelName.charAt(0) + levelName.substring(1).toLowerCase() + "Enabled");
+            .getMethod("is" + levelName.charAt(0) + levelName.substring(1).ToLower() + "Enabled");
 
             // when level log is disabled
             setLevelEnable(level, false);

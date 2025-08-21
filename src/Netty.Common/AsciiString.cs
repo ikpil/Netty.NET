@@ -924,8 +924,8 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * @return {@code true} if the specified string is a prefix of this string, {@code false} otherwise
      * @throws NullPointerException if {@code prefix} is {@code null}.
      */
-    public bool startsWith(ICharSequence prefix) {
-        return startsWith(prefix, 0);
+    public bool StartsWith(ICharSequence prefix) {
+        return StartsWith(prefix, 0);
     }
 
     /**
@@ -938,7 +938,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      *         otherwise.
      * @throws NullPointerException if {@code prefix} is {@code null}.
      */
-    public bool startsWith(ICharSequence prefix, int start) {
+    public bool StartsWith(ICharSequence prefix, int start) {
         return regionMatches(start, prefix, 0, prefix.length());
     }
 
@@ -1168,7 +1168,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
                             + length + ") <= srcLen(" + length() + ')');
         }
 
-        @SuppressWarnings("deprecation")
+        //@SuppressWarnings("deprecation")
         final string str = new string(value, 0, start + offset, length);
         return str;
     }

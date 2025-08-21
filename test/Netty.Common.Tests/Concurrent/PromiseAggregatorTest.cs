@@ -20,7 +20,7 @@ public class PromiseAggregatorTest {
     @Test
     public void testNullAggregatePromise() {
         assertThrows(NullPointerException.class, new Executable() {
-            @SuppressWarnings("deprecation")
+            //@SuppressWarnings("deprecation")
             @Override
             public void execute() {
                 new PromiseAggregator<Void, Future<Void>>(null);
@@ -30,9 +30,9 @@ public class PromiseAggregatorTest {
 
     @Test
     public void testAddNullFuture() {
-        @SuppressWarnings("unchecked")
+        //@SuppressWarnings("unchecked")
         Promise<Void> p = mock(Promise.class);
-        @SuppressWarnings("deprecation")
+        //@SuppressWarnings("deprecation")
         final PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
         assertThrows(NullPointerException.class, new Executable() {
@@ -43,11 +43,11 @@ public class PromiseAggregatorTest {
         });
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Test
     public void testSuccessfulNoPending() throws Exception {
         Promise<Void> p = mock(Promise.class);
-        @SuppressWarnings("deprecation")
+        //@SuppressWarnings("deprecation")
         PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
 
@@ -60,7 +60,7 @@ public class PromiseAggregatorTest {
         verify(p).setSuccess(null);
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Test
     public void testSuccessfulPending() throws Exception {
         Promise<Void> p = mock(Promise.class);
@@ -86,7 +86,7 @@ public class PromiseAggregatorTest {
         verify(p).setSuccess(null);
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Test
     public void testFailedFutureFailPending() throws Exception {
         Promise<Void> p = mock(Promise.class);
@@ -113,7 +113,7 @@ public class PromiseAggregatorTest {
         verify(p2).setFailure(t);
     }
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Test
     public void testFailedFutureNoFailPending() throws Exception {
         Promise<Void> p = mock(Promise.class);

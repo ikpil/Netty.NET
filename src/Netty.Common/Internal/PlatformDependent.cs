@@ -24,6 +24,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Netty.NET.Common;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -59,9 +60,9 @@ public class PlatformDependent
     private static readonly bool EXPLICIT_NO_PREFER_DIRECT;
     private static readonly long MAX_DIRECT_MEMORY = estimateMaxDirectMemory();
 
-    private static readonly int MPSC_CHUNK_SIZE =  1024;
-    private static readonly int MIN_MAX_MPSC_CAPACITY =  MPSC_CHUNK_SIZE * 2;
-    private static readonly int MAX_ALLOWED_MPSC_CAPACITY = Pow2.MAX_POW2;
+    public static readonly int MPSC_CHUNK_SIZE =  1024;
+    public static readonly int MIN_MAX_MPSC_CAPACITY =  MPSC_CHUNK_SIZE * 2;
+    public static readonly int MAX_ALLOWED_MPSC_CAPACITY = Pow2.MAX_POW2;
 
     private static readonly long BYTE_ARRAY_BASE_OFFSET = byteArrayBaseOffset0();
 
@@ -200,9 +201,13 @@ public class PlatformDependent
             logger.debug("-Dio.netty.jfr.enabled: {}", JFR);
         }
     }
+    
+    private PlatformDependent() {
+        // only static method supported
+    }
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
-    static void addFilesystemOsClassifiers(final ISet<string> availableClassifiers) {
+    public static void addFilesystemOsClassifiers(ISet<string> availableClassifiers) {
         if (processOsReleaseFile("/etc/os-release", availableClassifiers)) {
             return;
         }
@@ -218,11 +223,11 @@ public class PlatformDependent
                             new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8))) {
                         string line;
                         while ((line = reader.readLine()) != null) {
-                            if (line.startsWith(LINUX_ID_PREFIX)) {
+                            if (line.StartsWith(LINUX_ID_PREFIX)) {
                                 string id = normalizeOsReleaseVariableValue(
                                         line.substring(LINUX_ID_PREFIX.length()));
                                 addClassifier(availableClassifiers, id);
-                            } else if (line.startsWith(LINUX_ID_LIKE_PREFIX)) {
+                            } else if (line.StartsWith(LINUX_ID_LIKE_PREFIX)) {
                                 line = normalizeOsReleaseVariableValue(
                                         line.substring(LINUX_ID_LIKE_PREFIX.length()));
                                 addClassifier(availableClassifiers, line.split(" "));
@@ -257,7 +262,7 @@ public class PlatformDependent
             // let users omit classifiers with just -Dio.netty.osClassifiers
             return true;
         }
-        string[] classifiers = osClassifiers.split(",");
+        string[] classifiers = osClassifiers.Split(",");
         if (classifiers.length == 0) {
             throw new ArgumentException(
                     osClassifiersPropertyName + " property is not empty, but contains no classifiers: "
@@ -458,8 +463,8 @@ public class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(int initialCapacity) {
-        return new ConcurrentDictionary<>(initialCapacity);
+    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>(int initialCapacity) {
+        return new ConcurrentDictionary<K, V>();
     }
 
     /**
@@ -467,8 +472,8 @@ public class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(int initialCapacity, float loadFactor) {
-        return new ConcurrentDictionary<>(initialCapacity, loadFactor);
+    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>(int initialCapacity, float loadFactor) {
+        return new ConcurrentDictionary<K, V>();
     }
 
     /**
@@ -476,9 +481,10 @@ public class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(
-            int initialCapacity, float loadFactor, int concurrencyLevel) {
-        return new ConcurrentDictionary<>(initialCapacity, loadFactor, concurrencyLevel);
+    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>(
+            int initialCapacity, float loadFactor, int concurrencyLevel)
+    {
+        return new ConcurrentDictionary<K, V>();
     }
 
     /**
@@ -486,8 +492,8 @@ public class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static <K, V> ConcurrentDictionary<K, V> newConcurrentHashMap(IDictionary<? extends K, ? extends V> map) {
-        return new ConcurrentDictionary<>(map);
+    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>(IDictionary<K, V> map) {
+        return new ConcurrentDictionary<K, V>(map);
     }
 
     /**
@@ -524,16 +530,16 @@ public class PlatformDependent
                 "sun.misc.Unsafe or java.nio.DirectByteBuffer.<init>(long, int) not available");
     }
 
-    public static object getObject(object object, long fieldOffset) {
-        return PlatformDependent0.getObject(object, fieldOffset);
+    public static object getObject(object obj, long fieldOffset) {
+        return PlatformDependent0.getObject(obj, fieldOffset);
     }
 
-    public static int getInt(object object, long fieldOffset) {
-        return PlatformDependent0.getInt(object, fieldOffset);
+    public static int getInt(object obj, long fieldOffset) {
+        return PlatformDependent0.getInt(obj, fieldOffset);
     }
 
-    static void safeConstructPutInt(object object, long fieldOffset, int value) {
-        PlatformDependent0.safeConstructPutInt(object, fieldOffset, value);
+    static void safeConstructPutInt(object obj, long fieldOffset, int value) {
+        PlatformDependent0.safeConstructPutInt(obj, fieldOffset, value);
     }
 
     public static void putShortOrdered(long adddress, short newValue) {
@@ -1004,59 +1010,13 @@ public class PlatformDependent
         return hash;
     }
 
-    private static readonly class Mpsc {
-        private static readonly bool USE_MPSC_CHUNKED_ARRAY_QUEUE;
-
-        static {
-            object unsafe = null;
-            if (hasUnsafe()) {
-                // jctools goes through its own process of initializing unsafe; of
-                // course, this requires permissions which might not be granted to calling code, so we
-                // must mark this block as privileged too
-                unsafe = AccessController.doPrivileged(new PrivilegedAction<object>() {
-                    @Override
-                    public object run() {
-                        // force JCTools to initialize unsafe
-                        return UnsafeAccess.UNSAFE;
-                    }
-                });
-            }
-
-            if (unsafe == null) {
-                logger.debug("org.jctools-core.MpscChunkedArrayQueue: unavailable");
-                USE_MPSC_CHUNKED_ARRAY_QUEUE = false;
-            } else {
-                logger.debug("org.jctools-core.MpscChunkedArrayQueue: available");
-                USE_MPSC_CHUNKED_ARRAY_QUEUE = true;
-            }
-        }
-
-        static Queue<T> newMpscQueue<T>(int maxCapacity) {
-            // Calculate the max capacity which can not be bigger than MAX_ALLOWED_MPSC_CAPACITY.
-            // This is forced by the MpscChunkedArrayQueue implementation as will try to round it
-            // up to the next power of two and so will overflow otherwise.
-            int capacity = Math.Max(Math.Min(maxCapacity, MAX_ALLOWED_MPSC_CAPACITY), MIN_MAX_MPSC_CAPACITY);
-            return newChunkedMpscQueue(MPSC_CHUNK_SIZE, capacity);
-        }
-
-        static Queue<T> newChunkedMpscQueue<T>(final int chunkSize, final int capacity) {
-            return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscChunkedArrayQueue<T>(chunkSize, capacity)
-                    : new MpscChunkedAtomicArrayQueue<T>(chunkSize, capacity);
-        }
-
-        static Queue<T> newMpscQueue<T>() 
-        {
-            return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscUnboundedArrayQueue<T>(MPSC_CHUNK_SIZE)
-                                                : new MpscUnboundedAtomicArrayQueue<T>(MPSC_CHUNK_SIZE);
-        }
-    }
 
     /**
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!).
      * @return A MPSC queue which may be unbounded.
      */
-    public static Queue<T> newMpscQueue<T>() {
+    public static IQueue<T> newMpscQueue<T>() {
         return Mpsc.newMpscQueue<T>();
     }
 
@@ -1064,7 +1024,7 @@ public class PlatformDependent
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!).
      */
-    public static Queue<T> newMpscQueue<T>(int maxCapacity) {
+    public static IQueue<T> newMpscQueue<T>(int maxCapacity) {
         return Mpsc.newMpscQueue<T>(maxCapacity);
     }
 
@@ -1073,7 +1033,7 @@ public class PlatformDependent
      * consumer (one thread!).
      * The queue will grow and shrink its capacity in units of the given chunk size.
      */
-    public static Queue<T> newMpscQueue<T>(int chunkSize, int maxCapacity) {
+    public static IQueue<T> newMpscQueue<T>(int chunkSize, int maxCapacity) {
         return Mpsc.newChunkedMpscQueue<T>(chunkSize, maxCapacity);
     }
 
@@ -1081,7 +1041,7 @@ public class PlatformDependent
      * Create a new {@link Queue} which is safe to use for single producer (one thread!) and a single
      * consumer (one thread!).
      */
-    public static Queue<T> newSpscQueue<T>() {
+    public static IQueue<T> newSpscQueue<T>() {
         return hasUnsafe() ? new SpscLinkedQueue<T>() : new SpscLinkedAtomicQueue<T>();
     }
 
@@ -1089,7 +1049,7 @@ public class PlatformDependent
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!) with the given fixes {@code capacity}.
      */
-    public static Queue<T> newFixedMpscQueue<T>(int capacity) {
+    public static IQueue<T> newFixedMpscQueue<T>(int capacity) {
         return hasUnsafe() ? new MpscArrayQueue<T>(capacity) : new MpscAtomicArrayQueue<T>(capacity);
     }
 
@@ -1098,7 +1058,7 @@ public class PlatformDependent
      * consumer (one thread!) with the given fixes {@code capacity}.<br>
      * This should be preferred to {@link #newFixedMpscQueue(int)} when the queue is not to be heavily contended.
      */
-    public static Queue<T> newFixedMpscUnpaddedQueue<T>(int capacity) {
+    public static IQueue<T> newFixedMpscUnpaddedQueue<T>(int capacity) {
         return hasUnsafe() ? new MpscUnpaddedArrayQueue<T>(capacity) : new MpscAtomicUnpaddedArrayQueue<T>(capacity);
     }
 
@@ -1106,7 +1066,7 @@ public class PlatformDependent
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and multiple
      * consumers with the given fixes {@code capacity}.
      */
-    public static Queue<T> newFixedMpmcQueue<T>(int capacity) {
+    public static IQueue<T> newFixedMpmcQueue<T>(int capacity) {
         return hasUnsafe() ? new MpmcArrayQueue<T>(capacity) : new MpmcAtomicArrayQueue<T>(capacity);
     }
 
@@ -1134,7 +1094,7 @@ public class PlatformDependent
     /**
      * Returns a new concurrent {@link Deque}.
      */
-    public static <C> Deque<C> newConcurrentDeque() {
+    public static Deque<C> newConcurrentDeque<C>() {
         return new ConcurrentLinkedDeque<C>();
     }
 
@@ -1147,8 +1107,9 @@ public class PlatformDependent
         return ThreadLocalRandom.current();
     }
 
-    private static bool isWindows0() {
-        bool windows = "windows".equals(NORMALIZED_OS);
+    private static bool isWindows0()
+    {
+        bool windows = "windows".EqualsIgnoreCase(NORMALIZED_OS);
         if (windows) {
             logger.debug("Platform: Windows");
         }
@@ -1156,7 +1117,7 @@ public class PlatformDependent
     }
 
     private static bool isOsx0() {
-        bool osx = "osx".equals(NORMALIZED_OS);
+        bool osx = "osx".EqualsIgnoreCase(NORMALIZED_OS);
         if (osx) {
             logger.debug("Platform: MacOS");
         }
@@ -1165,11 +1126,12 @@ public class PlatformDependent
 
     private static bool maybeSuperUser0() {
         string username = SystemPropertyUtil.get("user.name");
-        if (isWindows()) {
-            return "Administrator".equals(username);
+        if (isWindows())
+        {
+            return "Administrator" == username;
         }
         // Check for root and toor as some BSDs have a toor user that is basically the same as root.
-        return "root".equals(username) || "toor".equals(username);
+        return "root" == username || "toor" == username;
     }
 
     private static Exception unsafeUnavailabilityCause0() {
@@ -1208,8 +1170,8 @@ public class PlatformDependent
     }
 
     private static bool isJ9Jvm0() {
-        string vmName = SystemPropertyUtil.get("java.vm.name", "").toLowerCase();
-        return vmName.startsWith("ibm j9") || vmName.startsWith("eclipse openj9");
+        string vmName = SystemPropertyUtil.get("java.vm.name", "").ToLower();
+        return vmName.StartsWith("ibm j9") || vmName.StartsWith("eclipse openj9");
     }
 
     /**
@@ -1221,7 +1183,7 @@ public class PlatformDependent
 
     private static bool isIkvmDotNet0() {
         string vmName = SystemPropertyUtil.get("java.vm.name", "").toUpperCase(Locale.US);
-        return vmName.equals("IKVM.NET");
+        return vmName.Equals("IKVM.NET");
     }
 
     private static Pattern getMaxDirectMemorySizeArgPattern() {
@@ -1243,7 +1205,7 @@ public class PlatformDependent
      *
      * @return The estimated max direct memory, in bytes.
      */
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     public static long estimateMaxDirectMemory() {
         long maxDirectMemory = PlatformDependent0.bitsMaxDirectMemory();
         if (maxDirectMemory > 0) {
@@ -1321,13 +1283,13 @@ public class PlatformDependent
 
             // This shouldn't happen, but just in case ..
             if (isWindows()) {
-                f = toDirectory(System.getenv("TEMP"));
+                f = toDirectory(Environment.GetEnvironmentVariable("TEMP"));
                 if (f != null) {
                     logger.debug("-Dio.netty.tmpdir: {} (%TEMP%)", f);
                     return f;
                 }
-
-                string userprofile = System.getenv("USERPROFILE");
+                
+                string userprofile = Environment.GetEnvironmentVariable("USERPROFILE");
                 if (userprofile != null) {
                     f = toDirectory(userprofile + "\\AppData\\Local\\Temp");
                     if (f != null) {
@@ -1342,7 +1304,7 @@ public class PlatformDependent
                     }
                 }
             } else {
-                f = toDirectory(System.getenv("TMPDIR"));
+                f = toDirectory(Environment.GetEnvironmentVariable("TMPDIR"));
                 if (f != null) {
                     logger.debug("-Dio.netty.tmpdir: {} ($TMPDIR)", f);
                     return f;
@@ -1363,7 +1325,7 @@ public class PlatformDependent
         return f;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
+    //@SuppressWarnings("ResultOfMethodCallIgnored")
     private static File toDirectory(string path) {
         if (path == null) {
             return null;
@@ -1632,37 +1594,37 @@ public class PlatformDependent
 
     private static string normalizeOs(string value) {
         value = normalize(value);
-        if (value.startsWith("aix")) {
+        if (value.StartsWith("aix")) {
             return "aix";
         }
-        if (value.startsWith("hpux")) {
+        if (value.StartsWith("hpux")) {
             return "hpux";
         }
-        if (value.startsWith("os400")) {
+        if (value.StartsWith("os400")) {
             // Avoid the names such as os4000
             if (value.length() <= 5 || !Character.isDigit(value.charAt(5))) {
                 return "os400";
             }
         }
-        if (value.startsWith("linux")) {
+        if (value.StartsWith("linux")) {
             return "linux";
         }
-        if (value.startsWith("macosx") || value.startsWith("osx") || value.startsWith("darwin")) {
+        if (value.StartsWith("macosx") || value.StartsWith("osx") || value.StartsWith("darwin")) {
             return "osx";
         }
-        if (value.startsWith("freebsd")) {
+        if (value.StartsWith("freebsd")) {
             return "freebsd";
         }
-        if (value.startsWith("openbsd")) {
+        if (value.StartsWith("openbsd")) {
             return "openbsd";
         }
-        if (value.startsWith("netbsd")) {
+        if (value.StartsWith("netbsd")) {
             return "netbsd";
         }
-        if (value.startsWith("solaris") || value.startsWith("sunos")) {
+        if (value.StartsWith("solaris") || value.StartsWith("sunos")) {
             return "sunos";
         }
-        if (value.startsWith("windows")) {
+        if (value.StartsWith("windows")) {
             return "windows";
         }
 
@@ -1676,7 +1638,4 @@ public class PlatformDependent
         return JFR;
     }
 
-    private PlatformDependent() {
-        // only static method supported
-    }
 }

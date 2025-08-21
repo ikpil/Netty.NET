@@ -419,19 +419,19 @@ public class AsciiStringCharacterTest {
     @Test
     public void testToLowerCase() {
         AsciiString foo = AsciiString.of("This is a tesT");
-        assertEquals("this is a test", foo.toLowerCase().toString());
+        assertEquals("this is a test", foo.ToLower().toString());
     }
 
     @Test
     public void testToLowerCaseForOddLengths() {
         AsciiString foo = AsciiString.of("This is a test!");
-        assertEquals("this is a test!", foo.toLowerCase().toString());
+        assertEquals("this is a test!", foo.ToLower().toString());
     }
 
     @Test
     public void testToLowerCaseLong() {
         AsciiString foo = AsciiString.of("This is a test for longer sequences");
-        assertEquals("this is a test for longer sequences", foo.toLowerCase().toString());
+        assertEquals("this is a test for longer sequences", foo.ToLower().toString());
     }
 
     @Test

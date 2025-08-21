@@ -308,7 +308,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
                 this, command, deadlineNanos(getCurrentTimeNanos(), unit.toNanos(initialDelay)), -unit.toNanos(delay)));
     }
 
-    @SuppressWarnings("deprecation")
+    //@SuppressWarnings("deprecation")
     private void validateScheduled0(long amount, TimeSpan unit) {
         validateScheduled(amount, unit);
     }

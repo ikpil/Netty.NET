@@ -79,7 +79,7 @@ public class DefaultAttributeMap : IAttributeMap
 
     private volatile DefaultAttribute[] attributes = EMPTY_ATTRIBUTES;
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     @Override
     public <T> IAttribute<T> attr(AttributeKey<T> key) {
         ObjectUtil.checkNotNull(key, "key");
@@ -149,7 +149,7 @@ public class DefaultAttributeMap : IAttributeMap
         }
     }
 
-    @SuppressWarnings("serial")
+    //@SuppressWarnings("serial")
     private static readonly class DefaultAttribute<T> extends AtomicReference<T> : IAttribute<T> {
 
         private static readonly AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
