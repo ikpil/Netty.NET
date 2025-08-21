@@ -276,7 +276,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         }
 
         if (interrupted) {
-            Thread.currentThread().interrupt();
+            Thread.CurrentThread.interrupt();
         }
 
         return this;
@@ -712,7 +712,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
                 return isDone();
             } finally {
                 if (interrupted) {
-                    Thread.currentThread().interrupt();
+                    Thread.CurrentThread.interrupt();
                 }
             }
         }

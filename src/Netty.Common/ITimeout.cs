@@ -13,18 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common;
 
 /**
  * A handle associated with a {@link TimerTask} that is returned by a
- * {@link Timer}.
+ * {@link ITimer}.
  */
-public interface Timeout {
-
+public interface ITimeout
+{
     /**
-     * Returns the {@link Timer} that created this handle.
+     * Returns the {@link ITimer} that created this handle.
      */
-    Timer timer();
+    ITimer timer();
 
     /**
      * Returns the {@link TimerTask} which is associated with this handle.

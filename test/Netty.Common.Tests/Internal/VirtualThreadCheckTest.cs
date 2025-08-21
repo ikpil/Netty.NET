@@ -21,14 +21,14 @@ public class VirtualThreadCheckTest {
     @Test
     public void testCheckVirtualThread() throws Exception {
         assertFalse(PlatformDependent.isVirtualThread(null));
-        assertFalse(PlatformDependent.isVirtualThread(Thread.currentThread()));
+        assertFalse(PlatformDependent.isVirtualThread(Thread.CurrentThread));
         FastThreadLocalThread fastThreadLocalThread = new FastThreadLocalThread();
         assertFalse(PlatformDependent.isVirtualThread(fastThreadLocalThread));
         final AtomicReference<Boolean> atomicRes = new AtomicReference<Boolean>();
         Thread subThread = new Thread() {
         @Override
         public void run() {
-        atomicRes.set(PlatformDependent.isVirtualThread(Thread.currentThread()));
+        atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
     }
 };
 subThread.start();
@@ -38,7 +38,7 @@ assertFalse(atomicRes.get());
 Thread subOfSubThread = new SubThread() {
     @Override
     public void run() {
-    atomicRes.set(PlatformDependent.isVirtualThread(Thread.currentThread()));
+    atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
 }
 
 };
@@ -49,7 +49,7 @@ assertFalse(atomicRes.get());
 Thread subOfSubOfSubThread = new SubOfSubThread() {
     @Override
     public void run() {
-    atomicRes.set(PlatformDependent.isVirtualThread(Thread.currentThread()));
+    atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
 }
 };
 subOfSubOfSubThread.start();
@@ -73,7 +73,7 @@ public void testGetVirtualThreadCheckMethod() throws Throwable {
     } else {
         assumeTrue(PlatformDependent.javaVersion() >= 21);
         assumeTrue(IS_VIRTUAL_THREAD_METHOD_HANDLE != null);
-        boolean isVirtual = (boolean) IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(Thread.currentThread());
+        boolean isVirtual = (boolean) IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(Thread.CurrentThread);
         assertFalse(isVirtual);
 
         Method startVirtualThread = getStartVirtualThreadMethod();

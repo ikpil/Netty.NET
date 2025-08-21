@@ -263,11 +263,11 @@ throws Exception {
         @Override
         public void run() {
         if (callGet) {
-        assertEquals(Thread.currentThread().getName(), threadLocal.get());
-        assertEquals(Thread.currentThread().getName(), threadLocal2.get());
+        assertEquals(Thread.CurrentThread.getName(), threadLocal.get());
+        assertEquals(Thread.CurrentThread.getName(), threadLocal2.get());
     } else {
-        threadLocal.set(Thread.currentThread().getName());
-        threadLocal2.set(Thread.currentThread().getName());
+        threadLocal.set(Thread.CurrentThread.getName());
+        threadLocal2.set(Thread.CurrentThread.getName());
     }
     }
     };
@@ -301,7 +301,7 @@ private static final class TestFastThreadLocal extends FastThreadLocal<String> {
 
     @Override
     protected String initialValue() throws Exception {
-        return Thread.currentThread().getName();
+        return Thread.CurrentThread.getName();
     }
 
     @Override

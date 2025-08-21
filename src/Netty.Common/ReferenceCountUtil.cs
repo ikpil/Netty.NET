@@ -163,7 +163,7 @@ public sealed class ReferenceCountUtil
     public static <T> T releaseLater(T msg, int decrement) {
         ObjectUtil.checkPositive(decrement, "decrement");
         if (msg instanceof IReferenceCounted) {
-            ThreadDeathWatcher.watch(Thread.currentThread(), new ReleasingTask((IReferenceCounted) msg, decrement));
+            ThreadDeathWatcher.watch(Thread.CurrentThread, new ReleasingTask((IReferenceCounted) msg, decrement));
         }
         return msg;
     }

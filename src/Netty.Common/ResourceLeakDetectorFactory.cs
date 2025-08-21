@@ -86,7 +86,7 @@ public abstract class ResourceLeakDetectorFactory
      * @return a new instance of {@link ResourceLeakDetector}
      */
     //@SuppressWarnings("deprecation")
-    public ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval)
+    public virtual ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval)
     {
         ObjectUtil.checkPositive(samplingInterval, "samplingInterval");
         return newResourceLeakDetector<T>(resource, samplingInterval, long.MaxValue);

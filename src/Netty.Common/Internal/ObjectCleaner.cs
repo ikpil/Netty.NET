@@ -44,7 +44,7 @@ public final class ObjectCleaner {
             Math.Max(500, getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
 
     // Package-private for testing
-    static readonly string CLEANER_THREAD_NAME = typeof(ObjectCleaner).getSimpleName() + "Thread";
+    static readonly string CLEANER_THREAD_NAME = nameof(ObjectCleaner) + "Thread";
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
     private static readonly ISet<AutomaticCleanerReference> LIVE_SET = ConcurrentDictionary.newKeySet();
     private static readonly ReferenceQueue<object> REFERENCE_QUEUE = new ReferenceQueue<>();
@@ -87,7 +87,7 @@ public final class ObjectCleaner {
             }
             if (interrupted) {
                 // As we caught the ThreadInterruptedException above we should mark the Thread as interrupted.
-                Thread.currentThread().interrupt();
+                Thread.CurrentThread.interrupt();
             }
         }
     };

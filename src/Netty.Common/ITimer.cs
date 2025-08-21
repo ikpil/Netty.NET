@@ -23,7 +23,7 @@ namespace Netty.NET.Common;
  * Schedules {@link ITimerTask}s for one-time future execution in a background
  * thread.
  */
-public interface Timer
+public interface ITimer
 {
     /**
      * Schedules the specified {@link ITimerTask} for one-time execution after
@@ -35,14 +35,14 @@ public interface Timer
      * @throws RejectedExecutionException if the pending timeouts are too many and creating new timeout
      *                                    can cause instability in the system.
      */
-    Timeout newTimeout(ITimerTask task, long delay, TimeSpan unit);
+    ITimeout newTimeout(ITimerTask task, long delay, TimeSpan unit);
 
     /**
-     * Releases all resources acquired by this {@link Timer} and cancels all
+     * Releases all resources acquired by this {@link ITimer} and cancels all
      * tasks which were scheduled but not executed yet.
      *
      * @return the handles associated with the tasks which were canceled by
      *         this method
      */
-    ISet<Timeout> stop();
+    ISet<ITimeout> stop();
 }

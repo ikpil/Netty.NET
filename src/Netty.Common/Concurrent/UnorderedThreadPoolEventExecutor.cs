@@ -101,7 +101,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
 
     @Override
     public bool inEventLoop() {
-        return inEventLoop(Thread.currentThread());
+        return inEventLoop(Thread.CurrentThread);
     }
 
     @Override
@@ -316,11 +316,11 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         @Override
         public Thread newThread(@NotNull Runnable r) {
             return delegate.newThread(() -> {
-                threads.add(Thread.currentThread());
+                threads.add(Thread.CurrentThread);
                 try {
                     r.run();
                 } finally {
-                    threads.remove(Thread.currentThread());
+                    threads.remove(Thread.CurrentThread);
                 }
             });
         }

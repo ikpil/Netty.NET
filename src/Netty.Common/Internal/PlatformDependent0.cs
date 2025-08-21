@@ -476,7 +476,7 @@ public class PlatformDependent0 {
             MethodHandle methodHandle = MethodHandles.publicLookup().findVirtual(typeof(Thread), "isVirtual",
                     methodType(typeof(bool)));
             // Call once to make sure the invocation works.
-            bool isVirtual = (bool) methodHandle.invokeExact(Thread.currentThread());
+            bool isVirtual = (bool) methodHandle.invokeExact(Thread.CurrentThread);
             return methodHandle;
         } catch (Exception e) {
             if (logger.isTraceEnabled()) {
@@ -971,12 +971,12 @@ public class PlatformDependent0 {
 
     static ClassLoader getContextClassLoader() {
         if (System.getSecurityManager() == null) {
-            return Thread.currentThread().getContextClassLoader();
+            return Thread.CurrentThread.getContextClassLoader();
         } else {
             return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
                 @Override
                 public ClassLoader run() {
-                    return Thread.currentThread().getContextClassLoader();
+                    return Thread.CurrentThread.getContextClassLoader();
                 }
             });
         }

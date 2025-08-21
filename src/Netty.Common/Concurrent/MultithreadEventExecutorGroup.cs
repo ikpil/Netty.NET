@@ -99,7 +99,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
                             }
                         } catch (ThreadInterruptedException interrupted) {
                             // Let the caller handle the interruption.
-                            Thread.currentThread().interrupt();
+                            Thread.CurrentThread.interrupt();
                             break;
                         }
                     }

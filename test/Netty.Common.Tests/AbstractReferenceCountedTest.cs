@@ -97,7 +97,7 @@ public class AbstractReferenceCountedTest
                                 refCountExceptions.incrementAndGet();
                             }
                         } catch (ThreadInterruptedException e) {
-                            Thread.currentThread().interrupt();
+                            Thread.CurrentThread.interrupt();
                         }
                     }));
                 }
@@ -146,7 +146,7 @@ public class AbstractReferenceCountedTest
                                 refCountExceptions.incrementAndGet();
                             }
                         } catch (ThreadInterruptedException e) {
-                            Thread.currentThread().interrupt();
+                            Thread.CurrentThread.interrupt();
                         }
                     }));
                 }

@@ -329,7 +329,7 @@ public class NativeLibraryLoader {
             logger.debug("Execution of '{}' succeed: {}", cmd, exitValue);
             return true;
         } catch (ThreadInterruptedException e) {
-            Thread.currentThread().interrupt();
+            Thread.CurrentThread.interrupt();
         } catch (IOException e) {
             logger.info("Execution of '{}' failed.", cmd, e);
         } catch (SecurityException e) {

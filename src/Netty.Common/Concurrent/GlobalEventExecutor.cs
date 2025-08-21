@@ -227,7 +227,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     private void startThread() {
         if (started.compareAndSet(false, true)) {
-            final Thread callingThread = Thread.currentThread();
+            final Thread callingThread = Thread.CurrentThread;
             ClassLoader parentCCL = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
                 @Override
                 public ClassLoader run() {

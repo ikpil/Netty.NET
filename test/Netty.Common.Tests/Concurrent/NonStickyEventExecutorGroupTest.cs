@@ -122,12 +122,12 @@ public class NonStickyEventExecutorGroupTest {
         for (int i = 1 ; i <= tasks; i++) {
             final int id = i;
             assertFalse(executor.inEventLoop());
-            assertFalse(executor.inEventLoop(Thread.currentThread()));
+            assertFalse(executor.inEventLoop(Thread.CurrentThread));
             futures.add(executor.submit(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        assertTrue(executor.inEventLoop(Thread.currentThread()));
+                        assertTrue(executor.inEventLoop(Thread.CurrentThread));
                         assertTrue(executor.inEventLoop());
 
                         if (cause.get() == null) {

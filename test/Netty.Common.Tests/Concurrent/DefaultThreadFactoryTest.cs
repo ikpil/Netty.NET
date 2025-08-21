@@ -30,7 +30,7 @@ namespace Netty.Common.Tests.Concurrent
             System.setSecurityManager(new SecurityManager() {
             @Override
             public void checkAccess(ThreadGroup g) {
-            final ThreadGroup source = Thread.currentThread().getThreadGroup();
+            final ThreadGroup source = Thread.CurrentThread.getThreadGroup();
 
             if (source != null) {
                 if (!source.parentOf(g)) {
@@ -77,7 +77,7 @@ namespace Netty.Common.Tests.Concurrent
                         t.join();
                     } catch (ThreadInterruptedException e) {
                         interrupted.set(e);
-                        Thread.currentThread().interrupt();
+                        Thread.CurrentThread.interrupt();
                     }
                 }
             });
@@ -98,7 +98,7 @@ namespace Netty.Common.Tests.Concurrent
                         t.join();
                     } catch (ThreadInterruptedException e) {
                         interrupted.set(e);
-                        Thread.currentThread().interrupt();
+                        Thread.CurrentThread.interrupt();
                     }
                 }
             });
@@ -264,7 +264,7 @@ namespace Netty.Common.Tests.Concurrent
         final Thread first = new Thread(group, new Runnable() {
             @Override
             public void run() {
-                final Thread current = Thread.currentThread();
+                final Thread current = Thread.CurrentThread;
                 firstCaptured.set(current.getThreadGroup());
                 factory.set(new DefaultThreadFactory("sticky", false));
             }
@@ -273,7 +273,7 @@ namespace Netty.Common.Tests.Concurrent
         first.join();
         assertEquals(group, firstCaptured.get());
 
-        ThreadGroup currentThreadGroup = Thread.currentThread().getThreadGroup();
+        ThreadGroup currentThreadGroup = Thread.CurrentThread.getThreadGroup();
         Thread second = factory.get().newThread(new Runnable() {
             @Override
             public void run() {

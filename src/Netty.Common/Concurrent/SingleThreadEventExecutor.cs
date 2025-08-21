@@ -1037,7 +1037,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             public void run() {
                 processingLock.lock();
                 assert thread == null;
-                thread = Thread.currentThread();
+                thread = Thread.CurrentThread;
                 if (interrupted) {
                     thread.interrupt();
                     interrupted = false;
@@ -1086,8 +1086,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                         if (success && gracefulShutdownStartTime == 0) {
                             // Check if confirmShutdown() was called at the end of the loop.
                             if (logger.isErrorEnabled()) {
-                                logger.error("Buggy " + typeof(IEventExecutor).getSimpleName() + " implementation; " +
-                                        typeof(SingleThreadEventExecutor).getSimpleName() + ".confirmShutdown() must " +
+                                logger.error("Buggy " + nameof(IEventExecutor) + " implementation; " +
+                                        nameof(SingleThreadEventExecutor) + ".confirmShutdown() must " +
                                         "be called before run() implementation terminates.");
                             }
                         }

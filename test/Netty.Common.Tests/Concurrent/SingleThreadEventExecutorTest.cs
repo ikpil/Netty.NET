@@ -244,7 +244,7 @@ public class SingleThreadEventExecutorTest {
                 null, new DefaultThreadFactory("test"), false) {
             @Override
             protected void run() {
-                threadRef.set(Thread.currentThread());
+                threadRef.set(Thread.CurrentThread);
                 while (!confirmShutdown()) {
                     Runnable task = takeTask();
                     if (task != null) {

@@ -1,5 +1,6 @@
 using System;
 using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
@@ -9,6 +10,8 @@ namespace Netty.NET.Common;
  */
 public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory 
 {
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultResourceLeakDetectorFactory));
+    
     private readonly Constructor<?> obsoleteCustomClassConstructor;
     private readonly Constructor<?> customClassConstructor;
 
@@ -47,7 +50,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
 
     private static Constructor<?> customClassConstructor(string customLeakDetector) {
         try {
-            final Type detectorClass = Class.forName(customLeakDetector, true,
+            Type detectorClass = Class.forName(customLeakDetector, true,
                     PlatformDependent.getSystemClassLoader());
 
             if (typeof(ResourceLeakDetector).isAssignableFrom(detectorClass)) {
@@ -62,9 +65,8 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
         return null;
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public <T> ResourceLeakDetector<T> newResourceLeakDetector(Class<T> resource, int samplingInterval,
+    //@SuppressWarnings("deprecation")
+    public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval,
                                                                long maxActive) {
         if (obsoleteCustomClassConstructor != null) {
             try {
@@ -88,8 +90,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
         return resourceLeakDetector;
     }
 
-    @Override
-    public <T> ResourceLeakDetector<T> newResourceLeakDetector(Class<T> resource, int samplingInterval) {
+    public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval) {
         if (customClassConstructor != null) {
             try {
                 @SuppressWarnings("unchecked")

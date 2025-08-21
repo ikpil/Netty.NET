@@ -18,15 +18,15 @@ namespace Netty.NET.Common;
 
 /**
  * A task which is executed after the delay specified with
- * {@link Timer#newTimeout(ITimerTask, long, TimeSpan)}.
+ * {@link ITimer#newTimeout(ITimerTask, long, TimeSpan)}.
  */
 public interface ITimerTask
 {
     /**
      * Executed after the delay specified with
-     * {@link Timer#newTimeout(ITimerTask, long, TimeSpan)}.
+     * {@link ITimer#newTimeout(ITimerTask, long, TimeSpan)}.
      *
      * @param timeout a handle which is associated with this task
      */
-    void run(Timeout timeout);
+    void run(ITimeout timeout);
 }

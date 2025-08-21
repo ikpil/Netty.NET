@@ -225,7 +225,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
             if (!state.compareAndSet(SUBMITTED, RUNNING)) {
                 return;
             }
-            Thread current = Thread.currentThread();
+            Thread current = Thread.CurrentThread;
             executingThread.set(current);
             for (;;) {
                 int i = 0;
