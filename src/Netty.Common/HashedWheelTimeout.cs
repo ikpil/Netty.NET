@@ -17,22 +17,22 @@ public class HashedWheelTimeout : ITimeout, IRunnable
 
     private readonly HashedWheelTimer _timer;
     private readonly ITimerTask _task;
-    private readonly long _deadline;
+    internal readonly long _deadline;
 
     //@SuppressWarnings({"unused", "FieldMayBeFinal", "RedundantFieldInitialization" })
     private readonly AtomicInteger _state = new AtomicInteger(ST_INIT);
 
     // remainingRounds will be calculated and set by Worker.transferTimeoutsToBuckets() before the
     // HashedWheelTimeout will be added to the correct HashedWheelBucket.
-    private long _remainingRounds;
+    internal long _remainingRounds;
 
     // This will be used to chain timeouts in HashedWheelTimerBucket via a double-linked-list.
     // As only the workerThread will act on it there is no need for synchronization / volatile.
-    private HashedWheelTimeout _next;
-    private HashedWheelTimeout _prev;
+    internal HashedWheelTimeout _next;
+    internal HashedWheelTimeout _prev;
 
     // The bucket to which the timeout was added
-    private HashedWheelBucket _bucket;
+    internal HashedWheelBucket _bucket;
 
     public HashedWheelTimeout(HashedWheelTimer timer, ITimerTask task, long deadline)
     {
