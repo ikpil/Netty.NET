@@ -1031,20 +1031,21 @@ public class PlatformDependent
             }
         }
 
-        static <T> Queue<T> newMpscQueue(final int maxCapacity) {
+        static Queue<T> newMpscQueue<T>(int maxCapacity) {
             // Calculate the max capacity which can not be bigger than MAX_ALLOWED_MPSC_CAPACITY.
             // This is forced by the MpscChunkedArrayQueue implementation as will try to round it
             // up to the next power of two and so will overflow otherwise.
-            final int capacity = Math.Max(Math.Min(maxCapacity, MAX_ALLOWED_MPSC_CAPACITY), MIN_MAX_MPSC_CAPACITY);
+            int capacity = Math.Max(Math.Min(maxCapacity, MAX_ALLOWED_MPSC_CAPACITY), MIN_MAX_MPSC_CAPACITY);
             return newChunkedMpscQueue(MPSC_CHUNK_SIZE, capacity);
         }
 
-        static <T> Queue<T> newChunkedMpscQueue(final int chunkSize, final int capacity) {
+        static Queue<T> newChunkedMpscQueue<T>(final int chunkSize, final int capacity) {
             return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscChunkedArrayQueue<T>(chunkSize, capacity)
                     : new MpscChunkedAtomicArrayQueue<T>(chunkSize, capacity);
         }
 
-        static Queue<T> newMpscQueue() {
+        static Queue<T> newMpscQueue<T>() 
+        {
             return USE_MPSC_CHUNKED_ARRAY_QUEUE ? new MpscUnboundedArrayQueue<T>(MPSC_CHUNK_SIZE)
                                                 : new MpscUnboundedAtomicArrayQueue<T>(MPSC_CHUNK_SIZE);
         }
@@ -1056,7 +1057,7 @@ public class PlatformDependent
      * @return A MPSC queue which may be unbounded.
      */
     public static Queue<T> newMpscQueue<T>() {
-        return Mpsc.newMpscQueue();
+        return Mpsc.newMpscQueue<T>();
     }
 
     /**

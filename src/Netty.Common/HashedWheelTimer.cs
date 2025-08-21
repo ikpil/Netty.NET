@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
@@ -65,19 +66,17 @@ namespace Netty.NET.Common;
  * timer facility'</a>.  More comprehensive slides are located
  * <a href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt">here</a>.
  */
-public class HashedWheelTimer : ITimer 
+public class HashedWheelTimer : ITimer
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
     private static readonly AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
     private static readonly AtomicBoolean WARNED_TOO_MANY_INSTANCES = new AtomicBoolean();
     private static readonly int INSTANCE_COUNT_LIMIT = 64;
-    private static readonly long MILLISECOND_NANOS = TimeSpan.MILLISECONDS.toNanos(1);
-    private static readonly ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.instance()
-            .newResourceLeakDetector(typeof(HashedWheelTimer), 1);
+    private static readonly long MILLISECOND_NANOS = TimeSpan.FromMilliseconds(1).Ticks * TimeSpan.NanosecondsPerTick;
 
-    private static readonly AtomicIntegerFieldUpdater<HashedWheelTimer> WORKER_STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(typeof(HashedWheelTimer), "workerState");
+    private static readonly ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.instance()
+        .newResourceLeakDetector<HashedWheelTimer>(typeof(HashedWheelTimer), 1);
 
     private readonly IResourceLeakTracker<HashedWheelTimer> leak;
     private readonly HashedWheelWorker worker = new HashedWheelWorker();
@@ -86,28 +85,27 @@ public class HashedWheelTimer : ITimer
     public const int WORKER_STATE_INIT = 0;
     public const int WORKER_STATE_STARTED = 1;
     public const int WORKER_STATE_SHUTDOWN = 2;
-    
-    @SuppressWarnings({"unused", "FieldMayBeFinal"})
-    private volatile int workerState; // 0 - init, 1 - started, 2 - shut down
+
+    private readonly AtomicInteger _workerState; // 0 - init, 1 - started, 2 - shut down
 
     private readonly long _tickDuration;
     private readonly HashedWheelBucket[] _wheel;
     private readonly int _mask;
-    private readonly CountDownLatch _startTimeInitialized = new CountDownLatch(1);
-    private readonly Queue<HashedWheelTimeout> _timeouts = PlatformDependent.newMpscQueue();
-    private readonly Queue<HashedWheelTimeout> _cancelledTimeouts = PlatformDependent.newMpscQueue();
+    private readonly CountdownEvent _startTimeInitialized = new CountdownEvent(1);
+    private readonly Queue<HashedWheelTimeout> _timeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
+    private readonly Queue<HashedWheelTimeout> _cancelledTimeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
     private readonly AtomicLong _pendingTimeouts = new AtomicLong(0);
     private readonly long _maxPendingTimeouts;
     private readonly IExecutor _taskExecutor;
 
-    private volatile long startTime;
+    private readonly AtomicLong _startTime;
 
     /**
      * Creates a new timer with the default thread factory
      * ({@link Executors#defaultThreadFactory()}), default tick duration, and
      * default number of ticks per wheel.
      */
-    public HashedWheelTimer() 
+    public HashedWheelTimer()
         : this(Executors.defaultThreadFactory())
     {
     }
@@ -122,7 +120,7 @@ public class HashedWheelTimer : ITimer
      * @throws NullPointerException     if {@code unit} is {@code null}
      * @throws ArgumentException if {@code tickDuration} is &lt;= 0
      */
-    public HashedWheelTimer(TimeSpan tickDuration) 
+    public HashedWheelTimer(TimeSpan tickDuration)
         : this(Executors.defaultThreadFactory(), tickDuration)
     {
     }
@@ -137,7 +135,7 @@ public class HashedWheelTimer : ITimer
      * @throws NullPointerException     if {@code unit} is {@code null}
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
-    public HashedWheelTimer(TimeSpan tickDuration, int ticksPerWheel) 
+    public HashedWheelTimer(TimeSpan tickDuration, int ticksPerWheel)
         : this(Executors.defaultThreadFactory(), tickDuration, ticksPerWheel)
     {
     }
@@ -151,7 +149,7 @@ public class HashedWheelTimer : ITimer
      *                      {@link ITimerTask} execution.
      * @throws NullPointerException if {@code threadFactory} is {@code null}
      */
-    public HashedWheelTimer(IThreadFactory threadFactory) 
+    public HashedWheelTimer(IThreadFactory threadFactory)
         : this(threadFactory, TimeSpan.FromMilliseconds(100))
     {
     }
@@ -168,8 +166,9 @@ public class HashedWheelTimer : ITimer
      * @throws ArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(
-            IThreadFactory threadFactory, long tickDuration, TimeSpan unit) {
-        this(threadFactory, tickDuration, unit, 512);
+        IThreadFactory threadFactory, TimeSpan tickDuration)
+        : this(threadFactory, tickDuration, 512)
+    {
     }
 
     /**
@@ -185,8 +184,8 @@ public class HashedWheelTimer : ITimer
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
-            IThreadFactory threadFactory,
-            TimeSpan tickDuration, int ticksPerWheel) 
+        IThreadFactory threadFactory,
+        TimeSpan tickDuration, int ticksPerWheel)
         : this(threadFactory, tickDuration, ticksPerWheel, true)
     {
     }
@@ -207,8 +206,8 @@ public class HashedWheelTimer : ITimer
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
-            IThreadFactory threadFactory,
-            TimeSpan tickDuration, int ticksPerWheel, bool leakDetection) 
+        IThreadFactory threadFactory,
+        TimeSpan tickDuration, int ticksPerWheel, bool leakDetection)
         : this(threadFactory, tickDuration, ticksPerWheel, leakDetection, -1)
     {
     }
@@ -234,12 +233,13 @@ public class HashedWheelTimer : ITimer
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
-            IThreadFactory threadFactory,
-            TimeSpan tickDuration, int ticksPerWheel, bool leakDetection,
-            long maxPendingTimeouts) 
+        IThreadFactory threadFactory,
+        TimeSpan tickDuration, int ticksPerWheel, bool leakDetection,
+        long maxPendingTimeouts)
         : this(threadFactory, tickDuration, ticksPerWheel, leakDetection, maxPendingTimeouts, ImmediateExecutor.INSTANCE)
     {
     }
+
     /**
      * Creates a new timer.
      *
@@ -264,67 +264,75 @@ public class HashedWheelTimer : ITimer
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
-            IThreadFactory threadFactory,
-            TimeSpan tickDuration, int ticksPerWheel, bool leakDetection,
-            long maxPendingTimeouts, IExecutor taskExecutor) {
-
+        IThreadFactory threadFactory,
+        TimeSpan tickDuration, int ticksPerWheel, bool leakDetection,
+        long maxPendingTimeouts, IExecutor taskExecutor)
+    {
         checkNotNull(threadFactory, "threadFactory");
         checkPositive(tickDuration, "tickDuration");
         checkPositive(ticksPerWheel, "ticksPerWheel");
-        this.taskExecutor = checkNotNull(taskExecutor, "taskExecutor");
+        _taskExecutor = checkNotNull(taskExecutor, "taskExecutor");
+        _startTime = new AtomicLong(0);
+
+        _workerState = new AtomicInteger(WORKER_STATE_INIT);
 
         // Normalize ticksPerWheel to power of two and initialize the wheel.
-        wheel = createWheel(ticksPerWheel);
-        mask = wheel.Length - 1;
+        _wheel = createWheel(ticksPerWheel);
+        _mask = _wheel.Length - 1;
 
         // Convert tickDuration to nanos.
-        long duration = unit.toNanos(tickDuration);
+        long duration = tickDuration.Ticks * TimeSpan.NanosecondsPerTick;
 
         // Prevent overflow.
-        if (duration >= long.MaxValue / wheel.Length) {
-            throw new ArgumentException($"tickDuration: {tickDuration} (expected: 0 < tickDuration in nanos < {long.MaxValue / wheel.Length}");
+        if (duration >= long.MaxValue / _wheel.Length)
+        {
+            throw new ArgumentException($"tickDuration: {tickDuration} (expected: 0 < tickDuration in nanos < {long.MaxValue / _wheel.Length}");
         }
 
-        if (duration < MILLISECOND_NANOS) {
+        if (duration < MILLISECOND_NANOS)
+        {
             logger.warn("Configured tickDuration {} smaller than {}, using 1ms.",
-                        tickDuration, MILLISECOND_NANOS);
-            this.tickDuration = MILLISECOND_NANOS;
-        } else {
-            this.tickDuration = duration;
+                tickDuration, MILLISECOND_NANOS);
+            _tickDuration = MILLISECOND_NANOS;
+        }
+        else
+        {
+            _tickDuration = duration;
         }
 
         workerThread = threadFactory.newThread(worker);
 
         leak = leakDetection || !workerThread.IsBackground ? leakDetector.track(this) : null;
 
-        this.maxPendingTimeouts = maxPendingTimeouts;
+        _maxPendingTimeouts = maxPendingTimeouts;
 
         if (INSTANCE_COUNTER.incrementAndGet() > INSTANCE_COUNT_LIMIT &&
-            WARNED_TOO_MANY_INSTANCES.compareAndSet(false, true)) {
+            WARNED_TOO_MANY_INSTANCES.compareAndSet(false, true))
+        {
             reportTooManyInstances();
         }
     }
 
     ~HashedWheelTimer()
     {
-        try {
-            super.finalize();
-        } finally {
-            // This object is going to be GCed and it is assumed the ship has sailed to do a proper shutdown. If
-            // we have not yet shutdown then we want to make sure we decrement the active instance count.
-            if (WORKER_STATE_UPDATER.getAndSet(this, WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN) {
-                INSTANCE_COUNTER.decrementAndGet();
-            }
+        // This object is going to be GCed and it is assumed the ship has sailed to do a proper shutdown. If
+        // we have not yet shutdown then we want to make sure we decrement the active instance count.
+        if (_workerState.set(WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
+        {
+            INSTANCE_COUNTER.decrementAndGet();
         }
     }
 
-    private static HashedWheelBucket[] createWheel(int ticksPerWheel) {
+    private static HashedWheelBucket[] createWheel(int ticksPerWheel)
+    {
         ticksPerWheel = MathUtil.findNextPositivePowerOfTwo(ticksPerWheel);
 
         HashedWheelBucket[] wheel = new HashedWheelBucket[ticksPerWheel];
-        for (int i = 0; i < wheel.length; i ++) {
+        for (int i = 0; i < wheel.Length; i++)
+        {
             wheel[i] = new HashedWheelBucket();
         }
+
         return wheel;
     }
 
@@ -335,12 +343,16 @@ public class HashedWheelTimer : ITimer
      * @throws InvalidOperationException if this timer has been
      *                               {@linkplain #stop() stopped} already
      */
-    public void start() {
-        switch (WORKER_STATE_UPDATER.get(this)) {
+    public void start()
+    {
+        switch (_workerState.read())
+        {
             case WORKER_STATE_INIT:
-                if (WORKER_STATE_UPDATER.compareAndSet(this, WORKER_STATE_INIT, WORKER_STATE_STARTED)) {
+                if (_workerState.compareAndSet(WORKER_STATE_INIT, WORKER_STATE_STARTED))
+                {
                     workerThread.Start();
                 }
+
                 break;
             case WORKER_STATE_STARTED:
                 break;
@@ -351,111 +363,137 @@ public class HashedWheelTimer : ITimer
         }
 
         // Wait until the startTime is initialized by the worker.
-        while (startTime == 0) {
-            try {
-                startTimeInitialized.await();
-            } catch (ThreadInterruptedException ignore) {
+        while (_startTime.read() == 0)
+        {
+            try
+            {
+                _startTimeInitialized.Wait();
+            }
+            catch (ThreadInterruptedException ignore)
+            {
                 // Ignore - it will be ready very soon.
             }
         }
     }
 
-    public ISet<ITimeout> stop() {
-        if (Thread.CurrentThread == workerThread) {
+    public ISet<ITimeout> stop()
+    {
+        if (Thread.CurrentThread == workerThread)
+        {
             throw new InvalidOperationException(
-                    nameof(HashedWheelTimer) +
-                            ".stop() cannot be called from " +
-                            nameof(ITimerTask));
+                nameof(HashedWheelTimer) +
+                ".stop() cannot be called from " +
+                nameof(ITimerTask));
         }
 
-        if (!WORKER_STATE_UPDATER.compareAndSet(this, WORKER_STATE_STARTED, WORKER_STATE_SHUTDOWN)) {
+        if (!_workerState.compareAndSet(WORKER_STATE_STARTED, WORKER_STATE_SHUTDOWN))
+        {
             // workerState can be 0 or 2 at this moment - let it always be 2.
-            if (WORKER_STATE_UPDATER.getAndSet(this, WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN) {
+            if (_workerState.set(WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
+            {
                 INSTANCE_COUNTER.decrementAndGet();
-                if (leak != null) {
+                if (leak != null)
+                {
                     bool closed = leak.close(this);
-                    assert closed;
+                    Debug.Assert(closed);
                 }
             }
 
-            return Collections.emptySet();
+            return new HashSet<ITimeout>();
         }
 
-        try {
+        try
+        {
             bool interrupted = false;
-            while (workerThread.isAlive()) {
-                workerThread.interrupt();
-                try {
-                    workerThread.join(100);
-                } catch (ThreadInterruptedException ignored) {
+            while (workerThread.IsAlive)
+            {
+                workerThread.Interrupt();
+                try
+                {
+                    workerThread.Join(100);
+                }
+                catch (ThreadInterruptedException ignored)
+                {
                     interrupted = true;
                 }
             }
 
-            if (interrupted) {
-                Thread.CurrentThread.interrupt();
-            }
-        } finally {
-            INSTANCE_COUNTER.decrementAndGet();
-            if (leak != null) {
-                bool closed = leak.close(this);
-                assert closed;
+            if (interrupted)
+            {
+                Thread.CurrentThread.Interrupt();
             }
         }
+        finally
+        {
+            INSTANCE_COUNTER.decrementAndGet();
+            if (leak != null)
+            {
+                bool closed = leak.close(this);
+                Debug.Assert(closed);
+            }
+        }
+
         ISet<ITimeout> unprocessed = worker.unprocessedTimeouts();
         ISet<ITimeout> cancelled = new HashSet<ITimeout>(unprocessed.Count);
-        foreach (ITimeout timeout in unprocessed) {
-            if (timeout.cancel()) {
+        foreach (ITimeout timeout in unprocessed)
+        {
+            if (timeout.cancel())
+            {
                 cancelled.Add(timeout);
             }
         }
+
         return cancelled;
     }
 
-    public ITimeout newTimeout(ITimerTask task, long delay, TimeSpan unit) {
+    public ITimeout newTimeout(ITimerTask task, TimeSpan delay)
+    {
         checkNotNull(task, "task");
-        checkNotNull(unit, "unit");
 
-        long pendingTimeoutsCount = pendingTimeouts.incrementAndGet();
+        long pendingTimeoutsCount = _pendingTimeouts.incrementAndGet();
 
-        if (maxPendingTimeouts > 0 && pendingTimeoutsCount > maxPendingTimeouts) {
-            pendingTimeouts.decrementAndGet();
+        if (_maxPendingTimeouts > 0 && pendingTimeoutsCount > _maxPendingTimeouts)
+        {
+            _pendingTimeouts.decrementAndGet();
             throw new RejectedExecutionException("Number of pending timeouts ("
-                + pendingTimeoutsCount + ") is greater than or equal to maximum allowed pending "
-                + "timeouts (" + maxPendingTimeouts + ")");
+                                                 + pendingTimeoutsCount + ") is greater than or equal to maximum allowed pending "
+                                                 + "timeouts (" + _maxPendingTimeouts + ")");
         }
 
         start();
 
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
-        long deadline = PreciseTimer.nanoTime() + unit.toNanos(delay) - startTime;
+        long delayNano = delay.Ticks * TimeSpan.NanosecondsPerTick;
+        long deadline = PreciseTimer.nanoTime() + delayNano - _startTime.read();
 
         // Guard against overflow.
-        if (delay > 0 && deadline < 0) {
+        if (delay.Ticks > 0 && deadline < 0)
+        {
             deadline = long.MaxValue;
         }
+
         HashedWheelTimeout timeout = new HashedWheelTimeout(this, task, deadline);
-        timeouts.add(timeout);
+        _timeouts.Enqueue(timeout);
         return timeout;
     }
 
     /**
      * Returns the number of pending timeouts of this {@link ITimer}.
      */
-    public long pendingTimeouts() {
+    public long pendingTimeouts()
+    {
         return _pendingTimeouts.get();
     }
 
-    private static void reportTooManyInstances() {
-        if (logger.isErrorEnabled()) {
+    private static void reportTooManyInstances()
+    {
+        if (logger.isErrorEnabled())
+        {
             string resourceType = StringUtil.simpleClassName(typeof(HashedWheelTimer));
             logger.error("You are creating too many " + resourceType + " instances. " +
-                    resourceType + " is a shared resource that must be reused across the JVM, " +
-                    "so that only a few instances are created.");
+                         resourceType + " is a shared resource that must be reused across the JVM, " +
+                         "so that only a few instances are created.");
         }
     }
-
-
-
 }

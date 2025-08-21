@@ -57,7 +57,7 @@ public class AtomicInteger
         return original == expectedValue;
     }
 
-    public int addAndget(int value)
+    public int addAndGet(int value)
     {
         return Interlocked.Add(ref _location, value);
     }
