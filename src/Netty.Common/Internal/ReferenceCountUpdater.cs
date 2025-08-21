@@ -37,9 +37,13 @@ public abstract class ReferenceCountUpdater<T> where T : IReferenceCounted
      * for example: if (rawCnt == 2 || rawCnt == 4 || (rawCnt & 1) == 0) { ...
      */
 
-    protected ReferenceCountUpdater() { }
+    protected ReferenceCountUpdater()
+    {
+        
+    }
 
-    public static long getUnsafeOffset(Class<? extends IReferenceCounted> clz, string fieldName) {
+    public static long getUnsafeOffset<T>(string fieldName) where T : IReferenceCounted
+    {
         try
         {
             if (PlatformDependent.hasUnsafe())

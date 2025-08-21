@@ -15,15 +15,11 @@
  */
 namespace Netty.NET.Common.Internal;
 
-
-
-
-
-
 /**
  * Some pending write which should be picked up later.
  */
-public final class PendingWrite {
+public sealed class PendingWrite 
+{
     private static readonly ObjectPool<PendingWrite> RECYCLER = ObjectPool.newPool(new ObjectCreator<PendingWrite>() {
         @Override
         public PendingWrite newObject(Handle<PendingWrite> handle) {

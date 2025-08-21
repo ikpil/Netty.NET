@@ -23,11 +23,8 @@ namespace Netty.NET.Common.Internal;
 /**
  * A simple list which is recyclable. This implementation does not allow {@code null} elements to be added.
  */
-public class RecyclableArrayList : List<object> 
+public class RecyclableArrayList<T> : List<T> 
 {
-
-    private static readonly long serialVersionUID = -8605125654176467947L;
-
     private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
     private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.newPool(
@@ -43,7 +40,7 @@ public class RecyclableArrayList : List<object>
     /**
      * Create a new empty {@link RecyclableArrayList} instance
      */
-    public static RecyclableArrayList newInstance() {
+    public static RecyclableArrayList<T> newInstance<T>() {
         return newInstance(DEFAULT_INITIAL_CAPACITY);
     }
 

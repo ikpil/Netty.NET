@@ -910,8 +910,8 @@ public class PlatformDependent0 {
     public static int hashCodeAscii(byte[] bytes, int startPos, int length) {
         int hash = HASH_CODE_ASCII_SEED;
         long baseOffset = BYTE_ARRAY_BASE_OFFSET + startPos;
-        final int remainingBytes = length & 7;
-        final long end = baseOffset + remainingBytes;
+        int remainingBytes = length & 7;
+        long end = baseOffset + remainingBytes;
         for (long i = baseOffset - 8 + length; i >= end; i -= 8) {
             hash = hashCodeAsciiCompute(UNSAFE.getLong(bytes, i), hash);
         }
