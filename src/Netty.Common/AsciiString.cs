@@ -1299,7 +1299,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
     }
 
     private long parseLong(int start, int end, int radix, bool negative) {
-        long max = long.MIN_VALUE / radix;
+        long max = long.MinValue / radix;
         long result = 0;
         int currOffset = start;
         while (currOffset < end) {

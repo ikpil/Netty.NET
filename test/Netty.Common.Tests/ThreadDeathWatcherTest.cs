@@ -102,7 +102,7 @@ public class ThreadDeathWatcherTest {
         t.join();
 
         // Wait until the watcher thread terminates itself.
-        assertTrue(ThreadDeathWatcher.awaitInactivity(Long.MAX_VALUE, TimeUnit.SECONDS));
+        assertTrue(ThreadDeathWatcher.awaitInactivity(long.MaxValue, TimeUnit.SECONDS));
 
         // And the task should not run.
         assertFalse(run.get());

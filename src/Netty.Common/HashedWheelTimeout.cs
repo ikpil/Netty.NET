@@ -11,9 +11,9 @@ public class HashedWheelTimeout : ITimeout, IRunnable
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
-    private const int ST_INIT = 0;
-    private const int ST_CANCELLED = 1;
-    private const int ST_EXPIRED = 2;
+    public const int ST_INIT = 0;
+    public const int ST_CANCELLED = 1;
+    public const int ST_EXPIRED = 2;
 
     private readonly HashedWheelTimer _timer;
     private readonly ITimerTask _task;
@@ -77,7 +77,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
         _timer._pendingTimeouts.decrementAndGet();
     }
 
-    void removeAfterCancellation()
+    internal void removeAfterCancellation()
     {
         remove();
         _task.cancelled(this);

@@ -108,8 +108,8 @@ public class AbstractScheduledEventExecutorTest {
 
     @Test
     public void testDeadlineNanosNotOverflow() {
-        Assertions.assertEquals(Long.MAX_VALUE, AbstractScheduledEventExecutor.deadlineNanos(
-                Ticker.systemTicker().nanoTime(), Long.MAX_VALUE));
+        Assertions.assertEquals(long.MaxValue, AbstractScheduledEventExecutor.deadlineNanos(
+                Ticker.systemTicker().nanoTime(), long.MaxValue));
     }
 
     private static final class TestScheduledEventExecutor extends AbstractScheduledEventExecutor {

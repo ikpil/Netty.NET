@@ -260,7 +260,7 @@ public class HashedWheelTimerTest {
             public void run(Timeout timeout) {
                 latch.countDown();
             }
-        }, Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+        }, long.MaxValue, TimeUnit.MILLISECONDS);
         assertFalse(latch.await(1, TimeUnit.SECONDS));
         timeout.cancel();
         timer.stop();

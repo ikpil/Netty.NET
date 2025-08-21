@@ -78,21 +78,21 @@ public class HashedWheelTimer : ITimer
     private static readonly ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.instance()
         .newResourceLeakDetector<HashedWheelTimer>(typeof(HashedWheelTimer), 1);
 
-    private readonly IResourceLeakTracker<HashedWheelTimer> leak;
-    private readonly HashedWheelWorker worker = new HashedWheelWorker();
-    private readonly Thread workerThread;
+    private readonly IResourceLeakTracker<HashedWheelTimer> _leak;
+    private readonly HashedWheelWorker _worker;
+    private readonly Thread _workerThread;
 
     public const int WORKER_STATE_INIT = 0;
     public const int WORKER_STATE_STARTED = 1;
     public const int WORKER_STATE_SHUTDOWN = 2;
 
-    private readonly AtomicInteger _workerState; // 0 - init, 1 - started, 2 - shut down
+    internal readonly AtomicInteger _workerState; // 0 - init, 1 - started, 2 - shut down
 
-    private readonly long _tickDuration;
-    private readonly HashedWheelBucket[] _wheel;
-    private readonly int _mask;
-    private readonly CountdownEvent _startTimeInitialized = new CountdownEvent(1);
-    private readonly Queue<HashedWheelTimeout> _timeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
+    internal readonly long _tickDuration;
+    internal readonly HashedWheelBucket[] _wheel;
+    internal readonly int _mask;
+    internal readonly CountdownEvent _startTimeInitialized = new CountdownEvent(1);
+    internal readonly Queue<HashedWheelTimeout> _timeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
     internal readonly Queue<HashedWheelTimeout> _cancelledTimeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
     internal readonly AtomicLong _pendingTimeouts = new AtomicLong(0);
     private readonly long _maxPendingTimeouts;
@@ -300,9 +300,10 @@ public class HashedWheelTimer : ITimer
             _tickDuration = duration;
         }
 
-        workerThread = threadFactory.newThread(worker);
+        _worker = new HashedWheelWorker(this);
+        _workerThread = threadFactory.newThread(_worker);
 
-        leak = leakDetection || !workerThread.IsBackground ? leakDetector.track(this) : null;
+        _leak = leakDetection || !_workerThread.IsBackground ? leakDetector.track(this) : null;
 
         _maxPendingTimeouts = maxPendingTimeouts;
 
@@ -350,7 +351,7 @@ public class HashedWheelTimer : ITimer
             case WORKER_STATE_INIT:
                 if (_workerState.compareAndSet(WORKER_STATE_INIT, WORKER_STATE_STARTED))
                 {
-                    workerThread.Start();
+                    _workerThread.Start();
                 }
 
                 break;
@@ -378,7 +379,7 @@ public class HashedWheelTimer : ITimer
 
     public ISet<ITimeout> stop()
     {
-        if (Thread.CurrentThread == workerThread)
+        if (Thread.CurrentThread == _workerThread)
         {
             throw new InvalidOperationException(
                 nameof(HashedWheelTimer) +
@@ -392,9 +393,9 @@ public class HashedWheelTimer : ITimer
             if (_workerState.set(WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
             {
                 INSTANCE_COUNTER.decrementAndGet();
-                if (leak != null)
+                if (_leak != null)
                 {
-                    bool closed = leak.close(this);
+                    bool closed = _leak.close(this);
                     Debug.Assert(closed);
                 }
             }
@@ -405,12 +406,12 @@ public class HashedWheelTimer : ITimer
         try
         {
             bool interrupted = false;
-            while (workerThread.IsAlive)
+            while (_workerThread.IsAlive)
             {
-                workerThread.Interrupt();
+                _workerThread.Interrupt();
                 try
                 {
-                    workerThread.Join(100);
+                    _workerThread.Join(100);
                 }
                 catch (ThreadInterruptedException ignored)
                 {
@@ -426,14 +427,14 @@ public class HashedWheelTimer : ITimer
         finally
         {
             INSTANCE_COUNTER.decrementAndGet();
-            if (leak != null)
+            if (_leak != null)
             {
-                bool closed = leak.close(this);
+                bool closed = _leak.close(this);
                 Debug.Assert(closed);
             }
         }
 
-        ISet<ITimeout> unprocessed = worker.unprocessedTimeouts();
+        ISet<ITimeout> unprocessed = _worker.unprocessedTimeouts();
         ISet<ITimeout> cancelled = new HashSet<ITimeout>(unprocessed.Count);
         foreach (ITimeout timeout in unprocessed)
         {
