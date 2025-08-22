@@ -32,13 +32,7 @@ public class RecyclableArrayList : List<object>
         );
 
     private bool _insertSinceRecycled;
-
-    /**
-     * Create a new empty {@link RecyclableArrayList} instance
-     */
-    public static RecyclableArrayList<T> newInstance<T>() {
-        return newInstance(DEFAULT_INITIAL_CAPACITY);
-    }
+    private readonly IObjectPoolHandle<RecyclableArrayList> _handle;
 
     /**
      * Create a new empty {@link RecyclableArrayList} instance with the given capacity.
@@ -49,7 +43,12 @@ public class RecyclableArrayList : List<object>
         return ret;
     }
 
-    private readonly IObjectPoolHandle<RecyclableArrayList> handle;
+    /**
+     * Create a new empty {@link RecyclableArrayList} instance
+     */
+    public static RecyclableArrayList<T> newInstance<T>() {
+        return newInstance(DEFAULT_INITIAL_CAPACITY);
+    }
 
     private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle) 
         : this(handle, DEFAULT_INITIAL_CAPACITY)
