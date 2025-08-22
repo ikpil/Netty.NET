@@ -31,7 +31,7 @@ public class RecyclableArrayList : List<object>
         new AnonymousObjectCreator<RecyclableArrayList>(x => new RecyclableArrayList(x))
         );
 
-    private bool insertSinceRecycled;
+    private bool _insertSinceRecycled;
 
     /**
      * Create a new empty {@link RecyclableArrayList} instance
@@ -118,7 +118,7 @@ public class RecyclableArrayList : List<object>
     @Override
     public object set(int index, object element) {
         object old = super.set(index, ObjectUtil.checkNotNull(element, "element"));
-        insertSinceRecycled = true;
+        _insertSinceRecycled = true;
         return old;
     }
 
@@ -126,7 +126,7 @@ public class RecyclableArrayList : List<object>
      * Returns {@code true} if any elements where added or set. This will be reset once {@link #recycle()} was called.
      */
     public bool insertSinceRecycled() {
-        return insertSinceRecycled;
+        return _insertSinceRecycled;
     }
 
     /**
@@ -134,7 +134,7 @@ public class RecyclableArrayList : List<object>
      */
     public bool recycle() {
         clear();
-        insertSinceRecycled = false;
+        _insertSinceRecycled = false;
         handle.recycle(this);
         return true;
     }
