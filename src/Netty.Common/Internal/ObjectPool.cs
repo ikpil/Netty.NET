@@ -13,31 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Internal;
-
-/**
- * Handle for an pooled {@link object} that will be used to notify the {@link ObjectPool} once it can
- * reuse the pooled {@link object} again.
- * @param <T>
- */
-public interface IObjectPoolHandle<T> 
-{
-    /**
-     * Recycle the {@link object} if possible and so make it ready to be reused.
-     */
-    void recycle(T self);
-}
-
 
 /**
  * Light-weight object pool.
  *
  * @param <T> the type of the pooled object
  */
-public abstract class ObjectPool<T> 
+public abstract class ObjectPool<T>
 {
-
-    ObjectPool() { }
+    protected ObjectPool()
+    {
+    }
 
     /**
      * Get a {@link object} from the {@link ObjectPool}. The returned {@link object} may be created via
@@ -45,48 +33,12 @@ public abstract class ObjectPool<T>
      */
     public abstract T get();
 
-
-    /**
-     * Creates a new object which references the given {@link Handle} and calls {@link Handle#recycle(object)} once
-     * it can be re-used.
-     *
-     * @param <T> the type of the pooled object
-     */
-    public interface ObjectCreator<T> {
-
-        /**
-         * Creates an returns a new {@link object} that can be used and later recycled via
-         * {@link Handle#recycle(object)}.
-         *
-         * @param handle can NOT be null.
-         */
-        T newObject(Handle<T> handle);
-    }
-
     /**
      * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link object}
      * that should be pooled.
      */
-    public static ObjectPool<T> newPool<T>(ObjectCreator<T> creator) {
+    public static ObjectPool<T> newPool(IObjectCreator<T> creator)
+    {
         return new RecyclerObjectPool<T>(ObjectUtil.checkNotNull(creator, "creator"));
-    }
-
-}
-
-public class RecyclerObjectPool<T> : ObjectPool<T> 
-{
-    private readonly Recycler<T> recycler;
-
-    public RecyclerObjectPool(ObjectCreator<T> creator) {
-        recycler = new Recycler<T>() {
-            @Override
-            protected T newObject(Handle<T> handle) {
-                return creator.newObject(handle);
-            }
-        };
-    }
-
-    public override T get() {
-        return recycler.get();
     }
 }

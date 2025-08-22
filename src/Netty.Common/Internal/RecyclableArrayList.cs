@@ -23,17 +23,13 @@ namespace Netty.NET.Common.Internal;
 /**
  * A simple list which is recyclable. This implementation does not allow {@code null} elements to be added.
  */
-public class RecyclableArrayList<T> : List<T> 
+public class RecyclableArrayList : List<object> 
 {
     private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
-    private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.newPool(
-            new ObjectPool<>.ObjectCreator<RecyclableArrayList>() {
-        @Override
-        public RecyclableArrayList newObject(Handle<RecyclableArrayList> handle) {
-            return new RecyclableArrayList(handle);
-        }
-    });
+    private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool<RecyclableArrayList>.newPool(
+        new AnonymousObjectCreator<RecyclableArrayList>(x => new RecyclableArrayList(x))
+        );
 
     private bool insertSinceRecycled;
 
@@ -53,14 +49,15 @@ public class RecyclableArrayList<T> : List<T>
         return ret;
     }
 
-    private readonly Handle<RecyclableArrayList> handle;
+    private readonly IObjectPoolHandle<RecyclableArrayList> handle;
 
-    private RecyclableArrayList(Handle<RecyclableArrayList> handle) {
-        this(handle, DEFAULT_INITIAL_CAPACITY);
+    private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle) 
+        : this(handle, DEFAULT_INITIAL_CAPACITY)
+    {
     }
 
-    private RecyclableArrayList(Handle<RecyclableArrayList> handle, int initialCapacity) {
-        super(initialCapacity);
+    private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle, int initialCapacity) : base (initialCapacity)
+    {
         this.handle = handle;
     }
 
