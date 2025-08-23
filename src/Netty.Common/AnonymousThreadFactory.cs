@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common;
 
