@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 
 namespace Netty.NET.Common.Internal;
@@ -23,100 +24,106 @@ namespace Netty.NET.Common.Internal;
 /**
  * A simple list which is recyclable. This implementation does not allow {@code null} elements to be added.
  */
-public class RecyclableArrayList : List<object> 
+public class RecyclableArrayList
 {
     private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
     private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool<RecyclableArrayList>.newPool(
         new AnonymousObjectCreator<RecyclableArrayList>(x => new RecyclableArrayList(x))
-        );
+    );
 
     private bool _insertSinceRecycled;
+    private readonly List<object> _list;
     private readonly IObjectPoolHandle<RecyclableArrayList> _handle;
 
     /**
      * Create a new empty {@link RecyclableArrayList} instance with the given capacity.
      */
-    public static RecyclableArrayList newInstance(int minCapacity) {
+    public static RecyclableArrayList newInstance(int minCapacity)
+    {
         RecyclableArrayList ret = RECYCLER.get();
-        ret.ensureCapacity(minCapacity);
+        ret._list.EnsureCapacity(minCapacity);
         return ret;
     }
 
     /**
      * Create a new empty {@link RecyclableArrayList} instance
      */
-    public static RecyclableArrayList<T> newInstance<T>() {
+    public static RecyclableArrayList newInstance<T>()
+    {
         return newInstance(DEFAULT_INITIAL_CAPACITY);
     }
 
-    private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle) 
+    private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle)
         : this(handle, DEFAULT_INITIAL_CAPACITY)
     {
     }
 
-    private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle, int initialCapacity) : base (initialCapacity)
+    private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle, int initialCapacity)
     {
-        this.handle = handle;
+        _handle = handle;
+        _list = new List<object>(initialCapacity);
     }
 
-    @Override
-    public bool addAll(Collection<?> c) {
+    public bool addAll<T>(Collection<T> c) where T : class
+    {
         checkNullElements(c);
-        if (super.addAll(c)) {
-            insertSinceRecycled = true;
-            return true;
-        }
-        return false;
+        _list.AddRange(c);
+        _insertSinceRecycled = true;
+        return true;
     }
 
-    @Override
-    public bool addAll(int index, Collection<?> c) {
+    public bool addAll<T>(int index, Collection<T> c) where T : class
+    {
         checkNullElements(c);
-        if (super.addAll(index, c)) {
-            insertSinceRecycled = true;
-            return true;
-        }
-        return false;
+        _list.InsertRange(index, c);
+        _insertSinceRecycled = true;
+        return true;
     }
 
-    private static void checkNullElements(Collection<?> c) {
-        if (c instanceof RandomAccess && c instanceof List) {
+    private static void checkNullElements<T>(Collection<T> c) where T : class
+    {
+        if (c is IList<T> list)
+        {
             // produce less garbage
-            List<?> list = (List<?>) c;
-            int size = list.size();
-            for (int i = 0; i  < size; i++) {
-                if (list.get(i) == null) {
+            int size = list.Count;
+            for (int i = 0; i < size; i++)
+            {
+                if (list[i] == null)
+                {
                     throw new ArgumentException("c contains null values");
                 }
             }
-        } else {
-            for (object element: c) {
-                if (element == null) {
+        }
+        else
+        {
+            foreach (object element in c)
+            {
+                if (element == null)
+                {
                     throw new ArgumentException("c contains null values");
                 }
             }
         }
     }
 
-    @Override
-    public bool add(object element) {
-        if (super.add(ObjectUtil.checkNotNull(element, "element"))) {
-            insertSinceRecycled = true;
-            return true;
-        }
-        return false;
+    public bool add(object element)
+    {
+        _list.Add(ObjectUtil.checkNotNull(element, "element"));
+        _insertSinceRecycled = true;
+        return true;
     }
 
-    @Override
-    public void add(int index, object element) {
-        super.add(index, ObjectUtil.checkNotNull(element, "element"));
-        insertSinceRecycled = true;
+    public void add(int index, object element)
+    {
+        _list.Insert(index, ObjectUtil.checkNotNull(element, "element"));
+        _insertSinceRecycled = true;
     }
 
-    @Override
-    public object set(int index, object element) {
-        object old = super.set(index, ObjectUtil.checkNotNull(element, "element"));
+    public object set(int index, object element)
+    {
+        object old = _list[index];
+        _list[index] = ObjectUtil.checkNotNull(element, "element");
         _insertSinceRecycled = true;
         return old;
     }
@@ -124,17 +131,19 @@ public class RecyclableArrayList : List<object>
     /**
      * Returns {@code true} if any elements where added or set. This will be reset once {@link #recycle()} was called.
      */
-    public bool insertSinceRecycled() {
+    public bool insertSinceRecycled()
+    {
         return _insertSinceRecycled;
     }
 
     /**
      * Clear and recycle this instance.
      */
-    public bool recycle() {
-        clear();
+    public bool recycle()
+    {
+        _list.Clear();
         _insertSinceRecycled = false;
-        handle.recycle(this);
+        _handle.recycle(this);
         return true;
     }
 }
