@@ -35,9 +35,9 @@ public class AsciiStringCharacterTest {
             b.append("eéaà");
         }
         final String bString = b.toString();
-        final Charset[] charsets = CharsetUtil.values();
+        final Encoding[] charsets = CharsetUtil.values();
         for (int i = 0; i < charsets.length; ++i) {
-            final Charset charset = charsets[i];
+            final Encoding charset = charsets[i];
             byte[] expected = bString.getBytes(charset);
             byte[] actual = new AsciiString(b, charset).toByteArray();
             assertArrayEquals(expected, actual, "failure for " + charset);
@@ -51,9 +51,9 @@ public class AsciiStringCharacterTest {
             b.append("eéaà");
         }
         final String bString = b.toString();
-        final Charset[] charsets = CharsetUtil.values();
+        final Encoding[] charsets = CharsetUtil.values();
         for (int i = 0; i < charsets.length; ++i) {
-            final Charset charset = charsets[i];
+            final Encoding charset = charsets[i];
             byte[] expected = bString.getBytes(charset);
             byte[] actual = new AsciiString(bString, charset).toByteArray();
             assertArrayEquals(expected, actual, "failure for " + charset);
@@ -67,7 +67,7 @@ public class AsciiStringCharacterTest {
             b.append("eéaà");
         }
         final String bString = b.toString();
-        // The AsciiString class actually limits the Charset to ISO_8859_1
+        // The AsciiString class actually limits the Encoding to ISO_8859_1
         byte[] expected = bString.getBytes(CharsetUtil.ISO_8859_1);
         byte[] actual = new AsciiString(bString).toByteArray();
         assertArrayEquals(expected, actual);

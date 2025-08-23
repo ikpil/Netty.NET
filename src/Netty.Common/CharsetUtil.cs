@@ -17,7 +17,7 @@ namespace Netty.NET.Common;
 
 /**
  * A utility class that provides various common operations and constants
- * related with {@link Charset} and its relevant classes.
+ * related with {@link Encoding} and its relevant classes.
  */
 public static class CharsetUtil 
 {
@@ -26,58 +26,58 @@ public static class CharsetUtil
      * 16-bit UTF (UCS Transformation Format) whose byte order is identified by
      * an optional byte-order mark
      */
-    public static readonly Charset UTF_16 = StandardCharsets.UTF_16;
+    public static readonly Encoding UTF_16 = StandardCharsets.UTF_16;
 
     /**
      * 16-bit UTF (UCS Transformation Format) whose byte order is big-endian
      */
-    public static readonly Charset UTF_16BE = StandardCharsets.UTF_16BE;
+    public static readonly Encoding UTF_16BE = StandardCharsets.UTF_16BE;
 
     /**
      * 16-bit UTF (UCS Transformation Format) whose byte order is little-endian
      */
-    public static readonly Charset UTF_16LE = StandardCharsets.UTF_16LE;
+    public static readonly Encoding UTF_16LE = StandardCharsets.UTF_16LE;
 
     /**
      * 8-bit UTF (UCS Transformation Format)
      */
-    public static readonly Charset UTF_8 = StandardCharsets.UTF_8;
+    public static readonly Encoding UTF_8 = StandardCharsets.UTF_8;
 
     /**
      * ISO Latin Alphabet No. 1, as known as <tt>ISO-LATIN-1</tt>
      */
-    public static readonly Charset ISO_8859_1 = StandardCharsets.ISO_8859_1;
+    public static readonly Encoding ISO_8859_1 = StandardCharsets.ISO_8859_1;
 
     /**
      * 7-bit ASCII, as known as ISO646-US or the Basic Latin block of the
      * Unicode character set
      */
-    public static readonly Charset US_ASCII = StandardCharsets.US_ASCII;
+    public static readonly Encoding US_ASCII = StandardCharsets.US_ASCII;
 
-    private static readonly Charset[] CHARSETS = new Charset[]
+    private static readonly Encoding[] CHARSETS = new Encoding[]
             { UTF_16, UTF_16BE, UTF_16LE, UTF_8, ISO_8859_1, US_ASCII };
 
-    public static Charset[] values() {
+    public static Encoding[] values() {
         return CHARSETS;
     }
 
     /**
-     * @deprecated Use {@link #encoder(Charset)}.
+     * @deprecated Use {@link #encoder(Encoding)}.
      */
     [Obsolete]
-    public static CharsetEncoder getEncoder(Charset charset) {
+    public static CharsetEncoder getEncoder(Encoding charset) {
         return encoder(charset);
     }
 
     /**
-     * Returns a new {@link CharsetEncoder} for the {@link Charset} with specified error actions.
+     * Returns a new {@link CharsetEncoder} for the {@link Encoding} with specified error actions.
      *
      * @param charset The specified charset
      * @param malformedInputAction The encoder's action for malformed-input errors
      * @param unmappableCharacterAction The encoder's action for unmappable-character errors
      * @return The encoder for the specified {@code charset}
      */
-    public static CharsetEncoder encoder(Charset charset, CodingErrorAction malformedInputAction,
+    public static CharsetEncoder encoder(Encoding charset, CodingErrorAction malformedInputAction,
                                          CodingErrorAction unmappableCharacterAction) {
         checkNotNull(charset, "charset");
         CharsetEncoder e = charset.newEncoder();
@@ -86,26 +86,26 @@ public static class CharsetUtil
     }
 
     /**
-     * Returns a new {@link CharsetEncoder} for the {@link Charset} with the specified error action.
+     * Returns a new {@link CharsetEncoder} for the {@link Encoding} with the specified error action.
      *
      * @param charset The specified charset
      * @param codingErrorAction The encoder's action for malformed-input and unmappable-character errors
      * @return The encoder for the specified {@code charset}
      */
-    public static CharsetEncoder encoder(Charset charset, CodingErrorAction codingErrorAction) {
+    public static CharsetEncoder encoder(Encoding charset, CodingErrorAction codingErrorAction) {
         return encoder(charset, codingErrorAction, codingErrorAction);
     }
 
     /**
-     * Returns a cached thread-local {@link CharsetEncoder} for the specified {@link Charset}.
+     * Returns a cached thread-local {@link CharsetEncoder} for the specified {@link Encoding}.
      *
      * @param charset The specified charset
      * @return The encoder for the specified {@code charset}
      */
-    public static CharsetEncoder encoder(Charset charset) {
+    public static CharsetEncoder encoder(Encoding charset) {
         checkNotNull(charset, "charset");
 
-        IDictionary<Charset, CharsetEncoder> map = InternalThreadLocalMap.get().charsetEncoderCache();
+        IDictionary<Encoding, CharsetEncoder> map = InternalThreadLocalMap.get().charsetEncoderCache();
         CharsetEncoder e = map.get(charset);
         if (e != null) {
             e.reset().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
@@ -118,22 +118,22 @@ public static class CharsetUtil
     }
 
     /**
-     * @deprecated Use {@link #decoder(Charset)}.
+     * @deprecated Use {@link #decoder(Encoding)}.
      */
     [Obsolete]
-    public static CharsetDecoder getDecoder(Charset charset) {
+    public static CharsetDecoder getDecoder(Encoding charset) {
         return decoder(charset);
     }
 
     /**
-     * Returns a new {@link CharsetDecoder} for the {@link Charset} with specified error actions.
+     * Returns a new {@link CharsetDecoder} for the {@link Encoding} with specified error actions.
      *
      * @param charset The specified charset
      * @param malformedInputAction The decoder's action for malformed-input errors
      * @param unmappableCharacterAction The decoder's action for unmappable-character errors
      * @return The decoder for the specified {@code charset}
      */
-    public static CharsetDecoder decoder(Charset charset, CodingErrorAction malformedInputAction,
+    public static CharsetDecoder decoder(Encoding charset, CodingErrorAction malformedInputAction,
                                          CodingErrorAction unmappableCharacterAction) {
         checkNotNull(charset, "charset");
         CharsetDecoder d = charset.newDecoder();
@@ -142,26 +142,26 @@ public static class CharsetUtil
     }
 
     /**
-     * Returns a new {@link CharsetDecoder} for the {@link Charset} with the specified error action.
+     * Returns a new {@link CharsetDecoder} for the {@link Encoding} with the specified error action.
      *
      * @param charset The specified charset
      * @param codingErrorAction The decoder's action for malformed-input and unmappable-character errors
      * @return The decoder for the specified {@code charset}
      */
-    public static CharsetDecoder decoder(Charset charset, CodingErrorAction codingErrorAction) {
+    public static CharsetDecoder decoder(Encoding charset, CodingErrorAction codingErrorAction) {
         return decoder(charset, codingErrorAction, codingErrorAction);
     }
 
     /**
-     * Returns a cached thread-local {@link CharsetDecoder} for the specified {@link Charset}.
+     * Returns a cached thread-local {@link CharsetDecoder} for the specified {@link Encoding}.
      *
      * @param charset The specified charset
      * @return The decoder for the specified {@code charset}
      */
-    public static CharsetDecoder decoder(Charset charset) {
+    public static CharsetDecoder decoder(Encoding charset) {
         checkNotNull(charset, "charset");
 
-        IDictionary<Charset, CharsetDecoder> map = InternalThreadLocalMap.get().charsetDecoderCache();
+        IDictionary<Encoding, CharsetDecoder> map = InternalThreadLocalMap.get().charsetDecoderCache();
         CharsetDecoder d = map.get(charset);
         if (d != null) {
             d.reset().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);

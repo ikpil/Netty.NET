@@ -176,7 +176,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
     /**
      * Create a copy of {@code value} into this instance using the encoding type of {@code charset}.
      */
-    public AsciiString(char[] value, Charset charset) {
+    public AsciiString(char[] value, Encoding charset) {
         this(value, charset, 0, value.length);
     }
 
@@ -184,7 +184,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * Create a copy of {@code value} into a this instance using the encoding type of {@code charset}.
      * The copy will start at index {@code start} and copy {@code length} bytes.
      */
-    public AsciiString(char[] value, Charset charset, int start, int length) {
+    public AsciiString(char[] value, Encoding charset, int start, int length) {
         CharBuffer cbuf = CharBuffer.wrap(value, start, length);
         CharsetEncoder encoder = CharsetUtil.encoder(charset);
         ByteBuffer nativeBuffer = ByteBuffer.allocate((int) (encoder.maxBytesPerChar() * length));
@@ -223,7 +223,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
     /**
      * Create a copy of {@code value} into this instance using the encoding type of {@code charset}.
      */
-    public AsciiString(ICharSequence value, Charset charset) {
+    public AsciiString(ICharSequence value, Encoding charset) {
         this(value, charset, 0, value.length());
     }
 
@@ -231,7 +231,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * Create a copy of {@code value} into this instance using the encoding type of {@code charset}.
      * The copy will start at index {@code start} and copy {@code length} bytes.
      */
-    public AsciiString(ICharSequence value, Charset charset, int start, int length) {
+    public AsciiString(ICharSequence value, Encoding charset, int start, int length) {
         CharBuffer cbuf = CharBuffer.wrap(value, start, start + length);
         CharsetEncoder encoder = CharsetUtil.encoder(charset);
         ByteBuffer nativeBuffer = ByteBuffer.allocate((int) (encoder.maxBytesPerChar() * length));
