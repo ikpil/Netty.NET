@@ -16,6 +16,18 @@
 
 namespace Netty.NET.Common.Internal;
 
+public static class ObjectPool
+{
+    /**
+     * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link object}
+     * that should be pooled.
+     */
+    public static ObjectPool<T> newPool<T>(IObjectCreator<T> creator)
+    {
+        return new RecyclerObjectPool<T>(ObjectUtil.checkNotNull(creator, "creator"));
+    }
+}
+
 /**
  * Light-weight object pool.
  *
@@ -32,13 +44,4 @@ public abstract class ObjectPool<T>
      * {@link ObjectCreator#newObject(Handle)} if no pooled {@link object} is ready to be reused.
      */
     public abstract T get();
-
-    /**
-     * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link object}
-     * that should be pooled.
-     */
-    public static ObjectPool<T> newPool(IObjectCreator<T> creator)
-    {
-        return new RecyclerObjectPool<T>(ObjectUtil.checkNotNull(creator, "creator"));
-    }
 }

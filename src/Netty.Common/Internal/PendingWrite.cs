@@ -13,82 +13,96 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using Netty.NET.Common.Concurrent;
+using Void = Netty.NET.Common.Concurrent.Void;
+
 namespace Netty.NET.Common.Internal;
 
 /**
  * Some pending write which should be picked up later.
  */
-public sealed class PendingWrite 
+public sealed class PendingWrite
 {
-    private static readonly ObjectPool<PendingWrite> RECYCLER = ObjectPool.newPool(new ObjectCreator<PendingWrite>() {
-        @Override
-        public PendingWrite newObject(Handle<PendingWrite> handle) {
-            return new PendingWrite(handle);
-        }
-    });
+    private static readonly ObjectPool<PendingWrite> RECYCLER = ObjectPool.newPool(
+        new AnonymousObjectCreator<PendingWrite>(x => new PendingWrite(x))
+    );
 
     /**
      * Create a new empty {@link RecyclableArrayList} instance
      */
-    public static PendingWrite newInstance(object msg, Promise<Void> promise) {
+    public static PendingWrite newInstance(object msg, Promise<Void> promise)
+    {
         PendingWrite pending = RECYCLER.get();
-        pending.msg = msg;
-        pending.promise = promise;
+        pending._msg = msg;
+        pending._promise = promise;
         return pending;
     }
 
-    private readonly Handle<PendingWrite> handle;
-    private object msg;
-    private Promise<Void> promise;
+    private readonly IObjectPoolHandle<PendingWrite> _handle;
+    private object _msg;
+    private Promise<Void> _promise;
 
-    private PendingWrite(Handle<PendingWrite> handle) {
-        this.handle = handle;
+    private PendingWrite(IObjectPoolHandle<PendingWrite> handle)
+    {
+        _handle = handle;
     }
 
     /**
      * Clear and recycle this instance.
      */
-    public bool recycle() {
-        msg = null;
-        promise = null;
-        handle.recycle(this);
+    public bool recycle()
+    {
+        _msg = null;
+        _promise = null;
+        _handle.recycle(this);
         return true;
     }
 
     /**
      * Fails the underlying {@link Promise} with the given cause and recycle this instance.
      */
-    public bool failAndRecycle(Exception cause) {
-        ReferenceCountUtil.release(msg);
-        if (promise != null) {
-            promise.setFailure(cause);
+    public bool failAndRecycle(Exception cause)
+    {
+        ReferenceCountUtil.release(_msg);
+        if (_promise != null)
+        {
+            _promise.setFailure(cause);
         }
+
         return recycle();
     }
 
     /**
      * Mark the underlying {@link Promise} successfully and recycle this instance.
      */
-    public bool successAndRecycle() {
-        if (promise != null) {
-            promise.setSuccess(null);
+    public bool successAndRecycle()
+    {
+        if (_promise != null)
+        {
+            _promise.setSuccess(null);
         }
+
         return recycle();
     }
 
-    public object msg() {
-        return msg;
+    public object msg()
+    {
+        return _msg;
     }
 
-    public Promise<Void> promise() {
-        return promise;
+    public Promise<Void> promise()
+    {
+        return _promise;
     }
 
     /**
      * Recycle this instance and return the {@link Promise}.
      */
-    public Promise<Void> recycleAndGet() {
-        Promise<Void> promise = this.promise;
+    public Promise<Void> recycleAndGet()
+    {
+        Promise<Void> promise = _promise;
         recycle();
         return promise;
     }
