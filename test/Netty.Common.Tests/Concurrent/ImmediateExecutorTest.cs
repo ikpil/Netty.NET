@@ -28,7 +28,7 @@ namespace Netty.Common.Tests.Concurrent;public class ImmediateExecutorTest {
 
     @Test
     public void testExecuteNonNullRunnable() throws Exception {
-        FutureTask<Void> task = new FutureTask<Void>(new Runnable() {
+        FutureTask<Void> task = new FutureTask<Void>(new IRunnable() {
             @Override
             public void run() {
                 // NOOP

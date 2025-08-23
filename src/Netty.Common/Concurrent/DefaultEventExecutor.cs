@@ -61,7 +61,7 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
     @Override
     protected void run() {
         for (;;) {
-            Runnable task = takeTask();
+            IRunnable task = takeTask();
             if (task != null) {
                 runTask(task);
                 updateLastExecutionTime();

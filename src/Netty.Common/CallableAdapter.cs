@@ -1,3 +1,5 @@
+using Netty.NET.Common.Functional;
+
 namespace Netty.NET.Common;
 
 public class CallableAdapter<T> : ICallable<T>

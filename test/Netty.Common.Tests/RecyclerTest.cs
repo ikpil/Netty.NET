@@ -33,7 +33,7 @@ public class RecyclerTest {
     }
 
     @NotNull
-    protected Thread newThread(Runnable runnable) {
+    protected Thread newThread(IRunnable runnable) {
         return new Thread(runnable);
     }
 
@@ -43,7 +43,7 @@ public class RecyclerTest {
         final Recycler<HandledObject> recycler = newRecycler(1024);
         final AtomicBoolean collected = new AtomicBoolean();
         final AtomicReference<HandledObject> reference = new AtomicReference<HandledObject>();
-        Thread thread = new Thread(new Runnable() {
+        Thread thread = new Thread(new IRunnable() {
         @Override
         public void run() {
         HandledObject object = recycler.get();
@@ -99,7 +99,7 @@ public void testMultipleRecycleAtDifferentThread() throws ThreadInterruptedExcep
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
-    final Thread thread1 = newThread(new Runnable() {
+    final Thread thread1 = newThread(new IRunnable() {
         @Override
         public void run() {
         object.recycle();
@@ -108,7 +108,7 @@ public void testMultipleRecycleAtDifferentThread() throws ThreadInterruptedExcep
     thread1.start();
     thread1.join();
 
-    final Thread thread2 = newThread(new Runnable() {
+    final Thread thread2 = newThread(new IRunnable() {
         @Override
         public void run() {
         try {
@@ -134,7 +134,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterrupte
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
 
     final CountDownLatch countDownLatch = new CountDownLatch(2);
-    final Thread thread1 = newThread(new Runnable() {
+    final Thread thread1 = newThread(new IRunnable() {
         @Override
         public void run() {
         try {
@@ -151,7 +151,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterrupte
     });
     thread1.start();
 
-    final Thread thread2 = newThread(new Runnable() {
+    final Thread thread2 = newThread(new IRunnable() {
         @Override
         public void run() {
         try {
@@ -191,7 +191,7 @@ public void testMultipleRecycleRacing() throws ThreadInterruptedException {
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
 
     final CountDownLatch countDownLatch = new CountDownLatch(1);
-    final Thread thread1 = newThread(new Runnable() {
+    final Thread thread1 = newThread(new IRunnable() {
         @Override
         public void run() {
         try {
@@ -298,7 +298,7 @@ public void testRecycleAtDifferentThread() throws Exception {
     final HandledObject o = recycler.get();
     final HandledObject o2 = recycler.get();
 
-    final Thread thread = newThread(new Runnable() {
+    final Thread thread = newThread(new IRunnable() {
         @Override
         public void run() {
         o.recycle();
@@ -319,13 +319,13 @@ public void testRecycleAtTwoThreadsMulti() throws Exception {
 
     ExecutorService single = Executors.newSingleThreadExecutor(new IThreadFactory() {
         @Override
-        public Thread newThread(@NotNull Runnable r) {
+        public Thread newThread(@NotNull IRunnable r) {
         return RecyclerTest.this.newThread(r);
     }
     });
 
     final CountDownLatch latch1 = new CountDownLatch(1);
-    single.execute(new Runnable() {
+    single.execute(new IRunnable() {
         @Override
         public void run() {
         o.recycle();
@@ -338,7 +338,7 @@ public void testRecycleAtTwoThreadsMulti() throws Exception {
     assertSame(o2, o);
 
     final CountDownLatch latch2 = new CountDownLatch(1);
-    single.execute(new Runnable() {
+    single.execute(new IRunnable() {
         @Override
         public void run() {
         //The object should be recycled
@@ -372,7 +372,7 @@ public void testMaxCapacityWithRecycleAtDifferentThread() throws Exception {
         array[i].recycle();
     }
 
-    final Thread thread = newThread(new Runnable() {
+    final Thread thread = newThread(new IRunnable() {
         @Override
         public void run() {
         for (int i1 = maxCapacity; i1 < array.length; i1++) {
@@ -416,7 +416,7 @@ public void testDiscardingExceedingElementsWithRecycleAtDifferentThread() throws
     instancesCount.set(0);
 
     // Recycle from other thread.
-    final Thread thread = newThread(new Runnable() {
+    final Thread thread = newThread(new IRunnable() {
         @Override
         public void run() {
         for (HandledObject object: array) {

@@ -16,7 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Concurrent;
@@ -43,24 +44,22 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         _parent = parent;
     }
 
-    @Override
-    public IEventExecutorGroup parent() {
-        return parent;
+    public virtual IEventExecutorGroup parent() {
+        return _parent;
     }
 
-    @Override
-    public IEventExecutor next() {
+    public virtual IEventExecutor next() {
         return this;
     }
 
-    @Override
-    public Iterator<IEventExecutor> iterator() {
-        return selfCollection.iterator();
+    public virtual IEnumerable<IEventExecutor> iterator()
+    {
+        return selfCollection;
     }
 
-    @Override
-    public Future<?> shutdownGracefully() {
-        return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeSpan.SECONDS);
+    public IFuture shutdownGracefully()
+    {
+        return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
     /**
@@ -75,18 +74,18 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      */
     @Override
     [Obsolete]
-    public List<Runnable> shutdownNow() {
+    public List<IRunnable> shutdownNow() {
         shutdown();
         return Collections.emptyList();
     }
 
     @Override
-    public Future<?> submit(Runnable task) {
+    public Future<?> submit(IRunnable task) {
         return (Future<?>) super.submit(task);
     }
 
     @Override
-    public Task<T> submit(Runnable task, T result) {
+    public Task<T> submit(IRunnable task, T result) {
         return (Future<T>) super.submit(task, result);
     }
 
@@ -96,7 +95,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     @Override
-    protected final <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
+    protected final <T> RunnableFuture<T> newTaskFor(IRunnable runnable, T value) {
         return new PromiseTask<T>(this, runnable, value);
     }
 
@@ -106,7 +105,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     @Override
-    public IScheduledTask<?> schedule(Runnable command, long delay,
+    public IScheduledTask<?> schedule(IRunnable command, long delay,
                                        TimeSpan unit) {
         throw new NotSupportedException();
     }
@@ -117,19 +116,19 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     @Override
-    public IScheduledTask<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
         throw new NotSupportedException();
     }
 
     @Override
-    public IScheduledTask<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
         throw new NotSupportedException();
     }
 
     /**
-     * Try to execute the given {@link Runnable} and just log if it throws a {@link Exception}.
+     * Try to execute the given {@link IRunnable} and just log if it throws a {@link Exception}.
      */
-    protected static void safeExecute(Runnable task) {
+    protected static void safeExecute(IRunnable task) {
         try {
             runTask(task);
         } catch (Exception t) {
@@ -137,19 +136,19 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         }
     }
 
-    protected static void runTask(@Execute Runnable task) {
+    protected static void runTask(@Execute IRunnable task) {
         task.run();
     }
 
     /**
-     * Like {@link #execute(Runnable)} but does not guarantee the task will be run until either
+     * Like {@link #execute(IRunnable)} but does not guarantee the task will be run until either
      * a non-lazy task is executed or the executor is shut down.
      * <p>
-     * The default implementation just delegates to {@link #execute(Runnable)}.
+     * The default implementation just delegates to {@link #execute(IRunnable)}.
      * </p>
      */
     @UnstableApi
-    public void lazyExecute(Runnable task) {
+    public void lazyExecute(IRunnable task) {
         execute(task);
     }
 
@@ -158,5 +157,5 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      *
      */
     [Obsolete]
-    public interface LazyRunnable extends Runnable { }
+    public interface LazyRunnable extends IRunnable { }
 }

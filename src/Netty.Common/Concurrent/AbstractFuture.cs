@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
 
-public interface IFuture<V>
+public interface IFuture
 {
     AggregateException cause();
 }
@@ -29,7 +29,7 @@ public interface IFuture<V>
  *
  * @param <V>
  */
-public abstract class AbstractFuture<V> : Task<V>, IFuture<V>
+public abstract class AbstractFuture<V> : Task<V>, IFuture
 {
     public AbstractFuture() : base(() => default)
     {

@@ -29,7 +29,7 @@ namespace Netty.Common.Tests.Concurrent
             // queue inspection might observe this task after the CountDownLatch opens.
             final Exchanger<Void> exchanger = new Exchanger<Void>();
             final CountDownLatch latch = new CountDownLatch(3);
-            Runnable task = new Runnable() {
+            IRunnable task = new IRunnable() {
             @Override
             public void run() {
             try {
@@ -41,7 +41,7 @@ namespace Netty.Common.Tests.Concurrent
         }
     };
     executor.execute(task);
-    Future<?> future = executor.submit(new Runnable() {
+    Future<?> future = executor.submit(new IRunnable() {
         @Override
         public void run() {
         latch.countDown();
@@ -73,7 +73,7 @@ namespace Netty.Common.Tests.Concurrent
     public void scheduledAtFixedRateMustRunTaskRepeatedly() throws ThreadInterruptedException {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         final CountDownLatch latch = new CountDownLatch(3);
-        Future<?> future = executor.scheduleAtFixedRate(new Runnable() {
+        Future<?> future = executor.scheduleAtFixedRate(new IRunnable() {
             @Override
             public void run() {
                 latch.countDown();

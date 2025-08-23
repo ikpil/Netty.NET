@@ -20,8 +20,8 @@ namespace Netty.NET.Common.Concurrent;
 
 
 /**
- * {@link IEventExecutorGroup} which will preserve {@link Runnable} execution order but makes no guarantees about what
- * {@link IEventExecutor} (and therefore {@link Thread}) will be used to execute the {@link Runnable}s.
+ * {@link IEventExecutorGroup} which will preserve {@link IRunnable} execution order but makes no guarantees about what
+ * {@link IEventExecutor} (and therefore {@link Thread}) will be used to execute the {@link IRunnable}s.
  *
  * <p>The {@link IEventExecutorGroup#next()} for the wrapped {@link IEventExecutorGroup} must <strong>NOT</strong> return
  * executors of type {@link IOrderedEventExecutor}.
@@ -92,7 +92,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
     //@SuppressWarnings("deprecation")
     @Override
-    public List<Runnable> shutdownNow() {
+    public List<IRunnable> shutdownNow() {
         return group.shutdownNow();
     }
 
@@ -123,12 +123,12 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public Future<?> submit(Runnable task) {
+    public Future<?> submit(IRunnable task) {
         return group.submit(task);
     }
 
     @Override
-    public Task<T> submit(Runnable task, T result) {
+    public Task<T> submit(IRunnable task, T result) {
         return group.submit(task, result);
     }
 
@@ -138,7 +138,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public IScheduledTask<?> schedule(Runnable command, long delay, TimeSpan unit) {
+    public IScheduledTask<?> schedule(IRunnable command, long delay, TimeSpan unit) {
         return group.schedule(command, delay, unit);
     }
 
@@ -148,12 +148,12 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public IScheduledTask<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
         return group.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
-    public IScheduledTask<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
         return group.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
@@ -196,14 +196,14 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public void execute(Runnable command) {
+    public void execute(IRunnable command) {
         group.execute(command);
     }
 
     private static readonly class NonStickyOrderedEventExecutor extends AbstractEventExecutor
-            implements Runnable, OrderedEventExecutor {
+            implements IRunnable, OrderedEventExecutor {
         private readonly IEventExecutor executor;
-        private readonly Queue<Runnable> tasks = PlatformDependent.newMpscQueue();
+        private readonly Queue<IRunnable> tasks = PlatformDependent.newMpscQueue();
 
         private static readonly int NONE = 0;
         private static readonly int SUBMITTED = 1;
@@ -231,7 +231,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
                 int i = 0;
                 try {
                     for (; i < maxTaskExecutePerRun; i++) {
-                        Runnable task = tasks.poll();
+                        IRunnable task = tasks.poll();
                         if (task == null) {
                             break;
                         }
@@ -256,7 +256,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
                         state.set(NONE);
                         // After setting the state to NONE, look at the tasks queue one more time.
                         // If it is empty, then we can return from this method.
-                        // Otherwise, it means the producer thread has called execute(Runnable)
+                        // Otherwise, it means the producer thread has called execute(IRunnable)
                         // and enqueued a task in between the tasks.poll() above and the state.set(NONE) here.
                         // There are two possible scenarios when this happens
                         //
@@ -320,7 +320,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
         }
 
         @Override
-        public void execute(Runnable command) {
+        public void execute(IRunnable command) {
             if (!tasks.offer(command)) {
                 throw new RejectedExecutionException();
             }

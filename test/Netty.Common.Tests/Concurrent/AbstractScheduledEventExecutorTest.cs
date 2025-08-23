@@ -17,7 +17,7 @@ namespace Netty.Common.Tests.Concurrent;
 
 
 public class AbstractScheduledEventExecutorTest {
-    private static final Runnable TEST_RUNNABLE = new Runnable() {
+    private static final IRunnable TEST_RUNNABLE = new IRunnable() {
 
         @Override
         public void run() {
@@ -154,7 +154,7 @@ public class AbstractScheduledEventExecutorTest {
         }
 
         @Override
-        public void execute(Runnable command) {
+        public void execute(IRunnable command) {
             throw new NotSupportedException();
         }
     }

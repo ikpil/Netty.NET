@@ -105,7 +105,7 @@ public void testRemoveAllFromFTLThread() throws Throwable {
 @Test
 public void testMultipleSetRemove() throws Exception {
     final FastThreadLocal<String> threadLocal = new FastThreadLocal<String>();
-    final Runnable runnable = new Runnable() {
+    final IRunnable runnable = new IRunnable() {
         @Override
         public void run() {
         threadLocal.set("1");
@@ -133,7 +133,7 @@ public void testMultipleSetRemove() throws Exception {
 public void testMultipleSetRemove_multipleThreadLocal() throws Exception {
     final FastThreadLocal<String> threadLocal = new FastThreadLocal<String>();
     final FastThreadLocal<String> threadLocal2 = new FastThreadLocal<String>();
-    final Runnable runnable = new Runnable() {
+    final IRunnable runnable = new IRunnable() {
         @Override
         public void run() {
         threadLocal.set("1");
@@ -173,7 +173,7 @@ public void testWrappedProperties() {
 
 @Test
 public void testWrapMany() throws ExecutionException, ThreadInterruptedException {
-class Worker implements Runnable {
+class Worker implements IRunnable {
     final Semaphore semaphore = new Semaphore(0);
     final FutureTask<?> task = new FutureTask<>(this, null);
 
@@ -259,7 +259,7 @@ throws Exception {
     final TestFastThreadLocal threadLocal = new TestFastThreadLocal();
     final TestFastThreadLocal threadLocal2 = new TestFastThreadLocal();
 
-    Runnable runnable = new Runnable() {
+    IRunnable runnable = new IRunnable() {
         @Override
         public void run() {
         if (callGet) {
@@ -272,7 +272,7 @@ throws Exception {
     }
     };
     if (wrap) {
-        Runnable r = runnable;
+        IRunnable r = runnable;
         runnable = () -> FastThreadLocalThread.runWithFastThreadLocal(r);
     }
     Thread thread = fastThreadLocal ? new FastThreadLocalThread(runnable) : new Thread(runnable);
@@ -350,7 +350,7 @@ public void testConstructionWithIndex() throws Exception {
 @Test
 public void testInternalThreadLocalMapExpand() throws Exception {
     final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
-    Runnable runnable = new Runnable() {
+    IRunnable runnable = new IRunnable() {
         @Override
         public void run() {
         int expand_threshold = 1 << 30;
@@ -410,7 +410,7 @@ public void testFastThreadLocalInitialValueWithUnset() throws Exception {
         return InternalThreadLocalMap.UNSET;
     }
     };
-    Runnable runnable = new Runnable() {
+    IRunnable runnable = new IRunnable() {
         @Override
         public void run() {
         try {

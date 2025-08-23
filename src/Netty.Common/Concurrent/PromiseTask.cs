@@ -31,22 +31,22 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
     private static readonly IRunnable FAILED = new SentinelRunnable("FAILED");
 
 
-    // Strictly of type Func<V> or Runnable
+    // Strictly of type Func<V> or IRunnable
     private ICallable<V> task;
 
-    PromiseTask(IEventExecutor executor, IRunnable runnable, V result) 
+    internal PromiseTask(IEventExecutor executor, IRunnable runnable, V result) 
         : base(executor)
     {
         task = new CallableAdapter<V>(runnable, result);
     }
 
-    PromiseTask(IEventExecutor executor, IRunnable runnable) 
+    internal PromiseTask(IEventExecutor executor, IRunnable runnable) 
         : base(executor)
     {
         task = new CallableAdapter<V>(runnable, default);
     }
 
-    PromiseTask(IEventExecutor executor, Func<V> callable) 
+    internal PromiseTask(IEventExecutor executor, Func<V> callable) 
     : base(executor)
     {
         task = new AnonymousCallable<V>(callable);
@@ -58,7 +58,7 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
         return task.call();
     }
 
-    public void run() {
+    public virtual void run() {
         try {
             if (setUncancellableInternal()) {
                 V result = runTask();
@@ -81,11 +81,11 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
     }
 
     @Override
-    public final Promise<V> setFailure(Exception cause) {
+    public Promise<V> setFailure(Exception cause) {
         throw new InvalidOperationException();
     }
 
-    protected final Promise<V> setFailureInternal(Exception cause) {
+    protected Promise<V> setFailureInternal(Exception cause) {
         super.setFailure(cause);
         clearTaskAfterCompletion(true, FAILED);
         return this;
@@ -101,11 +101,11 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
     }
 
     @Override
-    public final Promise<V> setSuccess(V result) {
+    public Promise<V> setSuccess(V result) {
         throw new InvalidOperationException();
     }
 
-    protected final Promise<V> setSuccessInternal(V result) {
+    protected Promise<V> setSuccessInternal(V result) {
         super.setSuccess(result);
         clearTaskAfterCompletion(true, COMPLETED);
         return this;
@@ -121,26 +121,24 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
     }
 
     @Override
-    public final bool setUncancellable() {
+    public bool setUncancellable() {
         throw new InvalidOperationException();
     }
 
-    protected final bool setUncancellableInternal() {
-        return super.setUncancellable();
+    protected bool setUncancellableInternal() {
+        return base.setUncancellable();
     }
 
-    @Override
     public bool cancel(bool mayInterruptIfRunning) {
-        return clearTaskAfterCompletion(super.cancel(mayInterruptIfRunning), CANCELLED);
+        return clearTaskAfterCompletion(base.cancel(mayInterruptIfRunning), CANCELLED);
     }
 
-    @Override
-    protected StringBuilder toStringBuilder() {
-        StringBuilder buf = super.toStringBuilder();
-        buf.setCharAt(buf.length() - 1, ',');
+    protected override StringBuilder toStringBuilder() {
+        StringBuilder buf = base.toStringBuilder();
+        buf.setCharAt(buf.Length - 1, ',');
 
-        return buf.append(" task: ")
-                  .append(task)
-                  .append(')');
+        return buf.Append(" task: ")
+                  .Append(task)
+                  .Append(')');
     }
 }

@@ -58,7 +58,7 @@ assertFalse(atomicRes.get());
 
 assumeTrue(PlatformDependent.javaVersion() >= 21);
 Method startVirtualThread = getStartVirtualThreadMethod();
-Thread virtualThread = (Thread) startVirtualThread.invoke(null, new Runnable() {
+Thread virtualThread = (Thread) startVirtualThread.invoke(null, new IRunnable() {
     @Override
     public void run() {
 }
@@ -77,7 +77,7 @@ public void testGetVirtualThreadCheckMethod() throws Throwable {
         assertFalse(isVirtual);
 
         Method startVirtualThread = getStartVirtualThreadMethod();
-        Thread virtualThread = (Thread) startVirtualThread.invoke(null, new Runnable() {
+        Thread virtualThread = (Thread) startVirtualThread.invoke(null, new IRunnable() {
             @Override
             public void run() {
         }
@@ -88,7 +88,7 @@ public void testGetVirtualThreadCheckMethod() throws Throwable {
 }
 
 private Method getStartVirtualThreadMethod() throws NoSuchMethodException {
-    return Thread.class.getMethod("startVirtualThread", Runnable.class);
+    return Thread.class.getMethod("startVirtualThread", IRunnable.class);
 }
 
 private static class SubThread extends Thread {

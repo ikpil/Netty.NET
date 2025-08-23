@@ -27,7 +27,7 @@ namespace Netty.Common.Tests.Internal
         public void testCleanup() throws Exception {
             final AtomicBoolean freeCalled = new AtomicBoolean();
             final CountDownLatch latch = new CountDownLatch(1);
-            temporaryThread = new Thread(new Runnable() {
+            temporaryThread = new Thread(new IRunnable() {
             @Override
             public void run() {
             try {
@@ -38,7 +38,7 @@ namespace Netty.Common.Tests.Internal
         }
     });
     temporaryThread.start();
-    ObjectCleaner.register(temporaryThread, new Runnable() {
+    ObjectCleaner.register(temporaryThread, new IRunnable() {
         @Override
         public void run() {
         freeCalled.set(true);
@@ -66,7 +66,7 @@ namespace Netty.Common.Tests.Internal
     public void testCleanupContinuesDespiteThrowing() throws ThreadInterruptedException {
         final AtomicInteger freeCalledCount = new AtomicInteger();
         final CountDownLatch latch = new CountDownLatch(1);
-        temporaryThread = new Thread(new Runnable() {
+        temporaryThread = new Thread(new IRunnable() {
             @Override
             public void run() {
                 try {
@@ -78,14 +78,14 @@ namespace Netty.Common.Tests.Internal
         });
         temporaryThread.start();
         temporaryObject = new Object();
-        ObjectCleaner.register(temporaryThread, new Runnable() {
+        ObjectCleaner.register(temporaryThread, new IRunnable() {
             @Override
             public void run() {
                 freeCalledCount.incrementAndGet();
                 throw new RuntimeException("expected");
             }
         });
-        ObjectCleaner.register(temporaryObject, new Runnable() {
+        ObjectCleaner.register(temporaryObject, new IRunnable() {
             @Override
             public void run() {
                 freeCalledCount.incrementAndGet();
@@ -112,7 +112,7 @@ namespace Netty.Common.Tests.Internal
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testCleanerThreadIsDaemon() throws Exception {
         temporaryObject = new Object();
-        ObjectCleaner.register(temporaryObject, new Runnable() {
+        ObjectCleaner.register(temporaryObject, new IRunnable() {
             @Override
             public void run() {
                 // NOOP

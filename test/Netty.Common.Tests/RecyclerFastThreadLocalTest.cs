@@ -19,7 +19,7 @@ namespace Netty.Common.Tests;
 public class RecyclerFastThreadLocalTest extends RecyclerTest {
     @NotNull
     @Override
-    protected Thread newThread(Runnable runnable) {
+    protected Thread newThread(IRunnable runnable) {
         return new FastThreadLocalThread(runnable);
     }
 
@@ -30,7 +30,7 @@ public class RecyclerFastThreadLocalTest extends RecyclerTest {
         final Recycler<HandledObject> recycler = newRecycler(1024);
         final AtomicBoolean collected = new AtomicBoolean();
         final AtomicReference<HandledObject> reference = new AtomicReference<HandledObject>();
-        Thread thread = new FastThreadLocalThread(new Runnable() {
+        Thread thread = new FastThreadLocalThread(new IRunnable() {
             @Override
             public void run() {
                 HandledObject object = recycler.get();

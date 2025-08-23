@@ -53,7 +53,7 @@ public class NonStickyEventExecutorGroupTest {
             final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
             List<Thread> threadList = new ArrayList<Thread>(threads);
             for (int i = 0 ; i < threads; i++) {
-                Thread thread = new Thread(new Runnable() {
+                Thread thread = new Thread(new IRunnable() {
                     @Override
                     public void run() {
                         try {
@@ -92,7 +92,7 @@ public class NonStickyEventExecutorGroupTest {
                 final CountDownLatch firstCompleted = new CountDownLatch(1);
                 final CountDownLatch latch = new CountDownLatch(2);
                 for (int i = 0; i < 2; i++) {
-                    executor.execute(new Runnable() {
+                    executor.execute(new IRunnable() {
                         @Override
                         public void run() {
                             firstCompleted.countDown();
@@ -123,7 +123,7 @@ public class NonStickyEventExecutorGroupTest {
             final int id = i;
             assertFalse(executor.inEventLoop());
             assertFalse(executor.inEventLoop(Thread.CurrentThread));
-            futures.add(executor.submit(new Runnable() {
+            futures.add(executor.submit(new IRunnable() {
                 @Override
                 public void run() {
                     try {

@@ -16,11 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Netty.NET.Common.Internal;
@@ -378,6 +377,11 @@ public static class StringUtil
         return decodeHexDump(hexDump, 0, hexDump.length());
     }
 
+    public static string simpleClassName<T>()
+    {
+        return simpleClassName(typeof(T));
+    }
+    
     /**
      * The shortcut to {@link #simpleClassName(Class) simpleClassName(o.getClass())}.
      */
@@ -397,16 +401,20 @@ public static class StringUtil
      * Generates a simplified name from a {@link Class}.  Similar to {@link Class#getSimpleName()}, but it works fine
      * with anonymous classes.
      */
-    public static string simpleClassName(Type clazz)
+    public static string simpleClassName(Type t)
     {
-        string className = ObjectUtil.checkNotNull(clazz, "clazz").Name;
-        int lastDotIdx = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
-        if (lastDotIdx > -1)
+        if (!t.IsGenericType || t.IsGenericTypeDefinition)
         {
-            return className.substring(lastDotIdx + 1);
+            return !t.IsGenericTypeDefinition
+                ? t.Name
+                : t.Name.Remove(t.Name.IndexOf('`'));
         }
 
-        return className;
+        var baseName = simpleClassName(t.GetGenericTypeDefinition());
+        var genericArgNames = t.GetGenericArguments().Select(simpleClassName);
+        var fullGenericArgName = string.Join(',', genericArgNames);
+
+        return $"{baseName}<{fullGenericArgName}>";
     }
 
     /**
@@ -827,28 +835,7 @@ public static class StringUtil
      */
     public static string join(string separator, IEnumerable<string> elements)
     {
-        ObjectUtil.checkNotNull(separator, "separator");
-        ObjectUtil.checkNotNull(elements, "elements");
-
-        using var iterator = elements.GetEnumerator();
-        if (!iterator.MoveNext())
-        {
-            return EMPTY_STRING;
-        }
-
-        string firstElement = iterator.Current;
-        if (!iterator.MoveNext())
-        {
-            return firstElement;
-        }
-
-        StringBuilder builder = new StringBuilder(firstElement);
-        do
-        {
-            builder.Append(separator).Append(iterator.Current);
-        } while (iterator.MoveNext());
-
-        return builder.ToString();
+        return string.Join(separator, elements);
     }
 
     /**

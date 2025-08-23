@@ -135,8 +135,8 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public List<Runnable> shutdownNow() {
-        List<Runnable> tasks = super.shutdownNow();
+    public List<IRunnable> shutdownNow() {
+        List<IRunnable> tasks = super.shutdownNow();
         terminationFuture.trySuccess(null);
         return tasks;
     }
@@ -171,7 +171,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    protected <V> RunnableScheduledFuture<V> decorateTask(Runnable runnable, RunnableScheduledFuture<V> task) {
+    protected <V> RunnableScheduledFuture<V> decorateTask(IRunnable runnable, RunnableScheduledFuture<V> task) {
         return runnable instanceof NonNotifyRunnable ?
                 task : new RunnableScheduledFutureTask<V>(this, task, false);
     }
@@ -182,7 +182,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public IScheduledTask<?> schedule(Runnable command, long delay, TimeSpan unit) {
+    public IScheduledTask<?> schedule(IRunnable command, long delay, TimeSpan unit) {
         return (IScheduledTask<> <?>) super.schedule(command, delay, unit);
     }
 
@@ -192,22 +192,22 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public IScheduledTask<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
         return (IScheduledTask<> <?>) super.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
-    public IScheduledTask<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
         return (IScheduledTask<> <?>) super.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
     @Override
-    public Future<?> submit(Runnable task) {
+    public Future<?> submit(IRunnable task) {
         return (Future<?>) super.submit(task);
     }
 
     @Override
-    public Task<T> submit(Runnable task, T result) {
+    public Task<T> submit(IRunnable task, T result) {
         return (Future<T>) super.submit(task, result);
     }
 
@@ -217,7 +217,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public void execute(Runnable command) {
+    public void execute(IRunnable command) {
         super.schedule(new NonNotifyRunnable(command), 0, NANOSECONDS);
     }
 
@@ -283,18 +283,18 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         }
     }
 
-    // This is a special wrapper which we will be used in execute(...) to wrap the submitted Runnable. This is needed as
+    // This is a special wrapper which we will be used in execute(...) to wrap the submitted IRunnable. This is needed as
     // ScheduledThreadPoolExecutor.execute(...) will delegate to submit(...) which will then use decorateTask(...).
     // The problem with this is that decorateTask(...) needs to ensure we only do our own decoration if we not call
     // from execute(...) as otherwise we may end up creating an endless loop because DefaultPromise will call
     // IEventExecutor.execute(...) when notify the listeners of the promise.
     //
     // See https://github.com/netty/netty/issues/6507
-    private static readonly class NonNotifyRunnable : Runnable {
+    private static readonly class NonNotifyRunnable : IRunnable {
 
-        private readonly Runnable task;
+        private readonly IRunnable task;
 
-        NonNotifyRunnable(Runnable task) {
+        NonNotifyRunnable(IRunnable task) {
             this.task = task;
         }
 
@@ -314,7 +314,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
         }
 
         @Override
-        public Thread newThread(@NotNull Runnable r) {
+        public Thread newThread(@NotNull IRunnable r) {
             return delegate.newThread(() -> {
                 threads.add(Thread.CurrentThread);
                 try {

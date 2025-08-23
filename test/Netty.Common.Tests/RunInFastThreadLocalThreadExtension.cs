@@ -30,7 +30,7 @@ public class RunInFastThreadLocalThreadExtension implements InvocationIntercepto
             final ReflectiveInvocationContext<Method> invocationContext,
             final ExtensionContext extensionContext) throws Throwable {
         final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
-        Thread thread = new FastThreadLocalThread(new Runnable() {
+        Thread thread = new FastThreadLocalThread(new IRunnable() {
             @Override
             public void run() {
                 try {

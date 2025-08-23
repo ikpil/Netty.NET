@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Concurrent;
 public final class RejectedExecutionHandlers {
     private static readonly RejectedExecutionHandler REJECT = new RejectedExecutionHandler() {
         @Override
-        public void rejected(Runnable task, SingleThreadEventExecutor executor) {
+        public void rejected(IRunnable task, SingleThreadEventExecutor executor) {
             throw new RejectedExecutionException();
         }
     };
@@ -51,7 +51,7 @@ public final class RejectedExecutionHandlers {
         final long backOffNanos = unit.toNanos(backoffAmount);
         return new RejectedExecutionHandler() {
             @Override
-            public void rejected(Runnable task, SingleThreadEventExecutor executor) {
+            public void rejected(IRunnable task, SingleThreadEventExecutor executor) {
                 if (!executor.inEventLoop()) {
                     for (int i = 0; i < retries; i++) {
                         // Try to wake up the executor so it will empty its task queue.

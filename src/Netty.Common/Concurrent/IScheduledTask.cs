@@ -26,16 +26,16 @@ namespace Netty.NET.Common.Concurrent;
 //[SuppressWarnings("ClassNameSameAsAncestorName")]
 public interface IScheduledTask
 {
-    bool Cancel();
+    bool cancel();
 
-    long Deadline { get; }
+    long deadline { get; }
 
-    Task Completion { get; }
+    Task completion { get; }
 
-    TaskAwaiter GetAwaiter();
+    TaskAwaiter getAwaiter();
 }
 
-public interface IScheduledTask<T> : IScheduledTask
+public interface IScheduledTask<out T> : IScheduledTask
 {
     T Result { get; }    
 }

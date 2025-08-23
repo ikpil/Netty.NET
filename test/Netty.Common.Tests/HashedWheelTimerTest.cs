@@ -158,7 +158,7 @@ public class HashedWheelTimerTest {
         final CountDownLatch timeoutLatch = new CountDownLatch(1);
         IExecutor executor = new IExecutor() {
             @Override
-            public void execute(Runnable command) {
+            public void execute(IRunnable command) {
                 try {
                     command.run();
                 } finally {

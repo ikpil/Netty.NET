@@ -106,7 +106,7 @@ public interface IExecutorService : IExecutor
     Task<T> submitAsync<T>(Func<T> task);
 
     /**
-     * Submits a Runnable task for execution and returns a Future
+     * Submits a IRunnable task for execution and returns a Future
      * representing that task. The Future's {@code get} method will
      * return the given result upon successful completion.
      *
@@ -121,7 +121,7 @@ public interface IExecutorService : IExecutor
     Task<T> submitAsync<T>(IRunnable task, T result);
 
     /**
-     * Submits a Runnable task for execution and returns a Future
+     * Submits a IRunnable task for execution and returns a Future
      * representing that task. The Future's {@code get} method will
      * return {@code null} upon <em>successful</em> completion.
      *

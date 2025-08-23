@@ -18,7 +18,6 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -38,14 +37,14 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      */
     public static readonly string PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
 
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultPromise));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultPromise<V>));
     private static readonly IInternalLogger  rejectedExecutionLogger =
-            InternalLoggerFactory.getInstance(typeof(DefaultPromise).getName() + ".rejectedExecution");
+            InternalLoggerFactory.getInstance(StringUtil.simpleClassName<DefaultPromise<V>>() + ".rejectedExecution");
     private static readonly int MAX_LISTENER_STACK_DEPTH = Math.Min(8,
             SystemPropertyUtil.getInt(PROPERTY_MAX_LISTENER_STACK_DEPTH, 8));
     //@SuppressWarnings("rawtypes")
-    private static readonly AtomicReferenceFieldUpdater<DefaultPromise, object> RESULT_UPDATER =
-            AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultPromise), typeof(object), "result");
+    private static readonly AtomicReferenceFieldUpdater<DefaultPromise<V>, object> RESULT_UPDATER =
+            AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultPromise<V>), typeof(object), "result");
     private static readonly object SUCCESS = new object();
     private static readonly object UNCANCELLABLE = new object();
     private static readonly CauseHolder CANCELLATION_CAUSE_HOLDER = new CauseHolder(
@@ -83,7 +82,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      * @param executor
      *        the {@link IEventExecutor} which is used to notify the promise once it is complete.
      *        It is assumed this executor will protect against {@link StackOverflowError} exceptions.
-     *        The executor may be used to avoid {@link StackOverflowError} by executing a {@link Runnable} if the stack
+     *        The executor may be used to avoid {@link StackOverflowError} by executing a {@link IRunnable} if the stack
      *        depth exceeds a threshold.
      *
      */
@@ -96,32 +95,28 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      */
     protected DefaultPromise() {
         // only for subclasses
-        executor = null;
+        _executor = null;
     }
 
-    @Override
-    public Promise<V> setSuccess(V result) {
+    public virtual Promise<V> setSuccess(V result) {
         if (setSuccess0(result)) {
             return this;
         }
         throw new InvalidOperationException("complete already: " + this);
     }
 
-    @Override
-    public bool trySuccess(V result) {
+    public virtual bool trySuccess(V result) {
         return setSuccess0(result);
     }
 
-    @Override
-    public Promise<V> setFailure(Exception cause) {
+    public virtual Promise<V> setFailure(Exception cause) {
         if (setFailure0(cause)) {
             return this;
         }
         throw new InvalidOperationException("complete already: " + this, cause);
     }
 
-    @Override
-    public bool tryFailure(Exception cause) {
+    public virtual bool tryFailure(Exception cause) {
         return setFailure0(cause);
     }
 
@@ -227,8 +222,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         return this;
     }
 
-    @Override
-    public Promise<V> await() {
+    public virtual Promise<V> await() {
         if (isDone()) {
             return this;
         }
@@ -441,7 +435,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      * Get the executor used to notify listeners when this promise is complete.
      * <p>
      * It is assumed this executor will protect against {@link StackOverflowError} exceptions.
-     * The executor may be used to avoid {@link StackOverflowError} by executing a {@link Runnable} if the stack
+     * The executor may be used to avoid {@link StackOverflowError} by executing a {@link IRunnable} if the stack
      * depth exceeds a threshold.
      * @return The executor used to notify listeners when this promise is complete.
      */
@@ -490,7 +484,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             }
         }
 
-        safeExecute(executor, new Runnable() {
+        safeExecute(executor, new IRunnable() {
             @Override
             public void run() {
                 notifyListenersNow();
@@ -520,7 +514,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             }
         }
 
-        safeExecute(executor, new Runnable() {
+        safeExecute(executor, new IRunnable() {
             @Override
             public void run() {
                 notifyListener0(future, listener);
@@ -751,7 +745,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             if (listeners instanceof GenericProgressiveFutureListener[]) {
                 final GenericProgressiveFutureListener<?>[] array =
                         (GenericProgressiveFutureListener<?>[]) listeners;
-                safeExecute(executor, new Runnable() {
+                safeExecute(executor, new IRunnable() {
                     @Override
                     public void run() {
                         notifyProgressiveListeners0(self, array, progress, total);
@@ -760,7 +754,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             } else {
                 final GenericProgressiveFutureListener<ProgressiveFuture<V>> l =
                         (GenericProgressiveFutureListener<ProgressiveFuture<V>>) listeners;
-                safeExecute(executor, new Runnable() {
+                safeExecute(executor, new IRunnable() {
                     @Override
                     public void run() {
                         notifyProgressiveListener0(self, l, progress, total);
@@ -847,7 +841,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
 
-    private static void safeExecute(IEventExecutor executor, Runnable task) {
+    private static void safeExecute(IEventExecutor executor, IRunnable task) {
         try {
             executor.execute(task);
         } catch (Exception t) {

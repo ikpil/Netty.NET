@@ -65,12 +65,12 @@ public class NettyRuntimeTests {
         final CyclicBarrier barrier = new CyclicBarrier(3);
 
         final AtomicReference<IllegalStateException> firstReference = new AtomicReference<IllegalStateException>();
-        final Runnable firstTarget = getRunnable(holder, barrier, firstReference);
+        final IRunnable firstTarget = getRunnable(holder, barrier, firstReference);
         final Thread firstGet = new Thread(firstTarget);
         firstGet.start();
 
         final AtomicReference<IllegalStateException> secondRefernce = new AtomicReference<IllegalStateException>();
-        final Runnable secondTarget = getRunnable(holder, barrier, secondRefernce);
+        final IRunnable secondTarget = getRunnable(holder, barrier, secondRefernce);
         final Thread secondGet = new Thread(secondTarget);
         secondGet.start();
 
@@ -87,11 +87,11 @@ public class NettyRuntimeTests {
         assertNull(secondRefernce.get());
     }
 
-    private static Runnable getRunnable(
+    private static IRunnable getRunnable(
             final NettyRuntime.AvailableProcessorsHolder holder,
             final CyclicBarrier barrier,
             final AtomicReference<IllegalStateException> reference) {
-        return new Runnable() {
+        return new IRunnable() {
             @Override
             public void run() {
                 await(barrier);
@@ -109,7 +109,7 @@ public class NettyRuntimeTests {
     public void testRacingGetAndSet() throws ThreadInterruptedException {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         final CyclicBarrier barrier = new CyclicBarrier(3);
-        final Thread get = new Thread(new Runnable() {
+        final Thread get = new Thread(new IRunnable() {
             @Override
             public void run() {
                 await(barrier);
@@ -120,7 +120,7 @@ public class NettyRuntimeTests {
         get.start();
 
         final AtomicReference<IllegalStateException> setException = new AtomicReference<IllegalStateException>();
-        final Thread set = new Thread(new Runnable() {
+        final Thread set = new Thread(new IRunnable() {
             @Override
             public void run() {
                 await(barrier);

@@ -103,11 +103,11 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      * is backing the {@link IEventExecutor}. Once an {@link IEventExecutor} was suspended it will be started again
      * by submitting work to it via one of the following methods:
      * <ul>
-     *   <li>{@link #execute(Runnable)}</li>
-     *   <li>{@link #schedule(Runnable, long, TimeSpan)}</li>
+     *   <li>{@link #execute(IRunnable)}</li>
+     *   <li>{@link #schedule(IRunnable, long, TimeSpan)}</li>
      *   <li>{@link #schedule(Callable, long, TimeSpan)}</li>
-     *   <li>{@link #scheduleAtFixedRate(Runnable, long, long, TimeSpan)}</li>
-     *   <li>{@link #scheduleWithFixedDelay(Runnable, long, long, TimeSpan)}</li>
+     *   <li>{@link #scheduleAtFixedRate(IRunnable, long, long, TimeSpan)}</li>
+     *   <li>{@link #scheduleWithFixedDelay(IRunnable, long, long, TimeSpan)}</li>
      * </ul>
      *
      * Even if this method returns {@code true} it might take some time for the {@link IEventExecutor} to fully suspend

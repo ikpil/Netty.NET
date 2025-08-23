@@ -44,7 +44,7 @@ public class PromiseCombiner
             if (executor.inEventLoop()) {
                 operationComplete0(future);
             } else {
-                executor.execute(new Runnable() {
+                executor.execute(new IRunnable() {
                     @Override
                     public void run() {
                         operationComplete0(future);

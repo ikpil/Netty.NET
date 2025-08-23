@@ -29,7 +29,7 @@ public class ResourceLeakDetectorTest {
         Thread[] threads = new Thread[50];
         final CyclicBarrier barrier = new CyclicBarrier(threads.length);
         for (int i = 0; i < threads.length; i++) {
-        Thread t = new Thread(new Runnable() {
+        Thread t = new Thread(new IRunnable() {
             final Queue<LeakAwareResource> resources = new ArrayDeque<LeakAwareResource>(100);
 
             @Override

@@ -21,7 +21,7 @@ public class SingleThreadEventExecutorTest {
         private final CountDownLatch startedLatch = new CountDownLatch(1);
         private final CountDownLatch runLatch = new CountDownLatch(1);
 
-        TestThread(Runnable task) {
+        TestThread(IRunnable task) {
             super(task);
         }
 
@@ -49,7 +49,7 @@ public class SingleThreadEventExecutorTest {
     private static final class TestThreadFactory implements IThreadFactory {
         final LinkedBlockingQueue<TestThread> threads = new LinkedBlockingQueue<>();
         @Override
-        public Thread newThread(@NotNull Runnable r) {
+        public Thread newThread(@NotNull IRunnable r) {
             TestThread thread = new TestThread(r);
             threads.add(thread);
             return thread;
@@ -66,7 +66,7 @@ public class SingleThreadEventExecutorTest {
         @Override
         protected void run() {
             while (!confirmShutdown() && !canSuspend()) {
-                Runnable task = takeTask();
+                IRunnable task = takeTask();
                 if (task != null) {
                     task.run();
                 }
@@ -203,7 +203,7 @@ public class SingleThreadEventExecutorTest {
             @Override
             protected void run() {
                 while (!confirmShutdown()) {
-                    Runnable task = takeTask();
+                    IRunnable task = takeTask();
                     if (task != null) {
                         task.run();
                     }
@@ -227,7 +227,7 @@ public class SingleThreadEventExecutorTest {
         assertThrows(RejectedExecutionException.class, new Executable() {
             @Override
             public void execute() {
-                executor.execute(new Runnable() {
+                executor.execute(new IRunnable() {
                     @Override
                     public void run() {
                         // Noop.
@@ -246,7 +246,7 @@ public class SingleThreadEventExecutorTest {
             protected void run() {
                 threadRef.set(Thread.CurrentThread);
                 while (!confirmShutdown()) {
-                    Runnable task = takeTask();
+                    IRunnable task = takeTask();
                     if (task != null) {
                         task.run();
                     }
@@ -295,7 +295,7 @@ public class SingleThreadEventExecutorTest {
             @Override
             protected void run() {
                 while (!confirmShutdown()) {
-                    Runnable task = takeTask();
+                    IRunnable task = takeTask();
                     if (task != null) {
                         task.run();
                     }
@@ -307,7 +307,7 @@ public class SingleThreadEventExecutorTest {
                 @Override
                 public void execute() throws Throwable {
                     final Promise<Void> promise = executor.newPromise();
-                    executor.execute(new Runnable() {
+                    executor.execute(new IRunnable() {
                         @Override
                         public void run() {
                             try {
@@ -346,7 +346,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    static class LatchTask extends CountDownLatch implements Runnable {
+    static class LatchTask extends CountDownLatch implements IRunnable {
         LatchTask() {
             super(1);
         }
@@ -365,7 +365,7 @@ public class SingleThreadEventExecutorTest {
                 Executors.defaultThreadFactory(), false) {
 
             @Override
-            protected boolean wakesUpForTask(final Runnable task) {
+            protected boolean wakesUpForTask(final IRunnable task) {
                 return !(task instanceof LazyLatchTask);
             }
 
@@ -430,14 +430,14 @@ public class SingleThreadEventExecutorTest {
     public void testTaskAddedAfterShutdownNotAbandoned() throws Exception {
 
         // A queue that doesn't support remove, so tasks once added cannot be rejected anymore
-        LinkedBlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<Runnable>() {
+        LinkedBlockingQueue<IRunnable> taskQueue = new LinkedBlockingQueue<IRunnable>() {
             @Override
             public boolean remove(Object o) {
                 throw new NotSupportedException();
             }
         };
 
-        final Runnable dummyTask = new Runnable() {
+        final IRunnable dummyTask = new IRunnable() {
             @Override
             public void run() {
             }
@@ -453,7 +453,7 @@ public class SingleThreadEventExecutorTest {
             @Override
             protected void run() {
                 while (!confirmShutdown()) {
-                    Runnable task = takeTask();
+                    IRunnable task = takeTask();
                     if (task != null) {
                         task.run();
                     }
@@ -503,7 +503,7 @@ public class SingleThreadEventExecutorTest {
             @Override
             protected void run() {
                 while (!confirmShutdown()) {
-                    Runnable task = takeTask();
+                    IRunnable task = takeTask();
                     if (task != null) {
                         task.run();
                     }
@@ -541,7 +541,7 @@ public class SingleThreadEventExecutorTest {
             @Override
             protected void run() {
                 while (!confirmShutdown()) {
-                    Runnable task = takeTask();
+                    IRunnable task = takeTask();
                     if (task != null) {
                         task.run();
                     }
@@ -555,7 +555,7 @@ public class SingleThreadEventExecutorTest {
 
         //ensure always has at least one task in taskQueue
         //check if scheduled tasks are triggered
-        executor.execute(new Runnable() {
+        executor.execute(new IRunnable() {
             @Override
             public void run() {
                 if (!f.isDone()) {
@@ -570,7 +570,7 @@ public class SingleThreadEventExecutorTest {
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
-    private static final class TestRunnable implements Runnable {
+    private static final class TestRunnable implements IRunnable {
         final AtomicBoolean ran = new AtomicBoolean();
 
         TestRunnable() {
@@ -595,7 +595,7 @@ public class SingleThreadEventExecutorTest {
                 };
 
         // Schedule something so we are sure the run() method will be called.
-        executor.execute(new Runnable() {
+        executor.execute(new IRunnable() {
             @Override
             public void run() {
                 // Noop.

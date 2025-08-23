@@ -179,7 +179,7 @@ public sealed class ReferenceCountUtil
     /**
      * Releases the objects when the thread that called {@link #releaseLater(object)} has been terminated.
      */
-    private static readonly class ReleasingTask : Runnable {
+    private static readonly class ReleasingTask : IRunnable {
 
         private readonly IReferenceCounted obj;
         private readonly int decrement;

@@ -43,7 +43,7 @@ public static class ThreadExecutorMap
 
     /**
      * Decorate the given {@link IExecutor} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
-     * when called from within the {@link Runnable} during execution.
+     * when called from within the {@link IRunnable} during execution.
      */
     public static IExecutor apply(IExecutor executor, IEventExecutor eventExecutor)
     {
@@ -55,8 +55,8 @@ public static class ThreadExecutorMap
     }
 
     /**
-     * Decorate the given {@link Runnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
-     * when called from within the {@link Runnable} during execution.
+     * Decorate the given {@link IRunnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
+     * when called from within the {@link IRunnable} during execution.
      */
     public static IRunnable apply(IRunnable command, IEventExecutor eventExecutor)
     {
@@ -78,7 +78,7 @@ public static class ThreadExecutorMap
 
     /**
      * Decorate the given {@link IThreadFactory} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
-     * when called from within the {@link Runnable} during execution.
+     * when called from within the {@link IRunnable} during execution.
      */
     public static IThreadFactory apply(IThreadFactory threadFactory, IEventExecutor eventExecutor)
     {

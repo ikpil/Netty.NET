@@ -15,53 +15,57 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Text;
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
 
 //@SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
-public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, PriorityQueueNode {
+public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, IPriorityQueueNode<V> 
+{
     // set once when added to priority queue
     private long id;
 
-    private long deadlineNanos;
+    private long _deadlineNanos;
     /* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
-    private readonly long periodNanos;
+    private readonly long _periodNanos;
 
-    private int queueIndex = INDEX_NOT_IN_QUEUE;
+    private int queueIndex = IPriorityQueueNode<V>.INDEX_NOT_IN_QUEUE;
 
-    ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Runnable runnable, long nanoTime) {
-
-        super(executor, runnable);
-        deadlineNanos = nanoTime;
-        periodNanos = 0;
+    public ScheduledFutureTask(AbstractScheduledEventExecutor executor, IRunnable runnable, long nanoTime) 
+        : base(executor, runnable)
+    {
+        _deadlineNanos = nanoTime;
+        _periodNanos = 0;
     }
 
-    ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Runnable runnable, long nanoTime, long period) {
+    public ScheduledFutureTask(AbstractScheduledEventExecutor executor,
+            IRunnable runnable, long nanoTime, long period) 
+    : base(executor, runnable)
+    {
 
-        super(executor, runnable);
-        deadlineNanos = nanoTime;
-        periodNanos = validatePeriod(period);
+        _deadlineNanos = nanoTime;
+        _periodNanos = validatePeriod(period);
     }
 
-    ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Func<V> callable, long nanoTime, long period) {
+    public ScheduledFutureTask(AbstractScheduledEventExecutor executor,
+            Func<V> callable, long nanoTime, long period) 
+        : base(executor, callable)
+    {
 
-        super(executor, callable);
-        deadlineNanos = nanoTime;
-        periodNanos = validatePeriod(period);
+        _deadlineNanos = nanoTime;
+        _periodNanos = validatePeriod(period);
     }
 
-    ScheduledFutureTask(AbstractScheduledEventExecutor executor,
-            Func<V> callable, long nanoTime) {
-
-        super(executor, callable);
-        deadlineNanos = nanoTime;
-        periodNanos = 0;
+    public ScheduledFutureTask(AbstractScheduledEventExecutor executor,
+            Func<V> callable, long nanoTime) 
+    : base(executor, callable)
+    {
+        _deadlineNanos = nanoTime;
+        _periodNanos = 0;
     }
 
     private static long validatePeriod(long period) {
@@ -71,33 +75,33 @@ public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, Priori
         return period;
     }
 
-    ScheduledFutureTask<V> setId(long id) {
+    internal ScheduledFutureTask<V> setId(long id) {
         if (this.id == 0L) {
             this.id = id;
         }
         return this;
     }
 
-    @Override
     protected IEventExecutor executor() {
-        return super.executor();
+        return base.executor();
     }
 
     public long deadlineNanos() {
-        return deadlineNanos;
+        return _deadlineNanos;
     }
 
-    void setConsumed() {
+    internal void setConsumed() {
         // Optimization to avoid checking system clock again
         // after deadline has passed and task has been dequeued
-        if (periodNanos == 0) {
-            assert scheduledExecutor().getCurrentTimeNanos() >= deadlineNanos;
-            deadlineNanos = 0L;
+        if (_periodNanos == 0)
+        {
+            Debug.Assert(scheduledExecutor().getCurrentTimeNanos() >= deadlineNanos);
+            _deadlineNanos = 0L;
         }
     }
 
     public long delayNanos() {
-        if (deadlineNanos == 0L) {
+        if (_deadlineNanos == 0L) {
             return 0L;
         }
         return delayNanos(scheduledExecutor().getCurrentTimeNanos());
@@ -108,21 +112,19 @@ public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, Priori
     }
 
     public long delayNanos(long currentTimeNanos) {
-        return deadlineToDelayNanos(currentTimeNanos, deadlineNanos);
+        return deadlineToDelayNanos(currentTimeNanos, _deadlineNanos);
     }
 
-    @Override
     public long getDelay(TimeSpan unit) {
         return unit.convert(delayNanos(), TimeSpan.NANOSECONDS);
     }
 
-    @Override
-    public int compareTo(Delayed o) {
+    public override int CompareTo(Delayed o) {
         if (this == o) {
             return 0;
         }
 
-        ScheduledFutureTask<?> that = (ScheduledFutureTask<?>) o;
+        ScheduledFutureTask<V> that = (ScheduledFutureTask<V>) o;
         long d = deadlineNanos() - that.deadlineNanos();
         if (d < 0) {
             return -1;
@@ -130,15 +132,16 @@ public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, Priori
             return 1;
         } else if (id < that.id) {
             return -1;
-        } else {
-            assert id != that.id;
+        } else
+        {
+            Debug.Assert(id != that.id);
             return 1;
         }
     }
 
-    @Override
-    public void run() {
-        assert executor().inEventLoop();
+    public override void run()
+    {
+        Debug.Assert(executor().inEventLoop());
         try {
             if (delayNanos() > 0L) {
                 // Not yet expired, need to add or remove from queue
@@ -149,7 +152,7 @@ public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, Priori
                 }
                 return;
             }
-            if (periodNanos == 0) {
+            if (_periodNanos == 0) {
                 if (setUncancellableInternal()) {
                     V result = runTask();
                     setSuccessInternal(result);
@@ -159,10 +162,10 @@ public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, Priori
                 if (!isCancelled()) {
                     runTask();
                     if (!executor().isShutdown()) {
-                        if (periodNanos > 0) {
-                            deadlineNanos += periodNanos;
+                        if (_periodNanos > 0) {
+                            deadlineNanos += _periodNanos;
                         } else {
-                            deadlineNanos = scheduledExecutor().getCurrentTimeNanos() - periodNanos;
+                            deadlineNanos = scheduledExecutor().getCurrentTimeNanos() - _periodNanos;
                         }
                         if (!isCancelled()) {
                             scheduledExecutor().scheduledTaskQueue().add(this);
@@ -175,8 +178,9 @@ public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, Priori
         }
     }
 
-    private AbstractScheduledEventExecutor scheduledExecutor() {
-        return (AbstractScheduledEventExecutor) executor();
+    private AbstractScheduledEventExecutor scheduledExecutor()
+    {
+        return executor() as AbstractScheduledEventExecutor;
     }
 
     /**
@@ -205,7 +209,7 @@ public class ScheduledFutureTask<V> : PromiseTask<V> , IScheduledTask<V>, Priori
         return buf.append(" deadline: ")
                   .append(deadlineNanos)
                   .append(", period: ")
-                  .append(periodNanos)
+                  .append(_periodNanos)
                   .append(')');
     }
 

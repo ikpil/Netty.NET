@@ -76,7 +76,7 @@ public class DefaultPromiseTest {
 }
 
 @Override
-public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+public ScheduledFuture<?> schedule(IRunnable command, long delay, TimeUnit unit) {
     return fail("Cannot schedule commands");
 }
 
@@ -86,12 +86,12 @@ public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeUnit un
 }
 
 @Override
-public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+public ScheduledFuture<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeUnit unit) {
     return fail("Cannot schedule commands");
 }
 
 @Override
-public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay,
+public ScheduledFuture<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay,
     TimeUnit unit) {
     return fail("Cannot schedule commands");
 }
@@ -102,7 +102,7 @@ public boolean inEventLoop(Thread thread) {
 }
 
 @Override
-public void execute(Runnable command) {
+public void execute(IRunnable command) {
     fail("Cannot schedule commands");
 }
 
@@ -247,7 +247,7 @@ public void testListenerNotifyOrder() throws Exception {
             }
             };
 
-            GlobalEventExecutor.INSTANCE.execute(new Runnable() {
+            GlobalEventExecutor.INSTANCE.execute(new IRunnable() {
                 @Override
                 public void run() {
                 promise.setSuccess(null);
@@ -311,7 +311,7 @@ public void testSignalRace() {
         final Map<Thread, DefaultPromise<Void>> promises = new HashMap<Thread, DefaultPromise<Void>>();
         for (int i = 0; i < numberOfAttempts; i++) {
             final DefaultPromise<Void> promise = new DefaultPromise<Void>(executor);
-            final Thread thread = new Thread(new Runnable() {
+            final Thread thread = new Thread(new IRunnable() {
                 @Override
                 public void run() {
                 promise.setSuccess(null);
@@ -372,7 +372,7 @@ throws ThreadInterruptedException {
     final CountDownLatch latch = new CountDownLatch(promiseChainLength);
 
     if (runTestInExecutorThread) {
-        executor.execute(new Runnable() {
+        executor.execute(new IRunnable() {
             @Override
             public void run() {
             testStackOverFlowChainedFuturesA(executor, p, latch);
@@ -414,7 +414,7 @@ throws ThreadInterruptedException {
     final CountDownLatch latch = new CountDownLatch(promiseChainLength);
 
     if (runTestInExecutorThread) {
-        executor.execute(new Runnable() {
+        executor.execute(new IRunnable() {
             @Override
             public void run() {
             testStackOverFlowChainedFuturesB(executor, p, latch);
@@ -502,7 +502,7 @@ private static void testLateListenerIsOrderedCorrectly(Throwable cause) throws T
 
         // This is the important listener. A late listener that is added after all late listeners
         // have completed, and needs to update state before a read operation (on the same executor).
-        executor.execute(new Runnable() {
+        executor.execute(new IRunnable() {
             @Override
             public void run() {
             promise.addListener(new FutureListener<Void>() {
@@ -516,7 +516,7 @@ private static void testLateListenerIsOrderedCorrectly(Throwable cause) throws T
         });
 
         // Simulate a read operation being queued up in the executor.
-        executor.execute(new Runnable() {
+        executor.execute(new IRunnable() {
             @Override
             public void run() {
             // This is the key, we depend upon the state being set in the next listener.
@@ -564,7 +564,7 @@ private static void testListenerNotifyLater(final int numListenersBefore) throws
     }
     };
     final Promise<Void> promise = new DefaultPromise<Void>(executor);
-    executor.execute(new Runnable() {
+    executor.execute(new IRunnable() {
         @Override
         public void run() {
         for (int i = 0; i < numListenersBefore; i++) {
@@ -572,7 +572,7 @@ private static void testListenerNotifyLater(final int numListenersBefore) throws
     }
     promise.setSuccess(null);
 
-    GlobalEventExecutor.INSTANCE.execute(new Runnable() {
+    GlobalEventExecutor.INSTANCE.execute(new IRunnable() {
         @Override
         public void run() {
         promise.addListener(listener);
@@ -595,7 +595,7 @@ private static final class TestEventExecutor extends SingleThreadEventExecutor {
     @Override
     protected void run() {
         for (;;) {
-            Runnable task = takeTask();
+            IRunnable task = takeTask();
             if (task != null) {
                 task.run();
                 updateLastExecutionTime();

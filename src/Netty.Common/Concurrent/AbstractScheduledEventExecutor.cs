@@ -168,7 +168,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * @see #pollScheduledTask(long)
      */
-    protected final Runnable pollScheduledTask() {
+    protected final IRunnable pollScheduledTask() {
         return pollScheduledTask(getCurrentTimeNanos());
     }
 
@@ -179,7 +179,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @return {@code true} if we were able to transfer everything, {@code false} if we need to call this method again
      *         as soon as there is space again in {@code taskQueue}.
      */
-    protected bool fetchFromScheduledTaskQueue(Queue<Runnable> taskQueue) {
+    protected bool fetchFromScheduledTaskQueue(Queue<IRunnable> taskQueue) {
         assert inEventLoop();
         Objects.requireNonNull(taskQueue, "taskQueue");
         if (scheduledTaskQueue == null || scheduledTaskQueue.isEmpty()) {
@@ -187,7 +187,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         }
         long nanoTime = getCurrentTimeNanos();
         for (;;) {
-            Runnable scheduledTask = pollScheduledTask(nanoTime);
+            IRunnable scheduledTask = pollScheduledTask(nanoTime);
             if (scheduledTask == null) {
                 return true;
             }
@@ -200,10 +200,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     /**
-     * Return the {@link Runnable} which is ready to be executed with the given {@code nanoTime}.
+     * Return the {@link IRunnable} which is ready to be executed with the given {@code nanoTime}.
      * You should use {@link #getCurrentTimeNanos()} to retrieve the correct {@code nanoTime}.
      */
-    protected final Runnable pollScheduledTask(long nanoTime) {
+    protected final IRunnable pollScheduledTask(long nanoTime) {
         assert inEventLoop();
 
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
@@ -246,7 +246,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    public IScheduledTask<> <?> schedule(Runnable command, long delay, TimeSpan unit) {
+    public IScheduledTask<> <?> schedule(IRunnable command, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (delay < 0) {
@@ -274,7 +274,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    public IScheduledTask<> <?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<> <?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
@@ -293,7 +293,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    public IScheduledTask<> <?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<> <?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
@@ -327,7 +327,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         // NOOP
     }
 
-    final void scheduleFromEventLoop(final ScheduledFutureTask<?> task) {
+    internal void scheduleFromEventLoop(ScheduledFutureTask<?> task) {
         // nextTaskId a long and so there is no chance it will overflow back to 0
         scheduledTaskQueue().add(task.setId(++nextTaskId));
     }

@@ -55,7 +55,7 @@ namespace Netty.Common.Tests.Concurrent
             // holder for the thread factory, plays the role of a global singleton
             final AtomicReference<DefaultThreadFactory> factory = new AtomicReference<DefaultThreadFactory>();
             final AtomicInteger counter = new AtomicInteger();
-            final Runnable task = new Runnable() {
+            final IRunnable task = new IRunnable() {
                 @Override
                 public void run() {
                     counter.incrementAndGet();
@@ -67,7 +67,7 @@ namespace Netty.Common.Tests.Concurrent
             // create the thread factory, since we are running the thread group brother, the thread
             // factory will now forever be tied to that group
             // we then create a thread from the factory to run a "task" for us
-            final Thread first = new Thread(new ThreadGroup("brother"), new Runnable() {
+            final Thread first = new Thread(new ThreadGroup("brother"), new IRunnable() {
                 @Override
                 public void run() {
                     factory.set(new DefaultThreadFactory("test", false, ThreadPriority.Normal, null));
@@ -89,7 +89,7 @@ namespace Netty.Common.Tests.Concurrent
             // now we will use factory again, this time from a sibling thread group sister
             // if DefaultThreadFactory is "sticky" about thread groups, a security manager
             // that forbids sibling thread groups from messing with each other will strike this down
-            final Thread second = new Thread(new ThreadGroup("sister"), new Runnable() {
+            final Thread second = new Thread(new ThreadGroup("sister"), new IRunnable() {
                 @Override
                 public void run() {
                     final Thread t = factory.get().newThread(task);
@@ -179,7 +179,7 @@ namespace Netty.Common.Tests.Concurrent
         final AtomicReference<ThreadGroup> captured = new AtomicReference<ThreadGroup>();
         final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
 
-        final Thread first = new Thread(new ThreadGroup("wrong"), new Runnable() {
+        final Thread first = new Thread(new ThreadGroup("wrong"), new IRunnable() {
             @Override
             public void run() {
                 final DefaultThreadFactory factory;
@@ -189,7 +189,7 @@ namespace Netty.Common.Tests.Concurrent
                     exception.set(e);
                     throw new RuntimeException(e);
                 }
-                final Thread t = factory.newThread(new Runnable() {
+                final Thread t = factory.newThread(new IRunnable() {
                     @Override
                     public void run() {
                     }
@@ -215,11 +215,11 @@ namespace Netty.Common.Tests.Concurrent
         final AtomicReference<ThreadGroup> firstCaptured = new AtomicReference<ThreadGroup>();
 
         final ThreadGroup firstGroup = new ThreadGroup("first");
-        final Thread first = new Thread(firstGroup, new Runnable() {
+        final Thread first = new Thread(firstGroup, new IRunnable() {
             @Override
             public void run() {
                 factory.set(new DefaultThreadFactory("sticky", false, ThreadPriority.Normal, null));
-                final Thread t = factory.get().newThread(new Runnable() {
+                final Thread t = factory.get().newThread(new IRunnable() {
                     @Override
                     public void run() {
                     }
@@ -235,10 +235,10 @@ namespace Netty.Common.Tests.Concurrent
         final AtomicReference<ThreadGroup> secondCaptured = new AtomicReference<ThreadGroup>();
 
         final ThreadGroup secondGroup = new ThreadGroup("second");
-        final Thread second = new Thread(secondGroup, new Runnable() {
+        final Thread second = new Thread(secondGroup, new IRunnable() {
             @Override
             public void run() {
-                final Thread t = factory.get().newThread(new Runnable() {
+                final Thread t = factory.get().newThread(new IRunnable() {
                     @Override
                     public void run() {
                     }
@@ -261,7 +261,7 @@ namespace Netty.Common.Tests.Concurrent
         final AtomicReference<ThreadGroup> firstCaptured = new AtomicReference<ThreadGroup>();
 
         final ThreadGroup group = new ThreadGroup("first");
-        final Thread first = new Thread(group, new Runnable() {
+        final Thread first = new Thread(group, new IRunnable() {
             @Override
             public void run() {
                 final Thread current = Thread.CurrentThread;
@@ -274,7 +274,7 @@ namespace Netty.Common.Tests.Concurrent
         assertEquals(group, firstCaptured.get());
 
         ThreadGroup currentThreadGroup = Thread.CurrentThread.getThreadGroup();
-        Thread second = factory.get().newThread(new Runnable() {
+        Thread second = factory.get().newThread(new IRunnable() {
             @Override
             public void run() {
                 // NOOP.

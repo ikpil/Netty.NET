@@ -25,23 +25,23 @@ using Netty.NET.Common.Internal.Logging;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Executes {@link Runnable} objects in the caller's thread. If the {@link #execute(Runnable)} is reentrant it will be
- * queued until the original {@link Runnable} finishes execution.
+ * Executes {@link IRunnable} objects in the caller's thread. If the {@link #execute(IRunnable)} is reentrant it will be
+ * queued until the original {@link IRunnable} finishes execution.
  * <p>
- * All {@link Exception} objects thrown from {@link #execute(Runnable)} will be swallowed and logged. This is to ensure
- * that all queued {@link Runnable} objects have the chance to be run.
+ * All {@link Exception} objects thrown from {@link #execute(IRunnable)} will be swallowed and logged. This is to ensure
+ * that all queued {@link IRunnable} objects have the chance to be run.
  */
 public class ImmediateEventExecutor : AbstractEventExecutor 
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ImmediateEventExecutor));
     public static readonly ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
     /**
-     * A Runnable will be queued if we are executing a Runnable. This is to prevent a {@link StackOverflowError}.
+     * A IRunnable will be queued if we are executing a IRunnable. This is to prevent a {@link StackOverflowError}.
      */
     private static readonly FastThreadLocal<Queue<IRunnable>> DELAYED_RUNNABLES = new FastThreadLocal<Queue<IRunnable>>() {
         @Override
-        protected Queue<Runnable> initialValue() {
-            return new ArrayDeque<Runnable>();
+        protected Queue<IRunnable> initialValue() {
+            return new ArrayDeque<IRunnable>();
         }
     };
     /**
@@ -104,22 +104,22 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    public void execute(Runnable command) {
+    public void execute(IRunnable command) {
         ObjectUtil.checkNotNull(command, "command");
         if (!RUNNING.get()) {
             RUNNING.set(true);
             try {
                 command.run();
             } catch (Exception cause) {
-                logger.info("Exception caught while executing Runnable {}", command, cause);
+                logger.info("Exception caught while executing IRunnable {}", command, cause);
             } finally {
-                Queue<Runnable> delayedRunnables = DELAYED_RUNNABLES.get();
-                Runnable runnable;
+                Queue<IRunnable> delayedRunnables = DELAYED_RUNNABLES.get();
+                IRunnable runnable;
                 while ((runnable = delayedRunnables.poll()) != null) {
                     try {
                         runnable.run();
                     } catch (Exception cause) {
-                        logger.info("Exception caught while executing Runnable {}", runnable, cause);
+                        logger.info("Exception caught while executing IRunnable {}", runnable, cause);
                     }
                 }
                 RUNNING.set(false);

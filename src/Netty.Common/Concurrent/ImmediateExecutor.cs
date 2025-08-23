@@ -30,7 +30,7 @@ public final class ImmediateExecutor : IExecutor {
     }
 
     @Override
-    public void execute(Runnable command) {
+    public void execute(IRunnable command) {
         ObjectUtil.checkNotNull(command, "command").run();
     }
 }

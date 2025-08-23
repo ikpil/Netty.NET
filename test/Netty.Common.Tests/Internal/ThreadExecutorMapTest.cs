@@ -57,7 +57,7 @@ public class ThreadExecutorMapTest {
         }
 
         @Override
-        public void execute(@NotNull Runnable command) {
+        public void execute(@NotNull IRunnable command) {
             throw new NotSupportedException();
         }
     };
@@ -66,10 +66,10 @@ public class ThreadExecutorMapTest {
     public void testOldExecutorIsRestored() {
         IExecutor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
         IExecutor executor2 = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, EVENT_EXECUTOR);
-        executor.execute(new Runnable() {
+        executor.execute(new IRunnable() {
             @Override
             public void run() {
-                executor2.execute(new Runnable() {
+                executor2.execute(new IRunnable() {
                     @Override
                     public void run() {
                         assertSame(EVENT_EXECUTOR, ThreadExecutorMap.currentExecutor());
@@ -83,7 +83,7 @@ public class ThreadExecutorMapTest {
     @Test
     public void testDecorateExecutor() {
         IExecutor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
-        executor.execute(new Runnable() {
+        executor.execute(new IRunnable() {
             @Override
             public void run() {
                 assertSame(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
@@ -93,7 +93,7 @@ public class ThreadExecutorMapTest {
 
     @Test
     public void testDecorateRunnable() {
-        ThreadExecutorMap.apply(new Runnable() {
+        ThreadExecutorMap.apply(new IRunnable() {
             @Override
             public void run() {
                 assertSame(ImmediateEventExecutor.INSTANCE,
@@ -106,7 +106,7 @@ public class ThreadExecutorMapTest {
     public void testDecorateThreadFactory() throws ThreadInterruptedException {
         IThreadFactory threadFactory =
                 ThreadExecutorMap.apply(Executors.defaultThreadFactory(), ImmediateEventExecutor.INSTANCE);
-        Thread thread = threadFactory.newThread(new Runnable() {
+        Thread thread = threadFactory.newThread(new IRunnable() {
             @Override
             public void run() {
                 assertSame(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());

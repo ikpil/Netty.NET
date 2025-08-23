@@ -36,7 +36,7 @@ public class ThreadDeathWatcherTest {
             }
         };
 
-        final Runnable task = new Runnable() {
+        final IRunnable task = new IRunnable() {
             @Override
             public void run() {
                 if (!t.isAlive()) {
@@ -82,7 +82,7 @@ public class ThreadDeathWatcherTest {
             }
         };
 
-        final Runnable task = new Runnable() {
+        final IRunnable task = new IRunnable() {
             @Override
             public void run() {
                 run.set(true);
@@ -113,10 +113,10 @@ public class ThreadDeathWatcherTest {
     public void testThreadGroup() throws ThreadInterruptedException {
         final ThreadGroup group = new ThreadGroup("group");
         final AtomicReference<ThreadGroup> capturedGroup = new AtomicReference<ThreadGroup>();
-        final Thread thread = new Thread(group, new Runnable() {
+        final Thread thread = new Thread(group, new IRunnable() {
             @Override
             public void run() {
-                final Thread t = ThreadDeathWatcher.threadFactory.newThread(new Runnable() {
+                final Thread t = ThreadDeathWatcher.threadFactory.newThread(new IRunnable() {
                     @Override
                     public void run() {
                     }

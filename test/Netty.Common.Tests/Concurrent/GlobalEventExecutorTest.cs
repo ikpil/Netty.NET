@@ -81,10 +81,10 @@ public class GlobalEventExecutorTest {
     public void testThreadGroup() throws ThreadInterruptedException {
         final ThreadGroup group = new ThreadGroup("group");
         final AtomicReference<ThreadGroup> capturedGroup = new AtomicReference<ThreadGroup>();
-        final Thread thread = new Thread(group, new Runnable() {
+        final Thread thread = new Thread(group, new IRunnable() {
             @Override
             public void run() {
-                final Thread t = e.threadFactory.newThread(new Runnable() {
+                final Thread t = e.threadFactory.newThread(new IRunnable() {
                     @Override
                     public void run() {
                     }
@@ -130,7 +130,7 @@ public class GlobalEventExecutorTest {
 
         //ensure always has at least one task in taskQueue
         //check if scheduled tasks are triggered
-        e.execute(new Runnable() {
+        e.execute(new IRunnable() {
             @Override
             public void run() {
                 if (!f.isDone()) {
@@ -144,7 +144,7 @@ public class GlobalEventExecutorTest {
         assertTrue(t.ran.get());
     }
 
-    private static final class TestRunnable implements Runnable {
+    private static final class TestRunnable implements IRunnable {
         final AtomicBoolean ran = new AtomicBoolean();
         final long delay;
 
