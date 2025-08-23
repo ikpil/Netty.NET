@@ -16,10 +16,12 @@
 
 using System;
 using System.Text;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
-public interface IRunnableFuture<V> : IRunnable, IFuture<V> {
+public interface IRunnableFuture<V> : IRunnable, IFuture<V> 
+{
 }
 
 public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V> 

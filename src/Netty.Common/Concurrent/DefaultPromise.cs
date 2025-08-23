@@ -413,25 +413,25 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
 
     protected virtual StringBuilder toStringBuilder() {
         StringBuilder buf = new StringBuilder(64)
-                .append(StringUtil.simpleClassName(this))
-                .append('@')
-                .append(int.toHexString(hashCode()));
+                .Append(StringUtil.simpleClassName(this))
+                .Append('@')
+                .Append(int.toHexString(hashCode()));
 
         object result = this.result;
         if (result == SUCCESS) {
-            buf.append("(success)");
+            buf.Append("(success)");
         } else if (result == UNCANCELLABLE) {
-            buf.append("(uncancellable)");
-        } else if (result instanceof CauseHolder) {
-            buf.append("(failure: ")
-                    .append(((CauseHolder) result).cause)
-                    .append(')');
+            buf.Append("(uncancellable)");
+        } else if (result is CauseHolder) {
+            buf.Append("(failure: ")
+                    .Append(((CauseHolder) result).cause)
+                    .Append(')');
         } else if (result != null) {
-            buf.append("(success: ")
-                    .append(result)
-                    .append(')');
+            buf.Append("(success: ")
+                    .Append(result)
+                    .Append(')');
         } else {
-            buf.append("(incomplete)");
+            buf.Append("(incomplete)");
         }
 
         return buf;
@@ -445,7 +445,8 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      * depth exceeds a threshold.
      * @return The executor used to notify listeners when this promise is complete.
      */
-    protected IEventExecutor executor() {
+    protected IEventExecutor executor() 
+    {
         return _executor;
     }
 

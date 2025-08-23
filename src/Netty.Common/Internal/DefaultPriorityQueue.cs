@@ -26,7 +26,6 @@ namespace Netty.NET.Common.Internal;
  * @param <T> The object that is maintained in the queue.
  */
 public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
-    where T : class
 {
     private readonly IComparer<T> _comparer;
     private int _count;
@@ -91,12 +90,12 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
         T result = peek();
         if (result == null)
         {
-            return null;
+            return default;
         }
 
         int newCount = --_count;
         T lastItem = _items[newCount];
-        _items[newCount] = null;
+        _items[newCount] = default;
         if (newCount > 0)
         {
             trickleDown(0, lastItem);
@@ -107,7 +106,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
 
     public T peek()
     {
-        return isEmpty() ? null : _items[0];
+        return isEmpty() ? default : _items[0];
     }
 
     public bool remove(T item)
@@ -121,14 +120,14 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
         _count--;
         if (index == _count)
         {
-            _items[index] = null;
+            _items[index] = default;
         }
         else
         {
             T last = _items[_count];
-            _items[_count] = null;
+            _items[_count] = default;
             trickleDown(index, last);
-            if (_items[index] == last)
+            if (_items[index].Equals(last))
             {
                 bubbleUp(index, last);
             }

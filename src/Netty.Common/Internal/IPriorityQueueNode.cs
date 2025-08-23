@@ -13,26 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Internal;
 
 /**
  * Provides methods for {@link DefaultPriorityQueue} to maintain internal state. These methods should generally not be
  * used outside the scope of {@link DefaultPriorityQueue}.
  */
-public interface PriorityQueueNode 
+public interface IPriorityQueueNode<T>
 {
     /**
      * This should be used to initialize the storage returned by {@link #priorityQueueIndex(DefaultPriorityQueue)}.
      */
-    int INDEX_NOT_IN_QUEUE = -1;
-
+    public const int INDEX_NOT_IN_QUEUE = -1;
+    
     /**
      * Get the last value set by {@link #priorityQueueIndex(DefaultPriorityQueue, int)} for the value corresponding to
      * {@code queue}.
      * <p>
      * Throwing exceptions from this method will result in undefined behavior.
      */
-    int priorityQueueIndex(DefaultPriorityQueue<?> queue);
+    int priorityQueueIndex(DefaultPriorityQueue<T> queue);
 
     /**
      * Used by {@link DefaultPriorityQueue} to maintain state for an element in the queue.
@@ -41,5 +42,5 @@ public interface PriorityQueueNode
      * @param queue The queue for which the index is being set.
      * @param i The index as used by {@link DefaultPriorityQueue}.
      */
-    void priorityQueueIndex(DefaultPriorityQueue<?> queue, int i);
+    void priorityQueueIndex(DefaultPriorityQueue<T> queue, int i);
 }

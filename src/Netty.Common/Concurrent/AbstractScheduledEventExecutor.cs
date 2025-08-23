@@ -13,6 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Concurrent;
 
 
@@ -29,10 +36,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
                 }
             };
 
-    static readonly Runnable WAKEUP_TASK = new Runnable() {
-       @Override
-       public void run() { } // Do nothing
-    };
+            private static readonly IRunnable WAKEUP_TASK = new AnonymousRunnable(() => { });
 
     PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue;
 
@@ -64,7 +68,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @deprecated Please use (or override) {@link #ticker()} instead. This method delegates to {@link #ticker()}. Old
      * code may still call this method for compatibility.
      */
-    protected long getCurrentTimeNanos() {
+    public long getCurrentTimeNanos() {
         return ticker().nanoTime();
     }
 
