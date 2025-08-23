@@ -27,7 +27,7 @@ public static class AsciiStringUtil
      * @param string the {@link AsciiString} to convert
      * @return the new {@link AsciiString} in lower case
      */
-    static AsciiString toLowerCase(final AsciiString string) {
+    static AsciiString toLowerCase(AsciiString string) {
         final byte[] byteArray = string.array();
         final int offset = string.arrayOffset();
         final int length = string.length();
