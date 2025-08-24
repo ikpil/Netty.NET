@@ -13,6 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common;
 
 /**
@@ -27,26 +31,26 @@ public static class AsciiStringUtil
      * @param string the {@link AsciiString} to convert
      * @return the new {@link AsciiString} in lower case
      */
-    static AsciiString toLowerCase(AsciiString string) {
-        final byte[] byteArray = string.array();
-        final int offset = string.arrayOffset();
-        final int length = string.length();
+    public static AsciiString toLowerCase(AsciiString str) {
+        byte[] byteArray = str.array();
+        int offset = str.arrayOffset();
+        int length = str.length();
         if (!containsUpperCase(byteArray, offset, length)) {
-            return string;
+            return str;
         }
-        final byte[] newByteArray = PlatformDependent.allocateUninitializedArray(length);
+        byte[] newByteArray = PlatformDependent.allocateUninitializedArray(length);
         toLowerCase(byteArray, offset, newByteArray);
         return new AsciiString(newByteArray, false);
     }
 
-    private static bool containsUpperCase(final byte[] byteArray, int offset, final int length) {
+    private static bool containsUpperCase(byte[] byteArray, int offset, int length) {
         if (!PlatformDependent.isUnaligned()) {
             return linearContainsUpperCase(byteArray, offset, length);
         }
 
-        final int longCount = length >>> 3;
+        int longCount = length >>> 3;
         for (int i = 0; i < longCount; ++i) {
-            final long word = PlatformDependent.getLong(byteArray, offset);
+            long word = PlatformDependent.getLong(byteArray, offset);
             if (SWARUtil.containsUpperCase(word)) {
                 return true;
             }
@@ -55,8 +59,8 @@ public static class AsciiStringUtil
         return unrolledContainsUpperCase(byteArray, offset, length & 7);
     }
 
-    private static bool linearContainsUpperCase(final byte[] byteArray, final int offset, final int length) {
-        final int end = offset + length;
+    private static bool linearContainsUpperCase(byte[] byteArray, int offset, int length) {
+        int end = offset + length;
         for (int idx = offset; idx < end; ++idx) {
             if (isUpperCase(byteArray[idx])) {
                 return true;
@@ -65,10 +69,10 @@ public static class AsciiStringUtil
         return false;
     }
 
-    private static bool unrolledContainsUpperCase(final byte[] byteArray, int offset, final int byteCount) {
+    private static bool unrolledContainsUpperCase(byte[] byteArray, int offset, int byteCount) {
         assert byteCount >= 0 && byteCount < 8;
         if ((byteCount & int.BYTES) != 0) {
-            final int word = PlatformDependent.getInt(byteArray, offset);
+            int word = PlatformDependent.getInt(byteArray, offset);
             if (SWARUtil.containsUpperCase(word)) {
                 return true;
             }
@@ -89,35 +93,35 @@ public static class AsciiStringUtil
         return false;
     }
 
-    private static void toLowerCase(final byte[] src, final int srcOffset, final byte[] dst) {
+    private static void toLowerCase(byte[] src, int srcOffset, byte[] dst) {
         if (!PlatformDependent.isUnaligned()) {
             linearToLowerCase(src, srcOffset, dst);
             return;
         }
 
-        final int length = dst.length;
-        final int longCount = length >>> 3;
+        int length = dst.length;
+        int longCount = length >>> 3;
         int offset = 0;
         for (int i = 0; i < longCount; ++i) {
-            final long word = PlatformDependent.getLong(src, srcOffset + offset);
+            long word = PlatformDependent.getLong(src, srcOffset + offset);
             PlatformDependent.putLong(dst, offset, SWARUtil.toLowerCase(word));
             offset += long.BYTES;
         }
         unrolledToLowerCase(src, srcOffset + offset, dst, offset, length & 7);
     }
 
-    private static void linearToLowerCase(final byte[] src, final int srcOffset, final byte[] dst) {
-        for (int i = 0; i < dst.length; ++i) {
+    private static void linearToLowerCase(byte[] src, int srcOffset, byte[] dst) {
+        for (int i = 0; i < dst.Length; ++i) {
             dst[i] = toLowerCase(src[srcOffset + i]);
         }
     }
 
-    private static void unrolledToLowerCase(final byte[] src, int srcPos,
-                                            final byte[] dst, int dstOffset, final int byteCount) {
+    private static void unrolledToLowerCase(byte[] src, int srcPos,
+                                            byte[] dst, int dstOffset, int byteCount) {
         assert byteCount >= 0 && byteCount < 8;
         int offset = 0;
         if ((byteCount & int.BYTES) != 0) {
-            final int word = PlatformDependent.getInt(src, srcPos + offset);
+            int word = PlatformDependent.getInt(src, srcPos + offset);
             PlatformDependent.putInt(dst, dstOffset + offset, SWARUtil.toLowerCase(word));
             offset += int.BYTES;
         }
@@ -142,26 +146,26 @@ public static class AsciiStringUtil
      * @param string the {@link AsciiString} to convert
      * @return the {@link AsciiString} in upper case
      */
-    static AsciiString toUpperCase(final AsciiString string) {
-        final byte[] byteArray = string.array();
-        final int offset = string.arrayOffset();
-        final int length = string.length();
+    public static AsciiString toUpperCase(AsciiString str) {
+        byte[] byteArray = str.array();
+        int offset = str.arrayOffset();
+        int length = str.length();
         if (!containsLowerCase(byteArray, offset, length)) {
-            return string;
+            return str;
         }
-        final byte[] newByteArray = PlatformDependent.allocateUninitializedArray(length);
+        byte[] newByteArray = PlatformDependent.allocateUninitializedArray(length);
         toUpperCase(byteArray, offset, newByteArray);
         return new AsciiString(newByteArray, false);
     }
 
-    private static bool containsLowerCase(final byte[] byteArray, int offset, final int length) {
+    private static bool containsLowerCase(byte[] byteArray, int offset, int length) {
         if (!PlatformDependent.isUnaligned()) {
             return linearContainsLowerCase(byteArray, offset, length);
         }
 
-        final int longCount = length >>> 3;
+        int longCount = length >>> 3;
         for (int i = 0; i < longCount; ++i) {
-            final long word = PlatformDependent.getLong(byteArray, offset);
+            long word = PlatformDependent.getLong(byteArray, offset);
             if (SWARUtil.containsLowerCase(word)) {
                 return true;
             }
@@ -170,8 +174,8 @@ public static class AsciiStringUtil
         return unrolledContainsLowerCase(byteArray, offset, length & 7);
     }
 
-    private static bool linearContainsLowerCase(final byte[] byteArray, final int offset, final int length) {
-        final int end = offset + length;
+    private static bool linearContainsLowerCase(byte[] byteArray, int offset, int length) {
+        int end = offset + length;
         for (int idx = offset; idx < end; ++idx) {
             if (isLowerCase(byteArray[idx])) {
                 return true;
@@ -180,10 +184,10 @@ public static class AsciiStringUtil
         return false;
     }
 
-    private static bool unrolledContainsLowerCase(final byte[] byteArray, int offset, final int byteCount) {
+    private static bool unrolledContainsLowerCase(byte[] byteArray, int offset, int byteCount) {
         assert byteCount >= 0 && byteCount < 8;
         if ((byteCount & int.BYTES) != 0) {
-            final int word = PlatformDependent.getInt(byteArray, offset);
+            int word = PlatformDependent.getInt(byteArray, offset);
             if (SWARUtil.containsLowerCase(word)) {
                 return true;
             }
@@ -204,35 +208,35 @@ public static class AsciiStringUtil
         return false;
     }
 
-    private static void toUpperCase(final byte[] src, final int srcOffset, final byte[] dst) {
+    private static void toUpperCase(byte[] src, int srcOffset, byte[] dst) {
         if (!PlatformDependent.isUnaligned()) {
             linearToUpperCase(src, srcOffset, dst);
             return;
         }
 
-        final int length = dst.length;
-        final int longCount = length >>> 3;
+        int length = dst.length;
+        int longCount = length >>> 3;
         int offset = 0;
         for (int i = 0; i < longCount; ++i) {
-            final long word = PlatformDependent.getLong(src, srcOffset + offset);
+            long word = PlatformDependent.getLong(src, srcOffset + offset);
             PlatformDependent.putLong(dst, offset, SWARUtil.toUpperCase(word));
             offset += long.BYTES;
         }
         unrolledToUpperCase(src, srcOffset + offset, dst, offset, length & 7);
     }
 
-    private static void linearToUpperCase(final byte[] src, final int srcOffset, final byte[] dst) {
+    private static void linearToUpperCase(byte[] src, int srcOffset, byte[] dst) {
         for (int i = 0; i < dst.length; ++i) {
             dst[i] = toUpperCase(src[srcOffset + i]);
         }
     }
 
-    private static void unrolledToUpperCase(final byte[] src, int srcOffset,
-                                            final byte[] dst, int dstOffset, final int byteCount) {
+    private static void unrolledToUpperCase(byte[] src, int srcOffset,
+                                            byte[] dst, int dstOffset, int byteCount) {
         assert byteCount >= 0 && byteCount < 8;
         int offset = 0;
         if ((byteCount & int.BYTES) != 0) {
-            final int word = PlatformDependent.getInt(src, srcOffset + offset);
+            int word = PlatformDependent.getInt(src, srcOffset + offset);
             PlatformDependent.putInt(dst, dstOffset + offset, SWARUtil.toUpperCase(word));
             offset += int.BYTES;
         }
@@ -249,7 +253,7 @@ public static class AsciiStringUtil
         }
     }
 
-    private static bool isLowerCase(final byte value) {
+    private static bool isLowerCase(byte value) {
         return value >= 'a' && value <= 'z';
     }
 
@@ -259,7 +263,7 @@ public static class AsciiStringUtil
      * @param value the byte to check
      * @return {@code true} if the byte is upper case, {@code false} otherwise.
      */
-    static bool isUpperCase(final byte value) {
+    static bool isUpperCase(byte value) {
         return value >= 'A' && value <= 'Z';
     }
 
@@ -269,7 +273,7 @@ public static class AsciiStringUtil
      * @param value the byte to convert
      * @return the lower case byte
      */
-    static byte toLowerCase(final byte value) {
+    static byte toLowerCase(byte value) {
         return isUpperCase(value)? (byte) (value + 32) : value;
     }
 
@@ -279,7 +283,7 @@ public static class AsciiStringUtil
      * @param value the byte to convert
      * @return the upper case byte
      */
-    static byte toUpperCase(final byte value) {
+    static byte toUpperCase(byte value) {
         return isLowerCase(value)? (byte) (value - 32) : value;
     }
 }

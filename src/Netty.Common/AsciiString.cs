@@ -1490,30 +1490,8 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
         return res;
     }
 
-    private interface CharEqualityComparator {
-        bool equals(char a, char b);
-    }
 
-    private static readonly class DefaultCharEqualityComparator : CharEqualityComparator {
-        static readonly DefaultCharEqualityComparator INSTANCE = new DefaultCharEqualityComparator();
-        private DefaultCharEqualityComparator() { }
 
-        @Override
-        public bool equals(char a, char b) {
-            return a == b;
-        }
-    }
-
-    private static readonly class AsciiCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
-        static readonly AsciiCaseInsensitiveCharEqualityComparator
-                INSTANCE = new AsciiCaseInsensitiveCharEqualityComparator();
-        private AsciiCaseInsensitiveCharEqualityComparator() { }
-
-        @Override
-        public bool equals(char a, char b) {
-            return equalsIgnoreCase(a, b);
-        }
-    }
 
     private static readonly class GeneralCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
         static readonly GeneralCaseInsensitiveCharEqualityComparator
