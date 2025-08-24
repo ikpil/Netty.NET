@@ -19,6 +19,7 @@ public static class Arrays
     {
         var dest = new T[size];
         Array.Copy(src, dest, size);
+        return dest;
     }
 
     public static T[] copyOfRange<T>(T[] array, int start, int end) where T : struct
