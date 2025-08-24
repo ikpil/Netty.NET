@@ -39,6 +39,9 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
     private static readonly char MAX_CHAR_VALUE = (char)255;
 
     public static readonly int INDEX_NOT_FOUND = -1;
+    
+    public const int CHARACTER_MIN_RADIX = 2;
+    public const int CHARACTER_MAX_RADIX = 36;
 
     public static readonly IHashingStrategy<ICharSequence> CASE_INSENSITIVE_HASHER = new CaseInsensitiveHashingStrategy();
     public static readonly IHashingStrategy<ICharSequence> CASE_SENSITIVE_HASHER = new CaseSensitiveHashingStrategy();
@@ -271,9 +274,9 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      *         The last-visited index If the {@link IByteProcessor#process(byte)} returned {@code false}.
      */
     public int forEachByte(int index, int length, IByteProcessor visitor) {
-        if (isOutOfBounds(index, length, this.length())) {
+        if (isOutOfBounds(index, length, length())) {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
-                    + ") <= " + "length(" + this.length() + ')');
+                    + ") <= " + "length(" + length() + ')');
         }
         return forEachByte0(index, length, visitor);
     }
@@ -306,9 +309,9 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      *         The last-visited index If the {@link IByteProcessor#process(byte)} returned {@code false}.
      */
     public int forEachByteDesc(int index, int length, IByteProcessor visitor) {
-        if (isOutOfBounds(index, length, this.length())) {
+        if (isOutOfBounds(index, length, length())) {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
-                    + ") <= " + "length(" + this.length() + ')');
+                    + ") <= " + "length(" + length() + ')');
         }
         return forEachByteDesc0(index, length, visitor);
     }
@@ -472,14 +475,14 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * @param string the string to concatenate
      * @return a new string which is the concatenation of this string and the specified string.
      */
-    public AsciiString concat(ICharSequence string) {
+    public AsciiString concat(ICharSequence str) {
         int thisLen = length();
         int thatLen = string.length();
         if (thatLen == 0) {
             return this;
         }
 
-        if (string instanceof AsciiString) {
+        if (string is AsciiString) {
             AsciiString that = (AsciiString) string;
             if (isEmpty()) {
                 return that;
@@ -523,7 +526,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * @param string the string to compare.
      * @return {@code true} if the specified string is equal to this string, {@code false} otherwise.
      */
-    public bool contentEqualsIgnoreCase(ICharSequence string) {
+    public bool contentEqualsIgnoreCase(ICharSequence str) {
         if (this == string) {
             return true;
         }
@@ -532,7 +535,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
             return false;
         }
 
-        if (string instanceof AsciiString) {
+        if (string is AsciiString) {
             AsciiString other = (AsciiString) string;
             byte[] value = _value;
             if (_offset == 0 && other._offset == 0 && length == value.length) {
@@ -678,7 +681,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      *         not a substring.
      * @throws NullPointerException if {@code string} is {@code null}.
      */
-    public int indexOf(ICharSequence string) {
+    public int indexOf(ICharSequence str) {
         return indexOf(string, 0);
     }
 
@@ -823,7 +826,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
             return false;
         }
 
-        int thisLen = this.length();
+        int thisLen = length();
         if (thisStart < 0 || thisLen - thisStart < length) {
             return false;
         }
@@ -864,7 +867,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
 
         ObjectUtil.checkNotNull(str, "string");
 
-        int thisLen = this.length();
+        int thisLen = length();
         if (thisStart < 0 || length > thisLen - thisStart) {
             return false;
         }
@@ -910,7 +913,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
         int len = _offset + _length;
         for (int i = _offset; i < len; ++i) {
             if (_value[i] == oldCharAsByte) {
-                byte[] buffer = PlatformDependent.allocateUninitializedArray(this.length());
+                byte[] buffer = PlatformDependent.allocateUninitializedArray(length());
                 Arrays.arraycopy(_value, _offset, buffer, 0, i - _offset);
                 buffer[i - _offset] = newCharAsByte;
                 ++i;
@@ -978,7 +981,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
         if (c is AsciiString asciiString) {
             return asciiString.trim();
         }
-        if (c instanceof string) {
+        if (c is string) {
             return ((string) c).trim();
         }
         int start = 0, last = c.length() - 1;
@@ -1002,7 +1005,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * @return a new string with characters {@code <= \\u0020} removed from the beginning and the end.
      */
     public AsciiString trim() {
-        int start = arrayOffset(), last = arrayOffset() + this.length() - 1;
+        int start = arrayOffset(), last = arrayOffset() + length() - 1;
         int end = last;
         while (start <= end && _value[start] <= ' ') {
             start++;
@@ -1076,7 +1079,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
         List<AsciiString> res = InternalThreadLocalMap.get().arrayList<AsciiString>();
 
         int start = 0;
-        int length = this.length();
+        int length = length();
         for (int i = start; i < length; i++) {
             if (charAt(i) == delim) {
                 if (start == i) {
@@ -1143,12 +1146,11 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * Translates the entire byte string to a {@link string}.
      * @see #toString(int)
      */
-    @Override
-    public string toString() {
-        string cache = string;
+    public override string ToString() {
+        string cache = _string;
         if (cache == null) {
             cache = toString(0);
-            string = cache;
+            _string = cache;
         }
         return cache;
     }
@@ -1181,7 +1183,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
     }
 
     public bool parseBoolean() {
-        return length >= 1 && _value[_offset] != 0;
+        return this.length >= 1 && _value[_offset] != 0;
     }
 
     public char parseChar() {
@@ -1213,7 +1215,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
         int intValue = parseInt(start, end, radix);
         short result = (short) intValue;
         if (result != intValue) {
-            throw new NumberFormatException(subSequence(start, end, false).toString());
+            throw new FormatException(subSequence(start, end, false).toString());
         }
         return result;
     }
@@ -1231,45 +1233,45 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
     }
 
     public int parseInt(int start, int end, int radix) {
-        if (radix < Character.MIN_RADIX || radix > Character.MAX_RADIX) {
-            throw new NumberFormatException();
+        if (radix < CHARACTER_MIN_RADIX || radix > CHARACTER_MAX_RADIX) {
+            throw new FormatException();
         }
 
         if (start == end) {
-            throw new NumberFormatException();
+            throw new FormatException();
         }
 
         int i = start;
         bool negative = byteAt(i) == '-';
         if (negative && ++i == end) {
-            throw new NumberFormatException(subSequence(start, end, false).toString());
+            throw new FormatException(subSequence(start, end, false).ToString());
         }
 
         return parseInt(i, end, radix, negative);
     }
 
     private int parseInt(int start, int end, int radix, bool negative) {
-        int max = int.MIN_VALUE / radix;
+        int max = int.MinValue / radix;
         int result = 0;
         int currOffset = start;
         while (currOffset < end) {
             int digit = Character.digit((char) (_value[currOffset++ + _offset] & 0xFF), radix);
             if (digit == -1) {
-                throw new NumberFormatException(subSequence(start, end, false).toString());
+                throw new FormatException(subSequence(start, end, false).toString());
             }
             if (max > result) {
-                throw new NumberFormatException(subSequence(start, end, false).toString());
+                throw new FormatException(subSequence(start, end, false).toString());
             }
             int next = result * radix - digit;
             if (next > result) {
-                throw new NumberFormatException(subSequence(start, end, false).toString());
+                throw new FormatException(subSequence(start, end, false).toString());
             }
             result = next;
         }
         if (!negative) {
             result = -result;
             if (result < 0) {
-                throw new NumberFormatException(subSequence(start, end, false).toString());
+                throw new FormatException(subSequence(start, end, false).toString());
             }
         }
         return result;
@@ -1289,17 +1291,17 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
 
     public long parseLong(int start, int end, int radix) {
         if (radix < Character.MIN_RADIX || radix > Character.MAX_RADIX) {
-            throw new NumberFormatException();
+            throw new FormatException();
         }
 
         if (start == end) {
-            throw new NumberFormatException();
+            throw new FormatException();
         }
 
         int i = start;
         bool negative = byteAt(i) == '-';
         if (negative && ++i == end) {
-            throw new NumberFormatException(subSequence(start, end, false).toString());
+            throw new FormatException(subSequence(start, end, false).toString());
         }
 
         return parseLong(i, end, radix, negative);
@@ -1312,21 +1314,21 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
         while (currOffset < end) {
             int digit = Character.digit((char) (_value[currOffset++ + _offset] & 0xFF), radix);
             if (digit == -1) {
-                throw new NumberFormatException(subSequence(start, end, false).toString());
+                throw new FormatException(subSequence(start, end, false).toString());
             }
             if (max > result) {
-                throw new NumberFormatException(subSequence(start, end, false).toString());
+                throw new FormatException(subSequence(start, end, false).toString());
             }
             long next = result * radix - digit;
             if (next > result) {
-                throw new NumberFormatException(subSequence(start, end, false).toString());
+                throw new FormatException(subSequence(start, end, false).toString());
             }
             result = next;
         }
         if (!negative) {
             result = -result;
             if (result < 0) {
-                throw new NumberFormatException(subSequence(start, end, false).toString());
+                throw new FormatException(subSequence(start, end, false).toString());
             }
         }
         return result;
@@ -1353,8 +1355,8 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * Returns an {@link AsciiString} containing the given character sequence. If the given string is already a
      * {@link AsciiString}, just returns the same instance.
      */
-    public static AsciiString of(ICharSequence string) {
-        return string instanceof AsciiString ? (AsciiString) string : new AsciiString(string);
+    public static AsciiString of(ICharSequence str) {
+        return string is AsciiString ? (AsciiString) string : new AsciiString(string);
     }
 
     /**
@@ -1378,7 +1380,7 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
         if (value == null) {
             return 0;
         }
-        if (value instanceof AsciiString) {
+        if (value is AsciiString) {
             return value.hashCode();
         }
 
@@ -1408,10 +1410,10 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
             return a == b;
         }
 
-        if (a instanceof AsciiString) {
+        if (a is AsciiString) {
             return ((AsciiString) a).contentEqualsIgnoreCase(b);
         }
-        if (b instanceof AsciiString) {
+        if (b is AsciiString) {
             return ((AsciiString) b).contentEqualsIgnoreCase(a);
         }
 
@@ -1470,11 +1472,11 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
             return a == b;
         }
 
-        if (a instanceof AsciiString) {
+        if (a is AsciiString) {
             return ((AsciiString) a).contentEquals(b);
         }
 
-        if (b instanceof AsciiString) {
+        if (b is AsciiString) {
             return ((AsciiString) b).contentEquals(a);
         }
 
@@ -1500,20 +1502,8 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
 
 
 
-    private static readonly class GeneralCaseInsensitiveCharEqualityComparator : CharEqualityComparator {
-        static readonly GeneralCaseInsensitiveCharEqualityComparator
-                INSTANCE = new GeneralCaseInsensitiveCharEqualityComparator();
-        private GeneralCaseInsensitiveCharEqualityComparator() { }
 
-        @Override
-        public bool equals(char a, char b) {
-            //For motivation, why we need two checks, see comment in string#regionMatches
-            return Character.toUpperCase(a) == Character.toUpperCase(b) ||
-                Character.toLowerCase(a) == Character.toLowerCase(b);
-        }
-    }
-
-    private static bool contains(ICharSequence a, ICharSequence b, CharEqualityComparator cmp) {
+    private static bool contains(ICharSequence a, ICharSequence b, ICharEqualityComparator cmp) {
         if (a == null || b == null || a.length() < b.length()) {
             return false;
         }
@@ -1538,8 +1528,8 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
     }
 
     private static bool regionMatchesCharSequences(ICharSequence cs, int csStart,
-                                         ICharSequence string, int start, int length,
-                                         CharEqualityComparator charEqualityComparator) {
+                                         ICharSequence str, int start, int length,
+                                         ICharEqualityComparator charEqualityComparator) {
         //general purpose implementation for CharSequences
         if (csStart < 0 || length > cs.length() - csStart) {
             return false;
@@ -1574,16 +1564,16 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
      */
     public static bool regionMatches(ICharSequence cs, bool ignoreCase, int csStart,
-                                        ICharSequence string, int start, int length) {
+                                        ICharSequence str, int start, int length) {
         if (cs == null || string == null) {
             return false;
         }
 
-        if (cs instanceof string && string instanceof string) {
+        if (cs is string && string is string) {
             return ((string) cs).regionMatches(ignoreCase, csStart, (string) string, start, length);
         }
 
-        if (cs instanceof AsciiString) {
+        if (cs is AsciiString) {
             return ((AsciiString) cs).regionMatches(ignoreCase, csStart, string, start, length);
         }
 
@@ -1603,19 +1593,19 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
      */
     public static bool regionMatchesAscii(ICharSequence cs, bool ignoreCase, int csStart,
-                                        ICharSequence string, int start, int length) {
+                                        ICharSequence str, int start, int length) {
         if (cs == null || string == null) {
             return false;
         }
 
-        if (!ignoreCase && cs instanceof string && string instanceof string) {
+        if (!ignoreCase && cs is string && string is string) {
             //we don't call regionMatches from string for ignoreCase==true. It's a general purpose method,
             //which make complex comparison in case of ignoreCase==true, which is useless for ASCII-only strings.
             //To avoid applying this complex ignore-case comparison, we will use regionMatchesCharSequences
             return ((string) cs).regionMatches(false, csStart, (string) string, start, length);
         }
 
-        if (cs instanceof AsciiString) {
+        if (cs is AsciiString) {
             return ((AsciiString) cs).regionMatches(ignoreCase, csStart, string, start, length);
         }
 
@@ -1742,9 +1732,9 @@ public class AsciiString : ICharSequence, IEquatable<AsciiString>, IComparable<A
      */
     //-----------------------------------------------------------------------
     public static int indexOf(string cs, char searchChar, int start) {
-        if (cs instanceof string) {
+        if (cs is string) {
             return ((string) cs).indexOf(searchChar, start);
-        } else if (cs instanceof AsciiString) {
+        } else if (cs is AsciiString) {
             return ((AsciiString) cs).indexOf(searchChar, start);
         }
         if (cs == null) {

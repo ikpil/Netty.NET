@@ -107,7 +107,7 @@ class SWARUtilTest {
             final long actual = SWARUtil.toUpperCase(value);
             long expected = 0L;
             for (int i = 0; i < Long.BYTES; i++) {
-                final byte b = (byte) Character.toUpperCase(asciiTable[idx + i]);
+                final byte b = (byte) char.ToUpperInvariant(asciiTable[idx + i]);
                 expected |= (long) ((b & 0xff)) << (56 - (Long.BYTES * i));
             }
             // then
@@ -127,7 +127,7 @@ class SWARUtilTest {
             final int actual = SWARUtil.toUpperCase(value);
             int expected = 0;
             for (int i = 0; i < Integer.BYTES; i++) {
-                final byte b = (byte) Character.toUpperCase(asciiTable[idx + i]);
+                final byte b = (byte) char.ToUpperInvariant(asciiTable[idx + i]);
                 expected |= (b & 0xff) << (24 - (Byte.SIZE * i));
             }
             // then
@@ -147,7 +147,7 @@ class SWARUtilTest {
             final long actual = SWARUtil.toLowerCase(value);
             long expected = 0L;
             for (int i = 0; i < Long.BYTES; i++) {
-                final byte b = (byte) Character.toLowerCase(asciiTable[idx + i]);
+                final byte b = (byte) char.ToLowerInvariant(asciiTable[idx + i]);
                 expected |= (long) ((b & 0xff)) << (56 - (Byte.SIZE * i));
             }
             // then
@@ -167,7 +167,7 @@ class SWARUtilTest {
             final int actual = SWARUtil.toLowerCase(value);
             int expected = 0;
             for (int i = 0; i < Integer.BYTES; i++) {
-                final byte b = (byte) Character.toLowerCase(asciiTable[idx + i]);
+                final byte b = (byte) char.ToLowerInvariant(asciiTable[idx + i]);
                 expected |= (b & 0xff) << (24 - (Byte.SIZE * i));
             }
             // then

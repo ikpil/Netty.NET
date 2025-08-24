@@ -1,6 +1,6 @@
 namespace Netty.NET.Common;
 
-public class AsciiCaseInsensitiveCharEqualityComparator : CharEqualityComparator 
+public class AsciiCaseInsensitiveCharEqualityComparator : ICharEqualityComparator 
 {
     public static readonly AsciiCaseInsensitiveCharEqualityComparator INSTANCE = new AsciiCaseInsensitiveCharEqualityComparator();
     private AsciiCaseInsensitiveCharEqualityComparator() { }

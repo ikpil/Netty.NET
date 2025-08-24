@@ -1,6 +1,6 @@
 namespace Netty.NET.Common;
 
-public class DefaultCharEqualityComparator : CharEqualityComparator
+public class DefaultCharEqualityComparator : ICharEqualityComparator
 {
     public static readonly DefaultCharEqualityComparator INSTANCE = new DefaultCharEqualityComparator();
 

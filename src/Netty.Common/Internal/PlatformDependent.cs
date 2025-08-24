@@ -1518,7 +1518,7 @@ public class PlatformDependent
     private static string normalize(string value) {
         StringBuilder sb = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) {
-            char c = Character.toLowerCase(value.charAt(i));
+            char c = char.ToLowerInvariant(value.charAt(i));
             if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
                 sb.append(c);
             }

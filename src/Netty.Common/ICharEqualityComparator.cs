@@ -1,6 +1,6 @@
 namespace Netty.NET.Common;
 
-public interface CharEqualityComparator 
+public interface ICharEqualityComparator 
 {
     bool equals(char a, char b);
 }
