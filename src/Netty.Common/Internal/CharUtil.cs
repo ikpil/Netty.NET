@@ -9,8 +9,8 @@ public static class CharUtil
 {
     public static readonly string Digits = "0123456789ABCDEF";
 
-    public static readonly int MinRadix = 2;
-    public static readonly int MaxRadix = 36;
+    public static readonly int MIN_RADIX = 2;
+    public static readonly int MAX_RADIX = 36;
 
     private const string DigitKeys = "0Aa\u0660\u06f0\u0966\u09e6\u0a66\u0ae6\u0b66\u0be7\u0c66\u0ce6\u0d66\u0e50\u0ed0\u0f20\u1040\u1369\u17e0\u1810\uff10\uff21\uff41";
     private static readonly char[] DigitValues = "90Z7zW\u0669\u0660\u06f9\u06f0\u096f\u0966\u09ef\u09e6\u0a6f\u0a66\u0aef\u0ae6\u0b6f\u0b66\u0bef\u0be6\u0c6f\u0c66\u0cef\u0ce6\u0d6f\u0d66\u0e59\u0e50\u0ed9\u0ed0\u0f29\u0f20\u1049\u1040\u1371\u1368\u17e9\u17e0\u1819\u1810\uff19\uff10\uff3a\uff17\uff5a\uff37".ToCharArray();
@@ -37,7 +37,7 @@ public static class CharUtil
     public static int ParseInt(ICharSequence seq, int start, int end, int radix)
     {
         Contract.Requires(seq != null);
-        Contract.Requires(radix >= MinRadix && radix <= MaxRadix);
+        Contract.Requires(radix >= MIN_RADIX && radix <= MAX_RADIX);
 
         if (start == end)
         {
@@ -59,7 +59,7 @@ public static class CharUtil
     public static int ParseInt(ICharSequence seq, int start, int end, int radix, bool negative)
     {
         Contract.Requires(seq != null);
-        Contract.Requires(radix >= MinRadix && radix <= MaxRadix);
+        Contract.Requires(radix >= MIN_RADIX && radix <= MAX_RADIX);
 
         int max = int.MinValue / radix;
         int result = 0;
@@ -107,8 +107,8 @@ public static class CharUtil
         }
 
         if (str == null
-            || radix < MinRadix
-            || radix > MaxRadix)
+            || radix < MIN_RADIX
+            || radix > MAX_RADIX)
         {
             ThrowFormatException(str);
         }
@@ -494,7 +494,7 @@ public static class CharUtil
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Digit(char c, int radix)
     {
-        if (radix >= MinRadix && radix <= MaxRadix)
+        if (radix >= MIN_RADIX && radix <= MAX_RADIX)
         {
             if (c < 128)
             {
