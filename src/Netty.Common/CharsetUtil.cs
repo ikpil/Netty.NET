@@ -26,45 +26,47 @@ namespace Netty.NET.Common;
  * A utility class that provides various common operations and constants
  * related with {@link Encoding} and its relevant classes.
  */
-public static class CharsetUtil 
+public static class CharsetUtil
 {
-
     /**
      * 16-bit UTF (UCS Transformation Format) whose byte order is identified by
      * an optional byte-order mark
      */
-    public static readonly Encoding UTF_16 = StandardCharsets.UTF_16;
+    public static readonly Encoding UTF_16 = Encoding.Unicode; //StandardCharsets.UTF_16;
 
     /**
      * 16-bit UTF (UCS Transformation Format) whose byte order is big-endian
      */
-    public static readonly Encoding UTF_16BE = StandardCharsets.UTF_16BE;
+    public static readonly Encoding UTF_16BE = Encoding.BigEndianUnicode; //StandardCharsets.UTF_16BE;
 
     /**
      * 16-bit UTF (UCS Transformation Format) whose byte order is little-endian
      */
-    public static readonly Encoding UTF_16LE = StandardCharsets.UTF_16LE;
+    public static readonly Encoding UTF_16LE = Encoding.Unicode; // StandardCharsets.UTF_16LE;
 
     /**
      * 8-bit UTF (UCS Transformation Format)
      */
-    public static readonly Encoding UTF_8 = StandardCharsets.UTF_8;
+    public static readonly Encoding UTF_8 = Encoding.UTF8; //StandardCharsets.UTF_8;
 
     /**
      * ISO Latin Alphabet No. 1, as known as <tt>ISO-LATIN-1</tt>
      */
-    public static readonly Encoding ISO_8859_1 = StandardCharsets.ISO_8859_1;
+    public static readonly Encoding ISO_8859_1 = Encoding.Latin1; // StandardCharsets.ISO_8859_1;
 
     /**
      * 7-bit ASCII, as known as ISO646-US or the Basic Latin block of the
      * Unicode character set
      */
-    public static readonly Encoding US_ASCII = StandardCharsets.US_ASCII;
+    public static readonly Encoding US_ASCII = Encoding.ASCII; //StandardCharsets.US_ASCII;
 
     private static readonly Encoding[] CHARSETS = new Encoding[]
-            { UTF_16, UTF_16BE, UTF_16LE, UTF_8, ISO_8859_1, US_ASCII };
+    {
+        UTF_16, UTF_16BE, UTF_16LE, UTF_8, ISO_8859_1, US_ASCII
+    };
 
-    public static Encoding[] values() {
+    public static Encoding[] values()
+    {
         return CHARSETS;
     }
 
@@ -72,55 +74,61 @@ public static class CharsetUtil
      * @deprecated Use {@link #encoder(Encoding)}.
      */
     [Obsolete]
-    public static CharsetEncoder getEncoder(Encoding charset) {
+    public static Encoder getEncoder(Encoding charset)
+    {
         return encoder(charset);
     }
 
     /**
-     * Returns a new {@link CharsetEncoder} for the {@link Encoding} with specified error actions.
+     * Returns a new {@link Encoder} for the {@link Encoding} with specified error actions.
      *
      * @param charset The specified charset
      * @param malformedInputAction The encoder's action for malformed-input errors
      * @param unmappableCharacterAction The encoder's action for unmappable-character errors
      * @return The encoder for the specified {@code charset}
      */
-    public static CharsetEncoder encoder(Encoding charset, CodingErrorAction malformedInputAction,
-                                         CodingErrorAction unmappableCharacterAction) {
+    public static Encoder encoder(Encoding charset, EncoderFallback malformedInputAction, EncoderFallback unmappableCharacterAction)
+    {
         checkNotNull(charset, "charset");
-        CharsetEncoder e = charset.newEncoder();
-        e.onMalformedInput(malformedInputAction).onUnmappableCharacter(unmappableCharacterAction);
+        Encoder e = charset.GetEncoder();
+        //e.onMalformedInput(malformedInputAction).onUnmappableCharacter(unmappableCharacterAction);
+        e.Fallback = malformedInputAction ?? EncoderFallback.ExceptionFallback;
         return e;
     }
 
     /**
-     * Returns a new {@link CharsetEncoder} for the {@link Encoding} with the specified error action.
+     * Returns a new {@link Encoder} for the {@link Encoding} with the specified error action.
      *
      * @param charset The specified charset
      * @param codingErrorAction The encoder's action for malformed-input and unmappable-character errors
      * @return The encoder for the specified {@code charset}
      */
-    public static CharsetEncoder encoder(Encoding charset, CodingErrorAction codingErrorAction) {
+    public static Encoder encoder(Encoding charset, EncoderFallback codingErrorAction)
+    {
         return encoder(charset, codingErrorAction, codingErrorAction);
     }
 
     /**
-     * Returns a cached thread-local {@link CharsetEncoder} for the specified {@link Encoding}.
+     * Returns a cached thread-local {@link Encoder} for the specified {@link Encoding}.
      *
      * @param charset The specified charset
      * @return The encoder for the specified {@code charset}
      */
-    public static CharsetEncoder encoder(Encoding charset) {
+    public static Encoder encoder(Encoding charset)
+    {
         checkNotNull(charset, "charset");
 
-        IDictionary<Encoding, CharsetEncoder> map = InternalThreadLocalMap.get().charsetEncoderCache();
-        CharsetEncoder e = map.get(charset);
-        if (e != null) {
-            e.reset().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
+        IDictionary<Encoding, Encoder> map = InternalThreadLocalMap.get().charsetEncoderCache();
+        map.TryGetValue(charset, out Encoder e);
+        if (e != null)
+        {
+            e.Reset();
+            e.Fallback = EncoderFallback.ReplacementFallback;
             return e;
         }
 
-        e = encoder(charset, CodingErrorAction.REPLACE, CodingErrorAction.REPLACE);
-        map.put(charset, e);
+        e = encoder(charset, EncoderFallback.ReplacementFallback, EncoderFallback.ReplacementFallback);
+        map[charset] = e;
         return e;
     }
 
@@ -128,55 +136,60 @@ public static class CharsetUtil
      * @deprecated Use {@link #decoder(Encoding)}.
      */
     [Obsolete]
-    public static CharsetDecoder getDecoder(Encoding charset) {
+    public static Decoder getDecoder(Encoding charset)
+    {
         return decoder(charset);
     }
 
     /**
-     * Returns a new {@link CharsetDecoder} for the {@link Encoding} with specified error actions.
+     * Returns a new {@link Decoder} for the {@link Encoding} with specified error actions.
      *
      * @param charset The specified charset
      * @param malformedInputAction The decoder's action for malformed-input errors
      * @param unmappableCharacterAction The decoder's action for unmappable-character errors
      * @return The decoder for the specified {@code charset}
      */
-    public static CharsetDecoder decoder(Encoding charset, CodingErrorAction malformedInputAction,
-                                         CodingErrorAction unmappableCharacterAction) {
+    public static Decoder decoder(Encoding charset, DecoderFallback malformedInputAction, DecoderFallback unmappableCharacterAction)
+    {
         checkNotNull(charset, "charset");
-        CharsetDecoder d = charset.newDecoder();
-        d.onMalformedInput(malformedInputAction).onUnmappableCharacter(unmappableCharacterAction);
+        Decoder d = charset.GetDecoder();
+        d.Fallback = malformedInputAction ?? DecoderFallback.ExceptionFallback;
         return d;
     }
 
     /**
-     * Returns a new {@link CharsetDecoder} for the {@link Encoding} with the specified error action.
+     * Returns a new {@link Decoder} for the {@link Encoding} with the specified error action.
      *
      * @param charset The specified charset
      * @param codingErrorAction The decoder's action for malformed-input and unmappable-character errors
      * @return The decoder for the specified {@code charset}
      */
-    public static CharsetDecoder decoder(Encoding charset, CodingErrorAction codingErrorAction) {
+    public static Decoder decoder(Encoding charset, DecoderFallback codingErrorAction)
+    {
         return decoder(charset, codingErrorAction, codingErrorAction);
     }
 
     /**
-     * Returns a cached thread-local {@link CharsetDecoder} for the specified {@link Encoding}.
+     * Returns a cached thread-local {@link Decoder} for the specified {@link Encoding}.
      *
      * @param charset The specified charset
      * @return The decoder for the specified {@code charset}
      */
-    public static CharsetDecoder decoder(Encoding charset) {
+    public static Decoder decoder(Encoding charset)
+    {
         checkNotNull(charset, "charset");
 
-        IDictionary<Encoding, CharsetDecoder> map = InternalThreadLocalMap.get().charsetDecoderCache();
-        CharsetDecoder d = map.get(charset);
-        if (d != null) {
-            d.reset().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
+        IDictionary<Encoding, Decoder> map = InternalThreadLocalMap.get().charsetDecoderCache();
+        map.TryGetValue(charset, out Decoder d);
+        if (d != null)
+        {
+            d.Reset();
+            d.Fallback = DecoderFallback.ReplacementFallback;
             return d;
         }
 
-        d = decoder(charset, CodingErrorAction.REPLACE, CodingErrorAction.REPLACE);
-        map.put(charset, d);
+        d = decoder(charset, DecoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+        map[charset] = d;
         return d;
     }
 }
