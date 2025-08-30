@@ -49,9 +49,19 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         return value.Length > 0 ? new StringCharSequence(value) : Empty;
     }
 
-    public ICharSequence SubSequence(int start) => SubSequence(start, _count);
+    public ICharSequence subSequence(int start) => subSequence(start, _count);
+    
+    public char charAt(int index)
+    {
+        return _value[index];
+    }
 
-    public ICharSequence SubSequence(int start, int end)
+    public int length()
+    {
+        return _count;
+    }
+
+    public ICharSequence subSequence(int start, int end)
     {
         Contract.Requires(start >= 0 && end >= start);
         Contract.Requires(end <= _count);
@@ -70,13 +80,13 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         }
     }
 
-    public bool RegionMatches(int thisStart, ICharSequence seq, int start, int length) =>
+    public bool regionMatches(int thisStart, ICharSequence seq, int start, int length) =>
         CharUtil.RegionMatches(this, thisStart, seq, start, length);
 
-    public bool RegionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length) =>
+    public bool regionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length) =>
         CharUtil.RegionMatchesIgnoreCase(this, thisStart, seq, start, length);
 
-    public int IndexOf(char ch, int start = 0)
+    public int indexOf(char ch, int start = 0)
     {
         Contract.Requires(start >= 0 && start < _count);
 
@@ -84,7 +94,7 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         return index < 0 ? index : index - _offset;
     }
 
-    public int IndexOf(string target, int start = 0) => _value.IndexOf(target, StringComparison.Ordinal);
+    public int indexOf(string target, int start = 0) => _value.IndexOf(target, StringComparison.Ordinal);
 
     public string ToString(int start)
     {
@@ -135,21 +145,21 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
 
         if (obj is ICharSequence seq)
         {
-            return ContentEquals(seq);
+            return contentEquals(seq);
         }
 
         return false;
     }
 
-    public int HashCode(bool ignoreCase) => ignoreCase
+    public int hashCode(bool ignoreCase) => ignoreCase
         ? StringComparer.OrdinalIgnoreCase.GetHashCode(ToString())
         : StringComparer.Ordinal.GetHashCode(ToString());
 
-    public override int GetHashCode() => HashCode(false);
+    public override int GetHashCode() => hashCode(false);
 
-    public bool ContentEquals(ICharSequence other) => CharUtil.ContentEquals(this, other);
+    public bool contentEquals(ICharSequence other) => CharUtil.ContentEquals(this, other);
 
-    public bool ContentEqualsIgnoreCase(ICharSequence other) => CharUtil.ContentEqualsIgnoreCase(this, other);
+    public bool contentEqualsIgnoreCase(ICharSequence other) => CharUtil.ContentEqualsIgnoreCase(this, other);
 
     public IEnumerator<char> GetEnumerator() => new CharSequenceEnumerator(this);
 
