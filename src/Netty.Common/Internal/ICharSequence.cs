@@ -22,9 +22,7 @@ public interface ICharSequence : IReadOnlyList<char>
 
     bool contentEqualsIgnoreCase(ICharSequence other);
 
-    int HashCode(bool ignoreCase);
+    int hashCode(bool ignoreCase);
 
     string ToString(int start);
-
-    string ToString();
 }
