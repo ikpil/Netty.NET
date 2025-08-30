@@ -50,7 +50,7 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
     }
 
     public ICharSequence subSequence(int start) => subSequence(start, _count);
-    
+
     public char charAt(int index)
     {
         return _value[index];
@@ -79,6 +79,10 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
             return _value[_offset + index];
         }
     }
+
+    public bool regionMatches(bool ignoreCase, int thisStart, ICharSequence seq, int start, int length) => ignoreCase
+        ? regionMatchesIgnoreCase(thisStart, seq, start, length)
+        : regionMatches(thisStart, seq, start, length);
 
     public bool regionMatches(int thisStart, ICharSequence seq, int start, int length) =>
         CharUtil.RegionMatches(this, thisStart, seq, start, length);
