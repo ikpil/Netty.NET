@@ -28,7 +28,7 @@ public class RecyclableArrayList
 {
     private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
-    private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool<RecyclableArrayList>.newPool(
+    private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.newPool(
         new AnonymousObjectCreator<RecyclableArrayList>(x => new RecyclableArrayList(x))
     );
 
