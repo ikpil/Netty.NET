@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Concurrent;
@@ -35,7 +36,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     private readonly IEventExecutorGroup _parent;
     private readonly IReadOnlyCollection<IEventExecutor> selfCollection;
     
-    protected AbstractEventExecutor() : this(null)
+    protected AbstractEventExecutor() : this(ObjectUtil.Null<IEventExecutorGroup>())
     {
     }
 
