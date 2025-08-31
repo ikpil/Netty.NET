@@ -208,7 +208,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     }
 
     @Override
-    public bool awaitTermination(long timeout, TimeSpan unit)
+    public bool awaitTermination(TimeSpan timeout)
             throws ThreadInterruptedException {
         long deadline = PreciseTimer.nanoTime() + unit.toNanos(timeout);
         loop: for (IEventExecutor l: children) {

@@ -40,10 +40,7 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
     /**
      * Calls {@link #inEventLoop(Thread)} with {@link Thread#currentThread()} as argument
      */
-    bool inEventLoop()
-    {
-        return inEventLoop(Thread.CurrentThread);
-    }
+    bool inEventLoop();
 
     /**
      * Return {@code true} if the given {@link Thread} is executed in the event loop,

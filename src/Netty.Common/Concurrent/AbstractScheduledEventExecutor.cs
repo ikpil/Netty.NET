@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
@@ -28,17 +29,17 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor 
 {
-    private static readonly Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
-            new Comparator<ScheduledFutureTask<?>>() {
-                @Override
-                public int compare(ScheduledFutureTask<?> o1, ScheduledFutureTask<?> o2) {
-                    return o1.compareTo(o2);
-                }
-            };
+    // private static readonly Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
+    //         new Comparator<ScheduledFutureTask<?>>() {
+    //             @Override
+    //             public int compare(ScheduledFutureTask<?> o1, ScheduledFutureTask<?> o2) {
+    //                 return o1.compareTo(o2);
+    //             }
+    //         };
 
-            private static readonly IRunnable WAKEUP_TASK = new AnonymousRunnable(() => { });
+            protected static readonly IRunnable WAKEUP_TASK = EmptyRunnable.Shared;
 
-    PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue;
+            protected IPriorityQueue<IScheduledTask> scheduledTaskQueue;
 
     long nextTaskId;
 
@@ -149,7 +150,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * This method MUST be called only when {@link #inEventLoop()} is {@code true}.
      */
     protected void cancelScheduledTasks() {
-        assert inEventLoop();
+        Debug.Assert(inEventLoop());
         PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
         if (isNullOrEmpty(scheduledTaskQueue)) {
             return;
@@ -179,8 +180,8 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @return {@code true} if we were able to transfer everything, {@code false} if we need to call this method again
      *         as soon as there is space again in {@code taskQueue}.
      */
-    protected bool fetchFromScheduledTaskQueue(Queue<IRunnable> taskQueue) {
-        assert inEventLoop();
+    protected bool fetchFromScheduledTaskQueue(IQueue<IRunnable> taskQueue) {
+        Debug.Assert(inEventLoop());
         Objects.requireNonNull(taskQueue, "taskQueue");
         if (scheduledTaskQueue == null || scheduledTaskQueue.isEmpty()) {
             return true;
@@ -204,7 +205,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * You should use {@link #getCurrentTimeNanos()} to retrieve the correct {@code nanoTime}.
      */
     protected final IRunnable pollScheduledTask(long nanoTime) {
-        assert inEventLoop();
+        Debug.Assert(inEventLoop());
 
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
         if (scheduledTask == null || scheduledTask.deadlineNanos() - nanoTime > 0) {
@@ -227,7 +228,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * Return the deadline (in nanoseconds) when the next scheduled task is ready to be run or {@code -1}
      * if no task is scheduled.
      */
-    protected final long nextScheduledTaskDeadlineNanos() {
+    protected long nextScheduledTaskDeadlineNanos() {
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
         return scheduledTask != null ? scheduledTask.deadlineNanos() : -1;
     }

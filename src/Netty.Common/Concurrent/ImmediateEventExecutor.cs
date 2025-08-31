@@ -101,7 +101,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    public bool awaitTermination(long timeout, TimeSpan unit) {
+    public bool awaitTermination(TimeSpan timeout) {
         return false;
     }
 

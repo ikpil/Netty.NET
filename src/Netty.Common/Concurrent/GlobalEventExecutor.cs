@@ -161,7 +161,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     }
 
     @Override
-    public Task shutdownGracefullyAsync(long quietPeriod, long timeout, TimeSpan unit) {
+    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) {
         return terminationFuture();
     }
 
@@ -192,7 +192,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     }
 
     @Override
-    public bool awaitTermination(long timeout, TimeSpan unit) {
+    public bool awaitTermination(TimeSpan timeout) {
         return false;
     }
 

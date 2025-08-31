@@ -58,7 +58,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         return selfCollection;
     }
 
-    public Task shutdownGracefullyAsync()
+    public virtual Task shutdownGracefullyAsync()
     {
         return shutdownGracefullyAsync(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT);
     }
@@ -138,7 +138,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         }
     }
 
-    protected static void runTask(@Execute IRunnable task) {
+    protected static void runTask(IRunnable task) {
         task.run();
     }
 
@@ -149,15 +149,9 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      * The default implementation just delegates to {@link #execute(IRunnable)}.
      * </p>
      */
-    @UnstableApi
+    [UnstableApi]
     public void lazyExecute(IRunnable task) {
         execute(task);
     }
 
-    /**
-     *  @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
-     *
-     */
-    [Obsolete]
-    public interface LazyRunnable extends IRunnable { }
 }

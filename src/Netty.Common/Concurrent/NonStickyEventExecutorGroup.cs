@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Concurrent;
  * <p>The {@link IEventExecutorGroup#next()} for the wrapped {@link IEventExecutorGroup} must <strong>NOT</strong> return
  * executors of type {@link IOrderedEventExecutor}.
  */
-@UnstableApi
+[UnstableApi]
 public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     private readonly IEventExecutorGroup group;
     private readonly int maxTaskExecutePerRun;
@@ -168,7 +168,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public bool awaitTermination(long timeout, TimeSpan unit) {
+    public bool awaitTermination(TimeSpan timeout) {
         return group.awaitTermination(timeout, unit);
     }
 
@@ -315,7 +315,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
         }
 
         @Override
-        public bool awaitTermination(long timeout, TimeSpan unit) {
+        public bool awaitTermination(TimeSpan timeout) {
             return executor.awaitTermination(timeout, unit);
         }
 

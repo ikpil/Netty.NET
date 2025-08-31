@@ -42,7 +42,7 @@ public static class ObjectUtil
      * Checks that the given argument is not null. If it is, throws {@link ArgumentNullException}.
      * Otherwise, returns the argument.
      */
-    public static T checkNotNull<T>(T arg, string text)
+    public static T checkNotNull<T>(T arg, string text) where T : class
     {
         if (arg == null)
         {
