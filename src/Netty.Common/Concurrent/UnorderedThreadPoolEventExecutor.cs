@@ -74,17 +74,17 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int,
-     * IThreadFactory, java.util.concurrent.RejectedExecutionHandler)} using {@link DefaultThreadFactory}.
+     * IThreadFactory, java.util.concurrent.IRejectedExecutionHandler)} using {@link DefaultThreadFactory}.
      */
-    public UnorderedThreadPoolEventExecutor(int corePoolSize, RejectedExecutionHandler handler) {
+    public UnorderedThreadPoolEventExecutor(int corePoolSize, IRejectedExecutionHandler handler) {
         this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler);
     }
 
     /**
-     * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, IThreadFactory, RejectedExecutionHandler)}
+     * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, IThreadFactory, IRejectedExecutionHandler)}
      */
     public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory,
-                                            RejectedExecutionHandler handler) {
+                                            IRejectedExecutionHandler handler) {
         super(corePoolSize, threadFactory, handler);
         setThreadFactory(new AccountingThreadFactory(threadFactory, eventLoopThreads));
     }

@@ -20,6 +20,7 @@ using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -68,7 +69,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private readonly ISet<IRunnable> shutdownHooks = new LinkedHashSet<IRunnable>();
     private readonly bool addTaskWakesUp;
     private readonly int maxPendingTasks;
-    private readonly RejectedExecutionHandler rejectedExecutionHandler;
+    private readonly IRejectedExecutionHandler rejectedExecutionHandler;
     private readonly bool supportSuspension;
 
     private long lastExecutionTime;
@@ -103,11 +104,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(IRunnable)} will wake up the
      *                          executor thread
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
-     * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
+     * @param rejectedHandler   the {@link IRejectedExecutionHandler} to use.
      */
     protected SingleThreadEventExecutor(
             IEventExecutorGroup parent, IThreadFactory threadFactory,
-            bool addTaskWakesUp, int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
+            bool addTaskWakesUp, int maxPendingTasks, IRejectedExecutionHandler rejectedHandler) {
         this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp, maxPendingTasks, rejectedHandler);
     }
 
@@ -120,12 +121,12 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *                          executor thread
      * @param supportSuspension {@code true} if suspension of this {@link SingleThreadEventExecutor} is supported.
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
-     * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
+     * @param rejectedHandler   the {@link IRejectedExecutionHandler} to use.
      */
     protected SingleThreadEventExecutor(
             IEventExecutorGroup parent, IThreadFactory threadFactory,
             bool addTaskWakesUp, bool supportSuspension,
-            int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
+            int maxPendingTasks, IRejectedExecutionHandler rejectedHandler) {
         this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp, supportSuspension,
                 maxPendingTasks, rejectedHandler);
     }
@@ -150,11 +151,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(IRunnable)} will wake up the
      *                          executor thread
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
-     * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
+     * @param rejectedHandler   the {@link IRejectedExecutionHandler} to use.
      */
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
                                         bool addTaskWakesUp, int maxPendingTasks,
-                                        RejectedExecutionHandler rejectedHandler) {
+                                        IRejectedExecutionHandler rejectedHandler) {
         this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler);
     }
 
@@ -167,11 +168,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *                          executor thread
      * @param supportSuspension {@code true} if suspension of this {@link SingleThreadEventExecutor} is supported.
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
-     * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
+     * @param rejectedHandler   the {@link IRejectedExecutionHandler} to use.
      */
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
                                         bool addTaskWakesUp, bool supportSuspension,
-                                        int maxPendingTasks, RejectedExecutionHandler rejectedHandler) {
+                                        int maxPendingTasks, IRejectedExecutionHandler rejectedHandler) {
         super(parent);
         this.addTaskWakesUp = addTaskWakesUp;
         this.supportSuspension = supportSuspension;
@@ -183,13 +184,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
                                         bool addTaskWakesUp, Queue<IRunnable> taskQueue,
-                                        RejectedExecutionHandler rejectedHandler) {
+                                        IRejectedExecutionHandler rejectedHandler) {
         this(parent, executor, addTaskWakesUp, false, taskQueue, rejectedHandler);
     }
 
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
                                         bool addTaskWakesUp, bool supportSuspension,
-                                        Queue<IRunnable> taskQueue, RejectedExecutionHandler rejectedHandler) {
+                                        Queue<IRunnable> taskQueue, IRejectedExecutionHandler rejectedHandler) {
         super(parent);
         this.addTaskWakesUp = addTaskWakesUp;
         this.supportSuspension = supportSuspension;
@@ -984,7 +985,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     /**
-     * Offers the task to the associated {@link RejectedExecutionHandler}.
+     * Offers the task to the associated {@link IRejectedExecutionHandler}.
      *
      * @param task to reject.
      */

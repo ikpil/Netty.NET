@@ -49,12 +49,12 @@ public final class DefaultEventExecutor extends SingleThreadEventExecutor {
     }
 
     public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory, int maxPendingTasks,
-                                RejectedExecutionHandler rejectedExecutionHandler) {
+                                IRejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, threadFactory, true, maxPendingTasks, rejectedExecutionHandler);
     }
 
     public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor, int maxPendingTasks,
-                                RejectedExecutionHandler rejectedExecutionHandler) {
+                                IRejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, executor, true, maxPendingTasks, rejectedExecutionHandler);
     }
 

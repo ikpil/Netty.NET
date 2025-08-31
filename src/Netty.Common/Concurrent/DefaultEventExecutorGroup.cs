@@ -47,15 +47,15 @@ public class DefaultEventExecutorGroup extends MultithreadEventExecutorGroup {
      * @param nThreads          the number of threads that will be used by this instance.
      * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
-     * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
+     * @param rejectedHandler   the {@link IRejectedExecutionHandler} to use.
      */
     public DefaultEventExecutorGroup(int nThreads, IThreadFactory threadFactory, int maxPendingTasks,
-                                     RejectedExecutionHandler rejectedHandler) {
+                                     IRejectedExecutionHandler rejectedHandler) {
         super(nThreads, threadFactory, maxPendingTasks, rejectedHandler);
     }
 
     @Override
     protected IEventExecutor newChild(IExecutor executor, params object[] args) {
-        return new DefaultEventExecutor(this, executor, (int) args[0], (RejectedExecutionHandler) args[1]);
+        return new DefaultEventExecutor(this, executor, (int) args[0], (IRejectedExecutionHandler) args[1]);
     }
 }

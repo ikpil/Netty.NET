@@ -13,31 +13,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Concurrent;
 
-
-
-
-
-
-
 /**
- * Expose helper methods which create different {@link RejectedExecutionHandler}s.
+ * Expose helper methods which create different {@link IRejectedExecutionHandler}s.
  */
-public final class RejectedExecutionHandlers {
-    private static readonly RejectedExecutionHandler REJECT = new RejectedExecutionHandler() {
-        @Override
-        public void rejected(IRunnable task, SingleThreadEventExecutor executor) {
-            throw new RejectedExecutionException();
-        }
-    };
-
-    private RejectedExecutionHandlers() { }
+public static class RejectedExecutionHandlers
+{
+    private static readonly IRejectedExecutionHandler REJECT = new RejectedExecutionHandler();
 
     /**
-     * Returns a {@link RejectedExecutionHandler} that will always just throw a {@link RejectedExecutionException}.
+     * Returns a {@link IRejectedExecutionHandler} that will always just throw a {@link RejectedExecutionException}.
      */
-    public static RejectedExecutionHandler reject() {
+    public static IRejectedExecutionHandler reject()
+    {
         return REJECT;
     }
 
@@ -46,27 +39,9 @@ public final class RejectedExecutionHandlers {
      * is only done if the task was added from outside of the event loop which means
      * {@link IEventExecutor#inEventLoop()} returns {@code false}.
      */
-    public static RejectedExecutionHandler backoff(final int retries, long backoffAmount, TimeSpan unit) {
+    public static IRejectedExecutionHandler backoff(int retries, TimeSpan backoffAmount)
+    {
         ObjectUtil.checkPositive(retries, "retries");
-        final long backOffNanos = unit.toNanos(backoffAmount);
-        return new RejectedExecutionHandler() {
-            @Override
-            public void rejected(IRunnable task, SingleThreadEventExecutor executor) {
-                if (!executor.inEventLoop()) {
-                    for (int i = 0; i < retries; i++) {
-                        // Try to wake up the executor so it will empty its task queue.
-                        executor.wakeup(false);
-
-                        LockSupport.parkNanos(backOffNanos);
-                        if (executor.offerTask(task)) {
-                            return;
-                        }
-                    }
-                }
-                // Either we tried to add the task from within the EventLoop or we was not able to add it even with
-                // backoff.
-                throw new RejectedExecutionException();
-            }
-        };
+        return new RejectedBackOffExecutionHandler(retries, backoffAmount);
     }
 }
