@@ -44,12 +44,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private static readonly int ST_SHUTDOWN = 6;
     private static readonly int ST_TERMINATED = 7;
 
-    private static readonly IRunnable NOOP_TASK = new IRunnable() {
-        @Override
-        public void run() {
-            // Do nothing.
-        }
-    };
+    private static readonly IRunnable NOOP_TASK = EmptyRunnable.Shared;
 
     private static readonly AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(typeof(SingleThreadEventExecutor), "state");

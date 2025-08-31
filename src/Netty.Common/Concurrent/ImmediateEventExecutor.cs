@@ -17,7 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 

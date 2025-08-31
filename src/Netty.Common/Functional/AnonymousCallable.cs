@@ -1,7 +1,6 @@
 using System;
-using Netty.NET.Common.Functional;
 
-namespace Netty.NET.Common;
+namespace Netty.NET.Common.Functional;
 
 public class AnonymousCallable<T> : ICallable<T>
 {
