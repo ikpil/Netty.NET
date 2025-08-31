@@ -159,7 +159,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     }
 
     @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
+    public Task shutdownGracefullyAsync(long quietPeriod, long timeout, TimeSpan unit) {
         return terminationFuture();
     }
 

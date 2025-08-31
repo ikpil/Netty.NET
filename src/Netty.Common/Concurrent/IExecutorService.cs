@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 

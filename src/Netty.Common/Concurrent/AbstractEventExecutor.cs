@@ -58,26 +58,28 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         return selfCollection;
     }
 
-    public IFuture shutdownGracefully()
+    public Task shutdownGracefullyAsync()
     {
-        return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT);
+        return shutdownGracefullyAsync(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT);
     }
+
+    public abstract Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
+    
 
     /**
      * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
-    @Override
     [Obsolete]
     public abstract void shutdown();
 
     /**
      * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
-    @Override
+    
     [Obsolete]
     public List<IRunnable> shutdownNow() {
         shutdown();
-        return Collections.emptyList();
+        return new List<IRunnable>();
     }
 
     @Override
