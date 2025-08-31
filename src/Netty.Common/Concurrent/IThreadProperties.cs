@@ -13,16 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Diagnostics;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
  * Expose details for a {@link Thread}.
  */
-public interface ThreadProperties {
+public interface IThreadProperties
+{
     /**
      * @see Thread#getState()
      */
-    Thread.State state();
+    ThreadState state();
 
     /**
      * @see Thread#getPriority()
@@ -52,7 +56,7 @@ public interface ThreadProperties {
     /**
      * @see Thread#getStackTrace()
      */
-    StackTraceElement[] stackTrace();
+    StackFrame[] stackTrace();
 
     /**
      * @see Thread#isAlive()

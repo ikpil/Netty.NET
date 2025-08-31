@@ -51,14 +51,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     private static readonly AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(typeof(SingleThreadEventExecutor), "state");
-    private static readonly AtomicReferenceFieldUpdater<SingleThreadEventExecutor, ThreadProperties> PROPERTIES_UPDATER =
+    private static readonly AtomicReferenceFieldUpdater<SingleThreadEventExecutor, IThreadProperties> PROPERTIES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(
-                    typeof(SingleThreadEventExecutor), typeof(ThreadProperties), "threadProperties");
+                    typeof(SingleThreadEventExecutor), typeof(IThreadProperties), "threadProperties");
     private readonly IQueue<IRunnable> _taskQueue;
 
     private volatile Thread _thread;
     //@SuppressWarnings("unused")
-    private volatile ThreadProperties threadProperties;
+    private volatile IThreadProperties threadProperties;
     private readonly IExecutor _executor;
     private volatile bool interrupted;
 
@@ -948,7 +948,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * it is fully started.
      */
     public final ThreadProperties threadProperties() {
-        ThreadProperties threadProperties = this.threadProperties;
+        IThreadProperties threadProperties = this.threadProperties;
         if (threadProperties == null) {
             Thread thread = this._thread;
             if (thread == null) {
@@ -1179,7 +1179,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return numTasks;
     }
 
-    private static readonly class DefaultThreadProperties : ThreadProperties {
+    private static readonly class DefaultThreadProperties : IThreadProperties {
         private readonly Thread t;
 
         DefaultThreadProperties(Thread t) {
