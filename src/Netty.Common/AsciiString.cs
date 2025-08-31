@@ -15,7 +15,10 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -48,6 +51,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
     public static readonly IHashingStrategy<ICharSequence> CASE_INSENSITIVE_HASHER = new CaseInsensitiveHashingStrategy();
     public static readonly IHashingStrategy<ICharSequence> CASE_SENSITIVE_HASHER = new CaseSensitiveHashingStrategy();
+
+    public int Count => _length;
 
     /**
      * If this value is modified outside the constructor then call {@link #arrayChanged()}.
@@ -125,7 +130,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * Create a copy of the underlying storage from {@code value}.
      * The copy will start at {@link ByteBuffer#position()} and copy {@link ByteBuffer#remaining()} bytes.
      */
-    public AsciiString(ArraySegment<byte> value)
+    public AsciiString(MemoryStream value)
         : this(value, true)
     {
     }
@@ -136,8 +141,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * if {@code copy} is {@code true} a copy will be made of the memory.
      * if {@code copy} is {@code false} the underlying storage will be shared, if possible.
      */
-    public AsciiString(ArraySegment<byte> value, bool copy)
-        : this(value, value.position(), value.remaining(), copy)
+    public AsciiString(MemoryStream stream, bool copy)
+        : this(stream, (int)stream.Position, (int)(stream.Length - stream.Position), copy)
     {
     }
 
@@ -147,34 +152,37 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * if {@code copy} is {@code true} a copy will be made of the memory.
      * if {@code copy} is {@code false} the underlying storage will be shared, if possible.
      */
-    public AsciiString(ArraySegment<byte> value, int start, int length, bool copy)
+    public AsciiString(MemoryStream stream, int start, int length, bool copy)
     {
-        if (isOutOfBounds(start, length, value.capacity()))
+        if (isOutOfBounds(start, length, stream.Length))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
-                                                  + ") <= " + "value.capacity(" + value.capacity() + ')');
+                                                  + ") <= " + "value.capacity(" + stream.Length + ')');
         }
 
-        if (value.hasArray())
+        // MemoryStream에서 backing buffer 가져오기
+        if (stream.TryGetBuffer(out ArraySegment<byte> seg))
         {
             if (copy)
             {
-                int bufferOffset = value.arrayOffset() + start;
-                _value = Arrays.copyOfRange(value.array(), bufferOffset, bufferOffset + length);
+                _value = new byte[length];
+                Arrays.arraycopy(seg.Array, seg.Offset + start, _value, 0, length);
                 _offset = 0;
             }
             else
             {
-                _value = value.array();
-                _offset = start;
+                _value = seg.Array;
+                _offset = seg.Offset + start;
             }
         }
         else
         {
+            // backing array가 없으면 새 배열 생성 후 읽기
             _value = PlatformDependent.allocateUninitializedArray(length);
-            int oldPos = value.position();
-            value.get(_value, 0, length);
-            value.position(oldPos);
+            long oldPos = stream.Position;
+            stream.Position = start;
+            stream.Read(_value, 0, length);
+            stream.Position = oldPos;
             _offset = 0;
         }
 
@@ -223,14 +231,17 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * Create a copy of {@code value} into a this instance using the encoding type of {@code charset}.
      * The copy will start at index {@code start} and copy {@code length} bytes.
      */
-    public AsciiString(char[] value, Encoding charset, int start, int length)
+    public AsciiString(char[] value, Encoding encoding, int start, int length)
     {
-        CharBuffer cbuf = CharBuffer.wrap(value, start, length);
-        Encoder encoder = CharsetUtil.encoder(charset);
-        ByteBuffer nativeBuffer = ByteBuffer.allocate((int)(encoder.maxBytesPerChar() * length));
-        encoder.encode(cbuf, nativeBuffer, true);
-        int bufferOffset = nativeBuffer.arrayOffset();
-        _value = Arrays.copyOfRange(nativeBuffer.array(), bufferOffset, bufferOffset + nativeBuffer.position());
+        if (start < 0 || length < 0 || start + length > value.Length)
+            throw new ArgumentOutOfRangeException();
+
+        // CharBuffer.wrap(chars, start, length) 대응 → 부분 배열 추출
+        char[] subChars = new char[length];
+        Arrays.arraycopy(value, start, subChars, 0, length);
+
+        // CharsetEncoder 대응 → Encoding.GetBytes()
+        _value = encoding.GetBytes(subChars);
         _offset = 0;
         _length = _value.Length;
     }
@@ -268,8 +279,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     /**
      * Create a copy of {@code value} into this instance using the encoding type of {@code charset}.
      */
-    public AsciiString(ICharSequence value, Encoding charset)
-        : this(value, charset, 0, value.length())
+    public AsciiString(ICharSequence value, Encoding encoding)
+        : this(value, encoding, 0, value.length())
     {
     }
 
@@ -277,18 +288,20 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * Create a copy of {@code value} into this instance using the encoding type of {@code charset}.
      * The copy will start at index {@code start} and copy {@code length} bytes.
      */
-    public AsciiString(ICharSequence value, Encoding charset, int start, int length)
+    public AsciiString(ICharSequence value, Encoding encoding, int start, int length)
     {
-        CharBuffer cbuf = CharBuffer.wrap(value, start, start + length);
-        Encoder encoder = CharsetUtil.encoder(charset);
-        ByteBuffer nativeBuffer = ByteBuffer.allocate((int)(encoder.maxBytesPerChar() * length));
-        encoder.encode(cbuf, nativeBuffer, true);
-        int offset = nativeBuffer.arrayOffset();
-        _value = Arrays.copyOfRange(nativeBuffer.array(), offset, offset + nativeBuffer.position());
+        int count = encoding.GetMaxByteCount(length);
+        var bytes = new byte[count];
+        count = encoding.GetBytes(value.ToString(0), start, length, bytes, 0);
+
+        _value = new byte[count];
+        PlatformDependent.copyMemory(bytes, 0, _value, 0, count);
+
         _offset = 0;
         _length = _value.Length;
     }
 
+    public char this[int index] => b2c(byteAt(index));
 
     /**
      * Iterates over the readable bytes of this buffer with the specified {@code processor} in ascending order.
@@ -516,9 +529,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *         positive integer if this string is after the specified string.
      * @throws NullPointerException if {@code string} is {@code null}.
      */
-    public int CompareTo(ICharSequence str)
+    public int CompareTo(AsciiString str)
     {
-        if (this == str)
+        if (Equals(str))
         {
             return 0;
         }
@@ -537,6 +550,11 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         return length1 - length2;
+    }
+
+    public int CompareTo(object obj)
+    {
+        return CompareTo(obj as AsciiString);
     }
 
     /**
@@ -650,6 +668,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
             return true;
         }
+    }
+
+
+    public int hashCode(bool ignoreCase)
+    {
+        return ignoreCase
+            ? CASE_INSENSITIVE_HASHER.GetHashCode(this)
+            : GetHashCode();
     }
 
     private bool misalignedEqualsIgnoreCase(AsciiString other)
@@ -994,6 +1020,34 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         for (int i = start, j = thisStart + arrayOffset(); i < thatEnd; i++, j++)
         {
             if (b2c(_value[j]) != str.charAt(i))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public bool regionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int count)
+    {
+        Contract.Requires(seq != null);
+
+        int thisLen = _length;
+        if (thisStart < 0 || count > thisLen - thisStart)
+        {
+            return false;
+        }
+
+        if (start < 0 || count > seq.Count - start)
+        {
+            return false;
+        }
+
+        thisStart += _offset;
+        int thisEnd = thisStart + count;
+        while (thisStart < thisEnd)
+        {
+            if (!equalsIgnoreCase(b2c(_value[thisStart++]), seq[start++]))
             {
                 return false;
             }
@@ -1357,22 +1411,33 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return h;
     }
 
-    public override bool Equals(object obj)
+    public bool Equals(AsciiString other)
     {
-        if (obj == null || obj.GetType() != typeof(AsciiString))
-        {
+        if (null == other)
             return false;
-        }
 
-        if (this == obj)
+        if (ReferenceEquals(this, other))
         {
             return true;
         }
 
-        AsciiString other = (AsciiString)obj;
         return length() == other.length() &&
                GetHashCode() == other.GetHashCode() &&
                PlatformDependent.equals(array(), arrayOffset(), other.array(), other.arrayOffset(), length());
+    }
+
+
+    public override bool Equals(object obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
+
+        if (obj is AsciiString otherStr)
+            return Equals(otherStr);
+
+        return false;
     }
 
     /**
@@ -1389,6 +1454,16 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         return cache;
+    }
+
+    public IEnumerator<char> GetEnumerator()
+    {
+        return new CharSequenceEnumerator(this);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 
     /**
@@ -2108,11 +2183,11 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * -1 if char {@code searchChar} is not found or {@code cs == null}
      */
     //-----------------------------------------------------------------------
-    public static int indexOf(string cs, char searchChar, int start)
+    public static int indexOf(ICharSequence cs, char searchChar, int start)
     {
-        if (cs is string)
+        if (cs is StringCharSequence)
         {
-            return ((string)cs).indexOf(searchChar, start);
+            return ((StringCharSequence)cs).indexOf(searchChar, start);
         }
         else if (cs is AsciiString)
         {
