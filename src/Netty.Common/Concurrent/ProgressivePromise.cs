@@ -25,13 +25,13 @@ public interface ProgressivePromise<V> : Promise<V>, ProgressiveFuture<V>
 {
     /**
      * Sets the current progress of the operation and notifies the listeners that implement
-     * {@link GenericProgressiveFutureListener}.
+     * {@link IGenericProgressiveFutureListener}.
      */
     ProgressivePromise<V> setProgress(long progress, long total);
 
     /**
      * Tries to set the current progress of the operation and notifies the listeners that implement
-     * {@link GenericProgressiveFutureListener}.  If the operation is already complete or the progress is out of range,
+     * {@link IGenericProgressiveFutureListener}.  If the operation is already complete or the progress is out of range,
      * this method does nothing but returning {@code false}.
      */
     bool tryProgress(long progress, long total);

@@ -459,7 +459,7 @@ final CountDownLatch latch) {
      * <ol>
      * <li>A write is done</li>
      * <li>The write operation completes, and the promise state is changed to done</li>
-     * <li>A listener is added to the return from the write. The {@link FutureListener#operationComplete(Future)}
+     * <li>A listener is added to the return from the write. The {@link IFutureListener#operationComplete(Future)}
      * updates state which must be invoked before the response to the previous write is read.</li>
      * <li>The write operation</li>
      * </ol>

@@ -91,7 +91,7 @@ public class PromiseNotifier<V, F extends Future<V>> : IGenericFutureListener<> 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <V, F extends Future<V>> F cascade(bool logNotifyFailure, final F future,
                                                      final Promise<? super V> promise) {
-        promise.addListener(new FutureListener() {
+        promise.addListener(new IFutureListener<>() {
             @Override
             public void operationComplete(Future f) {
                 if (f.isCancelled()) {

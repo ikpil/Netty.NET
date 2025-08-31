@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Netty Project
+ * Copyright 2013 The Netty Project
  *
  * The Netty Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -14,16 +14,16 @@
  * under the License.
  */
 
-using Netty.NET.Common.Concurrent;
+namespace Netty.NET.Common.Concurrent;
 
-namespace Netty.NET.Common;
-
-
-public interface AsyncMapping<IN, OUT> {
-
+public interface IGenericProgressiveFutureListener<in TProgressiveFuture> : IGenericFutureListener<TProgressiveFuture> 
+{
     /**
-     * Returns the {@link Future} that will provide the result of the mapping. The given {@link Promise} will
-     * be fulfilled when the result is available.
+     * Invoked when the operation has progressed.
+     *
+     * @param progress the progress of the operation so far (cumulative)
+     * @param total the number that signifies the end of the operation when {@code progress} reaches at it.
+     *              {@code -1} if the end of operation is unknown.
      */
-    IFuture<OUT> map(IN input, Promise<OUT> promise);
+    void operationProgressed(TProgressiveFuture future, long progress, long total);
 }

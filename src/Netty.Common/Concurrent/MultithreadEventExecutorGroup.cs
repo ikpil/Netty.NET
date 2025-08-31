@@ -109,7 +109,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
         chooser = chooserFactory.newChooser(children);
 
-        final FutureListener<object> terminationListener = new FutureListener<object>() {
+        final IFutureListener<object> terminationListener = new IFutureListener<object>() {
             @Override
             public void operationComplete(Future<object> future) {
                 if (terminatedChildren.incrementAndGet() == children.length) {

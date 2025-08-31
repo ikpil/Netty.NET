@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 The Netty Project
+ * Copyright 2015 The Netty Project
  *
  * The Netty Project licenses this file to you under the Apache License,
  * version 2.0 (the "License"); you may not use this file except in compliance
@@ -14,15 +14,16 @@
  * under the License.
  */
 
-namespace Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Concurrent;
 
-/**
- * A subtype of {@link GenericFutureListener} that hides type parameter for convenience.
- * <pre>
- * Future f = new DefaultPromise(..);
- * f.addListener(new FutureListener() {
- *     public void operationComplete(Future f) { .. }
- * });
- * </pre>
- */
-public interface FutureListener<V> extends GenericFutureListener<Future<V>> { }
+namespace Netty.NET.Common;
+
+
+public interface IAsyncMapping<IN, OUT> {
+
+    /**
+     * Returns the {@link Future} that will provide the result of the mapping. The given {@link Promise} will
+     * be fulfilled when the result is available.
+     */
+    IFuture<OUT> map(IN input, Promise<OUT> promise);
+}

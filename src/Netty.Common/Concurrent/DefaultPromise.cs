@@ -739,7 +739,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
                         self, (GenericProgressiveFutureListener<?>[]) listeners, progress, total);
             } else {
                 notifyProgressiveListener0(
-                        self, (GenericProgressiveFutureListener<ProgressiveFuture<V>>) listeners, progress, total);
+                        self, (IGenericProgressiveFutureListener<ProgressiveFuture<V>>) listeners, progress, total);
             }
         } else {
             if (listeners instanceof GenericProgressiveFutureListener[]) {
@@ -752,8 +752,8 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
                     }
                 });
             } else {
-                final GenericProgressiveFutureListener<ProgressiveFuture<V>> l =
-                        (GenericProgressiveFutureListener<ProgressiveFuture<V>>) listeners;
+                final IGenericProgressiveFutureListener<ProgressiveFuture<V>> l =
+                        (IGenericProgressiveFutureListener<ProgressiveFuture<V>>) listeners;
                 safeExecute(executor, new IRunnable() {
                     @Override
                     public void run() {
@@ -811,7 +811,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     private static void notifyProgressiveListeners0(
-            ProgressiveFuture<?> future, GenericProgressiveFutureListener<?>[] listeners, long progress, long total) {
+            ProgressiveFuture<?> future, IGenericProgressiveFutureListener<?>[] listeners, long progress, long total) {
         for (GenericProgressiveFutureListener<?> l: listeners) {
             if (l == null) {
                 break;

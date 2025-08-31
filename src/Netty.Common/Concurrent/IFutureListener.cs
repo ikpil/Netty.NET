@@ -16,13 +16,15 @@
 
 namespace Netty.NET.Common.Concurrent;
 
-public interface GenericProgressiveFutureListener<F extends ProgressiveFuture<?>> extends GenericFutureListener<F> {
-    /**
-     * Invoked when the operation has progressed.
-     *
-     * @param progress the progress of the operation so far (cumulative)
-     * @param total the number that signifies the end of the operation when {@code progress} reaches at it.
-     *              {@code -1} if the end of operation is unknown.
-     */
-    void operationProgressed(F future, long progress, long total);
+/**
+ * A subtype of {@link GenericFutureListener} that hides type parameter for convenience.
+ * <pre>
+ * Future f = new DefaultPromise(..);
+ * f.addListener(new IFutureListener() {
+ *     public void operationComplete(Future f) { .. }
+ * });
+ * </pre>
+ */
+public interface IFutureListener<V> : IGenericFutureListener<Future<V>>
+{
 }
