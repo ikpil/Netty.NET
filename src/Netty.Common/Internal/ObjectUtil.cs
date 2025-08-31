@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Netty.NET.Common.Internal;
@@ -466,4 +465,10 @@ public static class ObjectUtil
     {
         return wrapper != null ? wrapper : defaultValue;
     }
+
+    public static T Null<T>() where T : class
+    {
+        return null;
+    }
+    
 }
