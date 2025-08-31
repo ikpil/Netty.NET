@@ -14,7 +14,7 @@
  * under the License.
  */
 
-using System.Diagnostics;
+using System.Threading;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -31,7 +31,7 @@ public interface IThreadProperties
     /**
      * @see Thread#getPriority()
      */
-    int priority();
+    ThreadPriority priority();
 
     /**
      * @see Thread#isInterrupted()
@@ -56,7 +56,7 @@ public interface IThreadProperties
     /**
      * @see Thread#getStackTrace()
      */
-    StackFrame[] stackTrace();
+    System.Diagnostics.StackFrame[] stackTrace();
 
     /**
      * @see Thread#isAlive()
