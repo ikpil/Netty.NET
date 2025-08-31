@@ -82,8 +82,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         return new List<IRunnable>();
     }
 
-    @Override
-    public Future<?> submit(IRunnable task) {
+    public Task submit(IRunnable task) {
         return (Future<?>) super.submit(task);
     }
 
