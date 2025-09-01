@@ -417,7 +417,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *                         make progress and return to the selector mechanism to process inbound I/O events.
      * @return {@code true} if at least one task was run.
      */
-    protected final bool runScheduledAndExecutorTasks(final int maxDrainAttempts) {
+    protected bool runScheduledAndExecutorTasks(int maxDrainAttempts) {
         Debug.Assert(inEventLoop());
         bool ranAtLeastOneTask;
         int drainAttempt = 0;
@@ -720,19 +720,17 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return state >= ST_SHUTDOWN;
     }
 
-    @Override
-    public bool isTerminated() {
+    public override bool isTerminated() {
         return state == ST_TERMINATED;
     }
 
-    @Override
-    public bool isSuspended() {
+    public override bool isSuspended() {
         int currentState = state;
         return currentState == ST_SUSPENDED || currentState == ST_SUSPENDING;
     }
 
-    @Override
-    public bool trySuspend() {
+    public override bool trySuspend() 
+    {
         if (_supportSuspension) {
             if (STATE_UPDATER.compareAndSet(this, ST_STARTED, ST_SUSPENDING)) {
                 wakeup(inEventLoop());
@@ -827,8 +825,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return true;
     }
 
-    @Override
-    public bool awaitTermination(TimeSpan timeout) {
+    public override bool awaitTermination(TimeSpan timeout) {
         if (inEventLoop()) {
             throw new InvalidOperationException("cannot await termination of the current thread");
         }
@@ -838,22 +835,20 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return isTerminated();
     }
 
-    @Override
-    public void execute(IRunnable task) {
+    public override void execute(IRunnable task) {
         execute0(task);
     }
 
-    @Override
-    public void lazyExecute(IRunnable task) {
+    public override void lazyExecute(IRunnable task) {
         lazyExecute0(task);
     }
 
-    private void execute0(@Schedule IRunnable task) {
+    private void execute0(IRunnable task) {
         ObjectUtil.checkNotNull(task, "task");
         execute(task, wakesUpForTask(task));
     }
 
-    private void lazyExecute0(@Schedule IRunnable task) {
+    private void lazyExecute0(IRunnable task) {
         execute(ObjectUtil.checkNotNull(task, "task"), false);
     }
 
@@ -1163,7 +1158,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         });
     }
 
-    final int drainTasks() {
+    private int drainTasks() {
         int numTasks = 0;
         for (;;) {
             IRunnable runnable = _taskQueue.poll();

@@ -74,7 +74,7 @@ public interface IScheduledExecutorService : IExecutorService
      * @throws NullPointerException if command or unit is null
      * @throws IllegalArgumentException if period less than or equal to zero
      */
-    public IScheduledTask scheduleAtFixedRate(IRunnable command, long initialDelay, TimeSpan period);
+    public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period);
 
     /**
      * Submits a periodic action that becomes enabled first after the
@@ -111,5 +111,5 @@ public interface IScheduledExecutorService : IExecutorService
      * @throws NullPointerException if command or unit is null
      * @throws IllegalArgumentException if delay less than or equal to zero
      */
-    public IScheduledTask scheduleWithFixedDelay(IRunnable command, long initialDelay, TimeSpan delay);
+    public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay);
 }

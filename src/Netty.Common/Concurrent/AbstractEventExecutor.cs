@@ -72,61 +72,68 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     [Obsolete]
     public abstract void shutdown();
 
+    
     /**
      * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
-    
     [Obsolete]
     public List<IRunnable> shutdownNow() {
         shutdown();
         return new List<IRunnable>();
     }
+    
+    public abstract bool isShuttingDown();
+    public abstract bool isShutdown();
+    public abstract bool isTerminated();
+    public abstract bool isSuspended();
+    public abstract bool trySuspend();
 
     public Task submit(IRunnable task) {
         return (Future<?>) super.submit(task);
     }
 
     @Override
-    public Task<T> submit(IRunnable task, T result) {
+    public Task<T> submit<T>(IRunnable task, T result) {
         return (Future<T>) super.submit(task, result);
     }
 
     @Override
-    public Task<T> submit(Func<T> task) {
+    public Task<T> submit<T>(Func<T> task) {
         return (Future<T>) super.submit(task);
     }
 
     @Override
-    protected final <T> RunnableFuture<T> newTaskFor(IRunnable runnable, T value) {
+    protected RunnableFuture<T> newTaskFor<T>(IRunnable runnable, T value) {
         return new PromiseTask<T>(this, runnable, value);
     }
 
     @Override
-    protected final <T> RunnableFuture<T> newTaskFor(Func<T> callable) {
+    protected RunnableFuture<T> newTaskFor<T>(Func<T> callable) {
         return new PromiseTask<T>(this, callable);
     }
 
     @Override
-    public IScheduledTask<?> schedule(IRunnable command, long delay,
-                                       TimeSpan unit) {
+    public IScheduledTask schedule(IRunnable command, TimeSpan delay) {
         throw new NotSupportedException();
     }
 
     @Override
-    public <V> IScheduledTask<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
+    public IScheduledTask<V> schedule<V>(Func<V> callable, TimeSpan delay) {
         throw new NotSupportedException();
     }
 
     @Override
-    public IScheduledTask<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period) {
         throw new NotSupportedException();
     }
 
     @Override
-    public IScheduledTask<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay) {
         throw new NotSupportedException();
     }
 
+    public abstract void execute(IRunnable task);
+    
     /**
      * Try to execute the given {@link IRunnable} and just log if it throws a {@link Exception}.
      */
@@ -150,8 +157,8 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      * </p>
      */
     [UnstableApi]
-    public void lazyExecute(IRunnable task) {
+    public virtual void lazyExecute(IRunnable task) 
+    {
         execute(task);
     }
-
 }
