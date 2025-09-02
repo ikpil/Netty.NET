@@ -54,7 +54,7 @@ public class OsClassifiersTest {
         // ID
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, ",");
         final Set<String> available = new LinkedHashSet<>(2);
-        Assertions.assertThrows(IllegalArgumentException.class,
+        Assertions.assertThrows(ArgumentException.class,
                 () -> PlatformDependent.addPropertyOsClassifiers(available));
     }
 
@@ -85,7 +85,7 @@ public class OsClassifiersTest {
         // ID, ID_LIKE, excessive
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "manjaro,arch,slackware");
         final Set<String> available = new LinkedHashSet<>(2);
-        Assertions.assertThrows(IllegalArgumentException.class,
+        Assertions.assertThrows(ArgumentException.class,
                 () -> PlatformDependent.addPropertyOsClassifiers(available));
     }
 }

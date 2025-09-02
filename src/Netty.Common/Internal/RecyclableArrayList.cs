@@ -65,7 +65,7 @@ public class RecyclableArrayList
         _list = new List<object>(initialCapacity);
     }
 
-    public bool addAll<T>(Collection<T> c) where T : class
+    public bool addAll<T>(ICollection<T> c) where T : class
     {
         checkNullElements(c);
         _list.AddRange(c);
@@ -73,7 +73,7 @@ public class RecyclableArrayList
         return true;
     }
 
-    public bool addAll<T>(int index, Collection<T> c) where T : class
+    public bool addAll<T>(int index, ICollection<T> c) where T : class
     {
         checkNullElements(c);
         _list.InsertRange(index, c);
@@ -81,7 +81,7 @@ public class RecyclableArrayList
         return true;
     }
 
-    private static void checkNullElements<T>(Collection<T> c) where T : class
+    private static void checkNullElements<T>(ICollection<T> c) where T : class
     {
         if (c is IList<T> list)
         {

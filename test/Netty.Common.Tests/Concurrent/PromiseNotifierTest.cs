@@ -31,7 +31,7 @@ public class PromiseNotifierTest {
     //@SuppressWarnings("unchecked")
     @Test
     public void testNullPromiseInArray() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 new PromiseNotifier<Void, Future<Void>>((Promise<Void>) null);

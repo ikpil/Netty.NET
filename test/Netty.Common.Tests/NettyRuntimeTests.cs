@@ -29,7 +29,7 @@ public class NettyRuntimeTests {
             try {
                 holder.setAvailableProcessors(i);
                 fail();
-            } catch (final IllegalArgumentException e) {
+            } catch (final ArgumentException e) {
                 assertThat(e.getMessage()).contains("(expected: > 0)");
             }
         }

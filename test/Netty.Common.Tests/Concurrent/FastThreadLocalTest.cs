@@ -195,7 +195,7 @@ class Worker implements IRunnable {
 }
 
 int n = 100;
-List<Worker> workers = new ArrayList<>();
+List<Worker> workers = new List<>();
 for (int i = 0; i < n; i++) {
     Worker worker = new Worker();
     workers.add(worker);
@@ -423,6 +423,6 @@ public void testFastThreadLocalInitialValueWithUnset() throws Exception {
     FastThreadLocalThread fastThreadLocalThread = new FastThreadLocalThread(runnable);
     fastThreadLocalThread.start();
     fastThreadLocalThread.join();
-    assertInstanceOf(IllegalArgumentException.class, throwable.get());
+    assertInstanceOf(ArgumentException.class, throwable.get());
 }
 }

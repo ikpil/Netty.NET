@@ -212,7 +212,7 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public Task<T> submit(Func<T> task) {
+    public Task<T> submit(ICallable<T> task) {
         return (Future<T>) super.submit(task);
     }
 

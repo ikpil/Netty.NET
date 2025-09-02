@@ -78,17 +78,17 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
         return false;
     }
 
-    public bool addAll(Collection<T> c)
+    public bool addAll(ICollection<T> c)
     {
         return false;
     }
 
-    public bool removeAll(Collection<T> c)
+    public bool removeAll(ICollection<T> c)
     {
         return false;
     }
 
-    public bool retainAll(Collection<T> c)
+    public bool retainAll(ICollection<T> c)
     {
         return false;
     }

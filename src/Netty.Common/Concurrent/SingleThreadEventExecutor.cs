@@ -905,20 +905,20 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws ThreadInterruptedException, ExecutionException {
+    public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks) throws ThreadInterruptedException, ExecutionException {
         throwIfInEventLoop("invokeAny");
         return super.invokeAny(tasks);
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit)
+    public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit)
             throws ThreadInterruptedException, ExecutionException, TimeoutException {
         throwIfInEventLoop("invokeAny");
         return super.invokeAny(tasks, timeout, unit);
     }
 
     @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Func<T>> tasks)
+    public <T> List<java.util.concurrent.Future<T>> invokeAll(ICollection<? extends ICallable<T>> tasks)
             throws ThreadInterruptedException {
         throwIfInEventLoop("invokeAll");
         return super.invokeAll(tasks);
@@ -926,7 +926,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit) {
+            ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit) {
         throwIfInEventLoop("invokeAll");
         return super.invokeAll(tasks, timeout, unit);
     }

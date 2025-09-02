@@ -318,7 +318,7 @@ public class HashedWheelTimerTest {
                 Thread.sleep(1000);
             }
         }, 200, TimeUnit.MILLISECONDS);
-        List<Timeout> timeouts = new ArrayList<Timeout>();
+        List<Timeout> timeouts = new List<Timeout>();
         for (int i = 0; i < 10; i++) {
             timeouts.add(timer.newTimeout(createNoOpTimerTask(), 200, TimeUnit.MILLISECONDS));
         }

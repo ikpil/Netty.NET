@@ -65,7 +65,7 @@ public class AbstractScheduledEventExecutorTest {
     @Test
     public void testScheduleAtFixedRateRunnableZero() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 executor.scheduleAtFixedRate(TEST_RUNNABLE, 0, 0, TimeUnit.DAYS);
@@ -76,7 +76,7 @@ public class AbstractScheduledEventExecutorTest {
     @Test
     public void testScheduleAtFixedRateRunnableNegative() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 executor.scheduleAtFixedRate(TEST_RUNNABLE, 0, -1, TimeUnit.DAYS);
@@ -87,7 +87,7 @@ public class AbstractScheduledEventExecutorTest {
     @Test
     public void testScheduleWithFixedDelayZero() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 executor.scheduleWithFixedDelay(TEST_RUNNABLE, 0, -1, TimeUnit.DAYS);
@@ -98,7 +98,7 @@ public class AbstractScheduledEventExecutorTest {
     @Test
     public void testScheduleWithFixedDelayNegative() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 executor.scheduleWithFixedDelay(TEST_RUNNABLE, 0, -1, TimeUnit.DAYS);

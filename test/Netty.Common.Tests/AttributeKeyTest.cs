@@ -48,7 +48,7 @@ public class AttributeKeyTest {
         try {
             AttributeKey.<String>newInstance(name);
             fail();
-        } catch (IllegalArgumentException e) {
+        } catch (ArgumentException e) {
             // expected
         }
     }

@@ -133,7 +133,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public Task<T> submit(Func<T> task) {
+    public Task<T> submit(ICallable<T> task) {
         return group.submit(task);
     }
 
@@ -174,23 +174,23 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Func<T>> tasks) {
+            ICollection<? extends ICallable<T>> tasks) {
         return group.invokeAll(tasks);
     }
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit) {
+            ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit) {
         return group.invokeAll(tasks, timeout, unit);
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Func<T>> tasks) throws ThreadInterruptedException, ExecutionException {
+    public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks) throws ThreadInterruptedException, ExecutionException {
         return group.invokeAny(tasks);
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Func<T>> tasks, long timeout, TimeSpan unit)
+    public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit)
             throws ThreadInterruptedException, ExecutionException, TimeoutException {
         return group.invokeAny(tasks, timeout, unit);
     }

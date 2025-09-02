@@ -72,7 +72,7 @@ public interface IScheduledExecutorService : IExecutorService
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
      * @throws NullReferenceException if command or unit is null
-     * @throws IllegalArgumentException if period less than or equal to zero
+     * @throws ArgumentException if period less than or equal to zero
      */
     public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period);
 
@@ -109,7 +109,7 @@ public interface IScheduledExecutorService : IExecutorService
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
      * @throws NullReferenceException if command or unit is null
-     * @throws IllegalArgumentException if delay less than or equal to zero
+     * @throws ArgumentException if delay less than or equal to zero
      */
     public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay);
 }

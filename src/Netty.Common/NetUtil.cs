@@ -58,7 +58,7 @@ public static class NetUtil
     public static readonly NetworkInterface LOOPBACK_IF;
 
     /**
-     * An unmodifiable Collection of all the interfaces on this machine.
+     * An unmodifiable ICollection of all the interfaces on this machine.
      */
     public static readonly ICollection<NetworkInterface> NETWORK_INTERFACES;
 

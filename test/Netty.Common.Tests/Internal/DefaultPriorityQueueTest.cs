@@ -114,7 +114,7 @@ public class DefaultPriorityQueueTest {
         try {
             queue.offer(a);
             fail();
-        } catch (IllegalArgumentException t) {
+        } catch (ArgumentException t) {
             // expected
         }
 
@@ -255,7 +255,7 @@ public class DefaultPriorityQueueTest {
         f.value = 5;
         queue.priorityChanged(f);
 
-        List<TestElement> expectedOrderList = new ArrayList<>(queue.size());
+        List<TestElement> expectedOrderList = new List<>(queue.size());
         expectedOrderList.addAll(Arrays.asList(a, b, c, d, e, f));
         expectedOrderList.sort(TestElementComparator.INSTANCE);
 
@@ -279,7 +279,7 @@ public class DefaultPriorityQueueTest {
         try { // An element can not be inserted more than 1 time.
             queue.offer(a);
             fail();
-        } catch (IllegalArgumentException ignored) {
+        } catch (ArgumentException ignored) {
             // ignored
         }
     }

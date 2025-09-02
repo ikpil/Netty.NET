@@ -38,7 +38,7 @@ final class NetUtilSubstitutions {
 
     @Alias
     @InjectAccessors(typeof(NetUtilNetworkInterfacesAccessor))
-    public static Collection<NetworkInterface> NETWORK_INTERFACES;
+    public static ICollection<NetworkInterface> NETWORK_INTERFACES;
 
     private static readonly class NetUtilLocalhost4Accessor {
         static IPAddress get() {
@@ -89,18 +89,18 @@ final class NetUtilSubstitutions {
     }
 
     private static readonly class NetUtilNetworkInterfacesAccessor {
-        static Collection<NetworkInterface> get() {
+        static ICollection<NetworkInterface> get() {
             // using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
             return NetUtilNetworkInterfacesLazyHolder.NETWORK_INTERFACES;
         }
 
-        static void set(Collection<NetworkInterface> ignored) {
+        static void set(ICollection<NetworkInterface> ignored) {
             // a no-op setter to avoid exceptions when NetUtil is initialized at run-time
         }
     }
 
     private static readonly class NetUtilNetworkInterfacesLazyHolder {
-        private static readonly Collection<NetworkInterface> NETWORK_INTERFACES =
+        private static readonly ICollection<NetworkInterface> NETWORK_INTERFACES =
                 NetUtilInitializations.networkInterfaces();
     }
 }

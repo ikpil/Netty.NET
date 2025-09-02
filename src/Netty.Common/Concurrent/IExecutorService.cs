@@ -155,7 +155,7 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if any task cannot be
      *         scheduled for execution
      */
-    List<Task<T>> invokeAll<T>(Collection<Func<T>> tasks);
+    List<Task<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>;
 
     /**
      * Executes the given tasks, returning a list of Futures holding
@@ -185,7 +185,7 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if any task cannot be scheduled
      *         for execution
      */
-    List<Task<T>> invokeAll<T>(Collection<Func<T>> tasks, TimeSpan timeout);
+    List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>;
 
     /**
      * Executes the given tasks, returning the result
@@ -201,12 +201,12 @@ public interface IExecutorService : IExecutor
      * @throws ThreadInterruptedException if interrupted while waiting
      * @throws NullReferenceException if tasks or any element task
      *         subject to execution is {@code null}
-     * @throws IllegalArgumentException if tasks is empty
+     * @throws ArgumentException if tasks is empty
      * @throws ExecutionException if no task successfully completes
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
      */
-    T invokeAny<T>(Collection<Func<T>> tasks);
+    T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>;
 
     /**
      * Executes the given tasks, returning the result
@@ -231,5 +231,5 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
      */
-    T invokeAny<T>(Collection<Func<T>> tasks, TimeSpan timeout);
+    T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>;
 }

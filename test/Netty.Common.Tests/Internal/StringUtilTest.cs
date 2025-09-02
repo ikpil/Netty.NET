@@ -387,7 +387,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvWithSingleQuote() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsv("\"");
@@ -397,7 +397,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvWithOddQuote() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsv("\"\"\"");
@@ -407,7 +407,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvWithCRAndWithoutQuote() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsv("\r");
@@ -417,7 +417,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvWithLFAndWithoutQuote() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsv("\n");
@@ -427,7 +427,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvWithCommaAndWithoutQuote() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsv(",");
@@ -469,7 +469,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvFieldsWithCRWithoutQuote() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("a,\r");
@@ -479,7 +479,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvFieldsWithLFWithoutQuote() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("a,\r");
@@ -489,7 +489,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvFieldsWithQuote() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("a,\"");
@@ -499,7 +499,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvFieldsWithQuote2() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("\",a");
@@ -509,7 +509,7 @@ public class StringUtilTest {
 
     @Test
     public void unescapeCsvFieldsWithQuote3() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("a\"b,a");

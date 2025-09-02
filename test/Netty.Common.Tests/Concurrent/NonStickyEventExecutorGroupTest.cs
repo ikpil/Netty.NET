@@ -21,7 +21,7 @@ public class NonStickyEventExecutorGroupTest {
     public void testInvalidGroup() {
         final EventExecutorGroup group = new DefaultEventExecutorGroup(1);
         try {
-            assertThrows(IllegalArgumentException.class, new Executable() {
+            assertThrows(ArgumentException.class, new Executable() {
                 @Override
                 public void execute() {
                     new NonStickyEventExecutorGroup(group);
@@ -32,8 +32,8 @@ public class NonStickyEventExecutorGroupTest {
         }
     }
 
-    public static Collection<Object[]> data() throws Exception {
-        List<Object[]> params = new ArrayList<Object[]>();
+    public static ICollection<Object[]> data() throws Exception {
+        List<Object[]> params = new List<Object[]>();
         params.add(new Object[] {64});
         params.add(new Object[] {256});
         params.add(new Object[] {1024});
@@ -51,7 +51,7 @@ public class NonStickyEventExecutorGroupTest {
         try {
             final CountDownLatch startLatch = new CountDownLatch(1);
             final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
-            List<Thread> threadList = new ArrayList<Thread>(threads);
+            List<Thread> threadList = new List<Thread>(threads);
             for (int i = 0 ; i < threads; i++) {
                 Thread thread = new Thread(new IRunnable() {
                     @Override
@@ -115,7 +115,7 @@ public class NonStickyEventExecutorGroupTest {
         final AtomicReference<Throwable> cause = new AtomicReference<Throwable>();
         final AtomicInteger last = new AtomicInteger();
         int tasks = 10000;
-        List<Future<?>> futures = new ArrayList<Future<?>>(tasks);
+        List<Future<?>> futures = new List<Future<?>>(tasks);
         final CountDownLatch latch = new CountDownLatch(tasks);
         startLatch.await();
 

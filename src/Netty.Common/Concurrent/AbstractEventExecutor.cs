@@ -97,14 +97,6 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         return (Future<T>) super.submit(task);
     }
 
-    protected override RunnableFuture<T> newTaskFor<T>(IRunnable runnable, T value) {
-        return new PromiseTask<T>(this, runnable, value);
-    }
-
-    protected override RunnableFuture<T> newTaskFor<T>(ICallable<T> callable) {
-        return new PromiseTask<T>(this, callable);
-    }
-
     @Override
     public IScheduledTask schedule(IRunnable command, TimeSpan delay) {
         throw new NotSupportedException();

@@ -23,7 +23,7 @@ namespace Netty.NET.Common;
 
 
 /**
- * Collection of method to handle objects that may implement {@link IReferenceCounted}.
+ * ICollection of method to handle objects that may implement {@link IReferenceCounted}.
  */
 public sealed class ReferenceCountUtil 
 {

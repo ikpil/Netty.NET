@@ -48,7 +48,7 @@ public class ThreadDeathWatcherTest {
         try {
             ThreadDeathWatcher.watch(t, task);
             fail("must reject to watch a non-alive thread.");
-        } catch (IllegalArgumentException e) {
+        } catch (ArgumentException e) {
             // expected
         }
 

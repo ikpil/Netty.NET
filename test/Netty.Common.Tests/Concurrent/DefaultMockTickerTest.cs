@@ -43,11 +43,11 @@ namespace Netty.Common.Tests.Concurrent
         @Test
         void advanceWithNegativeAmount() {
             final MockTicker ticker = Ticker.newMockTicker();
-            assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(ArgumentException.class, () -> {
                 ticker.advance(-1, TimeUnit.SECONDS);
             });
 
-            assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(ArgumentException.class, () -> {
                 ticker.advanceMillis(-1);
             });
         }
@@ -55,10 +55,10 @@ namespace Netty.Common.Tests.Concurrent
         @Timeout(60)
         @Test
         void advanceWithWaiters() throws Exception {
-            final List<Thread> threads = new ArrayList<>();
+            final List<Thread> threads = new List<>();
             final DefaultMockTicker ticker = (DefaultMockTicker) Ticker.newMockTicker();
             final int numWaiters = 4;
-        final List<FutureTask<Void>> futures = new ArrayList<>();
+        final List<FutureTask<Void>> futures = new List<>();
         for (int i = 0; i < numWaiters; i++) {
             FutureTask<Void> task = new FutureTask<>(() -> {
                 try {

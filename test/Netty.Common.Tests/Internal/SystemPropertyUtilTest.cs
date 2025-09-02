@@ -35,7 +35,7 @@ public class SystemPropertyUtilTest {
 
     @Test
     public void testGetWithKeyEmpty() {
-        assertThrows(IllegalArgumentException.class, new Executable() {
+        assertThrows(ArgumentException.class, new Executable() {
             @Override
             public void execute() {
                 SystemPropertyUtil.get("", null);
