@@ -191,8 +191,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         return false;
     }
 
-    @Override
-    public bool awaitTermination(TimeSpan timeout) {
+    public override bool awaitTermination(TimeSpan timeout) {
         return false;
     }
 

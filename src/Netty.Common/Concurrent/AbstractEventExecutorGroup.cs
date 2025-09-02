@@ -39,19 +39,19 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     public abstract IEventExecutor next();
 
 
-    public Task<T> submitAsync<T>(Func<T> task)
+    public Task<T> submit<T>(ICallable<T> task)
     {
-        return next().submitAsync(task);
+        return next().submit(task);
     }
 
-    public Task<T> submitAsync<T>(IRunnable task, T result)
+    public Task<T> submit<T>(IRunnable task, T result)
     {
-        return next().submitAsync(task, result);
+        return next().submit(task, result);
     }
 
-    public Task submitAsync(IRunnable task)
+    public Task submit(IRunnable task)
     {
-        return next().submitAsync(task);
+        return next().submit(task);
     }
 
     public IScheduledTask schedule(IRunnable command, TimeSpan delay)

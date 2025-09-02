@@ -20,7 +20,7 @@ public class PromiseNotifierTest {
 
     @Test
     public void testNullPromisesArray() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new PromiseNotifier<Void, Future<Void>>((Promise<Void>[]) null);

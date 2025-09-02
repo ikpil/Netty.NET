@@ -12,7 +12,7 @@ public interface IExecutor
       * @param command the runnable task
       * @throws RejectedExecutionException if this task cannot be
       * accepted for execution
-      * @throws NullPointerException if command is null
+      * @throws NullReferenceException if command is null
       */
     void execute(IRunnable command);
 }

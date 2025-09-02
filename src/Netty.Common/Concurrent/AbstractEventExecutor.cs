@@ -64,51 +64,44 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     public abstract Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
-    
+
 
     /**
      * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
     [Obsolete]
     public abstract void shutdown();
-
     
     /**
      * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
     [Obsolete]
-    public List<IRunnable> shutdownNow() {
+    public override List<IRunnable> shutdownNow() {
         shutdown();
         return new List<IRunnable>();
     }
     
     public abstract bool isShuttingDown();
-    public abstract bool isShutdown();
-    public abstract bool isTerminated();
     public abstract bool isSuspended();
     public abstract bool trySuspend();
 
-    public Task submit(IRunnable task) {
+    public override Task submit(IRunnable task) {
         return (Future<?>) super.submit(task);
     }
 
-    @Override
-    public Task<T> submit<T>(IRunnable task, T result) {
+    public override Task<T> submit<T>(IRunnable task, T result) {
         return (Future<T>) super.submit(task, result);
     }
 
-    @Override
-    public Task<T> submit<T>(Func<T> task) {
+    public override Task<T> submit<T>(ICallable<T> task) {
         return (Future<T>) super.submit(task);
     }
 
-    @Override
-    protected RunnableFuture<T> newTaskFor<T>(IRunnable runnable, T value) {
+    protected override RunnableFuture<T> newTaskFor<T>(IRunnable runnable, T value) {
         return new PromiseTask<T>(this, runnable, value);
     }
 
-    @Override
-    protected RunnableFuture<T> newTaskFor<T>(Func<T> callable) {
+    protected override RunnableFuture<T> newTaskFor<T>(ICallable<T> callable) {
         return new PromiseTask<T>(this, callable);
     }
 

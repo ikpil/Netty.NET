@@ -527,7 +527,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param string the string to compare.
      * @return 0 if the strings are equal, a negative integer if this string is before the specified string, or a
      *         positive integer if this string is after the specified string.
-     * @throws NullPointerException if {@code string} is {@code null}.
+     * @throws NullReferenceException if {@code string} is {@code null}.
      */
     public int CompareTo(AsciiString str)
     {
@@ -608,7 +608,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *
      * @param suffix the suffix to look for.
      * @return {@code true} if the specified string is a suffix of this string, {@code false} otherwise.
-     * @throws NullPointerException if {@code suffix} is {@code null}.
+     * @throws NullReferenceException if {@code suffix} is {@code null}.
      */
     public bool endsWith(ICharSequence suffix)
     {
@@ -816,7 +816,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param string the string to find.
      * @return the index of the first character of the specified string in this string, -1 if the specified string is
      *         not a substring.
-     * @throws NullPointerException if {@code string} is {@code null}.
+     * @throws NullReferenceException if {@code string} is {@code null}.
      */
     public int indexOf(ICharSequence str)
     {
@@ -831,7 +831,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param start the starting offset.
      * @return the index of the first character of the specified string in this string, -1 if the specified string is
      *         not a substring.
-     * @throws NullPointerException if {@code subString} is {@code null}.
+     * @throws NullReferenceException if {@code subString} is {@code null}.
      */
     public int indexOf(ICharSequence subString, int start)
     {
@@ -920,7 +920,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param string the string to find.
      * @return the index of the first character of the specified string in this string, -1 if the specified string is
      *         not a substring.
-     * @throws NullPointerException if {@code string} is {@code null}.
+     * @throws NullReferenceException if {@code string} is {@code null}.
      */
     public int lastIndexOf(ICharSequence str)
     {
@@ -936,7 +936,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param start the starting offset.
      * @return the index of the first character of the specified string in this string , -1 if the specified string is
      *         not a substring.
-     * @throws NullPointerException if {@code subString} is {@code null}.
+     * @throws NullReferenceException if {@code subString} is {@code null}.
      */
     public int lastIndexOf(ICharSequence subString, int start)
     {
@@ -988,7 +988,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param start the starting offset in the specified string.
      * @param length the number of characters to compare.
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise
-     * @throws NullPointerException if {@code string} is {@code null}.
+     * @throws NullReferenceException if {@code string} is {@code null}.
      */
     public bool regionMatches(int thisStart, ICharSequence str, int start, int length)
     {
@@ -1066,7 +1066,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param start the starting offset in the specified string.
      * @param length the number of characters to compare.
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
-     * @throws NullPointerException if {@code string} is {@code null}.
+     * @throws NullReferenceException if {@code string} is {@code null}.
      */
     public bool regionMatches(bool ignoreCase, int thisStart, ICharSequence str, int start, int length)
     {
@@ -1160,7 +1160,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *
      * @param prefix the string to look for.
      * @return {@code true} if the specified string is a prefix of this string, {@code false} otherwise
-     * @throws NullPointerException if {@code prefix} is {@code null}.
+     * @throws NullReferenceException if {@code prefix} is {@code null}.
      */
     public bool StartsWith(ICharSequence prefix)
     {
@@ -1175,7 +1175,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param start the starting offset.
      * @return {@code true} if the specified string occurs in this string at the specified offset, {@code false}
      *         otherwise.
-     * @throws NullPointerException if {@code prefix} is {@code null}.
+     * @throws NullReferenceException if {@code prefix} is {@code null}.
      */
     public bool StartsWith(ICharSequence prefix, int start)
     {
@@ -1309,7 +1309,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param expr the regular expression to be matched.
      * @return {@code true} if the expression matches, otherwise {@code false}.
      * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
-     * @throws NullPointerException if {@code expr} is {@code null}.
+     * @throws NullReferenceException if {@code expr} is {@code null}.
      */
     public bool matches(string expr)
     {
@@ -1323,7 +1323,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param expr the regular expression used to divide the string.
      * @param max the number of entries in the resulting array.
      * @return an array of Strings created by separating the string along matches of the regular expression.
-     * @throws NullPointerException if {@code expr} is {@code null}.
+     * @throws NullReferenceException if {@code expr} is {@code null}.
      * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
      * @see Pattern#split(ICharSequence, int)
      */

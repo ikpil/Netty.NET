@@ -117,7 +117,7 @@ public class HashedWheelTimer : ITimer
      *
      * @param tickDuration the duration between tick
      * @param unit         the time unit of the {@code tickDuration}
-     * @throws NullPointerException     if {@code unit} is {@code null}
+     * @throws NullReferenceException     if {@code unit} is {@code null}
      * @throws ArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(TimeSpan tickDuration)
@@ -132,7 +132,7 @@ public class HashedWheelTimer : ITimer
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
-     * @throws NullPointerException     if {@code unit} is {@code null}
+     * @throws NullReferenceException     if {@code unit} is {@code null}
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(TimeSpan tickDuration, int ticksPerWheel)
@@ -147,7 +147,7 @@ public class HashedWheelTimer : ITimer
      * @param threadFactory a {@link IThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
      *                      {@link ITimerTask} execution.
-     * @throws NullPointerException if {@code threadFactory} is {@code null}
+     * @throws NullReferenceException if {@code threadFactory} is {@code null}
      */
     public HashedWheelTimer(IThreadFactory threadFactory)
         : this(threadFactory, TimeSpan.FromMilliseconds(100))
@@ -162,7 +162,7 @@ public class HashedWheelTimer : ITimer
      *                      {@link ITimerTask} execution.
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
-     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws ArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(
@@ -180,7 +180,7 @@ public class HashedWheelTimer : ITimer
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
-     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
@@ -202,7 +202,7 @@ public class HashedWheelTimer : ITimer
      * @param leakDetection {@code true} if leak detection should be enabled always,
      *                      if false it will only be enabled if the worker thread is not
      *                      a daemon thread.
-     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
@@ -229,7 +229,7 @@ public class HashedWheelTimer : ITimer
      *                             {@link java.util.concurrent.RejectedExecutionException}
      *                             being thrown. No maximum pending timeouts limit is assumed if
      *                             this value is 0 or negative.
-     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
@@ -260,7 +260,7 @@ public class HashedWheelTimer : ITimer
      * @param taskExecutor         The {@link IExecutor} that is used to execute the submitted {@link ITimerTask}s.
      *                             The caller is responsible to shutdown the {@link IExecutor} once it is not needed
      *                             anymore.
-     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(

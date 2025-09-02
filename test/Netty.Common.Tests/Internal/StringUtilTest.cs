@@ -138,7 +138,7 @@ public class StringUtilTest {
 
     @Test
     public void escapeCsvNull() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 StringUtil.escapeCsv(null);

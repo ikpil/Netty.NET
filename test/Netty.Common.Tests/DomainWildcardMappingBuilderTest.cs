@@ -18,7 +18,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
     @Test
     public void testNullDefaultValue() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainWildcardMappingBuilder<String>(null);
@@ -28,7 +28,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
     @Test
     public void testNullDomainNamePatternsAreForbidden() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainWildcardMappingBuilder<String>("NotFound").add(null, "Some value");
@@ -38,7 +38,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
     @Test
     public void testNullValuesAreForbidden() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainWildcardMappingBuilder<String>("NotFound").add("Some key", null);

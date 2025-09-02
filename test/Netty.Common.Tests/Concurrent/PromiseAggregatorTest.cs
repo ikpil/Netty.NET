@@ -19,7 +19,7 @@ public class PromiseAggregatorTest {
 
     @Test
     public void testNullAggregatePromise() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             //@SuppressWarnings("deprecation")
             @Override
             public void execute() {
@@ -35,7 +35,7 @@ public class PromiseAggregatorTest {
         //@SuppressWarnings("deprecation")
         final PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 a.add((Promise<Void>[]) null);

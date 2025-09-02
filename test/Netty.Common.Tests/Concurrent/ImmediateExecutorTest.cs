@@ -18,7 +18,7 @@ namespace Netty.Common.Tests.Concurrent;public class ImmediateExecutorTest {
 
     @Test
     public void testExecuteNullRunnable() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 ImmediateExecutor.INSTANCE.execute(null);

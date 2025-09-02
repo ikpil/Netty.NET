@@ -16,7 +16,7 @@ public interface IScheduledExecutorService : IExecutorService
      *         {@code null} upon completion
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
-     * @throws NullPointerException if command or unit is null
+     * @throws NullReferenceException if command or unit is null
      */
     public IScheduledTask schedule(IRunnable command, TimeSpan delay);
 
@@ -31,7 +31,7 @@ public interface IScheduledExecutorService : IExecutorService
      * @return a IScheduledTask that can be used to extract result or cancel
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
-     * @throws NullPointerException if callable or unit is null
+     * @throws NullReferenceException if callable or unit is null
      */
     public IScheduledTask<V> schedule<V>(Func<V> callable, TimeSpan delay);
 
@@ -71,7 +71,7 @@ public interface IScheduledExecutorService : IExecutorService
      *         abnormal termination of a task execution.
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
-     * @throws NullPointerException if command or unit is null
+     * @throws NullReferenceException if command or unit is null
      * @throws IllegalArgumentException if period less than or equal to zero
      */
     public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period);
@@ -108,7 +108,7 @@ public interface IScheduledExecutorService : IExecutorService
      *         abnormal termination of a task execution.
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
-     * @throws NullPointerException if command or unit is null
+     * @throws NullReferenceException if command or unit is null
      * @throws IllegalArgumentException if delay less than or equal to zero
      */
     public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay);

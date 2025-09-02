@@ -42,7 +42,7 @@ namespace Netty.Common.Tests.Internal.Logging
 
         @Test
         public void shouldNotAllowNullDefaultFactory() {
-            assertThrows(NullPointerException.class, new Executable() {
+            assertThrows(NullReferenceException.class, new Executable() {
                 @Override
                 public void execute() {
                 InternalLoggerFactory.setDefaultFactory(null);

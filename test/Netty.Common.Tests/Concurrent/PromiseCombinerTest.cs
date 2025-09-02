@@ -47,7 +47,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         try {
             combiner.finish(null);
             fail();
-        } catch (NullPointerException expected) {
+        } catch (NullReferenceException expected) {
             // expected
         }
         combiner.finish(p1);
@@ -62,7 +62,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
     @Test
     public void testAddNullPromise() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 combiner.add(null);
@@ -72,7 +72,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
     @Test
     public void testAddAllNullPromise() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 combiner.addAll(null);

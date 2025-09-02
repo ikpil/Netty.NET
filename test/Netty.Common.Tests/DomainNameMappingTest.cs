@@ -23,7 +23,7 @@ public class DomainNameMappingTest {
 
     @Test
     public void testNullDefaultValueInDeprecatedApi() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainNameMapping<String>(null);
@@ -33,7 +33,7 @@ public class DomainNameMappingTest {
 
     @Test
     public void testNullDomainNamePatternsAreForbiddenInDeprecatedApi() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainNameMapping<String>("NotFound").add(null, "Some value");
@@ -43,7 +43,7 @@ public class DomainNameMappingTest {
 
     @Test
     public void testNullValuesAreForbiddenInDeprecatedApi() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainNameMapping<String>("NotFound").add("Some key", null);
@@ -116,7 +116,7 @@ public class DomainNameMappingTest {
 
     @Test
     public void testNullDefaultValue() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainNameMappingBuilder<String>(null);
@@ -126,7 +126,7 @@ public class DomainNameMappingTest {
 
     @Test
     public void testNullDomainNamePatternsAreForbidden() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainNameMappingBuilder<String>("NotFound").add(null, "Some value");
@@ -137,7 +137,7 @@ public class DomainNameMappingTest {
     @Test
     public void testNullValuesAreForbidden() {
 
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 new DomainNameMappingBuilder<String>("NotFound").add("Some key", null);

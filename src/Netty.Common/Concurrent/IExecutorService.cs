@@ -102,9 +102,9 @@ public interface IExecutorService : IExecutor
      * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
-     * @throws NullPointerException if the task is null
+     * @throws NullReferenceException if the task is null
      */
-    Task<T> submitAsync<T>(Func<T> task);
+    Task<T> submit<T>(ICallable<T> task);
 
     /**
      * Submits a IRunnable task for execution and returns a Future
@@ -117,9 +117,9 @@ public interface IExecutorService : IExecutor
      * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
-     * @throws NullPointerException if the task is null
+     * @throws NullReferenceException if the task is null
      */
-    Task<T> submitAsync<T>(IRunnable task, T result);
+    Task<T> submit<T>(IRunnable task, T result);
 
     /**
      * Submits a IRunnable task for execution and returns a Future
@@ -130,9 +130,9 @@ public interface IExecutorService : IExecutor
      * @return a Future representing pending completion of the task
      * @throws RejectedExecutionException if the task cannot be
      *         scheduled for execution
-     * @throws NullPointerException if the task is null
+     * @throws NullReferenceException if the task is null
      */
-    Task submitAsync(IRunnable task);
+    Task submit(IRunnable task);
 
     /**
      * Executes the given tasks, returning a list of Futures holding
@@ -151,7 +151,7 @@ public interface IExecutorService : IExecutor
      *         given task list, each of which has completed
      * @throws ThreadInterruptedException if interrupted while waiting, in
      *         which case unfinished tasks are cancelled
-     * @throws NullPointerException if tasks or any of its elements are {@code null}
+     * @throws NullReferenceException if tasks or any of its elements are {@code null}
      * @throws RejectedExecutionException if any task cannot be
      *         scheduled for execution
      */
@@ -180,7 +180,7 @@ public interface IExecutorService : IExecutor
      *         of these tasks will not have completed.
      * @throws ThreadInterruptedException if interrupted while waiting, in
      *         which case unfinished tasks are cancelled
-     * @throws NullPointerException if tasks, any of its elements, or
+     * @throws NullReferenceException if tasks, any of its elements, or
      *         unit are {@code null}
      * @throws RejectedExecutionException if any task cannot be scheduled
      *         for execution
@@ -199,7 +199,7 @@ public interface IExecutorService : IExecutor
      * @param <T> the type of the values returned from the tasks
      * @return the result returned by one of the tasks
      * @throws ThreadInterruptedException if interrupted while waiting
-     * @throws NullPointerException if tasks or any element task
+     * @throws NullReferenceException if tasks or any element task
      *         subject to execution is {@code null}
      * @throws IllegalArgumentException if tasks is empty
      * @throws ExecutionException if no task successfully completes
@@ -223,7 +223,7 @@ public interface IExecutorService : IExecutor
      * @param <T> the type of the values returned from the tasks
      * @return the result returned by one of the tasks
      * @throws ThreadInterruptedException if interrupted while waiting
-     * @throws NullPointerException if tasks, or unit, or any element
+     * @throws NullReferenceException if tasks, or unit, or any element
      *         task subject to execution is {@code null}
      * @throws TimeoutException if the given timeout elapses before
      *         any task successfully completes

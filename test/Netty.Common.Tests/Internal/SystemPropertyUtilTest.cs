@@ -25,7 +25,7 @@ public class SystemPropertyUtilTest {
 
     @Test
     public void testGetWithKeyNull() {
-        assertThrows(NullPointerException.class, new Executable() {
+        assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
                 SystemPropertyUtil.get(null, null);
