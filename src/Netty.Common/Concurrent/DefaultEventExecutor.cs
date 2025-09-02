@@ -13,60 +13,70 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Concurrent;
 
+using Netty.NET.Common.Functional;
+
+namespace Netty.NET.Common.Concurrent;
 
 /**
  * Default {@link SingleThreadEventExecutor} implementation which just execute all submitted task in a
  * serial fashion.
  */
-public sealed class DefaultEventExecutor : SingleThreadEventExecutor 
+public sealed class DefaultEventExecutor : SingleThreadEventExecutor
 {
-
-    public DefaultEventExecutor() {
-        this((IEventExecutorGroup) null);
+    public DefaultEventExecutor()
+        : this((IEventExecutorGroup)null)
+    {
     }
 
-    public DefaultEventExecutor(IThreadFactory threadFactory) {
-        this(null, threadFactory);
+    public DefaultEventExecutor(IThreadFactory threadFactory)
+        : this(null, threadFactory)
+    {
     }
 
-    public DefaultEventExecutor(IExecutor executor) {
-        this(null, executor);
+    public DefaultEventExecutor(IExecutor executor)
+        : this(null, executor)
+    {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent) {
-        this(parent, new DefaultThreadFactory(typeof(DefaultEventExecutor)));
+    public DefaultEventExecutor(IEventExecutorGroup parent)
+        : this(parent, new DefaultThreadFactory(typeof(DefaultEventExecutor)))
+    {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory) {
-        super(parent, threadFactory, true);
+    public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory)
+        : base(parent, threadFactory, true)
+    {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor) {
-        super(parent, executor, true);
+    public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor)
+        : base(parent, executor, true)
+    {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory, int maxPendingTasks,
-                                IRejectedExecutionHandler rejectedExecutionHandler) {
-        super(parent, threadFactory, true, maxPendingTasks, rejectedExecutionHandler);
+    public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory, int maxPendingTasks, IRejectedExecutionHandler rejectedExecutionHandler)
+        : base(parent, threadFactory, true, maxPendingTasks, rejectedExecutionHandler)
+    {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor, int maxPendingTasks,
-                                IRejectedExecutionHandler rejectedExecutionHandler) {
-        super(parent, executor, true, maxPendingTasks, rejectedExecutionHandler);
+    public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor, int maxPendingTasks, IRejectedExecutionHandler rejectedExecutionHandler)
+        : base(parent, executor, true, maxPendingTasks, rejectedExecutionHandler)
+    {
     }
 
-    @Override
-    protected void run() {
-        for (;;) {
+    protected override void run()
+    {
+        for (;;)
+        {
             IRunnable task = takeTask();
-            if (task != null) {
+            if (task != null)
+            {
                 runTask(task);
                 updateLastExecutionTime();
             }
 
-            if (confirmShutdown()) {
+            if (confirmShutdown())
+            {
                 break;
             }
         }

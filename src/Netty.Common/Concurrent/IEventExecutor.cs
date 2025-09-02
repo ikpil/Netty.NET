@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -69,7 +70,7 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      * will return {@code true}. All {@link IFutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
-    IFuture<V> newSucceededFuture<V>(V result)
+    Task<V> newSucceededFuture<V>(V result)
     {
         return new SucceededFuture<V>(this, result);
     }
@@ -79,7 +80,7 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      * will return {@code false}. All {@link IFutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
-    IFuture<V> newFailedFuture<V>(Exception cause)
+    Task<V> newFailedFuture<V>(Exception cause)
     {
         return new FailedFuture<V>(this, cause);
     }
@@ -89,10 +90,7 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      *
      * @return {@code true} if suspended, {@code false} otherwise.
      */
-    bool isSuspended()
-    {
-        return false;
-    }
+    bool isSuspended();
 
     /**
      * Try to suspend this {@link IEventExecutor} and return {@code true} if suspension was successful.
@@ -112,8 +110,5 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      *
      * @return {@code true} if suspension was successful, otherwise {@code false}.
      */
-    bool trySuspend()
-    {
-        return false;
-    }
+    bool trySuspend();
 }
