@@ -33,10 +33,7 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      */
     IEventExecutorGroup parent();
 
-    bool isExecutorThread(Thread thread)
-    {
-        return inEventLoop(thread);
-    }
+    bool isExecutorThread(Thread thread);
 
     /**
      * Calls {@link #inEventLoop(Thread)} with {@link Thread#currentThread()} as argument

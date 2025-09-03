@@ -33,7 +33,7 @@ public interface IScheduledExecutorService : IExecutorService
      *         scheduled for execution
      * @throws NullReferenceException if callable or unit is null
      */
-    public IScheduledTask<V> schedule<V>(Func<V> callable, TimeSpan delay);
+    public IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay);
 
     /**
      * Submits a periodic action that becomes enabled first after the

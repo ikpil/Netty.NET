@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
 
@@ -11,6 +9,11 @@ namespace Netty.NET.Common.Concurrent;
 public abstract class AbstractExecutorService : IExecutorService
 {
     public abstract void execute(IRunnable task);
+    public abstract void shutdown();
+    public abstract List<IRunnable> shutdownNow();
+    public abstract bool isShutdown();
+    public abstract bool isTerminated();
+    public abstract bool awaitTermination(TimeSpan timeout);
 
     /**
      * Returns a {@code RunnableFuture} for the given runnable and default
@@ -71,6 +74,7 @@ public abstract class AbstractExecutorService : IExecutorService
         execute(ftask);
         return ftask.Completion;
     }
+
 
     /**
      * @throws RejectedExecutionException {@inheritDoc}

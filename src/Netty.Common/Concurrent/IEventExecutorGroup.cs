@@ -40,6 +40,8 @@ public interface IEventExecutorGroup : IScheduledExecutorService
      */
     Task shutdownGracefullyAsync();
 
+    Ticker ticker();
+
     /**
      * Signals this executor that the caller wants the executor to be shut down.  Once this method is called,
      * {@link #isShuttingDown()} starts to return {@code true}, and the executor prepares to shut itself down.

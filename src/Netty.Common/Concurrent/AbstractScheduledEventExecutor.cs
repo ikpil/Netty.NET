@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
@@ -43,17 +44,9 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     long nextTaskId;
 
-    protected AbstractScheduledEventExecutor() {
-    }
-
     protected AbstractScheduledEventExecutor(IEventExecutorGroup parent) 
         : base(parent)
     {
-    }
-
-    @Override
-    public Ticker ticker() {
-        return Ticker.systemTicker();
     }
 
     /**
@@ -156,7 +149,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
             return;
         }
 
-        final ScheduledFutureTask<?>[] scheduledTasks =
+        ScheduledFutureTask<?>[] scheduledTasks =
                 scheduledTaskQueue.toArray(new ScheduledFutureTask<?>[0]);
 
         for (ScheduledFutureTask<?> task: scheduledTasks) {
@@ -169,7 +162,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * @see #pollScheduledTask(long)
      */
-    protected final IRunnable pollScheduledTask() {
+    protected IRunnable pollScheduledTask() {
         return pollScheduledTask(getCurrentTimeNanos());
     }
 
@@ -204,7 +197,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * Return the {@link IRunnable} which is ready to be executed with the given {@code nanoTime}.
      * You should use {@link #getCurrentTimeNanos()} to retrieve the correct {@code nanoTime}.
      */
-    protected final IRunnable pollScheduledTask(long nanoTime) {
+    protected IRunnable pollScheduledTask(long nanoTime) {
         Debug.Assert(inEventLoop());
 
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
@@ -219,7 +212,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * Return the nanoseconds until the next scheduled task is ready to be run or {@code -1} if no task is scheduled.
      */
-    protected final long nextScheduledTaskNano() {
+    protected long nextScheduledTaskNano() {
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
         return scheduledTask != null ? scheduledTask.delayNanos() : -1;
     }
@@ -233,7 +226,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return scheduledTask != null ? scheduledTask.deadlineNanos() : -1;
     }
 
-    final ScheduledFutureTask<?> peekScheduledTask() {
+    protected ScheduledFutureTask peekScheduledTask() {
         Queue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
         return scheduledTaskQueue != null ? scheduledTaskQueue.peek() : null;
     }
@@ -241,8 +234,8 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * Returns {@code true} if a scheduled task is ready for processing.
      */
-    protected final bool hasScheduledTasks() {
-        ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+    protected bool hasScheduledTasks() {
+        ScheduledFutureTask scheduledTask = peekScheduledTask();
         return scheduledTask != null && scheduledTask.deadlineNanos() <= getCurrentTimeNanos();
     }
 
@@ -333,11 +326,11 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         scheduledTaskQueue().add(task.setId(++nextTaskId));
     }
 
-    private <V> IScheduledTask<> <V> schedule(final ScheduledFutureTask<V> task) {
+    private <V> IScheduledTask<> <V> schedule(ScheduledFutureTask<V> task) {
         if (inEventLoop()) {
             scheduleFromEventLoop(task);
         } else {
-            final long deadlineNanos = task.deadlineNanos();
+            long deadlineNanos = task.deadlineNanos();
             // task will add itself to scheduled task queue when run if not expired
             if (beforeScheduledTaskSubmitted(deadlineNanos)) {
                 execute(task);
@@ -353,7 +346,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return task;
     }
 
-    final void removeScheduled(final ScheduledFutureTask<?> task) {
+    void removeScheduled(ScheduledFutureTask<?> task) {
         assert task.isCancelled();
         if (inEventLoop()) {
             scheduledTaskQueue().removeTyped(task);
@@ -363,7 +356,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         }
     }
 
-    void scheduleRemoveScheduled(final ScheduledFutureTask<?> task) {
+    void scheduleRemoveScheduled(ScheduledFutureTask<?> task) {
         // task will remove itself from scheduled task queue when it runs
         lazyExecute(task);
     }

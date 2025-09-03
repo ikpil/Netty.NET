@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
@@ -26,7 +27,7 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * Abstract base class for {@link IEventExecutor} implementations.
  */
-public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExecutor 
+public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExecutor
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(AbstractEventExecutor));
 
@@ -34,28 +35,50 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     public static readonly TimeSpan DEFAULT_SHUTDOWN_TIMEOUT = TimeSpan.FromSeconds(15);
 
     private readonly IEventExecutorGroup _parent;
-    private readonly IReadOnlyCollection<IEventExecutor> selfCollection;
-    
+    private readonly IReadOnlyCollection<IEventExecutor> _selfCollection;
+
     protected AbstractEventExecutor() : this(ObjectUtil.Null<IEventExecutorGroup>())
     {
     }
 
-    protected AbstractEventExecutor(IEventExecutorGroup parent) {
-        selfCollection = new List<IEventExecutor> { this }.AsReadOnly(); 
+    protected AbstractEventExecutor(IEventExecutorGroup parent)
+    {
+        _selfCollection = new List<IEventExecutor> { this }.AsReadOnly();
         _parent = parent;
     }
 
-    public virtual IEventExecutorGroup parent() {
+    public virtual IEventExecutorGroup parent()
+    {
         return _parent;
     }
 
-    public virtual IEventExecutor next() {
+    public virtual Ticker ticker()
+    {
+        return Ticker.systemTicker();
+    }
+
+    public virtual bool isExecutorThread(Thread thread)
+    {
+        return inEventLoop(thread);
+    }
+
+    public virtual bool inEventLoop()
+    {
+        return inEventLoop(Thread.CurrentThread);
+    }
+
+    public abstract bool inEventLoop(Thread thread);
+
+    public abstract Task terminationAsync();
+
+    public virtual IEventExecutor next()
+    {
         return this;
     }
 
     public virtual IEnumerable<IEventExecutor> iterator()
     {
-        return selfCollection;
+        return _selfCollection;
     }
 
     public virtual Task shutdownGracefullyAsync()
@@ -70,67 +93,53 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
      */
     [Obsolete]
-    public abstract void shutdown();
-    
-    /**
-     * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
-     */
-    [Obsolete]
-    public override List<IRunnable> shutdownNow() {
+    public override List<IRunnable> shutdownNow()
+    {
         shutdown();
         return new List<IRunnable>();
     }
-    
+
     public abstract bool isShuttingDown();
     public abstract bool isSuspended();
     public abstract bool trySuspend();
 
-    public override Task submit(IRunnable task) {
-        return (Future<?>) super.submit(task);
-    }
-
-    public override Task<T> submit<T>(IRunnable task, T result) {
-        return (Future<T>) super.submit(task, result);
-    }
-
-    public override Task<T> submit<T>(ICallable<T> task) {
-        return (Future<T>) super.submit(task);
-    }
-
-    @Override
-    public IScheduledTask schedule(IRunnable command, TimeSpan delay) {
+    public virtual IScheduledTask schedule(IRunnable command, TimeSpan delay)
+    {
         throw new NotSupportedException();
     }
 
-    @Override
-    public IScheduledTask<V> schedule<V>(Func<V> callable, TimeSpan delay) {
+    public virtual IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay)
+    {
         throw new NotSupportedException();
     }
 
-    @Override
-    public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period) {
+    public virtual IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period)
+    {
         throw new NotSupportedException();
     }
 
-    @Override
-    public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay) {
+    public virtual IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay)
+    {
         throw new NotSupportedException();
     }
 
-    public abstract void execute(IRunnable task);
-    
     /**
      * Try to execute the given {@link IRunnable} and just log if it throws a {@link Exception}.
      */
-    protected static void safeExecute(IRunnable task) {
-        try {
+    protected static void safeExecute(IRunnable task)
+    {
+        try
+        {
             runTask(task);
-        } catch (Exception t) {
+        }
+        catch (Exception t)
+        {
             logger.warn("A task raised an exception. Task: {}", task, t);
         }
     }
 
-    protected static void runTask(IRunnable task) {
+    protected static void runTask(IRunnable task)
+    {
         task.run();
     }
 
@@ -142,7 +151,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      * </p>
      */
     [UnstableApi]
-    public virtual void lazyExecute(IRunnable task) 
+    public virtual void lazyExecute(IRunnable task)
     {
         execute(task);
     }
