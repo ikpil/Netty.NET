@@ -7,7 +7,7 @@ public class DefaultThreadProperties : IThreadProperties
 {
     private readonly Thread _t;
 
-    DefaultThreadProperties(Thread t)
+    public DefaultThreadProperties(Thread t)
     {
         _t = t;
     }

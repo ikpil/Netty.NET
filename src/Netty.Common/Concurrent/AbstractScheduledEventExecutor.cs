@@ -118,7 +118,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return Ticker.systemTicker().initialNanoTime();
     }
 
-    private IPriorityQueue<IScheduledTask> scheduledTaskQueue() {
+    public IPriorityQueue<IScheduledTask> scheduledTaskQueue() {
         if (_scheduledTaskQueue == null) {
             _scheduledTaskQueue = new DefaultPriorityQueue<IScheduledTask>(
                     SCHEDULED_FUTURE_TASK_COMPARATOR,
@@ -353,7 +353,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         }
     }
 
-    void scheduleRemoveScheduled(IScheduledTask task) {
+    protected virtual void scheduleRemoveScheduled(IScheduledTask task) {
         // task will remove itself from scheduled task queue when it runs
         lazyExecute(task);
     }

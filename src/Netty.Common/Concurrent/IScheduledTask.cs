@@ -17,6 +17,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -24,11 +25,12 @@ namespace Netty.NET.Common.Concurrent;
  * The result of a scheduled asynchronous operation.
  */
 //[SuppressWarnings("ClassNameSameAsAncestorName")]
-public interface IScheduledTask : IComparable<IScheduledTask>
+public interface IScheduledTask : IComparable<IScheduledTask>, IRunnable
 {
     bool cancel();
 
     long deadlineNanos();
+    long delayNanos(long nanos);
 
     Task completion { get; }
 

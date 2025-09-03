@@ -174,7 +174,7 @@ public abstract class AbstractExecutorService : IExecutorService
         }
     }
 
-    public T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>
+    public virtual T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>
     {
         try
         {
@@ -187,12 +187,12 @@ public abstract class AbstractExecutorService : IExecutorService
         }
     }
 
-    public T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
+    public virtual T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
     {
         return doInvokeAny(tasks, true, (long)timeout.TotalNanoseconds);
     }
 
-    public List<Task<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
+    public virtual List<Task<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
     {
         if (tasks == null)
             throw new NullReferenceException();
@@ -231,7 +231,7 @@ public abstract class AbstractExecutorService : IExecutorService
         }
     }
 
-    public List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
+    public virtual List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
     {
         if (tasks == null)
             throw new NullReferenceException();

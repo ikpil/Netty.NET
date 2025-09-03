@@ -7,6 +7,6 @@ namespace Netty.NET.Common.Functional;
  *
  */
 [Obsolete]
-public interface LazyRunnable : IRunnable
+public interface ILazyRunnable : IRunnable
 {
 }

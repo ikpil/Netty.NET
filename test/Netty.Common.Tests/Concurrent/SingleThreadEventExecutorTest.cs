@@ -253,7 +253,7 @@ public class SingleThreadEventExecutorTest {
                 }
             }
         };
-        ThreadProperties threadProperties = executor.threadProperties();
+        IThreadProperties threadProperties = executor.threadProperties();
 
         Thread thread = threadRef.get();
         assertEquals(thread.getId(), threadProperties.id());

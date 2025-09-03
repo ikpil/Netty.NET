@@ -35,8 +35,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
 
-    private static readonly IInternalLogger logger =
-            InternalLoggerFactory.getInstance(typeof(SingleThreadEventExecutor));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SingleThreadEventExecutor));
 
     private const int ST_NOT_STARTED = 1;
     private const int ST_SUSPENDING = 2;
@@ -57,11 +56,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     private volatile Thread _thread;
     //@SuppressWarnings("unused")
-    private volatile IThreadProperties threadProperties;
+    private volatile IThreadProperties _threadProperties;
     private readonly IExecutor _executor;
     private volatile bool interrupted;
 
-    private readonly Lock processingLock = new ReentrantLock();
+    private readonly object _processingLock = new object();
     private readonly CountDownLatch threadLock = new CountDownLatch(1);
     private readonly ISet<IRunnable> shutdownHooks = new LinkedHashSet<IRunnable>();
     private readonly bool _addTaskWakesUp;
@@ -78,7 +77,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private volatile long gracefulShutdownTimeout;
     private long gracefulShutdownStartTime;
 
-    private readonly Promise<?> terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    //private readonly TaskCompletionSource<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    private readonly TaskCompletionSource<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
 
     /**
      * Create a new instance
@@ -89,8 +89,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *                          executor thread
      */
     protected SingleThreadEventExecutor(
-            IEventExecutorGroup parent, IThreadFactory threadFactory, bool addTaskWakesUp) {
-        this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp);
+            IEventExecutorGroup parent, IThreadFactory threadFactory, bool addTaskWakesUp) 
+        : this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp)
+    {
     }
 
     /**
@@ -527,7 +528,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected long delayNanos(long currentTimeNanos) {
         currentTimeNanos -= ticker().initialNanoTime();
 
-        ScheduledFutureTask<> ?> scheduledTask = peekScheduledTask();
+        var scheduledTask = peekScheduledTask();
         if (scheduledTask == null) {
             return SCHEDULE_PURGE_INTERVAL;
         }
@@ -583,8 +584,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return inEventLoop(Thread.CurrentThread);
     }
 
-    public bool inEventLoop(Thread thread) {
-        return thread == this._thread;
+    public override bool inEventLoop(Thread thread) {
+        return thread == _thread;
     }
 
     /**
@@ -663,6 +664,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     default:
                         newState = oldState;
                         wakeup = false;
+                        break;
                 }
             }
             if (STATE_UPDATER.compareAndSet(this, oldState, newState)) {
@@ -683,7 +685,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         if (wakeup) {
             _taskQueue.TryEnqueue(WAKEUP_TASK);
             if (!_addTaskWakesUp) {
-                wakeup(inEventLoop);
+                this.wakeup(inEventLoop);
             }
         }
     }
@@ -695,15 +697,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             throw new ArgumentException(
                     "timeout: " + timeout + " (expected >= quietPeriod (" + quietPeriod + "))");
         }
-        ObjectUtil.checkNotNull(timeout, "timeout");
+        //ObjectUtil.checkNotNull(timeout, "timeout");
 
         shutdown0((long)quietPeriod.TotalNanoseconds, (long)timeout.TotalNanoseconds, ST_SHUTTING_DOWN);
         return terminationFuture();
     }
 
-    @Override
-    public Future<?> terminationFuture() {
-        return terminationFuture;
+    public Task terminationFuture() {
+        return _terminationFuture;
     }
 
     [Obsolete]
@@ -851,25 +852,22 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         execute(ObjectUtil.checkNotNull(task, "task"), false);
     }
 
-    @Override
-    void scheduleRemoveScheduled(final IScheduledTask task) {
+    protected override void scheduleRemoveScheduled(IScheduledTask task) {
         ObjectUtil.checkNotNull(task, "task");
         int currentState = state;
         if (_supportSuspension && currentState == ST_SUSPENDED) {
             // In the case of scheduling for removal we need to also ensure we will recover the "suspend" state
             // after it if it was set before. Otherwise we will always end up "unsuspending" things on cancellation
             // which is not optimal.
-            execute(new IRunnable() {
-                @Override
-                public void run() {
+            execute(new AnonymousRunnable(() => {
                     task.run();
-                    if (canSuspend(ST_SUSPENDED)) {
+                    if (canSuspend(ST_SUSPENDED))
+                    {
                         // Try suspending again to recover the state before we submitted the new task that will
                         // handle cancellation itself.
                         trySuspend();
                     }
-                }
-            }, true);
+            }), true);
         } else {
             // task will remove itself from scheduled task queue when it runs
             execute(task, false);
@@ -877,7 +875,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     private void execute(IRunnable task, bool immediate) {
-        bool inEventLoop = inEventLoop();
+        bool inEventLoop = this.inEventLoop();
         addTask(task);
         if (!inEventLoop) {
             startThread();
@@ -893,7 +891,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     // In worst case we will log on termination.
                 }
                 if (reject) {
-                    reject();
+                    SingleThreadEventExecutor.reject();
                 }
             }
         }
@@ -903,31 +901,28 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
     }
 
-    @Override
-    public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks) throws ThreadInterruptedException, ExecutionException {
+    public override T invokeAny<T>(ICollection<T> tasks)
+    {
         throwIfInEventLoop("invokeAny");
-        return super.invokeAny(tasks);
+        return base.invokeAny(tasks);
     }
 
-    @Override
-    public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit)
-            throws ThreadInterruptedException, ExecutionException, TimeoutException {
+    public override T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) 
+    {
         throwIfInEventLoop("invokeAny");
-        return super.invokeAny(tasks, timeout, unit);
+        return base.invokeAny(tasks, timeout);
     }
 
-    @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(ICollection<? extends ICallable<T>> tasks)
-            throws ThreadInterruptedException {
+    public override List<Task<T>> invokeAll<T>(ICollection<T> tasks)
+    {
         throwIfInEventLoop("invokeAll");
-        return super.invokeAll(tasks);
+        return base.invokeAll(tasks);
     }
 
-    @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit) {
+    public override List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) 
+    {
         throwIfInEventLoop("invokeAll");
-        return super.invokeAll(tasks, timeout, unit);
+        return base.invokeAll(tasks, timeout);
     }
 
     private void throwIfInEventLoop(string method) {
@@ -937,35 +932,30 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     /**
-     * Returns the {@link ThreadProperties} of the {@link Thread} that powers the {@link SingleThreadEventExecutor}.
+     * Returns the {@link IThreadProperties} of the {@link Thread} that powers the {@link SingleThreadEventExecutor}.
      * If the {@link SingleThreadEventExecutor} is not started yet, this operation will start it and block until
      * it is fully started.
      */
-    public final ThreadProperties threadProperties() {
-        IThreadProperties threadProperties = this.threadProperties;
+    public IThreadProperties threadProperties() {
+        IThreadProperties threadProperties = _threadProperties;
         if (threadProperties == null) {
             Thread thread = this._thread;
             if (thread == null) {
-                assert !inEventLoop();
-                submit(NOOP_TASK).syncUninterruptibly();
+                Debug.Assert(!inEventLoop());
+                submit(NOOP_TASK).Wait();
                 thread = this._thread;
-                assert thread != null;
+                Debug.Assert(thread != null);
             }
 
             threadProperties = new DefaultThreadProperties(thread);
             if (!PROPERTIES_UPDATER.compareAndSet(this, null, threadProperties)) {
-                threadProperties = this.threadProperties;
+                threadProperties = _threadProperties;
             }
         }
 
         return threadProperties;
     }
 
-    /**
-     * @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
-     */
-    [Obsolete]
-    protected interface NonWakeupRunnable extends LazyRunnable { }
 
     /**
      * Can be overridden to control which tasks require waking the {@link IEventExecutor} thread
@@ -984,13 +974,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @param task to reject.
      */
-    protected final void reject(IRunnable task) {
+    protected void reject(IRunnable task) {
         rejectedExecutionHandler.rejected(task, this);
     }
 
     // ScheduledExecutorService implementation
 
-    private static readonly long SCHEDULE_PURGE_INTERVAL = System.TimeSpan.SECONDS.toNanos(1);
+    private static readonly long SCHEDULE_PURGE_INTERVAL = (long)TimeSpan.FromSeconds(1).TotalNanoseconds;
 
     private void startThread() {
         int currentState = state;
@@ -1015,7 +1005,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 doStartThread();
             } catch (Exception cause) {
                 STATE_UPDATER.set(this, ST_TERMINATED);
-                terminationFuture.tryFailure(cause);
+                _terminationFuture.tryFailure(cause);
 
                 if (!(cause instanceof Exception)) {
                     // Also rethrow as it may be an OOME for example
@@ -1027,134 +1017,178 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return false;
     }
 
-    private void doStartThread() {
-        _executor.execute(new IRunnable() {
-            @Override
-            public void run() {
-                processingLock.lock();
-                assert thread == null;
-                thread = Thread.CurrentThread;
-                if (interrupted) {
-                    thread.interrupt();
-                    interrupted = false;
-                }
-                bool success = false;
-                Exception unexpectedException = null;
-                updateLastExecutionTime();
-                bool suspend = false;
-                try {
-                    for (;;) {
-                        SingleThreadEventExecutor.this.run();
-                        success = true;
+    private void doStartThread()
+    {
+        _executor.execute(new AnonymousRunnable(doStartThreadInternal));
+    }
 
-                        int currentState = state;
-                        if (canSuspend(currentState)) {
-                            if (!STATE_UPDATER.compareAndSet(SingleThreadEventExecutor.this,
-                                    ST_SUSPENDING, ST_SUSPENDED)) {
-                                // Try again as the CAS failed.
-                                continue;
-                            }
+    private void doStartThreadInternal()
+    {
+        lock (_processingLock)
+        {
+            Debug.Assert(_thread == null);
+            _thread = Thread.CurrentThread;
+            if (interrupted)
+            {
+                _thread.Interrupt();
+                interrupted = false;
+            }
 
-                            if (!canSuspend(ST_SUSPENDED) && STATE_UPDATER.compareAndSet(SingleThreadEventExecutor.this,
-                                        ST_SUSPENDED, ST_STARTED)) {
-                                // Seems like there was something added to the task queue again in the meantime but we
-                                // were able to re-engage this thread as the event loop thread.
-                                continue;
-                            }
-                            suspend = true;
+            bool success = false;
+            Exception unexpectedException = null;
+            updateLastExecutionTime();
+            bool suspend = false;
+            try
+            {
+                for (;;)
+                {
+                    SingleThreadEventExecutor.this.run();
+                    success = true;
+
+                    int currentState = state;
+                    if (canSuspend(currentState))
+                    {
+                        if (!STATE_UPDATER.compareAndSet(SingleThreadEventExecutor.this,
+                                ST_SUSPENDING, ST_SUSPENDED))
+                        {
+                            // Try again as the CAS failed.
+                            continue;
                         }
-                        break;
+
+                        if (!canSuspend(ST_SUSPENDED) && STATE_UPDATER.compareAndSet(SingleThreadEventExecutor.this,
+                                ST_SUSPENDED, ST_STARTED))
+                        {
+                            // Seems like there was something added to the task queue again in the meantime but we
+                            // were able to re-engage this thread as the event loop thread.
+                            continue;
+                        }
+
+                        suspend = true;
                     }
-                } catch (Exception t) {
-                    unexpectedException = t;
-                    logger.warn("Unexpected exception from an event executor: ", t);
-                } finally {
-                    bool shutdown = !suspend;
-                    if (shutdown) {
-                        for (;;) {
-                            // We are re-fetching the state as it might have been shutdown in the meantime.
-                            int oldState = state;
-                            if (oldState >= ST_SHUTTING_DOWN || STATE_UPDATER.compareAndSet(
-                                    SingleThreadEventExecutor.this, oldState, ST_SHUTTING_DOWN)) {
+
+                    break;
+                }
+            }
+            catch (Exception t)
+            {
+                unexpectedException = t;
+                logger.warn("Unexpected exception from an event executor: ", t);
+            }
+            finally
+            {
+                bool shutdown = !suspend;
+                if (shutdown)
+                {
+                    for (;;)
+                    {
+                        // We are re-fetching the state as it might have been shutdown in the meantime.
+                        int oldState = state;
+                        if (oldState >= ST_SHUTTING_DOWN || STATE_UPDATER.compareAndSet(
+                                SingleThreadEventExecutor.this, oldState, ST_SHUTTING_DOWN))
+                        {
+                            break;
+                        }
+                    }
+
+                    if (success && gracefulShutdownStartTime == 0)
+                    {
+                        // Check if confirmShutdown() was called at the end of the loop.
+                        if (logger.isErrorEnabled())
+                        {
+                            logger.error("Buggy " + nameof(IEventExecutor) + " implementation; " +
+                                         nameof(SingleThreadEventExecutor) + ".confirmShutdown() must " +
+                                         "be called before run() implementation terminates.");
+                        }
+                    }
+                }
+
+                try
+                {
+                    if (shutdown)
+                    {
+                        // Run all remaining tasks and shutdown hooks. At this point the event loop
+                        // is in ST_SHUTTING_DOWN state still accepting tasks which is needed for
+                        // graceful shutdown with quietPeriod.
+                        for (;;)
+                        {
+                            if (confirmShutdown())
+                            {
                                 break;
                             }
                         }
-                        if (success && gracefulShutdownStartTime == 0) {
-                            // Check if confirmShutdown() was called at the end of the loop.
-                            if (logger.isErrorEnabled()) {
-                                logger.error("Buggy " + nameof(IEventExecutor) + " implementation; " +
-                                        nameof(SingleThreadEventExecutor) + ".confirmShutdown() must " +
-                                        "be called before run() implementation terminates.");
+
+                        // Now we want to make sure no more tasks can be added from this point. This is
+                        // achieved by switching the state. Any new tasks beyond this point will be rejected.
+                        for (;;)
+                        {
+                            int currentState = state;
+                            if (currentState >= ST_SHUTDOWN || STATE_UPDATER.compareAndSet(
+                                    SingleThreadEventExecutor.this, currentState, ST_SHUTDOWN))
+                            {
+                                break;
                             }
                         }
+
+                        // We have the final set of tasks in the queue now, no more can be added, run all remaining.
+                        // No need to loop here, this is the final pass.
+                        confirmShutdown();
                     }
-
-                    try {
-                        if (shutdown) {
-                            // Run all remaining tasks and shutdown hooks. At this point the event loop
-                            // is in ST_SHUTTING_DOWN state still accepting tasks which is needed for
-                            // graceful shutdown with quietPeriod.
-                            for (;;) {
-                                if (confirmShutdown()) {
-                                    break;
-                                }
+                }
+                finally
+                {
+                    try
+                    {
+                        if (shutdown)
+                        {
+                            try
+                            {
+                                cleanup();
                             }
-
-                            // Now we want to make sure no more tasks can be added from this point. This is
-                            // achieved by switching the state. Any new tasks beyond this point will be rejected.
-                            for (;;) {
-                                int currentState = state;
-                                if (currentState >= ST_SHUTDOWN || STATE_UPDATER.compareAndSet(
-                                        SingleThreadEventExecutor.this, currentState, ST_SHUTDOWN)) {
-                                    break;
-                                }
-                            }
-
-                            // We have the final set of tasks in the queue now, no more can be added, run all remaining.
-                            // No need to loop here, this is the final pass.
-                            confirmShutdown();
-                        }
-                    } finally {
-                        try {
-                            if (shutdown) {
-                                try {
-                                    cleanup();
-                                } finally {
-                                    // Lets remove all FastThreadLocals for the Thread as we are about to terminate and
-                                    // notify the future. The user may block on the future and once it unblocks the JVM
-                                    // may terminate and start unloading classes.
-                                    // See https://github.com/netty/netty/issues/6596.
-                                    FastThreadLocal.removeAll();
-
-                                    STATE_UPDATER.set(SingleThreadEventExecutor.this, ST_TERMINATED);
-                                    threadLock.countDown();
-                                    int numUserTasks = drainTasks();
-                                    if (numUserTasks > 0 && logger.isWarnEnabled()) {
-                                        logger.warn("An event executor terminated with " +
-                                                "non-empty task queue (" + numUserTasks + ')');
-                                    }
-                                    if (unexpectedException == null) {
-                                        terminationFuture.setSuccess(null);
-                                    } else {
-                                        terminationFuture.setFailure(unexpectedException);
-                                    }
-                                }
-                            } else {
-                                // Lets remove all FastThreadLocals for the Thread as we are about to terminate it.
+                            finally
+                            {
+                                // Lets remove all FastThreadLocals for the Thread as we are about to terminate and
+                                // notify the future. The user may block on the future and once it unblocks the JVM
+                                // may terminate and start unloading classes.
+                                // See https://github.com/netty/netty/issues/6596.
                                 FastThreadLocal.removeAll();
 
-                                // Reset the stored threadProperties in case of suspension.
-                                threadProperties = null;
+                                STATE_UPDATER.set(SingleThreadEventExecutor.this, ST_TERMINATED);
+                                threadLock.countDown();
+                                int numUserTasks = drainTasks();
+                                if (numUserTasks > 0 && logger.isWarnEnabled())
+                                {
+                                    logger.warn("An event executor terminated with " +
+                                                "non-empty task queue (" + numUserTasks + ')');
+                                }
+
+                                if (unexpectedException == null)
+                                {
+                                    _terminationFuture.SetResult(null);
+                                }
+                                else
+                                {
+                                    _terminationFuture.SetException(unexpectedException);
+                                }
                             }
-                        } finally {
-                            _thread = null;
-                            // Let the next thread take over if needed.
-                            processingLock.unlock();
                         }
+                        else
+                        {
+                            // Lets remove all FastThreadLocals for the Thread as we are about to terminate it.
+                            FastThreadLocal.removeAll();
+
+                            // Reset the stored threadProperties in case of suspension.
+                            threadProperties = null;
+                        }
+                    }
+                    finally
+                    {
+                        _thread = null;
+                        // Let the next thread take over if needed.
+                        //processingLock.unlock();
                     }
                 }
             }
-        });
+        }
     }
 
     private int drainTasks() {
@@ -1174,3 +1208,4 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
 }
+
