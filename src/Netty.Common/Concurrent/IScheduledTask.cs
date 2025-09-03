@@ -24,7 +24,7 @@ namespace Netty.NET.Common.Concurrent;
  * The result of a scheduled asynchronous operation.
  */
 //[SuppressWarnings("ClassNameSameAsAncestorName")]
-public interface IScheduledTask
+public interface IScheduledTask : IComparable<IScheduledTask>
 {
     bool cancel();
 

@@ -98,17 +98,17 @@ public abstract class AbstractExecutorService : IExecutorService
         int ntasks = tasks.Count;
         if (ntasks == 0)
             throw new ArgumentException();
-    
+
         var futures = new List<QueueingTaskNode<T>>(ntasks);
         ExecutorCompletionService<T> ecs =
             new ExecutorCompletionService<T>(this);
-    
+
         // For efficiency, especially in executors with limited
         // parallelism, check to see if previously submitted tasks are
         // done before submitting more of them. This interleaving
         // plus the exception mechanics account for messiness of main
         // loop.
-    
+
         try
         {
             // Record exceptions so that if we fail to obtain any
@@ -116,12 +116,12 @@ public abstract class AbstractExecutorService : IExecutorService
             ExecutionException ee = null;
             long deadline = timed ? PreciseTimer.nanoTime() + nanos : 0L;
             IEnumerable<T> it = tasks;
-    
+
             // Start one task for sure; the rest incrementally
             futures.add(ecs.submit(it.next()));
             --ntasks;
             int active = 1;
-    
+
             for (;;)
             {
                 Task<T> f = ecs.poll();
@@ -145,7 +145,7 @@ public abstract class AbstractExecutorService : IExecutorService
                     else
                         f = ecs.take();
                 }
-    
+
                 if (f != null)
                 {
                     --active;
@@ -163,7 +163,7 @@ public abstract class AbstractExecutorService : IExecutorService
                     }
                 }
             }
-    
+
             if (ee == null)
                 ee = new ExecutionException();
             throw ee;
@@ -173,7 +173,7 @@ public abstract class AbstractExecutorService : IExecutorService
             cancelAll(futures);
         }
     }
-    
+
     public T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>
     {
         try
@@ -186,12 +186,12 @@ public abstract class AbstractExecutorService : IExecutorService
             return default;
         }
     }
-    
+
     public T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
     {
         return doInvokeAny(tasks, true, (long)timeout.TotalNanoseconds);
     }
-    
+
     public List<Task<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
     {
         if (tasks == null)
@@ -205,7 +205,7 @@ public abstract class AbstractExecutorService : IExecutorService
                 futures.Add(f);
                 execute(f);
             }
-    
+
             for (int i = 0, size = futures.Count; i < size; i++)
             {
                 var f = futures[i];
@@ -221,7 +221,7 @@ public abstract class AbstractExecutorService : IExecutorService
                     }
                 }
             }
-    
+
             return futures;
         }
         catch (Exception t)
@@ -230,7 +230,7 @@ public abstract class AbstractExecutorService : IExecutorService
             throw;
         }
     }
-    
+
     public List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
     {
         if (tasks == null)
@@ -247,32 +247,35 @@ public abstract class AbstractExecutorService : IExecutorService
                 var node = newTaskFor(t);
                 futures.Add(node);
             }
-    
+
             int size = futures.Count;
-    
+
             // Interleave time checks and calls to execute in case
             // executor doesn't have any/much parallelism.
             for (int i = 0; i < size; i++)
             {
                 if (((i == 0) ? nanos : deadline - PreciseTimer.nanoTime()) <= 0L)
-                    break timedOut;
+                    break
+                timedOut;
                 execute((IRunnable)futures.get(i));
             }
-    
+
             for (; j < size; j++)
             {
                 Task<T> f = futures.get(j);
                 if (!f.isDone())
                 {
                     try { f.get(deadline - PreciseTimer.nanoTime(), NANOSECONDS); }
-                    catch (CancellationException | ExecutionException ignore) {
+                    catch (CancellationException |
+
+                    ExecutionException ignore) {
                     }
                     catch (TimeoutException timedOut) {
                         break timedOut;
                     }
                 }
             }
-    
+
             return futures;
         }
         catch (Exception t)
@@ -280,7 +283,7 @@ public abstract class AbstractExecutorService : IExecutorService
             cancelAll(futures);
             throw t;
         }
-    
+
         // Timed out before all the tasks could be completed; cancel remaining
         cancelAll(futures, j);
         return futures;

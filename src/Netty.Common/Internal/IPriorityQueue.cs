@@ -15,10 +15,11 @@
  */
 
 using System.Collections.Generic;
+using Netty.NET.Common.Collections;
 
 namespace Netty.NET.Common.Internal;
 
-public interface IPriorityQueue<T> : IEnumerable<T>
+public interface IPriorityQueue<T> : IEnumerable<T>, IQueue<T>
 {
     /**
      * Same as {@link #remove(object)} but typed using generics.

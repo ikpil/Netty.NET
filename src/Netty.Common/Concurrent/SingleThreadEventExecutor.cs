@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -272,7 +271,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         BlockingQueue<IRunnable> taskQueue = (BlockingQueue<IRunnable>) _taskQueue;
         for (;;) {
-            ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+            IScheduledTask scheduledTask = peekScheduledTask();
             if (scheduledTask == null) {
                 IRunnable task = null;
                 try {
@@ -541,7 +540,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * closest scheduled task should run.
      */
     protected long deadlineNanos() {
-        ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+        IScheduledTask scheduledTask = peekScheduledTask();
         if (scheduledTask == null) {
             return getCurrentTimeNanos() + SCHEDULE_PURGE_INTERVAL;
         }
@@ -853,7 +852,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     @Override
-    void scheduleRemoveScheduled(final ScheduledFutureTask<?> task) {
+    void scheduleRemoveScheduled(final IScheduledTask task) {
         ObjectUtil.checkNotNull(task, "task");
         int currentState = state;
         if (_supportSuspension && currentState == ST_SUSPENDED) {
