@@ -222,35 +222,37 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     protected IScheduledTask peekScheduledTask() {
-        IQueue<IScheduledTask> scheduledTaskQueue = this.scheduledTaskQueue;
-        return scheduledTaskQueue != null ? scheduledTaskQueue.peek() : null;
+        var scheduledTaskQueue = _scheduledTaskQueue;
+        IScheduledTask task = null;
+        var peek= scheduledTaskQueue?.TryPeek(out task) ?? false;
+        return peek ? task : null;
     }
 
     /**
      * Returns {@code true} if a scheduled task is ready for processing.
      */
     protected bool hasScheduledTasks() {
-        ScheduledFutureTask scheduledTask = peekScheduledTask();
+        var scheduledTask = peekScheduledTask();
         return scheduledTask != null && scheduledTask.deadlineNanos() <= getCurrentTimeNanos();
     }
 
-    @Override
-    public IScheduledTask schedule(IRunnable command, long delay, TimeSpan unit) {
+    public override IScheduledTask schedule(IRunnable command, TimeSpan delay)
+    {
         ObjectUtil.checkNotNull(command, "command");
-        ObjectUtil.checkNotNull(unit, "unit");
-        if (delay < 0) {
-            delay = 0;
+        //ObjectUtil.checkNotNull(unit, "unit");
+        if (delay.Ticks < 0)
+        {
+            delay = TimeSpan.Zero;
         }
-        validateScheduled0(delay, unit);
+        validateScheduled0(delay);
 
-        return schedule(new ScheduledFutureTask<Void>(
+        return schedule(new ScheduledFutureTask(
                 this,
                 command,
-                deadlineNanos(getCurrentTimeNanos(), unit.toNanos(delay))));
+                deadlineNanos(getCurrentTimeNanos(), (long)delay.TotalNanoseconds));
     }
 
-    @Override
-    public <V> IScheduledTask<> <V> schedule(Func<V> callable, long delay, TimeSpan unit) {
+    public IScheduledTask schedule<V>(Func<V> callable, TimeSpan delay) {
         ObjectUtil.checkNotNull(callable, "callable");
         ObjectUtil.checkNotNull(unit, "unit");
         if (delay < 0) {
@@ -282,7 +284,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    public IScheduledTask<> <?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<> <?> scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {
@@ -294,16 +296,16 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
                     string.format("delay: %d (expected: > 0)", delay));
         }
 
-        validateScheduled0(initialDelay, unit);
-        validateScheduled0(delay, unit);
+        validateScheduled0(initialDelay);
+        validateScheduled0(delay);
 
         return schedule(new ScheduledFutureTask<Void>(
                 this, command, deadlineNanos(getCurrentTimeNanos(), unit.toNanos(initialDelay)), -unit.toNanos(delay)));
     }
 
     //@SuppressWarnings("deprecation")
-    private void validateScheduled0(long amount, TimeSpan unit) {
-        validateScheduled(amount, unit);
+    private void validateScheduled0(TimeSpan amount) {
+        validateScheduled(amount);
     }
 
     /**
@@ -312,7 +314,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @deprecated will be removed in the future.
      */
     [Obsolete]
-    protected void validateScheduled(long amount, TimeSpan unit) {
+    protected void validateScheduled(TimeSpan amount) {
         // NOOP
     }
 

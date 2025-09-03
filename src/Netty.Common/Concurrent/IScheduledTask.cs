@@ -28,7 +28,7 @@ public interface IScheduledTask : IComparable<IScheduledTask>
 {
     bool cancel();
 
-    long deadline { get; }
+    long deadlineNanos();
 
     Task completion { get; }
 
