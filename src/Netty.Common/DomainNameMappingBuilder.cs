@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using Netty.NET.Common.Collections;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common;
@@ -25,7 +26,7 @@ namespace Netty.NET.Common;
  * @param <V> concrete type of value objects
  * @deprecated Use {@link DomainWildcardMappingBuilder}
  */
-public class DomainNameMappingBuilder<T>
+public class DomainNameMappingBuilder<T> where T : class
 {
     private readonly T _defaultValue;
     private readonly IDictionary<string, T> _map;
