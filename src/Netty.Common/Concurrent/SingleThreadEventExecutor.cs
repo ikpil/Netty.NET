@@ -32,7 +32,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor 
 {
-    static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
+    private static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SingleThreadEventExecutor));
@@ -62,7 +62,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     private readonly object _processingLock = new object();
     private readonly CountDownLatch threadLock = new CountDownLatch(1);
-    private readonly ISet<IRunnable> shutdownHooks = new LinkedHashSet<IRunnable>();
+    private readonly LinkedHashSet<IRunnable> _shutdownHooks = new LinkedHashSet<IRunnable>();
     private readonly bool _addTaskWakesUp;
     private readonly int _maxPendingTasks;
     private readonly IRejectedExecutionHandler rejectedExecutionHandler;
@@ -593,10 +593,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      */
     public void addShutdownHook(IRunnable task) {
         if (inEventLoop()) {
-            shutdownHooks.Add(task);
+            _shutdownHooks.Add(task);
         } else
         {
-            execute(new AnonymousRunnable(() => shutdownHooks.Add(task)));
+            execute(new AnonymousRunnable(() => _shutdownHooks.Add(task)));
         }
     }
 
@@ -605,19 +605,19 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      */
     public void removeShutdownHook(IRunnable task) {
         if (inEventLoop()) {
-            shutdownHooks.Remove(task);
+            _shutdownHooks.Remove(task);
         } else
         {
-            execute(new AnonymousRunnable(() => shutdownHooks.Remove(task)));
+            execute(new AnonymousRunnable(() => _shutdownHooks.Remove(task)));
         }
     }
 
     private bool runShutdownHooks() {
         bool ran = false;
         // Note shutdown hooks can add / remove shutdown hooks.
-        while (!shutdownHooks.IsEmpty()) {
-            List<IRunnable> copy = new List<IRunnable>(shutdownHooks);
-            shutdownHooks.Clear();
+        while (!_shutdownHooks.IsEmpty()) {
+            List<IRunnable> copy = new List<IRunnable>(_shutdownHooks);
+            _shutdownHooks.Clear();
             foreach (IRunnable task in copy) {
                 try {
                     runTask(task);

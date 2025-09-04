@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Netty.NET.Common;
+namespace Netty.NET.Common.Collections;
 
-public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>
+public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue> where TKey : notnull
 {
     public int Count => _linkedList.Count;
     public bool IsReadOnly => false;
