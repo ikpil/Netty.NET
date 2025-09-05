@@ -15,7 +15,7 @@ public class AtomicBoolean
         _location = initialValue ? 1 : 0;
     }
 
-    public bool read()
+    public bool get()
     {
         return _location != 0;
     }

@@ -33,11 +33,6 @@ public class AtomicLong
 
     public long get()
     {
-        return _location;
-    }
-
-    public long read()
-    {
         return Volatile.Read(ref _location);
     }
 

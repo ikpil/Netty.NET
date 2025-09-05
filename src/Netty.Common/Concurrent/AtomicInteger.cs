@@ -31,11 +31,6 @@ public class AtomicInteger
         return Interlocked.Decrement(ref _location);
     }
 
-    public int read()
-    {
-        return _location;
-    }
-
     public int get()
     {
         return _location;

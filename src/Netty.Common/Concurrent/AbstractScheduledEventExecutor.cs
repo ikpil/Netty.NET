@@ -35,7 +35,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     protected static readonly IRunnable WAKEUP_TASK = EmptyRunnable.Shared;
 
-    private IPriorityQueue<IScheduledTask> _scheduledTaskQueue;
+    protected IPriorityQueue<IScheduledTask> _scheduledTaskQueue;
 
     private long nextTaskId;
 
