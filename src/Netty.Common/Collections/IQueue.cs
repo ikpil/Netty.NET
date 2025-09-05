@@ -1,10 +1,8 @@
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Collections;
 
-public interface IQueue<T> : IProducerConsumerCollection<T>, IReadOnlyCollection<T>
+public interface IQueue<T>
 {
     int Count { get; }
     bool IsEmpty();
