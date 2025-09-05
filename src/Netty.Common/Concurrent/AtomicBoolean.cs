@@ -4,7 +4,7 @@ namespace Netty.NET.Common.Concurrent;
 
 public class AtomicBoolean
 {
-    private int _location;
+    private volatile int _location;
 
     public AtomicBoolean() : this(false)
     {
@@ -17,7 +17,7 @@ public class AtomicBoolean
 
     public bool read()
     {
-        return Volatile.Read(ref _location) != 0;
+        return _location != 0;
     }
 
     // true if successful, otherwise false if the witness value was not the same as the expectedValue.

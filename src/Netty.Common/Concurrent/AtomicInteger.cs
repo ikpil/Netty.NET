@@ -4,7 +4,7 @@ namespace Netty.NET.Common.Concurrent;
 
 public class AtomicInteger
 {
-    private int _location;
+    private volatile int _location;
 
     public AtomicInteger() : this(0)
     {
@@ -33,7 +33,7 @@ public class AtomicInteger
 
     public int read()
     {
-        return Volatile.Read(ref _location);
+        return _location;
     }
 
     public int get()
