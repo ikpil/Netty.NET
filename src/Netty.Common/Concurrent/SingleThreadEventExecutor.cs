@@ -811,7 +811,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     public Task terminationFuture()
     {
-        return _terminationFuture;
+        return _terminationFuture.Task;
     }
 
     [Obsolete]
