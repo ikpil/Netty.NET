@@ -83,10 +83,13 @@ public class BlockingMessageQueue<T> : IQueue<T>
     {
         lock (_lock)
         {
-            for (int i = 0; i < limit && _queue.TryDequeue(out var item); ++i)
+            int i = 0;
+            for (i = 0; i < limit && _queue.TryDequeue(out var item); ++i)
             {
                 consumer.accept(item);
             }
+
+            return i;
         }
     }
 }
