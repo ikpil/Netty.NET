@@ -31,7 +31,7 @@ public interface IScheduledTask : IComparable<IScheduledTask>, IRunnable
 
     long deadlineNanos();
     long delayNanos(long nanos);
-
+    long delayNanos();
     Task completion { get; }
 
     TaskAwaiter getAwaiter();

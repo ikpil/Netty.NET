@@ -4,7 +4,7 @@ using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Collections;
 
-public class LinkedBlockingQueue<T> : IQueue<T>
+public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
 {
     private readonly BlockingCollection<T> _queue;
     public int Count => _queue.Count;
@@ -37,6 +37,11 @@ public class LinkedBlockingQueue<T> : IQueue<T>
     public bool TryDequeue(out T item)
     {
         return _queue.TryTake(out item);
+    }
+
+    public bool TryDequeue(out T item, TimeSpan timeout)
+    {
+        return _queue.TryTake(out item, timeout);
     }
 
     public bool TryPeek(out T item)

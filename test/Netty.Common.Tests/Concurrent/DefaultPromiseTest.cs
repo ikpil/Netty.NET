@@ -216,7 +216,7 @@ public void testNoStackOverflowWithDefaultEventExecutorB() throws Exception {
 public void testListenerNotifyOrder() throws Exception {
     EventExecutor executor = new TestEventExecutor();
     try {
-        final BlockingQueue<FutureListener<Void>> listeners = new LinkedBlockingQueue<FutureListener<Void>>();
+        final IBlockingQueue<FutureListener<Void>> listeners = new LinkedBlockingQueue<FutureListener<Void>>();
         int runs = 100000;
 
         for (int i = 0; i < runs; i++) {

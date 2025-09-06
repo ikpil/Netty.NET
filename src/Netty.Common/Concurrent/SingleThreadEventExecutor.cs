@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -260,7 +259,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Take the next {@link IRunnable} from the task queue and so will block if no task is currently present.
      * <p>
      * Be aware that this method will throw an {@link NotSupportedException} if the task queue, which was
-     * created via {@link #newTaskQueue()}, does not implement {@link BlockingQueue}.
+     * created via {@link #newTaskQueue()}, does not implement {@link IBlockingQueue}.
      * </p>
      *
      * @return {@code null} if the executor thread has been interrupted or waken up.
@@ -268,12 +267,12 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected IRunnable takeTask()
     {
         Debug.Assert(inEventLoop());
-        if (!(_taskQueue is BlockingQueue<IRunnable>))
+        if (!(_taskQueue is IBlockingQueue<IRunnable>))
         {
             throw new NotSupportedException();
         }
 
-        BlockingQueue<IRunnable> taskQueue = (BlockingQueue<IRunnable>)_taskQueue;
+        IBlockingQueue<IRunnable> taskQueue = (IBlockingQueue<IRunnable>)_taskQueue;
         for (;;)
         {
             IScheduledTask scheduledTask = peekScheduledTask();
@@ -303,7 +302,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 {
                     try
                     {
-                        task = taskQueue.poll(delayNanos, System.TimeSpan.NANOSECONDS);
+                        var delayTs= TimeSpan.FromTicks(delayNanos / 100);
+                        taskQueue.TryDequeue(out task, delayTs);
                     }
                     catch (ThreadInterruptedException e)
                     {
@@ -319,7 +319,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     // This is for example true for the read task of OIO Transport
                     // See https://github.com/netty/netty/issues/1614
                     fetchFromScheduledTaskQueue();
-                    task = taskQueue.poll();
+                    taskQueue.TryDequeue(out task);
                 }
 
                 if (task != null)
