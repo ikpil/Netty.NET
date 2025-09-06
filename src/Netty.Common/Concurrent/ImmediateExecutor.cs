@@ -13,24 +13,26 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Concurrent;
-
-
-
-
 
 /**
  * {@link IExecutor} which execute tasks in the callers thread.
  */
-public final class ImmediateExecutor : IExecutor {
+public class ImmediateExecutor : IExecutor
+{
     public static readonly ImmediateExecutor INSTANCE = new ImmediateExecutor();
 
-    private ImmediateExecutor() {
+    private ImmediateExecutor()
+    {
         // use static instance
     }
 
-    @Override
-    public void execute(IRunnable command) {
+    public void execute(IRunnable command)
+    {
         ObjectUtil.checkNotNull(command, "command").run();
     }
 }
