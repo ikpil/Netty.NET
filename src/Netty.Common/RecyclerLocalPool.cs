@@ -28,7 +28,7 @@ public class RecyclerLocalPool<T> : IConsumer<RecyclerDefaultHandle<T>>
 
         if (Recycler.BLOCKING_POOL)
         {
-            _pooledHandles = new BlockingQueue<RecyclerDefaultHandle<T>>(maxCapacity);
+            _pooledHandles = new BlockingMessageQueue<RecyclerDefaultHandle<T>>(maxCapacity);
         }
         else
         {
