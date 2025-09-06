@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
@@ -37,76 +38,63 @@ public class ImmediateEventExecutor : AbstractEventExecutor
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ImmediateEventExecutor));
     public static readonly ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
+
     /**
      * A IRunnable will be queued if we are executing a IRunnable. This is to prevent a {@link StackOverflowError}.
      */
-    private static readonly FastThreadLocal<Queue<IRunnable>> DELAYED_RUNNABLES = new FastThreadLocal<Queue<IRunnable>>() {
-        @Override
-        protected Queue<IRunnable> initialValue() {
-            return new ArrayDeque<IRunnable>();
-        }
-    };
+    private static readonly FastThreadLocal<Queue<IRunnable>> DELAYED_RUNNABLES = 
+        new FastThreadLocalFunc<Queue<IRunnable>>(() => new ArrayDeque<IRunnable>());
+
     /**
      * Set to {@code true} if we are executing a runnable.
      */
-    private static readonly FastThreadLocal<bool> RUNNING = new FastThreadLocal<bool>() {
-        @Override
-        protected bool initialValue() {
-            return false;
-        }
-    };
+    private static readonly FastThreadLocal<bool> RUNNING = new FastThreadLocalFunc<bool>(() => false);
 
-    private readonly Future<?> terminationFuture = new FailedFuture<object>(
-            GlobalEventExecutor.INSTANCE, new NotSupportedException());
+    // private readonly Future<?> _terminationFuture = new FailedFuture<object>(
+    //         GlobalEventExecutor.INSTANCE, new NotSupportedException());
 
     private ImmediateEventExecutor() { }
 
-    @Override
-    public bool inEventLoop() {
+    public override bool inEventLoop() {
         return true;
     }
 
-    @Override
-    public bool inEventLoop(Thread thread) {
+    public override bool inEventLoop(Thread thread) {
         return true;
     }
 
-    @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
+    public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) 
+    {
         return terminationFuture();
     }
 
-    @Override
-    public Future<?> terminationFuture() {
-        return terminationFuture;
+    public Task terminationFuture() {
+        return _terminationFuture;
     }
 
-    @Override
     [Obsolete]
-    public void shutdown() { }
+    public override void shutdown()
+    {
+        
+    }
 
-    @Override
-    public bool isShuttingDown() {
+    public override bool isShuttingDown() {
         return false;
     }
 
-    @Override
-    public bool isShutdown() {
+    public override bool isShutdown() {
         return false;
     }
 
-    @Override
-    public bool isTerminated() {
+    public override bool isTerminated() {
         return false;
     }
 
-    @Override
-    public bool awaitTermination(TimeSpan timeout) {
+    public override bool awaitTermination(TimeSpan timeout) {
         return false;
     }
 
-    @Override
-    public void execute(IRunnable command) {
+    public override void execute(IRunnable command) {
         ObjectUtil.checkNotNull(command, "command");
         if (!RUNNING.get()) {
             RUNNING.set(true);
@@ -132,25 +120,24 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    public <V> Promise<V> newPromise() {
+    public Promise<V> newPromise<V>() {
         return new ImmediatePromise<V>(this);
     }
 
     @Override
-    public <V> ProgressivePromise<V> newProgressivePromise() {
+    public ProgressivePromise<V> newProgressivePromise<V>() {
         return new ImmediateProgressivePromise<V>(this);
     }
 
-    static class ImmediatePromise<V> extends DefaultPromise<V> {
-        ImmediatePromise(IEventExecutor executor) {
-            super(executor);
+    protected class ImmediatePromise<V> : DefaultPromise<V> {
+        ImmediatePromise(IEventExecutor executor) 
+            : base(executor)
+        {
         }
 
-        @Override
-        protected void checkDeadLock() {
+        protected override void checkDeadLock() {
             // No check
         }
     }
-
 }
 

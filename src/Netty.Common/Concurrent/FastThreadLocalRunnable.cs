@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;

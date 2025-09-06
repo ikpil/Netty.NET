@@ -135,10 +135,6 @@ public static class FastThreadLocal
     }
 }
 
-public interface IFastThreadLocal
-{
-    void remove(InternalThreadLocalMap threadLocalMap);
-}
 
 public class FastThreadLocal<V> : IFastThreadLocal where V : class
 {
