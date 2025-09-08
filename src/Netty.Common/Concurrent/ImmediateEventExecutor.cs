@@ -42,8 +42,8 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     /**
      * A IRunnable will be queued if we are executing a IRunnable. This is to prevent a {@link StackOverflowError}.
      */
-    private static readonly FastThreadLocal<IQueue<IRunnable>> DELAYED_RUNNABLES =
-        new FastThreadLocalFunc<IQueue<IRunnable>>(() => new ArrayDeque<IRunnable>());
+    private static readonly FastThreadLocal<Queue<IRunnable>> DELAYED_RUNNABLES =
+        new FastThreadLocalFunc<Queue<IRunnable>>(() => new Queue<IRunnable>());
 
     /**
      * Set to {@code true} if we are executing a runnable.
@@ -53,7 +53,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     private static readonly StrongBox<bool> StrongTrue = new StrongBox<bool>(true);
     private static readonly FastThreadLocal<StrongBox<bool>> RUNNING = new FastThreadLocalFunc<StrongBox<bool>>(() => StrongFalse);
 
-    private readonly Task _terminationFuture = new FailedFuture<object>(
+    private readonly TaskCompletionSource<object> _terminationFuture = new FailedFuture<object>(
         GlobalEventExecutor.INSTANCE, new NotSupportedException());
 
     private ImmediateEventExecutor() { }
@@ -70,12 +70,12 @@ public class ImmediateEventExecutor : AbstractEventExecutor
 
     public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return terminationFuture();
+        return terminationAsync();
     }
 
-    public Task terminationFuture()
+    public override Task terminationAsync()
     {
-        return _terminationFuture;
+        return _terminationFuture.Task;
     }
 
     [Obsolete]
@@ -86,6 +86,16 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     public override bool isShuttingDown()
     {
         return false;
+    }
+
+    public override bool isSuspended()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override bool trySuspend()
+    {
+        throw new NotImplementedException();
     }
 
     public override bool isShutdown()
@@ -119,7 +129,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
             }
             finally
             {
-                IQueue<IRunnable> delayedRunnables = DELAYED_RUNNABLES.get();
+                var delayedRunnables = DELAYED_RUNNABLES.get();
                 IRunnable runnable;
                 while (delayedRunnables.TryDequeue(out runnable) && null != runnable)
                 {
@@ -138,7 +148,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
         }
         else
         {
-            DELAYED_RUNNABLES.get().TryEnqueue(command);
+            DELAYED_RUNNABLES.get().Enqueue(command);
         }
     }
 

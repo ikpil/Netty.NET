@@ -70,8 +70,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private readonly AtomicLong _gracefulShutdownTimeout = new AtomicLong();
     private long gracefulShutdownStartTime;
 
-    //private readonly TaskCompletionSource<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
-    private readonly DefaultPromise<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    private readonly TaskCompletionSource<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
 
     /**
      * Create a new instance
@@ -806,10 +805,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         //ObjectUtil.checkNotNull(timeout, "timeout");
 
         shutdown0((long)quietPeriod.TotalNanoseconds, (long)timeout.TotalNanoseconds, ST_SHUTTING_DOWN);
-        return terminationFuture();
+        return terminationAsync();
     }
 
-    public Task terminationFuture()
+    public override Task terminationAsync()
     {
         return _terminationFuture.Task;
     }

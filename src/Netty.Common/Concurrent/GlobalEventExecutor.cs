@@ -73,7 +73,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     private readonly AtomicBoolean started = new AtomicBoolean();
     volatile Thread thread;
 
-    private readonly Future<object> terminationFuture;
+    private readonly TaskCompletionSource<object> terminationFuture;
 
     private GlobalEventExecutor() 
     {

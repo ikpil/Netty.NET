@@ -41,7 +41,7 @@ public class UnorderedThreadPoolEventExecutor : ScheduledThreadPoolExecutor, IEv
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(
             typeof(UnorderedThreadPoolEventExecutor));
 
-    private readonly IPromise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
+    private readonly TaskCompletionSource<Void> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise<Void>();
     private readonly ISet<IEventExecutor> executorSet = Collections.singleton(this);
     private readonly ISet<Thread> eventLoopThreads = ConcurrentDictionary<,>.newKeySet();
 

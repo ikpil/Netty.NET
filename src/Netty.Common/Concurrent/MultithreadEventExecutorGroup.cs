@@ -34,7 +34,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     private readonly IEventExecutor[] children;
     private readonly ISet<IEventExecutor> readonlyChildren;
     private readonly AtomicInteger terminatedChildren = new AtomicInteger();
-    private readonly Task _terminationFuture = null;
+    private readonly TaskCompletionSource _terminationFuture = null;
     private readonly IEventExecutorChooser chooser;
 
     /**
