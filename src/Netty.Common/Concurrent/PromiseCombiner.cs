@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Concurrent;
  * <p>Callers may populate a promise combiner with any number of futures to be combined via the
  * {@link PromiseCombiner#add(Future)} and {@link PromiseCombiner#addAll(Future[])} methods. When all futures to be
  * combined have been added, callers must provide an aggregate promise to be notified when all combined promises have
- * finished via the {@link PromiseCombiner#finish(Promise)} method.</p>
+ * finished via the {@link PromiseCombiner#finish(IPromise)} method.</p>
  *
  * <p>This implementation is <strong>NOT</strong> thread-safe and all methods must be called
  * from the {@link IEventExecutor} thread.</p>
@@ -36,7 +36,7 @@ public class PromiseCombiner
 {
     private int expectedCount;
     private int doneCount;
-    private Promise<Void> aggregatePromise;
+    private IPromise<Void> aggregatePromise;
     private Exception cause;
     private readonly IGenericFutureListener<Future<?>> listener = new IGenericFutureListener<Future<?>>() {
         @Override
@@ -77,7 +77,7 @@ public class PromiseCombiner
 
     /**
      * The {@link IEventExecutor} to use for notifications. You must call {@link #add(Future)}, {@link #addAll(Future[])}
-     * and {@link #finish(Promise)} from within the {@link IEventExecutor} thread.
+     * and {@link #finish(IPromise)} from within the {@link IEventExecutor} thread.
      *
      * @param executor the {@link IEventExecutor} to use for notifications.
      */
@@ -87,20 +87,20 @@ public class PromiseCombiner
 
     /**
      * Adds a new promise to be combined. New promises may be added until an aggregate promise is added via the
-     * {@link PromiseCombiner#finish(Promise)} method.
+     * {@link PromiseCombiner#finish(IPromise)} method.
      *
      * @param promise the promise to add to this promise combiner
      *
      * @deprecated Replaced by {@link PromiseCombiner#add(Future)}.
      */
     [Obsolete]
-    public void add(Promise promise) {
+    public void add(IPromise<> promise) {
         add((Future) promise);
     }
 
     /**
      * Adds a new future to be combined. New futures may be added until an aggregate promise is added via the
-     * {@link PromiseCombiner#finish(Promise)} method.
+     * {@link PromiseCombiner#finish(IPromise)} method.
      *
      * @param future the future to add to this promise combiner
      */
@@ -114,20 +114,20 @@ public class PromiseCombiner
 
     /**
      * Adds new promises to be combined. New promises may be added until an aggregate promise is added via the
-     * {@link PromiseCombiner#finish(Promise)} method.
+     * {@link PromiseCombiner#finish(IPromise)} method.
      *
      * @param promises the promises to add to this promise combiner
      *
      * @deprecated Replaced by {@link PromiseCombiner#addAll(Future[])}
      */
     [Obsolete]
-    public void addAll(Promise... promises) {
+    public void addAll(IPromise<>... promises) {
         addAll((Future[]) promises);
     }
 
     /**
      * Adds new futures to be combined. New futures may be added until an aggregate promise is added via the
-     * {@link PromiseCombiner#finish(Promise)} method.
+     * {@link PromiseCombiner#finish(IPromise)} method.
      *
      * @param futures the futures to add to this promise combiner
      */
@@ -149,7 +149,7 @@ public class PromiseCombiner
      *
      * @param aggregatePromise the promise to notify when all combined futures have finished
      */
-    public void finish(Promise<Void> aggregatePromise) {
+    public void finish(IPromise<Void> aggregatePromise) {
         ObjectUtil.checkNotNull(aggregatePromise, "aggregatePromise");
         checkInEventLoop();
         if (this.aggregatePromise != null) {

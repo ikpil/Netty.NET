@@ -81,11 +81,11 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
     }
 
     @Override
-    public Promise<V> setFailure(Exception cause) {
+    public IPromise<V> setFailure(Exception cause) {
         throw new InvalidOperationException();
     }
 
-    protected Promise<V> setFailureInternal(Exception cause) {
+    protected IPromise<V> setFailureInternal(Exception cause) {
         super.setFailure(cause);
         clearTaskAfterCompletion(true, FAILED);
         return this;
@@ -101,11 +101,11 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
     }
 
     @Override
-    public Promise<V> setSuccess(V result) {
+    public IPromise<V> setSuccess(V result) {
         throw new InvalidOperationException();
     }
 
-    protected Promise<V> setSuccessInternal(V result) {
+    protected IPromise<V> setSuccessInternal(V result) {
         super.setSuccess(result);
         clearTaskAfterCompletion(true, COMPLETED);
         return this;

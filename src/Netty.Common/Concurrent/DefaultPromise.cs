@@ -25,7 +25,7 @@ using Netty.NET.Common.Internal.Logging;
 namespace Netty.NET.Common.Concurrent;
 
 
-public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
+public class DefaultPromise<V> : AbstractFuture<V> {
     /**
      * System property with integer type value, that determine the max reentrancy/recursion level for when
      * listener notifications prompt other listeners to be notified.
@@ -35,6 +35,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
      * <p>
      * The default value is {@code 8}.
      */
+
     public static readonly string PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultPromise<V>));
@@ -98,7 +99,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         _executor = null;
     }
 
-    public virtual Promise<V> setSuccess(V result) {
+    public virtual IPromise<V> setSuccess(V result) {
         if (setSuccess0(result)) {
             return this;
         }
@@ -109,7 +110,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         return setSuccess0(result);
     }
 
-    public virtual Promise<V> setFailure(Exception cause) {
+    public virtual IPromise<V> setFailure(Exception cause) {
         if (setFailure0(cause)) {
             return this;
         }
@@ -161,7 +162,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     @Override
-    public Promise<V> addListener(IGenericFutureListener<? extends Future<? super V>> listener) {
+    public IPromise<V> addListener(IGenericFutureListener<? extends Future<? super V>> listener) {
         checkNotNull(listener, "listener");
 
         synchronized (this) {
@@ -176,7 +177,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     @Override
-    public Promise<V> addListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
+    public IPromise<V> addListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
         checkNotNull(listeners, "listeners");
 
         synchronized (this) {
@@ -196,7 +197,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     @Override
-    public Promise<V> removeListener(final GenericFutureListener<? extends Future<? super V>> listener) {
+    public IPromise<V> removeListener(final GenericFutureListener<? extends Future<? super V>> listener) {
         checkNotNull(listener, "listener");
 
         synchronized (this) {
@@ -207,7 +208,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     @Override
-    public Promise<V> removeListeners(final GenericFutureListener<? extends Future<? super V>>... listeners) {
+    public IPromise<V> removeListeners(final GenericFutureListener<? extends Future<? super V>>... listeners) {
         checkNotNull(listeners, "listeners");
 
         synchronized (this) {
@@ -222,7 +223,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
         return this;
     }
 
-    public virtual Promise<V> await() {
+    public virtual IPromise<V> await() {
         if (isDone()) {
             return this;
         }
@@ -247,7 +248,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     @Override
-    public Promise<V> awaitUninterruptibly() {
+    public IPromise<V> awaitUninterruptibly() {
         if (isDone()) {
             return this;
         }
@@ -387,14 +388,14 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     @Override
-    public Promise<V> sync() {
+    public IPromise<V> sync() {
         await();
         rethrowIfFailed();
         return this;
     }
 
     @Override
-    public Promise<V> syncUninterruptibly() {
+    public IPromise<V> syncUninterruptibly() {
         awaitUninterruptibly();
         rethrowIfFailed();
         return this;
@@ -730,7 +731,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
             return;
         }
 
-        final ProgressiveFuture<V> self = (ProgressiveFuture<V>) this;
+        final ProgressiveFuture<V> self = (IProgressiveFuture<V>) this;
 
         IEventExecutor executor = executor();
         if (executor.inEventLoop()) {
@@ -739,7 +740,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
                         self, (GenericProgressiveFutureListener<?>[]) listeners, progress, total);
             } else {
                 notifyProgressiveListener0(
-                        self, (IGenericProgressiveFutureListener<ProgressiveFuture<V>>) listeners, progress, total);
+                        self, (IGenericProgressiveFutureListener<IProgressiveFuture<V>>) listeners, progress, total);
             }
         } else {
             if (listeners instanceof GenericProgressiveFutureListener[]) {
@@ -752,8 +753,8 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
                     }
                 });
             } else {
-                final IGenericProgressiveFutureListener<ProgressiveFuture<V>> l =
-                        (IGenericProgressiveFutureListener<ProgressiveFuture<V>>) listeners;
+                final IGenericProgressiveFutureListener<IProgressiveFuture<V>> l =
+                        (IGenericProgressiveFutureListener<IProgressiveFuture<V>>) listeners;
                 safeExecute(executor, new IRunnable() {
                     @Override
                     public void run() {
@@ -811,7 +812,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, Promise<V> {
     }
 
     private static void notifyProgressiveListeners0(
-            ProgressiveFuture<?> future, IGenericProgressiveFutureListener<?>[] listeners, long progress, long total) {
+            IProgressiveFuture<?> future, IGenericProgressiveFutureListener<?>[] listeners, long progress, long total) {
         for (GenericProgressiveFutureListener<?> l: listeners) {
             if (l == null) {
                 break;

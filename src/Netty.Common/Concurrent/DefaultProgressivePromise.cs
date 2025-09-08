@@ -16,7 +16,7 @@
 
 namespace Netty.NET.Common.Concurrent;
 
-public class DefaultProgressivePromise<V> : DefaultPromise<V>, ProgressivePromise<V> {
+public class DefaultProgressivePromise<V> : DefaultPromise<V>, IProgressivePromise<V> {
 
     /**
      * Creates a new instance.
@@ -34,7 +34,7 @@ public class DefaultProgressivePromise<V> : DefaultPromise<V>, ProgressivePromis
     protected DefaultProgressivePromise() { /* only for subclasses */ }
 
     @Override
-    public ProgressivePromise<V> setProgress(long progress, long total) {
+    public IProgressivePromise<V> setProgress(long progress, long total) {
         if (total < 0) {
             // total unknown
             total = -1; // normalize
@@ -68,61 +68,61 @@ public class DefaultProgressivePromise<V> : DefaultPromise<V>, ProgressivePromis
     }
 
     @Override
-    public ProgressivePromise<V> addListener(IGenericFutureListener<? extends Future<? super V>> listener) {
+    public IProgressivePromise<V> addListener(IGenericFutureListener<? extends Future<? super V>> listener) {
         super.addListener(listener);
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> addListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
+    public IProgressivePromise<V> addListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
         super.addListeners(listeners);
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> removeListener(IGenericFutureListener<? extends Future<? super V>> listener) {
+    public IProgressivePromise<V> removeListener(IGenericFutureListener<? extends Future<? super V>> listener) {
         super.removeListener(listener);
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> removeListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
+    public IProgressivePromise<V> removeListeners(IGenericFutureListener<? extends Future<? super V>>... listeners) {
         super.removeListeners(listeners);
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> sync() {
+    public IProgressivePromise<V> sync() {
         super.sync();
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> syncUninterruptibly() {
+    public IProgressivePromise<V> syncUninterruptibly() {
         super.syncUninterruptibly();
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> await() {
+    public IProgressivePromise<V> await() {
         super.await();
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> awaitUninterruptibly() {
+    public IProgressivePromise<V> awaitUninterruptibly() {
         super.awaitUninterruptibly();
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> setSuccess(V result) {
+    public IProgressivePromise<V> setSuccess(V result) {
         super.setSuccess(result);
         return this;
     }
 
     @Override
-    public ProgressivePromise<V> setFailure(Exception cause) {
+    public IProgressivePromise<V> setFailure(Exception cause) {
         super.setFailure(cause);
         return this;
     }

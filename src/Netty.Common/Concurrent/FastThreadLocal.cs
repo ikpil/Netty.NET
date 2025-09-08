@@ -177,7 +177,7 @@ public class FastThreadLocal<V> : IFastThreadLocal where V : class
             }
         }
 
-        return default;
+        return null;
     }
 
     /**

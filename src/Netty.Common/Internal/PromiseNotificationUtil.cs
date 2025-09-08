@@ -19,14 +19,14 @@ namespace Netty.NET.Common.Internal;
 
 
 /**
- * Internal utilities to notify {@link Promise}s.
+ * Internal utilities to notify {@link IPromise}s.
  */
 public final class PromiseNotificationUtil {
 
     private PromiseNotificationUtil() { }
 
     /**
-     * Try to cancel the {@link Promise} and log if {@code logger} is not {@code null} in case this fails.
+     * Try to cancel the {@link IPromise} and log if {@code logger} is not {@code null} in case this fails.
      */
     public static void tryCancel(Promise<?> p, InternalLogger logger) {
         if (!p.cancel(false) && logger != null) {
@@ -42,7 +42,7 @@ public final class PromiseNotificationUtil {
     }
 
     /**
-     * Try to mark the {@link Promise} as success and log if {@code logger} is not {@code null} in case this fails.
+     * Try to mark the {@link IPromise} as success and log if {@code logger} is not {@code null} in case this fails.
      */
     public static <V> void trySuccess(Promise<? super V> p, V result, InternalLogger logger) {
         if (!p.trySuccess(result) && logger != null) {
@@ -58,7 +58,7 @@ public final class PromiseNotificationUtil {
     }
 
     /**
-     * Try to mark the {@link Promise} as failure and log if {@code logger} is not {@code null} in case this fails.
+     * Try to mark the {@link IPromise} as failure and log if {@code logger} is not {@code null} in case this fails.
      */
     public static void tryFailure(Promise<?> p, Exception cause, InternalLogger logger) {
         if (!p.tryFailure(cause) && logger != null) {

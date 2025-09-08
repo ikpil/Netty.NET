@@ -24,12 +24,17 @@ public interface IFuture
     AggregateException cause();
 }
 
+public interface IFuture<V> : IFuture
+{
+}
+
+
 /**
  * Abstract {@link Future} implementation which does not allow for cancellation.
  *
  * @param <V>
  */
-public abstract class AbstractFuture<V> : Task<V>, IFuture
+public abstract class AbstractFuture<V> : TaskCompletionSource<V>, IFuture
 {
     public AbstractFuture() : base(() => default)
     {

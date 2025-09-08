@@ -47,14 +47,14 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
     bool inEventLoop(Thread thread);
 
     /**
-     * Return a new {@link Promise}.
+     * Return a new {@link IPromise}.
      */
-    Promise<V> newPromise<V>();
+    TaskCompletionSource<V> newPromise<V>();
 
     /**
      * Create a new {@link ProgressivePromise}.
      */
-    ProgressivePromise<V> newProgressivePromise<V>();
+    TaskCompletionSource<V> newProgressivePromise<V>();
 
     /**
      * Create a new {@link Future} which is marked as succeeded already. So {@link Future#isSuccess()}

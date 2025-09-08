@@ -30,7 +30,7 @@ public class Void
 /**
  * Special {@link Future} which is writable.
  */
-public interface Promise<V> : IFuture
+public interface IPromise<V> : IFuture
 {
     /**
      * Marks this future as a success and notifies all
@@ -38,7 +38,7 @@ public interface Promise<V> : IFuture
      *
      * If it is success or failed already it will throw an {@link InvalidOperationException}.
      */
-    Promise<V> setSuccess(V result);
+    IPromise<V> setSuccess(V result);
 
     /**
      * Marks this future as a success and notifies all
@@ -56,7 +56,7 @@ public interface Promise<V> : IFuture
      *
      * If it is success or failed already it will throw an {@link InvalidOperationException}.
      */
-    Promise<V> setFailure(Exception cause);
+    IPromise<V> setFailure(Exception cause);
 
     /**
      * Marks this future as a failure and notifies all
@@ -76,19 +76,19 @@ public interface Promise<V> : IFuture
      */
     bool setUncancellable();
 
-    Promise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
+    IPromise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
 
-    Promise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    IPromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    Promise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
+    IPromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
 
-    Promise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    IPromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    Promise<V> await();
+    IPromise<V> await();
 
-    Promise<V> awaitUninterruptibly();
+    IPromise<V> awaitUninterruptibly();
 
-    Promise<V> sync();
+    IPromise<V> sync();
 
-    Promise<V> syncUninterruptibly();
+    IPromise<V> syncUninterruptibly();
 }

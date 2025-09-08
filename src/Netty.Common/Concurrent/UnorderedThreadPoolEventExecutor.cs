@@ -13,27 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal.Logging;
+
 namespace Netty.NET.Common.Concurrent;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * {@link IEventExecutor} implementation which makes no guarantees about the ordering of task execution that
@@ -48,13 +37,13 @@ namespace Netty.NET.Common.Concurrent;
  * off-loading to their own thread-pools.
  */
 [Obsolete]
-public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolExecutor : IEventExecutor {
+public class UnorderedThreadPoolEventExecutor : ScheduledThreadPoolExecutor, IEventExecutor {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(
             typeof(UnorderedThreadPoolEventExecutor));
 
-    private readonly Promise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
+    private readonly IPromise<?> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise();
     private readonly ISet<IEventExecutor> executorSet = Collections.singleton(this);
-    private readonly ISet<Thread> eventLoopThreads = ConcurrentDictionary.newKeySet();
+    private readonly ISet<Thread> eventLoopThreads = ConcurrentDictionary<,>.newKeySet();
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int, IThreadFactory)}
@@ -110,12 +99,12 @@ public final class UnorderedThreadPoolEventExecutor extends ScheduledThreadPoolE
     }
 
     @Override
-    public <V> Promise<V> newPromise() {
+    public <V> IPromise<V> newPromise() {
         return new DefaultPromise<V>(this);
     }
 
     @Override
-    public <V> ProgressivePromise<V> newProgressivePromise() {
+    public <V> IProgressivePromise<V> newProgressivePromise() {
         return new DefaultProgressivePromise<V>(this);
     }
 

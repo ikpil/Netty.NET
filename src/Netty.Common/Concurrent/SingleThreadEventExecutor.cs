@@ -71,7 +71,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private long gracefulShutdownStartTime;
 
     //private readonly TaskCompletionSource<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
-    private readonly TaskCompletionSource<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    private readonly DefaultPromise<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
 
     /**
      * Create a new instance

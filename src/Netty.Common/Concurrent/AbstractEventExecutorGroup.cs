@@ -35,6 +35,12 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     public abstract bool isTerminated();
     public abstract bool awaitTermination(TimeSpan timeout);
     public abstract Task terminationAsync();
+
+    public Ticker ticker()
+    {
+        return Ticker.systemTicker();
+    }
+
     public abstract Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
     public abstract IEventExecutor next();
 
@@ -59,17 +65,17 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
         return next().schedule(command, delay);
     }
 
-    public IScheduledTask<V> schedule<V>(Func<V> callable, TimeSpan delay)
+    public IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay)
     {
         return next().schedule(callable, delay);
     }
 
-    public IScheduledTask scheduleAtFixedRate(IRunnable command, long initialDelay, TimeSpan period)
+    public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period)
     {
         return next().scheduleAtFixedRate(command, initialDelay, period);
     }
 
-    public IScheduledTask scheduleWithFixedDelay(IRunnable command, long initialDelay, TimeSpan delay)
+    public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay)
     {
         return next().scheduleWithFixedDelay(command, initialDelay, delay);
     }
@@ -79,22 +85,22 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
         return shutdownGracefullyAsync(AbstractEventExecutor.DEFAULT_SHUTDOWN_QUIET_PERIOD, AbstractEventExecutor.DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
-    public List<Task<T>> invokeAll<T>(ICollection<ICallable<T>> tasks)
+    public List<Task<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
     {
         return next().invokeAll(tasks);
     }
 
-    public List<Task<T>> invokeAll<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
+    public List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
     {
         return next().invokeAll(tasks, timeout);
     }
 
-    public T invokeAny<T>(ICollection<ICallable<T>> tasks)
+    public T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>
     {
         return next().invokeAny(tasks);
     }
 
-    public T invokeAny<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
+    public T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
     {
         return next().invokeAny(tasks, timeout);
     }

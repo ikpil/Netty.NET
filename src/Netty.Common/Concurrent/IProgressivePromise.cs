@@ -19,15 +19,15 @@ using System;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Special {@link ProgressiveFuture} which is writable.
+ * Special {@link IProgressiveFuture} which is writable.
  */
-public interface ProgressivePromise<V> : Promise<V>, ProgressiveFuture<V>
+public interface IProgressivePromise<V> : IPromise<V>, IProgressiveFuture<V>
 {
     /**
      * Sets the current progress of the operation and notifies the listeners that implement
      * {@link IGenericProgressiveFutureListener}.
      */
-    ProgressivePromise<V> setProgress(long progress, long total);
+    IProgressivePromise<V> setProgress(long progress, long total);
 
     /**
      * Tries to set the current progress of the operation and notifies the listeners that implement
@@ -36,22 +36,22 @@ public interface ProgressivePromise<V> : Promise<V>, ProgressiveFuture<V>
      */
     bool tryProgress(long progress, long total);
 
-    ProgressivePromise<V> setSuccess(V result);
+    IProgressivePromise<V> setSuccess(V result);
 
-    ProgressivePromise<V> setFailure(Exception cause);
+    IProgressivePromise<V> setFailure(Exception cause);
 
-    ProgressivePromise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
+    IProgressivePromise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
 
-    ProgressivePromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    IProgressivePromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    ProgressivePromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
+    IProgressivePromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
 
-    ProgressivePromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    IProgressivePromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    ProgressivePromise<V> await();
-    ProgressivePromise<V> awaitUninterruptibly();
+    IProgressivePromise<V> await();
+    IProgressivePromise<V> awaitUninterruptibly();
 
-    ProgressivePromise<V> sync();
+    IProgressivePromise<V> sync();
 
-    ProgressivePromise<V> syncUninterruptibly();
+    IProgressivePromise<V> syncUninterruptibly();
 }

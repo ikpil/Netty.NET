@@ -29,34 +29,34 @@ namespace Netty.NET.Common.Concurrent;
 [Obsolete]
 public class PromiseAggregator<V, F extends Future<V>> : IGenericFutureListener<> <F> {
 
-    private readonly Promise<?> aggregatePromise;
+    private readonly IPromise<?> aggregatePromise;
     private readonly bool failPending;
-    private ISet<Promise<V>> pendingPromises;
+    private ISet<IPromise<V>> pendingPromises;
 
     /**
      * Creates a new instance.
      *
-     * @param aggregatePromise  the {@link Promise} to notify
+     * @param aggregatePromise  the {@link IPromise} to notify
      * @param failPending  {@code true} to fail pending promises, false to leave them unaffected
      */
-    public PromiseAggregator(Promise<Void> aggregatePromise, bool failPending) {
+    public PromiseAggregator(IPromise<Void> aggregatePromise, bool failPending) {
         this.aggregatePromise = ObjectUtil.checkNotNull(aggregatePromise, "aggregatePromise");
         this.failPending = failPending;
     }
 
     /**
-     * See {@link PromiseAggregator#PromiseAggregator(Promise, bool)}.
+     * See {@link PromiseAggregator#PromiseAggregator(IPromise, bool)}.
      * Defaults {@code failPending} to true.
      */
-    public PromiseAggregator(Promise<Void> aggregatePromise) {
+    public PromiseAggregator(IPromise<Void> aggregatePromise) {
         this(aggregatePromise, true);
     }
 
     /**
-     * Add the given {@link Promise}s to the aggregator.
+     * Add the given {@link IPromise}s to the aggregator.
      */
     @SafeVarargs
-    public final PromiseAggregator<V, F> add(Promise<V>... promises) {
+    public final PromiseAggregator<V, F> add(IPromise<V>... promises) {
         ObjectUtil.checkNotNull(promises, "promises");
         if (promises.length == 0) {
             return this;
@@ -69,9 +69,9 @@ public class PromiseAggregator<V, F extends Future<V>> : IGenericFutureListener<
                 } else {
                     size = 2;
                 }
-                pendingPromises = new LinkedHashSet<Promise<V>>(size);
+                pendingPromises = new LinkedHashSet<IPromise<V>>(size);
             }
-            for (Promise<V> p : promises) {
+            for (IPromise<> <V> p : promises) {
                 if (p == null) {
                     continue;
                 }
@@ -92,7 +92,7 @@ public class PromiseAggregator<V, F extends Future<V>> : IGenericFutureListener<
                 Exception cause = future.cause();
                 aggregatePromise.setFailure(cause);
                 if (failPending) {
-                    for (Promise<V> pendingFuture : pendingPromises) {
+                    for (IPromise<> <V> pendingFuture : pendingPromises) {
                         pendingFuture.setFailure(cause);
                     }
                 }

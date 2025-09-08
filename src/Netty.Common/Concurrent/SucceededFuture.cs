@@ -48,8 +48,6 @@ public sealed class SucceededFuture<V> : CompleteFuture<V>
         return true;
     }
 
-    @Override
-
     public V getNow()
     {
         return result;

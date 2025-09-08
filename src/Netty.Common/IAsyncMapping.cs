@@ -22,8 +22,8 @@ namespace Netty.NET.Common;
 public interface IAsyncMapping<IN, OUT> {
 
     /**
-     * Returns the {@link Future} that will provide the result of the mapping. The given {@link Promise} will
+     * Returns the {@link Future} that will provide the result of the mapping. The given {@link IPromise} will
      * be fulfilled when the result is available.
      */
-    IFuture<OUT> map(IN input, Promise<OUT> promise);
+    IFuture<OUT> map(IN input, IPromise<OUT> promise);
 }

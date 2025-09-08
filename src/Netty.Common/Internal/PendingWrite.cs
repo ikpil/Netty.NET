@@ -32,7 +32,7 @@ public sealed class PendingWrite
     /**
      * Create a new empty {@link RecyclableArrayList} instance
      */
-    public static PendingWrite newInstance(object msg, Promise<Void> promise)
+    public static PendingWrite newInstance(object msg, IPromise<Void> promise)
     {
         PendingWrite pending = RECYCLER.get();
         pending._msg = msg;
@@ -42,7 +42,7 @@ public sealed class PendingWrite
 
     private readonly IObjectPoolHandle<PendingWrite> _handle;
     private object _msg;
-    private Promise<Void> _promise;
+    private IPromise<Void> _promise;
 
     private PendingWrite(IObjectPoolHandle<PendingWrite> handle)
     {
@@ -61,7 +61,7 @@ public sealed class PendingWrite
     }
 
     /**
-     * Fails the underlying {@link Promise} with the given cause and recycle this instance.
+     * Fails the underlying {@link IPromise} with the given cause and recycle this instance.
      */
     public bool failAndRecycle(Exception cause)
     {
@@ -75,7 +75,7 @@ public sealed class PendingWrite
     }
 
     /**
-     * Mark the underlying {@link Promise} successfully and recycle this instance.
+     * Mark the underlying {@link IPromise} successfully and recycle this instance.
      */
     public bool successAndRecycle()
     {
@@ -92,17 +92,17 @@ public sealed class PendingWrite
         return _msg;
     }
 
-    public Promise<Void> promise()
+    public IPromise<Void> promise()
     {
         return _promise;
     }
 
     /**
-     * Recycle this instance and return the {@link Promise}.
+     * Recycle this instance and return the {@link IPromise}.
      */
-    public Promise<Void> recycleAndGet()
+    public IPromise<Void> recycleAndGet()
     {
-        Promise<Void> promise = _promise;
+        IPromise<Void> promise = _promise;
         recycle();
         return promise;
     }

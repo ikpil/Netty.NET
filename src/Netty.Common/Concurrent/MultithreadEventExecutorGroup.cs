@@ -17,6 +17,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
@@ -32,7 +34,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     private readonly IEventExecutor[] children;
     private readonly ISet<IEventExecutor> readonlyChildren;
     private readonly AtomicInteger terminatedChildren = new AtomicInteger();
-    private readonly Promise<?> terminationFuture = new DefaultPromise(GlobalEventExecutor.INSTANCE);
+    private readonly Task _terminationFuture = null;
     private readonly IEventExecutorChooser chooser;
 
     /**

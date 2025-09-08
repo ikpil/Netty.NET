@@ -19,21 +19,21 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * A {@link Future} which is used to indicate the progress of an operation.
  */
-public interface ProgressiveFuture<V> : IFuture<V>
+public interface IProgressiveFuture<V> : IFuture<V>
 {
-    ProgressiveFuture<V> addListener(IGenericFutureListener<IFuture<V>> listener);
+    IProgressiveFuture<V> addListener(IGenericFutureListener<IFuture<V>> listener);
 
-    ProgressiveFuture<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    IProgressiveFuture<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    ProgressiveFuture<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
+    IProgressiveFuture<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
 
-    ProgressiveFuture<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    IProgressiveFuture<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    ProgressiveFuture<V> sync();
+    IProgressiveFuture<V> sync();
 
-    ProgressiveFuture<V> syncUninterruptibly();
+    IProgressiveFuture<V> syncUninterruptibly();
 
-    ProgressiveFuture<V> await();
+    IProgressiveFuture<V> await();
 
-    ProgressiveFuture<V> awaitUninterruptibly();
+    IProgressiveFuture<V> awaitUninterruptibly();
 }
