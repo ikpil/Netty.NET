@@ -261,13 +261,6 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         if (started.compareAndSet(false, true))
         {
             Thread callingThread = Thread.CurrentThread;
-            ClassLoader parentCCL = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>()
-            {
-                @Override
-                public ClassLoader run() {
-                return callingThread.getContextClassLoader();
-            }
-            });
             // Avoid calling classloader leaking through Thread.inheritedAccessControlContext.
             setContextClassLoader(callingThread, null);
             try
