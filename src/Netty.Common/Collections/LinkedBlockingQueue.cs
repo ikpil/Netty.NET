@@ -34,6 +34,11 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         return _queue.TryAdd(item);
     }
 
+    public bool TryDequeue(out T item)
+    {
+        return TryTake(out item);
+    }
+
     public T Take()
     {
         return _queue.Take();
