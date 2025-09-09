@@ -13,18 +13,29 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+
 namespace Netty.NET.Common.Internal;
-
-
 
 /**
  * {@link OutOfMemoryError} that is throws if {@link PlatformDependent#allocateDirectNoCleaner(int)} can not allocate
  * a new {@link ByteBuffer} due memory restrictions.
  */
-public final class OutOfDirectMemoryError extends OutOfMemoryError {
-    private static readonly long serialVersionUID = 4228264016184011555L;
-
-    OutOfDirectMemoryError(string s) {
-        super(s);
+public class OutOfDirectMemoryErrorException : OutOfMemoryException
+{
+    public OutOfDirectMemoryErrorException()
+    {
     }
+
+    public OutOfDirectMemoryErrorException(string message)
+        : base(message)
+    {
+    }
+
+    public OutOfDirectMemoryErrorException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
+
 }
