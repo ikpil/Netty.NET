@@ -134,7 +134,7 @@ public class AbstractScheduledEventExecutorTest {
         }
 
         @Override
-        public Future<?> terminationFuture() {
+        public Task terminationAsync() {
             throw new NotSupportedException();
         }
 

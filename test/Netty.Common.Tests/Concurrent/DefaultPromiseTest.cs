@@ -52,7 +52,7 @@ public class DefaultPromiseTest {
     }
 
     @Override
-    public Future<?> terminationFuture() {
+    public Task terminationAsync() {
         return null;
     }
 

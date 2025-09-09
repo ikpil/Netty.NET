@@ -167,7 +167,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     }
 
     @Override
-    public Future<?> terminationFuture() {
+    public Task terminationAsync() {
         return terminationFuture;
     }
 

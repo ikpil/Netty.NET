@@ -280,7 +280,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 IRunnable task = null;
                 try
                 {
-                    taskQueue.TryDequeue(out task);
+                    task = taskQueue.Take();
                     if (task == WAKEUP_TASK)
                     {
                         task = null;
@@ -301,8 +301,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 {
                     try
                     {
-                        var delayTs= TimeSpan.FromTicks(delayNanos / 100);
-                        taskQueue.TryDequeue(out task, delayTs);
+                        var delayTs = TimeSpan.FromTicks(delayNanos / 100);
+                        taskQueue.TryTake(out task, delayTs);
                     }
                     catch (ThreadInterruptedException e)
                     {
@@ -318,7 +318,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     // This is for example true for the read task of OIO Transport
                     // See https://github.com/netty/netty/issues/1614
                     fetchFromScheduledTaskQueue();
-                    taskQueue.TryDequeue(out task);
+                    taskQueue.TryTake(out task);
                 }
 
                 if (task != null)

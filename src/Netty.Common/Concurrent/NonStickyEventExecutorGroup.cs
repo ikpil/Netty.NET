@@ -80,7 +80,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     @Override
-    public Future<?> terminationFuture() {
+    public Task terminationAsync() {
         return group.terminationAsync();
     }
 
@@ -295,7 +295,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
         }
 
         @Override
-        public Future<?> terminationFuture() {
+        public Task terminationAsync() {
             return executor.terminationAsync();
         }
 

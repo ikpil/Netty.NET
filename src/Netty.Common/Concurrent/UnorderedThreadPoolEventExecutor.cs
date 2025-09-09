@@ -150,7 +150,7 @@ public class UnorderedThreadPoolEventExecutor : ScheduledThreadPoolExecutor, IEv
     }
 
     @Override
-    public Future<?> terminationFuture() {
+    public Task terminationAsync() {
         return terminationFuture;
     }
 
