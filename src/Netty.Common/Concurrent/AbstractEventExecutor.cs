@@ -120,8 +120,16 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     public abstract bool isShuttingDown();
-    public abstract bool isSuspended();
-    public abstract bool trySuspend();
+
+    public virtual bool isSuspended()
+    {
+        return false;
+    }
+
+    public virtual bool trySuspend()
+    {
+        return false;
+    }
 
     public virtual IScheduledTask schedule(IRunnable command, TimeSpan delay)
     {

@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
@@ -60,10 +59,10 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
     // be sticky about its thread group
     // visible for testing
-    private IThreadFactory threadFactory;
-    private readonly TaskRunner taskRunner = new TaskRunner();
+    private IThreadFactory _threadFactory;
+    private readonly TaskRunner _taskRunner;
     private readonly AtomicBoolean started = new AtomicBoolean();
-    volatile Thread thread;
+    private volatile Thread _thread;
 
     private readonly TaskCompletionSource<object> _terminationFuture;
 
@@ -80,16 +79,17 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         SCHEDULE_QUIET_PERIOD_INTERVAL = quietPeriod * PreciseTimer.NanosecondsPerSecond;
     }
 
-    private GlobalEventExecutor()
+    private GlobalEventExecutor() : base(null)
     {
         scheduledTaskQueue().TryEnqueue(quietPeriodTask);
-        threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
+        _threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
             DefaultThreadFactory.toPoolName(GetType()), false, ThreadPriority.Normal), this);
 
 
         NotSupportedException terminationFailure = new NotSupportedException();
         ThrowableUtil.unknownStackTrace(msg => new NotSupportedException(msg), typeof(GlobalEventExecutor), "terminationAsync");
         _terminationFuture = new FailedFuture<object>(this, terminationFailure);
+        _taskRunner = new TaskRunner(this);
     }
 
     /**
@@ -183,7 +183,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     public override bool inEventLoop(Thread thread)
     {
-        return thread == this.thread;
+        return thread == this._thread;
     }
 
     public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
@@ -232,7 +232,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
      */
     public bool awaitInactivity(TimeSpan timeout)
     {
-        Thread thread = this.thread;
+        Thread thread = this._thread;
         if (thread == null)
         {
             throw new InvalidOperationException("thread was not started");
@@ -272,7 +272,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
             setContextClassLoader(callingThread, null);
             try
             {
-                Thread t = threadFactory.newThread(taskRunner);
+                Thread t = _threadFactory.newThread(_taskRunner);
                 // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
                 // classloader.
                 // See:
@@ -283,8 +283,8 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
                 // Set the thread before starting it as otherwise inEventLoop() may return false and so produce
                 // an assert error.
                 // See https://github.com/netty/netty/issues/4357
-                thread = t;
-                t.start();
+                _thread = t;
+                t.Start();
             }
             finally
             {

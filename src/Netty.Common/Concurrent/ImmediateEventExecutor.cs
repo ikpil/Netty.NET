@@ -88,16 +88,6 @@ public class ImmediateEventExecutor : AbstractEventExecutor
         return false;
     }
 
-    public override bool isSuspended()
-    {
-        throw new NotImplementedException();
-    }
-
-    public override bool trySuspend()
-    {
-        throw new NotImplementedException();
-    }
-
     public override bool isShutdown()
     {
         return false;
