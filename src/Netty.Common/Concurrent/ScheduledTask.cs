@@ -66,7 +66,7 @@ public abstract class ScheduledTask : IScheduledTask
 
     public virtual void run()
     {
-        if (this.TrySetUncancelable())
+        if (TrySetUncancelable())
         {
             try
             {
