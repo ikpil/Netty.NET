@@ -91,7 +91,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      */
     [Obsolete]
     protected static long deadlineToDelayNanos(long deadlineNanos) {
-        return ScheduledFutureTask.deadlineToDelayNanos(defaultCurrentTimeNanos(), deadlineNanos);
+        return ScheduledTask.deadlineToDelayNanos(defaultCurrentTimeNanos(), deadlineNanos);
     }
 
     /**
@@ -118,7 +118,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return Ticker.systemTicker().initialNanoTime();
     }
 
-    public IPriorityQueue<IScheduledTask> scheduledTaskQueue() {
+    protected IPriorityQueue<IScheduledTask> scheduledTaskQueue() {
         if (_scheduledTaskQueue == null) {
             _scheduledTaskQueue = new DefaultPriorityQueue<IScheduledTask>(
                     SCHEDULED_FUTURE_TASK_COMPARATOR,
@@ -343,7 +343,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return task;
     }
 
-    void removeScheduled(IScheduledTask task) {
+    public void removeScheduled(IScheduledTask task) {
         assert task.isCancelled();
         if (inEventLoop()) {
             scheduledTaskQueue().removeTyped(task);

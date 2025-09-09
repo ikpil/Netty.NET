@@ -36,32 +36,30 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     private static readonly long SCHEDULE_QUIET_PERIOD_INTERVAL;
 
-
     public static readonly GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
 
     private readonly BlockingCollection<IRunnable> taskQueue = new BlockingCollection<IRunnable>();
 
-    private IScheduledTask<Void> quietPeriodTask = null;
-    // private ScheduledFutureTask<Void> quietPeriodTask = new ScheduledFutureTask<Void>(
-    //         this, Executors.<Void>callable(new IRunnable() {
+    private readonly IScheduledTask _quietPeriodTask = new ScheduledTask(
+    // this, Executors.<Void>callable(new Runnable() {
     //     @Override
     //     public void run() {
     //         // NOOP
     //     }
     // }, null),
-    //         // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
-    //         // could be overridden leading to unsafe initialization here!
-    //         deadlineNanos(getCurrentTimeNanos(), SCHEDULE_QUIET_PERIOD_INTERVAL),
-    //         -SCHEDULE_QUIET_PERIOD_INTERVAL
+    // // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
+    // // could be overridden leading to unsafe initialization here!
+    // deadlineNanos(getCurrentTimeNanos(), SCHEDULE_QUIET_PERIOD_INTERVAL),
+    // -SCHEDULE_QUIET_PERIOD_INTERVAL
     // );
 
     // because the GlobalEventExecutor is a singleton, tasks submitted to it can come from arbitrary threads and this
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
     // be sticky about its thread group
     // visible for testing
-    private IThreadFactory _threadFactory;
+    private readonly IThreadFactory _threadFactory;
     private readonly TaskRunner _taskRunner;
-    private readonly AtomicBoolean started = new AtomicBoolean();
+    private readonly AtomicBoolean _started = new AtomicBoolean();
     private volatile Thread _thread;
 
     private readonly TaskCompletionSource<object> _terminationFuture;
@@ -81,7 +79,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     private GlobalEventExecutor() : base(null)
     {
-        scheduledTaskQueue().TryEnqueue(quietPeriodTask);
+        scheduledTaskQueue().TryEnqueue(_quietPeriodTask);
         _threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
             DefaultThreadFactory.toPoolName(GetType()), false, ThreadPriority.Normal), this);
 
@@ -191,6 +189,11 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         return terminationAsync();
     }
 
+    public override bool isShuttingDown()
+    {
+        throw new NotImplementedException();
+    }
+
     public override Task terminationAsync()
     {
         return _terminationFuture.Task;
@@ -200,11 +203,6 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     public override void shutdown()
     {
         throw new NotSupportedException();
-    }
-
-    public override bool isShuttingDown()
-    {
-        return false;
     }
 
     public override bool isShutdown()
@@ -258,43 +256,21 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     private void startThread()
     {
-        if (started.compareAndSet(false, true))
+        if (_started.compareAndSet(false, true))
         {
-            Thread callingThread = Thread.CurrentThread;
-            // Avoid calling classloader leaking through Thread.inheritedAccessControlContext.
-            setContextClassLoader(callingThread, null);
-            try
-            {
-                Thread t = _threadFactory.newThread(_taskRunner);
-                // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
-                // classloader.
-                // See:
-                // - https://github.com/netty/netty/issues/7290
-                // - https://bugs.openjdk.java.net/browse/JDK-7008595
-                setContextClassLoader(t, null);
+            Thread t = _threadFactory.newThread(_taskRunner);
+            // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
+            // classloader.
+            // See:
+            // - https://github.com/netty/netty/issues/7290
+            // - https://bugs.openjdk.java.net/browse/JDK-7008595
+            //setContextClassLoader(t, null);
 
-                // Set the thread before starting it as otherwise inEventLoop() may return false and so produce
-                // an assert error.
-                // See https://github.com/netty/netty/issues/4357
-                _thread = t;
-                t.Start();
-            }
-            finally
-            {
-                setContextClassLoader(callingThread, parentCCL);
-            }
+            // Set the thread before starting it as otherwise inEventLoop() may return false and so produce
+            // an assert error.
+            // See https://github.com/netty/netty/issues/4357
+            _thread = t;
+            t.Start();
         }
-    }
-
-    private static void setContextClassLoader(Thread t, ClassLoader cl)
-    {
-        AccessController.doPrivileged(new PrivilegedAction<Void>()
-        {
-            @Override
-            public Void run() {
-            t.setContextClassLoader(cl);
-            return null;
-        }
-        });
     }
 }

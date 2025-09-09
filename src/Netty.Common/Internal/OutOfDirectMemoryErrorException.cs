@@ -24,18 +24,8 @@ namespace Netty.NET.Common.Internal;
  */
 public class OutOfDirectMemoryErrorException : OutOfMemoryException
 {
-    public OutOfDirectMemoryErrorException()
-    {
-    }
-
     public OutOfDirectMemoryErrorException(string message)
         : base(message)
     {
     }
-
-    public OutOfDirectMemoryErrorException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
-
 }
