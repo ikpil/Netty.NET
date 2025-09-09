@@ -34,19 +34,24 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         return _queue.TryAdd(item);
     }
 
-    public bool TryDequeue(out T item)
+    public T Take()
+    {
+        return _queue.Take();
+    }
+
+    public bool TryTake(out T item)
     {
         return _queue.TryTake(out item);
     }
 
-    public bool TryDequeue(out T item, TimeSpan timeout)
+    public bool TryTake(out T item, TimeSpan timeout)
     {
         return _queue.TryTake(out item, timeout);
     }
 
     public bool TryPeek(out T item)
     {
-        throw new NotImplementedException();
+        return TryTake(out item);
     }
 
     public void Clear()
