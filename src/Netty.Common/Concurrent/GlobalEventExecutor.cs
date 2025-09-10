@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
@@ -40,18 +41,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     private readonly BlockingCollection<IRunnable> taskQueue = new BlockingCollection<IRunnable>();
 
-    private readonly IScheduledTask _quietPeriodTask = new ScheduledTask(
-    // this, Executors.<Void>callable(new Runnable() {
-    //     @Override
-    //     public void run() {
-    //         // NOOP
-    //     }
-    // }, null),
-    // // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
-    // // could be overridden leading to unsafe initialization here!
-    // deadlineNanos(getCurrentTimeNanos(), SCHEDULE_QUIET_PERIOD_INTERVAL),
-    // -SCHEDULE_QUIET_PERIOD_INTERVAL
-    // );
+    private readonly IScheduledTask _quietPeriodTask;
 
     // because the GlobalEventExecutor is a singleton, tasks submitted to it can come from arbitrary threads and this
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
@@ -80,6 +70,14 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     private GlobalEventExecutor() : base(null)
     {
         scheduledTaskQueue().TryEnqueue(_quietPeriodTask);
+
+        // // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
+        // // could be overridden leading to unsafe initialization here!
+        _quietPeriodTask = new ScheduledRunnableTask(this, EmptyRunnable.Shared,
+            deadlineNanos(getCurrentTimeNanos(),
+                SCHEDULE_QUIET_PERIOD_INTERVAL),
+            -SCHEDULE_QUIET_PERIOD_INTERVAL
+        );
         _threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
             DefaultThreadFactory.toPoolName(GetType()), false, ThreadPriority.Normal), this);
 

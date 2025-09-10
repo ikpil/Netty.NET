@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
 
-public class ScheduledStateActionAsyncTask : ScheduledAsyncTask
+public class ScheduledStateActionAsyncTask<T> : ScheduledAsyncTask<T>
 {
     private readonly Action<object> _action;
 
     public ScheduledStateActionAsyncTask(AbstractScheduledEventExecutor executor, Action<object> action, object state, long deadline, CancellationToken cancellationToken)
-        : base(executor, deadline, new TaskCompletionSource(state), cancellationToken)
+        : base(executor, new TaskCompletionSource<T>(state), deadline, cancellationToken)
     {
         _action = action;
     }

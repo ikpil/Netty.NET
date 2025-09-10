@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
 
-public abstract class ScheduledTask : IScheduledTask
+public class ScheduledTask<T> : IScheduledTask
 {
     protected const int CancellationProhibited = 1;
     protected const int CancellationRequested = 1 << 1;
     private const int INDEX_NOT_IN_QUEUE = -1;
 
     protected readonly AbstractScheduledEventExecutor Executor;
-    protected readonly TaskCompletionSource Promise;
+    protected readonly TaskCompletionSource<T> Promise;
 
     private long _id;
     private long _deadlineNanos;
@@ -24,11 +24,27 @@ public abstract class ScheduledTask : IScheduledTask
 
     private int _queueIndex = INDEX_NOT_IN_QUEUE;
 
-    protected ScheduledTask(AbstractScheduledEventExecutor executor, long deadlineNanos, TaskCompletionSource promise)
+    protected ScheduledTask(AbstractScheduledEventExecutor executor, TaskCompletionSource<T> promise, long deadlineNanos)
     {
         Executor = executor;
         Promise = promise;
         _deadlineNanos = deadlineNanos;
+        _periodNanos = 0;
+    }
+
+    protected ScheduledTask(AbstractScheduledEventExecutor executor, TaskCompletionSource<T> promise, long deadlineNanos, long periodNanos)
+    {
+        Executor = executor;
+        Promise = promise;
+        _deadlineNanos = deadlineNanos;
+        _periodNanos = validatePeriod(periodNanos);
+    }
+
+    private static long validatePeriod(long period) {
+        if (period == 0) {
+            throw new ArgumentException("period: 0 (expected: != 0)");
+        }
+        return period;
     }
 
     public void setId(long id)
@@ -43,7 +59,7 @@ public abstract class ScheduledTask : IScheduledTask
             return 0;
         }
 
-        var that = (ScheduledTask)o;
+        var that = (ScheduledTask<T>)o;
         long d = deadlineNanos() - o.deadlineNanos();
         if (d < 0)
         {
@@ -66,23 +82,43 @@ public abstract class ScheduledTask : IScheduledTask
 
     public virtual void run()
     {
-        if (TrySetUncancelable())
-        {
-            try
-            {
-                Execute();
-                Promise.SetResult();
-                //Promise.TryComplete();
+        Debug.Assert(Executor.inEventLoop());
+        try {
+            if (delayNanos() > 0L) {
+                // Not yet expired, need to add or remove from queue
+                if (isCancelled()) {
+                    Executor.scheduledTaskQueue().remove(this);
+                } else {
+                    Executor.scheduleFromEventLoop(this);
+                }
+                return;
             }
-            catch (Exception ex)
-            {
-                // todo: check for fatal
-                Promise.TrySetException(ex);
+            if (_periodNanos == 0) {
+                if (setUncancellableInternal()) {
+                    V result = runTask();
+                    setSuccessInternal(result);
+                }
+            } else {
+                // check if is done as it may was cancelled
+                if (!isCancelled()) {
+                    runTask();
+                    if (!Executor.isShutdown()) {
+                        if (_periodNanos > 0) {
+                            _deadlineNanos += _periodNanos;
+                        } else {
+                            _deadlineNanos = Executor.getCurrentTimeNanos() - _periodNanos;
+                        }
+                        if (!isCancelled()) {
+                            Executor.scheduledTaskQueue().TryEnqueue(this);
+                        }
+                    }
+                }
             }
+        } catch (Exception cause) {
+            setFailureInternal(cause);
         }
-    }
 
-    protected abstract void Execute();
+    }
 
     public bool cancel()
     {

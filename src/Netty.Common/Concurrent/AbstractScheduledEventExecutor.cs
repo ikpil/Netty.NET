@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Netty.NET.Common.Collections;
@@ -23,7 +22,6 @@ using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
-
 
 /**
  * Abstract base class for {@link IEventExecutor}s that want to support scheduling.
@@ -76,7 +74,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return Ticker.systemTicker().nanoTime();
     }
 
-    static long deadlineNanos(long nanoTime, long delay) {
+    internal static long deadlineNanos(long nanoTime, long delay) {
         long deadlineNanos = nanoTime + delay;
         // Guard against overflow
         return deadlineNanos < 0 ? long.MaxValue : deadlineNanos;
@@ -118,7 +116,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return Ticker.systemTicker().initialNanoTime();
     }
 
-    protected IPriorityQueue<IScheduledTask> scheduledTaskQueue() {
+    internal IPriorityQueue<IScheduledTask> scheduledTaskQueue() {
         if (_scheduledTaskQueue == null) {
             _scheduledTaskQueue = new DefaultPriorityQueue<IScheduledTask>(
                     SCHEDULED_FUTURE_TASK_COMPARATOR,
@@ -170,8 +168,8 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      */
     protected bool fetchFromScheduledTaskQueue(IQueue<IRunnable> taskQueue) {
         Debug.Assert(inEventLoop());
-        Objects.requireNonNull(taskQueue, "taskQueue");
-        if (scheduledTaskQueue == null || scheduledTaskQueue.isEmpty()) {
+        ObjectUtil.requireNonNull(taskQueue, "taskQueue");
+        if (_scheduledTaskQueue == null || _scheduledTaskQueue.isEmpty()) {
             return true;
         }
         long nanoTime = getCurrentTimeNanos();
@@ -182,7 +180,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
             }
             if (!taskQueue.offer(scheduledTask)) {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
-                scheduledTaskQueue.add((IScheduledTask) scheduledTask);
+                _scheduledTaskQueue.add((IScheduledTask) scheduledTask);
                 return false;
             }
         }
@@ -199,7 +197,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         if (scheduledTask == null || scheduledTask.deadlineNanos() - nanoTime > 0) {
             return null;
         }
-        scheduledTaskQueue.remove();
+        _scheduledTaskQueue.remove();
         scheduledTask.setConsumed();
         return scheduledTask;
     }
@@ -246,22 +244,24 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         }
         validateScheduled0(delay);
 
-        return schedule(new ScheduledFutureTask(
-                this,
-                command,
-                deadlineNanos(getCurrentTimeNanos(), (long)delay.TotalNanoseconds));
+        return schedule(new ScheduledRunnableTask(
+            this, 
+            command, 
+            deadlineNanos(getCurrentTimeNanos(), (long)delay.TotalNanoseconds))
+        );
     }
 
     public IScheduledTask schedule<V>(Func<V> callable, TimeSpan delay) {
         ObjectUtil.checkNotNull(callable, "callable");
-        ObjectUtil.checkNotNull(unit, "unit");
-        if (delay < 0) {
-            delay = 0;
+        //ObjectUtil.checkNotNull(unit, "unit");
+        if (delay.Ticks < 0)
+        {
+            delay = TimeSpan.Zero;;
         }
-        validateScheduled0(delay, unit);
+        validateScheduled0(delay);
 
-        return schedule(new ScheduledFutureTask<V>(
-                this, callable, deadlineNanos(getCurrentTimeNanos(), unit.toNanos(delay))));
+        return schedule(new ScheduledRunnableTask(
+                this, callable, deadlineNanos(getCurrentTimeNanos(), (long)delay.TotalNanoseconds)));
     }
 
     @Override
@@ -323,7 +323,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         scheduledTaskQueue().add(task.setId(++nextTaskId));
     }
 
-    private <V> IScheduledTask<> <V> schedule(ScheduledFutureTask<V> task) {
+    private IScheduledTask schedule(IScheduledTask task) {
         if (inEventLoop()) {
             scheduleFromEventLoop(task);
         } else {
