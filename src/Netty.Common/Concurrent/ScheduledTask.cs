@@ -6,6 +6,14 @@ using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
 
+public static class ScheduledTask
+{
+    public static long deadlineToDelayNanos(long currentTimeNanos, long deadlineNanos)
+    {
+        return deadlineNanos == 0L ? 0L : Math.Max(0L, deadlineNanos - currentTimeNanos);
+    }
+}
+
 public class ScheduledTask<T> : IScheduledTask
 {
     protected const int CancellationProhibited = 1;
@@ -143,7 +151,7 @@ public class ScheduledTask<T> : IScheduledTask
 
     public long delayNanos(long currentTimeNanos)
     {
-        return deadlineToDelayNanos(currentTimeNanos, _deadlineNanos);
+        return ScheduledTask.deadlineToDelayNanos(currentTimeNanos, _deadlineNanos);
     }
 
     public long delayNanos()
@@ -184,10 +192,5 @@ public class ScheduledTask<T> : IScheduledTask
         } while (cancellationState != oldCancellationState);
 
         return true;
-    }
-
-    public static long deadlineToDelayNanos(long currentTimeNanos, long deadlineNanos)
-    {
-        return deadlineNanos == 0L ? 0L : Math.Max(0L, deadlineNanos - currentTimeNanos);
     }
 }

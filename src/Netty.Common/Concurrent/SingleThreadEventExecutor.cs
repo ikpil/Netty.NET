@@ -32,7 +32,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor
 {
-    private static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
+    public static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
         SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
 
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SingleThreadEventExecutor));

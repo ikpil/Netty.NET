@@ -23,14 +23,12 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
-
 /**
  * Abstract base class for {@link IEventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
  */
 public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup 
 {
-
     private readonly IEventExecutor[] children;
     private readonly ISet<IEventExecutor> readonlyChildren;
     private readonly AtomicInteger terminatedChildren = new AtomicInteger();
@@ -133,8 +131,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         return new DefaultThreadFactory(GetType());
     }
 
-    @Override
-    public IEventExecutor next() {
+    public override IEventExecutor next() {
         return chooser.next();
     }
 
@@ -147,8 +144,8 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * Return the number of {@link IEventExecutor} this implementation uses. This number is the maps
      * 1:1 to the threads it use.
      */
-    public final int executorCount() {
-        return children.length;
+    public int executorCount() {
+        return children.Length;
     }
 
     /**
@@ -158,30 +155,31 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      */
     protected abstract IEventExecutor newChild(IExecutor executor, params object[] args);
 
-    @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
-        for (IEventExecutor l: children) {
-            l.shutdownGracefully(quietPeriod, timeout, unit);
+    public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) 
+    {
+        foreach (IEventExecutor l in children) {
+            l.shutdownGracefullyAsync(quietPeriod, timeout);
         }
-        return terminationFuture();
+        return terminationAsync();
     }
 
-    @Override
-    public Task terminationAsync() {
-        return terminationFuture;
+    public override Task terminationAsync()
+    {
+        return _terminationFuture.Task;
     }
 
-    @Override
     [Obsolete]
-    public void shutdown() {
-        for (IEventExecutor l: children) {
+    public override void shutdown() 
+    {
+        foreach (IEventExecutor l in children) 
+        {
             l.shutdown();
         }
     }
 
-    @Override
-    public bool isShuttingDown() {
-        for (IEventExecutor l: children) {
+    public override bool isShuttingDown() 
+    {
+        foreach (IEventExecutor l in children) {
             if (!l.isShuttingDown()) {
                 return false;
             }
