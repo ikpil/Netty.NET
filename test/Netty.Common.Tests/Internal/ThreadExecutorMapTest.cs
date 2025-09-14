@@ -37,7 +37,7 @@ public class ThreadExecutorMapTest {
         }
 
         @Override
-        public Task terminationAsync() {
+        public Task terminationTask() {
             throw new NotSupportedException();
         }
 

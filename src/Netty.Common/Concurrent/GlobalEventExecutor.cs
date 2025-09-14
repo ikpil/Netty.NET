@@ -52,7 +52,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     private readonly AtomicBoolean _started = new AtomicBoolean();
     private volatile Thread _thread;
 
-    private readonly TaskCompletionSource<object> _terminationFuture;
+    private readonly TaskCompletionSource<object> _terminationSource;
 
     static GlobalEventExecutor()
     {
@@ -84,7 +84,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
         NotSupportedException terminationFailure = new NotSupportedException();
         ThrowableUtil.unknownStackTrace(msg => new NotSupportedException(msg), typeof(GlobalEventExecutor), "terminationAsync");
-        _terminationFuture = new FailedFuture<object>(this, terminationFailure);
+        _terminationSource = new FailedFuture<object>(this, terminationFailure);
         _taskRunner = new TaskRunner(this);
     }
 
@@ -184,7 +184,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return terminationAsync();
+        return terminationTask();
     }
 
     public override bool isShuttingDown()
@@ -192,9 +192,9 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         throw new NotImplementedException();
     }
 
-    public override Task terminationAsync()
+    public override Task terminationTask()
     {
-        return _terminationFuture.Task;
+        return _terminationSource.Task;
     }
 
     [Obsolete]

@@ -52,7 +52,7 @@ public class DefaultPromiseTest {
     }
 
     @Override
-    public Task terminationAsync() {
+    public Task terminationTask() {
         return null;
     }
 

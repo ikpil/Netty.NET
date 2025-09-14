@@ -52,7 +52,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     private static readonly StrongBox<bool> StrongTrue = new StrongBox<bool>(true);
     private static readonly FastThreadLocal<StrongBox<bool>> RUNNING = new FastThreadLocalFunc<StrongBox<bool>>(() => StrongFalse);
 
-    private readonly TaskCompletionSource<object> _terminationFuture = new FailedFuture<object>(
+    private readonly TaskCompletionSource<object> _terminationSource = new FailedFuture<object>(
         GlobalEventExecutor.INSTANCE, new NotSupportedException());
 
     private ImmediateEventExecutor() { }
@@ -69,12 +69,12 @@ public class ImmediateEventExecutor : AbstractEventExecutor
 
     public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return terminationAsync();
+        return terminationTask();
     }
 
-    public override Task terminationAsync()
+    public override Task terminationTask()
     {
-        return _terminationFuture.Task;
+        return _terminationSource.Task;
     }
 
     [Obsolete]

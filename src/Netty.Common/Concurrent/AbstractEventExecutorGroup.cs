@@ -34,7 +34,8 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     public abstract bool isShuttingDown();
     public abstract bool isTerminated();
     public abstract bool awaitTermination(TimeSpan timeout);
-    public abstract Task terminationAsync();
+    public abstract Task terminationTask();
+    public abstract IEnumerable<IEventExecutor> iterator();
 
     public Ticker ticker()
     {

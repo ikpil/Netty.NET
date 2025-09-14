@@ -15,6 +15,8 @@
  */
 
 using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -49,7 +51,7 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
     }
 
     private static IEventExecutorGroup verify(IEventExecutorGroup group) {
-        Iterator<IEventExecutor> executors = ObjectUtil.checkNotNull(group, "group").iterator();
+        IEnumerable<IEventExecutor> executors = ObjectUtil.checkNotNull(group, "group").iterator();
         while (executors.hasNext()) {
             IEventExecutor executor = executors.next();
             if (executor instanceof OrderedEventExecutor) {
@@ -79,9 +81,8 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
         return group.shutdownGracefully(quietPeriod, timeout, unit);
     }
 
-    @Override
-    public Task terminationAsync() {
-        return group.terminationAsync();
+    public override Task terminationTask() {
+        return group.terminationTask();
     }
 
     //@SuppressWarnings("deprecation")
@@ -101,10 +102,9 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
         return newExecutor(group.next());
     }
 
-    @Override
-    public Iterator<IEventExecutor> iterator() {
-        final Iterator<IEventExecutor> itr = group.iterator();
-        return new Iterator<IEventExecutor>() {
+    public override IEnumerable<IEventExecutor> iterator() {
+        IEnumerable<IEventExecutor> itr = group.iterator();
+        return new IEnumerable<IEventExecutor>() {
             @Override
             public bool hasNext() {
                 return itr.hasNext();
@@ -295,8 +295,8 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
         }
 
         @Override
-        public Task terminationAsync() {
-            return executor.terminationAsync();
+        public Task terminationTask() {
+            return executor.terminationTask();
         }
 
         @Override

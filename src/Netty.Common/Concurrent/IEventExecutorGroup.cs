@@ -36,7 +36,7 @@ public interface IEventExecutorGroup : IScheduledExecutorService
     /**
      * Shortcut method for {@link #shutdownGracefullyAsync(long, long, TimeSpan)} with sensible default values.
      *
-     * @return the {@link #terminationAsync()}
+     * @return the {@link #terminationTask()}
      */
     Task shutdownGracefullyAsync();
 
@@ -54,7 +54,7 @@ public interface IEventExecutorGroup : IScheduledExecutorService
      *                    regardless if a task was submitted during the quiet period
      * @param unit        the unit of {@code quietPeriod} and {@code timeout}
      *
-     * @return the {@link #terminationAsync()}
+     * @return the {@link #terminationTask()}
      */
     Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
 
@@ -62,7 +62,7 @@ public interface IEventExecutorGroup : IScheduledExecutorService
      * Returns the {@link Future} which is notified when all {@link IEventExecutor}s managed by this
      * {@link IEventExecutorGroup} have been terminated.
      */
-    Task terminationAsync();
+    Task terminationTask();
 
     /**
      * Returns one of the {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}.

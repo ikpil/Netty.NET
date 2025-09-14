@@ -41,7 +41,7 @@ public class UnorderedThreadPoolEventExecutor : ScheduledThreadPoolExecutor, IEv
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(
             typeof(UnorderedThreadPoolEventExecutor));
 
-    private readonly TaskCompletionSource<Void> terminationFuture = GlobalEventExecutor.INSTANCE.newPromise<Void>();
+    private readonly TaskCompletionSource<Void> _terminationSource = GlobalEventExecutor.INSTANCE.newPromise<Void>();
     private readonly ISet<IEventExecutor> executorSet = Collections.singleton(this);
     private readonly ISet<Thread> eventLoopThreads = ConcurrentDictionary<,>.newKeySet();
 
@@ -126,14 +126,14 @@ public class UnorderedThreadPoolEventExecutor : ScheduledThreadPoolExecutor, IEv
     @Override
     public List<IRunnable> shutdownNow() {
         List<IRunnable> tasks = super.shutdownNow();
-        terminationFuture.trySuccess(null);
+        _terminationSource.trySuccess(null);
         return tasks;
     }
 
     @Override
     public void shutdown() {
         super.shutdown();
-        terminationFuture.trySuccess(null);
+        _terminationSource.trySuccess(null);
     }
 
     @Override
@@ -146,17 +146,17 @@ public class UnorderedThreadPoolEventExecutor : ScheduledThreadPoolExecutor, IEv
         // TODO: At the moment this just calls shutdown but we may be able to do something more smart here which
         //       respects the quietPeriod and timeout.
         shutdown();
-        return terminationFuture();
+        return terminationTask();
+    }
+
+    public override Task terminationTask() {
+        return _terminationSource.Task;
     }
 
     @Override
-    public Task terminationAsync() {
-        return terminationFuture;
-    }
-
-    @Override
-    public Iterator<IEventExecutor> iterator() {
-        return executorSet.iterator();
+    public IEnumerable<IEventExecutor> iterator()
+    {
+        return executorSet;
     }
 
     @Override

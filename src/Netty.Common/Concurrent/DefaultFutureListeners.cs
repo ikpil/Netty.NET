@@ -17,7 +17,7 @@ namespace Netty.NET.Common.Concurrent;
 
 
 
-final class DefaultFutureListeners {
+class DefaultFutureListeners {
 
     private IGenericFutureListener<? extends Future<?>>[] listeners;
     private int size;

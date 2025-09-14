@@ -70,7 +70,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private readonly AtomicLong _gracefulShutdownTimeout = new AtomicLong();
     private long gracefulShutdownStartTime;
 
-    private readonly TaskCompletionSource<Void> _terminationFuture = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    private readonly TaskCompletionSource<Void> _terminationSource = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
 
     /**
      * Create a new instance
@@ -805,12 +805,12 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         //ObjectUtil.checkNotNull(timeout, "timeout");
 
         shutdown0((long)quietPeriod.TotalNanoseconds, (long)timeout.TotalNanoseconds, ST_SHUTTING_DOWN);
-        return terminationAsync();
+        return terminationTask();
     }
 
-    public override Task terminationAsync()
+    public override Task terminationTask()
     {
-        return _terminationFuture.Task;
+        return _terminationSource.Task;
     }
 
     [Obsolete]
@@ -1176,7 +1176,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             catch (Exception cause)
             {
                 _state.set(ST_TERMINATED);
-                _terminationFuture.SetException(cause);
+                _terminationSource.SetException(cause);
 
                 if (!(cause is OutOfMemoryException || cause is StackOverflowException || cause is ThreadAbortException))
                 {
@@ -1333,11 +1333,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
                                 if (unexpectedException == null)
                                 {
-                                    _terminationFuture.SetResult(null);
+                                    _terminationSource.SetResult(null);
                                 }
                                 else
                                 {
-                                    _terminationFuture.SetException(unexpectedException);
+                                    _terminationSource.SetException(unexpectedException);
                                 }
                             }
                         }

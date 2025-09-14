@@ -602,8 +602,8 @@ public class SingleThreadEventExecutorTest {
             }
         });
 
-        executor.terminationFuture().await();
+        executor.terminationTask().await();
 
-        assertSame(exception, executor.terminationFuture().cause());
+        assertSame(exception, executor.terminationTask().cause());
     }
 }

@@ -27,12 +27,12 @@ namespace Netty.NET.Common.Concurrent;
  * Abstract base class for {@link IEventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
  */
-public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup 
+public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 {
     private readonly IEventExecutor[] children;
     private readonly ISet<IEventExecutor> readonlyChildren;
     private readonly AtomicInteger terminatedChildren = new AtomicInteger();
-    private readonly TaskCompletionSource _terminationFuture = null;
+    private readonly TaskCompletionSource<Void> _terminationSource = new TaskCompletionSource<Void>();
     private readonly IEventExecutorChooser chooser;
 
     /**
@@ -42,7 +42,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args) 
+    protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args)
         : this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args)
     {
     }
@@ -54,7 +54,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param executor          the IExecutor to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor, params object[] args) 
+    protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor, params object[] args)
         : this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args)
     {
     }
@@ -68,38 +68,53 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor,
-                                            IEventExecutorChooserFactory chooserFactory, params object[] args) {
+        IEventExecutorChooserFactory chooserFactory, params object[] args)
+    {
         ObjectUtil.checkPositive(nThreads, "nThreads");
 
-        if (executor == null) {
+        if (executor == null)
+        {
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
         children = new IEventExecutor[nThreads];
 
-        for (int i = 0; i < nThreads; i ++) {
+        for (int i = 0; i < nThreads; i++)
+        {
             bool success = false;
-            try {
+            try
+            {
                 children[i] = newChild(executor, args);
                 success = true;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // TODO: Think about if this is a good exception type
                 throw new InvalidOperationException("failed to create a child event loop", e);
-            } finally {
-                if (!success) {
-                    for (int j = 0; j < i; j ++) {
+            }
+            finally
+            {
+                if (!success)
+                {
+                    for (int j = 0; j < i; j++)
+                    {
                         children[j].shutdownGracefullyAsync();
                     }
 
-                    for (int j = 0; j < i; j ++) {
+                    for (int j = 0; j < i; j++)
+                    {
                         IEventExecutor e = children[j];
-                        try {
-                            while (!e.isTerminated()) {
-                                e.awaitTermination(int.MaxValue, TimeSpan.SECONDS);
+                        try
+                        {
+                            while (!e.isTerminated())
+                            {
+                                e.awaitTermination(TimeSpan.FromSeconds(int.MaxValue));
                             }
-                        } catch (ThreadInterruptedException interrupted) {
+                        }
+                        catch (ThreadInterruptedException interrupted)
+                        {
                             // Let the caller handle the interruption.
-                            Thread.CurrentThread.interrupt();
+                            Thread.CurrentThread.Interrupt();
                             break;
                         }
                     }
@@ -109,42 +124,44 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
         chooser = chooserFactory.newChooser(children);
 
-        final IFutureListener<object> terminationListener = new IFutureListener<object>() {
-            @Override
-            public void operationComplete(Future<object> future) {
-                if (terminatedChildren.incrementAndGet() == children.length) {
-                    terminationFuture.setSuccess(null);
-                }
+        Action<Task> terminationListener = t =>
+        {
+            if (terminatedChildren.incrementAndGet() == children.Length)
+            {
+                _terminationSource.SetResult(Void.Empty);
             }
         };
 
-        for (IEventExecutor e: children) {
-            e.terminationFuture().addListener(terminationListener);
+        foreach (IEventExecutor e in children)
+        {
+            e.terminationTask().ContinueWith(terminationListener);
         }
 
-        ISet<IEventExecutor> childrenSet = new LinkedHashSet<IEventExecutor>(children.length);
-        Collections.addAll(childrenSet, children);
-        readonlyChildren = Collections.unmodifiableSet(childrenSet);
+        var childrenSet = new LinkedHashSet<IEventExecutor>(children);
+        readonlyChildren = childrenSet;
     }
 
-    protected IThreadFactory newDefaultThreadFactory() {
+    protected IThreadFactory newDefaultThreadFactory()
+    {
         return new DefaultThreadFactory(GetType());
     }
 
-    public override IEventExecutor next() {
+    public override IEventExecutor next()
+    {
         return chooser.next();
     }
 
-    @Override
-    public Iterator<IEventExecutor> iterator() {
-        return readonlyChildren.iterator();
+    public override IEnumerable<IEventExecutor> iterator()
+    {
+        return readonlyChildren;
     }
 
     /**
      * Return the number of {@link IEventExecutor} this implementation uses. This number is the maps
      * 1:1 to the threads it use.
      */
-    public int executorCount() {
+    public int executorCount()
+    {
         return children.Length;
     }
 
@@ -155,73 +172,94 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      */
     protected abstract IEventExecutor newChild(IExecutor executor, params object[] args);
 
-    public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) 
+    public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        foreach (IEventExecutor l in children) {
+        foreach (IEventExecutor l in children)
+        {
             l.shutdownGracefullyAsync(quietPeriod, timeout);
         }
-        return terminationAsync();
+
+        return terminationTask();
     }
 
-    public override Task terminationAsync()
+    public override Task terminationTask()
     {
-        return _terminationFuture.Task;
+        return _terminationSource.Task;
     }
 
     [Obsolete]
-    public override void shutdown() 
+    public override void shutdown()
     {
-        foreach (IEventExecutor l in children) 
+        foreach (IEventExecutor l in children)
         {
             l.shutdown();
         }
     }
 
-    public override bool isShuttingDown() 
+    public override bool isShuttingDown()
     {
-        foreach (IEventExecutor l in children) {
-            if (!l.isShuttingDown()) {
+        foreach (IEventExecutor l in children)
+        {
+            if (!l.isShuttingDown())
+            {
                 return false;
             }
         }
+
         return true;
     }
 
-    @Override
-    public bool isShutdown() {
-        for (IEventExecutor l: children) {
-            if (!l.isShutdown()) {
+    public override bool isShutdown()
+    {
+        foreach (IEventExecutor l in children)
+        {
+            if (!l.isShutdown())
+            {
                 return false;
             }
         }
+
         return true;
     }
 
-    @Override
-    public bool isTerminated() {
-        for (IEventExecutor l: children) {
-            if (!l.isTerminated()) {
+    public override bool isTerminated()
+    {
+        foreach (IEventExecutor l in children)
+        {
+            if (!l.isTerminated())
+            {
                 return false;
             }
         }
+
         return true;
     }
 
-    @Override
-    public bool awaitTermination(TimeSpan timeout)
-            throws ThreadInterruptedException {
-        long deadline = PreciseTimer.nanoTime() + unit.toNanos(timeout);
-        loop: for (IEventExecutor l: children) {
-            for (;;) {
+    public override bool awaitTermination(TimeSpan timeout)
+    {
+        long deadline = PreciseTimer.nanoTime() + (long)timeout.TotalNanoseconds;
+        foreach (IEventExecutor l in children)
+        {
+            bool breakLoop = false;
+            for (;;)
+            {
                 long timeLeft = deadline - PreciseTimer.nanoTime();
-                if (timeLeft <= 0) {
-                    break loop;
+                if (timeLeft <= 0)
+                {
+                    breakLoop = true;
+                    break;
                 }
-                if (l.awaitTermination(timeLeft, TimeSpan.NANOSECONDS)) {
+
+                if (l.awaitTermination(TimeSpan.FromTicks(timeLeft / 100)))
+                {
                     break;
                 }
             }
+
+            if (breakLoop)
+                break;
         }
+
         return isTerminated();
     }
 }

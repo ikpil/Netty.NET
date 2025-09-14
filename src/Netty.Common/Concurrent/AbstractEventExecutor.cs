@@ -89,7 +89,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         throw new NotImplementedException();
     }
 
-    public abstract Task terminationAsync();
+    public abstract Task terminationTask();
 
     public virtual IEventExecutor next()
     {
