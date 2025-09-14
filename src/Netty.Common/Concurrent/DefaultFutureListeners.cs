@@ -13,74 +13,90 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common.Concurrent;
 
-
-
-class DefaultFutureListeners {
-
-    private IGenericFutureListener<? extends Future<?>>[] listeners;
-    private int size;
-    private int progressiveSize; // the number of progressive listeners
+public class DefaultFutureListeners<T> where T : IFuture<T>
+{
+    private IGenericFutureListener<T>[] _listeners;
+    private int _size;
+    private int _progressiveSize; // the number of progressive listeners
 
     //@SuppressWarnings("unchecked")
-    DefaultFutureListeners(
-            IGenericFutureListener<? extends Future<?>> first, IGenericFutureListener<? extends Future<?>> second) {
-        listeners = new IGenericFutureListener<>[2];
-        listeners[0] = first;
-        listeners[1] = second;
-        size = 2;
-        if (first instanceof GenericProgressiveFutureListener) {
-            progressiveSize ++;
+    public DefaultFutureListeners(IGenericFutureListener<T> first, IGenericFutureListener<T> second)
+    {
+        _listeners = new IGenericFutureListener<T>[2];
+        _listeners[0] = first;
+        _listeners[1] = second;
+        _size = 2;
+        if (first is IGenericProgressiveFutureListener<IProgressiveFuture<T>>)
+        {
+            _progressiveSize++;
         }
-        if (second instanceof GenericProgressiveFutureListener) {
-            progressiveSize ++;
+
+        if (second is IGenericProgressiveFutureListener<IProgressiveFuture<T>>)
+        {
+            _progressiveSize++;
         }
     }
 
-    public void add(IGenericFutureListener<? extends Future<?>> l) {
-        IGenericFutureListener<> <? extends Future<?>>[] listeners = this.listeners;
-        final int size = this.size;
-        if (size == listeners.length) {
-            this.listeners = listeners = Arrays.copyOf(listeners, size << 1);
+    public void add(IGenericFutureListener<T> l)
+    {
+        IGenericFutureListener<T>[] listeners = _listeners;
+        int size = _size;
+        if (size == listeners.Length)
+        {
+            listeners = _listeners = Arrays.copyOf(listeners, size << 1);
         }
+
         listeners[size] = l;
-        this.size = size + 1;
+        _size = size + 1;
 
-        if (l instanceof GenericProgressiveFutureListener) {
-            progressiveSize ++;
+        if (l is IGenericProgressiveFutureListener<T>)
+        {
+            _progressiveSize++;
         }
     }
 
-    public void remove(IGenericFutureListener<? extends Future<?>> l) {
-        final GenericFutureListener<? extends Future<?>>[] listeners = this.listeners;
-        int size = this.size;
-        for (int i = 0; i < size; i ++) {
-            if (listeners[i] == l) {
+    public void remove(IGenericFutureListener<T> l)
+    {
+        IGenericFutureListener<T>[] listeners = _listeners;
+        int size = _size;
+        for (int i = 0; i < size; i++)
+        {
+            if (listeners[i] == l)
+            {
                 int listenersToMove = size - i - 1;
-                if (listenersToMove > 0) {
+                if (listenersToMove > 0)
+                {
                     Arrays.arraycopy(listeners, i + 1, listeners, i, listenersToMove);
                 }
-                listeners[-- size] = null;
-                this.size = size;
 
-                if (l instanceof GenericProgressiveFutureListener) {
-                    progressiveSize --;
+                listeners[--size] = null;
+                _size = size;
+
+                if (l is IGenericProgressiveFutureListener<T>)
+                {
+                    _progressiveSize--;
                 }
+
                 return;
             }
         }
     }
 
-    public IGenericFutureListener<? extends Future<?>>[] listeners() {
-        return listeners;
+    public IGenericFutureListener<T>[] listeners()
+    {
+        return _listeners;
     }
 
-    public int size() {
-        return size;
+    public int size()
+    {
+        return _size;
     }
 
-    public int progressiveSize() {
-        return progressiveSize;
+    public int progressiveSize()
+    {
+        return _progressiveSize;
     }
 }
