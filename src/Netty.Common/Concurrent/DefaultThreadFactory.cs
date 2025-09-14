@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading;
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
@@ -37,7 +38,7 @@ public class DefaultThreadFactory : IThreadFactory
         : this(toPoolName(poolType), daemon, priority)
     {
     }
-    
+
     public static string toPoolName(Type poolType)
     {
         ObjectUtil.checkNotNull(poolType, "poolType");
