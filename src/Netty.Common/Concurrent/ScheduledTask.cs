@@ -16,8 +16,9 @@ public static class ScheduledTask
 
 public class ScheduledTask<T> : IScheduledTask
 {
-    protected const int CancellationProhibited = 1;
-    protected const int CancellationRequested = 1 << 1;
+    public const int CancellationProhibited = 1;
+    public const int CancellationRequested = 1 << 1;
+
     private const int INDEX_NOT_IN_QUEUE = -1;
 
     protected readonly AbstractScheduledEventExecutor Executor;
@@ -48,16 +49,24 @@ public class ScheduledTask<T> : IScheduledTask
         _periodNanos = validatePeriod(periodNanos);
     }
 
-    private static long validatePeriod(long period) {
-        if (period == 0) {
+    private static long validatePeriod(long period)
+    {
+        if (period == 0)
+        {
             throw new ArgumentException("period: 0 (expected: != 0)");
         }
+
         return period;
     }
 
-    public void setId(long id)
+    public IScheduledTask setId(long id)
     {
-        _id = id;
+        if (_id == 0L)
+        {
+            _id = id;
+        }
+
+        return this;
     }
 
     public int CompareTo(IScheduledTask o)
@@ -91,41 +100,60 @@ public class ScheduledTask<T> : IScheduledTask
     public virtual void run()
     {
         Debug.Assert(Executor.inEventLoop());
-        try {
-            if (delayNanos() > 0L) {
+        try
+        {
+            if (delayNanos() > 0L)
+            {
                 // Not yet expired, need to add or remove from queue
-                if (isCancelled()) {
+                if (isCancelled())
+                {
                     Executor.scheduledTaskQueue().remove(this);
-                } else {
+                }
+                else
+                {
                     Executor.scheduleFromEventLoop(this);
                 }
+
                 return;
             }
-            if (_periodNanos == 0) {
-                if (setUncancellableInternal()) {
+
+            if (_periodNanos == 0)
+            {
+                if (setUncancellableInternal())
+                {
                     V result = runTask();
                     setSuccessInternal(result);
                 }
-            } else {
+            }
+            else
+            {
                 // check if is done as it may was cancelled
-                if (!isCancelled()) {
+                if (!isCancelled())
+                {
                     runTask();
-                    if (!Executor.isShutdown()) {
-                        if (_periodNanos > 0) {
+                    if (!Executor.isShutdown())
+                    {
+                        if (_periodNanos > 0)
+                        {
                             _deadlineNanos += _periodNanos;
-                        } else {
+                        }
+                        else
+                        {
                             _deadlineNanos = Executor.getCurrentTimeNanos() - _periodNanos;
                         }
-                        if (!isCancelled()) {
+
+                        if (!isCancelled())
+                        {
                             Executor.scheduledTaskQueue().TryEnqueue(this);
                         }
                     }
                 }
             }
-        } catch (Exception cause) {
+        }
+        catch (Exception cause)
+        {
             setFailureInternal(cause);
         }
-
     }
 
     public bool cancel()
