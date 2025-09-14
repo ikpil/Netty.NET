@@ -265,9 +265,7 @@ public abstract class AbstractExecutorService : IExecutorService
                 if (!f.isDone())
                 {
                     try { f.get(deadline - PreciseTimer.nanoTime(), NANOSECONDS); }
-                    catch (CancellationException |
-
-                    ExecutionException ignore) {
+                    catch (CancellationException | ExecutionException ignore) {
                     }
                     catch (TimeoutException timedOut) {
                         break timedOut;

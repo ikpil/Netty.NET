@@ -15,82 +15,85 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Internal;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Allows a way to register some {@link IRunnable} that will executed once there are no references to an {@link object}
  * anymore.
  */
-public final class ObjectCleaner {
+public static class ObjectCleaner {
     private static readonly int REFERENCE_QUEUE_POLL_TIMEOUT_MS =
-            Math.Max(500, getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
+            Math.Max(500, SystemPropertyUtil.getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
 
     // Package-private for testing
     static readonly string CLEANER_THREAD_NAME = nameof(ObjectCleaner) + "Thread";
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
-    private static readonly ISet<AutomaticCleanerReference> LIVE_SET = ConcurrentDictionary.newKeySet();
+    private static readonly ConcurrentDictionary<AutomaticCleanerReference, byte> LIVE_SET = new ConcurrentDictionary<AutomaticCleanerReference, byte>();
     private static readonly ReferenceQueue<object> REFERENCE_QUEUE = new ReferenceQueue<>();
     private static readonly AtomicBoolean CLEANER_RUNNING = new AtomicBoolean(false);
-    private static readonly IRunnable CLEANER_TASK = new IRunnable() {
-        @Override
-        public void run() {
-            bool interrupted = false;
-            for (;;) {
-                // Keep on processing as long as the LIVE_SET is not empty and once it becomes empty
-                // See if we can let this thread complete.
-                while (!LIVE_SET.isEmpty()) {
-                    final AutomaticCleanerReference reference;
-                    try {
-                        reference = (AutomaticCleanerReference) REFERENCE_QUEUE.remove(REFERENCE_QUEUE_POLL_TIMEOUT_MS);
-                    } catch (ThreadInterruptedException ex) {
-                        // Just consume and move on
-                        interrupted = true;
-                        continue;
-                    }
-                    if (reference != null) {
-                        try {
-                            reference.cleanup();
-                        } catch (Exception ignored) {
-                            // ignore exceptions, and don't log in case the logger throws an exception, blocks, or has
-                            // other unexpected side effects.
-                        }
-                        LIVE_SET.remove(reference);
-                    }
-                }
-                CLEANER_RUNNING.set(false);
 
-                // Its important to first access the LIVE_SET and then CLEANER_RUNNING to ensure correct
-                // behavior in multi-threaded environments.
-                if (LIVE_SET.isEmpty() || !CLEANER_RUNNING.compareAndSet(false, true)) {
-                    // There was nothing added after we set STARTED to false or some other cleanup Thread
-                    // was started already so its safe to let this Thread complete now.
-                    break;
+    private static readonly IRunnable CLEANER_TASK = AnonymousRunnable.Create(() =>
+    {
+        bool interrupted = false;
+        for (;;)
+        {
+            // Keep on processing as long as the LIVE_SET is not empty and once it becomes empty
+            // See if we can let this thread complete.
+            while (!LIVE_SET.IsEmpty)
+            {
+                AutomaticCleanerReference reference = null;
+                try
+                {
+                    reference = (AutomaticCleanerReference)REFERENCE_QUEUE.remove(REFERENCE_QUEUE_POLL_TIMEOUT_MS);
+                }
+                catch (ThreadInterruptedException ex)
+                {
+                    // Just consume and move on
+                    interrupted = true;
+                    continue;
+                }
+
+                if (reference != null)
+                {
+                    try
+                    {
+                        reference.cleanup();
+                    }
+                    catch (Exception ignored)
+                    {
+                        // ignore exceptions, and don't log in case the logger throws an exception, blocks, or has
+                        // other unexpected side effects.
+                    }
+
+                    LIVE_SET.Remove(reference);
                 }
             }
-            if (interrupted) {
-                // As we caught the ThreadInterruptedException above we should mark the Thread as interrupted.
-                Thread.CurrentThread.interrupt();
+
+            CLEANER_RUNNING.set(false);
+
+            // Its important to first access the LIVE_SET and then CLEANER_RUNNING to ensure correct
+            // behavior in multi-threaded environments.
+            if (LIVE_SET.IsEmpty || !CLEANER_RUNNING.compareAndSet(false, true))
+            {
+                // There was nothing added after we set STARTED to false or some other cleanup Thread
+                // was started already so its safe to let this Thread complete now.
+                break;
             }
         }
-    };
+
+        if (interrupted)
+        {
+            // As we caught the ThreadInterruptedException above we should mark the Thread as interrupted.
+            Thread.CurrentThread.interrupt();
+        }
+    });
 
     /**
      * Register the given {@link object} for which the {@link IRunnable} will be executed once there are no references
@@ -100,7 +103,7 @@ public final class ObjectCleaner {
      * anymore because it is not a cheap way to handle the cleanup.
      */
     public static void register(object obj, IRunnable cleanupTask) {
-        AutomaticCleanerReference reference = new AutomaticCleanerReference(object,
+        AutomaticCleanerReference reference = new AutomaticCleanerReference(obj,
                 ObjectUtil.checkNotNull(cleanupTask, "cleanupTask"));
         // Its important to add the reference to the LIVE_SET before we access CLEANER_RUNNING to ensure correct
         // behavior in multi-threaded environments.
@@ -139,7 +142,7 @@ public final class ObjectCleaner {
         // Only contains a static method.
     }
 
-    private static readonly class AutomaticCleanerReference extends WeakReference<object> {
+    private static readonly class AutomaticCleanerReference : WeakReference<object> {
         private readonly IRunnable cleanupTask;
 
         AutomaticCleanerReference(object referent, IRunnable cleanupTask) {

@@ -32,6 +32,7 @@ public class ScheduledTask<T> : IScheduledTask
     private int _volatileCancellationState;
 
     private int _queueIndex = INDEX_NOT_IN_QUEUE;
+    public Task Completion => Promise.Task;
 
     protected ScheduledTask(AbstractScheduledEventExecutor executor, TaskCompletionSource<T> promise, long deadlineNanos)
     {
@@ -192,7 +193,6 @@ public class ScheduledTask<T> : IScheduledTask
         return delayNanos(Executor.getCurrentTimeNanos());
     }
 
-    public Task Completion => Promise.Task;
 
     public TaskAwaiter GetAwaiter()
     {

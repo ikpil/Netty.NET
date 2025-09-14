@@ -251,7 +251,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         );
     }
 
-    public IScheduledTask schedule<V>(Func<V> callable, TimeSpan delay) {
+    public override IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay) {
         ObjectUtil.checkNotNull(callable, "callable");
         //ObjectUtil.checkNotNull(unit, "unit");
         if (delay.Ticks < 0)
@@ -264,43 +264,41 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
                 this, callable, deadlineNanos(getCurrentTimeNanos(), (long)delay.TotalNanoseconds)));
     }
 
-    @Override
-    public IScheduledTask<> <?> scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period) {
+    public override IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period) {
         ObjectUtil.checkNotNull(command, "command");
-        ObjectUtil.checkNotNull(unit, "unit");
-        if (initialDelay < 0) {
-            throw new ArgumentException(
-                    string.format("initialDelay: %d (expected: >= 0)", initialDelay));
+        //ObjectUtil.checkNotNull(unit, "unit");
+        var initialDelayNanos = (long)initialDelay.TotalNanoseconds;
+        var periodNanos = (long)period.TotalNanoseconds;
+        if (initialDelayNanos < 0) {
+            throw new ArgumentException($"initialDelay: {initialDelayNanos} (expected: >= 0)");
         }
-        if (period <= 0) {
-            throw new ArgumentException(
-                    string.format("period: %d (expected: > 0)", period));
+        if (periodNanos <= 0) {
+            throw new ArgumentException($"period: {periodNanos} (expected: > 0)");
         }
-        validateScheduled0(initialDelay, unit);
-        validateScheduled0(period, unit);
+        validateScheduled0(initialDelay);
+        validateScheduled0(period);
 
         return schedule(new ScheduledFutureTask<Void>(
-                this, command, deadlineNanos(getCurrentTimeNanos(), unit.toNanos(initialDelay)), unit.toNanos(period)));
+                this, command, deadlineNanos(getCurrentTimeNanos(), initialDelayNanos), periodNanos));
     }
 
-    @Override
-    public IScheduledTask<> <?> scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay) {
+    public override IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay) {
         ObjectUtil.checkNotNull(command, "command");
-        ObjectUtil.checkNotNull(unit, "unit");
-        if (initialDelay < 0) {
-            throw new ArgumentException(
-                    string.format("initialDelay: %d (expected: >= 0)", initialDelay));
+        //ObjectUtil.checkNotNull(unit, "unit");
+        var initialDelayNanos = (long)initialDelay.TotalNanoseconds;
+        var delayNanos = (long)delay.TotalNanoseconds;
+        if (initialDelayNanos < 0) {
+            throw new ArgumentException($"initialDelay: {initialDelay} (expected: >= 0)");
         }
-        if (delay <= 0) {
-            throw new ArgumentException(
-                    string.format("delay: %d (expected: > 0)", delay));
+        if (delayNanos <= 0) {
+            throw new ArgumentException($"delay: {delayNanos} (expected: > 0)");
         }
 
         validateScheduled0(initialDelay);
         validateScheduled0(delay);
 
-        return schedule(new ScheduledFutureTask<Void>(
-                this, command, deadlineNanos(getCurrentTimeNanos(), unit.toNanos(initialDelay)), -unit.toNanos(delay)));
+        return schedule(new ScheduledTask<Void>(
+                this, command, deadlineNanos(getCurrentTimeNanos(), initialDelayNanos), -delayNanos));
     }
 
     //@SuppressWarnings("deprecation")
@@ -320,7 +318,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     internal void scheduleFromEventLoop(IScheduledTask task) {
         // nextTaskId a long and so there is no chance it will overflow back to 0
-        scheduledTaskQueue().add(task.setId(++nextTaskId));
+        scheduledTaskQueue().TryEnqueue(task.setId(++nextTaskId));
     }
 
     private IScheduledTask schedule(IScheduledTask task) {

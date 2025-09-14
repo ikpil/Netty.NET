@@ -14,6 +14,11 @@ public class AtomicBoolean
     {
         _location = initialValue ? 1 : 0;
     }
+    
+    public bool set(bool exchange)
+    {
+        return 1 == Interlocked.Exchange(ref _location, exchange ? 1 : 0);
+    }
 
     public bool get()
     {
