@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
@@ -68,4 +69,6 @@ public interface IEventExecutorGroup : IScheduledExecutorService
      * Returns one of the {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}.
      */
     IEventExecutor next();
+
+    IEnumerable<IEventExecutor> iterator();
 }

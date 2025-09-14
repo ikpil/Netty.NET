@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
+using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -461,8 +462,8 @@ public class DefaultPromise<V> : AbstractFuture<V> {
      * @param future the future that is complete.
      * @param listener the listener to notify.
      */
-    protected static void notifyListener(
-            IEventExecutor eventExecutor, final Future<?> future, final GenericFutureListener<?> listener) {
+    public static void notifyListener(
+            IEventExecutor eventExecutor, IFuture future, IGenericFutureListener listener) {
         notifyListenerWithStackOverFlowProtection(
                 checkNotNull(eventExecutor, "eventExecutor"),
                 checkNotNull(future, "future"),

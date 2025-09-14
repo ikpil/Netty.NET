@@ -16,6 +16,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
@@ -43,9 +44,8 @@ public abstract class CompleteFuture<V> : AbstractFuture<V> {
         return _executor;
     }
 
-    @Override
-    public Future<V> addListener(IGenericFutureListener<? extends Future<? super V>> listener) {
-        DefaultPromise.notifyListener(executor(), this, ObjectUtil.checkNotNull(listener, "listener"));
+    public override Task<V> addListener(IGenericFutureListener<V> listener) {
+        DefaultPromise<V>.notifyListener(executor(), this, ObjectUtil.checkNotNull(listener, "listener"));
         return this;
     }
 

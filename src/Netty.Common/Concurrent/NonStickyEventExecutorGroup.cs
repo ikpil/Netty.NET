@@ -17,6 +17,9 @@
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -29,16 +32,18 @@ namespace Netty.NET.Common.Concurrent;
  * executors of type {@link IOrderedEventExecutor}.
  */
 [UnstableApi]
-public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
-    private readonly IEventExecutorGroup group;
-    private readonly int maxTaskExecutePerRun;
+public class NonStickyEventExecutorGroup : IEventExecutorGroup 
+{
+    private readonly IEventExecutorGroup _group;
+    private readonly int _maxTaskExecutePerRun;
 
     /**
      * Creates a new instance. Be aware that the given {@link IEventExecutorGroup} <strong>MUST NOT</strong> contain
      * any {@link IOrderedEventExecutor}s.
      */
-    public NonStickyEventExecutorGroup(IEventExecutorGroup group) {
-        this(group, 1024);
+    public NonStickyEventExecutorGroup(IEventExecutorGroup group) 
+        : this(group, 1024)
+    {
     }
 
     /**
@@ -46,8 +51,8 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
      * any {@link IOrderedEventExecutor}s.
      */
     public NonStickyEventExecutorGroup(IEventExecutorGroup group, int maxTaskExecutePerRun) {
-        this.group = verify(group);
-        this.maxTaskExecutePerRun = ObjectUtil.checkPositive(maxTaskExecutePerRun, "maxTaskExecutePerRun");
+        _group = verify(group);
+        _maxTaskExecutePerRun = ObjectUtil.checkPositive(maxTaskExecutePerRun, "maxTaskExecutePerRun");
     }
 
     private static IEventExecutorGroup verify(IEventExecutorGroup group) {
@@ -68,42 +73,42 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
     @Override
     public bool isShuttingDown() {
-        return group.isShuttingDown();
+        return _group.isShuttingDown();
     }
 
     @Override
     public Future<?> shutdownGracefully() {
-        return group.shutdownGracefullyAsync();
+        return _group.shutdownGracefullyAsync();
     }
 
     @Override
-    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
-        return group.shutdownGracefully(quietPeriod, timeout, unit);
+    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) {
+        return _group.shutdownGracefully(quietPeriod, timeout, unit);
     }
 
     public override Task terminationTask() {
-        return group.terminationTask();
+        return _group.terminationTask();
     }
 
     //@SuppressWarnings("deprecation")
     @Override
     public void shutdown() {
-        group.shutdown();
+        _group.shutdown();
     }
 
     //@SuppressWarnings("deprecation")
     @Override
     public List<IRunnable> shutdownNow() {
-        return group.shutdownNow();
+        return _group.shutdownNow();
     }
 
     @Override
     public IEventExecutor next() {
-        return newExecutor(group.next());
+        return newExecutor(_group.next());
     }
 
     public override IEnumerable<IEventExecutor> iterator() {
-        IEnumerable<IEventExecutor> itr = group.iterator();
+        IEnumerable<IEventExecutor> itr = _group.iterator();
         return new IEnumerable<IEventExecutor>() {
             @Override
             public bool hasNext() {
@@ -124,211 +129,80 @@ public final class NonStickyEventExecutorGroup : IEventExecutorGroup {
 
     @Override
     public Future<?> submit(IRunnable task) {
-        return group.submit(task);
+        return _group.submit(task);
     }
 
     @Override
     public Task<T> submit(IRunnable task, T result) {
-        return group.submit(task, result);
+        return _group.submit(task, result);
     }
 
     @Override
     public Task<T> submit(ICallable<T> task) {
-        return group.submit(task);
+        return _group.submit(task);
     }
 
     @Override
     public IScheduledTask<?> schedule(IRunnable command, long delay, TimeSpan unit) {
-        return group.schedule(command, delay, unit);
+        return _group.schedule(command, delay, unit);
     }
 
     @Override
     public <V> IScheduledTask<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
-        return group.schedule(callable, delay, unit);
+        return _group.schedule(callable, delay, unit);
     }
 
     @Override
     public IScheduledTask<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
-        return group.scheduleAtFixedRate(command, initialDelay, period, unit);
+        return _group.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
     public IScheduledTask<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
-        return group.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+        return _group.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
     @Override
     public bool isShutdown() {
-        return group.isShutdown();
+        return _group.isShutdown();
     }
 
     @Override
     public bool isTerminated() {
-        return group.isTerminated();
+        return _group.isTerminated();
     }
 
     @Override
     public bool awaitTermination(TimeSpan timeout) {
-        return group.awaitTermination(timeout, unit);
+        return _group.awaitTermination(timeout, unit);
     }
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
             ICollection<? extends ICallable<T>> tasks) {
-        return group.invokeAll(tasks);
+        return _group.invokeAll(tasks);
     }
 
     @Override
     public <T> List<java.util.concurrent.Future<T>> invokeAll(
             ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit) {
-        return group.invokeAll(tasks, timeout, unit);
+        return _group.invokeAll(tasks, timeout, unit);
     }
 
     @Override
     public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks) throws ThreadInterruptedException, ExecutionException {
-        return group.invokeAny(tasks);
+        return _group.invokeAny(tasks);
     }
 
     @Override
     public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit)
             throws ThreadInterruptedException, ExecutionException, TimeoutException {
-        return group.invokeAny(tasks, timeout, unit);
+        return _group.invokeAny(tasks, timeout, unit);
     }
 
     @Override
     public void execute(IRunnable command) {
-        group.execute(command);
+        _group.execute(command);
     }
 
-    private static readonly class NonStickyOrderedEventExecutor extends AbstractEventExecutor
-            implements IRunnable, OrderedEventExecutor {
-        private readonly IEventExecutor executor;
-        private readonly Queue<IRunnable> tasks = PlatformDependent.newMpscQueue();
-
-        private static readonly int NONE = 0;
-        private static readonly int SUBMITTED = 1;
-        private static readonly int RUNNING = 2;
-
-        private readonly AtomicInteger state = new AtomicInteger();
-        private readonly int maxTaskExecutePerRun;
-
-        private readonly AtomicReference<Thread> executingThread = new AtomicReference<Thread>();
-
-        NonStickyOrderedEventExecutor(IEventExecutor executor, int maxTaskExecutePerRun) {
-            super(executor);
-            this.executor = executor;
-            this.maxTaskExecutePerRun = maxTaskExecutePerRun;
-        }
-
-        @Override
-        public void run() {
-            if (!state.compareAndSet(SUBMITTED, RUNNING)) {
-                return;
-            }
-            Thread current = Thread.CurrentThread;
-            executingThread.set(current);
-            for (;;) {
-                int i = 0;
-                try {
-                    for (; i < maxTaskExecutePerRun; i++) {
-                        IRunnable task = tasks.poll();
-                        if (task == null) {
-                            break;
-                        }
-                        safeExecute(task);
-                    }
-                } finally {
-                    if (i == maxTaskExecutePerRun) {
-                        try {
-                            state.set(SUBMITTED);
-                            // Only set executingThread to null if no other thread did update it yet.
-                            executingThread.compareAndSet(current, null);
-                            executor.execute(this);
-                            return; // done
-                        } catch (Exception ignore) {
-                            // Reset the state back to running as we will keep on executing tasks.
-                            state.set(RUNNING);
-                            // if an error happened we should just ignore it and let the loop run again as there is not
-                            // much else we can do. Most likely this was triggered by a full task queue. In this case
-                            // we just will run more tasks and try again later.
-                        }
-                    } else {
-                        state.set(NONE);
-                        // After setting the state to NONE, look at the tasks queue one more time.
-                        // If it is empty, then we can return from this method.
-                        // Otherwise, it means the producer thread has called execute(IRunnable)
-                        // and enqueued a task in between the tasks.poll() above and the state.set(NONE) here.
-                        // There are two possible scenarios when this happens
-                        //
-                        // 1. The producer thread sees state == NONE, hence the compareAndSet(NONE, SUBMITTED)
-                        //    is successfully setting the state to SUBMITTED. This mean the producer
-                        //    will call / has called executor.execute(this). In this case, we can just return.
-                        // 2. The producer thread don't see the state change, hence the compareAndSet(NONE, SUBMITTED)
-                        //    returns false. In this case, the producer thread won't call executor.execute.
-                        //    In this case, we need to change the state to RUNNING and keeps running.
-                        //
-                        // The above cases can be distinguished by performing a
-                        // compareAndSet(NONE, RUNNING). If it returns "false", it is case 1; otherwise it is case 2.
-                        if (tasks.isEmpty() || !state.compareAndSet(NONE, RUNNING)) {
-                            // Only set executingThread to null if no other thread did update it yet.
-                            executingThread.compareAndSet(current, null);
-                            return; // done
-                        }
-                    }
-                }
-            }
-        }
-
-        @Override
-        public bool inEventLoop(Thread thread) {
-            return executingThread.get() == thread;
-        }
-
-        @Override
-        public bool isShuttingDown() {
-            return executor.isShutdown();
-        }
-
-        @Override
-        public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeSpan unit) {
-            return executor.shutdownGracefully(quietPeriod, timeout, unit);
-        }
-
-        @Override
-        public Task terminationTask() {
-            return executor.terminationTask();
-        }
-
-        @Override
-        public void shutdown() {
-            executor.shutdown();
-        }
-
-        @Override
-        public bool isShutdown() {
-            return executor.isShutdown();
-        }
-
-        @Override
-        public bool isTerminated() {
-            return executor.isTerminated();
-        }
-
-        @Override
-        public bool awaitTermination(TimeSpan timeout) {
-            return executor.awaitTermination(timeout, unit);
-        }
-
-        @Override
-        public void execute(IRunnable command) {
-            if (!tasks.offer(command)) {
-                throw new RejectedExecutionException();
-            }
-            if (state.compareAndSet(NONE, SUBMITTED)) {
-                // Actually it could happen that the runnable was picked up in between but we not care to much and just
-                // execute ourself. At worst this will be a NOOP when run() is called.
-                executor.execute(this);
-            }
-        }
-    }
 }
