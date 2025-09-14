@@ -265,7 +265,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     @Override
-    public IScheduledTask<> <?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<> <?> scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period) {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(unit, "unit");
         if (initialDelay < 0) {

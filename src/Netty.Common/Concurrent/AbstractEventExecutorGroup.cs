@@ -86,12 +86,12 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
         return shutdownGracefullyAsync(AbstractEventExecutor.DEFAULT_SHUTDOWN_QUIET_PERIOD, AbstractEventExecutor.DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
-    public List<Task<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
+    public List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
     {
         return next().invokeAll(tasks);
     }
 
-    public List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
+    public List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
     {
         return next().invokeAll(tasks, timeout);
     }

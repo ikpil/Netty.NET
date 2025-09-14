@@ -46,5 +46,3 @@ public abstract class QueueingTaskNode<T> : IRunnable
 
     protected abstract T call();
 }
-
-

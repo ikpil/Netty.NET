@@ -192,7 +192,7 @@ public abstract class AbstractExecutorService : IExecutorService
         return doInvokeAny(tasks, true, (long)timeout.TotalNanoseconds);
     }
 
-    public virtual List<Task<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
+    public virtual List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
     {
         if (tasks == null)
             throw new NullReferenceException();
@@ -209,11 +209,11 @@ public abstract class AbstractExecutorService : IExecutorService
             for (int i = 0, size = futures.Count; i < size; i++)
             {
                 var f = futures[i];
-                if (!f.IsCompleted)
+                if (!f.Completion.IsCompleted)
                 {
                     try
                     {
-                        f.Wait();
+                        f.Completion.Wait();
                     }
                     catch (Exception e)
                     {
@@ -231,7 +231,7 @@ public abstract class AbstractExecutorService : IExecutorService
         }
     }
 
-    public virtual List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
+    public virtual List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
     {
         if (tasks == null)
             throw new NullReferenceException();
@@ -255,8 +255,7 @@ public abstract class AbstractExecutorService : IExecutorService
             for (int i = 0; i < size; i++)
             {
                 if (((i == 0) ? nanos : deadline - PreciseTimer.nanoTime()) <= 0L)
-                    break
-                timedOut;
+                    break timedOut;
                 execute((IRunnable)futures.get(i));
             }
 

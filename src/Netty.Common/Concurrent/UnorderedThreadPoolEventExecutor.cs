@@ -181,12 +181,12 @@ public class UnorderedThreadPoolEventExecutor : ScheduledThreadPoolExecutor, IEv
     }
 
     @Override
-    public IScheduledTask<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
+    public IScheduledTask<?> scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period) {
         return (IScheduledTask<> <?>) super.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
-    public IScheduledTask<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
+    public IScheduledTask<?> scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay) {
         return (IScheduledTask<> <?>) super.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 

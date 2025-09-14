@@ -1064,13 +1064,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return base.invokeAny(tasks, timeout);
     }
 
-    public override List<Task<T>> invokeAll<T>(ICollection<T> tasks)
+    public override List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks)
     {
         throwIfInEventLoop("invokeAll");
         return base.invokeAll(tasks);
     }
 
-    public override List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout)
+    public override List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout)
     {
         throwIfInEventLoop("invokeAll");
         return base.invokeAll(tasks, timeout);

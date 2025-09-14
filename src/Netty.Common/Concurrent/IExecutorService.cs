@@ -154,7 +154,7 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if any task cannot be
      *         scheduled for execution
      */
-    List<Task<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>;
+    List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>;
 
     /**
      * Executes the given tasks, returning a list of Futures holding
@@ -184,7 +184,7 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if any task cannot be scheduled
      *         for execution
      */
-    List<Task<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>;
+    List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>;
 
     /**
      * Executes the given tasks, returning the result

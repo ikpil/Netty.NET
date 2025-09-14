@@ -17,12 +17,11 @@
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
-
 
 /**
  * {@link IEventExecutorGroup} which will preserve {@link IRunnable} execution order but makes no guarantees about what
@@ -32,7 +31,7 @@ namespace Netty.NET.Common.Concurrent;
  * executors of type {@link IOrderedEventExecutor}.
  */
 [UnstableApi]
-public class NonStickyEventExecutorGroup : IEventExecutorGroup 
+public class NonStickyEventExecutorGroup : IEventExecutorGroup
 {
     private readonly IEventExecutorGroup _group;
     private readonly int _maxTaskExecutePerRun;
@@ -41,168 +40,154 @@ public class NonStickyEventExecutorGroup : IEventExecutorGroup
      * Creates a new instance. Be aware that the given {@link IEventExecutorGroup} <strong>MUST NOT</strong> contain
      * any {@link IOrderedEventExecutor}s.
      */
-    public NonStickyEventExecutorGroup(IEventExecutorGroup group) 
-        : this(group, 1024)
+    public NonStickyEventExecutorGroup(IEventExecutorGroup group, int maxTaskExecutePerRun = 1024)
     {
-    }
-
-    /**
-     * Creates a new instance. Be aware that the given {@link IEventExecutorGroup} <strong>MUST NOT</strong> contain
-     * any {@link IOrderedEventExecutor}s.
-     */
-    public NonStickyEventExecutorGroup(IEventExecutorGroup group, int maxTaskExecutePerRun) {
         _group = verify(group);
         _maxTaskExecutePerRun = ObjectUtil.checkPositive(maxTaskExecutePerRun, "maxTaskExecutePerRun");
     }
 
-    private static IEventExecutorGroup verify(IEventExecutorGroup group) {
+    private static IEventExecutorGroup verify(IEventExecutorGroup group)
+    {
         IEnumerable<IEventExecutor> executors = ObjectUtil.checkNotNull(group, "group").iterator();
-        while (executors.hasNext()) {
-            IEventExecutor executor = executors.next();
-            if (executor instanceof OrderedEventExecutor) {
-                throw new ArgumentException("IEventExecutorGroup " + group
-                        + " contains OrderedEventExecutors: " + executor);
+        foreach (var executor in executors)
+        {
+            if (executor is IOrderedEventExecutor)
+            {
+                throw new ArgumentException("IEventExecutorGroup " + group + " contains OrderedEventExecutors: " + executor);
             }
         }
+
         return group;
     }
 
-    private NonStickyOrderedEventExecutor newExecutor(IEventExecutor executor) {
-        return new NonStickyOrderedEventExecutor(executor, maxTaskExecutePerRun);
+    private NonStickyOrderedEventExecutor newExecutor(IEventExecutor executor)
+    {
+        return new NonStickyOrderedEventExecutor(executor, _maxTaskExecutePerRun);
     }
 
-    @Override
-    public bool isShuttingDown() {
+    public bool isShuttingDown()
+    {
         return _group.isShuttingDown();
     }
 
-    @Override
-    public Future<?> shutdownGracefully() {
+    public Task shutdownGracefullyAsync()
+    {
         return _group.shutdownGracefullyAsync();
     }
 
-    @Override
-    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) {
-        return _group.shutdownGracefully(quietPeriod, timeout, unit);
+    public Ticker ticker()
+    {
+        return Ticker.systemTicker();
     }
 
-    public override Task terminationTask() {
+    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+    {
+        return _group.shutdownGracefullyAsync(quietPeriod, timeout);
+    }
+
+    public Task terminationTask()
+    {
         return _group.terminationTask();
     }
 
     //@SuppressWarnings("deprecation")
-    @Override
-    public void shutdown() {
+    public void shutdown()
+    {
         _group.shutdown();
     }
 
     //@SuppressWarnings("deprecation")
-    @Override
-    public List<IRunnable> shutdownNow() {
+    public List<IRunnable> shutdownNow()
+    {
         return _group.shutdownNow();
     }
 
-    @Override
-    public IEventExecutor next() {
+    public IEventExecutor next()
+    {
         return newExecutor(_group.next());
     }
 
-    public override IEnumerable<IEventExecutor> iterator() {
+    public IEnumerable<IEventExecutor> iterator()
+    {
         IEnumerable<IEventExecutor> itr = _group.iterator();
-        return new IEnumerable<IEventExecutor>() {
-            @Override
-            public bool hasNext() {
-                return itr.hasNext();
-            }
-
-            @Override
-            public IEventExecutor next() {
-                return newExecutor(itr.next());
-            }
-
-            @Override
-            public void remove() {
-                itr.remove();
-            }
-        };
+        foreach (var it in itr)
+        {
+            yield return newExecutor(it);
+        }
     }
 
-    @Override
-    public Future<?> submit(IRunnable task) {
+    public Task submit(IRunnable task)
+    {
         return _group.submit(task);
     }
 
-    @Override
-    public Task<T> submit(IRunnable task, T result) {
+    public Task<T> submit<T>(IRunnable task, T result)
+    {
         return _group.submit(task, result);
     }
 
-    @Override
-    public Task<T> submit(ICallable<T> task) {
+    public Task<T> submit<T>(ICallable<T> task)
+    {
         return _group.submit(task);
     }
 
-    @Override
-    public IScheduledTask<?> schedule(IRunnable command, long delay, TimeSpan unit) {
-        return _group.schedule(command, delay, unit);
+    public IScheduledTask schedule(IRunnable command, TimeSpan delay)
+    {
+        return _group.schedule(command, delay);
     }
 
-    @Override
-    public <V> IScheduledTask<V> schedule(Func<V> callable, long delay, TimeSpan unit) {
-        return _group.schedule(callable, delay, unit);
+    public IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay)
+    {
+        return _group.schedule(callable, delay);
     }
 
-    @Override
-    public IScheduledTask<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeSpan unit) {
-        return _group.scheduleAtFixedRate(command, initialDelay, period, unit);
+    public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period)
+    {
+        return _group.scheduleAtFixedRate(command, initialDelay, period);
     }
 
-    @Override
-    public IScheduledTask<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay, TimeSpan unit) {
-        return _group.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+    public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay)
+    {
+        return _group.scheduleWithFixedDelay(command, initialDelay, delay);
     }
 
-    @Override
-    public bool isShutdown() {
+    public bool isShutdown()
+    {
         return _group.isShutdown();
     }
 
-    @Override
-    public bool isTerminated() {
+    public bool isTerminated()
+    {
         return _group.isTerminated();
     }
 
-    @Override
-    public bool awaitTermination(TimeSpan timeout) {
-        return _group.awaitTermination(timeout, unit);
+    public bool awaitTermination(TimeSpan timeout)
+    {
+        return _group.awaitTermination(timeout);
     }
 
-    @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            ICollection<? extends ICallable<T>> tasks) {
+    public List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
+    {
         return _group.invokeAll(tasks);
     }
 
-    @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit) {
-        return _group.invokeAll(tasks, timeout, unit);
+    public List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
+    {
+        return _group.invokeAll<T>(tasks, timeout);
     }
 
-    @Override
-    public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks) throws ThreadInterruptedException, ExecutionException {
+    public T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>
+    {
         return _group.invokeAny(tasks);
     }
 
-    @Override
-    public <T> T invokeAny(ICollection<? extends ICallable<T>> tasks, long timeout, TimeSpan unit)
-            throws ThreadInterruptedException, ExecutionException, TimeoutException {
-        return _group.invokeAny(tasks, timeout, unit);
+    public T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
+    {
+        return _group.invokeAny(tasks, timeout);
     }
 
-    @Override
-    public void execute(IRunnable command) {
+    public void execute(IRunnable command)
+    {
         _group.execute(command);
     }
-
 }
