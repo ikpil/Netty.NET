@@ -72,7 +72,7 @@ internal static class NetUtilInitializations
     }
 
     public static NetworkIfaceAndInetAddress determineLoopback(
-        ICollection<NetworkInterface> networkInterfaces, IPAddress localhost4, IPAddress localhost6)
+        IReadOnlyList<NetworkInterface> networkInterfaces, IPAddress localhost4, IPAddress localhost6)
     {
         // Retrieve the list of available network interfaces.
         List<NetworkInterface> ifaces = new List<NetworkInterface>();
