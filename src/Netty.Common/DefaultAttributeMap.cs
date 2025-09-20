@@ -13,6 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common;
 
 
@@ -23,8 +27,7 @@ namespace Netty.NET.Common;
  */
 public class DefaultAttributeMap : IAttributeMap 
 {
-
-    private static readonly AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute[]> ATTRIBUTES_UPDATER =
+    private static readonly AtomicReferenceFieldUpdater<DefaultAttributeMap, DefaultAttribute<>[]> ATTRIBUTES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultAttributeMap), DefaultAttribute[].class, "attributes");
     private static readonly DefaultAttribute[] EMPTY_ATTRIBUTES = new DefaultAttribute[0];
 
@@ -121,7 +124,7 @@ public class DefaultAttributeMap : IAttributeMap
         return searchAttributeByKey(attributes, key) >= 0;
     }
 
-    private <T> void removeAttributeIfMatch(AttributeKey<T> key, DefaultAttribute<T> value) {
+    internal void removeAttributeIfMatch<T>(AttributeKey<T> key, DefaultAttribute<T> value) {
         for (;;) {
             final DefaultAttribute[] attributes = this.attributes;
             final int index = searchAttributeByKey(attributes, key);
@@ -149,61 +152,4 @@ public class DefaultAttributeMap : IAttributeMap
         }
     }
 
-    //@SuppressWarnings("serial")
-    private static readonly class DefaultAttribute<T> extends AtomicReference<T> : IAttribute<T> {
-
-        private static readonly AtomicReferenceFieldUpdater<DefaultAttribute, DefaultAttributeMap> MAP_UPDATER =
-                AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultAttribute),
-                                                       typeof(DefaultAttributeMap), "attributeMap");
-        private static readonly long serialVersionUID = -2661411462200283011L;
-
-        private volatile DefaultAttributeMap attributeMap;
-        private readonly AttributeKey<T> key;
-
-        DefaultAttribute(DefaultAttributeMap attributeMap, AttributeKey<T> key) {
-            this.attributeMap = attributeMap;
-            this.key = key;
-        }
-
-        @Override
-        public AttributeKey<T> key() {
-            return key;
-        }
-
-        private bool isRemoved() {
-            return attributeMap == null;
-        }
-
-        @Override
-        public T setIfAbsent(T value) {
-            while (!compareAndSet(null, value)) {
-                T old = get();
-                if (old != null) {
-                    return old;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public T getAndRemove() {
-            final DefaultAttributeMap attributeMap = this.attributeMap;
-            final bool removed = attributeMap != null && MAP_UPDATER.compareAndSet(this, attributeMap, null);
-            T oldValue = getAndSet(null);
-            if (removed) {
-                attributeMap.removeAttributeIfMatch(key, this);
-            }
-            return oldValue;
-        }
-
-        @Override
-        public void remove() {
-            final DefaultAttributeMap attributeMap = this.attributeMap;
-            final bool removed = attributeMap != null && MAP_UPDATER.compareAndSet(this, attributeMap, null);
-            set(null);
-            if (removed) {
-                attributeMap.removeAttributeIfMatch(key, this);
-            }
-        }
-    }
 }
