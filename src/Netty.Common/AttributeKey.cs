@@ -25,7 +25,7 @@ namespace Netty.NET.Common;
  * @param <T>   the type of the {@link IAttribute} which can be accessed via this {@link AttributeKey}.
  */
 //@SuppressWarnings("UnusedDeclaration") // 'T' is used only at compile time
-public class AttributeKey<T> : AbstractConstant<AttributeKey<T>>
+public class AttributeKey<T> : AbstractConstant<AttributeKey<T>>, IAttributeKey where T : class
 {
     private static readonly ConstantPool<AttributeKey<T>> _pool = new AttributeConstantPool<T>();
 

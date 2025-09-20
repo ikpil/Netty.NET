@@ -1,9 +1,9 @@
 namespace Netty.NET.Common.Concurrent;
 
 //@SuppressWarnings("serial")
-public sealed class DefaultAttribute<T> : AtomicReference<T>, IAttribute<T> where T : class
+public sealed class DefaultAttribute<T> : AtomicReference<T>, IAttribute<T>, IDefaultAttribute where T : class
 {
-    private volatile AtomicReference<DefaultAttributeMap> _attributeMap;
+    private AtomicReference<DefaultAttributeMap> _attributeMap;
     private readonly AttributeKey<T> _key;
 
     public DefaultAttribute(DefaultAttributeMap attributeMap, AttributeKey<T> key)
@@ -17,9 +17,14 @@ public sealed class DefaultAttribute<T> : AtomicReference<T>, IAttribute<T> wher
         return _key;
     }
 
-    private bool isRemoved()
+    IAttributeKey IDefaultAttribute.key()
     {
-        return _attributeMap == null;
+        return key();
+    }
+
+    public bool isRemoved()
+    {
+        return _attributeMap.get() == null;
     }
 
     public T setIfAbsent(T value)

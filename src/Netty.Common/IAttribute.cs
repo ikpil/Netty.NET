@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 namespace Netty.NET.Common;
 
 /**
@@ -20,9 +21,8 @@ namespace Netty.NET.Common;
  *
  * @param <T>   the type of the value it holds.
  */
-public interface IAttribute<T> 
+public interface IAttribute<T> where T : class
 {
-
     /**
      * Returns the key of this attribute.
      */
