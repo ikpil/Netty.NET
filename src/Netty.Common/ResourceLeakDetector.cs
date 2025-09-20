@@ -115,8 +115,9 @@ public static class ResourceLeakDetector
     /**
      * Sets the resource leak detection level.
      */
-    public static void setLevel(ResourceLeakDetectorLevel level) {
-        _level = ObjectUtil.checkNotNull(level, "level");
+    public static void setLevel(ResourceLeakDetectorLevel level)
+    {
+        _level = level;
     }
 
     /**
