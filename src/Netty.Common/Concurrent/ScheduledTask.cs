@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ public static class ScheduledTask
     }
 }
 
-public class ScheduledTask<T> : IScheduledTask
+public class ScheduledTask<T> : IScheduledTask<T>
 {
     public const int CancellationProhibited = 1;
     public const int CancellationRequested = 1 << 1;
@@ -32,7 +33,8 @@ public class ScheduledTask<T> : IScheduledTask
     private int _volatileCancellationState;
 
     private int _queueIndex = INDEX_NOT_IN_QUEUE;
-    public Task Completion => Promise.Task;
+    public Task<T> Completion => Promise.Task;
+    public T Result => Promise.Task.Result;
 
     protected ScheduledTask(AbstractScheduledEventExecutor executor, TaskCompletionSource<T> promise, long deadlineNanos)
     {
@@ -164,13 +166,23 @@ public class ScheduledTask<T> : IScheduledTask
             return false;
         }
 
-        bool canceled = this.Promise.TrySetCanceled();
+        bool canceled = Promise.TrySetCanceled();
         if (canceled)
         {
             Executor.removeScheduled(this);
         }
 
         return canceled;
+    }
+
+    public bool cancelWithoutRemove(bool mayInterruptIfRunning)
+    {
+        if (!AtomicCancellationStateUpdate(CancellationRequested, CancellationProhibited))
+        {
+            return false;
+        }
+
+        return Promise.TrySetCanceled();
     }
 
     public long deadlineNanos()
@@ -197,6 +209,11 @@ public class ScheduledTask<T> : IScheduledTask
     public TaskAwaiter GetAwaiter()
     {
         return Completion.GetAwaiter();
+    }
+
+    public void setConsumed()
+    {
+        throw new NotImplementedException();
     }
 
     private bool TrySetUncancelable()

@@ -27,18 +27,20 @@ namespace Netty.NET.Common.Concurrent;
 //[SuppressWarnings("ClassNameSameAsAncestorName")]
 public interface IScheduledTask : IComparable<IScheduledTask>, IRunnable
 {
+    bool isCancelled();
     bool cancel();
+    bool cancelWithoutRemove(bool mayInterruptIfRunning);
 
     long deadlineNanos();
     long delayNanos(long nanos);
     long delayNanos();
-    Task Completion { get; }
     IScheduledTask setId(long id);
-
     TaskAwaiter GetAwaiter();
+    void setConsumed();
 }
 
-public interface IScheduledTask<out T> : IScheduledTask
+public interface IScheduledTask<T> : IScheduledTask
 {
-    T Result { get; }    
+    T Result { get; }
+    Task<T> Completion { get; }
 }

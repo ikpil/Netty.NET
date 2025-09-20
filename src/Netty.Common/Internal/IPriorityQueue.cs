@@ -48,4 +48,5 @@ public interface IPriorityQueue<T> : IEnumerable<T>, IQueue<T>
     void clearIgnoringIndexes();
     
     bool isEmpty();
+    T[] toArray();
 }
