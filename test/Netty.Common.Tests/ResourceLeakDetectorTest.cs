@@ -123,13 +123,13 @@ public void testLeakBrokenHint() throws Throwable {
     DefaultResource.detectorWithSetupHint.initialHint = new ResourceLeakHint() {
         @Override
         public String toHintString() {
-        throw new RuntimeException("expected failure");
+        throw new Exception("expected failure");
     }
     };
     try {
         leakResource();
         fail("expected failure");
-    } catch (RuntimeException e) {
+    } catch (Exception e) {
         assertThat(e.getMessage()).isEqualTo("expected failure");
     }
     DefaultResource.detectorWithSetupHint.initialHint = DefaultResource.detectorWithSetupHint.canaryString;

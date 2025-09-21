@@ -142,8 +142,8 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
     @Test
     public void testAddAllFail() throws Exception {
-        RuntimeException e1 = new RuntimeException("fake exception 1");
-        RuntimeException e2 = new RuntimeException("fake exception 2");
+        Exception e1 = new Exception("fake exception 1");
+        Exception e2 = new Exception("fake exception 2");
         mockFailedPromise(p1, e1, l1Consumer);
         mockFailedPromise(p2, e2, l2Consumer);
         combiner.addAll(p1, p2);
@@ -156,8 +156,8 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
     @Test
     public void testAddFail() throws Exception {
-        RuntimeException e1 = new RuntimeException("fake exception 1");
-        RuntimeException e2 = new RuntimeException("fake exception 2");
+        Exception e1 = new Exception("fake exception 1");
+        Exception e2 = new Exception("fake exception 2");
         mockFailedPromise(p1, e1, l1Consumer);
         mockFailedPromise(p2, e2, l2Consumer);
         combiner.add(p1);

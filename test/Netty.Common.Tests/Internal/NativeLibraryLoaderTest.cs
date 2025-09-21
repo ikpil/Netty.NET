@@ -100,7 +100,7 @@ class NativeLibraryLoaderTest {
             assertTrue(suppressed.length == 1);
             assertTrue(expectedSuppressedExceptionClass.isInstance(suppressed[0]));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new Exception(e);
         }
     }
 }

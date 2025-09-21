@@ -35,7 +35,7 @@ namespace Netty.Common.Tests.Concurrent
             try {
                 exchanger.exchange(null);
             } catch (ThreadInterruptedException e) {
-                throw new RuntimeException(e);
+                throw new Exception(e);
             }
             latch.countDown();
         }
@@ -109,7 +109,7 @@ namespace Netty.Common.Tests.Concurrent
     public void testGetReturnsCorrectValueOnFailure() throws Exception {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         try {
-            final RuntimeException cause = new RuntimeException();
+            final Exception cause = new Exception();
             Future<String> f = executor.submit(new Callable<String>() {
                 @Override
                 public String call() {

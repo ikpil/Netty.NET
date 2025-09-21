@@ -172,7 +172,7 @@ public void testWrappedProperties() {
 }
 
 @Test
-public void testWrapMany() throws ExecutionException, ThreadInterruptedException {
+public void testWrapMany() throws AggregateException, ThreadInterruptedException {
 class Worker implements IRunnable {
     final Semaphore semaphore = new Semaphore(0);
     final FutureTask<?> task = new FutureTask<>(this, null);

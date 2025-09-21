@@ -187,7 +187,7 @@ namespace Netty.Common.Tests.Concurrent
                     factory = callable.call();
                 } catch (Exception e) {
                     exception.set(e);
-                    throw new RuntimeException(e);
+                    throw new Exception(e);
                 }
                 final Thread t = factory.newThread(new IRunnable() {
                     @Override

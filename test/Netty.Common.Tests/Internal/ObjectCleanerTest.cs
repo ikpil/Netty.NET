@@ -82,14 +82,14 @@ namespace Netty.Common.Tests.Internal
             @Override
             public void run() {
                 freeCalledCount.incrementAndGet();
-                throw new RuntimeException("expected");
+                throw new Exception("expected");
             }
         });
         ObjectCleaner.register(temporaryObject, new IRunnable() {
             @Override
             public void run() {
                 freeCalledCount.incrementAndGet();
-                throw new RuntimeException("expected");
+                throw new Exception("expected");
             }
         });
 

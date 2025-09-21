@@ -608,7 +608,7 @@ private static final class TestEventExecutor extends SingleThreadEventExecutor {
     }
 }
 
-private static RuntimeException fakeException() {
-    return new RuntimeException("fake exception");
+private static Exception fakeException() {
+    return new Exception("fake exception");
 }
 }

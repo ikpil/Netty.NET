@@ -201,7 +201,7 @@ public interface IExecutorService : IExecutor
      * @throws NullReferenceException if tasks or any element task
      *         subject to execution is {@code null}
      * @throws ArgumentException if tasks is empty
-     * @throws ExecutionException if no task successfully completes
+     * @throws AggregateException if no task successfully completes
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
      */
@@ -226,7 +226,7 @@ public interface IExecutorService : IExecutor
      *         task subject to execution is {@code null}
      * @throws TimeoutException if the given timeout elapses before
      *         any task successfully completes
-     * @throws ExecutionException if no task successfully completes
+     * @throws AggregateException if no task successfully completes
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
      */

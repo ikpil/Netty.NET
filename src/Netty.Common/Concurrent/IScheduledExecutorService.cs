@@ -50,7 +50,7 @@ public interface IScheduledExecutorService : IExecutorService
      * <li>The executor terminates, also resulting in task cancellation.
      * <li>An execution of the task throws an exception.  In this case
      * calling {@link Future#get() get} on the returned future will throw
-     * {@link ExecutionException}, holding the exception as its cause.
+     * {@link AggregateException}, holding the exception as its cause.
      * </ul>
      * Subsequent executions are suppressed.  Subsequent calls to
      * {@link Future#isDone isDone()} on the returned future will
@@ -90,7 +90,7 @@ public interface IScheduledExecutorService : IExecutorService
      * <li>The executor terminates, also resulting in task cancellation.
      * <li>An execution of the task throws an exception.  In this case
      * calling {@link Future#get() get} on the returned future will throw
-     * {@link ExecutionException}, holding the exception as its cause.
+     * {@link AggregateException}, holding the exception as its cause.
      * </ul>
      * Subsequent executions are suppressed.  Subsequent calls to
      * {@link Future#isDone isDone()} on the returned future will
