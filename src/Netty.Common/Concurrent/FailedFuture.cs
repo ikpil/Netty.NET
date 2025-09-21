@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Threading.Tasks;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
@@ -25,45 +26,12 @@ namespace Netty.NET.Common.Concurrent;
  * recommended to use {@link IEventExecutor#newFailedFuture(Exception)}
  * instead of calling the constructor of this future.
  */
-public class FailedFuture<V> : CompleteFuture<V> {
-
-    private readonly Exception _cause;
-
-    /**
-     * Creates a new instance.
-     *
-     * @param executor the {@link IEventExecutor} associated with this future
-     * @param cause   the cause of failure
-     */
-    public FailedFuture(IEventExecutor executor, Exception cause) {
-        super(executor);
-        this.cause = ObjectUtil.checkNotNull(cause, "cause");
-    }
-
-    @Override
-    public Exception cause() {
-        return _cause;
-    }
-
-    @Override
-    public bool isSuccess() {
-        return false;
-    }
-
-    @Override
-    public Future<V> sync() {
-        PlatformDependent.throwException(_cause);
-        return this;
-    }
-
-    @Override
-    public Future<V> syncUninterruptibly() {
-        PlatformDependent.throwException(_cause);
-        return this;
-    }
-
-    @Override
-    public V getNow() {
-        return null;
+public static class FailedFuture
+{
+    public static TaskCompletionSource<T> Create<T>(IEventExecutor executor, Exception cause)
+    {
+        var tcs = new TaskCompletionSource<T>();
+        tcs.SetException(cause);
+        return tcs;
     }
 }
