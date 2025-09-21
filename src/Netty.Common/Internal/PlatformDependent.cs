@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Netty.NET.Common;
 using Netty.NET.Common.Collections;
+using Netty.NET.Common.Collections.JCTools;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;

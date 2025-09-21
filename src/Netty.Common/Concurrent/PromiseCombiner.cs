@@ -13,9 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Concurrent;
-
-
 
 /**
  * <p>A promise combiner monitors the outcome of a number of discrete futures, then notifies a final, aggregate promise
@@ -38,23 +43,34 @@ public class PromiseCombiner
     private int doneCount;
     private IPromise<Void> aggregatePromise;
     private Exception cause;
-    private readonly IGenericFutureListener<Future<?>> listener = new IGenericFutureListener<Future<?>>() {
-        @Override
-        public void operationComplete(final Future<?> future) {
-            if (executor.inEventLoop()) {
+    private readonly IEventExecutor executor;
+    
+    private readonly Action<Task> listener = new Action<Task>(t => {
+    });
+
+    public class ABCD
+    {
+        private readonly IEventExecutor _executor;
+        
+        public ABCD(IEventExecutor executor)
+        {
+            _executor = executor;
+        }
+        
+        public void operationComplete(Task future) {
+            if (_executor.inEventLoop()) {
                 operationComplete0(future);
             } else {
-                executor.execute(new IRunnable() {
-                    @Override
-                    public void run() {
-                        operationComplete0(future);
-                    }
-                });
+                _executor.execute(AnonymousRunnable.Create(() =>
+                {
+                    operationComplete0(future);
+                }));
             }
         }
-
-        private void operationComplete0(Future<?> future) {
-            assert executor.inEventLoop();
+        
+        private void operationComplete0(Task future)
+        {
+            Debug.Assert(_executor.inEventLoop());
             ++doneCount;
             if (!future.isSuccess() && cause == null) {
                 cause = future.cause();
@@ -63,16 +79,16 @@ public class PromiseCombiner
                 tryPromise();
             }
         }
-    };
+    }
 
-    private readonly IEventExecutor executor;
 
     /**
      * Deprecated use {@link PromiseCombiner#PromiseCombiner(IEventExecutor)}.
      */
     [Obsolete]
-    public PromiseCombiner() {
-        this(ImmediateEventExecutor.INSTANCE);
+    public PromiseCombiner() 
+        : this(ImmediateEventExecutor.INSTANCE)
+    {
     }
 
     /**
@@ -82,7 +98,7 @@ public class PromiseCombiner
      * @param executor the {@link IEventExecutor} to use for notifications.
      */
     public PromiseCombiner(IEventExecutor executor) {
-        this.executor = ObjectUtil.checkNotNull(executor, "executor");
+        this._executor = ObjectUtil.checkNotNull(executor, "executor");
     }
 
     /**
@@ -162,7 +178,7 @@ public class PromiseCombiner
     }
 
     private void checkInEventLoop() {
-        if (!executor.inEventLoop()) {
+        if (!_executor.inEventLoop()) {
             throw new InvalidOperationException("Must be called from IEventExecutor thread");
         }
     }

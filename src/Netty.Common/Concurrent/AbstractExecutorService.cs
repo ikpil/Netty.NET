@@ -113,12 +113,12 @@ public abstract class AbstractExecutorService : IExecutorService
         {
             // Record exceptions so that if we fail to obtain any
             // result, we can throw the last exception we got.
-            ExecutionException ee = null;
+            AggregateException ee = null;
             long deadline = timed ? PreciseTimer.nanoTime() + nanos : 0L;
             IEnumerable<T> it = tasks;
 
             // Start one task for sure; the rest incrementally
-            futures.add(ecs.submit(it.next()));
+            futures.Add(ecs.submit(it.next()));
             --ntasks;
             int active = 1;
 
@@ -130,7 +130,7 @@ public abstract class AbstractExecutorService : IExecutorService
                     if (ntasks > 0)
                     {
                         --ntasks;
-                        futures.add(ecs.submit(it.next()));
+                        futures.Add(ecs.submit(it.next()));
                         ++active;
                     }
                     else if (active == 0)
@@ -153,19 +153,19 @@ public abstract class AbstractExecutorService : IExecutorService
                     {
                         return f.get();
                     }
-                    catch (ExecutionException eex)
+                    catch (AggregateException eex)
                     {
                         ee = eex;
                     }
-                    catch (RuntimeException rex)
+                    catch (Exception rex)
                     {
-                        ee = new ExecutionException(rex);
+                        ee = new AggregateException(rex);
                     }
                 }
             }
 
             if (ee == null)
-                ee = new ExecutionException();
+                ee = new AggregateException();
             throw ee;
         }
         finally
@@ -239,47 +239,70 @@ public abstract class AbstractExecutorService : IExecutorService
         long deadline = PreciseTimer.nanoTime() + nanos;
         var futures = new List<QueueingTaskNode<T>>(tasks.Count);
         int j = 0;
-        timedOut:
-        try
+        do
         {
-            foreach (var t in tasks)
+            try
             {
-                var node = newTaskFor(t);
-                futures.Add(node);
-            }
-
-            int size = futures.Count;
-
-            // Interleave time checks and calls to execute in case
-            // executor doesn't have any/much parallelism.
-            for (int i = 0; i < size; i++)
-            {
-                if (((i == 0) ? nanos : deadline - PreciseTimer.nanoTime()) <= 0L)
-                    break timedOut;
-                execute((IRunnable)futures.get(i));
-            }
-
-            for (; j < size; j++)
-            {
-                Task<T> f = futures.get(j);
-                if (!f.isDone())
+                foreach (var t in tasks)
                 {
-                    try { f.get(deadline - PreciseTimer.nanoTime(), NANOSECONDS); }
-                    catch (CancellationException | ExecutionException ignore) {
+                    var node = newTaskFor(t);
+                    futures.Add(node);
+                }
+
+                int size = futures.Count;
+
+                // Interleave time checks and calls to execute in case
+                // executor doesn't have any/much parallelism.
+                bool timedOut = false;
+                for (int i = 0; i < size; i++)
+                {
+                    if (((i == 0) ? nanos : deadline - PreciseTimer.nanoTime()) <= 0L)
+                    {
+                        timedOut = true;
+                        break;
                     }
-                    catch (TimeoutException timedOut) {
-                        break timedOut;
+                    
+                    execute(futures[i]);
+                }
+
+                if (timedOut)
+                    break;
+
+                for (; j < size; j++)
+                {
+                    QueueingTaskNode<T> f = futures[j];
+                    if (!f.IsCompleted)
+                    {
+                        try
+                        {
+                            var remainNanos = deadline - PreciseTimer.nanoTime();
+                            var remainTs = TimeSpan.FromTicks(remainNanos / 100);
+                            f.Completion.Wait(remainTs);
+                        }
+                        catch (OperationCanceledException ignore) {
+                        }
+                        catch( AggregateException ignore)
+                        {
+                        }
+                        catch (TimeoutException e)
+                        {
+                            timedOut = true;
+                            break;
+                        }
                     }
                 }
-            }
+                
+                if (timedOut)
+                    break;
 
-            return futures;
-        }
-        catch (Exception t)
-        {
-            cancelAll(futures);
-            throw t;
-        }
+                return futures;
+            }
+            catch (Exception t)
+            {
+                cancelAll(futures);
+                throw t;
+            }
+        } while (false);
 
         // Timed out before all the tasks could be completed; cancel remaining
         cancelAll(futures, j);

@@ -52,8 +52,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     private static readonly StrongBox<bool> StrongTrue = new StrongBox<bool>(true);
     private static readonly FastThreadLocal<StrongBox<bool>> RUNNING = new FastThreadLocalFunc<StrongBox<bool>>(() => StrongFalse);
 
-    private readonly TaskCompletionSource<object> _terminationSource = new FailedFuture<object>(
-        GlobalEventExecutor.INSTANCE, new NotSupportedException());
+    private readonly TaskCompletionSource<Void> _terminationSource = FailedFuture.Create<Void>(GlobalEventExecutor.INSTANCE, new NotSupportedException());
 
     private ImmediateEventExecutor() { }
 

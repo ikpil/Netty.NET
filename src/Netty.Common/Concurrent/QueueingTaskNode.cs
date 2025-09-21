@@ -18,6 +18,7 @@ public abstract class QueueingTaskNode<T> : IRunnable
     }
 
     public Task<T> Completion => _promise.Task;
+    public bool IsCompleted => _promise.Task.IsCompleted;
 
     public void cancel(bool mayInterruptIfRunning)
     {

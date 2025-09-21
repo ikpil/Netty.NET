@@ -13,13 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Netty.NET.Common.Internal;
+using Netty.NET.Common.Internal.Logging;
+using static Netty.NET.Common.Internal.ObjectUtil;
+
 namespace Netty.NET.Common.Concurrent;
-
-
-
-
-
-
 
 
 /**
@@ -29,10 +31,10 @@ namespace Netty.NET.Common.Concurrent;
  * @param <V> the type of value returned by the future
  * @param <F> the type of future
  */
-public class PromiseNotifier<V, F extends Future<V>> : IGenericFutureListener<> <F> {
-
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PromiseNotifier));
-    private readonly IPromise<? super V>[] promises;
+public class PromiseNotifier<V, F> : IGenericFutureListener<F> where F : TaskCompletionSource<V>
+{
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PromiseNotifier<V, F>));
+    private readonly IPromise<V>[] promises;
     private readonly bool logNotifyFailure;
 
     /**
@@ -40,9 +42,9 @@ public class PromiseNotifier<V, F extends Future<V>> : IGenericFutureListener<> 
      *
      * @param promises  the {@link IPromise}s to notify once this {@link IGenericFutureListener} is notified.
      */
-    @SafeVarargs
-    public PromiseNotifier(IPromise<? super V>... promises) {
-        this(true, promises);
+    public PromiseNotifier(params IPromise<V>[] promises) 
+    : this(true, promises)
+    {
     }
 
     /**
@@ -51,13 +53,14 @@ public class PromiseNotifier<V, F extends Future<V>> : IGenericFutureListener<> 
      * @param logNotifyFailure {@code true} if logging should be done in case notification fails.
      * @param promises  the {@link IPromise}s to notify once this {@link IGenericFutureListener} is notified.
      */
-    @SafeVarargs
-    public PromiseNotifier(bool logNotifyFailure, IPromise<? super V>... promises) {
+    public PromiseNotifier(bool logNotifyFailure, params IPromise<V>[] promises) 
+    {
         checkNotNull(promises, "promises");
-        for (IPromise<> <? super V> promise: promises) {
+        foreach (IPromise<V> promise in promises) {
             checkNotNullWithIAE(promise, "promise");
         }
-        this.promises = promises.clone();
+
+        this.promises = promises.ToArray();
         this.logNotifyFailure = logNotifyFailure;
     }
 
@@ -72,7 +75,7 @@ public class PromiseNotifier<V, F extends Future<V>> : IGenericFutureListener<> 
      * @param <F>       the type of the {@link Future}
      * @return          the passed in {@link Future}
      */
-    public static <V, F extends Future<V>> F cascade(final F future, final Promise<? super V> promise) {
+    public static F cascade(F future, TaskCompletionSource<V> promise) {
         return cascade(true, future, promise);
     }
 
@@ -88,17 +91,16 @@ public class PromiseNotifier<V, F extends Future<V>> : IGenericFutureListener<> 
      * @param <F>               the type of the {@link Future}
      * @return                  the passed in {@link Future}
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <V, F extends Future<V>> F cascade(bool logNotifyFailure, final F future,
-                                                     final Promise<? super V> promise) {
-        promise.addListener(new IFutureListener<>() {
-            @Override
-            public void operationComplete(Future f) {
-                if (f.isCancelled()) {
-                    future.cancel(false);
-                }
-            }
+    //@SuppressWarnings({"unchecked", "rawtypes"})
+    public static F cascade(bool logNotifyFailure, F future, TaskCompletionSource<V> promise)
+    {
+        promise.Task.ContinueWith(t =>
+        {
+            if (t.IsCanceled) {
+                future.cancel(false);
+            
         });
+
         future.addListener(new PromiseNotifier(logNotifyFailure, promise) {
             @Override
             public void operationComplete(Future f) {
