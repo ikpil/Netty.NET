@@ -1,8 +1,7 @@
 using System.Diagnostics.Contracts;
-using System.Threading;
 using Netty.NET.Common.Functional;
 
-namespace Netty.NET.Common.Collections;
+namespace Netty.NET.Common.Collections.JCTools;
 
 /// <summary>
 /// Forked from <a href="https://github.com/JCTools/JCTools">JCTools</a>.
@@ -246,96 +245,5 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
             // something we can fix here.
             return this.ConsumerIndex == this.ProducerIndex;
         }
-    }
-}
-
-abstract class MpscArrayQueueL1Pad<T> : ConcurrentCircularArrayQueue<T>
-    where T : class
-{
-#pragma warning disable 169 // padded reference
-    long p10, p11, p12, p13, p14, p15, p16;
-    long p30, p31, p32, p33, p34, p35, p36, p37;
-#pragma warning restore 169
-
-    protected MpscArrayQueueL1Pad(int capacity)
-        : base(capacity)
-    {
-    }
-}
-
-abstract class MpscArrayQueueTailField<T> : MpscArrayQueueL1Pad<T>
-    where T : class
-{
-    long producerIndex;
-
-    protected MpscArrayQueueTailField(int capacity)
-        : base(capacity)
-    {
-    }
-
-    protected long ProducerIndex => Volatile.Read(ref this.producerIndex);
-
-    protected bool TrySetProducerIndex(long expect, long newValue) => Interlocked.CompareExchange(ref this.producerIndex, newValue, expect) == expect;
-}
-
-abstract class MpscArrayQueueMidPad<T> : MpscArrayQueueTailField<T>
-    where T : class
-{
-#pragma warning disable 169 // padded reference
-    long p20, p21, p22, p23, p24, p25, p26;
-    long p30, p31, p32, p33, p34, p35, p36, p37;
-#pragma warning restore 169
-
-    protected MpscArrayQueueMidPad(int capacity)
-        : base(capacity)
-    {
-    }
-}
-
-abstract class MpscArrayQueueHeadCacheField<T> : MpscArrayQueueMidPad<T>
-    where T : class
-{
-    long headCache;
-
-    protected MpscArrayQueueHeadCacheField(int capacity)
-        : base(capacity)
-    {
-    }
-
-    protected long ConsumerIndexCache
-    {
-        get { return Volatile.Read(ref this.headCache); }
-        set { Volatile.Write(ref this.headCache, value); }
-    }
-}
-
-abstract class MpscArrayQueueL2Pad<T> : MpscArrayQueueHeadCacheField<T>
-    where T : class
-{
-#pragma warning disable 169 // padded reference
-    long p20, p21, p22, p23, p24, p25, p26;
-    long p30, p31, p32, p33, p34, p35, p36, p37;
-#pragma warning restore 169
-
-    protected MpscArrayQueueL2Pad(int capacity)
-        : base(capacity)
-    {
-    }
-}
-
-abstract class MpscArrayQueueConsumerField<T> : MpscArrayQueueL2Pad<T>
-    where T : class
-{
-    long consumerIndex;
-
-    protected MpscArrayQueueConsumerField(int capacity)
-        : base(capacity)
-    {
-    }
-
-    protected long ConsumerIndex
-    {
-        get { return Volatile.Read(ref this.consumerIndex); }
-        set { Volatile.Write(ref this.consumerIndex, value); } // todo: revisit: UNSAFE.putOrderedLong -- StoreStore fence
     }
 }

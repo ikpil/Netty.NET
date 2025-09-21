@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
-namespace Netty.NET.Common.Collections;
+namespace Netty.NET.Common.Collections.JCTools;
 
 public class Mpsc
 {

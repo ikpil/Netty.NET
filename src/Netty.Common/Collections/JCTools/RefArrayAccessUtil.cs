@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace Netty.NET.Common.Collections;
+namespace Netty.NET.Common.Collections.JCTools;
 
 public static class RefArrayAccessUtil
 {
