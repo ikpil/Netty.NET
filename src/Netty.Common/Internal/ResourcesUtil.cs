@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Internal;
 public static class ResourcesUtil
 {
     /**
-     * Returns a {@link File} named {@code fileName} associated with {@link Class} {@code resourceClass} .
+     * Returns a {@link FileInfo} named {@code fileName} associated with {@link Class} {@code resourceClass} .
      *
      * @param resourceClass The associated class
      * @param fileName The file name
@@ -39,7 +39,6 @@ public static class ResourcesUtil
 
         string assemblyLocation = assembly.Location;
         string assemblyDir = Path.GetDirectoryName(assemblyLocation);
-
 
         if (assemblyDir == null)
             throw new InvalidOperationException("Unable to determine assembly directory.");

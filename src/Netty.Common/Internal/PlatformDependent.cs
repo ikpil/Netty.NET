@@ -67,7 +67,7 @@ public class PlatformDependent
 
     private static readonly long BYTE_ARRAY_BASE_OFFSET = byteArrayBaseOffset0();
 
-    private static readonly File TMPDIR = tmpdir0();
+    private static readonly FileInfo TMPDIR = tmpdir0();
 
     private static readonly int BIT_MODE = bitMode0();
     private static readonly string NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", ""));
@@ -412,7 +412,7 @@ public class PlatformDependent
     /**
      * Returns the temporary directory.
      */
-    public static File tmpdir() {
+    public static FileInfo tmpdir() {
         return TMPDIR;
     }
 
@@ -1267,8 +1267,8 @@ public class PlatformDependent
         return maxDirectMemory;
     }
 
-    private static File tmpdir0() {
-        File f;
+    private static FileInfo tmpdir0() {
+        FileInfo f;
         try {
             f = toDirectory(SystemPropertyUtil.get("io.netty.tmpdir"));
             if (f != null) {
@@ -1317,9 +1317,9 @@ public class PlatformDependent
 
         // Last resort.
         if (isWindows()) {
-            f = new File("C:\\Windows\\Temp");
+            f = new FileInfo("C:\\Windows\\Temp");
         } else {
-            f = new File("/tmp");
+            f = new FileInfo("/tmp");
         }
 
         logger.warn("Failed to get the temporary directory; falling back to: {}", f);
@@ -1327,12 +1327,12 @@ public class PlatformDependent
     }
 
     //@SuppressWarnings("ResultOfMethodCallIgnored")
-    private static File toDirectory(string path) {
+    private static FileInfo toDirectory(string path) {
         if (path == null) {
             return null;
         }
 
-        File f = new File(path);
+        FileInfo f = new FileInfo(path);
         f.mkdirs();
 
         if (!f.isDirectory()) {
@@ -1470,7 +1470,7 @@ public class PlatformDependent
         return LINUX_OS_CLASSIFIERS;
     }
 
-    public static File createTempFile(string prefix, string suffix, File directory) {
+    public static FileInfo createTempFile(string prefix, string suffix, FileInfo directory) {
         if (directory == null) {
             return Files.createTempFile(prefix, suffix).toFile();
         }
