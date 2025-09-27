@@ -14,8 +14,8 @@
  * under the License.
  */
 
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -31,135 +31,79 @@ namespace Netty.NET.Common.Internal;
  */
 public static class SocketUtils
 {
-    private static IEnumerable<T> empty<T>()
+    public static void connect(Socket socket, IPAddress remoteAddress, int timeout)
     {
-        return Enumerable.Empty<T>();
+        socket.Connect(remoteAddress, timeout);
     }
 
-    public static void connect(Socket socket, SocketAddress remoteAddress, int timeout)
+    public static void bind(Socket socket, EndPoint bindpoint)
     {
-        try
-        {
-            socket.Connect(remoteAddress, timeout);
-        }
-        catch (PrivilegedActionException e)
-        {
-            throw (IOException)e.getCause();
-        }
+        socket.Bind(bindpoint);
     }
 
-    public static void bind(Socket socket, SocketAddress bindpoint)
+    public static bool connect(TcpClient socketChannel, IPEndPoint remoteAddress)
     {
         try
         {
-            socket.bind(bindpoint);
+            socketChannel.Connect(remoteAddress);
+            return true;
         }
-        catch (PrivilegedActionException e)
+        catch (Exception e)
         {
-            throw (IOException)e.getCause();
+            return false;
         }
     }
 
-    public static bool connect(SocketChannel socketChannel, SocketAddress remoteAddress)
+    public static Socket accept(Socket serverSocketChannel)
     {
-        try
-        {
-            return socketChannel.connect(remoteAddress);
-        }
-        catch (PrivilegedActionException e)
-        {
-            throw (IOException)e.getCause();
-        }
+        return serverSocketChannel.Accept();
     }
 
-    public static void bind(SocketChannel socketChannel, SocketAddress address)
+    public static EndPoint localSocketAddress(Socket socket)
     {
-        try
-        {
-            socketChannel.bind(address);
-        }
-        catch (PrivilegedActionException e)
-        {
-            throw (IOException)e.getCause();
-        }
-    }
-
-    public static SocketChannel accept(ServerSocketChannel serverSocketChannel)
-    {
-        try
-        {
-            return serverSocketChannel.accept();
-        }
-        catch (PrivilegedActionException e)
-        {
-            throw (IOException)e.getCause();
-        }
-    }
-
-    public static void bind(DatagramChannel networkChannel, final SocketAddress address) {
-        try
-        {
-            networkChannel.bind(address);
-        }
-        catch (PrivilegedActionException e)
-        {
-            throw (IOException)e.getCause();
-        }
-    }
-
-    public static SocketAddress localSocketAddress(ServerSocket socket)
-    {
-        return socket.getLocalSocketAddress();
+        return socket.LocalEndPoint;
     }
 
     public static IPAddress addressByName(string hostname)
     {
-        try
+        IPHostEntry hostEntry = Dns.GetHostEntry(hostname);
+
+        foreach (var ipAddress in hostEntry.AddressList)
         {
-            return IPAddress.getByName(hostname);
+            if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+                return ipAddress;
         }
-        catch (PrivilegedActionException e)
+
+        if (hostEntry.AddressList.Length > 0)
         {
-            throw (UnknownHostException)e.getCause();
+            return hostEntry.AddressList[0];
         }
+
+        return IPAddress.None;
     }
 
     public static IPAddress[] allAddressesByName(string hostname)
     {
-        try
-        {
-            return IPAddress.getAllByName(hostname);
-        }
-        catch (PrivilegedActionException e)
-        {
-            throw (UnknownHostException)e.getCause();
-        }
+        var hostEntry = Dns.GetHostEntry(hostname);
+        return hostEntry.AddressList;
     }
 
-    public static InetSocketAddress socketAddress(string hostname, final int port) {
-        return new InetSocketAddress(hostname, port);
-    }
-
-    public static List<IPAddress> addressesFromNetworkInterface(NetworkInterface intf)
+    public static IPEndPoint socketAddress(string hostname, int port)
     {
-        var list = new List<IPAddress>();
-        var ipProps = intf.GetIPProperties();
+        var ipAddress = addressByName(hostname);
+        return new IPEndPoint(ipAddress, port);
+    }
+
+    public static IEnumerable<IPAddress> addressesFromNetworkInterface(NetworkInterface intf)
+    {
+        IPInterfaceProperties properties = intf.GetIPProperties();
 
         // Android seems to sometimes return null even if this is not a valid return value by the api docs.
         // Just return an empty Enumeration in this case.
         // See https://github.com/netty/netty/issues/10045
-        if (ipProps == null || ipProps.UnicastAddresses == null)
-            return list;
-
-        foreach (var unicast in ipProps.UnicastAddresses)
-        {
-            if (unicast?.Address != null)
-            {
-                list.Add(unicast.Address);
-            }
-        }
-
-        return list;
+        return properties.UnicastAddresses
+            .Select(addrInfo => addrInfo.Address)
+            .ToList();
     }
 
     public static IPAddress loopbackAddress()
@@ -169,13 +113,12 @@ public static class SocketUtils
 
     public static byte[] hardwareAddressFromNetworkInterface(NetworkInterface intf)
     {
-        try
+        PhysicalAddress macAddress = intf.GetPhysicalAddress();
+        if (macAddress == PhysicalAddress.None)
         {
-            return intf.getHardwareAddress();
+            return null;
         }
-        catch (PrivilegedActionException e)
-        {
-            throw (SocketException)e.getCause();
-        }
+
+        return macAddress.GetAddressBytes();
     }
 }
