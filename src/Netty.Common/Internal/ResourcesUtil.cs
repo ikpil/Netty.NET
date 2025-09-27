@@ -12,18 +12,20 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+
+using System;
+using System.IO;
+using System.Net;
+using System.Reflection;
+
 namespace Netty.NET.Common.Internal;
-
-
-
-
 
 /**
  * A utility class that provides various common operations and constants
  * related to loading resources
  */
-public final class ResourcesUtil {
-
+public static class ResourcesUtil
+{
     /**
      * Returns a {@link File} named {@code fileName} associated with {@link Class} {@code resourceClass} .
      *
@@ -31,13 +33,20 @@ public final class ResourcesUtil {
      * @param fileName The file name
      * @return The file named {@code fileName} associated with {@link Class} {@code resourceClass} .
      */
-    public static File getFile(Class resourceClass, string fileName) {
-        try {
-            return new File(URLDecoder.decode(resourceClass.getResource(fileName).getFile(), "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            return new File(resourceClass.getResource(fileName).getFile());
-        }
-    }
+    public static FileInfo getFile(Type resourceClass, string fileName)
+    {
+        Assembly assembly = resourceClass.Assembly;
 
-    private ResourcesUtil() { }
+        string assemblyLocation = assembly.Location;
+        string assemblyDir = Path.GetDirectoryName(assemblyLocation);
+
+
+        if (assemblyDir == null)
+            throw new InvalidOperationException("Unable to determine assembly directory.");
+
+        string filePath = Path.Combine(assemblyDir, fileName);
+
+        filePath = WebUtility.UrlDecode(filePath);
+        return new FileInfo(filePath);
+    }
 }
