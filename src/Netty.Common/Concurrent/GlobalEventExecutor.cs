@@ -16,9 +16,11 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -39,7 +41,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     public static readonly GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
 
-    private readonly BlockingCollection<IRunnable> taskQueue = new BlockingCollection<IRunnable>();
+    private readonly BlockingCollection<IRunnable> _taskQueue = new BlockingCollection<IRunnable>();
 
     private readonly IScheduledTask _quietPeriodTask;
 
@@ -95,7 +97,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
      */
     public IRunnable takeTask()
     {
-        BlockingCollection<IRunnable> taskQueue = this.taskQueue;
+        BlockingCollection<IRunnable> taskQueue = _taskQueue;
         for (;;)
         {
             var scheduledTask = peekScheduledTask();
@@ -155,7 +157,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         IRunnable scheduledTask = pollScheduledTask(nanoTime);
         while (scheduledTask != null)
         {
-            taskQueue.Add(scheduledTask);
+            _taskQueue.Add(scheduledTask);
             scheduledTask = pollScheduledTask(nanoTime);
         }
     }
@@ -165,7 +167,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
      */
     public int pendingTasks()
     {
-        return taskQueue.Count;
+        return _taskQueue.Count;
     }
 
     /**
@@ -174,12 +176,12 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
      */
     private void addTask(IRunnable task)
     {
-        taskQueue.Add(ObjectUtil.checkNotNull(task, "task"));
+        _taskQueue.Add(ObjectUtil.checkNotNull(task, "task"));
     }
 
     public override bool inEventLoop(Thread thread)
     {
-        return thread == this._thread;
+        return thread == _thread;
     }
 
     public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
@@ -228,7 +230,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
      */
     public bool awaitInactivity(TimeSpan timeout)
     {
-        Thread thread = this._thread;
+        Thread thread = _thread;
         if (thread == null)
         {
             throw new InvalidOperationException("thread was not started");
@@ -269,6 +271,78 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
             // See https://github.com/netty/netty/issues/4357
             _thread = t;
             t.Start();
+        }
+    }
+
+
+    private class TaskRunner : IRunnable
+    {
+        private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(TaskRunner));
+
+        private readonly GlobalEventExecutor _this;
+
+        public TaskRunner(GlobalEventExecutor executor)
+        {
+            _this = executor;
+        }
+
+        public void run()
+        {
+            for (;;)
+            {
+                IRunnable task = _this.takeTask();
+                if (task != null)
+                {
+                    try
+                    {
+                        runTask(task);
+                    }
+                    catch (Exception t)
+                    {
+                        logger.warn("Unexpected exception from the global event executor: ", t);
+                    }
+
+                    if (task != _this._quietPeriodTask)
+                    {
+                        continue;
+                    }
+                }
+
+                IQueue<IScheduledTask> scheduledTaskQueue = _this._scheduledTaskQueue;
+                // Terminate if there is no task in the queue (except the noop task).
+                if (_this._taskQueue.IsEmpty() && (scheduledTaskQueue == null || scheduledTaskQueue.Count == 1))
+                {
+                    // Mark the current thread as stopped.
+                    // The following CAS must always success and must be uncontended,
+                    // because only one thread should be running at the same time.
+                    bool stopped = _this._started.compareAndSet(true, false);
+                    Debug.Assert(stopped);
+
+                    // Check if there are pending entries added by execute() or schedule*() while we do CAS above.
+                    // Do not check scheduledTaskQueue because it is not thread-safe and can only be mutated from a
+                    // TaskRunner actively running tasks.
+                    if (_this._taskQueue.IsEmpty())
+                    {
+                        // A) No new task was added and thus there's nothing to handle
+                        //    -> safe to terminate because there's nothing left to do
+                        // B) A new thread started and handled all the new tasks.
+                        //    -> safe to terminate the new thread will take care the rest
+                        break;
+                    }
+
+                    // There are pending tasks added again.
+                    if (!_this._started.compareAndSet(false, true))
+                    {
+                        // startThread() started a new thread and set 'started' to true.
+                        // -> terminate this thread so that the new thread reads from taskQueue exclusively.
+                        break;
+                    }
+
+                    // New tasks were added, but this worker was faster to set 'started' to true.
+                    // i.e. a new worker thread was not started by startThread().
+                    // -> keep this thread alive to handle the newly added entries.
+                }
+            }
         }
     }
 }
