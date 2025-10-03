@@ -7,7 +7,7 @@ namespace Netty.NET.Common;
 
 public class TraceRecord : Exception
 {
-    private static readonly TraceRecord BOTTOM = new BottomTraceRecord();
+    public static readonly TraceRecord BOTTOM = new BottomTraceRecord();
 
     private readonly string _hintString;
     private readonly TraceRecord _next;
@@ -15,7 +15,7 @@ public class TraceRecord : Exception
 
     public TraceRecord(TraceRecord next, object hint)
     {
-        // This needs to be generated even if toString() is never called as it may change later on.
+        // This needs to be generated even if ToString() is never called as it may change later on.
         _hintString = hint is IResourceLeakHint leakHint ? leakHint.toHintString() : hint.ToString();
         _next = next;
         _pos = next._pos + 1;

@@ -76,7 +76,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     private int _hash;
 
     /**
-     * Used to cache the {@link #toString()} value.
+     * Used to cache the {@link #ToString()} value.
      */
     private string _string;
 

@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Internal;
  */
 public static class StringUtil
 {
-    public const string EMPTY_STRING = "";
+    public static readonly string EMPTY_STRING = "";
     public static readonly string NEWLINE = SystemPropertyUtil.get("line.separator", "\n");
 
     public const char DOUBLE_QUOTE = '\"';

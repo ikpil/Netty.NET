@@ -13,6 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Text;
+using Netty.NET.Common;
+
 namespace Netty.Common.Tests;/**
  * Test character encoding and case insensitivity for the {@link AsciiString} class
  */
@@ -34,7 +38,7 @@ public class AsciiStringCharacterTest {
         for (int i = 0; i < 1 << 16; ++i) {
             b.append("eéaà");
         }
-        final String bString = b.toString();
+        final String bString = b.ToString();
         final Encoding[] charsets = CharsetUtil.values();
         for (int i = 0; i < charsets.length; ++i) {
             final Encoding charset = charsets[i];
@@ -50,7 +54,7 @@ public class AsciiStringCharacterTest {
         for (int i = 0; i < 1 << 16; ++i) {
             b.append("eéaà");
         }
-        final String bString = b.toString();
+        final String bString = b.ToString();
         final Encoding[] charsets = CharsetUtil.values();
         for (int i = 0; i < charsets.length; ++i) {
             final Encoding charset = charsets[i];
@@ -66,7 +70,7 @@ public class AsciiStringCharacterTest {
         for (int i = 0; i < 1 << 16; ++i) {
             b.append("eéaà");
         }
-        final String bString = b.toString();
+        final String bString = b.ToString();
         // The AsciiString class actually limits the Encoding to ISO_8859_1
         byte[] expected = bString.getBytes(CharsetUtil.ISO_8859_1);
         byte[] actual = new AsciiString(bString).toByteArray();
@@ -172,7 +176,7 @@ public class AsciiStringCharacterTest {
             upperCaseBuilder.append(upper);
             lowerCaseBytes[i] = (byte) (upper + upperToLower);
         }
-        String upperCaseString = upperCaseBuilder.toString();
+        String upperCaseString = upperCaseBuilder.ToString();
         String lowerCaseString = new String(lowerCaseBytes);
         AsciiString lowerCaseAscii = new AsciiString(lowerCaseBytes, false);
         AsciiString upperCaseAscii = new AsciiString(upperCaseString);

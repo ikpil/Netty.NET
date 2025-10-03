@@ -148,12 +148,12 @@ namespace Netty.Common.Tests.Internal.Logging
         public void testExceptionIn_toString() {
             Object o = new Object() {
                 @Override
-                public String toString() {
+                public String ToString() {
                 throw new IllegalStateException("a");
             }
             };
             String result = MessageFormatter.format("Troublesome object {}", o).getMessage();
-            assertEquals("Troublesome object [FAILED toString()]", result);
+            assertEquals("Troublesome object [FAILED ToString()]", result);
         }
 
         @Test

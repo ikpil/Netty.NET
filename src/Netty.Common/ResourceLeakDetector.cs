@@ -289,7 +289,7 @@ public class ResourceLeakDetector<T>
             if (@ref == null) {
                 break;
             }
-            ref.dispose();
+            @ref.dispose();
         }
     }
 

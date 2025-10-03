@@ -156,7 +156,7 @@ public class DefaultPriorityQueueTest {
                     sb.append(value).append(" ");
                 }
                 sb.append("]");
-                throw new AssertionError(sb.toString(), cause);
+                throw new AssertionError(sb.ToString(), cause);
             }
         }
         assertEmptyQueue(queue);

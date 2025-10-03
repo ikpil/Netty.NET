@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Netty.NET.Common.Internal;
+using static Netty.NET.Common.ResourceLeakDetector;
 
 namespace Netty.NET.Common;
 
@@ -9,14 +10,10 @@ namespace Netty.NET.Common;
 internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTracker<T>
 {
     //@SuppressWarnings("unchecked") // generics and updaters do not mix.
-    private static readonly AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater = (AtomicReferenceFieldUpdater)
-        AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultResourceLeak), typeof(TraceRecord), "head");
+    private static readonly AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater = (AtomicReferenceFieldUpdater) AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultResourceLeak), typeof(TraceRecord), "head");
 
     //@SuppressWarnings("unchecked") // generics and updaters do not mix.
-    private static readonly AtomicIntegerFieldUpdater<DefaultResourceLeak<?>> droppedRecordsUpdater =
-
-    (AtomicIntegerFieldUpdater)
-        AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultResourceLeak), "droppedRecords");
+    private static readonly AtomicIntegerFieldUpdater<DefaultResourceLeak<?>> droppedRecordsUpdater = (AtomicIntegerFieldUpdater) AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultResourceLeak), "droppedRecords");
 
     //@SuppressWarnings("unused")
     private volatile TraceRecord head;
@@ -163,16 +160,15 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
      * @param ref the reference. If {@code null}, this method has no effect.
      * @see java.lang.ref.Reference#reachabilityFence
      */
-    private static void reachabilityFence0(object ref) {
-        if (ref != null) {
-            synchronized (ref) {
+    private static void reachabilityFence0(object @ref) {
+        if (@ref != null) {
+            lock (@ref) {
                 // Empty synchronized is ok: https://stackoverflow.com/a/31933260/1151521
             }
         }
     }
 
-    @Override
-    public string toString() {
+    public override string ToString() {
         TraceRecord oldHead = headUpdater.get(this);
         return generateReport(oldHead);
     }
@@ -185,26 +181,26 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
     private string generateReport(TraceRecord oldHead) {
         if (oldHead == null) {
             // Already closed
-            return EMPTY_STRING;
+            return StringUtil.EMPTY_STRING;
         }
 
-        final int dropped = droppedRecordsUpdater.get(this);
+        int dropped = droppedRecordsUpdater.get(this);
         int duped = 0;
 
         int present = oldHead.pos + 1;
         // Guess about 2 kilobytes per stack trace
-        StringBuilder buf = new StringBuilder(present * 2048).append(NEWLINE);
-        buf.append("Recent access records: ").append(NEWLINE);
+        StringBuilder buf = new StringBuilder(present * 2048).Append(StringUtil.NEWLINE);
+        buf.Append("Recent access records: ").Append(StringUtil.NEWLINE);
 
         int i = 1;
         ISet<string> seen = new HashSet<string>(present);
         for (; oldHead != TraceRecord.BOTTOM; oldHead = oldHead.next) {
-            string s = oldHead.toString();
-            if (seen.add(s)) {
+            string s = oldHead.ToString();
+            if (seen.Add(s)) {
                 if (oldHead.next == TraceRecord.BOTTOM) {
-                    buf.append("Created at:").append(NEWLINE).append(s);
+                    buf.Append("Created at:").Append(StringUtil.NEWLINE).Append(s);
                 } else {
-                    buf.append('#').append(i++).append(':').append(NEWLINE).append(s);
+                    buf.Append('#').Append(i++).Append(':').Append(StringUtil.NEWLINE).Append(s);
                 }
             } else {
                 duped++;
@@ -212,24 +208,24 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
         }
 
         if (duped > 0) {
-            buf.append(": ")
-                    .append(duped)
-                    .append(" leak records were discarded because they were duplicates")
-                    .append(NEWLINE);
+            buf.Append(": ")
+                    .Append(duped)
+                    .Append(" leak records were discarded because they were duplicates")
+                    .Append(StringUtil.NEWLINE);
         }
 
         if (dropped > 0) {
-            buf.append(": ")
-               .append(dropped)
-               .append(" leak records were discarded because the leak record count is targeted to ")
-               .append(TARGET_RECORDS)
-               .append(". Use system property ")
-               .append(PROP_TARGET_RECORDS)
-               .append(" to increase the limit.")
-               .append(NEWLINE);
+            buf.Append(": ")
+               .Append(dropped)
+               .Append(" leak records were discarded because the leak record count is targeted to ")
+               .Append(TARGET_RECORDS)
+               .Append(". Use system property ")
+               .Append(PROP_TARGET_RECORDS)
+               .Append(" to increase the limit.")
+               .Append(StringUtil.NEWLINE);
         }
 
-        buf.setLength(buf.length() - NEWLINE.length());
-        return buf.toString();
+        buf.Length -= StringUtil.NEWLINE.length();
+        return buf.ToString();
     }
 }

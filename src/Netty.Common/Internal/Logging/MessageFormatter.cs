@@ -304,14 +304,14 @@ public static class MessageFormatter
         }
         catch (Exception t)
         {
-            Console.Error.WriteLine("SLF4J: Failed toString() invocation on an object of type ["
+            Console.Error.WriteLine("SLF4J: Failed ToString() invocation on an object of type ["
                                     + o.GetType().Name + ']');
             if (null != t.StackTrace)
             {
                 Console.Error.WriteLine(t.StackTrace);
             }
 
-            sbuf.Append("[FAILED toString()]");
+            sbuf.Append("[FAILED ToString()]");
         }
     }
 

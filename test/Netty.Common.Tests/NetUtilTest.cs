@@ -791,7 +791,7 @@ public class NetUtilTest {
             }
             buf.append(hex);
         }
-        return buf.toString();
+        return buf.ToString();
     }
 
     private static byte[] unhex(String value) {

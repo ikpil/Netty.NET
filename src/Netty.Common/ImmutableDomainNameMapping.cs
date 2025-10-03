@@ -111,7 +111,7 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T>
      * @param numberOfMappings       number of mappings the given instance holds,
      *                               e.g. {@link #domainNamePatterns#length}
      * @param estimatedMappingLength estimated size taken by one mapping
-     * @return estimated length of string returned by {@link #toString()}
+     * @return estimated length of string returned by {@link #ToString()}
      */
     private static int estimateBufferSize(int defaultValueLength,
         int numberOfMappings,

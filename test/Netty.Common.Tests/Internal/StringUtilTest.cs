@@ -584,7 +584,7 @@ public class StringUtilTest {
     public void testIsNullOrEmpty() {
         assertTrue(isNullOrEmpty(null));
         assertTrue(isNullOrEmpty(""));
-        assertTrue(isNullOrEmpty(StringUtil.EMPTY_STRING));
+        assertTrue(isNullOrEmpty(string.Empty));
         assertFalse(isNullOrEmpty(" "));
         assertFalse(isNullOrEmpty("\t"));
         assertFalse(isNullOrEmpty("\n"));

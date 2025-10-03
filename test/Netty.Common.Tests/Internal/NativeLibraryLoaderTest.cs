@@ -26,7 +26,7 @@ class NativeLibraryLoaderTest {
     @Test
     void testFileNotFound() {
         try {
-            NativeLibraryLoader.load(UUID.randomUUID().toString(), NativeLibraryLoaderTest.class.getClassLoader());
+            NativeLibraryLoader.load(UUID.randomUUID().ToString(), NativeLibraryLoaderTest.class.getClassLoader());
             fail();
         } catch (UnsatisfiedLinkError error) {
             assertTrue(error.getCause() instanceof FileNotFoundException);
@@ -37,7 +37,7 @@ class NativeLibraryLoaderTest {
     @Test
     void testFileNotFoundWithNullClassLoader() {
         try {
-            NativeLibraryLoader.load(UUID.randomUUID().toString(), null);
+            NativeLibraryLoader.load(UUID.randomUUID().ToString(), null);
             fail();
         } catch (UnsatisfiedLinkError error) {
             assertTrue(error.getCause() instanceof FileNotFoundException);

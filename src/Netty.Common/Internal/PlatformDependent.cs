@@ -1520,7 +1520,7 @@ public class PlatformDependent
                 sb.append(c);
             }
         }
-        return sb.toString();
+        return sb.ToString();
     }
 
     //replaces value.toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
@@ -1532,7 +1532,7 @@ public class PlatformDependent
                 sb.append(c);
             }
         }
-        return sb.toString();
+        return sb.ToString();
     }
 
     private static string normalizeArch(string value) {
