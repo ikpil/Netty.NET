@@ -980,8 +980,8 @@ public class PlatformDependent
      * The resulting hash code will be case insensitive.
      */
     public static int hashCodeAscii(ICharSequence bytes) {
-        final int length = bytes.length();
-        final int remainingBytes = length & 7;
+        int length = bytes.length();
+        int remainingBytes = length & 7;
         int hash = HASH_CODE_ASCII_SEED;
         // Benchmarking shows that by just naively looping for inputs 8~31 bytes long we incur a relatively large
         // performance penalty (only achieve about 60% performance of loop which iterates over each char). So because

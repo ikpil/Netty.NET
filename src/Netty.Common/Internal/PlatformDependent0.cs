@@ -61,9 +61,9 @@ public class PlatformDependent0 {
     //public static readonly Unsafe UNSAFE;
 
     // constants borrowed from murmur3
-    public static readonly uint HASH_CODE_ASCII_SEED = 0xc2b2ae35;
-    public static readonly uint HASH_CODE_C1 = 0xcc9e2d51;
-    public static readonly uint HASH_CODE_C2 = 0x1b873593;
+    public static readonly int HASH_CODE_ASCII_SEED = unchecked((int)0xc2b2ae35);
+    public static readonly int HASH_CODE_C1 = unchecked((int)0xcc9e2d51);
+    public static readonly int HASH_CODE_C2 = unchecked((int)0x1b873593);
 
     /**
      * Limits the number of bytes to copy per {@link Unsafe#copyMemory(long, long, long)} to allow safepoint polling
