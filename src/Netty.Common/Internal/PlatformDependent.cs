@@ -264,17 +264,17 @@ public class PlatformDependent
             return true;
         }
         string[] classifiers = osClassifiers.Split(",");
-        if (classifiers.length == 0) {
+        if (classifiers.Length == 0) {
             throw new ArgumentException(
                     osClassifiersPropertyName + " property is not empty, but contains no classifiers: "
                             + osClassifiers);
         }
         // at most ID, ID_LIKE classifiers
-        if (classifiers.length > 2) {
+        if (classifiers.Length > 2) {
             throw new ArgumentException(
                     osClassifiersPropertyName + " property contains more than 2 classifiers: " + osClassifiers);
         }
-        for (string classifier : classifiers) {
+        foreach (string classifier in classifiers) {
             addClassifier(availableClassifiers, classifier);
         }
         return true;
