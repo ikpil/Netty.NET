@@ -24,6 +24,94 @@ public interface IRunnableFuture<V> : IRunnable, IFuture<V>
 {
 }
 
+public class DefaultPromise<V> : IPromise<V>
+{
+    public DefaultPromise(IEventExecutor executor)
+    {
+        
+    }
+
+    public virtual AggregateException cause()
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual bool cancel(bool mayInterruptIfRunning)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> setSuccess(V result)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual bool trySuccess(V result)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> setFailure(Exception cause)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual bool tryFailure(Exception cause)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual bool setUncancellable()
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> addListener(IGenericFutureListener<IFuture<V>> listener)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners)
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> await()
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> awaitUninterruptibly()
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> sync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IPromise<V> syncUninterruptibly()
+    {
+        throw new NotImplementedException();
+    }
+
+    protected virtual StringBuilder toStringBuilder()
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V> 
 {
     private static readonly IRunnable COMPLETED = new SentinelRunnable("COMPLETED");
@@ -80,52 +168,47 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
         return done;
     }
 
-    @Override
-    public IPromise<V> setFailure(Exception cause) {
+    public override IPromise<V> setFailure(Exception cause) {
         throw new InvalidOperationException();
     }
 
     protected IPromise<V> setFailureInternal(Exception cause) {
-        super.setFailure(cause);
+        base.setFailure(cause);
         clearTaskAfterCompletion(true, FAILED);
         return this;
     }
 
-    @Override
-    public final bool tryFailure(Exception cause) {
+    public override bool tryFailure(Exception cause) {
         return false;
     }
 
-    protected final bool tryFailureInternal(Exception cause) {
-        return clearTaskAfterCompletion(super.tryFailure(cause), FAILED);
+    protected virtual bool tryFailureInternal(Exception cause) {
+        return clearTaskAfterCompletion(base.tryFailure(cause), FAILED);
     }
 
-    @Override
-    public IPromise<V> setSuccess(V result) {
+    public override IPromise<V> setSuccess(V result) {
         throw new InvalidOperationException();
     }
 
-    protected IPromise<V> setSuccessInternal(V result) {
-        super.setSuccess(result);
+    protected virtual IPromise<V> setSuccessInternal(V result) {
+        base.setSuccess(result);
         clearTaskAfterCompletion(true, COMPLETED);
         return this;
     }
 
-    @Override
-    public final bool trySuccess(V result) {
+    public override bool trySuccess(V result) {
         return false;
     }
 
-    protected final bool trySuccessInternal(V result) {
-        return clearTaskAfterCompletion(super.trySuccess(result), COMPLETED);
+    protected virtual bool trySuccessInternal(V result) {
+        return clearTaskAfterCompletion(base.trySuccess(result), COMPLETED);
     }
 
-    @Override
-    public bool setUncancellable() {
+    public override bool setUncancellable() {
         throw new InvalidOperationException();
     }
 
-    protected bool setUncancellableInternal() {
+    protected virtual bool setUncancellableInternal() {
         return base.setUncancellable();
     }
 
@@ -135,7 +218,7 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
 
     protected override StringBuilder toStringBuilder() {
         StringBuilder buf = base.toStringBuilder();
-        buf.setCharAt(buf.Length - 1, ',');
+        buf[buf.Length - 1] = ',';
 
         return buf.Append(" task: ")
                   .Append(task)
