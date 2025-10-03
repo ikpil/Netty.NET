@@ -1,108 +1,134 @@
 using System;
+using System.Reflection;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
-
 /**
  * Default implementation that loads custom leak detector via system property
  */
-public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory 
+public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultResourceLeakDetectorFactory));
-    
-    private readonly Constructor<?> obsoleteCustomClassConstructor;
-    private readonly Constructor<?> customClassConstructor;
 
-    public DefaultResourceLeakDetectorFactory() {
+    private readonly ConstructorInfo _obsoleteCustomClassConstructor;
+    private readonly ConstructorInfo _customClassConstructor;
+
+    public DefaultResourceLeakDetectorFactory()
+    {
         string customLeakDetector;
-        try {
+        try
+        {
             customLeakDetector = SystemPropertyUtil.get("io.netty.customResourceLeakDetector");
-        } catch (Exception cause) {
+        }
+        catch (Exception cause)
+        {
             logger.error("Could not access System property: io.netty.customResourceLeakDetector", cause);
             customLeakDetector = null;
         }
-        if (customLeakDetector == null) {
-            obsoleteCustomClassConstructor = customClassConstructor = null;
-        } else {
-            obsoleteCustomClassConstructor = obsoleteCustomClassConstructor(customLeakDetector);
-            customClassConstructor = customClassConstructor(customLeakDetector);
+
+        if (customLeakDetector == null)
+        {
+            _obsoleteCustomClassConstructor = _customClassConstructor = null;
+        }
+        else
+        {
+            _obsoleteCustomClassConstructor = obsoleteCustomClassConstructor(customLeakDetector);
+            _customClassConstructor = customClassConstructor(customLeakDetector);
         }
     }
 
-    private static Constructor<?> obsoleteCustomClassConstructor(string customLeakDetector) {
-        try {
-            final Type detectorClass = Class.forName(customLeakDetector, true,
-                    PlatformDependent.getSystemClassLoader());
+    private static ConstructorInfo obsoleteCustomClassConstructor(string customLeakDetector)
+    {
+        try
+        {
+            Type detectorClass = Type.GetType(customLeakDetector, true, true);
 
-            if (typeof(ResourceLeakDetector<>).isAssignableFrom(detectorClass)) {
-                return detectorClass.getConstructor(typeof(Class), typeof(int), typeof(long));
-            } else {
+            if (typeof(ResourceLeakDetector<>).IsAssignableFrom(detectorClass))
+            {
+                return detectorClass.GetConstructor([typeof(Type), typeof(int), typeof(long)]);
+            }
+            else
+            {
                 logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);
             }
-        } catch (Exception t) {
-            logger.error("Could not load custom resource leak detector class provided: {}",
-                    customLeakDetector, t);
         }
+        catch (Exception t)
+        {
+            logger.error("Could not load custom resource leak detector class provided: {}",
+                customLeakDetector, t);
+        }
+
         return null;
     }
 
-    private static Constructor<?> customClassConstructor(string customLeakDetector) {
-        try {
-            Type detectorClass = Class.forName(customLeakDetector, true,
-                    PlatformDependent.getSystemClassLoader());
+    private static ConstructorInfo customClassConstructor(string customLeakDetector)
+    {
+        try
+        {
+            Type detectorClass = Type.GetType(customLeakDetector, true, true);
 
-            if (typeof(ResourceLeakDetector).isAssignableFrom(detectorClass)) {
-                return detectorClass.getConstructor(typeof(Class), typeof(int));
-            } else {
+            if (typeof(ResourceLeakDetector<>).IsAssignableFrom(detectorClass))
+            {
+                return detectorClass.GetConstructor([typeof(Type), typeof(int)]);
+            }
+            else
+            {
                 logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);
             }
-        } catch (Exception t) {
-            logger.error("Could not load custom resource leak detector class provided: {}",
-                    customLeakDetector, t);
         }
+        catch (Exception t)
+        {
+            logger.error("Could not load custom resource leak detector class provided: {}",
+                customLeakDetector, t);
+        }
+
         return null;
     }
 
     //@SuppressWarnings("deprecation")
     public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval,
-                                                               long maxActive) {
-        if (obsoleteCustomClassConstructor != null) {
-            try {
+        long maxActive)
+    {
+        if (_obsoleteCustomClassConstructor != null)
+        {
+            try
+            {
                 //@SuppressWarnings("unchecked")
                 ResourceLeakDetector<T> leakDetector =
-                        (ResourceLeakDetector<T>) obsoleteCustomClassConstructor.newInstance(
-                                resource, samplingInterval, maxActive);
-                logger.debug("Loaded custom ResourceLeakDetector: {}",
-                        obsoleteCustomClassConstructor.getDeclaringClass().getName());
+                    (ResourceLeakDetector<T>)_obsoleteCustomClassConstructor.Invoke(
+                        [resource, samplingInterval, maxActive]);
+                logger.debug($"Loaded custom ResourceLeakDetector: {_obsoleteCustomClassConstructor?.DeclaringType?.Name ?? string.Empty}");
                 return leakDetector;
-            } catch (Exception t) {
-                logger.error(
-                        "Could not load custom resource leak detector provided: {} with the given resource: {}",
-                        obsoleteCustomClassConstructor.getDeclaringClass().getName(), resource, t);
+            }
+            catch (Exception t)
+            {
+                logger.error($"Could not load custom resource leak detector provided: {_obsoleteCustomClassConstructor?.DeclaringType?.Name ?? string.Empty} with the given resource: {resource}", t);
             }
         }
 
         ResourceLeakDetector<T> resourceLeakDetector = new ResourceLeakDetector<T>(resource, samplingInterval,
-                                                                                   maxActive);
+            maxActive);
         logger.debug("Loaded default ResourceLeakDetector: {}", resourceLeakDetector);
         return resourceLeakDetector;
     }
 
-    public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval) {
-        if (customClassConstructor != null) {
-            try {
+    public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval)
+    {
+        if (_customClassConstructor != null)
+        {
+            try
+            {
                 //@SuppressWarnings("unchecked")
                 ResourceLeakDetector<T> leakDetector =
-                        (ResourceLeakDetector<T>) customClassConstructor.newInstance(resource, samplingInterval);
-                logger.debug("Loaded custom ResourceLeakDetector: {}",
-                        customClassConstructor.getDeclaringClass().getName());
+                    (ResourceLeakDetector<T>)_customClassConstructor.Invoke([resource, samplingInterval]);
+                logger.debug($"Loaded custom ResourceLeakDetector: {_customClassConstructor?.DeclaringType?.Name ?? string.Empty}");
                 return leakDetector;
-            } catch (Exception t) {
-                logger.error(
-                        "Could not load custom resource leak detector provided: {} with the given resource: {}",
-                        customClassConstructor.getDeclaringClass().getName(), resource, t);
+            }
+            catch (Exception t)
+            {
+                logger.error($"Could not load custom resource leak detector provided: {_customClassConstructor?.DeclaringType?.Name ?? string.Empty} with the given resource: {resource}", t);
             }
         }
 
