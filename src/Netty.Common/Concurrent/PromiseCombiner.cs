@@ -43,25 +43,24 @@ public class PromiseCombiner
     private int doneCount;
     private IPromise<Void> aggregatePromise;
     private Exception cause;
-    private readonly IEventExecutor executor;
-    
-    private readonly Action<Task> listener = new Action<Task>(t => {
-    });
+    private readonly IEventExecutor _executor;
 
-    public class ABCD
+    private readonly PromiseCombinerListener _listener;
+
+    private class PromiseCombinerListener
     {
-        private readonly IEventExecutor _executor;
+        private readonly PromiseCombiner _combiner;
         
-        public ABCD(IEventExecutor executor)
+        public PromiseCombinerListener(PromiseCombiner combiner)
         {
-            _executor = executor;
+            _combiner = combiner;
         }
         
         public void operationComplete(Task future) {
-            if (_executor.inEventLoop()) {
+            if (_combiner._executor.inEventLoop()) {
                 operationComplete0(future);
             } else {
-                _executor.execute(AnonymousRunnable.Create(() =>
+                _combiner._executor.execute(AnonymousRunnable.Create(() =>
                 {
                     operationComplete0(future);
                 }));
@@ -70,13 +69,14 @@ public class PromiseCombiner
         
         private void operationComplete0(Task future)
         {
-            Debug.Assert(_executor.inEventLoop());
-            ++doneCount;
-            if (!future.isSuccess() && cause == null) {
-                cause = future.cause();
+            Debug.Assert(_combiner._executor.inEventLoop());
+            ++_combiner.doneCount;
+            if (!future.IsCompletedSuccessfully && _combiner.cause == null)
+            {
+                _combiner.cause = future.Exception;
             }
-            if (doneCount == expectedCount && aggregatePromise != null) {
-                tryPromise();
+            if (_combiner.doneCount == _combiner.expectedCount && _combiner.aggregatePromise != null) {
+                _combiner.tryPromise();
             }
         }
     }
@@ -98,20 +98,8 @@ public class PromiseCombiner
      * @param executor the {@link IEventExecutor} to use for notifications.
      */
     public PromiseCombiner(IEventExecutor executor) {
-        this._executor = ObjectUtil.checkNotNull(executor, "executor");
-    }
-
-    /**
-     * Adds a new promise to be combined. New promises may be added until an aggregate promise is added via the
-     * {@link PromiseCombiner#finish(IPromise)} method.
-     *
-     * @param promise the promise to add to this promise combiner
-     *
-     * @deprecated Replaced by {@link PromiseCombiner#add(Future)}.
-     */
-    [Obsolete]
-    public void add(IPromise<> promise) {
-        add((Future) promise);
+        _executor = ObjectUtil.checkNotNull(executor, "executor");
+        _listener = new PromiseCombinerListener(this);
     }
 
     /**
@@ -120,25 +108,12 @@ public class PromiseCombiner
      *
      * @param future the future to add to this promise combiner
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void add(Future future) {
+    //@SuppressWarnings({ "unchecked", "rawtypes" })
+    public void add(Task future) {
         checkAddAllowed();
         checkInEventLoop();
         ++expectedCount;
-        future.addListener(listener);
-    }
-
-    /**
-     * Adds new promises to be combined. New promises may be added until an aggregate promise is added via the
-     * {@link PromiseCombiner#finish(IPromise)} method.
-     *
-     * @param promises the promises to add to this promise combiner
-     *
-     * @deprecated Replaced by {@link PromiseCombiner#addAll(Future[])}
-     */
-    [Obsolete]
-    public void addAll(IPromise<>... promises) {
-        addAll((Future[]) promises);
+        future.ContinueWith(_listener.operationComplete);
     }
 
     /**
@@ -147,10 +122,10 @@ public class PromiseCombiner
      *
      * @param futures the futures to add to this promise combiner
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void addAll(Future... futures) {
-        for (Future future : futures) {
-            this.add(future);
+    //@SuppressWarnings({ "unchecked", "rawtypes" })
+    public void addAll(params Task[] futures) {
+        foreach (Task future in futures) {
+            add(future);
         }
     }
 
