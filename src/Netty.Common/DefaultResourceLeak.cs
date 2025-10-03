@@ -10,7 +10,7 @@ using static Netty.NET.Common.ResourceLeakDetector;
 namespace Netty.NET.Common;
 
 //@SuppressWarnings("deprecation")
-internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTracker<T>
+internal class DefaultResourceLeak<T> : IResourceLeakTracker<T>
 {
     //@SuppressWarnings("unused")
     private readonly AtomicReference<TraceRecord> head = new AtomicReference<TraceRecord>();
