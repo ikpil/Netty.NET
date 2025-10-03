@@ -34,7 +34,7 @@ namespace Netty.NET.Common.Concurrent;
 public class PromiseNotifier<V, F> : IGenericFutureListener<F> where F : TaskCompletionSource<V>
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PromiseNotifier<V, F>));
-    private readonly IPromise<V>[] promises;
+    private readonly TaskCompletionSource<V>[] promises;
     private readonly bool logNotifyFailure;
 
     /**
@@ -42,7 +42,7 @@ public class PromiseNotifier<V, F> : IGenericFutureListener<F> where F : TaskCom
      *
      * @param promises  the {@link IPromise}s to notify once this {@link IGenericFutureListener} is notified.
      */
-    public PromiseNotifier(params IPromise<V>[] promises) 
+    public PromiseNotifier(params TaskCompletionSource<V>[] promises) 
     : this(true, promises)
     {
     }
@@ -53,7 +53,7 @@ public class PromiseNotifier<V, F> : IGenericFutureListener<F> where F : TaskCom
      * @param logNotifyFailure {@code true} if logging should be done in case notification fails.
      * @param promises  the {@link IPromise}s to notify once this {@link IGenericFutureListener} is notified.
      */
-    public PromiseNotifier(bool logNotifyFailure, params IPromise<V>[] promises) 
+    public PromiseNotifier(bool logNotifyFailure, params TaskCompletionSource<V>[] promises) 
     {
         checkNotNull(promises, "promises");
         foreach (IPromise<V> promise in promises) {
@@ -94,41 +94,43 @@ public class PromiseNotifier<V, F> : IGenericFutureListener<F> where F : TaskCom
     //@SuppressWarnings({"unchecked", "rawtypes"})
     public static F cascade(bool logNotifyFailure, F future, TaskCompletionSource<V> promise)
     {
-        promise.Task.ContinueWith(t =>
-        {
-            if (t.IsCanceled) {
-                future.cancel(false);
-            
-        });
-
-        future.addListener(new PromiseNotifier(logNotifyFailure, promise) {
-            @Override
-            public void operationComplete(Future f) {
-                if (promise.isCancelled() && f.isCancelled()) {
-                    // Just return if we propagate a cancel from the promise to the future and both are notified already
-                    return;
-                }
-                super.operationComplete(future);
-            }
-        });
-        return future;
+        throw new NotImplementedException();
+        // promise.Task.ContinueWith(t =>
+        // {
+        //     if (t.IsCanceled) {
+        //         future.cancel(false);
+        //     
+        // });
+        //
+        // future.addListener(new PromiseNotifier(logNotifyFailure, promise) {
+        //     @Override
+        //     public void operationComplete(Future f) {
+        //         if (promise.isCancelled() && f.isCancelled()) {
+        //             // Just return if we propagate a cancel from the promise to the future and both are notified already
+        //             return;
+        //         }
+        //         super.operationComplete(future);
+        //     }
+        // });
+        // return future;
     }
 
-    @Override
     public void operationComplete(F future) {
-        InternalLogger internalLogger = logNotifyFailure ? logger : null;
-        if (future.isSuccess()) {
-            V result = future.get();
-            for (IPromise<> <? super V> p: promises) {
+        IInternalLogger internalLogger = logNotifyFailure ? logger : null;
+        if (future.Task.IsCompletedSuccessfully)
+        {
+            V result = future.Task.Result;
+            foreach (var p in promises) {
                 PromiseNotificationUtil.trySuccess(p, result, internalLogger);
             }
-        } else if (future.isCancelled()) {
-            for (IPromise<> <? super V> p: promises) {
+        } else if (future.Task.IsCanceled) {
+            foreach (var p in promises) {
                 PromiseNotificationUtil.tryCancel(p, internalLogger);
             }
-        } else {
-            Exception cause = future.cause();
-            for (IPromise<> <? super V> p: promises) {
+        } else
+        {
+            Exception cause = future.Task.Exception;
+            foreach (var p in promises) {
                 PromiseNotificationUtil.tryFailure(p, cause, internalLogger);
             }
         }
