@@ -241,7 +241,7 @@ public class ResourceLeakDetector<T>
      * @deprecated use {@link #track(object)}
      */
     [Obsolete]
-    public IResourceLeak open(T obj) {
+    public IResourceLeakTracker<T> open(T obj) {
         return track0(obj, false);
     }
 
@@ -311,17 +311,17 @@ public class ResourceLeakDetector<T>
 
         // Detect and report previous leaks.
         for (;;) {
-            DefaultResourceLeak ref = (DefaultResourceLeak) refQueue.poll();
-            if (ref == null) {
+            DefaultResourceLeak @ref = (DefaultResourceLeak) refQueue.poll();
+            if (@ref == null) {
                 break;
             }
 
-            if (!ref.dispose()) {
+            if (!@ref.dispose()) {
                 continue;
             }
 
-            string records = ref.getReportAndClearRecords();
-            if (reportedLeaks.add(records)) {
+            string records = @ref.getReportAndClearRecords();
+            if (reportedLeaks.Add(records)) {
                 if (records.isEmpty()) {
                     reportUntracedLeak(resourceType);
                 } else {
@@ -357,7 +357,7 @@ public class ResourceLeakDetector<T>
                 "To enable advanced leak reporting, " +
                 "specify the JVM option '-D{}={}' or call {}.setLevel() " +
                 "See https://netty.io/wiki/reference-counted-objects.html for more information.",
-                resourceType, PROP_LEVEL, ResourceLeakDetectorLevel.ADVANCED.name().ToLower(), simpleClassName(this));
+                resourceType, ResourceLeakDetector.PROP_LEVEL, nameof(ResourceLeakDetectorLevel.ADVANCED).ToLower(), StringUtil.simpleClassName(this));
     }
 
     /**

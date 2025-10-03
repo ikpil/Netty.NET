@@ -16,7 +16,12 @@
 
 namespace Netty.NET.Common;
 
-public interface IResourceLeakTracker<T>
+public interface IResourceLeakTracker
+{
+    
+}
+
+public interface IResourceLeakTracker<T> : IResourceLeakTracker
 {
     /**
      * Records the caller's current stack trace so that the {@link ResourceLeakDetector} can tell where the leaked

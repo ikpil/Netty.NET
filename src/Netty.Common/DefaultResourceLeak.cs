@@ -109,7 +109,7 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
         }
     }
 
-    bool dispose() {
+    public bool dispose() {
         clear();
         return allLeaks.remove(this);
     }
