@@ -34,7 +34,7 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
             object initialHint) {
         super(referent, refQueue);
 
-        assert referent != null;
+        Debug.Assert(referent != null);
 
         this.allLeaks = allLeaks;
 
@@ -131,7 +131,7 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
     @Override
     public bool close(T trackedObject) {
         // Ensure that the object that was tracked is the same as the one that was passed to close(...).
-        assert trackedHash == System.identityHashCode(trackedObject);
+        Debug.Assert(trackedHash == System.identityHashCode(trackedObject));
 
         try {
             return close();

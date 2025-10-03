@@ -193,7 +193,7 @@ class SWARUtilTest {
     }
 
     private static long getLong(byte[] bytes, int idx) {
-        assert idx >= 0 && bytes.length >= idx + 8;
+        Debug.Assert(idx >= 0 && bytes.length >= idx + 8);
         return (long) bytes[idx] << 56 |
                ((long) bytes[idx + 1] & 0xff) << 48 |
                ((long) bytes[idx + 2] & 0xff) << 40 |
@@ -205,7 +205,7 @@ class SWARUtilTest {
     }
 
     private static int getInt(byte[] bytes, int idx) {
-        assert idx >= 0 && bytes.length >= idx + 4;
+        Debug.Assert(idx >= 0 && bytes.length >= idx + 4);
         return bytes[idx] << 24 |
                (bytes[idx + 1] & 0xff) << 16 |
                (bytes[idx + 2] & 0xff) << 8 |

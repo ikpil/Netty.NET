@@ -433,7 +433,7 @@ public class PlatformDependent0 {
         //                     MethodHandle m = (MethodHandle) maybeException;
         //                     m = m.bindTo(finalInternalUnsafe);
         //                     byte[] bytes = (byte[]) (object) m.invokeExact(typeof(byte), 8);
-        //                     assert bytes.length == 8;
+        //                     Debug.Assert(bytes.length == 8);
         //                     allocateArrayMethod = m;
         //                 } catch (Exception e) {
         //                     maybeException = e;

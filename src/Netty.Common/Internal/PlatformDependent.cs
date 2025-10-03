@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Security;
 using System.Text;
@@ -29,6 +30,7 @@ using Netty.NET.Common.Collections.JCTools;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
+using static Netty.NET.Common.Internal.PlatformDependent0;
 
 namespace Netty.NET.Common.Internal;
 
@@ -455,8 +457,8 @@ public class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static <K, V> ConcurrentDictionary<,> K, V> newConcurrentHashMap() {
-        return new ConcurrentDictionary<>();
+    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>() {
+        return new ConcurrentDictionary<K, V>();
     }
 
     /**
@@ -599,8 +601,13 @@ public class PlatformDependent
         return hasUnsafe() ? PlatformDependent0.getLong(data, index) : data[toIntExact(index)];
     }
 
-    private static int toIntExact(long value) {
-        return Math.toIntExact(value);
+    private static int toIntExact(long value) 
+    {
+        if (value > int.MaxValue || value < int.MinValue)
+        {
+            throw new OverflowException("Value out of range for Int32.");
+        }
+        return (int)value;
     }
 
     private static long getLongSafe(byte[] bytes, int offset) {
@@ -773,7 +780,7 @@ public class PlatformDependent
      * this method <strong>MUST</strong> be deallocated via {@link #freeDirectNoCleaner(ByteBuffer)}.
      */
     public static ByteBuffer allocateDirectNoCleaner(int capacity) {
-        assert USE_DIRECT_BUFFER_NO_CLEANER;
+        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
 
         incrementMemoryCounter(capacity);
         try {
@@ -790,8 +797,9 @@ public class PlatformDependent
      * The {@link ByteBuffer} <strong>MUST</strong> be deallocated via the {@link ICleanableDirectBuffer#clean()}
      * of the returned {@link ICleanableDirectBuffer} object.
      */
-    public static ICleanableDirectBuffer allocateDirectBufferNoCleaner(int capacity) {
-        assert USE_DIRECT_BUFFER_NO_CLEANER;
+    public static ICleanableDirectBuffer allocateDirectBufferNoCleaner(int capacity)
+    {
+        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
         return DIRECT_CLEANER.allocate(capacity);
     }
 
@@ -800,7 +808,7 @@ public class PlatformDependent
      * this method <strong>MUST</strong> be deallocated via {@link #freeDirectNoCleaner(ByteBuffer)}.
      */
     public static ArraySegment<byte> reallocateDirectNoCleaner(ArraySegment<byte> buffer, int capacity) {
-        assert USE_DIRECT_BUFFER_NO_CLEANER;
+        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
 
         int len = capacity - buffer.capacity();
         incrementMemoryCounter(len);
@@ -821,7 +829,7 @@ public class PlatformDependent
      * via the {@link ICleanableDirectBuffer#clean()} method on the returned object.
      */
     public static ICleanableDirectBuffer reallocateDirectBufferNoCleaner(ICleanableDirectBuffer buffer, int capacity) {
-        assert USE_DIRECT_BUFFER_NO_CLEANER;
+        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
         return ((DirectCleaner) DIRECT_CLEANER).reallocate(buffer, capacity);
     }
 
@@ -830,7 +838,7 @@ public class PlatformDependent
      * {@link #allocateDirectNoCleaner(int)}.
      */
     public static void freeDirectNoCleaner(ArraySegment<byte> buffer) {
-        assert USE_DIRECT_BUFFER_NO_CLEANER;
+        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
 
         int capacity = buffer.capacity();
         PlatformDependent0.freeMemory(PlatformDependent0.directBufferAddress(buffer));
@@ -878,7 +886,7 @@ public class PlatformDependent
     private static void decrementMemoryCounter(int capacity) {
         if (DIRECT_MEMORY_COUNTER != null) {
             long usedMemory = DIRECT_MEMORY_COUNTER.addAndGet(-capacity);
-            assert usedMemory >= 0;
+            Debug.Assert(usedMemory >= 0);
         }
     }
 
