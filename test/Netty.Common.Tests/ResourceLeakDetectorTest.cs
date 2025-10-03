@@ -14,6 +14,12 @@
  * under the License.
  */
 
+using System.Runtime.CompilerServices;
+using Netty.Common.Tests;
+using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+
 namespace Netty.Common.Tests;
 
 public class ResourceLeakDetectorTest {
@@ -106,7 +112,7 @@ public void testLeakSetupHints() throws Throwable {
         DefaultResource.detectorWithSetupHint.track(resource2).close(resource2);
         // Give the GC something to work on.
         for (int i = 0; i < 1000; i++) {
-            sink = System.identityHashCode(new byte[10000]);
+            sink = RuntimeHelpers.GetHashCode(new byte[10000]);
         }
     } while (DefaultResource.detectorWithSetupHint.getLeaksFound() < 1 && !Thread.interrupted());
 
@@ -142,7 +148,7 @@ public void testLeakBrokenHint() throws Throwable {
         DefaultResource.detectorWithSetupHint.track(resource2).close(resource2);
         // Give the GC something to work on.
         for (int i = 0; i < 1000; i++) {
-            sink = System.identityHashCode(new byte[10000]);
+            sink = RuntimeHelpers.GetHashCode(new byte[10000]);
         }
     } while (DefaultResource.detectorWithSetupHint.getLeaksFound() < 1 && !Thread.interrupted());
 

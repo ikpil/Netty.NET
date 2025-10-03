@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
@@ -34,7 +35,7 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
         // Store the hash of the tracked object to later assert it in the close(...) method.
         // It's important that we not store a reference to the referent as this would disallow it from
         // be collected via the WeakReference.
-        trackedHash = System.identityHashCode(referent);
+        trackedHash = RuntimeHelpers.GetHashCode(referent);
         allLeaks.Add(this);
         // Create a new Record so we always have the creation stacktrace included.
         head.set(initialHint == null 
@@ -127,7 +128,7 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
     @Override
     public bool close(T trackedObject) {
         // Ensure that the object that was tracked is the same as the one that was passed to close(...).
-        Debug.Assert(trackedHash == System.identityHashCode(trackedObject));
+        Debug.Assert(trackedHash == RuntimeHelpers.GetHashCode(trackedObject));
 
         try {
             return close();

@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Netty.NET.Common;
 
@@ -81,8 +82,7 @@ public sealed class Signal : Exception, IConstant<Signal>
 
     public override int GetHashCode()
     {
-        //return System.identityHashCode(this);
-        return id();
+        return RuntimeHelpers.GetHashCode(this);
     }
 
     public int CompareTo(Signal other)
