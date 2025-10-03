@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using static Netty.NET.Common.ResourceLeakDetector;
 
@@ -9,25 +11,19 @@ namespace Netty.NET.Common;
 //@SuppressWarnings("deprecation")
 internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTracker<T>
 {
-    //@SuppressWarnings("unchecked") // generics and updaters do not mix.
-    private static readonly AtomicReferenceFieldUpdater<DefaultResourceLeak<?>, TraceRecord> headUpdater = (AtomicReferenceFieldUpdater) AtomicReferenceFieldUpdater.newUpdater(typeof(DefaultResourceLeak), typeof(TraceRecord), "head");
-
-    //@SuppressWarnings("unchecked") // generics and updaters do not mix.
-    private static readonly AtomicIntegerFieldUpdater<DefaultResourceLeak<?>> droppedRecordsUpdater = (AtomicIntegerFieldUpdater) AtomicIntegerFieldUpdater.newUpdater(typeof(DefaultResourceLeak), "droppedRecords");
+    //@SuppressWarnings("unused")
+    private readonly AtomicReference<TraceRecord> head = new AtomicReference<TraceRecord>();
 
     //@SuppressWarnings("unused")
-    private volatile TraceRecord head;
+    private readonly AtomicInteger droppedRecords = new AtomicInteger();
 
-    //@SuppressWarnings("unused")
-    private volatile int droppedRecords;
-
-    private readonly ISet<DefaultResourceLeak<object>> allLeaks;
+    private readonly ISet<IResourceLeakTracker<T>> allLeaks;
     private readonly int trackedHash;
 
     public DefaultResourceLeak(
             object referent,
             ReferenceQueue<object> refQueue,
-            ISet<DefaultResourceLeak<object>> allLeaks,
+            ISet<IResourceLeakTracker<T>> allLeaks,
             object initialHint) {
         super(referent, refQueue);
 
@@ -39,10 +35,12 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
         // It's important that we not store a reference to the referent as this would disallow it from
         // be collected via the WeakReference.
         trackedHash = System.identityHashCode(referent);
-        allLeaks.add(this);
+        allLeaks.Add(this);
         // Create a new Record so we always have the creation stacktrace included.
-        headUpdater.set(this, initialHint == null ?
-                new TraceRecord(TraceRecord.BOTTOM) : new TraceRecord(TraceRecord.BOTTOM, initialHint));
+        head.set(initialHint == null 
+            ? new TraceRecord(TraceRecord.BOTTOM) 
+            : new TraceRecord(TraceRecord.BOTTOM, initialHint)
+        );
     }
 
     public void record() {
@@ -87,24 +85,25 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
             TraceRecord newHead;
             bool dropped;
             do {
-                if ((prevHead = oldHead = headUpdater.get(this)) == null) {
+                if ((prevHead = oldHead = head.get()) == null) {
                     // already closed.
                     return;
                 }
-                final int numElements = oldHead.pos + 1;
+                int numElements = oldHead.pos() + 1;
                 if (numElements >= TARGET_RECORDS) {
-                    final int backOffFactor = Math.Min(numElements - TARGET_RECORDS, 30);
-                    dropped = ThreadLocalRandom.current().nextInt(1 << backOffFactor) != 0;
-                    if (dropped) {
-                        prevHead = oldHead.next;
+                    int backOffFactor = Math.Min(numElements - TARGET_RECORDS, 30);
+                    dropped = ThreadLocalRandom.current().Next(1 << backOffFactor) != 0;
+                    if (dropped)
+                    {
+                        prevHead = oldHead.next();
                     }
                 } else {
                     dropped = false;
                 }
                 newHead = hint != null ? new TraceRecord(prevHead, hint) : new TraceRecord(prevHead);
-            } while (!headUpdater.compareAndSet(this, oldHead, newHead));
+            } while (!head.compareAndSet(oldHead, newHead));
             if (dropped) {
-                droppedRecordsUpdater.incrementAndGet(this);
+                droppedRecords.incrementAndGet();
             }
         }
     }
@@ -119,7 +118,7 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
         if (allLeaks.remove(this)) {
             // Call clear so the reference is not even enqueued.
             clear();
-            headUpdater.set(this, null);
+            head.set(null);
             return true;
         }
         return false;
@@ -169,12 +168,12 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
     }
 
     public override string ToString() {
-        TraceRecord oldHead = headUpdater.get(this);
+        TraceRecord oldHead = head.get();
         return generateReport(oldHead);
     }
 
     string getReportAndClearRecords() {
-        TraceRecord oldHead = headUpdater.getAndSet(this, null);
+        TraceRecord oldHead = head.getAndSet(null);
         return generateReport(oldHead);
     }
 
@@ -184,20 +183,20 @@ internal class DefaultResourceLeak<T> : WeakReference<object>, IResourceLeakTrac
             return StringUtil.EMPTY_STRING;
         }
 
-        int dropped = droppedRecordsUpdater.get(this);
+        int dropped = droppedRecords.get();
         int duped = 0;
 
-        int present = oldHead.pos + 1;
+        int present = oldHead.pos() + 1;
         // Guess about 2 kilobytes per stack trace
         StringBuilder buf = new StringBuilder(present * 2048).Append(StringUtil.NEWLINE);
         buf.Append("Recent access records: ").Append(StringUtil.NEWLINE);
 
         int i = 1;
         ISet<string> seen = new HashSet<string>(present);
-        for (; oldHead != TraceRecord.BOTTOM; oldHead = oldHead.next) {
+        for (; oldHead != TraceRecord.BOTTOM; oldHead = oldHead.next()) {
             string s = oldHead.ToString();
             if (seen.Add(s)) {
-                if (oldHead.next == TraceRecord.BOTTOM) {
+                if (oldHead.next() == TraceRecord.BOTTOM) {
                     buf.Append("Created at:").Append(StringUtil.NEWLINE).Append(s);
                 } else {
                     buf.Append('#').Append(i++).Append(':').Append(StringUtil.NEWLINE).Append(s);

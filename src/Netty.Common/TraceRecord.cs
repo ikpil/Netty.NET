@@ -27,13 +27,23 @@ public class TraceRecord : Exception
         _next = next;
         _pos = next._pos + 1;
     }
-
+    
     // Used to terminate the stack
     protected TraceRecord()
     {
         _hintString = null;
         _next = null;
         _pos = -1;
+    }
+
+    public int pos()
+    {
+        return _pos;
+    }
+
+    public TraceRecord next()
+    {
+        return _next;
     }
 
     public override string ToString()
