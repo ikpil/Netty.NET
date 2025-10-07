@@ -20,6 +20,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
@@ -44,7 +45,7 @@ namespace Netty.NET.Common.Internal;
  * You can disable the use of {@code sun.misc.Unsafe} if you specify
  * the system property <strong>io.netty.noUnsafe</strong>.
  */
-public class PlatformDependent 
+public static class PlatformDependent 
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent));
 
@@ -218,16 +219,16 @@ public class PlatformDependent
             if (File.Exists(file)) 
             {
                 try {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8))) 
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8)))));
                     string line;
                     while ((line = reader.readLine()) != null) {
                         if (line.StartsWith(LINUX_ID_PREFIX)) {
                             string id = normalizeOsReleaseVariableValue(
-                                    line.substring(LINUX_ID_PREFIX.length()));
+                                line.substring(LINUX_ID_PREFIX.length()));
                             addClassifier(availableClassifiers, id);
                         } else if (line.StartsWith(LINUX_ID_LIKE_PREFIX)) {
                             line = normalizeOsReleaseVariableValue(
-                                    line.substring(LINUX_ID_LIKE_PREFIX.length()));
+                                line.substring(LINUX_ID_LIKE_PREFIX.length()));
                             addClassifier(availableClassifiers, line.Split(" "));
                         }
                     }
@@ -239,6 +240,7 @@ public class PlatformDependent
                 // specification states we should only fall back if /etc/os-release does not exist
                 return true;
             }
+
         } catch (SecurityException e) {
             logger.debug("Unable to check if {} exists", osReleaseFileName, e);
         }
@@ -740,7 +742,7 @@ public class PlatformDependent
         PlatformDependent0.putObject(o, offset, x);
     }
 
-    public static long objectFieldOffset(Field field) {
+    public static long objectFieldOffset(MemberInfo field) {
         return PlatformDependent0.objectFieldOffset(field);
     }
 
@@ -1239,7 +1241,7 @@ public class PlatformDependent
                     continue;
                 }
 
-                maxDirectMemory = long.parseLong(m.group(1));
+                maxDirectMemory = long.Parse(m.group(1));
                 switch (m.group(2).charAt(0)) {
                     case 'k': case 'K':
                         maxDirectMemory *= 1024;
@@ -1629,7 +1631,7 @@ public class PlatformDependent
         }
         if (value.StartsWith("os400")) {
             // Avoid the names such as os4000
-            if (value.length() <= 5 || !Character.isDigit(value.charAt(5))) {
+            if (value.length() <= 5 || !Char.IsDigit(value.charAt(5))) {
                 return "os400";
             }
         }
