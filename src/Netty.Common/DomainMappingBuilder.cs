@@ -22,7 +22,7 @@ namespace Netty.NET.Common;
  * @param <V> concrete type of value objects
  * @deprecated Use {@link DomainWildcardMappingBuilder} instead.
  */
-public class DomainMappingBuilder<T>
+public class DomainMappingBuilder<T> where T : class
 {
     private readonly DomainNameMappingBuilder<T> builder;
 

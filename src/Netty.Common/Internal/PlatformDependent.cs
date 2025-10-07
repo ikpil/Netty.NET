@@ -1326,9 +1326,9 @@ public static class PlatformDependent
 
         // Last resort.
         if (isWindows()) {
-            f = new FileInfo("C:\\Windows\\Temp");
+            f = new DirectoryInfo("C:\\Windows\\Temp");
         } else {
-            f = new FileInfo("/tmp");
+            f = new DirectoryInfo("/tmp");
         }
 
         logger.warn("Failed to get the temporary directory; falling back to: {}", f);

@@ -88,8 +88,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
     }
 
     //@SuppressWarnings("deprecation")
-    public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval,
-        long maxActive)
+    public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive)
     {
         if (_obsoleteCustomClassConstructor != null)
         {

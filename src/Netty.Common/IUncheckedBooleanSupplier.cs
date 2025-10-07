@@ -14,6 +14,8 @@
  * under the License.
  */
 
+using Netty.NET.Common.Functional;
+
 namespace Netty.NET.Common;
 
 /**
@@ -27,37 +29,3 @@ public interface IUncheckedBooleanSupplier : IBooleanSupplier
      */
     bool get();
 }
-
-/**
- * A supplier which always returns {@code false} and never throws.
- */
-public class UncheckedFalseSupplier : IUncheckedBooleanSupplier
-{
-    public static readonly UncheckedFalseSupplier INSTANCE = new UncheckedFalseSupplier();
-
-    private UncheckedFalseSupplier()
-    {
-    }
-
-    public bool get()
-    {
-        return false;
-    }
-};
-
-/**
- * A supplier which always returns {@code true} and never throws.
- */
-public class UncheckedTrueSupplier : IUncheckedBooleanSupplier
-{
-    public static readonly UncheckedTrueSupplier INSTANCE = new UncheckedTrueSupplier();
-
-    private UncheckedTrueSupplier()
-    {
-    }
-
-    public bool get()
-    {
-        return true;
-    }
-};

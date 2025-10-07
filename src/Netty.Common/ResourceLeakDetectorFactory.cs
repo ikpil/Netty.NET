@@ -58,7 +58,7 @@ public abstract class ResourceLeakDetectorFactory
      * @param <T> the type of the resource class
      * @return a new instance of {@link ResourceLeakDetector}
      */
-    public ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource)
+    public ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource) where T : class
     {
         return newResourceLeakDetector<T>(resource, ResourceLeakDetector.SAMPLING_INTERVAL);
     }
@@ -75,7 +75,7 @@ public abstract class ResourceLeakDetectorFactory
      * @return a new instance of {@link ResourceLeakDetector}
      */
     [Obsolete]
-    public abstract ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive);
+    public abstract ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive) where T : class;
 
     /**
      * Returns a new instance of a {@link ResourceLeakDetector} with the given resource class.
@@ -86,7 +86,7 @@ public abstract class ResourceLeakDetectorFactory
      * @return a new instance of {@link ResourceLeakDetector}
      */
     //@SuppressWarnings("deprecation")
-    public virtual ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval)
+    public virtual ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval) where T : class
     {
         ObjectUtil.checkPositive(samplingInterval, "samplingInterval");
         return newResourceLeakDetector<T>(resource, samplingInterval, long.MaxValue);
