@@ -27,7 +27,7 @@ namespace Netty.NET.Common;
 public static class ResourceLeakDetector
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetector));
-    
+
     public static readonly string PROP_LEVEL_OLD = "io.netty.leakDetectionLevel";
     public static readonly string PROP_LEVEL = "io.netty.leakDetection.level";
     public static readonly ResourceLeakDetectorLevel DEFAULT_LEVEL = ResourceLeakDetectorLevel.SIMPLE;
@@ -36,6 +36,7 @@ public static class ResourceLeakDetector
     public static readonly int DEFAULT_TARGET_RECORDS = 4;
 
     public static readonly string PROP_SAMPLING_INTERVAL = "io.netty.leakDetection.samplingInterval";
+
     // There is a minor performance benefit in TLR if this is a power of 2.
     public static readonly int DEFAULT_SAMPLING_INTERVAL = 128;
 
@@ -43,24 +44,27 @@ public static class ResourceLeakDetector
     public static readonly int SAMPLING_INTERVAL;
 
     private static ResourceLeakDetectorLevel _level;
-    
+
     internal static readonly AtomicReference<string[]> excludedMethods = new AtomicReference<string[]>(EmptyArrays.EMPTY_STRINGS);
 
-    
+
     static ResourceLeakDetector()
     {
         bool disabled;
-        if (SystemPropertyUtil.get("io.netty.noResourceLeakDetection") != null) {
+        if (SystemPropertyUtil.get("io.netty.noResourceLeakDetection") != null)
+        {
             disabled = SystemPropertyUtil.getBoolean("io.netty.noResourceLeakDetection", false);
             logger.debug("-Dio.netty.noResourceLeakDetection: {}", disabled);
             logger.warn(
                 "-Dio.netty.noResourceLeakDetection is deprecated. Use '-D{}={}' instead.",
                 PROP_LEVEL, nameof(ResourceLeakDetectorLevel.DISABLED).ToLowerInvariant());
-        } else {
+        }
+        else
+        {
             disabled = false;
         }
 
-        ResourceLeakDetectorLevel defaultLevel = disabled? ResourceLeakDetectorLevel.DISABLED : DEFAULT_LEVEL;
+        ResourceLeakDetectorLevel defaultLevel = disabled ? ResourceLeakDetectorLevel.DISABLED : DEFAULT_LEVEL;
 
         // First read old property name
         string levelStr = SystemPropertyUtil.get(PROP_LEVEL_OLD, defaultLevel.ToString());
@@ -73,7 +77,8 @@ public static class ResourceLeakDetector
         SAMPLING_INTERVAL = SystemPropertyUtil.getInt(PROP_SAMPLING_INTERVAL, DEFAULT_SAMPLING_INTERVAL);
 
         _level = level;
-        if (logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled())
+        {
             logger.debug("-D{}: {}", PROP_LEVEL, level.ToString().ToLowerInvariant());
             logger.debug("-D{}: {}", PROP_TARGET_RECORDS, TARGET_RECORDS);
         }
@@ -85,7 +90,8 @@ public static class ResourceLeakDetector
      * @param levelStr - level string : DISABLED, SIMPLE, ADVANCED, PARANOID. Ignores case.
      * @return corresponding level or SIMPLE level in case of no match.
      */
-    public static ResourceLeakDetectorLevel parseLevel(string levelStr) {
+    public static ResourceLeakDetectorLevel parseLevel(string levelStr)
+    {
         string trimmedLevelStr = levelStr.Trim();
         if (!Enum.TryParse(trimmedLevelStr, true, out ResourceLeakDetectorLevel level))
         {
@@ -94,14 +100,15 @@ public static class ResourceLeakDetector
 
         return level;
     }
-    
-    
+
+
     /**
      * @deprecated Use {@link #setLevel(ResourceLeakDetectorLevel)} instead.
      */
     [Obsolete]
-    public static void setEnabled(bool enabled) {
-        setLevel(enabled? ResourceLeakDetectorLevel.SIMPLE : ResourceLeakDetectorLevel.DISABLED);
+    public static void setEnabled(bool enabled)
+    {
+        setLevel(enabled ? ResourceLeakDetectorLevel.SIMPLE : ResourceLeakDetectorLevel.DISABLED);
     }
 
     /**
@@ -123,11 +130,12 @@ public static class ResourceLeakDetector
     /**
      * Returns the current resource leak detection level.
      */
-    public static ResourceLeakDetectorLevel getLevel() {
+    public static ResourceLeakDetectorLevel getLevel()
+    {
         return _level;
     }
-    
-    public static void addExclusions(Type clz, params string[] methodNames) 
+
+    public static void addExclusions(Type clz, params string[] methodNames)
     {
         ISet<string> nameSet = new HashSet<string>(methodNames);
         // Use loop rather than lookup. This avoids knowing the parameters, and doesn't have to handle
@@ -140,14 +148,16 @@ public static class ResourceLeakDetector
                 break;
             }
         }
-        
-        if (0 < nameSet.Count) {
+
+        if (0 < nameSet.Count)
+        {
             throw new ArgumentException("Can't find '" + nameSet + "' in " + clz.Name);
         }
-        
+
         string[] oldMethods;
         string[] newMethods;
-        do {
+        do
+        {
             oldMethods = excludedMethods.get();
             newMethods = Arrays.copyOf(oldMethods, oldMethods.Length + 2 * methodNames.Length);
             for (int i = 0; i < methodNames.Length; i++)
@@ -157,17 +167,16 @@ public static class ResourceLeakDetector
             }
         } while (!excludedMethods.compareAndSet(oldMethods, newMethods));
     }
-
 }
 
-public class ResourceLeakDetector<T>
+public class ResourceLeakDetector<T> where T : class
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<ResourceLeakDetector<T>>();
 
     /** the collection of active resources */
-    private readonly ConcurrentHashSet<DefaultResourceLeak<object>> allLeaks = new ConcurrentHashSet<DefaultResourceLeak<object>>();
+    private readonly ConcurrentHashSet<DefaultResourceLeak<T>> allLeaks = new ConcurrentHashSet<DefaultResourceLeak<T>>();
 
-    private readonly ReferenceQueue<object> refQueue = new ReferenceQueue<object>();
+    private readonly WeakReferenceQueue<DefaultResourceLeak<T>> refQueue = new WeakReferenceQueue<DefaultResourceLeak<T>>();
     private readonly ConcurrentHashSet<string> reportedLeaks = new ConcurrentHashSet<string>();
 
     private readonly string resourceType;
@@ -182,7 +191,7 @@ public class ResourceLeakDetector<T>
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
     [Obsolete]
-    public ResourceLeakDetector(Type resourceType) 
+    public ResourceLeakDetector(Type resourceType)
         : this(resourceType.Name)
     {
     }
@@ -191,7 +200,7 @@ public class ResourceLeakDetector<T>
      * @deprecated use {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}.
      */
     [Obsolete]
-    public ResourceLeakDetector(string resourceType) 
+    public ResourceLeakDetector(string resourceType)
         : this(resourceType, ResourceLeakDetector.DEFAULT_SAMPLING_INTERVAL, long.MaxValue)
     {
     }
@@ -206,7 +215,7 @@ public class ResourceLeakDetector<T>
      * @param maxActive This is deprecated and will be ignored.
      */
     [Obsolete]
-    public ResourceLeakDetector(Type resourceType, int samplingInterval, long maxActive) 
+    public ResourceLeakDetector(Type resourceType, int samplingInterval, long maxActive)
         : this(resourceType, samplingInterval)
     {
     }
@@ -217,7 +226,7 @@ public class ResourceLeakDetector<T>
      * or {@link ResourceLeakDetectorFactory#newResourceLeakDetector(Class, int, long)}
      */
     //@SuppressWarnings("deprecation")
-    public ResourceLeakDetector(Type resourceType, int samplingInterval) 
+    public ResourceLeakDetector(Type resourceType, int samplingInterval)
         : this(resourceType.Name, samplingInterval, long.MaxValue)
     {
     }
@@ -228,7 +237,8 @@ public class ResourceLeakDetector<T>
      * @param maxActive This is deprecated and will be ignored.
      */
     [Obsolete]
-    public ResourceLeakDetector(string resourceType, int samplingInterval, long maxActive) {
+    public ResourceLeakDetector(string resourceType, int samplingInterval, long maxActive)
+    {
         this.resourceType = ObjectUtil.checkNotNull(resourceType, "resourceType");
         this.samplingInterval = samplingInterval;
     }
@@ -241,7 +251,8 @@ public class ResourceLeakDetector<T>
      * @deprecated use {@link #track(object)}
      */
     [Obsolete]
-    public IResourceLeakTracker<T> open(T obj) {
+    public IResourceLeakTracker<T> open(T obj)
+    {
         return track0(obj, false);
     }
 
@@ -252,7 +263,8 @@ public class ResourceLeakDetector<T>
      * @return the {@link IResourceLeakTracker} or {@code null}
      */
     //@SuppressWarnings("unchecked")
-    public IResourceLeakTracker<T> track(T obj) {
+    public IResourceLeakTracker<T> track(T obj)
+    {
         return track0(obj, false);
     }
 
@@ -266,7 +278,8 @@ public class ResourceLeakDetector<T>
      * @return the {@link IResourceLeakTracker}
      */
     //@SuppressWarnings("unchecked")
-    public IResourceLeakTracker<T> trackForcibly(T obj) {
+    public IResourceLeakTracker<T> trackForcibly(T obj)
+    {
         return track0(obj, true);
     }
 
@@ -275,20 +288,26 @@ public class ResourceLeakDetector<T>
     {
         ResourceLeakDetectorLevel level = ResourceLeakDetector.getLevel();
         if (force ||
-                level == ResourceLeakDetectorLevel.PARANOID ||
-                (level != ResourceLeakDetectorLevel.DISABLED && ThreadLocalRandom.current().Next(samplingInterval) == 0)) {
+            level == ResourceLeakDetectorLevel.PARANOID ||
+            (level != ResourceLeakDetectorLevel.DISABLED && ThreadLocalRandom.current().Next(samplingInterval) == 0))
+        {
             reportLeak();
             return new DefaultResourceLeak<T>(obj, refQueue, allLeaks, getInitialHint(resourceType));
         }
+
         return null;
     }
 
-    private void clearRefQueue() {
-        for (;;) {
-            DefaultResourceLeak<T> @ref = (DefaultResourceLeak<T>) refQueue.poll();
-            if (@ref == null) {
+    private void clearRefQueue()
+    {
+        for (;;)
+        {
+            DefaultResourceLeak<T> @ref = (DefaultResourceLeak<T>)refQueue.poll();
+            if (@ref == null)
+            {
                 break;
             }
+
             @ref.dispose();
         }
     }
@@ -299,37 +318,48 @@ public class ResourceLeakDetector<T>
      *
      * @return {@code true} to enable leak reporting.
      */
-    protected bool needReport() {
+    protected bool needReport()
+    {
         return logger.isErrorEnabled();
     }
 
-    private void reportLeak() {
-        if (!needReport()) {
+    private void reportLeak()
+    {
+        if (!needReport())
+        {
             clearRefQueue();
             return;
         }
 
         // Detect and report previous leaks.
-        for (;;) {
-            DefaultResourceLeak @ref = (DefaultResourceLeak) refQueue.poll();
-            if (@ref == null) {
+        for (;;)
+        {
+            DefaultResourceLeak<T> @ref = (DefaultResourceLeak<T>)refQueue.poll();
+            if (@ref == null)
+            {
                 break;
             }
 
-            if (!@ref.dispose()) {
+            if (!@ref.dispose())
+            {
                 continue;
             }
 
             string records = @ref.getReportAndClearRecords();
-            if (reportedLeaks.Add(records)) {
-                if (records.isEmpty()) {
+            if (reportedLeaks.Add(records))
+            {
+                if (records.isEmpty())
+                {
                     reportUntracedLeak(resourceType);
-                } else {
+                }
+                else
+                {
                     reportTracedLeak(resourceType, records);
                 }
 
                 LeakListener listener = leakListener;
-                if (listener != null) {
+                if (listener != null)
+                {
                     listener.onLeak(resourceType, records);
                 }
             }
@@ -340,31 +370,34 @@ public class ResourceLeakDetector<T>
      * This method is called when a traced leak is detected. It can be overridden for tracking how many times leaks
      * have been detected.
      */
-    protected void reportTracedLeak(string resourceType, string records) {
+    protected void reportTracedLeak(string resourceType, string records)
+    {
         logger.error(
-                "LEAK: {}.release() was not called before it's garbage-collected. " +
-                "See https://netty.io/wiki/reference-counted-objects.html for more information.{}",
-                resourceType, records);
+            "LEAK: {}.release() was not called before it's garbage-collected. " +
+            "See https://netty.io/wiki/reference-counted-objects.html for more information.{}",
+            resourceType, records);
     }
 
     /**
      * This method is called when an untraced leak is detected. It can be overridden for tracking how many times leaks
      * have been detected.
      */
-    protected void reportUntracedLeak(string resourceType) {
+    protected void reportUntracedLeak(string resourceType)
+    {
         logger.error("LEAK: {}.release() was not called before it's garbage-collected. " +
-                "Enable advanced leak reporting to find out where the leak occurred. " +
-                "To enable advanced leak reporting, " +
-                "specify the JVM option '-D{}={}' or call {}.setLevel() " +
-                "See https://netty.io/wiki/reference-counted-objects.html for more information.",
-                resourceType, ResourceLeakDetector.PROP_LEVEL, nameof(ResourceLeakDetectorLevel.ADVANCED).ToLower(), StringUtil.simpleClassName(this));
+                     "Enable advanced leak reporting to find out where the leak occurred. " +
+                     "To enable advanced leak reporting, " +
+                     "specify the JVM option '-D{}={}' or call {}.setLevel() " +
+                     "See https://netty.io/wiki/reference-counted-objects.html for more information.",
+            resourceType, ResourceLeakDetector.PROP_LEVEL, nameof(ResourceLeakDetectorLevel.ADVANCED).ToLower(), StringUtil.simpleClassName(this));
     }
 
     /**
      * @deprecated This method will no longer be invoked by {@link ResourceLeakDetector}.
      */
     [Obsolete]
-    protected void reportInstancesLeak(string resourceType) {
+    protected void reportInstancesLeak(string resourceType)
+    {
     }
 
     /**
@@ -372,27 +405,24 @@ public class ResourceLeakDetector<T>
      * supplied to {@link IResourceLeakTracker#record(object)}, will be printed alongside the stack trace of the
      * creation of the resource.
      */
-    protected object getInitialHint(string resourceType) {
+    protected object getInitialHint(string resourceType)
+    {
         return null;
     }
 
     /**
      * Set leak listener. Previous listener will be replaced.
      */
-    public void setLeakListener(LeakListener leakListener) {
+    public void setLeakListener(LeakListener leakListener)
+    {
         this.leakListener = leakListener;
     }
 
-    public interface LeakListener {
-
+    public interface LeakListener
+    {
         /**
          * Will be called once a leak is detected.
          */
         void onLeak(string resourceType, string records);
     }
-
- 
-
-
-    
 }

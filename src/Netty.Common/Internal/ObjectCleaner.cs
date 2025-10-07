@@ -40,7 +40,7 @@ public static class ObjectCleaner
 
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
     private static readonly ConcurrentHashSet<AutomaticCleanerReference> LIVE_SET = new ConcurrentHashSet<AutomaticCleanerReference>();
-    private static readonly ReferenceQueue<object> REFERENCE_QUEUE = new ReferenceQueue<>();
+    private static readonly WeakReferenceQueue<object> REFERENCE_QUEUE = new WeakReferenceQueue<>();
     private static readonly AtomicBoolean CLEANER_RUNNING = new AtomicBoolean(false);
 
     private static readonly IRunnable CLEANER_TASK = AnonymousRunnable.Create(() =>

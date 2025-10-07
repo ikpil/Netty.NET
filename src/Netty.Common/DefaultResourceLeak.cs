@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using static Netty.NET.Common.ResourceLeakDetector;
@@ -10,45 +11,43 @@ using static Netty.NET.Common.ResourceLeakDetector;
 namespace Netty.NET.Common;
 
 //@SuppressWarnings("deprecation")
-internal class DefaultResourceLeak<T> : IResourceLeakTracker<T>
+internal class DefaultResourceLeak<T> : IResourceLeakTracker<T> where T : class
 {
     //@SuppressWarnings("unused")
-    private readonly AtomicReference<TraceRecord> head = new AtomicReference<TraceRecord>();
+    private readonly AtomicReference<TraceRecord> _head = new AtomicReference<TraceRecord>();
 
     //@SuppressWarnings("unused")
-    private readonly AtomicInteger droppedRecords = new AtomicInteger();
+    private readonly AtomicInteger _droppedRecords = new AtomicInteger();
 
-    private readonly ISet<IResourceLeakTracker<T>> allLeaks;
-    private readonly int trackedHash;
+    private readonly ISet<DefaultResourceLeak<T>> _allLeaks;
+    private readonly int _trackedHash;
+    private WeakReferenceQueueElement<DefaultResourceLeak<T>> _weak;
 
-    public DefaultResourceLeak(
-            object referent,
-            ReferenceQueue<object> refQueue,
-            ISet<IResourceLeakTracker<T>> allLeaks,
-            object initialHint) {
-        super(referent, refQueue);
-
+    public DefaultResourceLeak(T referent, WeakReferenceQueue<DefaultResourceLeak<T>> refQueue, ISet<DefaultResourceLeak<T>> allLeaks, object initialHint)
+    {
         Debug.Assert(referent != null);
-
-        this.allLeaks = allLeaks;
+        _weak = new WeakReferenceQueueElement<DefaultResourceLeak<T>>(refQueue, this);
+        _allLeaks = allLeaks;
 
         // Store the hash of the tracked object to later assert it in the close(...) method.
         // It's important that we not store a reference to the referent as this would disallow it from
         // be collected via the WeakReference.
-        trackedHash = RuntimeHelpers.GetHashCode(referent);
+        _trackedHash = RuntimeHelpers.GetHashCode(referent);
         allLeaks.Add(this);
         // Create a new Record so we always have the creation stacktrace included.
-        head.set(initialHint == null 
-            ? new TraceRecord(TraceRecord.BOTTOM) 
+        _head.set(initialHint == null
+            ? new TraceRecord(TraceRecord.BOTTOM)
             : new TraceRecord(TraceRecord.BOTTOM, initialHint)
         );
     }
 
-    public void record() {
+    public void record()
+    {
         record0(null);
     }
 
-    public void record(object hint) {
+    public void record(object hint)
+    {
         record0(hint);
     }
 
@@ -78,61 +77,80 @@ internal class DefaultResourceLeak<T> : IResourceLeakTracker<T>
      * object isn't shared! If this is a problem, the loop can be aborted and the record dropped, because another
      * thread won the race.
      */
-    private void record0(object hint) {
+    private void record0(object hint)
+    {
         // Check TARGET_RECORDS > 0 here to avoid similar check before remove from and add to lastRecords
-        if (TARGET_RECORDS > 0) {
+        if (TARGET_RECORDS > 0)
+        {
             TraceRecord oldHead;
             TraceRecord prevHead;
             TraceRecord newHead;
             bool dropped;
-            do {
-                if ((prevHead = oldHead = head.get()) == null) {
+            do
+            {
+                if ((prevHead = oldHead = _head.get()) == null)
+                {
                     // already closed.
                     return;
                 }
+
                 int numElements = oldHead.pos() + 1;
-                if (numElements >= TARGET_RECORDS) {
+                if (numElements >= TARGET_RECORDS)
+                {
                     int backOffFactor = Math.Min(numElements - TARGET_RECORDS, 30);
                     dropped = ThreadLocalRandom.current().Next(1 << backOffFactor) != 0;
                     if (dropped)
                     {
                         prevHead = oldHead.next();
                     }
-                } else {
+                }
+                else
+                {
                     dropped = false;
                 }
+
                 newHead = hint != null ? new TraceRecord(prevHead, hint) : new TraceRecord(prevHead);
-            } while (!head.compareAndSet(oldHead, newHead));
-            if (dropped) {
-                droppedRecords.incrementAndGet();
+            } while (!_head.compareAndSet(oldHead, newHead));
+
+            if (dropped)
+            {
+                _droppedRecords.incrementAndGet();
             }
         }
     }
 
-    public bool dispose() {
-        clear();
-        return allLeaks.remove(this);
+    public bool dispose()
+    {
+        _weak?.clear();
+        _weak = null;
+        return _allLeaks.Remove(this);
     }
 
-    @Override
-    public bool close() {
-        if (allLeaks.remove(this)) {
+    public bool close()
+    {
+        if (_allLeaks.Remove(this))
+        {
             // Call clear so the reference is not even enqueued.
-            clear();
-            head.set(null);
+            _weak?.clear();
+            _weak = null;
+            _head.set(null);
             return true;
         }
+
         return false;
     }
 
-    @Override
-    public bool close(T trackedObject) {
+    public bool close(T trackedObject)
+    {
         // Ensure that the object that was tracked is the same as the one that was passed to close(...).
-        Debug.Assert(trackedHash == RuntimeHelpers.GetHashCode(trackedObject));
+        Debug.Assert(_trackedHash == RuntimeHelpers.GetHashCode(trackedObject));
 
-        try {
+        try
+        {
             return close();
-        } finally {
+        }
+        finally
+        {
             // This method will do `synchronized(trackedObject)` and we should be sure this will not cause deadlock.
             // It should not, because somewhere up the callstack should be a (successful) `trackedObject.release`,
             // therefore it is unreasonable that anyone else, anywhere, is holding a lock on the trackedObject.
@@ -141,50 +159,57 @@ internal class DefaultResourceLeak<T> : IResourceLeakTracker<T>
         }
     }
 
-     /**
-     * Ensures that the object referenced by the given reference remains
-     * <a href="package-summary.html#reachability"><em>strongly reachable</em></a>,
-     * regardless of any prior actions of the program that might otherwise cause
-     * the object to become unreachable; thus, the referenced object is not
-     * reclaimable by garbage collection at least until after the invocation of
-     * this method.
-     *
-     * <p> Recent versions of the JDK have a nasty habit of prematurely deciding objects are unreachable.
-     * see: https://stackoverflow.com/questions/26642153/finalize-called-on-strongly-reachable-object-in-java-8
-     * The Java 9 method Reference.reachabilityFence offers a solution to this problem.
-     *
-     * <p> This method is always implemented as a synchronization on {@code ref}, not as
-     * {@code Reference.reachabilityFence} for consistency across platforms and to allow building on JDK 6-8.
-     * <b>It is the caller's responsibility to ensure that this synchronization will not cause deadlock.</b>
-     *
-     * @param ref the reference. If {@code null}, this method has no effect.
-     * @see java.lang.ref.Reference#reachabilityFence
-     */
-    private static void reachabilityFence0(object @ref) {
-        if (@ref != null) {
-            lock (@ref) {
+    /**
+    * Ensures that the object referenced by the given reference remains
+    * <a href="package-summary.html#reachability"><em>strongly reachable</em></a>,
+    * regardless of any prior actions of the program that might otherwise cause
+    * the object to become unreachable; thus, the referenced object is not
+    * reclaimable by garbage collection at least until after the invocation of
+    * this method.
+    *
+    * <p> Recent versions of the JDK have a nasty habit of prematurely deciding objects are unreachable.
+    * see: https://stackoverflow.com/questions/26642153/finalize-called-on-strongly-reachable-object-in-java-8
+    * The Java 9 method Reference.reachabilityFence offers a solution to this problem.
+    *
+    * <p> This method is always implemented as a synchronization on {@code ref}, not as
+    * {@code Reference.reachabilityFence} for consistency across platforms and to allow building on JDK 6-8.
+    * <b>It is the caller's responsibility to ensure that this synchronization will not cause deadlock.</b>
+    *
+    * @param ref the reference. If {@code null}, this method has no effect.
+    * @see java.lang.ref.Reference#reachabilityFence
+    */
+    private static void reachabilityFence0(object @ref)
+    {
+        if (@ref != null)
+        {
+            lock (@ref)
+            {
                 // Empty synchronized is ok: https://stackoverflow.com/a/31933260/1151521
             }
         }
     }
 
-    public override string ToString() {
-        TraceRecord oldHead = head.get();
+    public override string ToString()
+    {
+        TraceRecord oldHead = _head.get();
         return generateReport(oldHead);
     }
 
-    string getReportAndClearRecords() {
-        TraceRecord oldHead = head.getAndSet(null);
+    internal string getReportAndClearRecords()
+    {
+        TraceRecord oldHead = _head.getAndSet(null);
         return generateReport(oldHead);
     }
 
-    private string generateReport(TraceRecord oldHead) {
-        if (oldHead == null) {
+    private string generateReport(TraceRecord oldHead)
+    {
+        if (oldHead == null)
+        {
             // Already closed
             return StringUtil.EMPTY_STRING;
         }
 
-        int dropped = droppedRecords.get();
+        int dropped = _droppedRecords.get();
         int duped = 0;
 
         int present = oldHead.pos() + 1;
@@ -194,35 +219,44 @@ internal class DefaultResourceLeak<T> : IResourceLeakTracker<T>
 
         int i = 1;
         ISet<string> seen = new HashSet<string>(present);
-        for (; oldHead != TraceRecord.BOTTOM; oldHead = oldHead.next()) {
+        for (; oldHead != TraceRecord.BOTTOM; oldHead = oldHead.next())
+        {
             string s = oldHead.ToString();
-            if (seen.Add(s)) {
-                if (oldHead.next() == TraceRecord.BOTTOM) {
+            if (seen.Add(s))
+            {
+                if (oldHead.next() == TraceRecord.BOTTOM)
+                {
                     buf.Append("Created at:").Append(StringUtil.NEWLINE).Append(s);
-                } else {
+                }
+                else
+                {
                     buf.Append('#').Append(i++).Append(':').Append(StringUtil.NEWLINE).Append(s);
                 }
-            } else {
+            }
+            else
+            {
                 duped++;
             }
         }
 
-        if (duped > 0) {
+        if (duped > 0)
+        {
             buf.Append(": ")
-                    .Append(duped)
-                    .Append(" leak records were discarded because they were duplicates")
-                    .Append(StringUtil.NEWLINE);
+                .Append(duped)
+                .Append(" leak records were discarded because they were duplicates")
+                .Append(StringUtil.NEWLINE);
         }
 
-        if (dropped > 0) {
+        if (dropped > 0)
+        {
             buf.Append(": ")
-               .Append(dropped)
-               .Append(" leak records were discarded because the leak record count is targeted to ")
-               .Append(TARGET_RECORDS)
-               .Append(". Use system property ")
-               .Append(PROP_TARGET_RECORDS)
-               .Append(" to increase the limit.")
-               .Append(StringUtil.NEWLINE);
+                .Append(dropped)
+                .Append(" leak records were discarded because the leak record count is targeted to ")
+                .Append(TARGET_RECORDS)
+                .Append(". Use system property ")
+                .Append(PROP_TARGET_RECORDS)
+                .Append(" to increase the limit.")
+                .Append(StringUtil.NEWLINE);
         }
 
         buf.Length -= StringUtil.NEWLINE.length();
