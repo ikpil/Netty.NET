@@ -200,10 +200,6 @@ public static class PlatformDependent
             logger.debug("-Dio.netty.jfr.enabled: {}", JFR);
         }
     }
-    
-    private PlatformDependent() {
-        // only static method supported
-    }
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
     public static void addFilesystemOsClassifiers(ISet<string> availableClassifiers) {
@@ -213,22 +209,31 @@ public static class PlatformDependent
         processOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
-    private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers) {
-        Path file = Paths.get(osReleaseFileName);
+    private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers) 
+    {
+        if (string.IsNullOrEmpty(osReleaseFileName) || availableClassifiers == null)
+            return false;
+
+        string file = osReleaseFileName;
         try {
             if (File.Exists(file)) 
             {
-                try {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8)))));
+                try
+                {
+                    using var stream = File.OpenRead(osReleaseFileName);
+                    using var reader = new StreamReader(stream, Encoding.UTF8);
+                    
                     string line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.StartsWith(LINUX_ID_PREFIX)) {
-                            string id = normalizeOsReleaseVariableValue(
-                                line.substring(LINUX_ID_PREFIX.length()));
+                    while ((line = reader.ReadLine()) != null) 
+                    {
+                        if (line.StartsWith(LINUX_ID_PREFIX)) 
+                        {
+                            string id = normalizeOsReleaseVariableValue(line.substring(LINUX_ID_PREFIX.length()));
                             addClassifier(availableClassifiers, id);
-                        } else if (line.StartsWith(LINUX_ID_LIKE_PREFIX)) {
-                            line = normalizeOsReleaseVariableValue(
-                                line.substring(LINUX_ID_LIKE_PREFIX.length()));
+                        } 
+                        else if (line.StartsWith(LINUX_ID_LIKE_PREFIX)) 
+                        {
+                            line = normalizeOsReleaseVariableValue(line.substring(LINUX_ID_LIKE_PREFIX.length()));
                             addClassifier(availableClassifiers, line.Split(" "));
                         }
                     }
@@ -410,7 +415,7 @@ public static class PlatformDependent
     /**
      * Returns the temporary directory.
      */
-    public static FileInfo tmpdir() {
+    public static DirectoryInfo tmpdir() {
         return TMPDIR;
     }
 
