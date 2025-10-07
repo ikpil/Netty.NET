@@ -11,7 +11,7 @@ public class NoopCleaner : ICleaner
         return new NoopDirectBufferImpl(capacity);
     }
 
-    public void freeDirectBuffer(ArraySegment<byte> buffer)
+    public void freeDirectBuffer(ByteBuffer buffer)
     {
         // NOOP
     }

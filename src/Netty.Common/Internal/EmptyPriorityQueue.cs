@@ -19,12 +19,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Internal;
 
 public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
 {
     private static readonly EmptyPriorityQueue<T> INSTANCE = new EmptyPriorityQueue<T>();
+
+    public int Count => 0;
 
     private EmptyPriorityQueue()
     {
@@ -62,39 +65,9 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
         return true;
     }
 
-    public bool contains(object o)
+    public T[] toArray()
     {
-        return false;
-    }
-
-    public bool add(T t)
-    {
-        return false;
-    }
-
-
-    public bool containsAll(ICollection<T> c)
-    {
-        return false;
-    }
-
-    public bool addAll(ICollection<T> c)
-    {
-        return false;
-    }
-
-    public bool removeAll(ICollection<T> c)
-    {
-        return false;
-    }
-
-    public bool retainAll(ICollection<T> c)
-    {
-        return false;
-    }
-
-    public void clear()
-    {
+        throw new NotImplementedException();
     }
 
     public void clearIgnoringIndexes()
@@ -147,9 +120,40 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
     }
 
 
-    public override string ToString()
+    public bool IsEmpty()
     {
-        return typeof(EmptyPriorityQueue<T>).Name;
+        return true;
+    }
+
+    public bool TryRemove(T item)
+    {
+        return false;
+    }
+
+    public bool TryEnqueue(T item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool TryDequeue(out T item)
+    {
+        item = default;
+        return false;
+    }
+
+    public bool TryPeek(out T item)
+    {
+        item = default;
+        return false;
+    }
+
+    public void Clear()
+    {
+    }
+
+    public int Drain(IConsumer<T> consumer, int limit)
+    {
+        return 0;
     }
 
     public T[] ToArray()
@@ -157,11 +161,8 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
         return Array.Empty<T>();
     }
 
-    // @Override
-    // public <T1> T1[] toArray(T1[] a) {
-    //     if (a.length > 0) {
-    //         a[0] = null;
-    //     }
-    //     return a;
-    // }
+    public override string ToString()
+    {
+        return typeof(EmptyPriorityQueue<T>).Name;
+    }
 }

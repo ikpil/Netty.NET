@@ -1,6 +1,6 @@
 ﻿namespace Netty.NET.Common;
 
-internal class AttributeConstantPool<T> : ConstantPool<AttributeKey<T>>
+internal class AttributeConstantPool<T> : ConstantPool<AttributeKey<T>> where T : class
 {
     protected override AttributeKey<T> newConstant(int id, string name)
     {
