@@ -25,27 +25,27 @@ internal class DirectCleaner : ICleaner
         return new CleanableDirectBufferImpl(PlatformDependent.allocateDirectNoCleaner(capacity));
     }
 
-    public void freeDirectBuffer(ArraySegment<byte> buffer)
+    public void freeDirectBuffer(ByteBuffer buffer)
     {
         PlatformDependent.freeDirectNoCleaner(buffer);
     }
 
-    ICleanableDirectBuffer reallocate(ICleanableDirectBuffer buffer, int capacity)
+    internal ICleanableDirectBuffer reallocate(ICleanableDirectBuffer buffer, int capacity)
     {
-        ArraySegment<byte> newByteBuffer = PlatformDependent.reallocateDirectNoCleaner(buffer.buffer(), capacity);
+        ByteBuffer newByteBuffer = PlatformDependent.reallocateDirectNoCleaner(buffer.buffer(), capacity);
         return new CleanableDirectBufferImpl(newByteBuffer);
     }
 
     private class CleanableDirectBufferImpl : ICleanableDirectBuffer
     {
-        private readonly ArraySegment<byte> _buffer;
+        private readonly ByteBuffer _buffer;
 
-        internal CleanableDirectBufferImpl(ArraySegment<byte> buffer)
+        internal CleanableDirectBufferImpl(ByteBuffer buffer)
         {
             _buffer = buffer;
         }
 
-        public ArraySegment<byte> buffer()
+        public ByteBuffer buffer()
         {
             return _buffer;
         }

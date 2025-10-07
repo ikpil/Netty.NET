@@ -30,20 +30,22 @@ namespace Netty.NET.Common.Internal;
 /**
  * The {@link PlatformDependent} operations which requires access to {@code sun.misc.*}.
  */
-public class PlatformDependent0 {
-
+public class PlatformDependent0
+{
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent0));
     private static readonly long ADDRESS_FIELD_OFFSET;
     private static readonly long BYTE_ARRAY_BASE_OFFSET;
     private static readonly long INT_ARRAY_BASE_OFFSET;
     private static readonly long INT_ARRAY_INDEX_SCALE;
     private static readonly long LONG_ARRAY_BASE_OFFSET;
+
     private static readonly long LONG_ARRAY_INDEX_SCALE;
+
     // private static readonly MethodHandle DIRECT_BUFFER_CONSTRUCTOR;
     // private static readonly MethodHandle ALLOCATE_ARRAY_METHOD;
     // private static readonly MethodHandle ALIGN_SLICE;
     private static readonly bool IS_ANDROID = isAndroid0();
-    private static readonly int JAVA_VERSION = javaVersion0();
+    private static readonly int DOTNET_VERSION = dotnetVersion0();
     private static readonly Exception EXPLICIT_NO_UNSAFE_CAUSE = explicitNoUnsafeCause0();
 
     private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE;
@@ -51,7 +53,7 @@ public class PlatformDependent0 {
     // See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/
     // ImageInfo.java
     private static readonly bool RUNNING_IN_NATIVE_IMAGE = SystemPropertyUtil.contains(
-            "org.graalvm.nativeimage.imagecode");
+        "org.graalvm.nativeimage.imagecode");
 
     private static readonly bool IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = explicitTryReflectionSetAccessible0();
 
@@ -75,7 +77,7 @@ public class PlatformDependent0 {
 
     private static readonly long BITS_MAX_DIRECT_MEMORY;
 
-    static PlatformDependent0() 
+    static PlatformDependent0()
     {
         // MethodHandles.Lookup lookup = MethodHandles.lookup();
         // final ByteBuffer direct;
@@ -518,15 +520,18 @@ public class PlatformDependent0 {
         // }
     }
 
-    private static bool unsafeStaticFieldOffsetSupported() {
+    private static bool unsafeStaticFieldOffsetSupported()
+    {
         return !RUNNING_IN_NATIVE_IMAGE;
     }
 
-    public static bool isExplicitNoUnsafe() {
+    public static bool isExplicitNoUnsafe()
+    {
         return EXPLICIT_NO_UNSAFE_CAUSE != null;
     }
 
-    private static Exception explicitNoUnsafeCause0() {
+    private static Exception explicitNoUnsafeCause0()
+    {
         bool explicitProperty = SystemPropertyUtil.contains("io.netty.noUnsafe");
         bool noUnsafe = SystemPropertyUtil.getBoolean("io.netty.noUnsafe", false);
         logger.debug("-Dio.netty.noUnsafe: {}", noUnsafe);
@@ -538,15 +543,19 @@ public class PlatformDependent0 {
         string reason = "io.netty.noUnsafe";
         string unspecified = "<unspecified>";
         string unsafeMemoryAccess = SystemPropertyUtil.get("sun.misc.unsafe.memory.access", unspecified);
-        if (!explicitProperty && unspecified.Equals(unsafeMemoryAccess) && javaVersion() >= 25) {
+        if (!explicitProperty && unspecified.Equals(unsafeMemoryAccess) && dotnetVersion() >= 25)
+        {
             reason = "io.netty.noUnsafe=true by default on Java 25+";
             noUnsafe = true;
-        } else if (!("allow".Equals(unsafeMemoryAccess) || unspecified.Equals(unsafeMemoryAccess))) {
+        }
+        else if (!("allow".Equals(unsafeMemoryAccess) || unspecified.Equals(unsafeMemoryAccess)))
+        {
             reason = "--sun-misc-unsafe-memory-access=" + unsafeMemoryAccess;
             noUnsafe = true;
         }
 
-        if (noUnsafe) {
+        if (noUnsafe)
+        {
             string msg = "sun.misc.Unsafe: unavailable (" + reason + ')';
             logger.debug(msg);
             return new NotSupportedException(msg);
@@ -554,13 +563,17 @@ public class PlatformDependent0 {
 
         // Legacy properties
         string unsafePropName;
-        if (SystemPropertyUtil.contains("io.netty.tryUnsafe")) {
+        if (SystemPropertyUtil.contains("io.netty.tryUnsafe"))
+        {
             unsafePropName = "io.netty.tryUnsafe";
-        } else {
+        }
+        else
+        {
             unsafePropName = "org.jboss.netty.tryUnsafe";
         }
 
-        if (!SystemPropertyUtil.getBoolean(unsafePropName, true)) {
+        if (!SystemPropertyUtil.getBoolean(unsafePropName, true))
+        {
             string msg = "sun.misc.Unsafe: unavailable (" + unsafePropName + ')';
             logger.debug(msg);
             return new NotSupportedException(msg);
@@ -569,14 +582,16 @@ public class PlatformDependent0 {
         return null;
     }
 
-    public static bool isUnaligned() {
+    public static bool isUnaligned()
+    {
         return UNALIGNED;
     }
 
     /**
      * Any value >= 0 should be considered as a valid max direct memory value.
      */
-    public static long bitsMaxDirectMemory() {
+    public static long bitsMaxDirectMemory()
+    {
         return BITS_MAX_DIRECT_MEMORY;
     }
 
@@ -586,37 +601,42 @@ public class PlatformDependent0 {
         //return UNSAFE != null;
     }
 
-    public static Exception getUnsafeUnavailabilityCause() {
+    public static Exception getUnsafeUnavailabilityCause()
+    {
         return UNSAFE_UNAVAILABILITY_CAUSE;
     }
 
-    public static bool unalignedAccess() {
+    public static bool unalignedAccess()
+    {
         return UNALIGNED;
     }
 
-    public static void throwException<E>(E cause) where E : Exception 
+    public static void throwException<E>(E cause) where E : Exception
     {
         throwException0<E>(cause);
     }
 
     //@SuppressWarnings("unchecked")
-    private static void throwException0<E>(E t) where E : Exception 
+    private static void throwException0<E>(E t) where E : Exception
     {
         throw t;
     }
 
-    public static bool hasDirectBufferNoCleanerConstructor() {
+    public static bool hasDirectBufferNoCleanerConstructor()
+    {
         //return DIRECT_BUFFER_CONSTRUCTOR != null;
         return false;
     }
 
-    public static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity) {
+    public static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity)
+    {
         throwException(new NotImplementedException());
         return null;
         //return newDirectBuffer(UNSAFE.reallocateMemory(directBufferAddress(buffer), capacity), capacity);
     }
 
-    public static ByteBuffer allocateDirectNoCleaner(int capacity) {
+    public static ByteBuffer allocateDirectNoCleaner(int capacity)
+    {
         throwException(new NotImplementedException());
         return null;
         // // Calling malloc with capacity of 0 may return a null ptr or a memory address that can be used.
@@ -625,13 +645,15 @@ public class PlatformDependent0 {
         // return newDirectBuffer(UNSAFE.allocateMemory(Math.Max(1, capacity)), capacity);
     }
 
-    public static bool hasAlignSliceMethod() {
+    public static bool hasAlignSliceMethod()
+    {
         throwException(new NotImplementedException());
         return false;
         //return ALIGN_SLICE != null;
     }
 
-    public static ByteBuffer alignSlice(ByteBuffer buffer, int alignment) {
+    public static ByteBuffer alignSlice(ByteBuffer buffer, int alignment)
+    {
         throwException(new NotImplementedException());
         return null;
         // try {
@@ -642,13 +664,15 @@ public class PlatformDependent0 {
         // }
     }
 
-    public static bool hasAllocateArrayMethod() {
+    public static bool hasAllocateArrayMethod()
+    {
         throwException(new NotImplementedException());
         return false;
         //return ALLOCATE_ARRAY_METHOD != null;
     }
 
-    public static byte[] allocateUninitializedArray(int size) {
+    public static byte[] allocateUninitializedArray(int size)
+    {
         throwException(new NotImplementedException());
         return null;
         // try {
@@ -659,7 +683,8 @@ public class PlatformDependent0 {
         // }
     }
 
-    public static ByteBuffer newDirectBuffer(long address, int capacity) {
+    public static ByteBuffer newDirectBuffer(long address, int capacity)
+    {
         throwException(new NotImplementedException());
         return null;
         // ObjectUtil.checkPositiveOrZero(capacity, "capacity");
@@ -672,7 +697,8 @@ public class PlatformDependent0 {
         // }
     }
 
-    private static void rethrowIfPossible(Exception cause) {
+    private static void rethrowIfPossible(Exception cause)
+    {
         throwException(new NotImplementedException());
         // if (cause instanceof Error) {
         //     throw (Error) cause;
@@ -682,190 +708,227 @@ public class PlatformDependent0 {
         // }
     }
 
-    public static long directBufferAddress(ByteBuffer buffer) {
+    public static long directBufferAddress(ByteBuffer buffer)
+    {
         return getLong(buffer, ADDRESS_FIELD_OFFSET);
     }
 
-    public static long byteArrayBaseOffset() {
+    public static long byteArrayBaseOffset()
+    {
         return BYTE_ARRAY_BASE_OFFSET;
     }
 
-    public static object getObject(object obj, long fieldOffset) {
+    public static object getObject(object obj, long fieldOffset)
+    {
         throwException(new NotImplementedException());
         return null;
         //return UNSAFE.getObject(obj, fieldOffset);
     }
 
-    public static int getInt(object obj, long fieldOffset) {
+    public static int getInt(object obj, long fieldOffset)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getInt(obj, fieldOffset);
     }
 
-    public static void safeConstructPutInt(object obj, long fieldOffset, int value) {
+    public static void safeConstructPutInt(object obj, long fieldOffset, int value)
+    {
         throwException(new NotImplementedException());
         // UNSAFE.putInt(obj, fieldOffset, value);
         // UNSAFE.storeFence();
     }
 
-    private static long getLong(object obj, long fieldOffset) {
+    private static long getLong(object obj, long fieldOffset)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getLong(obj, fieldOffset);
     }
 
-    public static long objectFieldOffset(MemberInfo field) {
+    public static long objectFieldOffset(MemberInfo field)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.objectFieldOffset(field);
     }
 
-    public static byte getByte(long address) {
+    public static byte getByte(long address)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getByte(address);
     }
 
-    public static short getShort(long address) {
+    public static short getShort(long address)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getShort(address);
     }
 
-    public static int getInt(long address) {
+    public static int getInt(long address)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getInt(address);
     }
 
-    public static long getLong(long address) {
+    public static long getLong(long address)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getLong(address);
     }
 
-    public static byte getByte(byte[] data, int index) {
+    public static byte getByte(byte[] data, int index)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getByte(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    public static byte getByte(byte[] data, long index) {
+    public static byte getByte(byte[] data, long index)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getByte(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    public static short getShort(byte[] data, int index) {
+    public static short getShort(byte[] data, int index)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getShort(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    public static int getInt(byte[] data, int index) {
+    public static int getInt(byte[] data, int index)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getInt(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    public static int getInt(int[] data, long index) {
+    public static int getInt(int[] data, long index)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getInt(data, INT_ARRAY_BASE_OFFSET + INT_ARRAY_INDEX_SCALE * index);
     }
 
-    public static int getIntVolatile(long address) {
+    public static int getIntVolatile(long address)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getIntVolatile(null, address);
     }
 
-    public static void putIntOrdered(long address, int newValue) {
+    public static void putIntOrdered(long address, int newValue)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putOrderedInt(null, address, newValue);
     }
 
-    public static long getLong(byte[] data, int index) {
+    public static long getLong(byte[] data, int index)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getLong(data, BYTE_ARRAY_BASE_OFFSET + index);
     }
 
-    public static long getLong(long[] data, long index) {
+    public static long getLong(long[] data, long index)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.getLong(data, LONG_ARRAY_BASE_OFFSET + LONG_ARRAY_INDEX_SCALE * index);
     }
 
-    public static void putByte(long address, byte value) {
+    public static void putByte(long address, byte value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putByte(address, value);
     }
 
-    public static void putShort(long address, short value) {
+    public static void putShort(long address, short value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putShort(address, value);
     }
 
-    public static void putShortOrdered(long address, short newValue) {
+    public static void putShortOrdered(long address, short newValue)
+    {
         throwException(new NotImplementedException());
         // UNSAFE.storeFence();
         // UNSAFE.putShort(null, address, newValue);
     }
 
-    public static void putInt(long address, int value) {
+    public static void putInt(long address, int value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putInt(address, value);
     }
 
-    public static void putLong(long address, long value) {
+    public static void putLong(long address, long value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putLong(address, value);
     }
 
-    public static void putByte(byte[] data, int index, byte value) {
+    public static void putByte(byte[] data, int index, byte value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putByte(data, BYTE_ARRAY_BASE_OFFSET + index, value);
     }
 
-    public static void putByte(object data, long offset, byte value) {
+    public static void putByte(object data, long offset, byte value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putByte(data, offset, value);
     }
 
-    public static void putShort(byte[] data, int index, short value) {
+    public static void putShort(byte[] data, int index, short value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putShort(data, BYTE_ARRAY_BASE_OFFSET + index, value);
     }
 
-    public static void putInt(byte[] data, int index, int value) {
+    public static void putInt(byte[] data, int index, int value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putInt(data, BYTE_ARRAY_BASE_OFFSET + index, value);
     }
 
-    public static void putLong(byte[] data, int index, long value) {
+    public static void putLong(byte[] data, int index, long value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putLong(data, BYTE_ARRAY_BASE_OFFSET + index, value);
     }
 
-    public static void putObject(object o, long offset, object x) {
+    public static void putObject(object o, long offset, object x)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.putObject(o, offset, x);
     }
 
-    public static void copyMemory(long srcAddr, long dstAddr, long length) {
+    public static void copyMemory(long srcAddr, long dstAddr, long length)
+    {
         // Manual safe-point polling is only needed prior Java9:
         // See https://bugs.openjdk.java.net/browse/JDK-8149596
-        if (javaVersion() <= 8) {
+        if (dotnetVersion() <= 8)
+        {
             copyMemoryWithSafePointPolling(srcAddr, dstAddr, length);
-        } else {
+        }
+        else
+        {
             throwException(new NotImplementedException());
             //UNSAFE.copyMemory(srcAddr, dstAddr, length);
         }
     }
 
-    private static void copyMemoryWithSafePointPolling(long srcAddr, long dstAddr, long length) {
-        while (length > 0) {
+    private static void copyMemoryWithSafePointPolling(long srcAddr, long dstAddr, long length)
+    {
+        while (length > 0)
+        {
             long size = Math.Min(length, UNSAFE_COPY_THRESHOLD);
             throwException(new NotImplementedException());
             //UNSAFE.copyMemory(srcAddr, dstAddr, size);
@@ -875,20 +938,26 @@ public class PlatformDependent0 {
         }
     }
 
-    public static void copyMemory(object src, long srcOffset, object dst, long dstOffset, long length) {
+    public static void copyMemory(object src, long srcOffset, object dst, long dstOffset, long length)
+    {
         // Manual safe-point polling is only needed prior Java9:
         // See https://bugs.openjdk.java.net/browse/JDK-8149596
-        if (javaVersion() <= 8) {
+        if (dotnetVersion() <= 8)
+        {
             copyMemoryWithSafePointPolling(src, srcOffset, dst, dstOffset, length);
-        } else {
+        }
+        else
+        {
             throwException(new NotImplementedException());
             //UNSAFE.copyMemory(src, srcOffset, dst, dstOffset, length);
         }
     }
 
     private static void copyMemoryWithSafePointPolling(
-            object src, long srcOffset, object dst, long dstOffset, long length) {
-        while (length > 0) {
+        object src, long srcOffset, object dst, long dstOffset, long length)
+    {
+        while (length > 0)
+        {
             long size = Math.Min(length, UNSAFE_COPY_THRESHOLD);
             throwException(new NotImplementedException());
             //UNSAFE.copyMemory(src, srcOffset, dst, dstOffset, size);
@@ -898,17 +967,20 @@ public class PlatformDependent0 {
         }
     }
 
-    public static void setMemory(long address, long bytes, byte value) {
+    public static void setMemory(long address, long bytes, byte value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.setMemory(address, bytes, value);
     }
 
-    public static void setMemory(object o, long offset, long bytes, byte value) {
+    public static void setMemory(object o, long offset, long bytes, byte value)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.setMemory(o, offset, bytes, value);
     }
 
-    public static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    public static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
+    {
         throwException(new NotImplementedException());
         return false;
         // int remainingBytes = length & 7;
@@ -939,7 +1011,8 @@ public class PlatformDependent0 {
         //         UNSAFE.getByte(bytes1, baseOffset1) == UNSAFE.getByte(bytes2, baseOffset2);
     }
 
-    public static int equalsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    public static int equalsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
+    {
         throwException(new NotImplementedException());
         return 0;
         // long result = 0;
@@ -966,7 +1039,8 @@ public class PlatformDependent0 {
         // return ConstantTimeUtils.equalsConstantTime(result, 0);
     }
 
-    public static bool isZero(byte[] bytes, int startPos, int length) {
+    public static bool isZero(byte[] bytes, int startPos, int length)
+    {
         throwException(new NotImplementedException());
         return false;
         // if (length <= 0) {
@@ -994,7 +1068,8 @@ public class PlatformDependent0 {
         // return bytes[startPos] == 0;
     }
 
-    public static int hashCodeAscii(byte[] bytes, int startPos, int length) {
+    public static int hashCodeAscii(byte[] bytes, int startPos, int length)
+    {
         throwException(new NotImplementedException());
         return 0;
         // int hash = HASH_CODE_ASCII_SEED;
@@ -1024,10 +1099,11 @@ public class PlatformDependent0 {
         // return hash;
     }
 
-    public static int hashCodeAsciiCompute(long value, int hash) {
+    public static int hashCodeAsciiCompute(long value, int hash)
+    {
         throwException(new NotImplementedException());
         return 0;
-        
+
         // // masking with 0x1f reduces the number of overall bits that impact the hash code but makes the hash
         // // code the same regardless of character case (upper case or lower case hash is the same).
         // return hash * HASH_CODE_C1 +
@@ -1037,15 +1113,18 @@ public class PlatformDependent0 {
         //         (int) ((value & 0x1f1f1f1f00000000L) >>> 32);
     }
 
-    public static int hashCodeAsciiSanitize(int value) {
+    public static int hashCodeAsciiSanitize(int value)
+    {
         return value & 0x1f1f1f1f;
     }
 
-    public static int hashCodeAsciiSanitize(short value) {
+    public static int hashCodeAsciiSanitize(short value)
+    {
         return value & 0x1f1f;
     }
 
-    public static int hashCodeAsciiSanitize(byte value) {
+    public static int hashCodeAsciiSanitize(byte value)
+    {
         return value & 0x1f;
     }
 
@@ -1064,34 +1143,40 @@ public class PlatformDependent0 {
         return Assembly.GetEntryAssembly();
     }
 
-    public static int addressSize() {
+    public static int addressSize()
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.addressSize();
     }
 
-    public static long allocateMemory(long size) {
+    public static long allocateMemory(long size)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.allocateMemory(size);
     }
 
-    public static void freeMemory(long address) {
+    public static void freeMemory(long address)
+    {
         throwException(new NotImplementedException());
         //UNSAFE.freeMemory(address);
     }
 
-    public static long reallocateMemory(long address, long newSize) {
+    public static long reallocateMemory(long address, long newSize)
+    {
         throwException(new NotImplementedException());
         return 0;
         //return UNSAFE.reallocateMemory(address, newSize);
     }
 
-    public static bool isAndroid() {
+    public static bool isAndroid()
+    {
         return IS_ANDROID;
     }
 
-    private static bool isAndroid0() {
+    private static bool isAndroid0()
+    {
         // Idea: Sometimes java binaries include Android classes on the classpath, even if it isn't actually Android.
         // Rather than check if certain classes are present, just check the VM, which is tied to the JDK.
 
@@ -1101,59 +1186,52 @@ public class PlatformDependent0 {
         // Android sets this property to Dalvik, regardless of whether it actually is.
         string vmName = SystemPropertyUtil.get("java.vm.name");
         bool isAndroid = "Dalvik".Equals(vmName);
-        if (isAndroid) {
+        if (isAndroid)
+        {
             logger.debug("Platform: Android");
         }
+
         return isAndroid;
     }
 
-    private static bool explicitTryReflectionSetAccessible0() {
+    private static bool explicitTryReflectionSetAccessible0()
+    {
         // we disable reflective access
         return SystemPropertyUtil.getBoolean("io.netty.tryReflectionSetAccessible",
-                javaVersion() < 9 || RUNNING_IN_NATIVE_IMAGE);
+            dotnetVersion() < 9 || RUNNING_IN_NATIVE_IMAGE);
     }
 
-    public static bool isExplicitTryReflectionSetAccessible() {
+    public static bool isExplicitTryReflectionSetAccessible()
+    {
         return IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE;
     }
 
-    public static int javaVersion() {
-        return JAVA_VERSION;
+    public static int dotnetVersion()
+    {
+        return DOTNET_VERSION;
     }
 
-    private static int javaVersion0() {
+    private static int dotnetVersion0()
+    {
         int majorVersion;
 
-        if (isAndroid()) {
+        if (isAndroid())
+        {
             majorVersion = 6;
-        } else {
-            majorVersion = majorVersionFromJavaSpecificationVersion();
+        }
+        else
+        {
+            majorVersion = majorVersionFromDotNetSpecificationVersion();
         }
 
-        logger.debug("Java version: {}", majorVersion);
+        logger.debug($".NET version: {majorVersion}");
 
         return majorVersion;
     }
 
     // Package-private for testing only
-    public static int majorVersionFromJavaSpecificationVersion() {
-        return majorVersion(SystemPropertyUtil.get("java.specification.version", "1.6"));
-    }
-
-    // Package-private for testing only
-    public static int majorVersion(string dotnetSpecVersion) {
-        string[] components = dotnetSpecVersion.Split("\\.");
-        int[] version = new int[components.Length];
-        for (int i = 0; i < components.Length; i++) {
-            version[i] = int.Parse(components[i]);
-        }
-
-        if (version[0] == 1)
-        {
-            Debug.Assert(version[1] >= 6);
-            return version[1];
-        } else {
-            return version[0];
-        }
+    public static int majorVersionFromDotNetSpecificationVersion()
+    {
+        return Environment.Version.Major;
     }
 }

@@ -20,6 +20,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -33,12 +34,6 @@ using Netty.NET.Common.Internal.Logging;
 using static Netty.NET.Common.Internal.PlatformDependent0;
 
 namespace Netty.NET.Common.Internal;
-
-public interface ICleaner
-{
-    ICleanableDirectBuffer allocate(int capacity);
-    void freeDirectBuffer(ArraySegment<byte> buffer);
-}
 
 
 /**
@@ -181,7 +176,7 @@ public class PlatformDependent
                     "instability.");
         }
 
-        ISet<string> availableClassifiers = new LinkedHashSet<>();
+        ISet<string> availableClassifiers = new LinkedHashSet<string>();
 
         if (!addPropertyOsClassifiers(availableClassifiers)) {
             addFilesystemOsClassifiers(availableClassifiers);
@@ -220,9 +215,10 @@ public class PlatformDependent
     private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers) {
         Path file = Paths.get(osReleaseFileName);
         try {
-            if (Files.exists(file)) {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8))) {
+            if (File.Exists(file)) 
+            {
+                try {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8))) 
                     string line;
                     while ((line = reader.readLine()) != null) {
                         if (line.StartsWith(LINUX_ID_PREFIX)) {
@@ -232,7 +228,7 @@ public class PlatformDependent
                         } else if (line.StartsWith(LINUX_ID_LIKE_PREFIX)) {
                             line = normalizeOsReleaseVariableValue(
                                     line.substring(LINUX_ID_LIKE_PREFIX.length()));
-                            addClassifier(availableClassifiers, line.split(" "));
+                            addClassifier(availableClassifiers, line.Split(" "));
                         }
                     }
                 } catch (SecurityException e) {
@@ -325,7 +321,7 @@ public class PlatformDependent
      * Return the version of Java under which this library is used.
      */
     public static int javaVersion() {
-        return PlatformDependent0.javaVersion();
+        return PlatformDependent0.dotnetVersion();
     }
 
     /**
@@ -805,7 +801,7 @@ public class PlatformDependent
      * Reallocate a new {@link ByteBuffer} with the given {@code capacity}. {@link ByteBuffer}s reallocated with
      * this method <strong>MUST</strong> be deallocated via {@link #freeDirectNoCleaner(ByteBuffer)}.
      */
-    public static ArraySegment<byte> reallocateDirectNoCleaner(ArraySegment<byte> buffer, int capacity) {
+    public static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity) {
         Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
 
         int len = capacity - buffer.capacity();
@@ -835,7 +831,7 @@ public class PlatformDependent
      * This method <strong>MUST</strong> only be called for {@link ByteBuffer}s that were allocated via
      * {@link #allocateDirectNoCleaner(int)}.
      */
-    public static void freeDirectNoCleaner(ArraySegment<byte> buffer) {
+    public static void freeDirectNoCleaner(ByteBuffer buffer) {
         Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
 
         int capacity = buffer.capacity();
@@ -1189,7 +1185,7 @@ public class PlatformDependent
     }
 
     private static bool isIkvmDotNet0() {
-        string vmName = SystemPropertyUtil.get("java.vm.name", "").toUpperCase(Locale.US);
+        string vmName = SystemPropertyUtil.get(".name", "").toUpperCase(Locale.US);
         return vmName.Equals("IKVM.NET");
     }
 
@@ -1597,6 +1593,30 @@ public class PlatformDependent
             default:
                 return "unknown";
         }
+    }
+    
+    public static string normalizeRuntime()
+    {
+        // dotnet version
+        string desc = RuntimeInformation.FrameworkDescription ?? "Unknown CLR";
+
+        // 2 runtime check
+        if (Type.GetType("Mono.Runtime") != null)
+            return "Mono";
+
+        if (Type.GetType("UnityEngine.Application") != null)
+            return "Unity (IL2CPP or MonoBackend)";
+
+        if (desc.Contains(".NET Framework", StringComparison.OrdinalIgnoreCase))
+            return "CLR (.NET Framework)";
+
+        if (desc.Contains(".NET Core", StringComparison.OrdinalIgnoreCase))
+            return "CoreCLR (.NET Core)";
+
+        if (desc.Contains(".NET", StringComparison.OrdinalIgnoreCase))
+            return "CoreCLR (.NET 5/6/7/8/9+)";
+
+        return desc; // fallback (NativeAOT, Wasm 등)
     }
 
     private static string normalizeOs(string value) {

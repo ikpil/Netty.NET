@@ -30,7 +30,7 @@ public interface ICleanableDirectBuffer
      *
      * @return The {@link ByteBuffer} instance.
      */
-    ArraySegment<byte> buffer();
+    ByteBuffer buffer();
 
     /**
      * Deallocate the buffer. This method can only be called once per instance,
