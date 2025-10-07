@@ -65,7 +65,7 @@ public static class PlatformDependent
 
     private static readonly long BYTE_ARRAY_BASE_OFFSET = byteArrayBaseOffset0();
 
-    private static readonly FileInfo TMPDIR = tmpdir0();
+    private static readonly DirectoryInfo TMPDIR = tmpdir0();
 
     private static readonly int BIT_MODE = bitMode0();
     private static readonly string NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", ""));
@@ -1271,8 +1271,8 @@ public static class PlatformDependent
         return maxDirectMemory;
     }
 
-    private static FileInfo tmpdir0() {
-        FileInfo f;
+    private static DirectoryInfo tmpdir0() {
+        DirectoryInfo f;
         try {
             f = toDirectory(SystemPropertyUtil.get("io.netty.tmpdir"));
             if (f != null) {
@@ -1331,22 +1331,25 @@ public static class PlatformDependent
     }
 
     //@SuppressWarnings("ResultOfMethodCallIgnored")
-    private static FileInfo toDirectory(string path) {
-        if (path == null) {
+    private static DirectoryInfo toDirectory(string path) {
+        if (path == null)
             return null;
+
+        var dir = new DirectoryInfo(path);
+
+        try
+        {
+            if (!dir.Exists)
+                dir.Create();
+
+            if (!dir.Attributes.HasFlag(FileAttributes.Directory))
+                return null;
+
+            return dir;
         }
-
-        FileInfo f = new FileInfo(path);
-        f.mkdirs();
-
-        if (!f.isDirectory()) {
-            return null;
-        }
-
-        try {
-            return f.getAbsoluteFile();
-        } catch (Exception ignored) {
-            return f;
+        catch
+        {
+            return dir;
         }
     }
 
@@ -1475,10 +1478,17 @@ public static class PlatformDependent
     }
 
     public static FileInfo createTempFile(string prefix, string suffix, FileInfo directory) {
-        if (directory == null) {
-            return Files.createTempFile(prefix, suffix).toFile();
+        string dirPath = directory?.FullName ?? Path.GetTempPath();
+
+        var randomFileName =Path.GetRandomFileName();
+        string fileName = $"{prefix}{randomFileName}{suffix}";
+        string filePath = Path.Combine(dirPath, fileName);
+
+        {
+            using var fs = File.Create(filePath);
         }
-        return Files.createTempFile(directory.toPath(), prefix, suffix).toFile();
+        
+        return new FileInfo(filePath);
     }
 
     /**
