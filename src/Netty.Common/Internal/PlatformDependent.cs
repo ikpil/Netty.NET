@@ -219,36 +219,34 @@ public class PlatformDependent
 
     private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers) {
         Path file = Paths.get(osReleaseFileName);
-        return AccessController.doPrivileged((PrivilegedAction<bool>) () -> {
-            try {
-                if (Files.exists(file)) {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-                            new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8))) {
-                        string line;
-                        while ((line = reader.readLine()) != null) {
-                            if (line.StartsWith(LINUX_ID_PREFIX)) {
-                                string id = normalizeOsReleaseVariableValue(
-                                        line.substring(LINUX_ID_PREFIX.length()));
-                                addClassifier(availableClassifiers, id);
-                            } else if (line.StartsWith(LINUX_ID_LIKE_PREFIX)) {
-                                line = normalizeOsReleaseVariableValue(
-                                        line.substring(LINUX_ID_LIKE_PREFIX.length()));
-                                addClassifier(availableClassifiers, line.split(" "));
-                            }
+        try {
+            if (Files.exists(file)) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        new BoundedInputStream(Files.newInputStream(file)), StandardCharsets.UTF_8))) {
+                    string line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.StartsWith(LINUX_ID_PREFIX)) {
+                            string id = normalizeOsReleaseVariableValue(
+                                    line.substring(LINUX_ID_PREFIX.length()));
+                            addClassifier(availableClassifiers, id);
+                        } else if (line.StartsWith(LINUX_ID_LIKE_PREFIX)) {
+                            line = normalizeOsReleaseVariableValue(
+                                    line.substring(LINUX_ID_LIKE_PREFIX.length()));
+                            addClassifier(availableClassifiers, line.split(" "));
                         }
-                    } catch (SecurityException e) {
-                        logger.debug("Unable to read {}", osReleaseFileName, e);
-                    } catch (IOException e) {
-                        logger.debug("Error while reading content of {}", osReleaseFileName, e);
                     }
-                    // specification states we should only fall back if /etc/os-release does not exist
-                    return true;
+                } catch (SecurityException e) {
+                    logger.debug("Unable to read {}", osReleaseFileName, e);
+                } catch (IOException e) {
+                    logger.debug("Error while reading content of {}", osReleaseFileName, e);
                 }
-            } catch (SecurityException e) {
-                logger.debug("Unable to check if {} exists", osReleaseFileName, e);
+                // specification states we should only fall back if /etc/os-release does not exist
+                return true;
             }
-            return false;
-        });
+        } catch (SecurityException e) {
+            logger.debug("Unable to check if {} exists", osReleaseFileName, e);
+        }
+        return false;
     }
 
     static bool addPropertyOsClassifiers(ISet<string> availableClassifiers) {
@@ -1376,9 +1374,9 @@ public class PlatformDependent
 
         // os.arch also gives us a good hint.
         string arch = SystemPropertyUtil.get("os.arch", "").toLowerCase(Locale.US).trim();
-        if ("amd64".equals(arch) || "x86_64".equals(arch)) {
+        if ("amd64".Equals(arch) || "x86_64".Equals(arch)) {
             bitMode = 64;
-        } else if ("i386".equals(arch) || "i486".equals(arch) || "i586".equals(arch) || "i686".equals(arch)) {
+        } else if ("i386".Equals(arch) || "i486".Equals(arch) || "i586".Equals(arch) || "i686".Equals(arch)) {
             bitMode = 32;
         }
 
@@ -1412,7 +1410,7 @@ public class PlatformDependent
     }
 
     private static bool equalsSafe(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
-        final int end = startPos1 + length;
+        int end = startPos1 + length;
         for (; startPos1 < end; ++startPos1, ++startPos2) {
             if (bytes1[startPos1] != bytes2[startPos2]) {
                 return false;
@@ -1422,7 +1420,7 @@ public class PlatformDependent
     }
 
     private static bool isZeroSafe(byte[] bytes, int startPos, int length) {
-        final int end = startPos + length;
+        int end = startPos + length;
         for (; startPos < end; ++startPos) {
             if (bytes[startPos] != 0) {
                 return false;
@@ -1436,8 +1434,8 @@ public class PlatformDependent
      */
     static int hashCodeAsciiSafe(byte[] bytes, int startPos, int length) {
         int hash = HASH_CODE_ASCII_SEED;
-        final int remainingBytes = length & 7;
-        final int end = startPos + remainingBytes;
+        int remainingBytes = length & 7;
+        int end = startPos + remainingBytes;
         for (int i = startPos - 8 + length; i >= end; i -= 8) {
             hash = PlatformDependent0.hashCodeAsciiCompute(getLongSafe(bytes, i), hash);
         }
@@ -1491,10 +1489,10 @@ public class PlatformDependent
      * @param dest             destination set
      * @param maybeClassifiers potential classifiers to add
      */
-    private static void addClassifier(ISet<string> dest, string... maybeClassifiers) {
-        for (string id : maybeClassifiers) {
+    private static void addClassifier(ISet<string> dest, params string[] maybeClassifiers) {
+        foreach (string id in maybeClassifiers) {
             if (isAllowedClassifier(id)) {
-                dest.add(id);
+                dest.Add(id);
             }
         }
     }
@@ -1512,12 +1510,12 @@ public class PlatformDependent
 
     //replaces value.trim().replaceAll("[\"']", "") to avoid regexp overhead
     private static string normalizeOsReleaseVariableValue(string value) {
-        string trimmed = value.trim();
+        string trimmed = value.Trim();
         StringBuilder sb = new StringBuilder(trimmed.length());
         for (int i = 0; i < trimmed.length(); i++) {
             char c = trimmed.charAt(i);
             if (c != '"' && c != '\'') {
-                sb.append(c);
+                sb.Append(c);
             }
         }
         return sb.ToString();
@@ -1529,7 +1527,7 @@ public class PlatformDependent
         for (int i = 0; i < value.length(); i++) {
             char c = char.ToLowerInvariant(value.charAt(i));
             if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
-                sb.append(c);
+                sb.Append(c);
             }
         }
         return sb.ToString();

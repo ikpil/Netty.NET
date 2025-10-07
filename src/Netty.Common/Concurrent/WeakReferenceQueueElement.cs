@@ -1,6 +1,6 @@
 using System;
 
-namespace Netty.NET.Common.Collections;
+namespace Netty.NET.Common.Concurrent;
 
 public class WeakReferenceQueueElement<T> where T : class
 {
