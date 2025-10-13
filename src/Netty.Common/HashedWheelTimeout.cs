@@ -142,7 +142,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
 
     public override string ToString()
     {
-        long currentTime = PreciseTimer.nanoTime();
+        long currentTime = SystemTimer.nanoTime();
         long remaining = _deadline - currentTime + _timer._startTime.read();
 
         StringBuilder buf = new StringBuilder(192)

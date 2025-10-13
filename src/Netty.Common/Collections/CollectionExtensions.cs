@@ -9,13 +9,23 @@ public static class CollectionExtensions
         return string.IsNullOrEmpty(str);
     }
     
-    public static bool IsEmpty<T>(this IReadOnlyCollection<T> a)
+    public static bool IsEmpty<T>(this List<T> c)
     {
-        return 0 >= a.Count;
+        return 0 >= c.Count;
+    }
+    
+    public static bool IsEmpty<TKey, TValue>(this Dictionary<TKey, TValue> c)
+    {
+        return 0 >= c.Count;
+    }
+    
+    public static bool IsEmpty<T>(this HashSet<T> c)
+    {
+        return 0 >= c.Count;
     }
 
-    public static bool IsEmpty<T>(this ICollection<T> a)
+    public static bool IsEmpty<T>(this ConcurrentHashSet<T> c)
     {
-        return 0 >= a.Count;
+        return 0 >= c.Count;
     }
 }

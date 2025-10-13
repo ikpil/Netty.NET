@@ -21,12 +21,12 @@ internal class DefaultResourceLeak<T> : IResourceLeakTracker<T> where T : class
 
     private readonly ISet<DefaultResourceLeak<T>> _allLeaks;
     private readonly int _trackedHash;
-    private WeakReferenceQueueElement<DefaultResourceLeak<T>> _weak;
+    private WeakReferenceQueueEntry<DefaultResourceLeak<T>> _weak;
 
     public DefaultResourceLeak(T referent, WeakReferenceQueue<DefaultResourceLeak<T>> refQueue, ISet<DefaultResourceLeak<T>> allLeaks, object initialHint)
     {
         Debug.Assert(referent != null);
-        _weak = new WeakReferenceQueueElement<DefaultResourceLeak<T>>(refQueue, this);
+        _weak = new WeakReferenceQueueEntry<DefaultResourceLeak<T>>(this, refQueue);
         _allLeaks = allLeaks;
 
         // Store the hash of the tracked object to later assert it in the close(...) method.

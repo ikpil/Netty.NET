@@ -237,13 +237,13 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
     public override bool awaitTermination(TimeSpan timeout)
     {
-        long deadline = PreciseTimer.nanoTime() + (long)timeout.TotalNanoseconds;
+        long deadline = SystemTimer.nanoTime() + (long)timeout.TotalNanoseconds;
         foreach (IEventExecutor l in children)
         {
             bool breakLoop = false;
             for (;;)
             {
-                long timeLeft = deadline - PreciseTimer.nanoTime();
+                long timeLeft = deadline - SystemTimer.nanoTime();
                 if (timeLeft <= 0)
                 {
                     breakLoop = true;

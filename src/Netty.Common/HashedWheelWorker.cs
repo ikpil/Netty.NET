@@ -24,7 +24,7 @@ public class HashedWheelWorker : IRunnable
     public void run()
     {
         // Initialize the startTime.
-        _timer._startTime.set(PreciseTimer.nanoTime());
+        _timer._startTime.set(SystemTimer.nanoTime());
         if (_timer._startTime.read() == 0)
         {
             // We use 0 as an indicator for the uninitialized value here, so make sure it's not 0 when initialized.
@@ -139,7 +139,7 @@ public class HashedWheelWorker : IRunnable
 
         for (;;)
         {
-            long currentTime = PreciseTimer.nanoTime() - _timer._startTime.read();
+            long currentTime = SystemTimer.nanoTime() - _timer._startTime.read();
             long sleepTimeMs = (deadline - currentTime + 999999) / 1000000;
 
             if (sleepTimeMs <= 0)

@@ -22,7 +22,7 @@ namespace Netty.NET.Common.Concurrent;
 sealed class SystemTicker : Ticker
 {
     public static readonly SystemTicker INSTANCE = new SystemTicker();
-    private static readonly long START_TIME = PreciseTimer.nanoTime();
+    private static readonly long START_TIME = SystemTimer.nanoTime();
 
     public override long initialNanoTime()
     {
@@ -31,7 +31,7 @@ sealed class SystemTicker : Ticker
 
     public override long nanoTime()
     {
-        return PreciseTimer.nanoTime() - START_TIME;
+        return SystemTimer.nanoTime() - START_TIME;
     }
 
     public override void sleep(TimeSpan delay)

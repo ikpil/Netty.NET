@@ -114,7 +114,7 @@ public abstract class AbstractExecutorService : IExecutorService
             // Record exceptions so that if we fail to obtain any
             // result, we can throw the last exception we got.
             AggregateException ee = null;
-            long deadline = timed ? PreciseTimer.nanoTime() + nanos : 0L;
+            long deadline = timed ? SystemTimer.nanoTime() + nanos : 0L;
             IEnumerable<T> it = tasks;
 
             // Start one task for sure; the rest incrementally
@@ -140,7 +140,7 @@ public abstract class AbstractExecutorService : IExecutorService
                         f = ecs.poll(nanos, NANOSECONDS);
                         if (f == null)
                             throw new TimeoutException();
-                        nanos = deadline - PreciseTimer.nanoTime();
+                        nanos = deadline - SystemTimer.nanoTime();
                     }
                     else
                         f = ecs.take();
@@ -236,7 +236,7 @@ public abstract class AbstractExecutorService : IExecutorService
         if (tasks == null)
             throw new NullReferenceException();
         long nanos = (long)timeout.TotalNanoseconds;
-        long deadline = PreciseTimer.nanoTime() + nanos;
+        long deadline = SystemTimer.nanoTime() + nanos;
         var futures = new List<QueueingTaskNode<T>>(tasks.Count);
         int j = 0;
         do
@@ -256,7 +256,7 @@ public abstract class AbstractExecutorService : IExecutorService
                 bool timedOut = false;
                 for (int i = 0; i < size; i++)
                 {
-                    if (((i == 0) ? nanos : deadline - PreciseTimer.nanoTime()) <= 0L)
+                    if (((i == 0) ? nanos : deadline - SystemTimer.nanoTime()) <= 0L)
                     {
                         timedOut = true;
                         break;
@@ -275,7 +275,7 @@ public abstract class AbstractExecutorService : IExecutorService
                     {
                         try
                         {
-                            var remainNanos = deadline - PreciseTimer.nanoTime();
+                            var remainNanos = deadline - SystemTimer.nanoTime();
                             var remainTs = TimeSpan.FromTicks(remainNanos / 100);
                             f.Completion.Wait(remainTs);
                         }

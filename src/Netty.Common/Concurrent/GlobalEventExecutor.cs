@@ -66,7 +66,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
         logger.debug("-Dio.netty.globalEventExecutor.quietPeriodSeconds: {}", quietPeriod);
 
-        SCHEDULE_QUIET_PERIOD_INTERVAL = quietPeriod * PreciseTimer.NanosecondsPerSecond;
+        SCHEDULE_QUIET_PERIOD_INTERVAL = quietPeriod * SystemTimer.NanosecondsPerSecond;
     }
 
     private GlobalEventExecutor() : base(null)

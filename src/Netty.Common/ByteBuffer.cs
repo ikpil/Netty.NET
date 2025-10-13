@@ -1,7 +1,19 @@
+using System;
+
 namespace Netty.NET.Common;
 
 public class ByteBuffer
 {
+    public ByteBuffer()
+    {
+        
+    }
+
+    public ByteBuffer(IntPtr handle, int position, int capacity)
+    {
+        
+    }
+    
     public int capacity()
     {
         return -1;

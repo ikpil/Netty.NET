@@ -466,7 +466,7 @@ public class HashedWheelTimer : ITimer
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
         long delayNano = delay.Ticks * TimeSpan.NanosecondsPerTick;
-        long deadline = PreciseTimer.nanoTime() + delayNano - _startTime.read();
+        long deadline = SystemTimer.nanoTime() + delayNano - _startTime.read();
 
         // Guard against overflow.
         if (delay.Ticks > 0 && deadline < 0)

@@ -2,12 +2,12 @@ using System;
 
 namespace Netty.NET.Common.Concurrent;
 
-public class WeakReferenceQueueElement<T> where T : class
+public class WeakReferenceQueueEntry<T> where T : class
 {
     private readonly WeakReferenceQueue<T> _queue;
     private readonly WeakReference<T> _weak;
 
-    ~WeakReferenceQueueElement()
+    ~WeakReferenceQueueEntry()
     {
         if (_weak.TryGetTarget(out var target))
         {
@@ -15,13 +15,13 @@ public class WeakReferenceQueueElement<T> where T : class
         }
     }
     
-    public WeakReferenceQueueElement(WeakReferenceQueue<T> queue, T obj)
+    public WeakReferenceQueueEntry(T obj, WeakReferenceQueue<T> queue)
     {
-        _queue = queue;
         _weak = new WeakReference<T>(obj);
+        _queue = queue;
     }
 
-    public void clear()
+    public virtual void clear()
     {
         _weak.SetTarget(null);
     }

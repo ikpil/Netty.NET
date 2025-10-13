@@ -40,7 +40,7 @@ public static class ObjectCleaner
 
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
     private static readonly ConcurrentHashSet<AutomaticCleanerReference> LIVE_SET = new ConcurrentHashSet<AutomaticCleanerReference>();
-    private static readonly WeakReferenceQueue<object> REFERENCE_QUEUE = new WeakReferenceQueue<>();
+    private static readonly WeakReferenceQueue<object> REFERENCE_QUEUE = new WeakReferenceQueue<object>();
     private static readonly AtomicBoolean CLEANER_RUNNING = new AtomicBoolean(false);
 
     private static readonly IRunnable CLEANER_TASK = AnonymousRunnable.Create(() =>
@@ -108,7 +108,7 @@ public static class ObjectCleaner
      */
     public static void register(object obj, IRunnable cleanupTask)
     {
-        AutomaticCleanerReference reference = new AutomaticCleanerReference(obj, ObjectUtil.checkNotNull(cleanupTask, "cleanupTask"));
+        AutomaticCleanerReference reference = new AutomaticCleanerReference(LIVE_SET, obj, REFERENCE_QUEUE, ObjectUtil.checkNotNull(cleanupTask, "cleanupTask"));
         // Its important to add the reference to the LIVE_SET before we access CLEANER_RUNNING to ensure correct
         // behavior in multi-threaded environments.
         LIVE_SET.Add(reference);
@@ -117,7 +117,7 @@ public static class ObjectCleaner
         if (CLEANER_RUNNING.compareAndSet(false, true))
         {
             Thread cleanupThread = new FastThreadLocalThread(CLEANER_TASK);
-            cleanupThread.Priority = ThreadPriority.MIN_PRIORITY;
+            cleanupThread.Priority = ThreadPriority.Lowest;
             cleanupThread.Name = CLEANER_THREAD_NAME;
 
             // Mark this as a daemon thread to ensure that we the JVM can exit if this is the only thread that is

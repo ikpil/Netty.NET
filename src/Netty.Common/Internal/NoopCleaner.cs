@@ -18,16 +18,16 @@ public class NoopCleaner : ICleaner
 
     private class NoopDirectBufferImpl : ICleanableDirectBuffer
     {
-        private readonly ArraySegment<byte> _byteBuffer;
+        private readonly ByteBuffer _byteBuffer;
 
         internal NoopDirectBufferImpl(int capacity)
         {
             // ByteBuffer.allocateDirect(capacity); 
             IntPtr handle = Marshal.AllocHGlobal(capacity);
-            _byteBuffer = new ArraySegment<byte>(handle, 0, capacity);
+            _byteBuffer = new ByteBuffer(handle, 0, capacity);
         }
 
-        public ArraySegment<byte> buffer()
+        public ByteBuffer buffer()
         {
             return _byteBuffer;
         }
