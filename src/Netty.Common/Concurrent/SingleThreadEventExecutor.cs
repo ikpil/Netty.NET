@@ -246,7 +246,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     {
         for (;;)
         {
-            taskQueue.TryDequeue(out var task);
+            taskQueue.tryDequeue(out var task);
             if (task != WAKEUP_TASK)
             {
                 return task;
@@ -280,7 +280,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 IRunnable task = null;
                 try
                 {
-                    task = taskQueue.Take();
+                    task = taskQueue.take();
                     if (task == WAKEUP_TASK)
                     {
                         task = null;
@@ -302,7 +302,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     try
                     {
                         var delayTs = TimeSpan.FromTicks(delayNanos / 100);
-                        taskQueue.TryTake(out task, delayTs);
+                        taskQueue.tryTake(out task, delayTs);
                     }
                     catch (ThreadInterruptedException e)
                     {
@@ -318,7 +318,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     // This is for example true for the read task of OIO Transport
                     // See https://github.com/netty/netty/issues/1614
                     fetchFromScheduledTaskQueue();
-                    taskQueue.TryTake(out task);
+                    taskQueue.tryTake(out task);
                 }
 
                 if (task != null)
@@ -370,7 +370,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected IRunnable peekTask()
     {
         Debug.Assert(inEventLoop());
-        return _taskQueue.TryPeek(out var task) ? task : null;
+        return _taskQueue.tryPeek(out var task) ? task : null;
     }
 
     /**
@@ -379,7 +379,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected bool hasTasks()
     {
         Debug.Assert(inEventLoop());
-        return !_taskQueue.IsEmpty();
+        return !_taskQueue.isEmpty();
     }
 
     /**
@@ -410,7 +410,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             reject();
         }
 
-        return _taskQueue.TryEnqueue(task);
+        return _taskQueue.tryEnqueue(task);
     }
 
     /**
@@ -418,7 +418,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      */
     protected bool removeTask(IRunnable task)
     {
-        return _taskQueue.TryRemove(ObjectUtil.checkNotNull(task, "task"));
+        return _taskQueue.tryRemove(ObjectUtil.checkNotNull(task, "task"));
     }
 
     /**
@@ -523,7 +523,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         safeExecute(task);
         // Use taskQueue.poll() directly rather than pollTaskFrom() since the latter may
         // silently consume more than one item from the queue (skips over WAKEUP_TASK instances)
-        while (remaining-- > 0 && taskQueue.TryDequeue(out task))
+        while (remaining-- > 0 && taskQueue.tryDequeue(out task))
         {
             safeExecute(task);
         }
@@ -645,7 +645,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         {
             // Use offer as we actually only need this to unblock the thread and if offer fails we do not care as there
             // is already something in the queue.
-            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _taskQueue.tryEnqueue(WAKEUP_TASK);
         }
     }
 
@@ -786,7 +786,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         if (wakeup)
         {
-            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _taskQueue.tryEnqueue(WAKEUP_TASK);
             if (!_addTaskWakesUp)
             {
                 this.wakeup(inEventLoop);
@@ -922,7 +922,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 return true;
             }
 
-            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _taskQueue.tryEnqueue(WAKEUP_TASK);
             return false;
         }
 
@@ -937,7 +937,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         {
             // Check if any tasks were added to the queue every 100ms.
             // TODO: Change the behavior of takeTask() so that it returns on timeout.
-            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _taskQueue.tryEnqueue(WAKEUP_TASK);
             try
             {
                 Thread.Sleep(100);
@@ -1366,7 +1366,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         int numTasks = 0;
         for (;;)
         {
-            _taskQueue.TryDequeue(out var runnable);
+            _taskQueue.tryDequeue(out var runnable);
             if (runnable == null)
             {
                 break;

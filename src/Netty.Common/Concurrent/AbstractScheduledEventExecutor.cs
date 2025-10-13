@@ -139,7 +139,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     private static bool isNullOrEmpty(IQueue<IScheduledTask> queue)
     {
-        return queue == null || queue.IsEmpty();
+        return queue == null || queue.isEmpty();
     }
 
     /**
@@ -199,10 +199,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
                 return true;
             }
 
-            if (!taskQueue.TryEnqueue(scheduledTask))
+            if (!taskQueue.tryEnqueue(scheduledTask))
             {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
-                _scheduledTaskQueue.TryEnqueue((IScheduledTask)scheduledTask);
+                _scheduledTaskQueue.tryEnqueue((IScheduledTask)scheduledTask);
                 return false;
             }
         }
@@ -222,7 +222,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
             return null;
         }
 
-        _scheduledTaskQueue.TryDequeue(out _);
+        _scheduledTaskQueue.tryDequeue(out _);
         scheduledTask.setConsumed();
         return scheduledTask;
     }
@@ -250,7 +250,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     {
         var scheduledTaskQueue = _scheduledTaskQueue;
         IScheduledTask task = null;
-        var peek = scheduledTaskQueue?.TryPeek(out task) ?? false;
+        var peek = scheduledTaskQueue?.tryPeek(out task) ?? false;
         return peek ? task : null;
     }
 
@@ -363,7 +363,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     internal void scheduleFromEventLoop(IScheduledTask task)
     {
         // nextTaskId a long and so there is no chance it will overflow back to 0
-        scheduledTaskQueue().TryEnqueue(task.setId(++nextTaskId));
+        scheduledTaskQueue().tryEnqueue(task.setId(++nextTaskId));
     }
 
     private IScheduledTask<T> schedule<T>(IScheduledTask<T> task)
@@ -399,7 +399,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         Debug.Assert(task.isCancelled());
         if (inEventLoop())
         {
-            scheduledTaskQueue().TryRemove(task);
+            scheduledTaskQueue().tryRemove(task);
         }
         else
         {

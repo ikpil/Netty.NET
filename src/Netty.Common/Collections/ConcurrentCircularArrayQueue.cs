@@ -1,3 +1,5 @@
+using Netty.NET.Common.Collections.JCTools;
+
 namespace Netty.NET.Common.Collections;
 
 /// Forked from
@@ -64,9 +66,9 @@ abstract class ConcurrentCircularArrayQueue<T> : ConcurrentCircularArrayQueueL0P
     /// <returns>The element at the offset.</returns>
     protected T LvElement(long offset) => RefArrayAccessUtil.LvElement(this.Buffer, offset);
 
-    public override void Clear()
+    public override void clear()
     {
-        while (this.TryDequeue(out T _) || !this.IsEmpty)
+        while (this.tryDequeue(out T _) || !this.isEmpty())
         {
             // looping
         }

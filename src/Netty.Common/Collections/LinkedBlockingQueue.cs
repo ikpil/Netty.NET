@@ -19,47 +19,47 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         _queue = new BlockingCollection<T>(collection, boundedCapacity);
     }
 
-    public bool IsEmpty()
+    public bool isEmpty()
     {
         return 0 >= Count;
     }
 
-    public bool TryRemove(T item)
+    public bool tryRemove(T item)
     {
         throw new NotImplementedException();
     }
 
-    public bool TryEnqueue(T item)
+    public bool tryEnqueue(T item)
     {
         return _queue.TryAdd(item);
     }
 
-    public bool TryDequeue(out T item)
+    public bool tryDequeue(out T item)
     {
-        return TryTake(out item);
+        return tryTake(out item);
     }
 
-    public T Take()
+    public T take()
     {
         return _queue.Take();
     }
 
-    public bool TryTake(out T item)
+    public bool tryTake(out T item)
     {
         return _queue.TryTake(out item);
     }
 
-    public bool TryTake(out T item, TimeSpan timeout)
+    public bool tryTake(out T item, TimeSpan timeout)
     {
         return _queue.TryTake(out item, timeout);
     }
 
-    public bool TryPeek(out T item)
+    public bool tryPeek(out T item)
     {
-        return TryTake(out item);
+        return tryTake(out item);
     }
 
-    public void Clear()
+    public void clear()
     {
         while (_queue.TryTake(out var _))
         {
@@ -67,7 +67,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         }
     }
 
-    public int Drain(IConsumer<T> consumer, int limit)
+    public int drain(IConsumer<T> consumer, int limit)
     {
         int i = 0;
         for (i = 0; i < limit && _queue.TryTake(out var item); ++i)

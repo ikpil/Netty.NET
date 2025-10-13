@@ -14,6 +14,9 @@
  * under the License.
  */
 
+using System.Collections.Generic;
+using Netty.NET.Common.Functional;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
@@ -59,5 +62,11 @@ public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
     protected override IEventExecutor newChild(IExecutor executor, params object[] args)
     {
         return new DefaultEventExecutor(this, executor, (int)args[0], (IRejectedExecutionHandler)args[1]);
+    }
+
+    public override List<IRunnable> shutdownNow()
+    {
+        // ...
+        throw new System.NotImplementedException();
     }
 }

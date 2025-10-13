@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Internal;
 
@@ -31,6 +32,8 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
     private int _count;
     private int _capacity;
     private T[] _items;
+
+    public int Count => _count;
 
     public DefaultPriorityQueue(IComparer<T> comparer, int initialSize)
     {
@@ -49,9 +52,30 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
         return _count;
     }
 
+
     public bool isEmpty()
     {
         return _count == 0;
+    }
+
+    public bool tryRemove(T item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool tryEnqueue(T item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool tryDequeue(out T item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool tryPeek(out T item)
+    {
+        throw new NotImplementedException();
     }
 
     public bool contains(T o)
@@ -65,11 +89,15 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
         Array.Clear(_items, 0, 0);
     }
 
+    public int drain(IConsumer<T> consumer, int limit)
+    {
+        throw new NotImplementedException();
+    }
+
     public void clearIgnoringIndexes()
     {
         _count = 0;
     }
-
 
     public bool offer(T e)
     {
@@ -232,7 +260,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
         return GetEnumerator();
     }
 
-    public T[] ToArray()
+    public T[] toArray()
     {
         return Arrays.copyOf(_items, _count);
     }

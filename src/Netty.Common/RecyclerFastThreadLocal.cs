@@ -26,6 +26,6 @@ public class RecyclerFastThreadLocal<T> : FastThreadLocal<RecyclerLocalPool<T>>
         var handles = value._pooledHandles;
         value._pooledHandles = null;
         value._owner = null;
-        handles.Clear();
+        handles.clear();
     }
 }

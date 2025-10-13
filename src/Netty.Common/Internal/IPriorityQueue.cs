@@ -19,7 +19,7 @@ using Netty.NET.Common.Collections;
 
 namespace Netty.NET.Common.Internal;
 
-public interface IPriorityQueue<T> : IEnumerable<T>, IQueue<T>
+public interface IPriorityQueue<T> : IQueue<T>, IEnumerable<T>
 {
     /**
      * Same as {@link #remove(object)} but typed using generics.
@@ -46,7 +46,6 @@ public interface IPriorityQueue<T> : IEnumerable<T>, IQueue<T>
      * will be garbage collected after this call.
      */
     void clearIgnoringIndexes();
-    
-    bool isEmpty();
+
     T[] toArray();
 }

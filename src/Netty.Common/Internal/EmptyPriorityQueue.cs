@@ -119,39 +119,33 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
         return GetEnumerator();
     }
 
-
-    public bool IsEmpty()
-    {
-        return true;
-    }
-
-    public bool TryRemove(T item)
+    public bool tryRemove(T item)
     {
         return false;
     }
 
-    public bool TryEnqueue(T item)
+    public bool tryEnqueue(T item)
     {
         throw new NotImplementedException();
     }
 
-    public bool TryDequeue(out T item)
+    public bool tryDequeue(out T item)
     {
         item = default;
         return false;
     }
 
-    public bool TryPeek(out T item)
+    public bool tryPeek(out T item)
     {
         item = default;
         return false;
     }
 
-    public void Clear()
+    public void clear()
     {
     }
 
-    public int Drain(IConsumer<T> consumer, int limit)
+    public int drain(IConsumer<T> consumer, int limit)
     {
         return 0;
     }

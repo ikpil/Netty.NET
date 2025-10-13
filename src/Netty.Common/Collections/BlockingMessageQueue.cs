@@ -28,7 +28,7 @@ public class BlockingMessageQueue<T> : IQueue<T>
     }
 
 
-    public bool IsEmpty()
+    public bool isEmpty()
     {
         lock (_lock)
         {
@@ -36,12 +36,12 @@ public class BlockingMessageQueue<T> : IQueue<T>
         }
     }
 
-    public bool TryRemove(T item)
+    public bool tryRemove(T item)
     {
         throw new NotImplementedException();
     }
 
-    public bool TryEnqueue(T item)
+    public bool tryEnqueue(T item)
     {
         lock (_lock)
         {
@@ -55,7 +55,7 @@ public class BlockingMessageQueue<T> : IQueue<T>
         }
     }
 
-    public bool TryDequeue(out T item)
+    public bool tryDequeue(out T item)
     {
         lock (_lock)
         {
@@ -63,7 +63,7 @@ public class BlockingMessageQueue<T> : IQueue<T>
         }
     }
 
-    public bool TryPeek(out T item)
+    public bool tryPeek(out T item)
     {
         lock (_lock)
         {
@@ -71,7 +71,7 @@ public class BlockingMessageQueue<T> : IQueue<T>
         }
     }
 
-    public void Clear()
+    public void clear()
     {
         lock (_lock)
         {
@@ -79,7 +79,7 @@ public class BlockingMessageQueue<T> : IQueue<T>
         }
     }
 
-    public int Drain(IConsumer<T> consumer, int limit)
+    public int drain(IConsumer<T> consumer, int limit)
     {
         lock (_lock)
         {

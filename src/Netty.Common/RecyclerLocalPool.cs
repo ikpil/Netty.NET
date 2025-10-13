@@ -49,7 +49,7 @@ public class RecyclerLocalPool<T> : IConsumer<RecyclerDefaultHandle<T>>
 
         if (0 >= _batch.Count)
         {
-            handles.Drain(this, _chunkSize);
+            handles.drain(this, _chunkSize);
         }
 
         RecyclerDefaultHandle<T> handle = _batch.Dequeue();
@@ -87,7 +87,7 @@ public class RecyclerLocalPool<T> : IConsumer<RecyclerDefaultHandle<T>>
             var handles = _pooledHandles;
             if (handles != null)
             {
-                handles.TryEnqueue(handle);
+                handles.tryEnqueue(handle);
             }
         }
     }

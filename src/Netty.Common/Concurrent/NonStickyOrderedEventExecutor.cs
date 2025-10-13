@@ -44,7 +44,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
             {
                 for (; i < _maxTaskExecutePerRun; i++)
                 {
-                    tasks.TryDequeue(out var task);
+                    tasks.tryDequeue(out var task);
                     if (task == null)
                     {
                         break;
@@ -92,7 +92,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
                     //
                     // The above cases can be distinguished by performing a
                     // compareAndSet(NONE, RUNNING). If it returns "false", it is case 1; otherwise it is case 2.
-                    if (tasks.IsEmpty() || !_state.compareAndSet(NONE, RUNNING))
+                    if (tasks.isEmpty() || !_state.compareAndSet(NONE, RUNNING))
                     {
                         // Only set executingThread to null if no other thread did update it yet.
                         _executingThread.compareAndSet(current, null);
@@ -145,7 +145,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
 
     public override void execute(IRunnable command)
     {
-        if (!tasks.TryEnqueue(command))
+        if (!tasks.tryEnqueue(command))
         {
             throw new RejectedExecutionException();
         }

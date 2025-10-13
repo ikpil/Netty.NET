@@ -147,7 +147,7 @@ public class ScheduledTask<T> : IScheduledTask<T>
 
                         if (!isCancelled())
                         {
-                            Executor.scheduledTaskQueue().TryEnqueue(this);
+                            Executor.scheduledTaskQueue().tryEnqueue(this);
                         }
                     }
                 }

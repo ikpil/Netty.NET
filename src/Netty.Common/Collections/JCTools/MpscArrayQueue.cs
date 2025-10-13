@@ -31,14 +31,19 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
     {
     }
 
+    public override bool tryRemove(T item)
+    {
+        throw new System.NotImplementedException();
+    }
+
     /// <summary>
     /// Lock free Enqueue operation, using a single compare-and-swap. As the class name suggests, access is
     /// permitted to many threads concurrently.
     /// </summary>
     /// <param name="e">The item to enqueue.</param>
     /// <returns><c>true</c> if the item was added successfully, otherwise <c>false</c>.</returns>
-    /// <seealso cref="IQueue{T}.TryEnqueue"/>
-    public override bool TryEnqueue(T e)
+    /// <seealso cref="IQueue{T}.tryEnqueue"/>
+    public override bool tryEnqueue(T e)
     {
         Contract.Requires(e != null);
 
@@ -78,7 +83,7 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
     }
 
     /// <summary>
-    /// A wait-free alternative to <see cref="TryEnqueue"/>, which fails on compare-and-swap failure.
+    /// A wait-free alternative to <see cref="tryEnqueue"/>, which fails on compare-and-swap failure.
     /// </summary>
     /// <param name="e">The item to enqueue.</param>
     /// <returns><c>1</c> if next element cannot be filled, <c>-1</c> if CAS failed, and <c>0</c> if successful.</returns>
@@ -121,8 +126,8 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
     /// </summary>
     /// <param name="item">The dequeued item.</param>
     /// <returns><c>true</c> if an item was retrieved, otherwise <c>false</c>.</returns>
-    /// <seealso cref="IQueue{T}.TryDequeue"/>
-    public override bool TryDequeue(out T item)
+    /// <seealso cref="IQueue{T}.tryDequeue"/>
+    public override bool tryDequeue(out T item)
     {
         long consumerIndex = this.ConsumerIndex; // LoadLoad
         long offset = this.CalcElementOffset(consumerIndex);
@@ -162,8 +167,8 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
     /// </summary>
     /// <param name="item">The peeked item.</param>
     /// <returns><c>true</c> if an item was retrieved, otherwise <c>false</c>.</returns>
-    /// <seealso cref="IQueue{T}.TryPeek"/>
-    public override bool TryPeek(out T item)
+    /// <seealso cref="IQueue{T}.tryPeek"/>
+    public override bool tryPeek(out T item)
     {
         // Copy field to avoid re-reading after volatile load
         T[] buffer = this.Buffer;
@@ -196,11 +201,11 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
         return true;
     }
 
-    public override int Drain(IConsumer<T> c, int limit)
+    public override int drain(IConsumer<T> c, int limit)
     {
         T item;
         int i = 0;
-        for (; i < limit && TryDequeue(out item); i++)
+        for (; i < limit && tryDequeue(out item); i++)
         {
             c.accept(item);
         }
@@ -234,16 +239,13 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
         }
     }
 
-    public override bool IsEmpty
+    public override bool isEmpty()
     {
-        get
-        {
-            // Order matters!
-            // Loading consumer before producer allows for producer increments after consumer index is read.
-            // This ensures the correctness of this method at least for the consumer thread. Other threads POV is
-            // not really
-            // something we can fix here.
-            return this.ConsumerIndex == this.ProducerIndex;
-        }
+        // Order matters!
+        // Loading consumer before producer allows for producer increments after consumer index is read.
+        // This ensures the correctness of this method at least for the consumer thread. Other threads POV is
+        // not really
+        // something we can fix here.
+        return this.ConsumerIndex == this.ProducerIndex;
     }
 }

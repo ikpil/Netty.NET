@@ -71,7 +71,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     private GlobalEventExecutor() : base(null)
     {
-        scheduledTaskQueue().TryEnqueue(_quietPeriodTask);
+        scheduledTaskQueue().tryEnqueue(_quietPeriodTask);
 
         // // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
         // // could be overridden leading to unsafe initialization here!
