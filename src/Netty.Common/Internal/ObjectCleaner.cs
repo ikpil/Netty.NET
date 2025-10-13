@@ -15,14 +15,10 @@
  */
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.JavaScript;
 using System.Threading;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
-using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Internal;
 
@@ -43,7 +39,7 @@ public static class ObjectCleaner
     private static readonly WeakReferenceQueue<object> REFERENCE_QUEUE = new WeakReferenceQueue<object>();
     private static readonly AtomicBoolean CLEANER_RUNNING = new AtomicBoolean(false);
 
-    private static readonly IRunnable CLEANER_TASK = AnonymousRunnable.Create(() =>
+    private static void CLEANER_TASK()
     {
         bool interrupted = false;
         for (;;)
@@ -97,7 +93,7 @@ public static class ObjectCleaner
             // As we caught the ThreadInterruptedException above we should mark the Thread as interrupted.
             Thread.CurrentThread.Interrupt();
         }
-    });
+    }
 
     /**
      * Register the given {@link object} for which the {@link IRunnable} will be executed once there are no references
@@ -116,7 +112,7 @@ public static class ObjectCleaner
         // Check if there is already a cleaner running.
         if (CLEANER_RUNNING.compareAndSet(false, true))
         {
-            Thread cleanupThread = new FastThreadLocalThread(CLEANER_TASK);
+            Thread cleanupThread = new Thread(CLEANER_TASK);
             cleanupThread.Priority = ThreadPriority.Lowest;
             cleanupThread.Name = CLEANER_THREAD_NAME;
 
