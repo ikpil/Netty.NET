@@ -542,7 +542,7 @@ public static class PlatformDependent
         return PlatformDependent0.getInt(obj, fieldOffset);
     }
 
-    static void safeConstructPutInt(object obj, long fieldOffset, int value) {
+    public static void safeConstructPutInt(object obj, long fieldOffset, int value) {
         PlatformDependent0.safeConstructPutInt(obj, fieldOffset, value);
     }
 

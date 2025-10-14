@@ -39,7 +39,6 @@ public abstract class ReferenceCountUpdater<T> where T : IReferenceCounted
 
     protected ReferenceCountUpdater()
     {
-        
     }
 
     public static long getUnsafeOffset<T>(string fieldName) where T : IReferenceCounted
@@ -48,7 +47,8 @@ public abstract class ReferenceCountUpdater<T> where T : IReferenceCounted
         {
             if (PlatformDependent.hasUnsafe())
             {
-                return PlatformDependent.objectFieldOffset(clz.getDeclaredField(fieldName));
+                var clz = typeof(T);
+                return PlatformDependent.objectFieldOffset(clz.GetField(fieldName));
             }
         }
         catch (Exception ignore)

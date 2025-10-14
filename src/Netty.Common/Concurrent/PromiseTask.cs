@@ -20,7 +20,7 @@ using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
-public interface IRunnableFuture<V> : IRunnable, IFuture<V> 
+public interface IRunnableFuture<V> : IRunnable, IFuture<V>
 {
 }
 
@@ -28,7 +28,6 @@ public class DefaultPromise<V> : IPromise<V>
 {
     public DefaultPromise(IEventExecutor executor)
     {
-        
     }
 
     public virtual AggregateException cause()
@@ -112,7 +111,7 @@ public class DefaultPromise<V> : IPromise<V>
     }
 }
 
-public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V> 
+public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
 {
     private static readonly IRunnable COMPLETED = new SentinelRunnable("COMPLETED");
     private static readonly IRunnable CANCELLED = new SentinelRunnable("CANCELLED");
@@ -122,20 +121,20 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
     // Strictly of type Func<V> or IRunnable
     private ICallable<V> task;
 
-    internal PromiseTask(IEventExecutor executor, IRunnable runnable, V result) 
+    internal PromiseTask(IEventExecutor executor, IRunnable runnable, V result)
         : base(executor)
     {
         task = new CallableAdapter<V>(runnable, result);
     }
 
-    internal PromiseTask(IEventExecutor executor, IRunnable runnable) 
+    internal PromiseTask(IEventExecutor executor, IRunnable runnable)
         : base(executor)
     {
         task = new CallableAdapter<V>(runnable, default);
     }
 
-    internal PromiseTask(IEventExecutor executor, Func<V> callable) 
-    : base(executor)
+    internal PromiseTask(IEventExecutor executor, Func<V> callable)
+        : base(executor)
     {
         task = new AnonymousCallable<V>(callable);
     }
@@ -146,82 +145,102 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
         return task.call();
     }
 
-    public virtual void run() {
-        try {
-            if (setUncancellableInternal()) {
+    public virtual void run()
+    {
+        try
+        {
+            if (setUncancellableInternal())
+            {
                 V result = runTask();
                 setSuccessInternal(result);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             setFailureInternal(e);
         }
     }
 
-    private bool clearTaskAfterCompletion(bool done, IRunnable result) {
-        if (done) {
+    private bool clearTaskAfterCompletion(bool done, IRunnable result)
+    {
+        if (done)
+        {
             // The only time where it might be possible for the sentinel task
             // to be called is in the case of a periodic ScheduledFutureTask,
             // in which case it's a benign race with cancellation and the (null)
             // return value is not used.
             task = new CallableAdapter<V>(result, default);
         }
+
         return done;
     }
 
-    public override IPromise<V> setFailure(Exception cause) {
+    public override IPromise<V> setFailure(Exception cause)
+    {
         throw new InvalidOperationException();
     }
 
-    protected IPromise<V> setFailureInternal(Exception cause) {
+    protected IPromise<V> setFailureInternal(Exception cause)
+    {
         base.setFailure(cause);
         clearTaskAfterCompletion(true, FAILED);
         return this;
     }
 
-    public override bool tryFailure(Exception cause) {
+    public override bool tryFailure(Exception cause)
+    {
         return false;
     }
 
-    protected virtual bool tryFailureInternal(Exception cause) {
+    protected virtual bool tryFailureInternal(Exception cause)
+    {
         return clearTaskAfterCompletion(base.tryFailure(cause), FAILED);
     }
 
-    public override IPromise<V> setSuccess(V result) {
+    public override IPromise<V> setSuccess(V result)
+    {
         throw new InvalidOperationException();
     }
 
-    protected virtual IPromise<V> setSuccessInternal(V result) {
+    protected virtual IPromise<V> setSuccessInternal(V result)
+    {
         base.setSuccess(result);
         clearTaskAfterCompletion(true, COMPLETED);
         return this;
     }
 
-    public override bool trySuccess(V result) {
+    public override bool trySuccess(V result)
+    {
         return false;
     }
 
-    protected virtual bool trySuccessInternal(V result) {
+    protected virtual bool trySuccessInternal(V result)
+    {
         return clearTaskAfterCompletion(base.trySuccess(result), COMPLETED);
     }
 
-    public override bool setUncancellable() {
+    public override bool setUncancellable()
+    {
         throw new InvalidOperationException();
     }
 
-    protected virtual bool setUncancellableInternal() {
+    protected virtual bool setUncancellableInternal()
+    {
         return base.setUncancellable();
     }
 
-    public bool cancel(bool mayInterruptIfRunning) {
+    public bool cancel(bool mayInterruptIfRunning)
+    {
         return clearTaskAfterCompletion(base.cancel(mayInterruptIfRunning), CANCELLED);
     }
 
-    protected override StringBuilder toStringBuilder() {
+    protected override StringBuilder toStringBuilder()
+    {
         StringBuilder buf = base.toStringBuilder();
         buf[buf.Length - 1] = ',';
 
         return buf.Append(" task: ")
-                  .Append(task)
-                  .Append(')');
+            .Append(task)
+            .Append(')');
     }
 }
