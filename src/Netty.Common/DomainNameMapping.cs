@@ -111,7 +111,7 @@ public class DomainNameMapping<T> : IMapping<string, T>
             hostname = IDN.toASCII(hostname, IDN.ALLOW_UNASSIGNED);
         }
 
-        return hostname.toLowerCase(Locale.US);
+        return hostname.toLowerCase(CultureInfo.GetCultureInfo("en-US"));
     }
 
     private static bool needsNormalization(string hostname)

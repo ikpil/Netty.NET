@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -1192,15 +1193,15 @@ public static class PlatformDependent
     }
 
     private static bool isIkvmDotNet0() {
-        string vmName = SystemPropertyUtil.get(".name", "").toUpperCase(Locale.US);
+        string vmName = SystemPropertyUtil.get(".name", "").ToUpper(CultureInfo.GetCultureInfo("en-US"));
         return vmName.Equals("IKVM.NET");
     }
 
-    private static Pattern getMaxDirectMemorySizeArgPattern() {
+    private static Regex getMaxDirectMemorySizeArgPattern() {
         // Pattern's is immutable so it's always safe published
-        Pattern pattern = MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
+        Regex pattern = MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
         if (pattern == null) {
-            pattern = Pattern.compile("\\s*-XX:MaxDirectMemorySize\\s*=\\s*([0-9]+)\\s*([kKmMgG]?)\\s*$");
+            pattern = new Regex("\\s*-XX:MaxDirectMemorySize\\s*=\\s*([0-9]+)\\s*([kKmMgG]?)\\s*$");
             MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN =  pattern;
         }
         return pattern;
@@ -1238,10 +1239,10 @@ public static class PlatformDependent
                     runtimeClass, "getInputArguments", methodType(typeof(List)));
             List<string> vmArgs = (List<string>) getInputArguments.invoke(getRuntime.invoke());
 
-            Pattern maxDirectMemorySizeArgPattern = getMaxDirectMemorySizeArgPattern();
+            Regex maxDirectMemorySizeArgPattern = getMaxDirectMemorySizeArgPattern();
 
-            for (int i = vmArgs.size() - 1; i >= 0; i --) {
-                Matcher m = maxDirectMemorySizeArgPattern.matcher(vmArgs.get(i));
+            for (int i = vmArgs.Count - 1; i >= 0; i --) {
+                Match m = maxDirectMemorySizeArgPattern.Match(vmArgs[i]);
                 if (!m.matches()) {
                     continue;
                 }
@@ -1379,7 +1380,7 @@ public static class PlatformDependent
         }
 
         // os.arch also gives us a good hint.
-        string arch = SystemPropertyUtil.get("os.arch", "").toLowerCase(Locale.US).trim();
+        string arch = SystemPropertyUtil.get("os.arch", "").ToLower(CultureInfo.GetCultureInfo("en-US")).Trim();
         if ("amd64".Equals(arch) || "x86_64".Equals(arch)) {
             bitMode = 64;
         } else if ("i386".Equals(arch) || "i486".Equals(arch) || "i586".Equals(arch) || "i686".Equals(arch)) {
@@ -1391,11 +1392,11 @@ public static class PlatformDependent
         }
 
         // Last resort: guess from VM name and then fall back to most common 64-bit mode.
-        string vm = SystemPropertyUtil.get("java.vm.name", "").toLowerCase(Locale.US);
-        Pattern bitPattern = Pattern.compile("([1-9][0-9]+)-?bit");
-        Matcher m = bitPattern.matcher(vm);
-        if (m.find()) {
-            return int.Parse(m.group(1));
+        string vm = SystemPropertyUtil.get("java.vm.name", "").ToLower(CultureInfo.GetCultureInfo("en-US"));
+        Regex bitPattern = new Regex("([1-9][0-9]+)-?bit");
+        var m = bitPattern.Match(vm);
+        if (m.Success) {
+            return int.Parse(m.Groups[1].Value);
         } else {
             return 64;
         }
@@ -1534,7 +1535,7 @@ public static class PlatformDependent
         return sb.ToString();
     }
 
-    //replaces value.toLowerCase(Locale.US).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
+    //replaces value.toLowerCase(CultureInfo.GetCultureInfo("en-US")).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
     private static string normalize(string value) {
         StringBuilder sb = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) {

@@ -61,9 +61,59 @@ public sealed class AppendableCharSequence : ICharSequence
         this.pos = length;
     }
 
+    ICharSequence ICharSequence.subSequence(int start, int end)
+    {
+        return subSequence(start, end);
+    }
+
+    public ICharSequence subSequence(int start)
+    {
+        throw new NotImplementedException();
+    }
+
+    public char charAt(int index)
+    {
+        throw new NotImplementedException();
+    }
+
     public int length()
     {
         return pos;
+    }
+
+    public int indexOf(char ch, int start = 0)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool regionMatches(int thisStart, ICharSequence seq, int start, int length)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool regionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool contentEquals(ICharSequence other)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool contentEqualsIgnoreCase(ICharSequence other)
+    {
+        throw new NotImplementedException();
+    }
+
+    public int hashCode(bool ignoreCase)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string ToString(int start)
+    {
+        throw new NotImplementedException();
     }
 
     /**
