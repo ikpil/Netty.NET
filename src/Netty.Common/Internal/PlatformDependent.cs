@@ -1053,7 +1053,8 @@ public static class PlatformDependent
      * consumer (one thread!).
      */
     public static IQueue<T> newSpscQueue<T>() {
-        return hasUnsafe() ? new SpscLinkedQueue<T>() : new SpscLinkedAtomicQueue<T>();
+        throw new NotImplementedException();
+        //return hasUnsafe() ? new SpscLinkedQueue<T>() : new SpscLinkedAtomicQueue<T>();
     }
 
     /**
@@ -1061,7 +1062,8 @@ public static class PlatformDependent
      * consumer (one thread!) with the given fixes {@code capacity}.
      */
     public static IQueue<T> newFixedMpscQueue<T>(int capacity) {
-        return hasUnsafe() ? new MpscArrayQueue<T>(capacity) : new MpscAtomicArrayQueue<T>(capacity);
+        throw new NotImplementedException();
+        //return hasUnsafe() ? new MpscArrayQueue<T>(capacity) : new MpscAtomicArrayQueue<T>(capacity);
     }
 
     /**
@@ -1070,7 +1072,8 @@ public static class PlatformDependent
      * This should be preferred to {@link #newFixedMpscQueue(int)} when the queue is not to be heavily contended.
      */
     public static IQueue<T> newFixedMpscUnpaddedQueue<T>(int capacity) {
-        return hasUnsafe() ? new MpscUnpaddedArrayQueue<T>(capacity) : new MpscAtomicUnpaddedArrayQueue<T>(capacity);
+        throw new NotImplementedException();
+        //return hasUnsafe() ? new MpscUnpaddedArrayQueue<T>(capacity) : new MpscAtomicUnpaddedArrayQueue<T>(capacity);
     }
 
     /**
@@ -1078,35 +1081,38 @@ public static class PlatformDependent
      * consumers with the given fixes {@code capacity}.
      */
     public static IQueue<T> newFixedMpmcQueue<T>(int capacity) {
-        return hasUnsafe() ? new MpmcArrayQueue<T>(capacity) : new MpmcAtomicArrayQueue<T>(capacity);
+        throw new NotImplementedException();
+        //return hasUnsafe() ? new MpmcArrayQueue<T>(capacity) : new MpmcAtomicArrayQueue<T>(capacity);
     }
 
     /**
      * Return the {@link ClassLoader} for the given {@link Class}.
      */
-    public static ClassLoader getClassLoader(Type clazz) {
+    public static Assembly getClassLoader(Type clazz) {
         return PlatformDependent0.getClassLoader(clazz);
     }
 
     /**
      * Return the context {@link ClassLoader} for the current {@link Thread}.
      */
-    public static ClassLoader getContextClassLoader() {
+    public static Assembly getContextClassLoader() {
         return PlatformDependent0.getContextClassLoader();
     }
 
     /**
      * Return the system {@link ClassLoader}.
      */
-    public static ClassLoader getSystemClassLoader() {
+    public static Assembly getSystemClassLoader() {
         return PlatformDependent0.getSystemClassLoader();
     }
 
     /**
      * Returns a new concurrent {@link Deque}.
      */
-    public static Deque<C> newConcurrentDeque<C>() {
-        return new ConcurrentLinkedDeque<C>();
+    public static IQueue<C> newConcurrentDeque<C>()
+    {
+        throw new NotImplementedException();
+        //return new ConcurrentLinkedDeque<C>();
     }
 
     /**
@@ -1200,7 +1206,7 @@ public static class PlatformDependent
     private static Regex getMaxDirectMemorySizeArgPattern() {
         // Pattern's is immutable so it's always safe published
         Regex pattern = MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
-        if (pattern == null) {
+        if (pattern == null){
             pattern = new Regex("\\s*-XX:MaxDirectMemorySize\\s*=\\s*([0-9]+)\\s*([kKmMgG]?)\\s*$");
             MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN =  pattern;
         }
@@ -1219,59 +1225,38 @@ public static class PlatformDependent
     //@SuppressWarnings("unchecked")
     public static long estimateMaxDirectMemory() {
         long maxDirectMemory = PlatformDependent0.bitsMaxDirectMemory();
-        if (maxDirectMemory > 0) {
+        if (maxDirectMemory > 0)
             return maxDirectMemory;
+
+        string gcHeapHardLimit = Environment.GetEnvironmentVariable("DOTNET_GCHeapHardLimit");
+        if (long.TryParse(gcHeapHardLimit, out maxDirectMemory) && maxDirectMemory > 0)
+            return maxDirectMemory;
+
+        var info = GC.GetGCMemoryInfo();
+        long totalAvailableMemoryBytes = info.TotalAvailableMemoryBytes;
+        if (totalAvailableMemoryBytes <= 0)
+            return 0;
+
+        string gcHeapHardLimitPercent = Environment.GetEnvironmentVariable("DOTNET_GCHeapHardLimitPercent");
+        if (int.TryParse(gcHeapHardLimitPercent, out var percent) && percent > 0)
+        {
+            var ratio = Math.Min(100, percent) * 0.01d;
+            maxDirectMemory = (long)(totalAvailableMemoryBytes * ratio);
         }
 
-        try {
-            // Now try to get the JVM option (-XX:MaxDirectMemorySize) and parse it.
-            // Note that we are using reflection because Android doesn't have these classes.
-            ClassLoader systemClassLoader = getSystemClassLoader();
-            Type mgmtFactoryClass = Class.forName(
-                    "java.lang.management.ManagementFactory", true, systemClassLoader);
-            Type runtimeClass = Class.forName(
-                    "java.lang.management.RuntimeMXBean", true, systemClassLoader);
-
-            MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-            MethodHandle getRuntime = lookup.findStatic(
-                    mgmtFactoryClass, "getRuntimeMXBean", methodType(runtimeClass));
-            MethodHandle getInputArguments = lookup.findVirtual(
-                    runtimeClass, "getInputArguments", methodType(typeof(List)));
-            List<string> vmArgs = (List<string>) getInputArguments.invoke(getRuntime.invoke());
-
-            Regex maxDirectMemorySizeArgPattern = getMaxDirectMemorySizeArgPattern();
-
-            for (int i = vmArgs.Count - 1; i >= 0; i --) {
-                Match m = maxDirectMemorySizeArgPattern.Match(vmArgs[i]);
-                if (!m.matches()) {
-                    continue;
-                }
-
-                maxDirectMemory = long.Parse(m.group(1));
-                switch (m.group(2).charAt(0)) {
-                    case 'k': case 'K':
-                        maxDirectMemory *= 1024;
-                        break;
-                    case 'm': case 'M':
-                        maxDirectMemory *= 1024 * 1024;
-                        break;
-                    case 'g': case 'G':
-                        maxDirectMemory *= 1024 * 1024 * 1024;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            }
-        } catch (Exception ignored) {
-            // Ignore
+        if (maxDirectMemory <= 0)
+        {
+            maxDirectMemory = info.TotalAvailableMemoryBytes;
         }
 
-        if (maxDirectMemory <= 0) {
-            maxDirectMemory = Runtime.getRuntime().maxMemory();
-            logger.debug("maxDirectMemory: {} bytes (maybe)", maxDirectMemory);
-        } else {
-            logger.debug("maxDirectMemory: {} bytes", maxDirectMemory);
+        if (maxDirectMemory <= 0)
+        {
+            maxDirectMemory = Process.GetCurrentProcess().PrivateMemorySize64;
+            logger.debug($"maxDirectMemory: {maxDirectMemory} bytes (maybe)");
+        }
+        else
+        {
+            logger.debug($"maxDirectMemory: {maxDirectMemory} bytes");
         }
 
         return maxDirectMemory;
