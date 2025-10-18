@@ -10,7 +10,7 @@ namespace Netty.NET.Common;
  *
  * @param <V> concrete type of value objects
  */
-public class ImmutableDomainNameMapping<T> : DomainNameMapping<T>
+public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : class
 {
     private static readonly string REPR_HEADER = "ImmutableDomainNameMapping(default: ";
     private static readonly string REPR_MAP_OPENING = ", map: {";

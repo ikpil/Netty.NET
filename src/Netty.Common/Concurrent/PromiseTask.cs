@@ -16,6 +16,7 @@
 
 using System;
 using System.Text;
+using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
@@ -24,7 +25,7 @@ public interface IRunnableFuture<V> : IRunnable, IFuture<V>
 {
 }
 
-public class DefaultPromise<V> : IPromise<V>
+public class DefaultPromise<V> : TaskCompletionSource<V>
 {
     public DefaultPromise(IEventExecutor executor)
     {
@@ -102,6 +103,10 @@ public class DefaultPromise<V> : IPromise<V>
 
     public virtual IPromise<V> syncUninterruptibly()
     {
+        throw new NotImplementedException();
+    }
+    
+    protected virtual void checkDeadLock() {
         throw new NotImplementedException();
     }
 

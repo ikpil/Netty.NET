@@ -3,15 +3,15 @@ using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
 
-public class ScheduledActionTask : ScheduledTask
+public class ScheduledActionTask : ScheduledTask<Void>
 {
     private readonly Action _action;
 
     public ScheduledActionTask(AbstractScheduledEventExecutor executor, Action action, long deadline)
-        : base(executor, deadline, new TaskCompletionSource())
+        : base(executor, new TaskCompletionSource<Void>(), deadline)
     {
         this._action = action;
     }
 
-    protected override void Execute() => _action.Invoke();
+    public override void run() => _action.Invoke();
 }

@@ -19,7 +19,7 @@ public static class CollectionExtensions
         return 0 >= c.Count;
     }
 
-    public static bool IsEmpty<T>(this HashSet<T> c)
+    public static bool IsEmpty<T>(this ISet<T> c)
     {
         return 0 >= c.Count;
     }

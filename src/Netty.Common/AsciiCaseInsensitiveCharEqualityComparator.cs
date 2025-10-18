@@ -5,7 +5,8 @@ public class AsciiCaseInsensitiveCharEqualityComparator : ICharEqualityComparato
     public static readonly AsciiCaseInsensitiveCharEqualityComparator INSTANCE = new AsciiCaseInsensitiveCharEqualityComparator();
     private AsciiCaseInsensitiveCharEqualityComparator() { }
 
-    public bool equals(char a, char b) {
-        return equalsIgnoreCase(a, b);
+    public bool equals(char a, char b)
+    {
+        return char.ToLowerInvariant(a) == char.ToLowerInvariant(b);
     }
 }

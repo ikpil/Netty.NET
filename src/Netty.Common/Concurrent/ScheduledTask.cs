@@ -159,6 +159,11 @@ public class ScheduledTask<T> : IScheduledTask<T>
         }
     }
 
+    public bool isCancelled()
+    {
+        throw new NotImplementedException();
+    }
+
     public bool cancel()
     {
         if (!AtomicCancellationStateUpdate(CancellationRequested, CancellationProhibited))

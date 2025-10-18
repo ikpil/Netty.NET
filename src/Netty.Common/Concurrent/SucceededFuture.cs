@@ -18,6 +18,20 @@ using System;
 
 namespace Netty.NET.Common.Concurrent;
 
+public class CompleteFuture<T>
+{
+    public CompleteFuture(IEventExecutor executor)
+    {
+        // ..
+    }
+
+    public virtual Exception cause()
+    {
+        return null;
+        // ..
+    }
+}
+
 /**
  * The {@link CompleteFuture} which is succeeded already.  It is
  * recommended to use {@link IEventExecutor#newSucceededFuture(object)} instead of

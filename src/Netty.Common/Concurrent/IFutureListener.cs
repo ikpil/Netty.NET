@@ -14,6 +14,8 @@
  * under the License.
  */
 
+using System.Threading.Tasks;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
@@ -25,6 +27,6 @@ namespace Netty.NET.Common.Concurrent;
  * });
  * </pre>
  */
-public interface IFutureListener<V> : IGenericFutureListener<Future<V>>
+public interface IFutureListener<V> : IGenericFutureListener<Task<V>>
 {
 }

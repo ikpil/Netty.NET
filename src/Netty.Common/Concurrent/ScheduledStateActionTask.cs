@@ -13,5 +13,5 @@ public class ScheduledStateActionTask<T> : ScheduledTask<T>
         _action = action;
     }
 
-    protected override void Execute() => _action.Invoke(Completion.AsyncState);
+    public override void run() => _action.Invoke(Completion.AsyncState);
 }

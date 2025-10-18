@@ -1,12 +1,41 @@
 using System;
+using System.Diagnostics;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
+public class AtomicArray<T>
+{
+    public AtomicArray(int a)
+    {
+        throw new NotImplementedException();
+    }
+
+    public T get(int index)
+    {
+        return default;
+    }
+
+    public void lazySet(int index, T item)
+    {
+        
+    }
+
+    public T getAndSet(int idex, T item)
+    {
+        return default;
+    }
+
+    public int length()
+    {
+        return -1;
+    }
+}
+
 /**
  * This implementation is based on MpscAtomicUnpaddedArrayQueue from JCTools.
  */
-public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQueue
+public sealed class MpscAtomicIntegerArrayQueue : AtomicArray<int>, IMpscIntQueue
 {
     private AtomicLong PRODUCER_INDEX => producerIndex;
     private AtomicLong PRODUCER_LIMIT => producerLimit;
@@ -19,8 +48,8 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
     private readonly AtomicLong consumerIndex;
 
     public MpscAtomicIntegerArrayQueue(int capacity, int emptyValue)
+        : base(MathUtil.safeFindNextPositivePowerOfTwo(capacity))
     {
-        super(MathUtil.safeFindNextPositivePowerOfTwo(capacity));
         if (emptyValue != 0)
         {
             this.emptyValue = emptyValue;
@@ -29,14 +58,14 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
             {
                 lazySet(i, emptyValue);
             }
-
+        
             getAndSet(end, emptyValue); // 'getAndSet' acts as a full barrier, giving us initialization safety.
         }
         else
         {
             this.emptyValue = 0;
         }
-
+        
         mask = length() - 1;
         
         producerIndex = new AtomicLong();
@@ -53,14 +82,14 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
 
         // use a cached view on consumer index (potentially updated in loop)
         int mask = this.mask;
-        long producerLimit = this.producerLimit.read();
+        long producerLimit = this.producerLimit.get();
         long pIndex;
         do
         {
-            pIndex = producerIndex.read();
+            pIndex = producerIndex.get();
             if (pIndex >= producerLimit)
             {
-                long cIndex = consumerIndex.read();
+                long cIndex = consumerIndex.get();
                 producerLimit = cIndex + mask + 1;
                 if (pIndex >= producerLimit)
                 {
@@ -71,7 +100,7 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
                 {
                     // update producer limit to the next index that we must recheck the consumer index
                     // this is racy, but the race is benign
-                    PRODUCER_LIMIT.lazySet(this, producerLimit);
+                    PRODUCER_LIMIT.set(producerLimit);
                 }
             }
         } while (!PRODUCER_INDEX.compareAndSet(pIndex, pIndex + 1));
@@ -89,7 +118,7 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
 
     public int poll()
     {
-        long cIndex = consumerIndex.read();
+        long cIndex = consumerIndex.get();
         int offset = (int)(cIndex & mask);
         // If we can't see the next available element we can't poll
         int value = get(offset);
@@ -100,7 +129,7 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
              * winning the CAS on offer but before storing the element in the queue. Other producers may go on
              * to fill up the queue after this element.
              */
-            if (cIndex != producerIndex.read())
+            if (cIndex != producerIndex.get())
             {
                 do
                 {
@@ -114,7 +143,7 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
         }
 
         lazySet(offset, emptyValue);
-        CONSUMER_INDEX.lazySet(this, cIndex + 1);
+        CONSUMER_INDEX.set(cIndex + 1);
         return value;
     }
 
@@ -128,7 +157,7 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
         }
 
         int mask = this.mask;
-        long cIndex = consumerIndex; // Note: could be weakened to plain-load.
+        long cIndex = consumerIndex.get(); // Note: could be weakened to plain-load.
         for (int i = 0; i < limit; i++)
         {
             long index = cIndex + i;
@@ -141,7 +170,7 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
 
             lazySet(offset, emptyValue); // Note: could be weakened to plain-store.
             // ordered store -> atomic and ordered for size()
-            CONSUMER_INDEX.lazySet(this, index + 1);
+            CONSUMER_INDEX.set(index + 1);
             consumer.Invoke(value);
         }
 
@@ -159,16 +188,16 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
 
         int mask = this.mask;
         long capacity = mask + 1;
-        long producerLimit = this.producerLimit.read();
+        long producerLimit = this.producerLimit.get();
         long pIndex;
         int actualLimit;
         do
         {
-            pIndex = producerIndex.read();
+            pIndex = producerIndex.get();
             long available = producerLimit - pIndex;
             if (available <= 0)
             {
-                long cIndex = consumerIndex.read();
+                long cIndex = consumerIndex.get();
                 producerLimit = cIndex + capacity;
                 available = producerLimit - pIndex;
                 if (available <= 0)
@@ -179,7 +208,7 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
                 else
                 {
                     // update producer limit to the next index that we must recheck the consumer index
-                    PRODUCER_LIMIT.lazySet(this, producerLimit);
+                    PRODUCER_LIMIT.set(producerLimit);
                 }
             }
 
@@ -200,21 +229,21 @@ public sealed class MpscAtomicIntegerArrayQueue : AtomicIntegerArray, IMpscIntQu
     public bool isEmpty()
     {
         // Load consumer index before producer index, so our check is conservative.
-        long cIndex = consumerIndex.read();
-        long pIndex = producerIndex.read();
+        long cIndex = consumerIndex.get();
+        long pIndex = producerIndex.get();
         return cIndex >= pIndex;
     }
 
     public int size()
     {
         // Loop until we get a consistent read of both the consumer and producer indices.
-        long after = consumerIndex.read();
+        long after = consumerIndex.get();
         long size;
         for (;;)
         {
             long before = after;
-            long pIndex = producerIndex.read();
-            after = consumerIndex.read();
+            long pIndex = producerIndex.get();
+            after = consumerIndex.get();
             if (before == after)
             {
                 size = pIndex - after;

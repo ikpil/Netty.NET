@@ -21,5 +21,5 @@ public class ScheduledRunnableTask : ScheduledTask<Void>
 
 
 
-    protected override void Execute() => _action.run();
+    public override void run() => _action.run();
 }

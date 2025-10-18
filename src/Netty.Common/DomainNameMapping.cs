@@ -16,6 +16,8 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Internal;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
@@ -29,7 +31,7 @@ namespace Netty.NET.Common;
  * </p>
  * @deprecated Use {@link DomainWildcardMappingBuilder}}
  */
-public class DomainNameMapping<T> : IMapping<string, T>
+public class DomainNameMapping<T> : IMapping<string, T> where T : class
 {
     protected readonly T _defaultValue;
     private readonly IDictionary<string, T> _map;

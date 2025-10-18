@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -92,8 +93,8 @@ public class HashedWheelTimer : ITimer
     internal readonly HashedWheelBucket[] _wheel;
     internal readonly int _mask;
     internal readonly CountdownEvent _startTimeInitialized = new CountdownEvent(1);
-    internal readonly Queue<HashedWheelTimeout> _timeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
-    internal readonly Queue<HashedWheelTimeout> _cancelledTimeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
+    internal readonly IQueue<HashedWheelTimeout> _timeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
+    internal readonly IQueue<HashedWheelTimeout> _cancelledTimeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
     internal readonly AtomicLong _pendingTimeouts = new AtomicLong(0);
     private readonly long _maxPendingTimeouts;
     internal readonly IExecutor _taskExecutor;

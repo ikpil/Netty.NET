@@ -16,5 +16,5 @@ public class ScheduledStateActionWithContextAsyncTask<T> : ScheduledAsyncTask<T>
         _context = context;
     }
 
-    protected override void Execute() => _action.Invoke(_context, Completion.AsyncState);
+    public override void run() => _action.Invoke(_context, Completion.AsyncState);
 }

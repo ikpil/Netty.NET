@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using Netty.NET.Common.Collections;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common;
@@ -25,7 +26,7 @@ namespace Netty.NET.Common;
  * <a href="https://tools.ietf.org/search/rfc6125#section-6.4">DNS wildcard</a> matching.
  * @param <V> the type of the value that we map to.
  */
-public class DomainWildcardMappingBuilder<T>
+public class DomainWildcardMappingBuilder<T> where T : class
 {
     private readonly T defaultValue;
     private readonly IDictionary<string, T> map;

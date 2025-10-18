@@ -21,6 +21,7 @@ using System.Security;
 using System.Reflection;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal.Logging;
 
@@ -89,7 +90,9 @@ public class PlatformDependent0
         //     direct = null;
         //     addressField = null;
         //     unsafe = null;
-        // } else {
+        // } else
+        // {
+        //     Marshal.AllocHGlobal(1));
         //     direct = ByteBuffer.allocateDirect(1);
         //
         //     // attempt to access field Unsafe#theUnsafe
@@ -624,8 +627,7 @@ public class PlatformDependent0
 
     public static bool hasDirectBufferNoCleanerConstructor()
     {
-        //return DIRECT_BUFFER_CONSTRUCTOR != null;
-        return false;
+        return DIRECT_BUFFER_CONSTRUCTOR != null;
     }
 
     public static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity)

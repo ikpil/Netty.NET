@@ -20,6 +20,11 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common.Internal;
 
+public class AtomicIntegerFieldUpdater<T>
+{
+    
+}
+
 /**
  * Common logic for {@link IReferenceCounted} implementations
  */
