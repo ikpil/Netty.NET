@@ -18,7 +18,7 @@ namespace Netty.Common.Tests.Concurrent
 {
     public class DefaultThreadFactoryTest {
 
-        @Test
+        [Fact]
             @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
         public void testDescendantThreadGroups() throws ThreadInterruptedException {
             final SecurityManager current = System.getSecurityManager();
@@ -117,7 +117,7 @@ namespace Netty.Common.Tests.Concurrent
 
     // test that when DefaultThreadFactory is constructed with a sticky thread group, threads
     // created by it have the sticky thread group
-    @Test
+    [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
     public void testDefaultThreadFactoryStickyThreadGroupConstructor() throws ThreadInterruptedException {
         final ThreadGroup sticky = new ThreadGroup("sticky");
@@ -133,7 +133,7 @@ namespace Netty.Common.Tests.Concurrent
 
     // test that when a security manager is installed that provides a ThreadGroup, DefaultThreadFactory inherits from
     // the security manager
-    @Test
+    [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
     public void testDefaultThreadFactoryInheritsThreadGroupFromSecurityManager() throws ThreadInterruptedException {
         final SecurityManager current = System.getSecurityManager();
@@ -207,7 +207,7 @@ namespace Netty.Common.Tests.Concurrent
 
     // test that when DefaultThreadFactory is constructed without a sticky thread group, threads
     // created by it inherit the correct thread group
-    @Test
+    [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
     public void testDefaultThreadFactoryNonStickyThreadGroupConstructor() throws ThreadInterruptedException {
 
@@ -254,7 +254,7 @@ namespace Netty.Common.Tests.Concurrent
 
     // test that when DefaultThreadFactory is constructed without a sticky thread group, threads
     // created by it inherit the correct thread group
-    @Test
+    [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
     public void testCurrentThreadGroupIsUsed() throws ThreadInterruptedException {
         final AtomicReference<DefaultThreadFactory> factory = new AtomicReference<DefaultThreadFactory>();

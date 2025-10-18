@@ -17,7 +17,7 @@ namespace Netty.Common.Tests.Internal;
 
 public class PlatformDependentTest {
     private static final Random r = new Random();
-    @Test
+    [Fact]
     public void testEqualsConsistentTime() {
         testEquals(new EqualityChecker() {
             @Override
@@ -27,7 +27,7 @@ public class PlatformDependentTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testEquals() {
         testEquals(new EqualityChecker() {
             @Override
@@ -37,7 +37,7 @@ public class PlatformDependentTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testIsZero() {
         byte[] bytes = new byte[100];
         assertTrue(PlatformDependent.isZero(bytes, 0, 0));
@@ -116,7 +116,7 @@ public class PlatformDependentTest {
         return (char) r.nextInt(255 + 1);
     }
 
-    @Test
+    [Fact]
     public void testHashCodeAscii() {
         for (int i = 0; i < 1000; ++i) {
             // byte[] and char[] need to be initialized such that there values are within valid "ascii" range
@@ -136,7 +136,7 @@ public class PlatformDependentTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testAllocateWithCapacity0() {
         assumeTrue(PlatformDependent.hasDirectBufferNoCleanerConstructor());
         ByteBuffer buffer = PlatformDependent.allocateDirectNoCleaner(0);
@@ -146,7 +146,7 @@ public class PlatformDependentTest {
     }
 
     @EnabledForJreRange(min = JRE.JAVA_25)
-    @Test
+    [Fact]
     void java25MustHaveCleanerImplAvailable() throws Exception {
         assertTrue(CleanerJava25.isSupported(),
                 "The CleanerJava25 implementation must be supported on Java 25+");

@@ -17,7 +17,7 @@ namespace Netty.Common.Tests;
 
 public class AttributeKeyTest {
 
-    @Test
+    [Fact]
     public void testExists() {
         String name = "test";
         assertFalse(AttributeKey.exists(name));
@@ -27,7 +27,7 @@ public class AttributeKeyTest {
         assertNotNull(attr);
     }
 
-    @Test
+    [Fact]
     public void testValueOf() {
         String name = "test1";
         assertFalse(AttributeKey.exists(name));
@@ -37,7 +37,7 @@ public class AttributeKeyTest {
         assertSame(attr, attr2);
     }
 
-    @Test
+    [Fact]
     public void testNewInstance() {
         String name = "test2";
         assertFalse(AttributeKey.exists(name));

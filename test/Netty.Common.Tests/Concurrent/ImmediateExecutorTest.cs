@@ -16,7 +16,7 @@
 
 namespace Netty.Common.Tests.Concurrent;public class ImmediateExecutorTest {
 
-    @Test
+    [Fact]
     public void testExecuteNullRunnable() {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
@@ -26,7 +26,7 @@ namespace Netty.Common.Tests.Concurrent;public class ImmediateExecutorTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testExecuteNonNullRunnable() throws Exception {
         FutureTask<Void> task = new FutureTask<Void>(new IRunnable() {
             @Override

@@ -18,7 +18,7 @@ namespace Netty.Common.Tests.Concurrent;
 
 public class PromiseNotifierTest {
 
-    @Test
+    [Fact]
     public void testNullPromisesArray() {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
@@ -29,7 +29,7 @@ public class PromiseNotifierTest {
     }
 
     //@SuppressWarnings("unchecked")
-    @Test
+    [Fact]
     public void testNullPromiseInArray() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -39,7 +39,7 @@ public class PromiseNotifierTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testListenerSuccess() throws Exception {
         //@SuppressWarnings("unchecked")
         Promise<Void> p1 = mock(Promise.class);
@@ -62,7 +62,7 @@ public class PromiseNotifierTest {
         verify(p2).trySuccess(null);
     }
 
-    @Test
+    [Fact]
     public void testListenerFailure() throws Exception {
         //@SuppressWarnings("unchecked")
         Promise<Void> p1 = mock(Promise.class);
@@ -87,7 +87,7 @@ public class PromiseNotifierTest {
         verify(p2).tryFailure(t);
     }
 
-    @Test
+    [Fact]
     public void testCancelPropagationWhenFusedFromFuture() {
         Promise<Void> p1 = ImmediateEventExecutor.INSTANCE.newPromise();
         Promise<Void> p2 = ImmediateEventExecutor.INSTANCE.newPromise();

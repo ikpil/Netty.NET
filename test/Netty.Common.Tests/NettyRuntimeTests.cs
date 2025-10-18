@@ -22,7 +22,7 @@ namespace Netty.Common.Tests;
 
 public class NettyRuntimeTests {
 
-    @Test
+    [Fact]
     public void testIllegalSet() {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         for (final int i : new int[] { -1, 0 }) {
@@ -35,7 +35,7 @@ public class NettyRuntimeTests {
         }
     }
 
-    @Test
+    [Fact]
     public void testMultipleSets() {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         holder.setAvailableProcessors(1);
@@ -47,7 +47,7 @@ public class NettyRuntimeTests {
         }
     }
 
-    @Test
+    [Fact]
     public void testSetAfterGet() {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         holder.availableProcessors();
@@ -59,7 +59,7 @@ public class NettyRuntimeTests {
         }
     }
 
-    @Test
+    [Fact]
     public void testRacingGetAndGet() throws ThreadInterruptedException {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         final CyclicBarrier barrier = new CyclicBarrier(3);
@@ -105,7 +105,7 @@ public class NettyRuntimeTests {
         };
     }
 
-    @Test
+    [Fact]
     public void testRacingGetAndSet() throws ThreadInterruptedException {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         final CyclicBarrier barrier = new CyclicBarrier(3);
@@ -150,7 +150,7 @@ public class NettyRuntimeTests {
         }
     }
 
-    @Test
+    [Fact]
     public void testGetWithSystemProperty() {
         final String availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
         try {
@@ -166,7 +166,7 @@ public class NettyRuntimeTests {
         }
     }
 
-    @Test
+    [Fact]
     [SuppressForbidden("testing fallback to Runtime#availableProcessors")]
     public void testGet() {
         final String availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");

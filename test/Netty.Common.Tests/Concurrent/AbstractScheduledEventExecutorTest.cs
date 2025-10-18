@@ -13,20 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+
 namespace Netty.Common.Tests.Concurrent;
 
-
-public class AbstractScheduledEventExecutorTest {
-    private static final IRunnable TEST_RUNNABLE = new IRunnable() {
-
-        @Override
-        public void run() {
-        }
-    };
+public class AbstractScheduledEventExecutorTest
+{
+    private static readonly IRunnable TEST_RUNNABLE = EmptyRunnable.Shared;
 
     private static final Callable<?> TEST_CALLABLE = Executors.callable(TEST_RUNNABLE);
 
-    @Test
+    [Fact]
     public void testScheduleRunnableZero() {
         TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         ScheduledFuture<?> future = executor.schedule(TEST_RUNNABLE, 0, TimeUnit.NANOSECONDS);
@@ -35,7 +34,7 @@ public class AbstractScheduledEventExecutorTest {
         assertNull(executor.pollScheduledTask());
     }
 
-    @Test
+    [Fact]
     public void testScheduleRunnableNegative() {
         TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         ScheduledFuture<?> future = executor.schedule(TEST_RUNNABLE, -1, TimeUnit.NANOSECONDS);
@@ -44,7 +43,7 @@ public class AbstractScheduledEventExecutorTest {
         assertNull(executor.pollScheduledTask());
     }
 
-    @Test
+    [Fact]
     public void testScheduleCallableZero() {
         TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         ScheduledFuture<?> future = executor.schedule(TEST_CALLABLE, 0, TimeUnit.NANOSECONDS);
@@ -53,7 +52,7 @@ public class AbstractScheduledEventExecutorTest {
         assertNull(executor.pollScheduledTask());
     }
 
-    @Test
+    [Fact]
     public void testScheduleCallableNegative() {
         TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         ScheduledFuture<?> future = executor.schedule(TEST_CALLABLE, -1, TimeUnit.NANOSECONDS);
@@ -62,7 +61,7 @@ public class AbstractScheduledEventExecutorTest {
         assertNull(executor.pollScheduledTask());
     }
 
-    @Test
+    [Fact]
     public void testScheduleAtFixedRateRunnableZero() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         assertThrows(ArgumentException.class, new Executable() {
@@ -73,7 +72,7 @@ public class AbstractScheduledEventExecutorTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testScheduleAtFixedRateRunnableNegative() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         assertThrows(ArgumentException.class, new Executable() {
@@ -84,7 +83,7 @@ public class AbstractScheduledEventExecutorTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testScheduleWithFixedDelayZero() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         assertThrows(ArgumentException.class, new Executable() {
@@ -95,7 +94,7 @@ public class AbstractScheduledEventExecutorTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testScheduleWithFixedDelayNegative() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         assertThrows(ArgumentException.class, new Executable() {
@@ -106,7 +105,7 @@ public class AbstractScheduledEventExecutorTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testDeadlineNanosNotOverflow() {
         Assertions.assertEquals(long.MaxValue, AbstractScheduledEventExecutor.deadlineNanos(
                 Ticker.systemTicker().nanoTime(), long.MaxValue));

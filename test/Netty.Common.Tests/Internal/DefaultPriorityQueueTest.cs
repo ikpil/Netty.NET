@@ -17,7 +17,7 @@ namespace Netty.Common.Tests.Internal;
 
 
 public class DefaultPriorityQueueTest {
-    @Test
+    [Fact]
     public void testPoll() {
         PriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
@@ -59,7 +59,7 @@ public class DefaultPriorityQueueTest {
         assertEmptyQueue(queue);
     }
 
-    @Test
+    [Fact]
     public void testClear() {
         PriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
@@ -91,7 +91,7 @@ public class DefaultPriorityQueueTest {
         assertSame(c, queue.peek());
     }
 
-    @Test
+    [Fact]
     public void testClearIgnoringIndexes() {
         PriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
@@ -122,17 +122,17 @@ public class DefaultPriorityQueueTest {
         assertSame(e, queue.peek());
     }
 
-    @Test
+    [Fact]
     public void testRemoval() {
         testRemoval(false);
     }
 
-    @Test
+    [Fact]
     public void testRemovalTyped() {
         testRemoval(true);
     }
 
-    @Test
+    [Fact]
     public void testRemovalFuzz() {
         ThreadLocalRandom threadLocalRandom = ThreadLocalRandom.current();
         final int numElements = threadLocalRandom.nextInt(0, 30);
@@ -210,7 +210,7 @@ public class DefaultPriorityQueueTest {
         assertEmptyQueue(queue);
     }
 
-    @Test
+    [Fact]
     public void testZeroInitialSize() {
         PriorityQueue<TestElement> queue = new DefaultPriorityQueue<>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
@@ -223,7 +223,7 @@ public class DefaultPriorityQueueTest {
         assertEmptyQueue(queue);
     }
 
-    @Test
+    [Fact]
     public void testPriorityChange() {
         PriorityQueue<TestElement> queue = new DefaultPriorityQueue<>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);

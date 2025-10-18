@@ -17,17 +17,17 @@ namespace Netty.Common.Tests.Internal;
 
 public class AppendableCharSequenceTest {
 
-    @Test
+    [Fact]
     public void testSimpleAppend() {
         testSimpleAppend0(new AppendableCharSequence(128));
     }
 
-    @Test
+    [Fact]
     public void testAppendString() {
         testAppendString0(new AppendableCharSequence(128));
     }
 
-    @Test
+    [Fact]
     public void testAppendAppendableCharSequence() {
         AppendableCharSequence seq = new AppendableCharSequence(128);
 
@@ -42,24 +42,24 @@ public class AppendableCharSequenceTest {
         assertEqualsChars(text, seq);
     }
 
-    @Test
+    [Fact]
     public void testSimpleAppendWithExpand() {
         testSimpleAppend0(new AppendableCharSequence(2));
     }
 
-    @Test
+    [Fact]
     public void testAppendStringWithExpand() {
         testAppendString0(new AppendableCharSequence(2));
     }
 
-    @Test
+    [Fact]
     public void testSubSequence() {
         AppendableCharSequence master = new AppendableCharSequence(26);
         master.append("abcdefghijlkmonpqrstuvwxyz");
         assertEquals("abcdefghij", master.subSequence(0, 10).toString());
     }
 
-    @Test
+    [Fact]
     public void testEmptySubSequence() {
         AppendableCharSequence master = new AppendableCharSequence(26);
         master.append("abcdefghijlkmonpqrstuvwxyz");

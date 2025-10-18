@@ -44,13 +44,13 @@ namespace Netty.Common.Tests.Internal.Logging
 {
     public class MessageFormatterTest {
 
-        @Test
+        [Fact]
         public void testNull() {
             String result = MessageFormatter.format(null, 1).getMessage();
             assertNull(result);
         }
 
-        @Test
+        [Fact]
         public void nullParametersShouldBeHandledWithoutBarfing() {
             String result = MessageFormatter.format("Value is {}.", null).getMessage();
             assertEquals("Value is null.", result);
@@ -77,7 +77,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("Val1 is null, val2 is null, val3 is 3", result);
         }
 
-        @Test
+        [Fact]
         public void verifyOneParameterIsHandledCorrectly() {
             String result = MessageFormatter.format("Value is {}.", 3).getMessage();
             assertEquals("Value is 3.", result);
@@ -114,7 +114,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("File name is C:\\App folder.zip.", result);
         }
 
-        @Test
+        [Fact]
         public void testTwoParameters() {
             String result = MessageFormatter.format("Value {} is smaller than {}.", 1, 2).getMessage();
             assertEquals("Value 1 is smaller than 2.", result);
@@ -144,7 +144,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("Value {} is smaller than 1", result);
         }
 
-        @Test
+        [Fact]
         public void testExceptionIn_toString() {
             Object o = new Object() {
                 @Override
@@ -156,7 +156,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("Troublesome object [FAILED ToString()]", result);
         }
 
-        @Test
+        [Fact]
         public void testNullArray() {
             String msg0 = "msg0";
             String msg1 = "msg1 {}";
@@ -179,7 +179,7 @@ namespace Netty.Common.Tests.Internal.Logging
         }
 
         // tests the case when the parameters are supplied in a single array
-        @Test
+        [Fact]
         public void testArrayFormat() {
             Integer[] ia0 = { 1, 2, 3 };
 
@@ -205,7 +205,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("Val1=1, Val2={", result);
         }
 
-        @Test
+        [Fact]
         public void testArrayValues() {
             Integer[] p1 = { 2, 3 };
 
@@ -233,7 +233,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("a[1.0, 2.0]", result);
         }
 
-        @Test
+        [Fact]
         public void testMultiDimensionalArrayValues() {
             Integer[] ia0 = { 1, 2, 3 };
             Integer[] ia1 = { 10, 20, 30 };
@@ -264,7 +264,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("[[0, 127, -128], [0, -32768, 32767]]{}[10, 20, 30]", result);
         }
 
-        @Test
+        [Fact]
         public void testCyclicArrays() {
             Object[] cyclicA = new Object[1];
             cyclicA[0] = cyclicA;
@@ -279,7 +279,7 @@ namespace Netty.Common.Tests.Internal.Logging
                 MessageFormatter.arrayFormat("{}{}", a).getMessage());
         }
 
-        @Test
+        [Fact]
         public void testArrayThrowable() {
             FormattingTuple ft;
             Throwable t = new Throwable();

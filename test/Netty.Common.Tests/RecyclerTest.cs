@@ -37,7 +37,7 @@ public class RecyclerTest {
         return new Thread(runnable);
     }
 
-    @Test
+    [Fact]
         @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced() throws Exception {
         final Recycler<HandledObject> recycler = newRecycler(1024);
@@ -76,12 +76,12 @@ reference.getAndSet(null).recycle();
 
 }
 
-@Test
+[Fact]
 public void verySmallRecycer() {
     newRecycler(2, 0, 1).get();
 }
 
-@Test
+[Fact]
 public void testMultipleRecycle() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
@@ -94,7 +94,7 @@ public void testMultipleRecycle() {
     });
 }
 
-@Test
+[Fact]
 public void testMultipleRecycleAtDifferentThread() throws ThreadInterruptedException {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
@@ -127,7 +127,7 @@ public void testMultipleRecycleAtDifferentThread() throws ThreadInterruptedExcep
     assertNotNull(exception);
 }
 
-@Test
+[Fact]
 public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterruptedException {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
@@ -184,7 +184,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterrupte
     }
 }
 
-@Test
+[Fact]
 public void testMultipleRecycleRacing() throws ThreadInterruptedException {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
@@ -229,7 +229,7 @@ public void testMultipleRecycleRacing() throws ThreadInterruptedException {
     }
 }
 
-@Test
+[Fact]
 public void testRecycle() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     HandledObject object = recycler.get();
@@ -239,7 +239,7 @@ public void testRecycle() {
     object2.recycle();
 }
 
-@Test
+[Fact]
 public void testRecycleDisable() {
     Recycler<HandledObject> recycler = newRecycler(-1);
     HandledObject object = recycler.get();
@@ -249,7 +249,7 @@ public void testRecycleDisable() {
     object2.recycle();
 }
 
-@Test
+[Fact]
 public void testRecycleDisableDrop() {
     Recycler<HandledObject> recycler = newRecycler(1024, 0, 16);
     HandledObject object = recycler.get();
@@ -266,7 +266,7 @@ public void testRecycleDisableDrop() {
      * Test to make sure bug #2848 never happens again
      * https://github.com/netty/netty/issues/2848
      */
-@Test
+[Fact]
 public void testMaxCapacity() {
     testMaxCapacity(300);
     Random rand = new Random();
@@ -292,7 +292,7 @@ private static void testMaxCapacity(int maxCapacity) {
         + maxCapacity + ") as we not pool all new handles internally");
 }
 
-@Test
+[Fact]
 public void testRecycleAtDifferentThread() throws Exception {
     final Recycler<HandledObject> recycler = newRecycler(256, 2, 16);
     final HandledObject o = recycler.get();
@@ -312,7 +312,7 @@ public void testRecycleAtDifferentThread() throws Exception {
     assertNotSame(recycler.get(), o2);
 }
 
-@Test
+[Fact]
 public void testRecycleAtTwoThreadsMulti() throws Exception {
     final Recycler<HandledObject> recycler = newRecycler(256);
     final HandledObject o = recycler.get();
@@ -354,7 +354,7 @@ public void testRecycleAtTwoThreadsMulti() throws Exception {
     single.shutdown();
 }
 
-@Test
+[Fact]
 public void testMaxCapacityWithRecycleAtDifferentThread() throws Exception {
     final int maxCapacity = 4;
     final Recycler<HandledObject> recycler = newRecycler(maxCapacity, 4, 4);
@@ -392,7 +392,7 @@ public void testMaxCapacityWithRecycleAtDifferentThread() throws Exception {
     assertEquals(0, recycler.threadLocalSize());
 }
 
-@Test
+[Fact]
 public void testDiscardingExceedingElementsWithRecycleAtDifferentThread() throws Exception {
     final int maxCapacity = 32;
     final AtomicInteger instancesCount = new AtomicInteger(0);

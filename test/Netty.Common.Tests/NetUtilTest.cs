@@ -578,17 +578,17 @@ public class NetUtilTest {
             "::ffff:1.2.3.4", "::ffff:1.2.3.4",
             "::ffff:192.168.0.1", "::ffff:192.168.0.1");
 
-    @Test
+    [Fact]
     public void testLocalhost() {
         assertNotNull(LOCALHOST);
     }
 
-    @Test
+    [Fact]
     public void testLoopback() {
         assertNotNull(LOOPBACK_IF);
     }
 
-    @Test
+    [Fact]
     public void testIsValidIpV4Address() {
         for (String host : validIpV4Hosts.keySet()) {
             assertTrue(isValidIpV4Address(host), host);
@@ -598,7 +598,7 @@ public class NetUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testIsValidIpV6Address() {
         for (String host : validIpV6Hosts.keySet()) {
             assertTrue(isValidIpV6Address(host), host);
@@ -660,7 +660,7 @@ public class NetUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testCreateByteArrayFromIpAddressString() {
         for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
             String ip = e.getKey();
@@ -680,7 +680,7 @@ public class NetUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testBytesToIpAddress() {
         for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
             assertEquals(e.getKey(), bytesToIpAddress(createByteArrayFromIpAddressString(e.getKey())));
@@ -691,7 +691,7 @@ public class NetUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testBytesToIpAddressWithOffset() {
         for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
             byte[] bytes = copyWithOffset(createByteArrayFromIpAddressString(e.getKey()));
@@ -716,27 +716,27 @@ public class NetUtilTest {
         return array;
     }
 
-    @Test
+    [Fact]
     public void testIp6AddressToString() throws UnknownHostException {
         for (Entry<byte[], String> testEntry : ipv6ToAddressStrings.entrySet()) {
             assertEquals(testEntry.getValue(), toAddressString(IPAddress.getByAddress(testEntry.getKey())));
         }
     }
 
-    @Test
+    [Fact]
     public void testIp4AddressToString() throws UnknownHostException {
         for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
             assertEquals(e.getKey(), toAddressString(IPAddress.getByAddress(unhex(e.getValue()))));
         }
     }
 
-    @Test
+    [Fact]
     public void testIPv4ToInt() throws UnknownHostException {
         assertEquals(2130706433, ipv4AddressToInt((IPAddress) IPAddress.getByName("127.0.0.1")));
         assertEquals(-1062731519, ipv4AddressToInt((IPAddress) IPAddress.getByName("192.168.1.1")));
     }
 
-    @Test
+    [Fact]
     public void testIpv4MappedIp6GetByName() {
         for (Entry<String, String> testEntry : ipv4MappedToIPv6AddressStrings.entrySet()) {
             String srcIp = testEntry.getKey();
@@ -747,7 +747,7 @@ public class NetUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testInvalidIpv4MappedIp6GetByName() {
         for (String host : invalidIpV4Hosts.keySet()) {
             assertNull(getByName(host, true), host);
@@ -758,7 +758,7 @@ public class NetUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testIp6InetSocketAddressToString() throws UnknownHostException {
         for (Entry<byte[], String> testEntry : ipv6ToAddressStrings.entrySet()) {
             assertEquals('[' + testEntry.getValue() + "]:9999",
@@ -766,7 +766,7 @@ public class NetUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testIp4SocketAddressToString() throws UnknownHostException {
         for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
             assertEquals(e.getKey() + ":9999",

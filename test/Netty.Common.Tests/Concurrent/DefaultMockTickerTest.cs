@@ -17,19 +17,19 @@ namespace Netty.Common.Tests.Concurrent
 {
     class DefaultMockTickerTest {
 
-        @Test
+        [Fact]
         void newMockTickerShouldReturnDefaultMockTicker() {
             assertTrue(Ticker.newMockTicker() instanceof DefaultMockTicker);
         }
 
-        @Test
+        [Fact]
         void defaultValues() {
             final MockTicker ticker = Ticker.newMockTicker();
             assertEquals(0, ticker.initialNanoTime());
             assertEquals(0, ticker.nanoTime());
         }
 
-        @Test
+        [Fact]
         void advanceWithoutWaiters() {
             final MockTicker ticker = Ticker.newMockTicker();
             ticker.advance(42, TimeUnit.NANOSECONDS);
@@ -40,7 +40,7 @@ namespace Netty.Common.Tests.Concurrent
             assertEquals(42_000_042, ticker.nanoTime());
         }
 
-        @Test
+        [Fact]
         void advanceWithNegativeAmount() {
             final MockTicker ticker = Ticker.newMockTicker();
             assertThrows(ArgumentException.class, () -> {
@@ -53,7 +53,7 @@ namespace Netty.Common.Tests.Concurrent
         }
 
         @Timeout(60)
-        @Test
+        [Fact]
         void advanceWithWaiters() throws Exception {
             final List<Thread> threads = new List<>();
             final DefaultMockTicker ticker = (DefaultMockTicker) Ticker.newMockTicker();
@@ -125,7 +125,7 @@ namespace Netty.Common.Tests.Concurrent
 
 }
 
-    @Test
+    [Fact]
     void sleepZero() throws ThreadInterruptedException {
         final MockTicker ticker = Ticker.newMockTicker();
         // All sleep calls with 0 delay should return immediately.

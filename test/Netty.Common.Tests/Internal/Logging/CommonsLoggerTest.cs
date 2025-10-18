@@ -22,7 +22,7 @@ namespace Netty.Common.Tests.Internal.Logging
     public class CommonsLoggerTest {
         private static final Exception e = new Exception();
 
-        @Test
+        [Fact]
         public void testIsTraceEnabled() {
             Log mockLog = mock(Log.class);
 
@@ -34,7 +34,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).isTraceEnabled();
         }
 
-        @Test
+        [Fact]
         public void testIsDebugEnabled() {
             Log mockLog = mock(Log.class);
 
@@ -46,7 +46,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).isDebugEnabled();
         }
 
-        @Test
+        [Fact]
         public void testIsInfoEnabled() {
             Log mockLog = mock(Log.class);
 
@@ -58,7 +58,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).isInfoEnabled();
         }
 
-        @Test
+        [Fact]
         public void testIsWarnEnabled() {
             Log mockLog = mock(Log.class);
 
@@ -70,7 +70,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).isWarnEnabled();
         }
 
-        @Test
+        [Fact]
         public void testIsErrorEnabled() {
             Log mockLog = mock(Log.class);
 
@@ -82,7 +82,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).isErrorEnabled();
         }
 
-        @Test
+        [Fact]
         public void testTrace() {
             Log mockLog = mock(Log.class);
 
@@ -92,7 +92,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).trace("a");
         }
 
-        @Test
+        [Fact]
         public void testTraceWithException() {
             Log mockLog = mock(Log.class);
 
@@ -102,7 +102,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).trace("a", e);
         }
 
-        @Test
+        [Fact]
         public void testDebug() {
             Log mockLog = mock(Log.class);
 
@@ -112,7 +112,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).debug("a");
         }
 
-        @Test
+        [Fact]
         public void testDebugWithException() {
             Log mockLog = mock(Log.class);
 
@@ -122,7 +122,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).debug("a", e);
         }
 
-        @Test
+        [Fact]
         public void testInfo() {
             Log mockLog = mock(Log.class);
 
@@ -132,7 +132,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).info("a");
         }
 
-        @Test
+        [Fact]
         public void testInfoWithException() {
             Log mockLog = mock(Log.class);
 
@@ -142,7 +142,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).info("a", e);
         }
 
-        @Test
+        [Fact]
         public void testWarn() {
             Log mockLog = mock(Log.class);
 
@@ -152,7 +152,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).warn("a");
         }
 
-        @Test
+        [Fact]
         public void testWarnWithException() {
             Log mockLog = mock(Log.class);
 
@@ -162,7 +162,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).warn("a", e);
         }
 
-        @Test
+        [Fact]
         public void testError() {
             Log mockLog = mock(Log.class);
 
@@ -172,7 +172,7 @@ namespace Netty.Common.Tests.Internal.Logging
             verify(mockLog).error("a");
         }
 
-        @Test
+        [Fact]
         public void testErrorWithException() {
             Log mockLog = mock(Log.class);
 

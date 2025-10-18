@@ -33,7 +33,7 @@ public class GlobalEventExecutorTest {
         }
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testAutomaticStartStop() throws Exception {
         final TestRunnable task = new TestRunnable(500);
@@ -58,7 +58,7 @@ public class GlobalEventExecutorTest {
         assertTrue(task.ran.get());
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testScheduledTasks() throws Exception {
         TestRunnable task = new TestRunnable(0);
@@ -76,7 +76,7 @@ public class GlobalEventExecutorTest {
 
     // ensure that when a task submission causes a new thread to be created, the thread inherits the thread group of the
     // submitting thread
-    @Test
+    [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
     public void testThreadGroup() throws ThreadInterruptedException {
         final ThreadGroup group = new ThreadGroup("group");
@@ -98,7 +98,7 @@ public class GlobalEventExecutorTest {
         assertEquals(group, capturedGroup.get());
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testTakeTask() throws Exception {
         //add task
@@ -120,7 +120,7 @@ public class GlobalEventExecutorTest {
         assertTrue(afterTask.ran.get());
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testTakeTaskAlwaysHasTask() throws Exception {
         //for https://github.com/netty/netty/issues/1614

@@ -24,17 +24,17 @@ public class PlatformDependent0Test {
         assumeTrue(PlatformDependent0.hasDirectBufferNoCleanerConstructor());
     }
 
-    @Test
+    [Fact]
     public void testNewDirectBufferNegativeMemoryAddress() {
         testNewDirectBufferMemoryAddress(-1);
     }
 
-    @Test
+    [Fact]
     public void testNewDirectBufferNonNegativeMemoryAddress() {
         testNewDirectBufferMemoryAddress(10);
     }
 
-    @Test
+    [Fact]
     public void testNewDirectBufferZeroMemoryAddress() {
         PlatformDependent0.newDirectBuffer(0, 10);
     }
@@ -48,7 +48,7 @@ public class PlatformDependent0Test {
         assertEquals(capacity, buffer.capacity());
     }
 
-    @Test
+    [Fact]
     public void testMajorVersionFromJavaSpecificationVersion() {
         final SecurityManager current = System.getSecurityManager();
 
@@ -74,7 +74,7 @@ public class PlatformDependent0Test {
         }
     }
 
-    @Test
+    [Fact]
     public void testMajorVersion() {
         assertEquals(6, PlatformDependent0.majorVersion("1.6"));
         assertEquals(7, PlatformDependent0.majorVersion("1.7"));

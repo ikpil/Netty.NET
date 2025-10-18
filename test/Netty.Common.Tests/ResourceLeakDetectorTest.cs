@@ -26,7 +26,7 @@ public class ResourceLeakDetectorTest {
     //@SuppressWarnings("unused")
     private static volatile int sink;
 
-    @Test
+    [Fact]
         @Timeout(value = 60000, unit = TimeUnit.MILLISECONDS)
     public void testConcurrentUsage() throws Throwable {
         final AtomicBoolean finished = new AtomicBoolean();
@@ -99,7 +99,7 @@ assertNoErrors(error);
 }
 
 @Timeout(10)
-@Test
+[Fact]
 public void testLeakSetupHints() throws Throwable {
     DefaultResource.detectorWithSetupHint.initialise();
     leakResource();
@@ -121,7 +121,7 @@ public void testLeakSetupHints() throws Throwable {
 }
 
 @Timeout(10)
-@Test
+[Fact]
 public void testLeakBrokenHint() throws Throwable {
     DefaultResource.detectorWithSetupHint.initialise();
 

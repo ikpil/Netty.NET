@@ -33,12 +33,12 @@ namespace Netty.Common.Tests.Internal.Logging
             return (V) result.get(key);
         }
 
-        @Test
+        [Fact]
         public void testName() {
             assertEquals(loggerName, logger.name());
         }
 
-        @Test
+        [Fact]
         public void testAllLevel() throws Exception {
             testLevel(InternalLogLevel.TRACE);
             testLevel(InternalLogLevel.DEBUG);

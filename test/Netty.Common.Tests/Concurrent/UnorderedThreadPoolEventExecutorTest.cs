@@ -18,7 +18,7 @@ namespace Netty.Common.Tests.Concurrent
     public class UnorderedThreadPoolEventExecutorTest {
 
         // See https://github.com/netty/netty/issues/6507
-        @Test
+        [Fact]
         public void testNotEndlessExecute() throws Exception {
             UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
 
@@ -68,7 +68,7 @@ namespace Netty.Common.Tests.Concurrent
         }
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
     public void scheduledAtFixedRateMustRunTaskRepeatedly() throws ThreadInterruptedException {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
@@ -87,7 +87,7 @@ namespace Netty.Common.Tests.Concurrent
         }
     }
 
-    @Test
+    [Fact]
     public void testGetReturnsCorrectValueOnSuccess() throws Exception {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         try {
@@ -105,7 +105,7 @@ namespace Netty.Common.Tests.Concurrent
         }
     }
 
-    @Test
+    [Fact]
     public void testGetReturnsCorrectValueOnFailure() throws Exception {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         try {
@@ -123,7 +123,7 @@ namespace Netty.Common.Tests.Concurrent
         }
     }
 
-    @Test
+    [Fact]
     void tasksRunningInUnorderedExecutorAreInEventLoop() throws Exception {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         try {

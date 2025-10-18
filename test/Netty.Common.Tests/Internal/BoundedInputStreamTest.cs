@@ -37,7 +37,7 @@ namespace Netty.Common.Tests.Internal
         }
     }
 
-    @Test
+    [Fact]
     void testBoundEnforced256() throws IOException {
     final byte[] bytes = new byte[256];
         for (int i = 0; i < bytes.length; i++) {

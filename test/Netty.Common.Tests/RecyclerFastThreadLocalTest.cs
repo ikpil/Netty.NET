@@ -24,7 +24,7 @@ public class RecyclerFastThreadLocalTest extends RecyclerTest {
     }
 
     @Override
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced() throws Exception {
         final Recycler<HandledObject> recycler = newRecycler(1024);

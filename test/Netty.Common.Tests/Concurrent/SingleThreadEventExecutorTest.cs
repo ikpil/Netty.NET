@@ -79,7 +79,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    @Test
+    [Fact]
     void testSuspension() throws Exception {
         TestThreadFactory threadFactory = new TestThreadFactory();
         final SingleThreadEventExecutor executor = new SuspendingSingleThreadEventExecutor(threadFactory);
@@ -115,7 +115,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     void testNotSuspendedUntilScheduledTaskIsCancelled() throws Exception {
         TestThreadFactory threadFactory = new TestThreadFactory();
@@ -154,7 +154,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    @Test
+    [Fact]
     void testNotSuspendedUntilScheduledTaskDidRun() throws Exception {
         TestThreadFactory threadFactory = new TestThreadFactory();
         final SingleThreadEventExecutor executor = new SuspendingSingleThreadEventExecutor(threadFactory);
@@ -194,7 +194,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testWrappedExecutorIsShutdown() {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -237,7 +237,7 @@ public class SingleThreadEventExecutorTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testThreadProperties() {
         final AtomicReference<Thread> threadRef = new AtomicReference<Thread>();
         SingleThreadEventExecutor executor = new SingleThreadEventExecutor(
@@ -265,25 +265,25 @@ public class SingleThreadEventExecutorTest {
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 3000, unit = TimeUnit.MILLISECONDS)
     public void testInvokeAnyInEventLoop() {
         testInvokeInEventLoop(true, false);
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 3000, unit = TimeUnit.MILLISECONDS)
     public void testInvokeAnyInEventLoopWithTimeout() {
         testInvokeInEventLoop(true, true);
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 3000, unit = TimeUnit.MILLISECONDS)
     public void testInvokeAllInEventLoop() {
         testInvokeInEventLoop(false, false);
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 3000, unit = TimeUnit.MILLISECONDS)
     public void testInvokeAllInEventLoopWithTimeout() {
         testInvokeInEventLoop(false, true);
@@ -359,7 +359,7 @@ public class SingleThreadEventExecutorTest {
 
     static class LazyLatchTask extends LatchTask { }
 
-    @Test
+    [Fact]
     public void testLazyExecution() throws Exception {
         final SingleThreadEventExecutor executor = new SingleThreadEventExecutor(null,
                 Executors.defaultThreadFactory(), false) {
@@ -426,7 +426,7 @@ public class SingleThreadEventExecutorTest {
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
-    @Test
+    [Fact]
     public void testTaskAddedAfterShutdownNotAbandoned() throws Exception {
 
         // A queue that doesn't support remove, so tasks once added cannot be rejected anymore
@@ -495,7 +495,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testTakeTask() throws Exception {
         final SingleThreadEventExecutor executor =
@@ -531,7 +531,7 @@ public class SingleThreadEventExecutorTest {
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testTakeTaskAlwaysHasTask() throws Exception {
         //for https://github.com/netty/netty/issues/1614
@@ -582,7 +582,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testExceptionIsPropagatedToTerminationFuture() throws Exception {
         final IllegalStateException exception = new IllegalStateException();

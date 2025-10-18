@@ -40,7 +40,7 @@ public class AsciiStringMemoryTest {
         bAsciiString = new AsciiString(b, bOffset, length, false);
     }
 
-    @Test
+    [Fact]
     public void testSharedMemory() {
         ++a[aOffset];
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
@@ -52,7 +52,7 @@ public class AsciiStringMemoryTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testNotSharedMemory() {
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
         ++a[aOffset];
@@ -65,7 +65,7 @@ public class AsciiStringMemoryTest {
         }
     }
 
-    @Test
+    [Fact]
     public void forEachTest() throws Exception {
         final AtomicReference<Integer> aCount = new AtomicReference<Integer>(0);
         final AtomicReference<Integer> bCount = new AtomicReference<Integer>(0);
@@ -91,19 +91,19 @@ public class AsciiStringMemoryTest {
         assertEquals(bAsciiString.length(), bCount.get().intValue());
     }
 
-    @Test
+    [Fact]
     public void forEachWithIndexEndTest() throws Exception {
         assertNotEquals(-1, aAsciiString.forEachByte(aAsciiString.length() - 1,
                 1, new IndexOfProcessor(aAsciiString.byteAt(aAsciiString.length() - 1))));
     }
 
-    @Test
+    [Fact]
     public void forEachWithIndexBeginTest() throws Exception {
         assertNotEquals(-1, aAsciiString.forEachByte(0,
                 1, new IndexOfProcessor(aAsciiString.byteAt(0))));
     }
 
-    @Test
+    [Fact]
     public void forEachDescTest() throws Exception {
         final AtomicReference<Integer> aCount = new AtomicReference<Integer>(0);
         final AtomicReference<Integer> bCount = new AtomicReference<Integer>(0);
@@ -129,19 +129,19 @@ public class AsciiStringMemoryTest {
         assertEquals(bAsciiString.length(), bCount.get().intValue());
     }
 
-    @Test
+    [Fact]
     public void forEachDescWithIndexEndTest() throws Exception {
         assertNotEquals(-1, bAsciiString.forEachByteDesc(bAsciiString.length() - 1,
                 1, new IndexOfProcessor(bAsciiString.byteAt(bAsciiString.length() - 1))));
     }
 
-    @Test
+    [Fact]
     public void forEachDescWithIndexBeginTest() throws Exception {
         assertNotEquals(-1, bAsciiString.forEachByteDesc(0,
                 1, new IndexOfProcessor(bAsciiString.byteAt(0))));
     }
 
-    @Test
+    [Fact]
     public void subSequenceTest() {
         final int start = 12;
         final int end = aAsciiString.length();
@@ -151,7 +151,7 @@ public class AsciiStringMemoryTest {
         assertEquals(aSubSequence.hashCode(), bSubSequence.hashCode());
     }
 
-    @Test
+    [Fact]
     public void copyTest() {
         byte[] aCopy = new byte[aAsciiString.length()];
         aAsciiString.copy(0, aCopy, 0, aCopy.length);

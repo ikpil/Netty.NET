@@ -16,7 +16,7 @@
 namespace Netty.Common.Tests.Internal;
 public class MathUtilTest {
 
-    @Test
+    [Fact]
     public void testFindNextPositivePowerOfTwo() {
         assertEquals(1, findNextPositivePowerOfTwo(0));
         assertEquals(1, findNextPositivePowerOfTwo(1));
@@ -28,7 +28,7 @@ public class MathUtilTest {
         assertEquals(1, findNextPositivePowerOfTwo(-10000));
     }
 
-    @Test
+    [Fact]
     public void testSafeFindNextPositivePowerOfTwo() {
         assertEquals(1, safeFindNextPositivePowerOfTwo(0));
         assertEquals(1, safeFindNextPositivePowerOfTwo(1));
@@ -44,7 +44,7 @@ public class MathUtilTest {
         assertEquals(1, safeFindNextPositivePowerOfTwo(Integer.MIN_VALUE + 1));
     }
 
-    @Test
+    [Fact]
     public void testIsOutOfBounds() {
         assertFalse(isOutOfBounds(0, 0, 0));
         assertFalse(isOutOfBounds(0, 0, 1));

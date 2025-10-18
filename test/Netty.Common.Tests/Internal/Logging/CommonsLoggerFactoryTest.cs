@@ -21,7 +21,7 @@ namespace Netty.Common.Tests.Internal.Logging
 {
     public class CommonsLoggerFactoryTest {
 
-        @Test
+        [Fact]
         public void testCreation() {
             InternalLogger logger = CommonsLoggerFactory.INSTANCE.newInstance("foo");
             assertTrue(logger instanceof CommonsLogger);

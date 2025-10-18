@@ -17,7 +17,7 @@ namespace Netty.Common.Tests.Concurrent;
 public class NonStickyEventExecutorGroupTest {
     private static final String PARAMETERIZED_NAME = "{index}: maxTaskExecutePerRun = {0}";
 
-    @Test
+    [Fact]
     public void testInvalidGroup() {
         final EventExecutorGroup group = new DefaultEventExecutorGroup(1);
         try {

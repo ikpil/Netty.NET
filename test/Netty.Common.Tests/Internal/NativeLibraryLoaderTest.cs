@@ -23,7 +23,7 @@ class NativeLibraryLoaderTest {
         return "x86_64".equals(OS_ARCH) || "amd64".equals(OS_ARCH);
     }
 
-    @Test
+    [Fact]
     void testFileNotFound() {
         try {
             NativeLibraryLoader.load(UUID.randomUUID().ToString(), NativeLibraryLoaderTest.class.getClassLoader());
@@ -34,7 +34,7 @@ class NativeLibraryLoaderTest {
         }
     }
 
-    @Test
+    [Fact]
     void testFileNotFoundWithNullClassLoader() {
         try {
             NativeLibraryLoader.load(UUID.randomUUID().ToString(), null);
@@ -45,7 +45,7 @@ class NativeLibraryLoaderTest {
         }
     }
 
-    @Test
+    [Fact]
     @EnabledOnOs(LINUX)
     @EnabledIf("is_x86_64")
     void testMultipleResourcesWithSameContentInTheClassLoader() throws MalformedURLException {
@@ -58,7 +58,7 @@ class NativeLibraryLoaderTest {
         assertTrue(true);
     }
 
-    @Test
+    [Fact]
     @EnabledOnOs(LINUX)
     @EnabledIf("is_x86_64")
     void testMultipleResourcesInTheClassLoader() throws MalformedURLException {
@@ -77,7 +77,7 @@ class NativeLibraryLoaderTest {
                     .contains("Multiple resources found for 'META-INF/native/lib" + resourceName + ".so'"));
     }
 
-    @Test
+    [Fact]
     @EnabledOnOs(LINUX)
     @EnabledIf("is_x86_64")
     void testSingleResourceInTheClassLoader() throws MalformedURLException {

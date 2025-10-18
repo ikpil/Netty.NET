@@ -18,12 +18,12 @@ namespace Netty.Common.Tests.Internal;
 
 public class StringUtilTest {
 
-    @Test
+    [Fact]
     public void ensureNewlineExists() {
         assertNotNull(NEWLINE);
     }
 
-    @Test
+    [Fact]
     public void testToHexString() {
         assertEquals("0", toHexString(new byte[] { 0 }));
         assertEquals("1", toHexString(new byte[] { 1 }));
@@ -32,7 +32,7 @@ public class StringUtilTest {
         assertEquals("", toHexString(EmptyArrays.EMPTY_BYTES));
     }
 
-    @Test
+    [Fact]
     public void testToHexStringPadded() {
         assertEquals("00", toHexStringPadded(new byte[]{0}));
         assertEquals("01", toHexStringPadded(new byte[]{1}));
@@ -41,58 +41,58 @@ public class StringUtilTest {
         assertEquals("", toHexStringPadded(EmptyArrays.EMPTY_BYTES));
     }
 
-    @Test
+    [Fact]
     public void splitSimple() {
         assertArrayEquals(new String[] { "foo", "bar" }, "foo:bar".split(":"));
     }
 
-    @Test
+    [Fact]
     public void splitWithTrailingDelimiter() {
         assertArrayEquals(new String[] { "foo", "bar" }, "foo,bar,".split(","));
     }
 
-    @Test
+    [Fact]
     public void splitWithTrailingDelimiters() {
         assertArrayEquals(new String[] { "foo", "bar" }, "foo!bar!!".split("!"));
     }
 
-    @Test
+    [Fact]
     public void splitWithTrailingDelimitersDot() {
         assertArrayEquals(new String[] { "foo", "bar" }, "foo.bar..".split("\\."));
     }
 
-    @Test
+    [Fact]
     public void splitWithTrailingDelimitersEq() {
         assertArrayEquals(new String[] { "foo", "bar" }, "foo=bar==".split("="));
     }
 
-    @Test
+    [Fact]
     public void splitWithTrailingDelimitersSpace() {
         assertArrayEquals(new String[] { "foo", "bar" }, "foo bar  ".split(" "));
     }
 
-    @Test
+    [Fact]
     public void splitWithConsecutiveDelimiters() {
         assertArrayEquals(new String[] { "foo", "", "bar" }, "foo$$bar".split("\\$"));
     }
 
-    @Test
+    [Fact]
     public void splitWithDelimiterAtBeginning() {
         assertArrayEquals(new String[] { "", "foo", "bar" }, "#foo#bar".split("#"));
     }
 
-    @Test
+    [Fact]
     public void splitMaxPart() {
         assertArrayEquals(new String[] { "foo", "bar:bar2" }, "foo:bar:bar2".split(":", 2));
         assertArrayEquals(new String[] { "foo", "bar", "bar2" }, "foo:bar:bar2".split(":", 3));
     }
 
-    @Test
+    [Fact]
     public void substringAfterTest() {
         assertEquals("bar:bar2", substringAfter("foo:bar:bar2", ':'));
     }
 
-    @Test
+    [Fact]
     public void commonSuffixOfLengthTest() {
         // negative length suffixes are never common
         checkNotCommonSuffix("abc", "abc", -1);
@@ -136,7 +136,7 @@ public class StringUtilTest {
         return sp;
     }
 
-    @Test
+    [Fact]
     public void escapeCsvNull() {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
@@ -146,179 +146,179 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void escapeCsvEmpty() {
         CharSequence value = "";
         escapeCsv(value, value);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvUnquoted() {
         CharSequence value = "something";
         escapeCsv(value, value);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvAlreadyQuoted() {
         CharSequence value = "\"something\"";
         CharSequence expected = "\"something\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithQuote() {
         CharSequence value = "s\"";
         CharSequence expected = "\"s\"\"\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithQuoteInMiddle() {
         CharSequence value = "some text\"and more text";
         CharSequence expected = "\"some text\"\"and more text\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithQuoteInMiddleAlreadyQuoted() {
         CharSequence value = "\"some text\"and more text\"";
         CharSequence expected = "\"some text\"\"and more text\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithQuotedWords() {
         CharSequence value = "\"foo\"\"goo\"";
         CharSequence expected = "\"foo\"\"goo\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithAlreadyEscapedQuote() {
         CharSequence value = "foo\"\"goo";
         CharSequence expected = "foo\"\"goo";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvEndingWithQuote() {
         CharSequence value = "some\"";
         CharSequence expected = "\"some\"\"\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithSingleQuote() {
         CharSequence value = "\"";
         CharSequence expected = "\"\"\"\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithSingleQuoteAndCharacter() {
         CharSequence value = "\"f";
         CharSequence expected = "\"\"\"f\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvAlreadyEscapedQuote() {
         CharSequence value = "\"some\"\"";
         CharSequence expected = "\"some\"\"\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvQuoted() {
         CharSequence value = "\"foo,goo\"";
         escapeCsv(value, value);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithLineFeed() {
         CharSequence value = "some text\n more text";
         CharSequence expected = "\"some text\n more text\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithSingleLineFeedCharacter() {
         CharSequence value = "\n";
         CharSequence expected = "\"\n\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithMultipleLineFeedCharacter() {
         CharSequence value = "\n\n";
         CharSequence expected = "\"\n\n\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithQuotedAndLineFeedCharacter() {
         CharSequence value = " \" \n ";
         CharSequence expected = "\" \"\" \n \"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithLineFeedAtEnd() {
         CharSequence value = "testing\n";
         CharSequence expected = "\"testing\n\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithComma() {
         CharSequence value = "test,ing";
         CharSequence expected = "\"test,ing\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithSingleComma() {
         CharSequence value = ",";
         CharSequence expected = "\",\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithSingleCarriageReturn() {
         CharSequence value = "\r";
         CharSequence expected = "\"\r\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithMultipleCarriageReturn() {
         CharSequence value = "\r\r";
         CharSequence expected = "\"\r\r\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithCarriageReturn() {
         CharSequence value = "some text\r more text";
         CharSequence expected = "\"some text\r more text\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithQuotedAndCarriageReturnCharacter() {
         CharSequence value = "\"\r";
         CharSequence expected = "\"\"\"\r\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithCarriageReturnAtEnd() {
         CharSequence value = "testing\r";
         CharSequence expected = "\"testing\r\"";
         escapeCsv(value, expected);
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithCRLFCharacter() {
         CharSequence value = "\r\n";
         CharSequence expected = "\"\r\n\"";
@@ -341,7 +341,7 @@ public class StringUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     public void escapeCsvWithTrimming() {
         assertSame("", StringUtil.escapeCsv("", true));
         assertSame("ab", StringUtil.escapeCsv("ab", true));
@@ -359,7 +359,7 @@ public class StringUtilTest {
         escapeCsvWithTrimming("\ttest,ing ", "\"test,ing\"");
     }
 
-    @Test
+    [Fact]
     public void escapeCsvGarbageFree() {
         // 'StringUtil#escapeCsv()' should return same string object if string didn't changing.
         assertSame("1", StringUtil.escapeCsv("1", true));
@@ -371,7 +371,7 @@ public class StringUtilTest {
         assertSame("\"123\"\"321\"", StringUtil.escapeCsv("\"123\"\"321\"", true));
     }
 
-    @Test
+    [Fact]
     public void testUnescapeCsv() {
         assertEquals("", unescapeCsv(""));
         assertEquals("\"", unescapeCsv("\"\"\"\""));
@@ -385,7 +385,7 @@ public class StringUtilTest {
         assertEquals("hello,netty", unescapeCsv("\"hello,netty\""));
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvWithSingleQuote() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -395,7 +395,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvWithOddQuote() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -405,7 +405,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvWithCRAndWithoutQuote() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -415,7 +415,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvWithLFAndWithoutQuote() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -425,7 +425,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvWithCommaAndWithoutQuote() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -435,7 +435,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void escapeCsvAndUnEscapeCsv() {
         assertEscapeCsvAndUnEscapeCsv("");
         assertEscapeCsvAndUnEscapeCsv("netty");
@@ -451,7 +451,7 @@ public class StringUtilTest {
         assertEquals(value, unescapeCsv(StringUtil.escapeCsv(value)));
     }
 
-    @Test
+    [Fact]
     public void testUnescapeCsvFields() {
         assertEquals(Collections.singletonList(""), unescapeCsvFields(""));
         assertEquals(Arrays.asList("", ""), unescapeCsvFields(","));
@@ -467,7 +467,7 @@ public class StringUtilTest {
         assertEquals(Arrays.asList("a\rb", "c\nd"), unescapeCsvFields("\"a\rb\",\"c\nd\""));
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvFieldsWithCRWithoutQuote() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -477,7 +477,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvFieldsWithLFWithoutQuote() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -487,7 +487,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvFieldsWithQuote() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -497,7 +497,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvFieldsWithQuote2() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -507,7 +507,7 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void unescapeCsvFieldsWithQuote3() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -517,12 +517,12 @@ public class StringUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testSimpleClassName() throws Exception {
         testSimpleClassName(String.class);
     }
 
-    @Test
+    [Fact]
     public void testSimpleInnerClassName() throws Exception {
         testSimpleClassName(TestClass.class);
     }
@@ -540,7 +540,7 @@ public class StringUtilTest {
 
     private static final class TestClass { }
 
-    @Test
+    [Fact]
     public void testEndsWith() {
         assertFalse(StringUtil.endsWith("", 'u'));
         assertTrue(StringUtil.endsWith("u", 'u'));
@@ -549,7 +549,7 @@ public class StringUtilTest {
         assertFalse(StringUtil.endsWith("u-", 'u'));
     }
 
-    @Test
+    [Fact]
     public void trimOws() {
         assertSame("", StringUtil.trimOws(""));
         assertEquals("", StringUtil.trimOws(" \t "));
@@ -566,7 +566,7 @@ public class StringUtilTest {
         assertEquals("a b", StringUtil.trimOws("\ta b \t").toString());
     }
 
-    @Test
+    [Fact]
     public void testJoin() {
         assertEquals("",
                      StringUtil.join(",", Collections.<CharSequence>emptyList()).toString());
@@ -580,7 +580,7 @@ public class StringUtilTest {
                      StringUtil.join(",", Arrays.asList("a", "b", "c", null, "d")).toString());
     }
 
-    @Test
+    [Fact]
     public void testIsNullOrEmpty() {
         assertTrue(isNullOrEmpty(null));
         assertTrue(isNullOrEmpty(""));
@@ -592,7 +592,7 @@ public class StringUtilTest {
         assertFalse(isNullOrEmpty(NEWLINE));
     }
 
-    @Test
+    [Fact]
     public void testIndexOfWhiteSpace() {
         assertEquals(-1, indexOfWhiteSpace("", 0));
         assertEquals(0, indexOfWhiteSpace(" ", 0));
@@ -607,7 +607,7 @@ public class StringUtilTest {
         assertEquals(-1, indexOfWhiteSpace("foo\tbar\r\n", Integer.MAX_VALUE));
     }
 
-    @Test
+    [Fact]
     public void testIndexOfNonWhiteSpace() {
         assertEquals(-1, indexOfNonWhiteSpace("", 0));
         assertEquals(-1, indexOfNonWhiteSpace(" ", 0));

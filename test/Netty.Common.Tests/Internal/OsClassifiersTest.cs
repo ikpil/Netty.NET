@@ -31,7 +31,7 @@ public class OsClassifiersTest {
         systemProperties.remove(OS_CLASSIFIERS_PROPERTY);
     }
 
-    @Test
+    [Fact]
     void testOsClassifiersPropertyAbsent() {
         Set<String> available = new LinkedHashSet<>(2);
         boolean added = PlatformDependent.addPropertyOsClassifiers(available);
@@ -39,7 +39,7 @@ public class OsClassifiersTest {
         assertTrue(available.isEmpty());
     }
 
-    @Test
+    [Fact]
     void testOsClassifiersPropertyEmpty() {
         // empty property -Dio.netty.osClassifiers
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "");
@@ -49,7 +49,7 @@ public class OsClassifiersTest {
         assertTrue(available.isEmpty());
     }
 
-    @Test
+    [Fact]
     void testOsClassifiersPropertyNotEmptyNoClassifiers() {
         // ID
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, ",");
@@ -58,7 +58,7 @@ public class OsClassifiersTest {
                 () -> PlatformDependent.addPropertyOsClassifiers(available));
     }
 
-    @Test
+    [Fact]
     void testOsClassifiersPropertySingle() {
         // ID
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "fedora");
@@ -69,7 +69,7 @@ public class OsClassifiersTest {
         assertEquals("fedora", available.iterator().next());
     }
 
-    @Test
+    [Fact]
     void testOsClassifiersPropertyPair() {
         // ID, ID_LIKE
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "manjaro,arch");
@@ -80,7 +80,7 @@ public class OsClassifiersTest {
         assertEquals("arch", available.iterator().next());
     }
 
-    @Test
+    [Fact]
     void testOsClassifiersPropertyExcessive() {
         // ID, ID_LIKE, excessive
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "manjaro,arch,slackware");

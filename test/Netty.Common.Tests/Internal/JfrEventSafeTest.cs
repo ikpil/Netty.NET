@@ -17,7 +17,7 @@ namespace Netty.Common.Tests.Internal;
 
 //@SuppressWarnings("Since15")
 public class JfrEventSafeTest {
-    @Test
+    [Fact]
     public void test() {
         // This code should work even on java 8. Other details are tested in JfrEventTest.
         if (PlatformDependent.isJfrEnabled()) {
@@ -27,7 +27,7 @@ public class JfrEventSafeTest {
         }
     }
 
-    @Test
+    [Fact]
     @EnabledForJreRange(min = JRE.JAVA_17) // RecordingStream
     public void simple() throws Throwable {
         try (RecordingStream stream = new RecordingStream()) {
@@ -44,7 +44,7 @@ public class JfrEventSafeTest {
         }
     }
 
-    @Test
+    [Fact]
     @EnabledForJreRange(min = JRE.JAVA_17) // RecordingStream
     public void enableDefaults() throws Throwable {
         try (RecordingStream stream = new RecordingStream()) {

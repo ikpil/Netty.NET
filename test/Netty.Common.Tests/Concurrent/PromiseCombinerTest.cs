@@ -42,7 +42,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         combiner = new PromiseCombiner(ImmediateEventExecutor.INSTANCE);
     }
 
-    @Test
+    [Fact]
     public void testNullArgument() {
         try {
             combiner.finish(null);
@@ -54,13 +54,13 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         verify(p1).trySuccess(null);
     }
 
-    @Test
+    [Fact]
     public void testNullAggregatePromise() {
         combiner.finish(p1);
         verify(p1).trySuccess(null);
     }
 
-    @Test
+    [Fact]
     public void testAddNullPromise() {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
@@ -70,7 +70,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testAddAllNullPromise() {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
@@ -80,7 +80,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testAddAfterFinish() {
         combiner.finish(p1);
         assertThrows(IllegalStateException.class, new Executable() {
@@ -92,7 +92,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     }
 
     //@SuppressWarnings("unchecked")
-    @Test
+    [Fact]
     public void testAddAllAfterFinish() {
         combiner.finish(p1);
         assertThrows(IllegalStateException.class, new Executable() {
@@ -104,7 +104,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     }
 
     //@SuppressWarnings("unchecked")
-    @Test
+    [Fact]
     public void testFinishCalledTwiceThrows() {
         combiner.finish(p1);
         assertThrows(IllegalStateException.class, new Executable() {
@@ -115,7 +115,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testAddAllSuccess() throws Exception {
         mockSuccessPromise(p1, l1Consumer);
         mockSuccessPromise(p2, l2Consumer);
@@ -127,7 +127,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         verifySuccess(p3);
     }
 
-    @Test
+    [Fact]
     public void testAddSuccess() throws Exception {
         mockSuccessPromise(p1, l1Consumer);
         mockSuccessPromise(p2, l2Consumer);
@@ -140,7 +140,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         verifySuccess(p3);
     }
 
-    @Test
+    [Fact]
     public void testAddAllFail() throws Exception {
         Exception e1 = new Exception("fake exception 1");
         Exception e2 = new Exception("fake exception 2");
@@ -154,7 +154,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         verifyFail(p3, e1);
     }
 
-    @Test
+    [Fact]
     public void testAddFail() throws Exception {
         Exception e1 = new Exception("fake exception 1");
         Exception e2 = new Exception("fake exception 2");
@@ -169,7 +169,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         verifyFail(p3, e1);
     }
 
-    @Test
+    [Fact]
     public void testEventExecutor() {
         EventExecutor executor = mock(EventExecutor.class);
         when(executor.inEventLoop()).thenReturn(false);

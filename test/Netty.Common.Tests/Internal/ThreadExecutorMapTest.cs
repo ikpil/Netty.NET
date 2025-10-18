@@ -62,7 +62,7 @@ public class ThreadExecutorMapTest {
         }
     };
 
-    @Test
+    [Fact]
     public void testOldExecutorIsRestored() {
         IExecutor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
         IExecutor executor2 = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, EVENT_EXECUTOR);
@@ -80,7 +80,7 @@ public class ThreadExecutorMapTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testDecorateExecutor() {
         IExecutor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
         executor.execute(new IRunnable() {
@@ -91,7 +91,7 @@ public class ThreadExecutorMapTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testDecorateRunnable() {
         ThreadExecutorMap.apply(new IRunnable() {
             @Override
@@ -102,7 +102,7 @@ public class ThreadExecutorMapTest {
         }, ImmediateEventExecutor.INSTANCE).run();
     }
 
-    @Test
+    [Fact]
     public void testDecorateThreadFactory() throws ThreadInterruptedException {
         IThreadFactory threadFactory =
                 ThreadExecutorMap.apply(Executors.defaultThreadFactory(), ImmediateEventExecutor.INSTANCE);

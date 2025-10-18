@@ -23,12 +23,12 @@ public class DefaultAttributeMapTest {
         map = new DefaultAttributeMap();
     }
 
-    @Test
+    [Fact]
     public void testMapExists() {
         assertNotNull(map);
     }
 
-    @Test
+    [Fact]
     public void testGetSetString() {
         AttributeKey<String> key = AttributeKey.valueOf("Nothing");
         IAttribute<String> one = map.attr(key);
@@ -45,7 +45,7 @@ public class DefaultAttributeMapTest {
         assertNull(one.get());
     }
 
-    @Test
+    [Fact]
     public void testGetSetInt() {
         AttributeKey<Integer> key = AttributeKey.valueOf("Nada");
         IAttribute<Integer> one = map.attr(key);
@@ -63,7 +63,7 @@ public class DefaultAttributeMapTest {
     }
 
     // See https://github.com/netty/netty/issues/2523
-    @Test
+    [Fact]
     public void testSetRemove() {
         AttributeKey<Integer> key = AttributeKey.valueOf("key");
 
@@ -77,7 +77,7 @@ public class DefaultAttributeMapTest {
         assertNotSame(attr, attr2);
     }
 
-    @Test
+    [Fact]
     public void testHasAttrRemoved() {
         AttributeKey<Integer>[] keys = new AttributeKey[20];
         for (int i = 0; i < 20; i++) {
@@ -103,7 +103,7 @@ public class DefaultAttributeMapTest {
         }
     }
 
-    @Test
+    [Fact]
     public void testGetAndSetWithNull() {
         AttributeKey<Integer> key = AttributeKey.valueOf("key");
 

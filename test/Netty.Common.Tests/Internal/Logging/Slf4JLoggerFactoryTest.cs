@@ -21,14 +21,14 @@ namespace Netty.Common.Tests.Internal.Logging
 {
     public class Slf4JLoggerFactoryTest {
 
-        @Test
+        [Fact]
         public void testCreation() {
             InternalLogger logger = Slf4JLoggerFactory.INSTANCE.newInstance("foo");
             assertTrue(logger instanceof Slf4JLogger || logger instanceof LocationAwareSlf4JLogger);
             assertEquals("foo", logger.name());
         }
 
-        @Test
+        [Fact]
         public void testCreationLogger() {
             Logger logger = mock(Logger.class);
             when(logger.getName()).thenReturn("testlogger");
@@ -37,7 +37,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("testlogger", internalLogger.name());
         }
 
-        @Test
+        [Fact]
         public void testCreationLocationAwareLogger() {
             Logger logger = mock(LocationAwareLogger.class);
             when(logger.getName()).thenReturn("testlogger");
@@ -46,7 +46,7 @@ namespace Netty.Common.Tests.Internal.Logging
             assertEquals("testlogger", internalLogger.name());
         }
 
-        @Test
+        [Fact]
         public void testFormatMessage() {
             ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
             LocationAwareLogger logger = mock(LocationAwareLogger.class);

@@ -19,7 +19,7 @@ namespace Netty.Common.Tests;
 
 public class ThreadDeathWatcherTest {
 
-    @Test
+    [Fact]
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
     public void testWatch() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
@@ -65,7 +65,7 @@ public class ThreadDeathWatcherTest {
         latch.await();
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
     public void testUnwatch() throws Exception {
         final AtomicBoolean run = new AtomicBoolean();
@@ -108,7 +108,7 @@ public class ThreadDeathWatcherTest {
         assertFalse(run.get());
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
     public void testThreadGroup() throws ThreadInterruptedException {
         final ThreadGroup group = new ThreadGroup("group");

@@ -17,7 +17,7 @@ namespace Netty.Common.Tests.Internal;
 
 public class ThreadLocalRandomTest {
 
-    @Test
+    [Fact]
     public void getInitialSeedUniquifierPreservesInterrupt() {
         try {
             Thread.CurrentThread.interrupt();

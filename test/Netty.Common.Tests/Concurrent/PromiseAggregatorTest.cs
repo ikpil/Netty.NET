@@ -17,7 +17,7 @@
 namespace Netty.Common.Tests.Concurrent;
 public class PromiseAggregatorTest {
 
-    @Test
+    [Fact]
     public void testNullAggregatePromise() {
         assertThrows(NullReferenceException.class, new Executable() {
             //@SuppressWarnings("deprecation")
@@ -28,7 +28,7 @@ public class PromiseAggregatorTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testAddNullFuture() {
         //@SuppressWarnings("unchecked")
         Promise<Void> p = mock(Promise.class);
@@ -44,7 +44,7 @@ public class PromiseAggregatorTest {
     }
 
     //@SuppressWarnings("unchecked")
-    @Test
+    [Fact]
     public void testSuccessfulNoPending() throws Exception {
         Promise<Void> p = mock(Promise.class);
         //@SuppressWarnings("deprecation")
@@ -61,7 +61,7 @@ public class PromiseAggregatorTest {
     }
 
     //@SuppressWarnings("unchecked")
-    @Test
+    [Fact]
     public void testSuccessfulPending() throws Exception {
         Promise<Void> p = mock(Promise.class);
         PromiseAggregator<Void, Future<Void>> a =
@@ -87,7 +87,7 @@ public class PromiseAggregatorTest {
     }
 
     //@SuppressWarnings("unchecked")
-    @Test
+    [Fact]
     public void testFailedFutureFailPending() throws Exception {
         Promise<Void> p = mock(Promise.class);
         PromiseAggregator<Void, Future<Void>> a =
@@ -114,7 +114,7 @@ public class PromiseAggregatorTest {
     }
 
     //@SuppressWarnings("unchecked")
-    @Test
+    [Fact]
     public void testFailedFutureNoFailPending() throws Exception {
         Promise<Void> p = mock(Promise.class);
         PromiseAggregator<Void, Future<Void>> a =

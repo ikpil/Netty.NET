@@ -23,7 +23,7 @@ public class FastThreadLocalTest {
         assertEquals(0, FastThreadLocal.size());
     }
 
-    @Test
+    [Fact]
     public void testGetAndSetReturnsOldValue() {
         FastThreadLocal<Boolean> threadLocal = new FastThreadLocal<Boolean>() {
             @Override
@@ -39,7 +39,7 @@ public class FastThreadLocalTest {
         threadLocal.remove();
     }
 
-    @Test
+    [Fact]
     public void testGetIfExists() {
         FastThreadLocal<Boolean> threadLocal = new FastThreadLocal<Boolean>() {
             @Override
@@ -56,7 +56,7 @@ public class FastThreadLocalTest {
         assertNull(threadLocal.getIfExists());
     }
 
-    @Test
+    [Fact]
         @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
     public void testRemoveAll() throws Exception {
         final AtomicBoolean removed = new AtomicBoolean();
@@ -78,7 +78,7 @@ assertEquals(0, FastThreadLocal.size());
 
 }
 
-@Test
+[Fact]
 @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
 public void testRemoveAllFromFTLThread() throws Throwable {
     final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
@@ -102,7 +102,7 @@ public void testRemoveAllFromFTLThread() throws Throwable {
     }
 }
 
-@Test
+[Fact]
 public void testMultipleSetRemove() throws Exception {
     final FastThreadLocal<String> threadLocal = new FastThreadLocal<String>();
     final IRunnable runnable = new IRunnable() {
@@ -129,7 +129,7 @@ public void testMultipleSetRemove() throws Exception {
     assertEquals(0, ObjectCleaner.getLiveSetCount() - sizeWhenStart);
 }
 
-@Test
+[Fact]
 public void testMultipleSetRemove_multipleThreadLocal() throws Exception {
     final FastThreadLocal<String> threadLocal = new FastThreadLocal<String>();
     final FastThreadLocal<String> threadLocal2 = new FastThreadLocal<String>();
@@ -161,7 +161,7 @@ public void testMultipleSetRemove_multipleThreadLocal() throws Exception {
     assertEquals(0, ObjectCleaner.getLiveSetCount() - sizeWhenStart);
 }
 
-@Test
+[Fact]
 public void testWrappedProperties() {
     assertFalse(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
     assertFalse(FastThreadLocalThread.currentThreadHasFastThreadLocal());
@@ -171,7 +171,7 @@ public void testWrappedProperties() {
     });
 }
 
-@Test
+[Fact]
 public void testWrapMany() throws AggregateException, ThreadInterruptedException {
 class Worker implements IRunnable {
     final Semaphore semaphore = new Semaphore(0);
@@ -215,39 +215,39 @@ for (Worker worker : workers) {
 }
 }
 
-@Test
+[Fact]
 @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
 public void testOnRemoveCalledForFastThreadLocalGet() throws Exception {
     testOnRemoveCalled(true, false, true);
 }
 
 @Disabled("onRemoval(...) not called with non FastThreadLocal")
-@Test
+[Fact]
 @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
 public void testOnRemoveCalledForNonFastThreadLocalGet() throws Exception {
     testOnRemoveCalled(false, false, true);
 }
 
-@Test
+[Fact]
 @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
 public void testOnRemoveCalledForFastThreadLocalSet() throws Exception {
     testOnRemoveCalled(true, false, false);
 }
 
 @Disabled("onRemoval(...) not called with non FastThreadLocal")
-@Test
+[Fact]
 @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
 public void testOnRemoveCalledForNonFastThreadLocalSet() throws Exception {
     testOnRemoveCalled(false, false, false);
 }
 
-@Test
+[Fact]
 @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
 public void testOnRemoveCalledForWrappedGet() throws Exception {
     testOnRemoveCalled(false, true, true);
 }
 
-@Test
+[Fact]
 @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
 public void testOnRemoveCalledForWrappedSet() throws Exception {
     testOnRemoveCalled(false, true, false);
@@ -310,7 +310,7 @@ private static final class TestFastThreadLocal extends FastThreadLocal<String> {
     }
 }
 
-@Test
+[Fact]
 public void testConstructionWithIndex() throws Exception {
     int ARRAY_LIST_CAPACITY_MAX_SIZE = Integer.MAX_VALUE - 8;
     Field nextIndexField =
@@ -347,7 +347,7 @@ public void testConstructionWithIndex() throws Exception {
                                                                                "getting committed to the Git repository, we should only enable this test when running in a CI " +
                                                                                "environment. We make this check by assuming a 'CI' environment variable. " +
                                                                                "This matches what Github Actions is doing for us currently.")
-@Test
+[Fact]
 public void testInternalThreadLocalMapExpand() throws Exception {
     final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
     IRunnable runnable = new IRunnable() {
@@ -368,7 +368,7 @@ public void testInternalThreadLocalMapExpand() throws Exception {
     assertThat(throwable.get()).isNotInstanceOf(NegativeArraySizeException.class);
 }
 
-@Test
+[Fact]
 public void testFastThreadLocalSize() throws Exception {
     int originSize = FastThreadLocal.size();
     assertTrue(originSize >= 0);
@@ -401,7 +401,7 @@ public void testFastThreadLocalSize() throws Exception {
     assertEquals(0, FastThreadLocal.size());
 }
 
-@Test
+[Fact]
 public void testFastThreadLocalInitialValueWithUnset() throws Exception {
     final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
     final FastThreadLocal fst = new FastThreadLocal() {

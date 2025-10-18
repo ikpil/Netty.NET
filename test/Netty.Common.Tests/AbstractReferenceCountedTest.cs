@@ -21,7 +21,7 @@ namespace Netty.Common.Tests;
 public class AbstractReferenceCountedTest 
 {
 
-    @Test
+    [Fact]
     public void testRetainOverflow() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(Integer.MAX_VALUE);
@@ -29,14 +29,14 @@ public class AbstractReferenceCountedTest
         assertThrows(IllegalReferenceCountException.class, referenceCounted::retain);
     }
 
-    @Test
+    [Fact]
     public void testRetainOverflow2() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         assertEquals(1, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.retain(Integer.MAX_VALUE));
     }
 
-    @Test
+    [Fact]
     public void testReleaseOverflow() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(0);
@@ -44,7 +44,7 @@ public class AbstractReferenceCountedTest
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.release(Integer.MAX_VALUE));
     }
 
-    @Test
+    [Fact]
     public void testReleaseErrorMessage() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         assertTrue(referenceCounted.release());
@@ -56,7 +56,7 @@ public class AbstractReferenceCountedTest
         }
     }
 
-    @Test
+    [Fact]
     public void testRetainResurrect() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         assertTrue(referenceCounted.release());
@@ -64,7 +64,7 @@ public class AbstractReferenceCountedTest
         assertThrows(IllegalReferenceCountException.class, referenceCounted::retain);
     }
 
-    @Test
+    [Fact]
     public void testRetainResurrect2() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         assertTrue(referenceCounted.release());
@@ -72,7 +72,7 @@ public class AbstractReferenceCountedTest
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.retain(2));
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 30000, unit = TimeUnit.MILLISECONDS)
     public void testRetainFromMultipleThreadsThrowsReferenceCountException() throws Exception {
         int threads = 4;
@@ -118,7 +118,7 @@ public class AbstractReferenceCountedTest
         }
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 30000, unit = TimeUnit.MILLISECONDS)
     public void testReleaseFromMultipleThreadsThrowsReferenceCountException() throws Exception {
         int threads = 4;

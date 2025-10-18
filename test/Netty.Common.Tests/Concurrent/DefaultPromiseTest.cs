@@ -108,7 +108,7 @@ public void execute(IRunnable command) {
 
 }
 
-@Test
+[Fact]
 public void testCancelDoesNotScheduleWhenNoListeners() {
     EventExecutor executor = new RejectingEventExecutor();
 
@@ -117,7 +117,7 @@ public void testCancelDoesNotScheduleWhenNoListeners() {
     assertTrue(promise.isCancelled());
 }
 
-@Test
+[Fact]
 public void testSuccessDoesNotScheduleWhenNoListeners() {
     EventExecutor executor = new RejectingEventExecutor();
 
@@ -127,7 +127,7 @@ public void testSuccessDoesNotScheduleWhenNoListeners() {
     assertSame(value, promise.getNow());
 }
 
-@Test
+[Fact]
 public void testFailureDoesNotScheduleWhenNoListeners() {
     EventExecutor executor = new RejectingEventExecutor();
 
@@ -137,7 +137,7 @@ public void testFailureDoesNotScheduleWhenNoListeners() {
     assertSame(cause, promise.cause());
 }
 
-@Test
+[Fact]
 public void testCancellationExceptionIsThrownWhenBlockingGet() {
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     assertTrue(promise.cancel(false));
@@ -149,7 +149,7 @@ public void testCancellationExceptionIsThrownWhenBlockingGet() {
     });
 }
 
-@Test
+[Fact]
 public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout() {
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     assertTrue(promise.cancel(false));
@@ -161,20 +161,20 @@ public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout() {
     });
 }
 
-@Test
+[Fact]
 public void testCancellationExceptionIsReturnedAsCause() {
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     assertTrue(promise.cancel(false));
     assertThat(promise.cause()).isInstanceOf(TaskCanceledException.class);
 }
 
-@Test
+[Fact]
 public void testStackOverflowWithImmediateEventExecutorA() throws Exception {
     testStackOverFlowChainedFuturesA(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true);
     testStackOverFlowChainedFuturesA(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false);
 }
 
-@Test
+[Fact]
 public void testNoStackOverflowWithDefaultEventExecutorA() throws Exception {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     try {
@@ -190,13 +190,13 @@ public void testNoStackOverflowWithDefaultEventExecutorA() throws Exception {
     }
 }
 
-@Test
+[Fact]
 public void testNoStackOverflowWithImmediateEventExecutorB() throws Exception {
     testStackOverFlowChainedFuturesB(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true);
     testStackOverFlowChainedFuturesB(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false);
 }
 
-@Test
+[Fact]
 public void testNoStackOverflowWithDefaultEventExecutorB() throws Exception {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     try {
@@ -212,7 +212,7 @@ public void testNoStackOverflowWithDefaultEventExecutorB() throws Exception {
     }
 }
 
-@Test
+[Fact]
 public void testListenerNotifyOrder() throws Exception {
     EventExecutor executor = new TestEventExecutor();
     try {
@@ -267,7 +267,7 @@ public void testListenerNotifyOrder() throws Exception {
     }
 }
 
-@Test
+[Fact]
 public void testListenerNotifyLater() throws Exception {
     // Testing first execution path in DefaultPromise
     testListenerNotifyLater(1);
@@ -276,31 +276,31 @@ public void testListenerNotifyLater() throws Exception {
     testListenerNotifyLater(2);
 }
 
-@Test
+[Fact]
 @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
 public void testPromiseListenerAddWhenCompleteFailure() throws Exception {
     testPromiseListenerAddWhenComplete(fakeException());
 }
 
-@Test
+[Fact]
 @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
 public void testPromiseListenerAddWhenCompleteSuccess() throws Exception {
     testPromiseListenerAddWhenComplete(null);
 }
 
-@Test
+[Fact]
 @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
 public void testLateListenerIsOrderedCorrectlySuccess() throws ThreadInterruptedException {
     testLateListenerIsOrderedCorrectly(null);
 }
 
-@Test
+[Fact]
 @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
 public void testLateListenerIsOrderedCorrectlyFailure() throws ThreadInterruptedException {
     testLateListenerIsOrderedCorrectly(fakeException());
 }
 
-@Test
+[Fact]
 public void testSignalRace() {
     final long wait = TimeUnit.NANOSECONDS.convert(10, TimeUnit.SECONDS);
     EventExecutor executor = null;
@@ -333,7 +333,7 @@ public void testSignalRace() {
     }
 }
 
-@Test
+[Fact]
 public void signalUncancellableCompletionValue() {
     final Promise<Signal> promise = new DefaultPromise<Signal>(ImmediateEventExecutor.INSTANCE);
     promise.setSuccess(Signal.valueOf(DefaultPromise.class, "UNCANCELLABLE"));
@@ -341,7 +341,7 @@ public void signalUncancellableCompletionValue() {
     assertTrue(promise.isSuccess());
 }
 
-@Test
+[Fact]
 public void signalSuccessCompletionValue() {
     final Promise<Signal> promise = new DefaultPromise<Signal>(ImmediateEventExecutor.INSTANCE);
     promise.setSuccess(Signal.valueOf(DefaultPromise.class, "SUCCESS"));
@@ -349,7 +349,7 @@ public void signalSuccessCompletionValue() {
     assertTrue(promise.isSuccess());
 }
 
-@Test
+[Fact]
 public void setUncancellableGetNow() {
     final Promise<String> promise = new DefaultPromise<String>(ImmediateEventExecutor.INSTANCE);
     assertNull(promise.getNow());

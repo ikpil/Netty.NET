@@ -19,7 +19,7 @@ class SWARUtilTest {
 
     private final Random random = new Random();
 
-    @Test
+    [Fact]
     void containsUpperCaseLong() {
         // given
         final byte[] asciiTable = getExtendedAsciiTable();
@@ -38,7 +38,7 @@ class SWARUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     void containsUpperCaseInt() {
         // given
         final byte[] asciiTable = getExtendedAsciiTable();
@@ -57,7 +57,7 @@ class SWARUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     void containsLowerCaseLong() {
         // given
         final byte[] asciiTable = getExtendedAsciiTable();
@@ -76,7 +76,7 @@ class SWARUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     void containsLowerCaseInt() {
         // given
         final byte[] asciiTable = getExtendedAsciiTable();
@@ -95,7 +95,7 @@ class SWARUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     void toUpperCaseLong() {
         // given
         final byte[] asciiTable = getExtendedAsciiTable();
@@ -115,7 +115,7 @@ class SWARUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     void toUpperCaseInt() {
         // given
         final byte[] asciiTable = getExtendedAsciiTable();
@@ -135,7 +135,7 @@ class SWARUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     void toLowerCaseLong() {
         // given
         final byte[] asciiTable = getExtendedAsciiTable();
@@ -155,7 +155,7 @@ class SWARUtilTest {
         }
     }
 
-    @Test
+    [Fact]
     void toLowerCaseInt() {
         // given
         final byte[] asciiTable = getExtendedAsciiTable();

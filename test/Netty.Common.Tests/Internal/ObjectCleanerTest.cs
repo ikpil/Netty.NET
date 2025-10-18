@@ -22,7 +22,7 @@ namespace Netty.Common.Tests.Internal
         private Thread temporaryThread;
         private Object temporaryObject;
 
-        @Test
+        [Fact]
             @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
         public void testCleanup() throws Exception {
             final AtomicBoolean freeCalled = new AtomicBoolean();
@@ -61,7 +61,7 @@ namespace Netty.Common.Tests.Internal
         }
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testCleanupContinuesDespiteThrowing() throws ThreadInterruptedException {
         final AtomicInteger freeCalledCount = new AtomicInteger();
@@ -108,7 +108,7 @@ namespace Netty.Common.Tests.Internal
         }
     }
 
-    @Test
+    [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testCleanerThreadIsDaemon() throws Exception {
         temporaryObject = new Object();

@@ -31,7 +31,7 @@ public class ConstantPoolTest {
         }
     };
 
-    @Test
+    [Fact]
     public void testCannotProvideNullName() {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
@@ -41,7 +41,7 @@ public class ConstantPoolTest {
         });
     }
 
-    @Test
+    [Fact]
     //@SuppressWarnings("RedundantStringConstructorCall")
     public void testUniqueness() {
         TestConstant a = pool.valueOf(new String("Leroy"));
@@ -49,14 +49,14 @@ public class ConstantPoolTest {
         assertSame(a, b);
     }
 
-    @Test
+    [Fact]
     public void testIdUniqueness() {
         TestConstant one = pool.valueOf("one");
         TestConstant two = pool.valueOf("two");
         assertNotEquals(one.id(), two.id());
     }
 
-    @Test
+    [Fact]
     public void testCompare() {
         TestConstant a = pool.valueOf("a_alpha");
         TestConstant b = pool.valueOf("b_beta");
@@ -89,7 +89,7 @@ public class ConstantPoolTest {
         assertSame(e, array[4]);
     }
 
-    @Test
+    [Fact]
     public void testComposedName() {
         TestConstant a = pool.valueOf(Object.class, "A");
         assertEquals("java.lang.Object#A", a.name());

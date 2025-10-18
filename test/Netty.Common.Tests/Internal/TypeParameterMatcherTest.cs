@@ -19,7 +19,7 @@ namespace Netty.Common.Tests.Internal;
 
 public class TypeParameterMatcherTest {
 
-    @Test
+    [Fact]
     public void testConcreteClass() throws Exception {
         TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ(), TypeX.class, "A");
         assertFalse(m.match(new Object()));
@@ -33,7 +33,7 @@ public class TypeParameterMatcherTest {
         assertFalse(m.match(new CC()));
     }
 
-    @Test
+    [Fact]
     public void testUnsolvedParameter() throws Exception {
         assertThrows(IllegalStateException.class, new Executable() {
         @Override
@@ -44,7 +44,7 @@ public class TypeParameterMatcherTest {
 
 }
 
-@Test
+[Fact]
 public void testAnonymousClass() throws Exception {
     TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>() { }, TypeX.class, "B");
     assertFalse(m.match(new Object()));
@@ -58,7 +58,7 @@ public void testAnonymousClass() throws Exception {
     assertFalse(m.match(new CC()));
 }
 
-@Test
+[Fact]
 public void testAbstractClass() throws Exception {
     TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ(), TypeX.class, "C");
     assertFalse(m.match(new Object()));
@@ -95,7 +95,7 @@ public static class BBB extends BB { }
 public static class C { }
 public static class CC extends C { }
 
-@Test
+[Fact]
 public void testInaccessibleClass() throws Exception {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U<T>() { }, U.class, "E");
     assertFalse(m.match(new Object()));
@@ -105,14 +105,14 @@ public void testInaccessibleClass() throws Exception {
 private static class T { }
 private static class U<E> { E a; }
 
-@Test
+[Fact]
 public void testArrayAsTypeParam() throws Exception {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U<byte[]>() { }, U.class, "E");
     assertFalse(m.match(new Object()));
     assertTrue(m.match(new byte[1]));
 }
 
-@Test
+[Fact]
 public void testRawType() throws Exception {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U() { }, U.class, "E");
     assertTrue(m.match(new Object()));
@@ -122,7 +122,7 @@ private static class V<E> {
     U<E> u = new U<E>() { };
 }
 
-@Test
+[Fact]
 public void testInnerClass() throws Exception {
     TypeParameterMatcher m = TypeParameterMatcher.find(new V<String>().u, U.class, "E");
     assertTrue(m.match(new Object()));
@@ -136,7 +136,7 @@ private static class X<T, E> extends W<E> {
     T t;
 }
 
-@Test
+[Fact]
 public void testErasure() throws Exception {
     assertThrows(IllegalStateException.class, new Executable() {
         @Override

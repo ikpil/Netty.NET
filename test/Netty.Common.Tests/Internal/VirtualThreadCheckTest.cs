@@ -18,7 +18,7 @@ namespace Netty.Common.Tests.Internal;
 
 public class VirtualThreadCheckTest {
 
-    @Test
+    [Fact]
     public void testCheckVirtualThread() throws Exception {
         assertFalse(PlatformDependent.isVirtualThread(null));
         assertFalse(PlatformDependent.isVirtualThread(Thread.CurrentThread));
@@ -66,7 +66,7 @@ Thread virtualThread = (Thread) startVirtualThread.invoke(null, new IRunnable() 
 assertTrue(PlatformDependent.isVirtualThread(virtualThread));
 }
 
-@Test
+[Fact]
 public void testGetVirtualThreadCheckMethod() throws Throwable {
     if (PlatformDependent.javaVersion() < 19) {
         assertNull(IS_VIRTUAL_THREAD_METHOD_HANDLE);

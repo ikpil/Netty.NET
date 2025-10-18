@@ -65,7 +65,7 @@ public class ObjectUtilTest {
     private static final String NUM_ZERO_NAME = "NUMBER_ZERO";
     private static final String NUM_NEG_NAME = "NUMBER_NEGATIVE";
 
-    @Test
+    [Fact]
     public void testCheckNotNull() {
         Exception actualEx = null;
         try {
@@ -85,7 +85,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNotNullWithIAE() {
         Exception actualEx = null;
         try {
@@ -105,7 +105,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNotNullArrayParam() {
         Exception actualEx = null;
         try {
@@ -125,7 +125,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckPositiveIntString() {
         Exception actualEx = null;
         try {
@@ -154,7 +154,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckPositiveLongString() {
         Exception actualEx = null;
         try {
@@ -183,7 +183,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckPositiveDoubleString() {
         Exception actualEx = null;
         try {
@@ -212,7 +212,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckPositiveFloatString() {
         Exception actualEx = null;
         try {
@@ -241,7 +241,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckPositiveOrZeroIntString() {
         Exception actualEx = null;
         try {
@@ -269,7 +269,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckPositiveOrZeroLongString() {
         Exception actualEx = null;
         try {
@@ -297,7 +297,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckPositiveOrZeroDoubleString() {
         Exception actualEx = null;
         try {
@@ -325,7 +325,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckPositiveOrZeroFloatString() {
         Exception actualEx = null;
         try {
@@ -353,7 +353,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNonEmptyTArrayString() {
         Exception actualEx = null;
 
@@ -383,7 +383,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNonEmptyByteArrayString() {
         Exception actualEx = null;
 
@@ -413,7 +413,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNonEmptyCharArrayString() {
         Exception actualEx = null;
 
@@ -443,7 +443,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNonEmptyTString() {
         Exception actualEx = null;
         try {
@@ -472,7 +472,7 @@ public class ObjectUtilTest {
         assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNonEmptyStringString() {
         Exception actualEx = null;
 
@@ -510,7 +510,7 @@ public class ObjectUtilTest {
         assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNonEmptyCharSequenceString() {
         Exception actualEx = null;
 
@@ -548,7 +548,7 @@ public class ObjectUtilTest {
         assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
     }
 
-    @Test
+    [Fact]
     public void testCheckNonEmptyAfterTrim() {
         Exception actualEx = null;
 

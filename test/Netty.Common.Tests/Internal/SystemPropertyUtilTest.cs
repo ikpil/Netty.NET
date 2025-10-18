@@ -23,7 +23,7 @@ public class SystemPropertyUtilTest {
         System.clearProperty("key");
     }
 
-    @Test
+    [Fact]
     public void testGetWithKeyNull() {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
@@ -33,7 +33,7 @@ public class SystemPropertyUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testGetWithKeyEmpty() {
         assertThrows(ArgumentException.class, new Executable() {
             @Override
@@ -43,31 +43,31 @@ public class SystemPropertyUtilTest {
         });
     }
 
-    @Test
+    [Fact]
     public void testGetDefaultValueWithPropertyNull() {
         assertEquals("default", SystemPropertyUtil.get("key", "default"));
     }
 
-    @Test
+    [Fact]
     public void testGetPropertyValue() {
         System.setProperty("key", "value");
         assertEquals("value", SystemPropertyUtil.get("key"));
     }
 
-    @Test
+    [Fact]
     public void testGetBooleanDefaultValueWithPropertyNull() {
         assertTrue(SystemPropertyUtil.getBoolean("key", true));
         assertFalse(SystemPropertyUtil.getBoolean("key", false));
     }
 
-    @Test
+    [Fact]
     public void testGetBooleanDefaultValueWithEmptyString() {
         System.setProperty("key", "");
         assertTrue(SystemPropertyUtil.getBoolean("key", true));
         assertFalse(SystemPropertyUtil.getBoolean("key", false));
     }
 
-    @Test
+    [Fact]
     public void testGetBooleanWithTrueValue() {
         System.setProperty("key", "true");
         assertTrue(SystemPropertyUtil.getBoolean("key", false));
@@ -77,7 +77,7 @@ public class SystemPropertyUtilTest {
         assertTrue(SystemPropertyUtil.getBoolean("key", true));
     }
 
-    @Test
+    [Fact]
     public void testGetBooleanWithFalseValue() {
         System.setProperty("key", "false");
         assertFalse(SystemPropertyUtil.getBoolean("key", true));
@@ -87,7 +87,7 @@ public class SystemPropertyUtilTest {
         assertFalse(SystemPropertyUtil.getBoolean("key", true));
     }
 
-    @Test
+    [Fact]
     public void testGetBooleanDefaultValueWithWrongValue() {
         System.setProperty("key", "abc");
         assertTrue(SystemPropertyUtil.getBoolean("key", true));
@@ -95,35 +95,35 @@ public class SystemPropertyUtilTest {
         assertFalse(SystemPropertyUtil.getBoolean("key", false));
     }
 
-    @Test
+    [Fact]
     public void getIntDefaultValueWithPropertyNull() {
         assertEquals(1, SystemPropertyUtil.getInt("key", 1));
     }
 
-    @Test
+    [Fact]
     public void getIntWithPropertValueIsInt() {
         System.setProperty("key", "123");
         assertEquals(123, SystemPropertyUtil.getInt("key", 1));
     }
 
-    @Test
+    [Fact]
     public void getIntDefaultValueWithPropertValueIsNotInt() {
         System.setProperty("key", "NotInt");
         assertEquals(1, SystemPropertyUtil.getInt("key", 1));
     }
 
-    @Test
+    [Fact]
     public void getLongDefaultValueWithPropertyNull() {
         assertEquals(1, SystemPropertyUtil.getLong("key", 1));
     }
 
-    @Test
+    [Fact]
     public void getLongWithPropertValueIsLong() {
         System.setProperty("key", "123");
         assertEquals(123, SystemPropertyUtil.getLong("key", 1));
     }
 
-    @Test
+    [Fact]
     public void getLongDefaultValueWithPropertValueIsNotLong() {
         System.setProperty("key", "NotInt");
         assertEquals(1, SystemPropertyUtil.getLong("key", 1));
