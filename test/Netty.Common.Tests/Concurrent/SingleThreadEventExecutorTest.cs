@@ -74,40 +74,40 @@ public class SingleThreadEventExecutorTest {
         }
 
         @Override
-        protected void wakeup(boolean inEventLoop) {
+        protected void wakeup(bool inEventLoop) {
             interruptThread();
         }
     }
 
     [Fact]
-    void testSuspension() throws Exception {
+    void testSuspension() {
         TestThreadFactory threadFactory = new TestThreadFactory();
         final SingleThreadEventExecutor executor = new SuspendingSingleThreadEventExecutor(threadFactory);
         LatchTask task1 = new LatchTask();
         executor.execute(task1);
         Thread currentThread = threadFactory.threads.take();
-        assertTrue(executor.trySuspend());
+        Assert.True(executor.trySuspend());
         task1.await();
 
         // Let's wait till the current Thread did die....
         currentThread.join();
 
         // Should be suspended now, we should be able to also call trySuspend() again.
-        assertTrue(executor.isSuspended());
+        Assert.True(executor.isSuspended());
         // There was no thread created as we did not try to execute something yet.
-        assertTrue(threadFactory.threads.isEmpty());
+        Assert.True(threadFactory.threads.isEmpty());
 
         LatchTask task2 = new LatchTask();
         executor.execute(task2);
         // Suspendion was reset as a task was executed.
-        assertFalse(executor.isSuspended());
+        Assert.False(executor.isSuspended());
         currentThread = threadFactory.threads.take();
         task2.await();
 
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
         currentThread.join();
-        assertFalse(executor.isSuspended());
-        assertTrue(executor.isShutdown());
+        Assert.False(executor.isSuspended());
+        Assert.True(executor.isShutdown());
 
         // Guarantee that al tasks were able to die...
         while ((currentThread = threadFactory.threads.poll()) != null) {
@@ -117,7 +117,7 @@ public class SingleThreadEventExecutorTest {
 
     [Fact]
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
-    void testNotSuspendedUntilScheduledTaskIsCancelled() throws Exception {
+    void testNotSuspendedUntilScheduledTaskIsCancelled() {
         TestThreadFactory threadFactory = new TestThreadFactory();
         final SingleThreadEventExecutor executor = new SuspendingSingleThreadEventExecutor(threadFactory);
 
@@ -127,10 +127,10 @@ public class SingleThreadEventExecutorTest {
         // Let's wait until the thread is started
         currentThread.awaitStarted();
         currentThread.awaitRunnableExecution();
-        assertTrue(executor.trySuspend());
+        Assert.True(executor.trySuspend());
 
         // Now cancel the task which should allow the suspension to let the thread die once we call trySuspend() again
-        assertTrue(future.cancel(false));
+        Assert.True(future.cancel(false));
         future.await();
 
         // Call in a loop as removal of scheduled tasks from task queue might be lazy
@@ -141,12 +141,12 @@ public class SingleThreadEventExecutorTest {
         currentThread.join();
 
         // Should be suspended now, we should be able to also call trySuspend() again.
-        assertTrue(executor.trySuspend());
-        assertTrue(executor.isSuspended());
+        Assert.True(executor.trySuspend());
+        Assert.True(executor.isSuspended());
 
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
-        assertFalse(executor.isSuspended());
-        assertTrue(executor.isShutdown());
+        Assert.False(executor.isSuspended());
+        Assert.True(executor.isShutdown());
 
         // Guarantee that al tasks were able to die...
         while ((currentThread = threadFactory.threads.poll()) != null) {
@@ -155,7 +155,7 @@ public class SingleThreadEventExecutorTest {
     }
 
     [Fact]
-    void testNotSuspendedUntilScheduledTaskDidRun() throws Exception {
+    void testNotSuspendedUntilScheduledTaskDidRun() {
         TestThreadFactory threadFactory = new TestThreadFactory();
         final SingleThreadEventExecutor executor = new SuspendingSingleThreadEventExecutor(threadFactory);
 
@@ -173,7 +173,7 @@ public class SingleThreadEventExecutorTest {
         currentThread.awaitStarted();
         currentThread.awaitRunnableExecution();
         latch.countDown();
-        assertTrue(executor.trySuspend());
+        Assert.True(executor.trySuspend());
 
         // Now wait till the scheduled task was run
         future.sync();
@@ -181,12 +181,12 @@ public class SingleThreadEventExecutorTest {
         currentThread.join();
 
         // Should be suspended now, we should be able to also call trySuspend() again.
-        assertTrue(executor.trySuspend());
-        assertTrue(executor.isSuspended());
+        Assert.True(executor.trySuspend());
+        Assert.True(executor.isSuspended());
 
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
-        assertFalse(executor.isSuspended());
-        assertTrue(executor.isShutdown());
+        Assert.False(executor.isSuspended());
+        Assert.True(executor.isShutdown());
 
         // Guarantee that al tasks were able to die...
         while ((currentThread = threadFactory.threads.poll()) != null) {
@@ -220,7 +220,7 @@ public class SingleThreadEventExecutorTest {
                 executor.shutdownGracefully().syncUninterruptibly();
             }
         });
-        assertTrue(executor.isShutdown());
+        Assert.True(executor.isShutdown());
     }
 
     private static void executeShouldFail(final IExecutor executor) {
@@ -256,12 +256,12 @@ public class SingleThreadEventExecutorTest {
         IThreadProperties threadProperties = executor.threadProperties();
 
         Thread thread = threadRef.get();
-        assertEquals(thread.getId(), threadProperties.id());
-        assertEquals(thread.getName(), threadProperties.name());
-        assertEquals(thread.getPriority(), threadProperties.priority());
-        assertEquals(thread.isAlive(), threadProperties.isAlive());
-        assertEquals(thread.isDaemon(), threadProperties.isDaemon());
-        assertTrue(threadProperties.stackTrace().length > 0);
+        Assert.Equal(thread.getId(), threadProperties.id());
+        Assert.Equal(thread.getName(), threadProperties.name());
+        Assert.Equal(thread.getPriority(), threadProperties.priority());
+        Assert.Equal(thread.isAlive(), threadProperties.isAlive());
+        Assert.Equal(thread.isDaemon(), threadProperties.isDaemon());
+        Assert.True(threadProperties.stackTrace().length > 0);
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
@@ -289,7 +289,7 @@ public class SingleThreadEventExecutorTest {
         testInvokeInEventLoop(false, true);
     }
 
-    private static void testInvokeInEventLoop(final boolean any, final boolean timeout) {
+    private static void testInvokeInEventLoop(final bool any, final bool timeout) {
         final SingleThreadEventExecutor executor = new SingleThreadEventExecutor(null,
                 Executors.defaultThreadFactory(), true) {
             @Override
@@ -314,7 +314,7 @@ public class SingleThreadEventExecutorTest {
                                 Set<Callable<Boolean>> set = Collections.<Callable<Boolean>>singleton(
                                         new Callable<Boolean>() {
                                     @Override
-                                    public Boolean call() throws Exception {
+                                    public Boolean call() {
                                         promise.setFailure(new AssertionError("Should never execute the Callable"));
                                         return Boolean.TRUE;
                                     }
@@ -360,12 +360,12 @@ public class SingleThreadEventExecutorTest {
     static class LazyLatchTask extends LatchTask { }
 
     [Fact]
-    public void testLazyExecution() throws Exception {
+    public void testLazyExecution() {
         final SingleThreadEventExecutor executor = new SingleThreadEventExecutor(null,
                 Executors.defaultThreadFactory(), false) {
 
             @Override
-            protected boolean wakesUpForTask(final IRunnable task) {
+            protected bool wakesUpForTask(final IRunnable task) {
                 return !(task instanceof LazyLatchTask);
             }
 
@@ -387,7 +387,7 @@ public class SingleThreadEventExecutorTest {
             }
 
             @Override
-            protected void wakeup(boolean inEventLoop) {
+            protected void wakeup(bool inEventLoop) {
                 if (!inEventLoop) {
                     synchronized (this) {
                         notifyAll();
@@ -399,7 +399,7 @@ public class SingleThreadEventExecutorTest {
         // Ensure event loop is started
         LatchTask latch0 = new LatchTask();
         executor.execute(latch0);
-        assertTrue(latch0.await(100, TimeUnit.MILLISECONDS));
+        Assert.True(latch0.await(100, TimeUnit.MILLISECONDS));
         // Pause to ensure it enters waiting state
         Thread.sleep(100L);
 
@@ -411,28 +411,28 @@ public class SingleThreadEventExecutorTest {
         executor.execute(latch2);
 
         // Neither should run yet
-        assertFalse(latch1.await(100, TimeUnit.MILLISECONDS));
-        assertFalse(latch2.await(100, TimeUnit.MILLISECONDS));
+        Assert.False(latch1.await(100, TimeUnit.MILLISECONDS));
+        Assert.False(latch2.await(100, TimeUnit.MILLISECONDS));
 
         // Submit regular task via regular execute
         LatchTask latch3 = new LatchTask();
         executor.execute(latch3);
 
         // Should flush latch1 and latch2 and then run latch3 immediately
-        assertTrue(latch3.await(100, TimeUnit.MILLISECONDS));
-        assertEquals(0, latch1.getCount());
-        assertEquals(0, latch2.getCount());
+        Assert.True(latch3.await(100, TimeUnit.MILLISECONDS));
+        Assert.Equal(0, latch1.getCount());
+        Assert.Equal(0, latch2.getCount());
 
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
     [Fact]
-    public void testTaskAddedAfterShutdownNotAbandoned() throws Exception {
+    public void testTaskAddedAfterShutdownNotAbandoned() {
 
         // A queue that doesn't support remove, so tasks once added cannot be rejected anymore
         LinkedBlockingQueue<IRunnable> taskQueue = new LinkedBlockingQueue<IRunnable>() {
             @Override
-            public boolean remove(Object o) {
+            public bool remove(Object o) {
                 throw new NotSupportedException();
             }
         };
@@ -461,8 +461,8 @@ public class SingleThreadEventExecutorTest {
             }
 
             @Override
-            protected boolean confirmShutdown() {
-                boolean result = super.confirmShutdown();
+            protected bool confirmShutdown() {
+                bool result = super.confirmShutdown();
                 // After shutdown is confirmed, scheduled one more task and record it
                 if (result) {
                     attempts.incrementAndGet();
@@ -484,20 +484,20 @@ public class SingleThreadEventExecutorTest {
         executor.shutdownGracefully(0, 100, TimeUnit.MILLISECONDS).sync();
 
         // Ensure there are no user-tasks left.
-        assertEquals(0, executor.drainTasks());
+        Assert.Equal(0, executor.drainTasks());
 
         // Verify that queue is empty and all attempts either succeeded or were rejected
-        assertTrue(taskQueue.isEmpty());
-        assertTrue(attempts.get() > 0);
-        assertEquals(attempts.get(), submittedTasks.size() + rejects.get());
+        Assert.True(taskQueue.isEmpty());
+        Assert.True(attempts.get() > 0);
+        Assert.Equal(attempts.get(), submittedTasks.size() + rejects.get());
         for (Future<?> f : submittedTasks) {
-            assertTrue(f.isSuccess());
+            Assert.True(f.isSuccess());
         }
     }
 
     [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testTakeTask() throws Exception {
+    public void testTakeTask() {
         final SingleThreadEventExecutor executor =
                 new SingleThreadEventExecutor(null, Executors.defaultThreadFactory(), true) {
             @Override
@@ -525,15 +525,15 @@ public class SingleThreadEventExecutorTest {
 
         f.sync();
 
-        assertTrue(beforeTask.ran.get());
-        assertTrue(scheduledTask.ran.get());
-        assertTrue(afterTask.ran.get());
+        Assert.True(beforeTask.ran.get());
+        Assert.True(scheduledTask.ran.get());
+        Assert.True(afterTask.ran.get());
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
     [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testTakeTaskAlwaysHasTask() throws Exception {
+    public void testTakeTaskAlwaysHasTask() {
         //for https://github.com/netty/netty/issues/1614
 
         final SingleThreadEventExecutor executor =
@@ -566,7 +566,7 @@ public class SingleThreadEventExecutorTest {
 
         f.sync();
 
-        assertTrue(t.ran.get());
+        Assert.True(t.ran.get());
         executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS).syncUninterruptibly();
     }
 
@@ -584,7 +584,7 @@ public class SingleThreadEventExecutorTest {
 
     [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testExceptionIsPropagatedToTerminationFuture() throws Exception {
+    public void testExceptionIsPropagatedToTerminationFuture() {
         final IllegalStateException exception = new IllegalStateException();
         final SingleThreadEventExecutor executor =
                 new SingleThreadEventExecutor(null, Executors.defaultThreadFactory(), true) {
@@ -604,6 +604,6 @@ public class SingleThreadEventExecutorTest {
 
         executor.terminationTask().await();
 
-        assertSame(exception, executor.terminationTask().cause());
+        Assert.Same(exception, executor.terminationTask().cause());
     }
 }

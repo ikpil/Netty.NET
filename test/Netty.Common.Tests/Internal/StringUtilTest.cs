@@ -20,76 +20,76 @@ public class StringUtilTest {
 
     [Fact]
     public void ensureNewlineExists() {
-        assertNotNull(NEWLINE);
+        Assert.NotNull(NEWLINE);
     }
 
     [Fact]
     public void testToHexString() {
-        assertEquals("0", toHexString(new byte[] { 0 }));
-        assertEquals("1", toHexString(new byte[] { 1 }));
-        assertEquals("0", toHexString(new byte[] { 0, 0 }));
-        assertEquals("100", toHexString(new byte[] { 1, 0 }));
-        assertEquals("", toHexString(EmptyArrays.EMPTY_BYTES));
+        Assert.Equal("0", toHexString(new byte[] { 0 }));
+        Assert.Equal("1", toHexString(new byte[] { 1 }));
+        Assert.Equal("0", toHexString(new byte[] { 0, 0 }));
+        Assert.Equal("100", toHexString(new byte[] { 1, 0 }));
+        Assert.Equal("", toHexString(EmptyArrays.EMPTY_BYTES));
     }
 
     [Fact]
     public void testToHexStringPadded() {
-        assertEquals("00", toHexStringPadded(new byte[]{0}));
-        assertEquals("01", toHexStringPadded(new byte[]{1}));
-        assertEquals("0000", toHexStringPadded(new byte[]{0, 0}));
-        assertEquals("0100", toHexStringPadded(new byte[]{1, 0}));
-        assertEquals("", toHexStringPadded(EmptyArrays.EMPTY_BYTES));
+        Assert.Equal("00", toHexStringPadded(new byte[]{0}));
+        Assert.Equal("01", toHexStringPadded(new byte[]{1}));
+        Assert.Equal("0000", toHexStringPadded(new byte[]{0, 0}));
+        Assert.Equal("0100", toHexStringPadded(new byte[]{1, 0}));
+        Assert.Equal("", toHexStringPadded(EmptyArrays.EMPTY_BYTES));
     }
 
     [Fact]
     public void splitSimple() {
-        assertArrayEquals(new String[] { "foo", "bar" }, "foo:bar".split(":"));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo:bar".split(":"));
     }
 
     [Fact]
     public void splitWithTrailingDelimiter() {
-        assertArrayEquals(new String[] { "foo", "bar" }, "foo,bar,".split(","));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo,bar,".split(","));
     }
 
     [Fact]
     public void splitWithTrailingDelimiters() {
-        assertArrayEquals(new String[] { "foo", "bar" }, "foo!bar!!".split("!"));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo!bar!!".split("!"));
     }
 
     [Fact]
     public void splitWithTrailingDelimitersDot() {
-        assertArrayEquals(new String[] { "foo", "bar" }, "foo.bar..".split("\\."));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo.bar..".split("\\."));
     }
 
     [Fact]
     public void splitWithTrailingDelimitersEq() {
-        assertArrayEquals(new String[] { "foo", "bar" }, "foo=bar==".split("="));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo=bar==".split("="));
     }
 
     [Fact]
     public void splitWithTrailingDelimitersSpace() {
-        assertArrayEquals(new String[] { "foo", "bar" }, "foo bar  ".split(" "));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo bar  ".split(" "));
     }
 
     [Fact]
     public void splitWithConsecutiveDelimiters() {
-        assertArrayEquals(new String[] { "foo", "", "bar" }, "foo$$bar".split("\\$"));
+        Assert.Equal(new string[] { "foo", "", "bar" }, "foo$$bar".split("\\$"));
     }
 
     [Fact]
     public void splitWithDelimiterAtBeginning() {
-        assertArrayEquals(new String[] { "", "foo", "bar" }, "#foo#bar".split("#"));
+        Assert.Equal(new string[] { "", "foo", "bar" }, "#foo#bar".split("#"));
     }
 
     [Fact]
     public void splitMaxPart() {
-        assertArrayEquals(new String[] { "foo", "bar:bar2" }, "foo:bar:bar2".split(":", 2));
-        assertArrayEquals(new String[] { "foo", "bar", "bar2" }, "foo:bar:bar2".split(":", 3));
+        Assert.Equal(new string[] { "foo", "bar:bar2" }, "foo:bar:bar2".split(":", 2));
+        Assert.Equal(new string[] { "foo", "bar", "bar2" }, "foo:bar:bar2".split(":", 3));
     }
 
     [Fact]
     public void substringAfterTest() {
-        assertEquals("bar:bar2", substringAfter("foo:bar:bar2", ':'));
+        Assert.Equal("bar:bar2", substringAfter("foo:bar:bar2", ':'));
     }
 
     [Fact]
@@ -121,18 +121,18 @@ public class StringUtilTest {
         checkNotCommonSuffix("abcx", "abcy", 1);
     }
 
-    private static void checkNotCommonSuffix(String s, String p, int len) {
-        assertFalse(checkCommonSuffixSymmetric(s, p, len));
+    private static void checkNotCommonSuffix(string s, string p, int len) {
+        Assert.False(checkCommonSuffixSymmetric(s, p, len));
     }
 
-    private static void checkCommonSuffix(String s, String p, int len) {
-        assertTrue(checkCommonSuffixSymmetric(s, p, len));
+    private static void checkCommonSuffix(string s, string p, int len) {
+        Assert.True(checkCommonSuffixSymmetric(s, p, len));
     }
 
-    private static boolean checkCommonSuffixSymmetric(String s, String p, int len) {
-        boolean sp = commonSuffixOfLength(s, p, len);
-        boolean ps = commonSuffixOfLength(p, s, len);
-        assertEquals(sp, ps);
+    private static bool checkCommonSuffixSymmetric(string s, string p, int len) {
+        bool sp = commonSuffixOfLength(s, p, len);
+        bool ps = commonSuffixOfLength(p, s, len);
+        Assert.Equal(sp, ps);
         return sp;
     }
 
@@ -333,18 +333,18 @@ public class StringUtilTest {
         escapeCsv(value, expected, true);
     }
 
-    private static void escapeCsv(CharSequence value, CharSequence expected, boolean trimOws) {
+    private static void escapeCsv(CharSequence value, CharSequence expected, bool trimOws) {
         CharSequence escapedValue = value;
         for (int i = 0; i < 10; ++i) {
             escapedValue = StringUtil.escapeCsv(escapedValue, trimOws);
-            assertEquals(expected, escapedValue.toString());
+            Assert.Equal(expected, escapedValue.toString());
         }
     }
 
     [Fact]
     public void escapeCsvWithTrimming() {
-        assertSame("", StringUtil.escapeCsv("", true));
-        assertSame("ab", StringUtil.escapeCsv("ab", true));
+        Assert.Same("", StringUtil.escapeCsv("", true));
+        Assert.Same("ab", StringUtil.escapeCsv("ab", true));
 
         escapeCsvWithTrimming("", "");
         escapeCsvWithTrimming(" \t ", "");
@@ -362,27 +362,27 @@ public class StringUtilTest {
     [Fact]
     public void escapeCsvGarbageFree() {
         // 'StringUtil#escapeCsv()' should return same string object if string didn't changing.
-        assertSame("1", StringUtil.escapeCsv("1", true));
-        assertSame(" 123 ", StringUtil.escapeCsv(" 123 ", false));
-        assertSame("\" 123 \"", StringUtil.escapeCsv("\" 123 \"", true));
-        assertSame("\"\"", StringUtil.escapeCsv("\"\"", true));
-        assertSame("123 \"\"", StringUtil.escapeCsv("123 \"\"", true));
-        assertSame("123\"\"321", StringUtil.escapeCsv("123\"\"321", true));
-        assertSame("\"123\"\"321\"", StringUtil.escapeCsv("\"123\"\"321\"", true));
+        Assert.Same("1", StringUtil.escapeCsv("1", true));
+        Assert.Same(" 123 ", StringUtil.escapeCsv(" 123 ", false));
+        Assert.Same("\" 123 \"", StringUtil.escapeCsv("\" 123 \"", true));
+        Assert.Same("\"\"", StringUtil.escapeCsv("\"\"", true));
+        Assert.Same("123 \"\"", StringUtil.escapeCsv("123 \"\"", true));
+        Assert.Same("123\"\"321", StringUtil.escapeCsv("123\"\"321", true));
+        Assert.Same("\"123\"\"321\"", StringUtil.escapeCsv("\"123\"\"321\"", true));
     }
 
     [Fact]
     public void testUnescapeCsv() {
-        assertEquals("", unescapeCsv(""));
-        assertEquals("\"", unescapeCsv("\"\"\"\""));
-        assertEquals("\"\"", unescapeCsv("\"\"\"\"\"\""));
-        assertEquals("\"\"\"", unescapeCsv("\"\"\"\"\"\"\"\""));
-        assertEquals("\"netty\"", unescapeCsv("\"\"\"netty\"\"\""));
-        assertEquals("netty", unescapeCsv("netty"));
-        assertEquals("netty", unescapeCsv("\"netty\""));
-        assertEquals("\r", unescapeCsv("\"\r\""));
-        assertEquals("\n", unescapeCsv("\"\n\""));
-        assertEquals("hello,netty", unescapeCsv("\"hello,netty\""));
+        Assert.Equal("", unescapeCsv(""));
+        Assert.Equal("\"", unescapeCsv("\"\"\"\""));
+        Assert.Equal("\"\"", unescapeCsv("\"\"\"\"\"\""));
+        Assert.Equal("\"\"\"", unescapeCsv("\"\"\"\"\"\"\"\""));
+        Assert.Equal("\"netty\"", unescapeCsv("\"\"\"netty\"\"\""));
+        Assert.Equal("netty", unescapeCsv("netty"));
+        Assert.Equal("netty", unescapeCsv("\"netty\""));
+        Assert.Equal("\r", unescapeCsv("\"\r\""));
+        Assert.Equal("\n", unescapeCsv("\"\n\""));
+        Assert.Equal("hello,netty", unescapeCsv("\"hello,netty\""));
     }
 
     [Fact]
@@ -447,24 +447,24 @@ public class StringUtilTest {
         assertEscapeCsvAndUnEscapeCsv("\n");
     }
 
-    private static void assertEscapeCsvAndUnEscapeCsv(String value) {
-        assertEquals(value, unescapeCsv(StringUtil.escapeCsv(value)));
+    private static void assertEscapeCsvAndUnEscapeCsv(string value) {
+        Assert.Equal(value, unescapeCsv(StringUtil.escapeCsv(value)));
     }
 
     [Fact]
     public void testUnescapeCsvFields() {
-        assertEquals(Collections.singletonList(""), unescapeCsvFields(""));
-        assertEquals(Arrays.asList("", ""), unescapeCsvFields(","));
-        assertEquals(Arrays.asList("a", ""), unescapeCsvFields("a,"));
-        assertEquals(Arrays.asList("", "a"), unescapeCsvFields(",a"));
-        assertEquals(Collections.singletonList("\""), unescapeCsvFields("\"\"\"\""));
-        assertEquals(Arrays.asList("\"", "\""), unescapeCsvFields("\"\"\"\",\"\"\"\""));
-        assertEquals(Collections.singletonList("netty"), unescapeCsvFields("netty"));
-        assertEquals(Arrays.asList("hello", "netty"), unescapeCsvFields("hello,netty"));
-        assertEquals(Collections.singletonList("hello,netty"), unescapeCsvFields("\"hello,netty\""));
-        assertEquals(Arrays.asList("hello", "netty"), unescapeCsvFields("\"hello\",\"netty\""));
-        assertEquals(Arrays.asList("a\"b", "c\"d"), unescapeCsvFields("\"a\"\"b\",\"c\"\"d\""));
-        assertEquals(Arrays.asList("a\rb", "c\nd"), unescapeCsvFields("\"a\rb\",\"c\nd\""));
+        Assert.Equal(Collections.singletonList(""), unescapeCsvFields(""));
+        Assert.Equal(Arrays.asList("", ""), unescapeCsvFields(","));
+        Assert.Equal(Arrays.asList("a", ""), unescapeCsvFields("a,"));
+        Assert.Equal(Arrays.asList("", "a"), unescapeCsvFields(",a"));
+        Assert.Equal(Collections.singletonList("\""), unescapeCsvFields("\"\"\"\""));
+        Assert.Equal(Arrays.asList("\"", "\""), unescapeCsvFields("\"\"\"\",\"\"\"\""));
+        Assert.Equal(Collections.singletonList("netty"), unescapeCsvFields("netty"));
+        Assert.Equal(Arrays.asList("hello", "netty"), unescapeCsvFields("hello,netty"));
+        Assert.Equal(Collections.singletonList("hello,netty"), unescapeCsvFields("\"hello,netty\""));
+        Assert.Equal(Arrays.asList("hello", "netty"), unescapeCsvFields("\"hello\",\"netty\""));
+        Assert.Equal(Arrays.asList("a\"b", "c\"d"), unescapeCsvFields("\"a\"\"b\",\"c\"\"d\""));
+        Assert.Equal(Arrays.asList("a\rb", "c\nd"), unescapeCsvFields("\"a\rb\",\"c\nd\""));
     }
 
     [Fact]
@@ -518,105 +518,105 @@ public class StringUtilTest {
     }
 
     [Fact]
-    public void testSimpleClassName() throws Exception {
-        testSimpleClassName(String.class);
+    public void testSimpleClassName() {
+        testSimpleClassName(string.class);
     }
 
     [Fact]
-    public void testSimpleInnerClassName() throws Exception {
+    public void testSimpleInnerClassName() {
         testSimpleClassName(TestClass.class);
     }
 
-    private static void testSimpleClassName(Class<?> clazz) throws Exception {
+    private static void testSimpleClassName(Class<?> clazz) {
         Package pkg = clazz.getPackage();
-        String name;
+        string name;
         if (pkg != null) {
             name = clazz.getName().substring(pkg.getName().length() + 1);
         } else {
             name = clazz.getName();
         }
-        assertEquals(name, simpleClassName(clazz));
+        Assert.Equal(name, simpleClassName(clazz));
     }
 
     private static final class TestClass { }
 
     [Fact]
     public void testEndsWith() {
-        assertFalse(StringUtil.endsWith("", 'u'));
-        assertTrue(StringUtil.endsWith("u", 'u'));
-        assertTrue(StringUtil.endsWith("-u", 'u'));
-        assertFalse(StringUtil.endsWith("-", 'u'));
-        assertFalse(StringUtil.endsWith("u-", 'u'));
+        Assert.False(StringUtil.endsWith("", 'u'));
+        Assert.True(StringUtil.endsWith("u", 'u'));
+        Assert.True(StringUtil.endsWith("-u", 'u'));
+        Assert.False(StringUtil.endsWith("-", 'u'));
+        Assert.False(StringUtil.endsWith("u-", 'u'));
     }
 
     [Fact]
     public void trimOws() {
-        assertSame("", StringUtil.trimOws(""));
-        assertEquals("", StringUtil.trimOws(" \t "));
-        assertSame("a", StringUtil.trimOws("a"));
-        assertEquals("a", StringUtil.trimOws(" a"));
-        assertEquals("a", StringUtil.trimOws("a "));
-        assertEquals("a", StringUtil.trimOws(" a "));
-        assertSame("abc", StringUtil.trimOws("abc"));
-        assertEquals("abc", StringUtil.trimOws("\tabc"));
-        assertEquals("abc", StringUtil.trimOws("abc\t"));
-        assertEquals("abc", StringUtil.trimOws("\tabc\t"));
-        assertSame("a\t b", StringUtil.trimOws("a\t b"));
-        assertEquals("", StringUtil.trimOws("\t ").toString());
-        assertEquals("a b", StringUtil.trimOws("\ta b \t").toString());
+        Assert.Same("", StringUtil.trimOws(""));
+        Assert.Equal("", StringUtil.trimOws(" \t "));
+        Assert.Same("a", StringUtil.trimOws("a"));
+        Assert.Equal("a", StringUtil.trimOws(" a"));
+        Assert.Equal("a", StringUtil.trimOws("a "));
+        Assert.Equal("a", StringUtil.trimOws(" a "));
+        Assert.Same("abc", StringUtil.trimOws("abc"));
+        Assert.Equal("abc", StringUtil.trimOws("\tabc"));
+        Assert.Equal("abc", StringUtil.trimOws("abc\t"));
+        Assert.Equal("abc", StringUtil.trimOws("\tabc\t"));
+        Assert.Same("a\t b", StringUtil.trimOws("a\t b"));
+        Assert.Equal("", StringUtil.trimOws("\t ").toString());
+        Assert.Equal("a b", StringUtil.trimOws("\ta b \t").toString());
     }
 
     [Fact]
     public void testJoin() {
-        assertEquals("",
+        Assert.Equal("",
                      StringUtil.join(",", Collections.<CharSequence>emptyList()).toString());
-        assertEquals("a",
+        Assert.Equal("a",
                      StringUtil.join(",", Collections.singletonList("a")).toString());
-        assertEquals("a,b",
+        Assert.Equal("a,b",
                      StringUtil.join(",", Arrays.asList("a", "b")).toString());
-        assertEquals("a,b,c",
+        Assert.Equal("a,b,c",
                      StringUtil.join(",", Arrays.asList("a", "b", "c")).toString());
-        assertEquals("a,b,c,null,d",
+        Assert.Equal("a,b,c,null,d",
                      StringUtil.join(",", Arrays.asList("a", "b", "c", null, "d")).toString());
     }
 
     [Fact]
     public void testIsNullOrEmpty() {
-        assertTrue(isNullOrEmpty(null));
-        assertTrue(isNullOrEmpty(""));
-        assertTrue(isNullOrEmpty(string.Empty));
-        assertFalse(isNullOrEmpty(" "));
-        assertFalse(isNullOrEmpty("\t"));
-        assertFalse(isNullOrEmpty("\n"));
-        assertFalse(isNullOrEmpty("foo"));
-        assertFalse(isNullOrEmpty(NEWLINE));
+        Assert.True(isNullOrEmpty(null));
+        Assert.True(isNullOrEmpty(""));
+        Assert.True(isNullOrEmpty(string.Empty));
+        Assert.False(isNullOrEmpty(" "));
+        Assert.False(isNullOrEmpty("\t"));
+        Assert.False(isNullOrEmpty("\n"));
+        Assert.False(isNullOrEmpty("foo"));
+        Assert.False(isNullOrEmpty(NEWLINE));
     }
 
     [Fact]
     public void testIndexOfWhiteSpace() {
-        assertEquals(-1, indexOfWhiteSpace("", 0));
-        assertEquals(0, indexOfWhiteSpace(" ", 0));
-        assertEquals(-1, indexOfWhiteSpace(" ", 1));
-        assertEquals(0, indexOfWhiteSpace("\n", 0));
-        assertEquals(-1, indexOfWhiteSpace("\n", 1));
-        assertEquals(0, indexOfWhiteSpace("\t", 0));
-        assertEquals(-1, indexOfWhiteSpace("\t", 1));
-        assertEquals(3, indexOfWhiteSpace("foo\r\nbar", 1));
-        assertEquals(-1, indexOfWhiteSpace("foo\r\nbar", 10));
-        assertEquals(7, indexOfWhiteSpace("foo\tbar\r\n", 6));
-        assertEquals(-1, indexOfWhiteSpace("foo\tbar\r\n", Integer.MAX_VALUE));
+        Assert.Equal(-1, indexOfWhiteSpace("", 0));
+        Assert.Equal(0, indexOfWhiteSpace(" ", 0));
+        Assert.Equal(-1, indexOfWhiteSpace(" ", 1));
+        Assert.Equal(0, indexOfWhiteSpace("\n", 0));
+        Assert.Equal(-1, indexOfWhiteSpace("\n", 1));
+        Assert.Equal(0, indexOfWhiteSpace("\t", 0));
+        Assert.Equal(-1, indexOfWhiteSpace("\t", 1));
+        Assert.Equal(3, indexOfWhiteSpace("foo\r\nbar", 1));
+        Assert.Equal(-1, indexOfWhiteSpace("foo\r\nbar", 10));
+        Assert.Equal(7, indexOfWhiteSpace("foo\tbar\r\n", 6));
+        Assert.Equal(-1, indexOfWhiteSpace("foo\tbar\r\n", Integer.MAX_VALUE));
     }
 
     [Fact]
     public void testIndexOfNonWhiteSpace() {
-        assertEquals(-1, indexOfNonWhiteSpace("", 0));
-        assertEquals(-1, indexOfNonWhiteSpace(" ", 0));
-        assertEquals(-1, indexOfNonWhiteSpace(" \t", 0));
-        assertEquals(-1, indexOfNonWhiteSpace(" \t\r\n", 0));
-        assertEquals(2, indexOfNonWhiteSpace(" \tfoo\r\n", 0));
-        assertEquals(2, indexOfNonWhiteSpace(" \tfoo\r\n", 1));
-        assertEquals(4, indexOfNonWhiteSpace(" \tfoo\r\n", 4));
-        assertEquals(-1, indexOfNonWhiteSpace(" \tfoo\r\n", 10));
-        assertEquals(-1, indexOfNonWhiteSpace(" \tfoo\r\n", Integer.MAX_VALUE));
+        Assert.Equal(-1, indexOfNonWhiteSpace("", 0));
+        Assert.Equal(-1, indexOfNonWhiteSpace(" ", 0));
+        Assert.Equal(-1, indexOfNonWhiteSpace(" \t", 0));
+        Assert.Equal(-1, indexOfNonWhiteSpace(" \t\r\n", 0));
+        Assert.Equal(2, indexOfNonWhiteSpace(" \tfoo\r\n", 0));
+        Assert.Equal(2, indexOfNonWhiteSpace(" \tfoo\r\n", 1));
+        Assert.Equal(4, indexOfNonWhiteSpace(" \tfoo\r\n", 4));
+        Assert.Equal(-1, indexOfNonWhiteSpace(" \tfoo\r\n", 10));
+        Assert.Equal(-1, indexOfNonWhiteSpace(" \tfoo\r\n", Integer.MAX_VALUE));
     }
 }

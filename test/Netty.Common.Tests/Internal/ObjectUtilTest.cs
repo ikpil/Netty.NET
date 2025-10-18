@@ -26,8 +26,8 @@ public class ObjectUtilTest {
     private static final Object NULL_OBJECT = null;
 
     private static final Object NON_NULL_OBJECT = "Object is not null";
-    private static final String NON_NULL_EMPTY_STRING = "";
-    private static final String NON_NULL_WHITESPACE_STRING = "  ";
+    private static final string NON_NULL_EMPTY_STRING = "";
+    private static final string NON_NULL_WHITESPACE_STRING = "  ";
     private static final Object[] NON_NULL_EMPTY_OBJECT_ARRAY = {};
     private static final Object[] NON_NULL_FILLED_OBJECT_ARRAY = { NON_NULL_OBJECT };
     private static final CharSequence NULL_CHARSEQUENCE = (CharSequence) NULL_OBJECT;
@@ -38,13 +38,13 @@ public class ObjectUtilTest {
     private static final char[] NON_NULL_EMPTY_CHAR_ARRAY = {};
     private static final char[] NON_NULL_FILLED_CHAR_ARRAY = { 'A' };
 
-    private static final String NULL_NAME = "IS_NULL";
-    private static final String NON_NULL_NAME = "NOT_NULL";
-    private static final String NON_NULL_EMPTY_NAME = "NOT_NULL_BUT_EMPTY";
+    private static final string NULL_NAME = "IS_NULL";
+    private static final string NON_NULL_NAME = "NOT_NULL";
+    private static final string NON_NULL_EMPTY_NAME = "NOT_NULL_BUT_EMPTY";
 
-    private static final String TEST_RESULT_NULLEX_OK = "Expected a NPE/IAE";
-    private static final String TEST_RESULT_NULLEX_NOK = "Expected no exception";
-    private static final String TEST_RESULT_EXTYPE_NOK = "Expected type not found";
+    private static final string TEST_RESULT_NULLEX_OK = "Expected a NPE/IAE";
+    private static final string TEST_RESULT_NULLEX_NOK = "Expected no exception";
+    private static final string TEST_RESULT_EXTYPE_NOK = "Expected type not found";
 
     private static final int ZERO_INT = 0;
     private static final long ZERO_LONG = 0;
@@ -61,9 +61,9 @@ public class ObjectUtilTest {
     private static final double NEG_ONE_DOUBLE = -1.0d;
     private static final float NEG_ONE_FLOAT = -1.0f;
 
-    private static final String NUM_POS_NAME = "NUMBER_POSITIVE";
-    private static final String NUM_ZERO_NAME = "NUMBER_ZERO";
-    private static final String NUM_NEG_NAME = "NUMBER_NEGATIVE";
+    private static final string NUM_POS_NAME = "NUMBER_POSITIVE";
+    private static final string NUM_ZERO_NAME = "NUMBER_ZERO";
+    private static final string NUM_NEG_NAME = "NUMBER_NEGATIVE";
 
     [Fact]
     public void testCheckNotNull() {
@@ -81,8 +81,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -101,8 +101,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -121,8 +121,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -141,8 +141,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -150,8 +150,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -170,8 +170,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -179,8 +179,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -199,8 +199,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -208,8 +208,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -228,8 +228,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -237,8 +237,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -265,8 +265,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -293,8 +293,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -321,8 +321,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -349,8 +349,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -362,8 +362,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -379,8 +379,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -392,8 +392,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -409,8 +409,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -422,8 +422,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -439,8 +439,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -451,8 +451,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -468,8 +468,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -477,16 +477,16 @@ public class ObjectUtilTest {
         Exception actualEx = null;
 
         try {
-            ObjectUtil.checkNonEmpty((String) NULL_OBJECT, NULL_NAME);
+            ObjectUtil.checkNonEmpty((string) NULL_OBJECT, NULL_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
-            ObjectUtil.checkNonEmpty((String) NON_NULL_OBJECT, NON_NULL_NAME);
+            ObjectUtil.checkNonEmpty((string) NON_NULL_OBJECT, NON_NULL_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
@@ -494,16 +494,16 @@ public class ObjectUtilTest {
 
         actualEx = null;
         try {
-            ObjectUtil.checkNonEmpty((String) NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
+            ObjectUtil.checkNonEmpty((string) NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
-            ObjectUtil.checkNonEmpty((String) NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
+            ObjectUtil.checkNonEmpty((string) NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
@@ -519,8 +519,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -536,8 +536,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -553,16 +553,16 @@ public class ObjectUtilTest {
         Exception actualEx = null;
 
         try {
-            ObjectUtil.checkNonEmptyAfterTrim((String) NULL_OBJECT, NULL_NAME);
+            ObjectUtil.checkNonEmptyAfterTrim((string) NULL_OBJECT, NULL_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
-            ObjectUtil.checkNonEmptyAfterTrim((String) NON_NULL_OBJECT, NON_NULL_NAME);
+            ObjectUtil.checkNonEmptyAfterTrim((string) NON_NULL_OBJECT, NON_NULL_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
@@ -574,8 +574,8 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try {
@@ -583,7 +583,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        assertTrue(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 }

@@ -67,13 +67,13 @@ public class ResourceLeakDetectorTest {
         }
         }
 
-        private boolean closeResources(boolean checkClosed) {
+        private bool closeResources(bool checkClosed) {
             for (;;) {
                 LeakAwareResource r = resources.poll();
                 if (r == null) {
                     return false;
                 }
-                boolean closed = r.close();
+                bool closed = r.close();
                 if (checkClosed && !closed) {
                     error.compareAndSet(null,
                         new AssertionError("IResourceLeak.close() returned 'false' but expected 'true'"));
@@ -128,7 +128,7 @@ public void testLeakBrokenHint() throws Throwable {
     DefaultResource.detectorWithSetupHint.failOnUntraced = false;
     DefaultResource.detectorWithSetupHint.initialHint = new ResourceLeakHint() {
         @Override
-        public String toHintString() {
+        public string toHintString() {
         throw new Exception("expected failure");
     }
     };
@@ -173,7 +173,7 @@ LeakAwareResource(Resource resource, IResourceLeakTracker<Resource> leak) {
 }
 
 @Override
-public boolean close() {
+public bool close() {
     // Using ResourceLeakDetector.close(...) to prove this fixes the leak problem reported
     // in https://github.com/netty/netty/issues/6034 .
     //
@@ -191,13 +191,13 @@ private static final class DefaultResource implements Resource {
         new CreationRecordLeakDetector<Resource>(Resource.class, 1);
 
     @Override
-    public boolean close() {
+    public bool close() {
         return true;
     }
 }
 
 private interface Resource {
-    boolean close();
+    bool close();
 }
 
 private static void assertNoErrors(AtomicReference<Throwable> ref) throws Throwable {
@@ -216,17 +216,17 @@ private static final class TestResourceLeakDetector<T> extends ResourceLeakDetec
     }
 
     @Override
-    protected void reportTracedLeak(String resourceType, String records) {
+    protected void reportTracedLeak(string resourceType, string records) {
         reportError(new AssertionError("Leak reported for '" + resourceType + "':\n" + records));
     }
 
     @Override
-    protected void reportUntracedLeak(String resourceType) {
+    protected void reportUntracedLeak(string resourceType) {
         reportError(new AssertionError("Leak reported for '" + resourceType + '\''));
     }
 
     @Override
-    protected void reportInstancesLeak(String resourceType) {
+    protected void reportInstancesLeak(string resourceType) {
         reportError(new AssertionError("Leak reported for '" + resourceType + '\''));
     }
 
@@ -240,9 +240,9 @@ private static final class TestResourceLeakDetector<T> extends ResourceLeakDetec
 }
 
 private static final class CreationRecordLeakDetector<T> extends ResourceLeakDetector<T> {
-    String canaryString;
+    string canaryString;
     Object initialHint;
-    boolean failOnUntraced = true;
+    bool failOnUntraced = true;
 
     private final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
 private final AtomicInteger leaksFound = new AtomicInteger(0);
@@ -258,12 +258,12 @@ public void initialise() {
 }
 
 @Override
-protected boolean needReport() {
+protected bool needReport() {
     return true;
 }
 
 @Override
-protected void reportTracedLeak(String resourceType, String records) {
+protected void reportTracedLeak(string resourceType, string records) {
     if (!records.contains(canaryString)) {
         reportError(new AssertionError("Leak records did not contain canary string"));
     }
@@ -271,7 +271,7 @@ protected void reportTracedLeak(String resourceType, String records) {
 }
 
 @Override
-protected void reportUntracedLeak(String resourceType) {
+protected void reportUntracedLeak(string resourceType) {
     if (failOnUntraced) {
         reportError(new AssertionError("Got untraced leak w/o canary string"));
     }
@@ -283,7 +283,7 @@ private void reportError(AssertionError cause) {
 }
 
 @Override
-protected Object getInitialHint(String resourceType) {
+protected Object getInitialHint(string resourceType) {
     return initialHint;
 }
 

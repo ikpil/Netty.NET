@@ -44,8 +44,8 @@ public class PlatformDependent0Test {
 
         int capacity = 10;
         ByteBuffer buffer = PlatformDependent0.newDirectBuffer(address, capacity);
-        assertEquals(address, PlatformDependent0.directBufferAddress(buffer));
-        assertEquals(capacity, buffer.capacity());
+        Assert.Equal(address, PlatformDependent0.directBufferAddress(buffer));
+        Assert.Equal(capacity, buffer.capacity());
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class PlatformDependent0Test {
         try {
             System.setSecurityManager(new SecurityManager() {
                 @Override
-                public void checkPropertyAccess(String key) {
+                public void checkPropertyAccess(string key) {
                     if (key.equals("java.specification.version")) {
                         // deny
                         throw new SecurityException(key);
@@ -68,7 +68,7 @@ public class PlatformDependent0Test {
                 }
             });
 
-            assertEquals(6, PlatformDependent0.majorVersionFromJavaSpecificationVersion());
+            Assert.Equal(6, PlatformDependent0.majorVersionFromJavaSpecificationVersion());
         } finally {
             System.setSecurityManager(current);
         }
@@ -76,11 +76,11 @@ public class PlatformDependent0Test {
 
     [Fact]
     public void testMajorVersion() {
-        assertEquals(6, PlatformDependent0.majorVersion("1.6"));
-        assertEquals(7, PlatformDependent0.majorVersion("1.7"));
-        assertEquals(8, PlatformDependent0.majorVersion("1.8"));
-        assertEquals(8, PlatformDependent0.majorVersion("8"));
-        assertEquals(9, PlatformDependent0.majorVersion("1.9")); // early version of JDK 9 before Project Verona
-        assertEquals(9, PlatformDependent0.majorVersion("9"));
+        Assert.Equal(6, PlatformDependent0.majorVersion("1.6"));
+        Assert.Equal(7, PlatformDependent0.majorVersion("1.7"));
+        Assert.Equal(8, PlatformDependent0.majorVersion("1.8"));
+        Assert.Equal(8, PlatformDependent0.majorVersion("8"));
+        Assert.Equal(9, PlatformDependent0.majorVersion("1.9")); // early version of JDK 9 before Project Verona
+        Assert.Equal(9, PlatformDependent0.majorVersion("9"));
     }
 }

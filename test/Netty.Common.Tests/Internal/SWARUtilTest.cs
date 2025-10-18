@@ -28,13 +28,13 @@ class SWARUtilTest {
         // when
         for (int idx = 0; idx < asciiTable.length; idx += Long.BYTES) {
             final long value = getLong(asciiTable, idx);
-            final boolean actual = SWARUtil.containsUpperCase(value);
-            boolean expected = false;
+            final bool actual = SWARUtil.containsUpperCase(value);
+            bool expected = false;
             for (int i = 0; i < Long.BYTES; i++) {
                 expected |= Character.isUpperCase(asciiTable[idx + i]);
             }
             // then
-            assertEquals(expected, actual);
+            Assert.Equal(expected, actual);
         }
     }
 
@@ -47,13 +47,13 @@ class SWARUtilTest {
         // when
         for (int idx = 0; idx < asciiTable.length; idx += Integer.BYTES) {
             final int value = getInt(asciiTable, idx);
-            final boolean containsUpperCase = SWARUtil.containsUpperCase(value);
-            boolean expectedContainsUpperCase = false;
+            final bool containsUpperCase = SWARUtil.containsUpperCase(value);
+            bool expectedContainsUpperCase = false;
             for (int i = 0; i < Integer.BYTES; i++) {
                 expectedContainsUpperCase |= Character.isUpperCase(asciiTable[idx + i]);
             }
             // then
-            assertEquals(expectedContainsUpperCase, containsUpperCase);
+            Assert.Equal(expectedContainsUpperCase, containsUpperCase);
         }
     }
 
@@ -66,13 +66,13 @@ class SWARUtilTest {
         // when
         for (int idx = 0; idx < asciiTable.length; idx += Long.BYTES) {
             final long value = getLong(asciiTable, idx);
-            final boolean actual = SWARUtil.containsLowerCase(value);
-            boolean expected = false;
+            final bool actual = SWARUtil.containsLowerCase(value);
+            bool expected = false;
             for (int i = 0; i < Long.BYTES; i++) {
                 expected |= Character.isLowerCase(asciiTable[idx + i]);
             }
             // then
-            assertEquals(expected, actual);
+            Assert.Equal(expected, actual);
         }
     }
 
@@ -85,13 +85,13 @@ class SWARUtilTest {
         // when
         for (int idx = 0; idx < asciiTable.length; idx += Integer.BYTES) {
             final int value = getInt(asciiTable, idx);
-            final boolean actual = SWARUtil.containsLowerCase(value);
-            boolean expected = false;
+            final bool actual = SWARUtil.containsLowerCase(value);
+            bool expected = false;
             for (int i = 0; i < Integer.BYTES; i++) {
                 expected |= Character.isLowerCase(asciiTable[idx + i]);
             }
             // then
-            assertEquals(expected, actual);
+            Assert.Equal(expected, actual);
         }
     }
 
@@ -111,7 +111,7 @@ class SWARUtilTest {
                 expected |= (long) ((b & 0xff)) << (56 - (Long.BYTES * i));
             }
             // then
-            assertEquals(expected, actual);
+            Assert.Equal(expected, actual);
         }
     }
 
@@ -131,7 +131,7 @@ class SWARUtilTest {
                 expected |= (b & 0xff) << (24 - (Byte.SIZE * i));
             }
             // then
-            assertEquals(expected, actual);
+            Assert.Equal(expected, actual);
         }
     }
 
@@ -151,7 +151,7 @@ class SWARUtilTest {
                 expected |= (long) ((b & 0xff)) << (56 - (Byte.SIZE * i));
             }
             // then
-            assertEquals(expected, actual);
+            Assert.Equal(expected, actual);
         }
     }
 
@@ -171,7 +171,7 @@ class SWARUtilTest {
                 expected |= (b & 0xff) << (24 - (Byte.SIZE * i));
             }
             // then
-            assertEquals(expected, actual);
+            Assert.Equal(expected, actual);
         }
     }
 

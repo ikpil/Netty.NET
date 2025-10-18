@@ -46,7 +46,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     public void testNullArgument() {
         try {
             combiner.finish(null);
-            fail();
+            Assert.Fail();
         } catch (NullReferenceException expected) {
             // expected
         }
@@ -116,7 +116,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     }
 
     [Fact]
-    public void testAddAllSuccess() throws Exception {
+    public void testAddAllSuccess() {
         mockSuccessPromise(p1, l1Consumer);
         mockSuccessPromise(p2, l2Consumer);
         combiner.addAll(p1, p2);
@@ -128,7 +128,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     }
 
     [Fact]
-    public void testAddSuccess() throws Exception {
+    public void testAddSuccess() {
         mockSuccessPromise(p1, l1Consumer);
         mockSuccessPromise(p2, l2Consumer);
         combiner.add(p1);
@@ -141,7 +141,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     }
 
     [Fact]
-    public void testAddAllFail() throws Exception {
+    public void testAddAllFail() {
         Exception e1 = new Exception("fake exception 1");
         Exception e2 = new Exception("fake exception 2");
         mockFailedPromise(p1, e1, l1Consumer);
@@ -155,7 +155,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     }
 
     [Fact]
-    public void testAddFail() throws Exception {
+    public void testAddFail() {
         Exception e1 = new Exception("fake exception 1");
         Exception e2 = new Exception("fake exception 2");
         mockFailedPromise(p1, e1, l1Consumer);
@@ -179,14 +179,14 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
         try {
             combiner.add(future);
-            fail();
+            Assert.Fail();
         } catch (IllegalStateException expected) {
             // expected
         }
 
         try {
             combiner.addAll(future);
-            fail();
+            Assert.Fail();
         } catch (IllegalStateException expected) {
             // expected
         }
@@ -195,7 +195,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
         Promise<Void> promise = (Promise<Void>) mock(Promise.class);
         try {
             combiner.finish(promise);
-            fail();
+            Assert.Fail();
         } catch (IllegalStateException expected) {
             // expected
         }

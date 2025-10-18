@@ -39,7 +39,7 @@ public class RecyclerTest {
 
     [Fact]
         @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced() throws Exception {
+    public void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced() {
         final Recycler<HandledObject> recycler = newRecycler(1024);
         final AtomicBoolean collected = new AtomicBoolean();
         final AtomicReference<HandledObject> reference = new AtomicReference<HandledObject>();
@@ -57,7 +57,7 @@ protected void finalize() throws Throwable {
     collected.set(true);
 }
 };
-assertFalse(collected.get());
+Assert.False(collected.get());
 thread.start();
 thread.join();
 
@@ -124,7 +124,7 @@ public void testMultipleRecycleAtDifferentThread() throws ThreadInterruptedExcep
     HandledObject b = recycler.get();
     assertNotSame(a, b);
     IllegalStateException exception = exceptionStore.get();
-    assertNotNull(exception);
+    Assert.NotNull(exception);
 }
 
 [Fact]
@@ -176,7 +176,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterrupte
         IllegalStateException exception = exceptionStore.get();
         if (exception != null) {
             assertThat(exception).hasMessageContaining("recycled already");
-            assertEquals(0, exception.getSuppressed().length);
+            Assert.Equal(0, exception.getSuppressed().length);
         }
     } finally {
         thread1.join(1000);
@@ -223,7 +223,7 @@ public void testMultipleRecycleRacing() throws ThreadInterruptedException {
         HandledObject b = recycler.get();
         assertNotSame(a, b);
         IllegalStateException exception = exceptionStore.get();
-        assertNotNull(exception); // Object got recycled twice, so at least one of the calls must throw.
+        Assert.NotNull(exception); // Object got recycled twice, so at least one of the calls must throw.
     } finally {
         thread1.join(1000);
     }
@@ -235,7 +235,7 @@ public void testRecycle() {
     HandledObject object = recycler.get();
     object.recycle();
     HandledObject object2 = recycler.get();
-    assertSame(object, object2);
+    Assert.Same(object, object2);
     object2.recycle();
 }
 
@@ -255,10 +255,10 @@ public void testRecycleDisableDrop() {
     HandledObject object = recycler.get();
     object.recycle();
     HandledObject object2 = recycler.get();
-    assertSame(object, object2);
+    Assert.Same(object, object2);
     object2.recycle();
     HandledObject object3 = recycler.get();
-    assertSame(object, object3);
+    Assert.Same(object, object3);
     object3.recycle();
 }
 
@@ -287,13 +287,13 @@ private static void testMaxCapacity(int maxCapacity) {
         objects[i] = null;
     }
 
-    assertTrue(maxCapacity >= recycler.threadLocalSize(),
+    Assert.True(maxCapacity >= recycler.threadLocalSize(),
         "The threadLocalSize (" + recycler.threadLocalSize() + ") must be <= maxCapacity ("
         + maxCapacity + ") as we not pool all new handles internally");
 }
 
 [Fact]
-public void testRecycleAtDifferentThread() throws Exception {
+public void testRecycleAtDifferentThread() {
     final Recycler<HandledObject> recycler = newRecycler(256, 2, 16);
     final HandledObject o = recycler.get();
     final HandledObject o2 = recycler.get();
@@ -308,12 +308,12 @@ public void testRecycleAtDifferentThread() throws Exception {
     thread.start();
     thread.join();
 
-    assertSame(recycler.get(), o);
+    Assert.Same(recycler.get(), o);
     assertNotSame(recycler.get(), o2);
 }
 
 [Fact]
-public void testRecycleAtTwoThreadsMulti() throws Exception {
+public void testRecycleAtTwoThreadsMulti() {
     final Recycler<HandledObject> recycler = newRecycler(256);
     final HandledObject o = recycler.get();
 
@@ -332,10 +332,10 @@ public void testRecycleAtTwoThreadsMulti() throws Exception {
         latch1.countDown();
     }
     });
-    assertTrue(latch1.await(100, TimeUnit.MILLISECONDS));
+    Assert.True(latch1.await(100, TimeUnit.MILLISECONDS));
     final HandledObject o2 = recycler.get();
     // Always recycler the first object, that is Ok
-    assertSame(o2, o);
+    Assert.Same(o2, o);
 
     final CountDownLatch latch2 = new CountDownLatch(1);
     single.execute(new IRunnable() {
@@ -346,16 +346,16 @@ public void testRecycleAtTwoThreadsMulti() throws Exception {
         latch2.countDown();
     }
     });
-    assertTrue(latch2.await(100, TimeUnit.MILLISECONDS));
+    Assert.True(latch2.await(100, TimeUnit.MILLISECONDS));
 
     // It should be the same object, right?
     final HandledObject o3 = recycler.get();
-    assertSame(o3, o);
+    Assert.Same(o3, o);
     single.shutdown();
 }
 
 [Fact]
-public void testMaxCapacityWithRecycleAtDifferentThread() throws Exception {
+public void testMaxCapacityWithRecycleAtDifferentThread() {
     final int maxCapacity = 4;
     final Recycler<HandledObject> recycler = newRecycler(maxCapacity, 4, 4);
 
@@ -383,17 +383,17 @@ public void testMaxCapacityWithRecycleAtDifferentThread() throws Exception {
     thread.start();
     thread.join();
 
-    assertEquals(maxCapacity * 3 / 4, recycler.threadLocalSize());
+    Assert.Equal(maxCapacity * 3 / 4, recycler.threadLocalSize());
 
     for (int i = 0; i < array.length; i ++) {
         recycler.get();
     }
 
-    assertEquals(0, recycler.threadLocalSize());
+    Assert.Equal(0, recycler.threadLocalSize());
 }
 
 [Fact]
-public void testDiscardingExceedingElementsWithRecycleAtDifferentThread() throws Exception {
+public void testDiscardingExceedingElementsWithRecycleAtDifferentThread() {
     final int maxCapacity = 32;
     final AtomicInteger instancesCount = new AtomicInteger(0);
 
@@ -411,7 +411,7 @@ public void testDiscardingExceedingElementsWithRecycleAtDifferentThread() throws
         array[i] = recycler.get();
     }
 
-    assertEquals(array.length, instancesCount.get());
+    Assert.Equal(array.length, instancesCount.get());
     // Reset counter.
     instancesCount.set(0);
 
@@ -427,7 +427,7 @@ public void testDiscardingExceedingElementsWithRecycleAtDifferentThread() throws
     thread.start();
     thread.join();
 
-    assertEquals(0, instancesCount.get());
+    Assert.Equal(0, instancesCount.get());
 
     // Borrow 2 * maxCapacity objects. Half of them should come from
     // the recycler queue, the other half should be freshly allocated.
@@ -436,7 +436,7 @@ public void testDiscardingExceedingElementsWithRecycleAtDifferentThread() throws
     }
 
     // The implementation uses maxCapacity / 2 as limit per WeakOrderQueue
-    assertTrue(array.length - maxCapacity / 2 <= instancesCount.get(),
+    Assert.True(array.length - maxCapacity / 2 <= instancesCount.get(),
         "The instances count (" +  instancesCount.get() + ") must be <= array.length (" + array.length
         + ") - maxCapacity (" + maxCapacity + ") / 2 as we not pool all new handles" +
         " internally");

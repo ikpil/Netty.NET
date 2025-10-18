@@ -24,8 +24,8 @@ namespace Netty.Common.Tests.Internal.Logging
         [Fact]
         public void testCreation() {
             InternalLogger logger = CommonsLoggerFactory.INSTANCE.newInstance("foo");
-            assertTrue(logger instanceof CommonsLogger);
-            assertEquals("foo", logger.name());
+            Assert.True(logger instanceof CommonsLogger);
+            Assert.Equal("foo", logger.name());
         }
     }
 }

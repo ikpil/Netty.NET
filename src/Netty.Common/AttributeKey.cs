@@ -18,6 +18,24 @@ using System;
 
 namespace Netty.NET.Common;
 
+public class AttributeKey
+{
+    public static bool exists<T>(string name) where T : class
+    {
+        return AttributeKey<T>.exists(name);
+    }
+    
+    public static AttributeKey<T> valueOf<T>(string name) where T : class
+    {
+        return AttributeKey<T>.valueOf(name);
+    }
+    
+    public static AttributeKey<T> newInstance<T>(string name) where T : class
+    {
+        return AttributeKey<T>.newInstance(name);
+    }
+}
+
 /**
  * Key which can be used to access {@link IAttribute} out of the {@link IAttributeMap}. Be aware that it is not be
  * possible to have multiple keys with the same name.

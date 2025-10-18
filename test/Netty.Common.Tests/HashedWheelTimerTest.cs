@@ -24,13 +24,13 @@ public class HashedWheelTimerTest {
         final CountDownLatch barrier = new CountDownLatch(1);
         final Timeout timeout = timer.newTimeout(new ITimerTask() {
             @Override
-            public void run(Timeout timeout) throws Exception {
+            public void run(Timeout timeout) {
                 fail("This should not have run");
                 barrier.countDown();
             }
         }, 10, TimeUnit.SECONDS);
-        assertFalse(barrier.await(3, TimeUnit.SECONDS));
-        assertFalse(timeout.isExpired(), "timer should not expire");
+        Assert.False(barrier.await(3, TimeUnit.SECONDS));
+        Assert.False(timeout.isExpired(), "timer should not expire");
         timer.stop();
     }
 
@@ -40,12 +40,12 @@ public class HashedWheelTimerTest {
         final CountDownLatch barrier = new CountDownLatch(1);
         final Timeout timeout = timer.newTimeout(new ITimerTask() {
             @Override
-            public void run(Timeout timeout) throws Exception {
+            public void run(Timeout timeout) {
                 barrier.countDown();
             }
         }, 2, TimeUnit.SECONDS);
-        assertTrue(barrier.await(3, TimeUnit.SECONDS));
-        assertTrue(timeout.isExpired(), "timer should expire");
+        Assert.True(barrier.await(3, TimeUnit.SECONDS));
+        Assert.True(timeout.isExpired(), "timer should expire");
         timer.stop();
     }
 
@@ -57,25 +57,25 @@ public class HashedWheelTimerTest {
         for (int i = 0; i < 3; i ++) {
             timerProcessed.newTimeout(new ITimerTask() {
                 @Override
-                public void run(final Timeout timeout) throws Exception {
+                public void run(final Timeout timeout) {
                     latch.countDown();
                 }
             }, 1, TimeUnit.MILLISECONDS);
         }
 
         latch.await();
-        assertEquals(0, timerProcessed.stop().size(), "Number of unprocessed timeouts should be 0");
+        Assert.Equal(0, timerProcessed.stop().size(), "Number of unprocessed timeouts should be 0");
 
         final Timer timerUnprocessed = new HashedWheelTimer();
         for (int i = 0; i < 5; i ++) {
             timerUnprocessed.newTimeout(new ITimerTask() {
                 @Override
-                public void run(Timeout timeout) throws Exception {
+                public void run(Timeout timeout) {
                 }
             }, 5, TimeUnit.SECONDS);
         }
         Thread.sleep(1000L); // sleep for a second
-        assertFalse(timerUnprocessed.stop().isEmpty(), "Number of unprocessed timeouts should be greater than 0");
+        Assert.False(timerUnprocessed.stop().isEmpty(), "Number of unprocessed timeouts should be greater than 0");
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class HashedWheelTimerTest {
         for (int i = 0; i < 3; i ++) {
             timer.newTimeout(new ITimerTask() {
                 @Override
-                public void run(Timeout timeout) throws Exception {
+                public void run(Timeout timeout) {
                     latch.countDown();
                 }
             }, 1, TimeUnit.MILLISECONDS);
@@ -112,14 +112,14 @@ public class HashedWheelTimerTest {
 
         timer.newTimeout(new ITimerTask() {
             @Override
-            public void run(final Timeout timeout) throws Exception {
+            public void run(final Timeout timeout) {
                 timer.newTimeout(this, 100, TimeUnit.MILLISECONDS);
                 latch.countDown();
             }
         }, 100, TimeUnit.MILLISECONDS);
 
         latch.await();
-        assertFalse(timer.stop().isEmpty());
+        Assert.False(timer.stop().isEmpty());
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public class HashedWheelTimerTest {
             final long start = PreciseTimer.nanoTime();
             timer.newTimeout(new ITimerTask() {
                 @Override
-                public void run(final Timeout timeout) throws Exception {
+                public void run(final Timeout timeout) {
                     queue.add(TimeUnit.NANOSECONDS.toMillis(PreciseTimer.nanoTime() - start));
                 }
             }, timeout, TimeUnit.MILLISECONDS);
@@ -143,7 +143,7 @@ public class HashedWheelTimerTest {
 
         for (int i = 0; i < scheduledTasks; i++) {
             long delay = queue.take();
-            assertTrue(delay >= timeout && delay < maxTimeout,
+            Assert.True(delay >= timeout && delay < maxTimeout,
                 "Timeout + " + scheduledTasks + " delay " + delay + " must be " + timeout + " < " + maxTimeout);
         }
 
@@ -170,7 +170,7 @@ public class HashedWheelTimerTest {
                 TimeUnit.MILLISECONDS, 32, true, 2, executor);
         timer.newTimeout(new ITimerTask() {
             @Override
-            public void run(final Timeout timeout) throws Exception {
+            public void run(final Timeout timeout) {
                 timeoutLatch.countDown();
             }
         }, timeout, TimeUnit.MILLISECONDS);
@@ -204,7 +204,7 @@ public class HashedWheelTimerTest {
             TimeUnit.MILLISECONDS, 32, true, 2);
         timer.newTimeout(createNoOpTimerTask(), 5, TimeUnit.SECONDS);
         Timeout timeoutToCancel = timer.newTimeout(createNoOpTimerTask(), 5, TimeUnit.SECONDS);
-        assertTrue(timeoutToCancel.cancel());
+        Assert.True(timeoutToCancel.cancel());
 
         Thread.sleep(tickDurationMs * 5);
 
@@ -242,12 +242,12 @@ public class HashedWheelTimerTest {
         final Timeout t2 = timer.newTimeout(createNoOpTimerTask(), 100, TimeUnit.MINUTES);
         timer.newTimeout(createCountDownLatchTimerTask(latch), 90, TimeUnit.MILLISECONDS);
 
-        assertEquals(3, timer.pendingTimeouts());
+        Assert.Equal(3, timer.pendingTimeouts());
         t1.cancel();
         t2.cancel();
         latch.await();
 
-        assertEquals(0, timer.pendingTimeouts());
+        Assert.Equal(0, timer.pendingTimeouts());
         timer.stop();
     }
 
@@ -261,7 +261,7 @@ public class HashedWheelTimerTest {
                 latch.countDown();
             }
         }, long.MaxValue, TimeUnit.MILLISECONDS);
-        assertFalse(latch.await(1, TimeUnit.SECONDS));
+        Assert.False(latch.await(1, TimeUnit.SECONDS));
         timeout.cancel();
         timer.stop();
     }
@@ -273,14 +273,14 @@ public class HashedWheelTimerTest {
         for (int i = 0; i < 5; i ++) {
             timerUnprocessed.newTimeout(new ITimerTask() {
                 @Override
-                public void run(Timeout timeout) throws Exception {
+                public void run(Timeout timeout) {
                 }
             }, 5, TimeUnit.SECONDS);
         }
         Thread.sleep(1000L); // sleep for a second
 
         for (Timeout timeout : timerUnprocessed.stop()) {
-            assertTrue(timeout.isCancelled(), "All unprocessed tasks should be canceled");
+            Assert.True(timeout.isCancelled(), "All unprocessed tasks should be canceled");
         }
     }
 
@@ -291,7 +291,7 @@ public class HashedWheelTimerTest {
         final Timeout t1 = timer.newTimeout(new ITimerTask() {
             @Override
             public void run(Timeout timeout) {
-                fail();
+                Assert.Fail();
             }
 
             @Override
@@ -300,7 +300,7 @@ public class HashedWheelTimerTest {
             }
         }, 90, TimeUnit.MILLISECONDS);
 
-        assertEquals(1, timer.pendingTimeouts());
+        Assert.Equal(1, timer.pendingTimeouts());
         t1.cancel();
         latch.await();
     }
@@ -313,7 +313,7 @@ public class HashedWheelTimerTest {
         // A total of 11 timeouts with the same delay are submitted, and they will be processed in the same tick.
         timer.newTimeout(new ITimerTask() {
             @Override
-            public void run(Timeout timeout) throws Exception {
+            public void run(Timeout timeout) {
                 barrier.countDown();
                 Thread.sleep(1000);
             }
@@ -329,14 +329,14 @@ public class HashedWheelTimerTest {
             timeout.cancel();
         }
         Thread.sleep(2000);
-        assertEquals(0, timer.pendingTimeouts());
+        Assert.Equal(0, timer.pendingTimeouts());
         timer.stop();
     }
 
     private static ITimerTask createNoOpTimerTask() {
         return new ITimerTask() {
             @Override
-            public void run(final Timeout timeout) throws Exception {
+            public void run(final Timeout timeout) {
             }
         };
     }
@@ -344,7 +344,7 @@ public class HashedWheelTimerTest {
     private static ITimerTask createCountDownLatchTimerTask(final CountDownLatch latch) {
         return new ITimerTask() {
             @Override
-            public void run(final Timeout timeout) throws Exception {
+            public void run(final Timeout timeout) {
                 latch.countDown();
             }
         };

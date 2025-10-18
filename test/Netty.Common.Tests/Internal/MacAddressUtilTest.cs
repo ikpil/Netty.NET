@@ -20,42 +20,42 @@ public class MacAddressUtilTest {
     [Fact]
     public void testCompareAddresses() {
         // should not prefer empty address when candidate is not globally unique
-        assertEquals(
+        Assert.Equal(
                 0,
                 MacAddressUtil.compareAddresses(
                         EMPTY_BYTES,
                         new byte[]{(byte) 0x52, (byte) 0x54, (byte) 0x00, (byte) 0xf9, (byte) 0x32, (byte) 0xbd}));
 
         // only candidate is globally unique
-        assertEquals(
+        Assert.Equal(
                 -1,
                 MacAddressUtil.compareAddresses(
                         EMPTY_BYTES,
                         new byte[]{(byte) 0x50, (byte) 0x54, (byte) 0x00, (byte) 0xf9, (byte) 0x32, (byte) 0xbd}));
 
         // only candidate is globally unique
-        assertEquals(
+        Assert.Equal(
                 -1,
                 MacAddressUtil.compareAddresses(
                         new byte[]{(byte) 0x52, (byte) 0x54, (byte) 0x00, (byte) 0xf9, (byte) 0x32, (byte) 0xbd},
                         new byte[]{(byte) 0x50, (byte) 0x54, (byte) 0x00, (byte) 0xf9, (byte) 0x32, (byte) 0xbd}));
 
         // only current is globally unique
-        assertEquals(
+        Assert.Equal(
                 1,
                 MacAddressUtil.compareAddresses(
                         new byte[]{(byte) 0x52, (byte) 0x54, (byte) 0x00, (byte) 0xf9, (byte) 0x32, (byte) 0xbd},
                         EMPTY_BYTES));
 
         // only current is globally unique
-        assertEquals(
+        Assert.Equal(
                 1,
                 MacAddressUtil.compareAddresses(
                         new byte[]{(byte) 0x50, (byte) 0x54, (byte) 0x00, (byte) 0xf9, (byte) 0x32, (byte) 0xbd},
                         new byte[]{(byte) 0x52, (byte) 0x54, (byte) 0x00, (byte) 0xf9, (byte) 0x32, (byte) 0xbd}));
 
         // both are globally unique
-        assertEquals(
+        Assert.Equal(
                 0,
                 MacAddressUtil.compareAddresses(
                         new byte[]{(byte) 0x50, (byte) 0x54, (byte) 0x00, (byte) 0xf9, (byte) 0x32, (byte) 0xbd},
@@ -64,27 +64,27 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacEUI48() {
-        assertArrayEquals(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xbb, 0x22, (byte) 0xcc},
+        Assert.Equal(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xbb, 0x22, (byte) 0xcc},
                 parseMAC("00-AA-11-BB-22-CC"));
-        assertArrayEquals(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xbb, 0x22, (byte) 0xcc},
+        Assert.Equal(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xbb, 0x22, (byte) 0xcc},
                 parseMAC("00:AA:11:BB:22:CC"));
     }
 
     [Fact]
     public void testParseMacMAC48ToEUI64() {
         // MAC-48 into an EUI-64
-        assertArrayEquals(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xff, (byte) 0xff, (byte) 0xbb, 0x22, (byte) 0xcc},
+        Assert.Equal(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xff, (byte) 0xff, (byte) 0xbb, 0x22, (byte) 0xcc},
                 parseMAC("00-AA-11-FF-FF-BB-22-CC"));
-        assertArrayEquals(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xff, (byte) 0xff, (byte) 0xbb, 0x22, (byte) 0xcc},
+        Assert.Equal(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xff, (byte) 0xff, (byte) 0xbb, 0x22, (byte) 0xcc},
                 parseMAC("00:AA:11:FF:FF:BB:22:CC"));
     }
 
     [Fact]
     public void testParseMacEUI48ToEUI64() {
         // EUI-48 into an EUI-64
-        assertArrayEquals(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xff, (byte) 0xfe, (byte) 0xbb, 0x22, (byte) 0xcc},
+        Assert.Equal(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xff, (byte) 0xfe, (byte) 0xbb, 0x22, (byte) 0xcc},
                 parseMAC("00-AA-11-FF-FE-BB-22-CC"));
-        assertArrayEquals(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xff, (byte) 0xfe, (byte) 0xbb, 0x22, (byte) 0xcc},
+        Assert.Equal(new byte[]{0, (byte) 0xaa, 0x11, (byte) 0xff, (byte) 0xfe, (byte) 0xbb, 0x22, (byte) 0xcc},
                 parseMAC("00:AA:11:FF:FE:BB:22:CC"));
     }
 

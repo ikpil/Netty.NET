@@ -13,42 +13,51 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common;
+
 namespace Netty.Common.Tests;
 
-public class AttributeKeyTest {
-
+public class AttributeKeyTest
+{
     [Fact]
-    public void testExists() {
-        String name = "test";
-        assertFalse(AttributeKey.exists(name));
-        AttributeKey<String> attr = AttributeKey.valueOf(name);
+    public void testExists()
+    {
+        string name = "test";
+        Assert.False(AttributeKey.exists<string>(name));
+        AttributeKey<string> attr = AttributeKey.valueOf<string>(name);
 
-        assertTrue(AttributeKey.exists(name));
-        assertNotNull(attr);
+        Assert.True(AttributeKey.exists<string>(name));
+        Assert.NotNull(attr);
     }
 
     [Fact]
-    public void testValueOf() {
-        String name = "test1";
-        assertFalse(AttributeKey.exists(name));
-        AttributeKey<String> attr = AttributeKey.valueOf(name);
-        AttributeKey<String> attr2 = AttributeKey.valueOf(name);
+    public void testValueOf()
+    {
+        string name = "test1";
+        Assert.False(AttributeKey.exists<string>(name));
+        AttributeKey<string> attr = AttributeKey.valueOf<string>(name);
+        AttributeKey<string> attr2 = AttributeKey.valueOf<string>(name);
 
-        assertSame(attr, attr2);
+        Assert.Same(attr, attr2);
     }
 
     [Fact]
-    public void testNewInstance() {
-        String name = "test2";
-        assertFalse(AttributeKey.exists(name));
-        AttributeKey<String> attr = AttributeKey.newInstance(name);
-        assertTrue(AttributeKey.exists(name));
-        assertNotNull(attr);
+    public void testNewInstance()
+    {
+        string name = "test2";
+        Assert.False(AttributeKey.exists<string>(name));
+        AttributeKey<string> attr = AttributeKey.newInstance<string>(name);
+        Assert.True(AttributeKey.exists<string>(name));
+        Assert.NotNull(attr);
 
-        try {
-            AttributeKey.<String>newInstance(name);
-            fail();
-        } catch (ArgumentException e) {
+        try
+        {
+            AttributeKey.newInstance<string>(name);
+            Assert.Fail();
+        }
+        catch (ArgumentException e)
+        {
             // expected
         }
     }

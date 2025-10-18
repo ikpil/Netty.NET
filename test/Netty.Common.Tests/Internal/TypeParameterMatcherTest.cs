@@ -20,21 +20,21 @@ namespace Netty.Common.Tests.Internal;
 public class TypeParameterMatcherTest {
 
     [Fact]
-    public void testConcreteClass() throws Exception {
+    public void testConcreteClass() {
         TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ(), TypeX.class, "A");
-        assertFalse(m.match(new Object()));
-        assertFalse(m.match(new A()));
-        assertFalse(m.match(new AA()));
-        assertTrue(m.match(new AAA()));
-        assertFalse(m.match(new B()));
-        assertFalse(m.match(new BB()));
-        assertFalse(m.match(new BBB()));
-        assertFalse(m.match(new C()));
-        assertFalse(m.match(new CC()));
+        Assert.False(m.match(new Object()));
+        Assert.False(m.match(new A()));
+        Assert.False(m.match(new AA()));
+        Assert.True(m.match(new AAA()));
+        Assert.False(m.match(new B()));
+        Assert.False(m.match(new BB()));
+        Assert.False(m.match(new BBB()));
+        Assert.False(m.match(new C()));
+        Assert.False(m.match(new CC()));
     }
 
     [Fact]
-    public void testUnsolvedParameter() throws Exception {
+    public void testUnsolvedParameter() {
         assertThrows(IllegalStateException.class, new Executable() {
         @Override
         public void execute() {
@@ -45,31 +45,31 @@ public class TypeParameterMatcherTest {
 }
 
 [Fact]
-public void testAnonymousClass() throws Exception {
+public void testAnonymousClass() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>() { }, TypeX.class, "B");
-    assertFalse(m.match(new Object()));
-    assertFalse(m.match(new A()));
-    assertFalse(m.match(new AA()));
-    assertFalse(m.match(new AAA()));
-    assertFalse(m.match(new B()));
-    assertFalse(m.match(new BB()));
-    assertTrue(m.match(new BBB()));
-    assertFalse(m.match(new C()));
-    assertFalse(m.match(new CC()));
+    Assert.False(m.match(new Object()));
+    Assert.False(m.match(new A()));
+    Assert.False(m.match(new AA()));
+    Assert.False(m.match(new AAA()));
+    Assert.False(m.match(new B()));
+    Assert.False(m.match(new BB()));
+    Assert.True(m.match(new BBB()));
+    Assert.False(m.match(new C()));
+    Assert.False(m.match(new CC()));
 }
 
 [Fact]
-public void testAbstractClass() throws Exception {
+public void testAbstractClass() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ(), TypeX.class, "C");
-    assertFalse(m.match(new Object()));
-    assertFalse(m.match(new A()));
-    assertFalse(m.match(new AA()));
-    assertFalse(m.match(new AAA()));
-    assertFalse(m.match(new B()));
-    assertFalse(m.match(new BB()));
-    assertFalse(m.match(new BBB()));
-    assertFalse(m.match(new C()));
-    assertTrue(m.match(new CC()));
+    Assert.False(m.match(new Object()));
+    Assert.False(m.match(new A()));
+    Assert.False(m.match(new AA()));
+    Assert.False(m.match(new AAA()));
+    Assert.False(m.match(new B()));
+    Assert.False(m.match(new BB()));
+    Assert.False(m.match(new BBB()));
+    Assert.False(m.match(new C()));
+    Assert.True(m.match(new CC()));
 }
 
 public static class TypeX<A, B, C> {
@@ -96,26 +96,26 @@ public static class C { }
 public static class CC extends C { }
 
 [Fact]
-public void testInaccessibleClass() throws Exception {
+public void testInaccessibleClass() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U<T>() { }, U.class, "E");
-    assertFalse(m.match(new Object()));
-    assertTrue(m.match(new T()));
+    Assert.False(m.match(new Object()));
+    Assert.True(m.match(new T()));
 }
 
 private static class T { }
 private static class U<E> { E a; }
 
 [Fact]
-public void testArrayAsTypeParam() throws Exception {
+public void testArrayAsTypeParam() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U<byte[]>() { }, U.class, "E");
-    assertFalse(m.match(new Object()));
-    assertTrue(m.match(new byte[1]));
+    Assert.False(m.match(new Object()));
+    Assert.True(m.match(new byte[1]));
 }
 
 [Fact]
-public void testRawType() throws Exception {
+public void testRawType() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U() { }, U.class, "E");
-    assertTrue(m.match(new Object()));
+    Assert.True(m.match(new Object()));
 }
 
 private static class V<E> {
@@ -123,9 +123,9 @@ private static class V<E> {
 }
 
 [Fact]
-public void testInnerClass() throws Exception {
-    TypeParameterMatcher m = TypeParameterMatcher.find(new V<String>().u, U.class, "E");
-    assertTrue(m.match(new Object()));
+public void testInnerClass() {
+    TypeParameterMatcher m = TypeParameterMatcher.find(new V<string>().u, U.class, "E");
+    Assert.True(m.match(new Object()));
 }
 
 private abstract static class W<E> {
@@ -137,13 +137,13 @@ private static class X<T, E> extends W<E> {
 }
 
 [Fact]
-public void testErasure() throws Exception {
+public void testErasure() {
     assertThrows(IllegalStateException.class, new Executable() {
         @Override
         public void execute() {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new X<String, Date>(), W.class, "E");
-        assertTrue(m.match(new Date()));
-        assertFalse(m.match(new Object()));
+        TypeParameterMatcher m = TypeParameterMatcher.find(new X<string, Date>(), W.class, "E");
+        Assert.True(m.match(new Date()));
+        Assert.False(m.match(new Object()));
     }
     });
 }

@@ -54,13 +54,13 @@ namespace Netty.Common.Tests.Internal.Logging
         public void shouldGetInstance() {
             InternalLoggerFactory.setDefaultFactory(oldLoggerFactory);
 
-            String helloWorld = "Hello, world!";
+            string helloWorld = "Hello, world!";
 
             InternalLogger one = InternalLoggerFactory.getInstance("helloWorld");
             InternalLogger two = InternalLoggerFactory.getInstance(helloWorld.getClass());
 
-            assertNotNull(one);
-            assertNotNull(two);
+            Assert.NotNull(one);
+            Assert.NotNull(two);
             assertNotSame(one, two);
         }
 
@@ -69,7 +69,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isTraceEnabled()).thenReturn(true);
 
             InternalLogger logger = InternalLoggerFactory.getInstance("mock");
-            assertTrue(logger.isTraceEnabled());
+            Assert.True(logger.isTraceEnabled());
             verify(mockLogger).isTraceEnabled();
         }
 
@@ -78,7 +78,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isDebugEnabled()).thenReturn(true);
 
             InternalLogger logger = InternalLoggerFactory.getInstance("mock");
-            assertTrue(logger.isDebugEnabled());
+            Assert.True(logger.isDebugEnabled());
             verify(mockLogger).isDebugEnabled();
         }
 
@@ -87,7 +87,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isInfoEnabled()).thenReturn(true);
 
             InternalLogger logger = InternalLoggerFactory.getInstance("mock");
-            assertTrue(logger.isInfoEnabled());
+            Assert.True(logger.isInfoEnabled());
             verify(mockLogger).isInfoEnabled();
         }
 
@@ -96,7 +96,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isWarnEnabled()).thenReturn(true);
 
             InternalLogger logger = InternalLoggerFactory.getInstance("mock");
-            assertTrue(logger.isWarnEnabled());
+            Assert.True(logger.isWarnEnabled());
             verify(mockLogger).isWarnEnabled();
         }
 
@@ -105,7 +105,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isErrorEnabled()).thenReturn(true);
 
             InternalLogger logger = InternalLoggerFactory.getInstance("mock");
-            assertTrue(logger.isErrorEnabled());
+            Assert.True(logger.isErrorEnabled());
             verify(mockLogger).isErrorEnabled();
         }
 

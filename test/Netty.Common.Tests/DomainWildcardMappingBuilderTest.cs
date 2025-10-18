@@ -21,7 +21,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
-                new DomainWildcardMappingBuilder<String>(null);
+                new DomainWildcardMappingBuilder<string>(null);
             }
         });
     }
@@ -31,7 +31,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
-                new DomainWildcardMappingBuilder<String>("NotFound").add(null, "Some value");
+                new DomainWildcardMappingBuilder<string>("NotFound").add(null, "Some value");
             }
         });
     }
@@ -41,57 +41,57 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
         assertThrows(NullReferenceException.class, new Executable() {
             @Override
             public void execute() {
-                new DomainWildcardMappingBuilder<String>("NotFound").add("Some key", null);
+                new DomainWildcardMappingBuilder<string>("NotFound").add("Some key", null);
             }
         });
     }
 
     [Fact]
     public void testDefaultValue() {
-        IMapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
+        IMapping<string, string> mapping = new DomainWildcardMappingBuilder<string>("NotFound")
             .add("*.netty.io", "Netty")
             .build();
 
-        assertEquals("NotFound", mapping.map("not-existing"));
+        Assert.Equal("NotFound", mapping.map("not-existing"));
     }
 
     [Fact]
     public void testStrictEquality() {
-        IMapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
+        IMapping<string, string> mapping = new DomainWildcardMappingBuilder<string>("NotFound")
             .add("netty.io", "Netty")
             .add("downloads.netty.io", "Netty-Downloads")
             .build();
 
-        assertEquals("Netty", mapping.map("netty.io"));
-        assertEquals("Netty-Downloads", mapping.map("downloads.netty.io"));
+        Assert.Equal("Netty", mapping.map("netty.io"));
+        Assert.Equal("Netty-Downloads", mapping.map("downloads.netty.io"));
 
-        assertEquals("NotFound", mapping.map("x.y.z.netty.io"));
+        Assert.Equal("NotFound", mapping.map("x.y.z.netty.io"));
     }
 
     [Fact]
     public void testWildcardMatchesNotAnyPrefix() {
-        IMapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
+        IMapping<string, string> mapping = new DomainWildcardMappingBuilder<string>("NotFound")
             .add("*.netty.io", "Netty")
             .build();
 
-        assertEquals("NotFound", mapping.map("netty.io"));
-        assertEquals("Netty", mapping.map("downloads.netty.io"));
-        assertEquals("NotFound", mapping.map("x.y.z.netty.io"));
+        Assert.Equal("NotFound", mapping.map("netty.io"));
+        Assert.Equal("Netty", mapping.map("downloads.netty.io"));
+        Assert.Equal("NotFound", mapping.map("x.y.z.netty.io"));
 
-        assertEquals("NotFound", mapping.map("netty.io.x"));
+        Assert.Equal("NotFound", mapping.map("netty.io.x"));
     }
 
     [Fact]
     public void testExactMatchWins() {
-        assertEquals("Netty-Downloads",
-            new DomainWildcardMappingBuilder<String>("NotFound")
+        Assert.Equal("Netty-Downloads",
+            new DomainWildcardMappingBuilder<string>("NotFound")
                 .add("*.netty.io", "Netty")
                 .add("downloads.netty.io", "Netty-Downloads")
                 .build()
                 .map("downloads.netty.io"));
 
-        assertEquals("Netty-Downloads",
-            new DomainWildcardMappingBuilder<String>("NotFound")
+        Assert.Equal("Netty-Downloads",
+            new DomainWildcardMappingBuilder<string>("NotFound")
                 .add("downloads.netty.io", "Netty-Downloads")
                 .add("*.netty.io", "Netty")
                 .build()
@@ -100,12 +100,12 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
     [Fact]
     public void testToString() {
-        IMapping<String, String> mapping = new DomainWildcardMappingBuilder<String>("NotFound")
+        IMapping<string, string> mapping = new DomainWildcardMappingBuilder<string>("NotFound")
             .add("*.netty.io", "Netty")
             .add("downloads.netty.io", "Netty-Download")
             .build();
 
-        assertEquals(
+        Assert.Equal(
             "ImmutableDomainWildcardMapping(default: NotFound, map: " +
                     "{*.netty.io=Netty, downloads.netty.io=Netty-Download})",
             mapping.toString());

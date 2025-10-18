@@ -19,14 +19,14 @@ namespace Netty.Common.Tests;
 public class ConstantPoolTest {
 
     static final class TestConstant extends AbstractConstant<TestConstant> {
-        TestConstant(int id, String name) {
+        TestConstant(int id, string name) {
             super(id, name);
         }
     }
 
     private static final ConstantPool<TestConstant> pool = new ConstantPool<TestConstant>() {
         @Override
-        protected TestConstant newConstant(int id, String name) {
+        protected TestConstant newConstant(int id, string name) {
             return new TestConstant(id, name);
         }
     };
@@ -44,9 +44,9 @@ public class ConstantPoolTest {
     [Fact]
     //@SuppressWarnings("RedundantStringConstructorCall")
     public void testUniqueness() {
-        TestConstant a = pool.valueOf(new String("Leroy"));
-        TestConstant b = pool.valueOf(new String("Leroy"));
-        assertSame(a, b);
+        TestConstant a = pool.valueOf(new string("Leroy"));
+        TestConstant b = pool.valueOf(new string("Leroy"));
+        Assert.Same(a, b);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class ConstantPoolTest {
         set.add(a);
 
         TestConstant[] array = set.toArray(new TestConstant[0]);
-        assertEquals(5, array.length);
+        Assert.Equal(5, array.length);
 
         // Sort by name
         Arrays.sort(array, new Comparator<TestConstant>() {
@@ -82,16 +82,16 @@ public class ConstantPoolTest {
             }
         });
 
-        assertSame(a, array[0]);
-        assertSame(b, array[1]);
-        assertSame(c, array[2]);
-        assertSame(d, array[3]);
-        assertSame(e, array[4]);
+        Assert.Same(a, array[0]);
+        Assert.Same(b, array[1]);
+        Assert.Same(c, array[2]);
+        Assert.Same(d, array[3]);
+        Assert.Same(e, array[4]);
     }
 
     [Fact]
     public void testComposedName() {
         TestConstant a = pool.valueOf(Object.class, "A");
-        assertEquals("java.lang.Object#A", a.name());
+        Assert.Equal("java.lang.Object#A", a.name());
     }
 }

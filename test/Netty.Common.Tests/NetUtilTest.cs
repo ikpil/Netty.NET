@@ -16,19 +16,19 @@
 namespace Netty.Common.Tests;
 public class NetUtilTest {
 
-    private static final class TestMap extends HashMap<String, String> {
+    private static final class TestMap extends HashMap<string, string> {
         private static final long serialVersionUID = -298642816998608473L;
 
-        TestMap(String... values) {
+        TestMap(string... values) {
             for (int i = 0; i < values.length; i += 2) {
-                String key = values[i];
-                String value = values[i + 1];
+                string key = values[i];
+                string value = values[i + 1];
                 put(key, value);
             }
         }
     }
 
-    private static final Map<String, String> validIpV4Hosts = new TestMap(
+    private static final Map<string, string> validIpV4Hosts = new TestMap(
             "192.168.1.0",     "c0a80100",
             "10.255.255.254",  "0afffffe",
             "172.18.5.4",      "ac120504",
@@ -37,7 +37,7 @@ public class NetUtilTest {
             "255.255.255.255", "ffffffff",
             "1.2.3.4",         "01020304");
 
-    private static final Map<String, String> invalidIpV4Hosts = new TestMap(
+    private static final Map<string, string> invalidIpV4Hosts = new TestMap(
             "1.256.3.4",     null,
             "256.0.0.1",     null,
             "1.1.1.1.1",     null,
@@ -68,7 +68,7 @@ public class NetUtilTest {
             "0.1111.0.0",    null,
             "...",           null);
 
-    private static final Map<String, String> validIpV6Hosts = new TestMap(
+    private static final Map<string, string> validIpV6Hosts = new TestMap(
             "::ffff:5.6.7.8",                            "00000000000000000000ffff05060708",
             "fdf8:f53b:82e4::53",                        "fdf8f53b82e400000000000000000053",
             "fe80::200:5aee:feaa:20a2",                  "fe8000000000000002005aeefeaa20a2",
@@ -125,7 +125,7 @@ public class NetUtilTest {
             "::0:0:0:0:0:0",                             "00000000000000000000000000000000",
             "::0:0:0:0:0:0:0",                           "00000000000000000000000000000000");
 
-    private static final Map<String, String> invalidIpV6Hosts = new TestMap(
+    private static final Map<string, string> invalidIpV6Hosts = new TestMap(
             // Test method with garbage.
             "Obvious Garbage",          null,
             // Test method with preferred style, too many :
@@ -360,7 +360,7 @@ public class NetUtilTest {
             // Invalid IPv4 format
             "::ffff:0.1.2.", null);
 
-    private static final Map<byte[], String> ipv6ToAddressStrings = new HashMap<byte[], String>() {
+    private static final Map<byte[], string> ipv6ToAddressStrings = new HashMap<byte[], string>() {
         private static final long serialVersionUID = 2999763170377573184L;
         {
             // From the RFC 5952 https://tools.ietf.org/html/rfc5952#section-4
@@ -467,7 +467,7 @@ public class NetUtilTest {
         }
     };
 
-    private static final Map<String, String> ipv4MappedToIPv6AddressStrings = new TestMap(
+    private static final Map<string, string> ipv4MappedToIPv6AddressStrings = new TestMap(
             // IPv4 addresses
             "255.255.255.255", "::ffff:255.255.255.255",
             "0.0.0.0", "::ffff:0.0.0.0",
@@ -580,130 +580,130 @@ public class NetUtilTest {
 
     [Fact]
     public void testLocalhost() {
-        assertNotNull(LOCALHOST);
+        Assert.NotNull(LOCALHOST);
     }
 
     [Fact]
     public void testLoopback() {
-        assertNotNull(LOOPBACK_IF);
+        Assert.NotNull(LOOPBACK_IF);
     }
 
     [Fact]
     public void testIsValidIpV4Address() {
-        for (String host : validIpV4Hosts.keySet()) {
-            assertTrue(isValidIpV4Address(host), host);
+        for (string host : validIpV4Hosts.keySet()) {
+            Assert.True(isValidIpV4Address(host), host);
         }
-        for (String host : invalidIpV4Hosts.keySet()) {
-            assertFalse(isValidIpV4Address(host), host);
+        for (string host : invalidIpV4Hosts.keySet()) {
+            Assert.False(isValidIpV4Address(host), host);
         }
     }
 
     [Fact]
     public void testIsValidIpV6Address() {
-        for (String host : validIpV6Hosts.keySet()) {
-            assertTrue(isValidIpV6Address(host), host);
+        for (string host : validIpV6Hosts.keySet()) {
+            Assert.True(isValidIpV6Address(host), host);
             if (host.charAt(0) != '[' && !host.contains("%")) {
-                assertNotNull(getByName(host, true), host);
+                Assert.NotNull(getByName(host, true), host);
 
-                String hostMod = '[' + host + ']';
-                assertTrue(isValidIpV6Address(hostMod), hostMod);
+                string hostMod = '[' + host + ']';
+                Assert.True(isValidIpV6Address(hostMod), hostMod);
 
                 hostMod = host + '%';
-                assertTrue(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(isValidIpV6Address(hostMod), hostMod);
 
                 hostMod = host + "%eth1";
-                assertTrue(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(isValidIpV6Address(hostMod), hostMod);
 
                 hostMod = '[' + host + "%]";
-                assertTrue(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(isValidIpV6Address(hostMod), hostMod);
 
                 hostMod = '[' + host + "%1]";
-                assertTrue(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(isValidIpV6Address(hostMod), hostMod);
 
                 hostMod = '[' + host + "]%";
-                assertFalse(isValidIpV6Address(hostMod), hostMod);
+                Assert.False(isValidIpV6Address(hostMod), hostMod);
 
                 hostMod = '[' + host + "]%1";
-                assertFalse(isValidIpV6Address(hostMod), hostMod);
+                Assert.False(isValidIpV6Address(hostMod), hostMod);
             }
         }
-        for (String host : invalidIpV6Hosts.keySet()) {
-            assertFalse(isValidIpV6Address(host), host);
+        for (string host : invalidIpV6Hosts.keySet()) {
+            Assert.False(isValidIpV6Address(host), host);
             assertNull(getByName(host), host);
 
-            String hostMod = '[' + host + ']';
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            string hostMod = '[' + host + ']';
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
 
             hostMod = host + '%';
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
 
             hostMod = host + "%eth1";
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host + "%]";
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host + "%1]";
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host + "]%";
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host + "]%1";
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
 
             hostMod = host + ']';
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host;
-            assertFalse(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(isValidIpV6Address(hostMod), hostMod);
         }
     }
 
     [Fact]
     public void testCreateByteArrayFromIpAddressString() {
-        for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
-            String ip = e.getKey();
+        for (Entry<string, string> e : validIpV4Hosts.entrySet()) {
+            string ip = e.getKey();
             assertHexDumpEquals(e.getValue(), createByteArrayFromIpAddressString(ip), ip);
         }
-        for (Entry<String, String> e : invalidIpV4Hosts.entrySet()) {
-            String ip = e.getKey();
+        for (Entry<string, string> e : invalidIpV4Hosts.entrySet()) {
+            string ip = e.getKey();
             assertHexDumpEquals(e.getValue(), createByteArrayFromIpAddressString(ip), ip);
         }
-        for (Entry<String, String> e : validIpV6Hosts.entrySet()) {
-            String ip = e.getKey();
+        for (Entry<string, string> e : validIpV6Hosts.entrySet()) {
+            string ip = e.getKey();
             assertHexDumpEquals(e.getValue(), createByteArrayFromIpAddressString(ip), ip);
         }
-        for (Entry<String, String> e : invalidIpV6Hosts.entrySet()) {
-            String ip = e.getKey();
+        for (Entry<string, string> e : invalidIpV6Hosts.entrySet()) {
+            string ip = e.getKey();
             assertHexDumpEquals(e.getValue(), createByteArrayFromIpAddressString(ip), ip);
         }
     }
 
     [Fact]
     public void testBytesToIpAddress() {
-        for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
-            assertEquals(e.getKey(), bytesToIpAddress(createByteArrayFromIpAddressString(e.getKey())));
-            assertEquals(e.getKey(), bytesToIpAddress(validIpV4ToBytes(e.getKey())));
+        for (Entry<string, string> e : validIpV4Hosts.entrySet()) {
+            Assert.Equal(e.getKey(), bytesToIpAddress(createByteArrayFromIpAddressString(e.getKey())));
+            Assert.Equal(e.getKey(), bytesToIpAddress(validIpV4ToBytes(e.getKey())));
         }
-        for (Entry<byte[], String> testEntry : ipv6ToAddressStrings.entrySet()) {
-            assertEquals(testEntry.getValue(), bytesToIpAddress(testEntry.getKey()));
+        for (Entry<byte[], string> testEntry : ipv6ToAddressStrings.entrySet()) {
+            Assert.Equal(testEntry.getValue(), bytesToIpAddress(testEntry.getKey()));
         }
     }
 
     [Fact]
     public void testBytesToIpAddressWithOffset() {
-        for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
+        for (Entry<string, string> e : validIpV4Hosts.entrySet()) {
             byte[] bytes = copyWithOffset(createByteArrayFromIpAddressString(e.getKey()));
-            assertEquals(e.getKey(), bytesToIpAddress(bytes, 1, bytes.length - 2));
+            Assert.Equal(e.getKey(), bytesToIpAddress(bytes, 1, bytes.length - 2));
 
             byte[] bytes2 = copyWithOffset(createByteArrayFromIpAddressString(e.getKey()));
-            assertEquals(e.getKey(), bytesToIpAddress(bytes2, 1, bytes2.length - 2));
+            Assert.Equal(e.getKey(), bytesToIpAddress(bytes2, 1, bytes2.length - 2));
         }
 
-        for (Entry<byte[], String> testEntry : ipv6ToAddressStrings.entrySet()) {
+        for (Entry<byte[], string> testEntry : ipv6ToAddressStrings.entrySet()) {
             byte[] bytes = copyWithOffset(testEntry.getKey());
-            assertEquals(testEntry.getValue(), bytesToIpAddress(bytes, 1, bytes.length - 2));
+            Assert.Equal(testEntry.getValue(), bytesToIpAddress(bytes, 1, bytes.length - 2));
         }
     }
 
@@ -718,74 +718,74 @@ public class NetUtilTest {
 
     [Fact]
     public void testIp6AddressToString() throws UnknownHostException {
-        for (Entry<byte[], String> testEntry : ipv6ToAddressStrings.entrySet()) {
-            assertEquals(testEntry.getValue(), toAddressString(IPAddress.getByAddress(testEntry.getKey())));
+        for (Entry<byte[], string> testEntry : ipv6ToAddressStrings.entrySet()) {
+            Assert.Equal(testEntry.getValue(), toAddressString(IPAddress.getByAddress(testEntry.getKey())));
         }
     }
 
     [Fact]
     public void testIp4AddressToString() throws UnknownHostException {
-        for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
-            assertEquals(e.getKey(), toAddressString(IPAddress.getByAddress(unhex(e.getValue()))));
+        for (Entry<string, string> e : validIpV4Hosts.entrySet()) {
+            Assert.Equal(e.getKey(), toAddressString(IPAddress.getByAddress(unhex(e.getValue()))));
         }
     }
 
     [Fact]
     public void testIPv4ToInt() throws UnknownHostException {
-        assertEquals(2130706433, ipv4AddressToInt((IPAddress) IPAddress.getByName("127.0.0.1")));
-        assertEquals(-1062731519, ipv4AddressToInt((IPAddress) IPAddress.getByName("192.168.1.1")));
+        Assert.Equal(2130706433, ipv4AddressToInt((IPAddress) IPAddress.getByName("127.0.0.1")));
+        Assert.Equal(-1062731519, ipv4AddressToInt((IPAddress) IPAddress.getByName("192.168.1.1")));
     }
 
     [Fact]
     public void testIpv4MappedIp6GetByName() {
-        for (Entry<String, String> testEntry : ipv4MappedToIPv6AddressStrings.entrySet()) {
-            String srcIp = testEntry.getKey();
-            String dstIp = testEntry.getValue();
+        for (Entry<string, string> testEntry : ipv4MappedToIPv6AddressStrings.entrySet()) {
+            string srcIp = testEntry.getKey();
+            string dstIp = testEntry.getValue();
             IPAddress inet6Address = getByName(srcIp, true);
-            assertNotNull(inet6Address, srcIp + ", " + dstIp);
-            assertEquals(dstIp, toAddressString(inet6Address, true), srcIp);
+            Assert.NotNull(inet6Address, srcIp + ", " + dstIp);
+            Assert.Equal(dstIp, toAddressString(inet6Address, true), srcIp);
         }
     }
 
     [Fact]
     public void testInvalidIpv4MappedIp6GetByName() {
-        for (String host : invalidIpV4Hosts.keySet()) {
+        for (string host : invalidIpV4Hosts.keySet()) {
             assertNull(getByName(host, true), host);
         }
 
-        for (String host : invalidIpV6Hosts.keySet()) {
+        for (string host : invalidIpV6Hosts.keySet()) {
             assertNull(getByName(host, true), host);
         }
     }
 
     [Fact]
     public void testIp6InetSocketAddressToString() throws UnknownHostException {
-        for (Entry<byte[], String> testEntry : ipv6ToAddressStrings.entrySet()) {
-            assertEquals('[' + testEntry.getValue() + "]:9999",
+        for (Entry<byte[], string> testEntry : ipv6ToAddressStrings.entrySet()) {
+            Assert.Equal('[' + testEntry.getValue() + "]:9999",
                     toSocketAddressString(new InetSocketAddress(IPAddress.getByAddress(testEntry.getKey()), 9999)));
         }
     }
 
     [Fact]
     public void testIp4SocketAddressToString() throws UnknownHostException {
-        for (Entry<String, String> e : validIpV4Hosts.entrySet()) {
-            assertEquals(e.getKey() + ":9999",
+        for (Entry<string, string> e : validIpV4Hosts.entrySet()) {
+            Assert.Equal(e.getKey() + ":9999",
                     toSocketAddressString(new InetSocketAddress(IPAddress.getByAddress(unhex(e.getValue())), 9999)));
         }
     }
 
-    private static void assertHexDumpEquals(String expected, byte[] actual, String message) {
-        assertEquals(expected, hex(actual), message);
+    private static void assertHexDumpEquals(string expected, byte[] actual, string message) {
+        Assert.Equal(expected, hex(actual), message);
     }
 
-    private static String hex(byte[] value) {
+    private static string hex(byte[] value) {
         if (value == null) {
             return null;
         }
 
         StringBuilder buf = new StringBuilder(value.length << 1);
         for (byte b: value) {
-            String hex = StringUtil.byteToHexString(b);
+            string hex = StringUtil.byteToHexString(b);
             if (hex.length() == 1) {
                 buf.append('0');
             }
@@ -794,7 +794,7 @@ public class NetUtilTest {
         return buf.ToString();
     }
 
-    private static byte[] unhex(String value) {
+    private static byte[] unhex(string value) {
         return value != null ? StringUtil.decodeHexDump(value) : null;
     }
 }

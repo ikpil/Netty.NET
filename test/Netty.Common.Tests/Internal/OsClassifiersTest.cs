@@ -17,7 +17,7 @@ namespace Netty.Common.Tests.Internal;
 
 
 public class OsClassifiersTest {
-    private static final String OS_CLASSIFIERS_PROPERTY = "io.netty.osClassifiers";
+    private static final string OS_CLASSIFIERS_PROPERTY = "io.netty.osClassifiers";
 
     private Properties systemProperties;
 
@@ -33,27 +33,27 @@ public class OsClassifiersTest {
 
     [Fact]
     void testOsClassifiersPropertyAbsent() {
-        Set<String> available = new LinkedHashSet<>(2);
-        boolean added = PlatformDependent.addPropertyOsClassifiers(available);
-        assertFalse(added);
-        assertTrue(available.isEmpty());
+        Set<string> available = new LinkedHashSet<>(2);
+        bool added = PlatformDependent.addPropertyOsClassifiers(available);
+        Assert.False(added);
+        Assert.True(available.isEmpty());
     }
 
     [Fact]
     void testOsClassifiersPropertyEmpty() {
         // empty property -Dio.netty.osClassifiers
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "");
-        Set<String> available = new LinkedHashSet<>(2);
-        boolean added = PlatformDependent.addPropertyOsClassifiers(available);
-        assertTrue(added);
-        assertTrue(available.isEmpty());
+        Set<string> available = new LinkedHashSet<>(2);
+        bool added = PlatformDependent.addPropertyOsClassifiers(available);
+        Assert.True(added);
+        Assert.True(available.isEmpty());
     }
 
     [Fact]
     void testOsClassifiersPropertyNotEmptyNoClassifiers() {
         // ID
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, ",");
-        final Set<String> available = new LinkedHashSet<>(2);
+        final Set<string> available = new LinkedHashSet<>(2);
         Assertions.assertThrows(ArgumentException.class,
                 () -> PlatformDependent.addPropertyOsClassifiers(available));
     }
@@ -62,29 +62,29 @@ public class OsClassifiersTest {
     void testOsClassifiersPropertySingle() {
         // ID
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "fedora");
-        Set<String> available = new LinkedHashSet<>(2);
-        boolean added = PlatformDependent.addPropertyOsClassifiers(available);
-        assertTrue(added);
-        assertEquals(1, available.size());
-        assertEquals("fedora", available.iterator().next());
+        Set<string> available = new LinkedHashSet<>(2);
+        bool added = PlatformDependent.addPropertyOsClassifiers(available);
+        Assert.True(added);
+        Assert.Equal(1, available.size());
+        Assert.Equal("fedora", available.iterator().next());
     }
 
     [Fact]
     void testOsClassifiersPropertyPair() {
         // ID, ID_LIKE
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "manjaro,arch");
-        Set<String> available = new LinkedHashSet<>(2);
-        boolean added = PlatformDependent.addPropertyOsClassifiers(available);
-        assertTrue(added);
-        assertEquals(1, available.size());
-        assertEquals("arch", available.iterator().next());
+        Set<string> available = new LinkedHashSet<>(2);
+        bool added = PlatformDependent.addPropertyOsClassifiers(available);
+        Assert.True(added);
+        Assert.Equal(1, available.size());
+        Assert.Equal("arch", available.iterator().next());
     }
 
     [Fact]
     void testOsClassifiersPropertyExcessive() {
         // ID, ID_LIKE, excessive
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "manjaro,arch,slackware");
-        final Set<String> available = new LinkedHashSet<>(2);
+        final Set<string> available = new LinkedHashSet<>(2);
         Assertions.assertThrows(ArgumentException.class,
                 () -> PlatformDependent.addPropertyOsClassifiers(available));
     }

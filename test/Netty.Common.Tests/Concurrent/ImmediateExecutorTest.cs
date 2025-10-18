@@ -14,7 +14,8 @@
  * under the License.
  */
 
-namespace Netty.Common.Tests.Concurrent;public class ImmediateExecutorTest {
+namespace Netty.Common.Tests.Concurrent;
+public class ImmediateExecutorTest {
 
     [Fact]
     public void testExecuteNullRunnable() {
@@ -27,7 +28,7 @@ namespace Netty.Common.Tests.Concurrent;public class ImmediateExecutorTest {
     }
 
     [Fact]
-    public void testExecuteNonNullRunnable() throws Exception {
+    public void testExecuteNonNullRunnable() {
         FutureTask<Void> task = new FutureTask<Void>(new IRunnable() {
             @Override
             public void run() {
@@ -35,8 +36,8 @@ namespace Netty.Common.Tests.Concurrent;public class ImmediateExecutorTest {
             }
         }, null);
         ImmediateExecutor.INSTANCE.execute(task);
-        assertTrue(task.isDone());
-        assertFalse(task.isCancelled());
+        Assert.True(task.isDone());
+        Assert.False(task.isCancelled());
         assertNull(task.get());
     }
 }

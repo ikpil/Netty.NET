@@ -18,8 +18,8 @@ namespace Netty.Common.Tests.Internal;
 
 class NativeLibraryLoaderTest {
 
-    private static final String OS_ARCH = System.getProperty("os.arch");
-    private boolean is_x86_64() {
+    private static final string OS_ARCH = System.getProperty("os.arch");
+    private bool is_x86_64() {
         return "x86_64".equals(OS_ARCH) || "amd64".equals(OS_ARCH);
     }
 
@@ -27,9 +27,9 @@ class NativeLibraryLoaderTest {
     void testFileNotFound() {
         try {
             NativeLibraryLoader.load(UUID.randomUUID().ToString(), NativeLibraryLoaderTest.class.getClassLoader());
-            fail();
+            Assert.Fail();
         } catch (UnsatisfiedLinkError error) {
-            assertTrue(error.getCause() instanceof FileNotFoundException);
+            Assert.True(error.getCause() instanceof FileNotFoundException);
             verifySuppressedException(error, UnsatisfiedLinkError.class);
         }
     }
@@ -38,9 +38,9 @@ class NativeLibraryLoaderTest {
     void testFileNotFoundWithNullClassLoader() {
         try {
             NativeLibraryLoader.load(UUID.randomUUID().ToString(), null);
-            fail();
+            Assert.Fail();
         } catch (UnsatisfiedLinkError error) {
-            assertTrue(error.getCause() instanceof FileNotFoundException);
+            Assert.True(error.getCause() instanceof FileNotFoundException);
             verifySuppressedException(error, ClassNotFoundException.class);
         }
     }
@@ -52,10 +52,10 @@ class NativeLibraryLoaderTest {
         URL url1 = new File("src/test/data/NativeLibraryLoader/1").toURI().toURL();
         URL url2 = new File("src/test/data/NativeLibraryLoader/2").toURI().toURL();
         final URLClassLoader loader = new URLClassLoader(new URL[] {url1, url2});
-        final String resourceName = "test3";
+        final string resourceName = "test3";
 
         NativeLibraryLoader.load(resourceName, loader);
-        assertTrue(true);
+        Assert.True(true);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ class NativeLibraryLoaderTest {
         URL url1 = new File("src/test/data/NativeLibraryLoader/1").toURI().toURL();
         URL url2 = new File("src/test/data/NativeLibraryLoader/2").toURI().toURL();
         final URLClassLoader loader = new URLClassLoader(new URL[] {url1, url2});
-        final String resourceName = "test1";
+        final string resourceName = "test1";
 
         Exception ise = assertThrows(IllegalStateException.class, new Executable() {
             @Override
@@ -73,7 +73,7 @@ class NativeLibraryLoaderTest {
                 NativeLibraryLoader.load(resourceName, loader);
             }
         });
-        assertTrue(ise.getMessage()
+        Assert.True(ise.getMessage()
                     .contains("Multiple resources found for 'META-INF/native/lib" + resourceName + ".so'"));
     }
 
@@ -84,21 +84,21 @@ class NativeLibraryLoaderTest {
         URL url1 = new File("src/test/data/NativeLibraryLoader/1").toURI().toURL();
         URL url2 = new File("src/test/data/NativeLibraryLoader/2").toURI().toURL();
         URLClassLoader loader = new URLClassLoader(new URL[] {url1, url2});
-        String resourceName = "test2";
+        string resourceName = "test2";
 
         NativeLibraryLoader.load(resourceName, loader);
-        assertTrue(true);
+        Assert.True(true);
     }
 
     private static void verifySuppressedException(UnsatisfiedLinkError error,
             Class<?> expectedSuppressedExceptionClass) {
         try {
             Throwable[] suppressed = error.getCause().getSuppressed();
-            assertTrue(suppressed.length == 1);
-            assertTrue(suppressed[0] instanceof UnsatisfiedLinkError);
+            Assert.True(suppressed.length == 1);
+            Assert.True(suppressed[0] instanceof UnsatisfiedLinkError);
             suppressed = (suppressed[0]).getSuppressed();
-            assertTrue(suppressed.length == 1);
-            assertTrue(expectedSuppressedExceptionClass.isInstance(suppressed[0]));
+            Assert.True(suppressed.length == 1);
+            Assert.True(expectedSuppressedExceptionClass.isInstance(suppressed[0]));
         } catch (Exception e) {
             throw new Exception(e);
         }

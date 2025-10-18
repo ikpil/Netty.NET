@@ -15,7 +15,7 @@
  */
 namespace Netty.Common.Tests.Concurrent;
 public class NonStickyEventExecutorGroupTest {
-    private static final String PARAMETERIZED_NAME = "{index}: maxTaskExecutePerRun = {0}";
+    private static readonly string PARAMETERIZED_NAME = "{index}: maxTaskExecutePerRun = {0}";
 
     [Fact]
     public void testInvalidGroup() {
@@ -32,7 +32,7 @@ public class NonStickyEventExecutorGroupTest {
         }
     }
 
-    public static ICollection<Object[]> data() throws Exception {
+    public static ICollection<Object[]> data() {
         List<Object[]> params = new List<Object[]>();
         params.add(new Object[] {64});
         params.add(new Object[] {256});
@@ -99,10 +99,10 @@ public class NonStickyEventExecutorGroupTest {
                             latch.countDown();
                         }
                     });
-                    assertTrue(firstCompleted.await(1, TimeUnit.SECONDS));
+                    Assert.True(firstCompleted.await(1, TimeUnit.SECONDS));
                 }
 
-                assertTrue(latch.await(5, TimeUnit.SECONDS));
+                Assert.True(latch.await(5, TimeUnit.SECONDS));
             }
         } finally {
             nonStickyGroup.shutdownGracefully();
@@ -111,7 +111,7 @@ public class NonStickyEventExecutorGroupTest {
 
     private static void execute(EventExecutorGroup group, CountDownLatch startLatch) throws Throwable {
         final EventExecutor executor = group.next();
-        assertTrue(executor instanceof OrderedEventExecutor);
+        Assert.True(executor instanceof OrderedEventExecutor);
         final AtomicReference<Throwable> cause = new AtomicReference<Throwable>();
         final AtomicInteger last = new AtomicInteger();
         int tasks = 10000;
@@ -121,14 +121,14 @@ public class NonStickyEventExecutorGroupTest {
 
         for (int i = 1 ; i <= tasks; i++) {
             final int id = i;
-            assertFalse(executor.inEventLoop());
-            assertFalse(executor.inEventLoop(Thread.CurrentThread));
+            Assert.False(executor.inEventLoop());
+            Assert.False(executor.inEventLoop(Thread.CurrentThread));
             futures.add(executor.submit(new IRunnable() {
                 @Override
                 public void run() {
                     try {
-                        assertTrue(executor.inEventLoop(Thread.CurrentThread));
-                        assertTrue(executor.inEventLoop());
+                        Assert.True(executor.inEventLoop(Thread.CurrentThread));
+                        Assert.True(executor.inEventLoop());
 
                         if (cause.get() == null) {
                             int lastId = last.get();

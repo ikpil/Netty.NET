@@ -21,7 +21,7 @@ public class ThreadDeathWatcherTest {
 
     [Fact]
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void testWatch() throws Exception {
+    public void testWatch() {
         final CountDownLatch latch = new CountDownLatch(1);
         final Thread t = new Thread() {
             @Override
@@ -56,7 +56,7 @@ public class ThreadDeathWatcherTest {
         ThreadDeathWatcher.watch(t, task);
 
         // As long as the thread is alive, the task should not run.
-        assertFalse(latch.await(750, TimeUnit.MILLISECONDS));
+        Assert.False(latch.await(750, TimeUnit.MILLISECONDS));
 
         // Interrupt the thread to terminate it.
         t.interrupt();
@@ -67,7 +67,7 @@ public class ThreadDeathWatcherTest {
 
     [Fact]
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void testUnwatch() throws Exception {
+    public void testUnwatch() {
         final AtomicBoolean run = new AtomicBoolean();
         final Thread t = new Thread() {
             @Override
@@ -102,10 +102,10 @@ public class ThreadDeathWatcherTest {
         t.join();
 
         // Wait until the watcher thread terminates itself.
-        assertTrue(ThreadDeathWatcher.awaitInactivity(long.MaxValue, TimeUnit.SECONDS));
+        Assert.True(ThreadDeathWatcher.awaitInactivity(long.MaxValue, TimeUnit.SECONDS));
 
         // And the task should not run.
-        assertFalse(run.get());
+        Assert.False(run.get());
     }
 
     [Fact]
@@ -127,6 +127,6 @@ public class ThreadDeathWatcherTest {
         thread.start();
         thread.join();
 
-        assertEquals(group, capturedGroup.get());
+        Assert.Equal(group, capturedGroup.get());
     }
 }

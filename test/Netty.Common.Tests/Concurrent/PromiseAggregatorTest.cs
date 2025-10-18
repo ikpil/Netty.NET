@@ -45,7 +45,7 @@ public class PromiseAggregatorTest {
 
     //@SuppressWarnings("unchecked")
     [Fact]
-    public void testSuccessfulNoPending() throws Exception {
+    public void testSuccessfulNoPending() {
         Promise<Void> p = mock(Promise.class);
         //@SuppressWarnings("deprecation")
         PromiseAggregator<Void, Future<Void>> a =
@@ -62,7 +62,7 @@ public class PromiseAggregatorTest {
 
     //@SuppressWarnings("unchecked")
     [Fact]
-    public void testSuccessfulPending() throws Exception {
+    public void testSuccessfulPending() {
         Promise<Void> p = mock(Promise.class);
         PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
@@ -75,7 +75,7 @@ public class PromiseAggregatorTest {
         when(p2.isSuccess()).thenReturn(true);
         when(p.setSuccess(null)).thenReturn(p);
 
-        assertEquals(a, a.add(p1, null, p2));
+        Assert.Equal(a, a.add(p1, null, p2));
         a.operationComplete(p1);
         a.operationComplete(p2);
 
@@ -88,7 +88,7 @@ public class PromiseAggregatorTest {
 
     //@SuppressWarnings("unchecked")
     [Fact]
-    public void testFailedFutureFailPending() throws Exception {
+    public void testFailedFutureFailPending() {
         Promise<Void> p = mock(Promise.class);
         PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
@@ -115,7 +115,7 @@ public class PromiseAggregatorTest {
 
     //@SuppressWarnings("unchecked")
     [Fact]
-    public void testFailedFutureNoFailPending() throws Exception {
+    public void testFailedFutureNoFailPending() {
         Promise<Void> p = mock(Promise.class);
         PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p, false);

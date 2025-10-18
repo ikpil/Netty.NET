@@ -31,15 +31,15 @@ public class AppendableCharSequenceTest {
     public void testAppendAppendableCharSequence() {
         AppendableCharSequence seq = new AppendableCharSequence(128);
 
-        String text = "testdata";
+        string text = "testdata";
         AppendableCharSequence seq2 = new AppendableCharSequence(128);
         seq2.append(text);
         seq.append(seq2);
 
-        assertEquals(text, seq.toString());
-        assertEquals(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
+        Assert.Equal(text, seq.toString());
+        Assert.Equal(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
 
-        assertEqualsChars(text, seq);
+        Assert.EqualChars(text, seq);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class AppendableCharSequenceTest {
     public void testSubSequence() {
         AppendableCharSequence master = new AppendableCharSequence(26);
         master.append("abcdefghijlkmonpqrstuvwxyz");
-        assertEquals("abcdefghij", master.subSequence(0, 10).toString());
+        Assert.Equal("abcdefghij", master.subSequence(0, 10).toString());
     }
 
     [Fact]
@@ -64,43 +64,43 @@ public class AppendableCharSequenceTest {
         AppendableCharSequence master = new AppendableCharSequence(26);
         master.append("abcdefghijlkmonpqrstuvwxyz");
         AppendableCharSequence sub =  master.subSequence(0, 0);
-        assertEquals(0, sub.length());
+        Assert.Equal(0, sub.length());
         sub.append('b');
-        assertEquals('b', sub.charAt(0));
+        Assert.Equal('b', sub.charAt(0));
     }
 
     private static void testSimpleAppend0(AppendableCharSequence seq) {
-        String text = "testdata";
+        string text = "testdata";
         for (int i = 0; i < text.length(); i++) {
             seq.append(text.charAt(i));
         }
 
-        assertEquals(text, seq.toString());
-        assertEquals(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
+        Assert.Equal(text, seq.toString());
+        Assert.Equal(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
 
-        assertEqualsChars(text, seq);
+        Assert.EqualChars(text, seq);
 
         seq.reset();
-        assertEquals(0, seq.length());
+        Assert.Equal(0, seq.length());
     }
 
     private static void testAppendString0(AppendableCharSequence seq) {
-        String text = "testdata";
+        string text = "testdata";
         seq.append(text);
 
-        assertEquals(text, seq.toString());
-        assertEquals(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
+        Assert.Equal(text, seq.toString());
+        Assert.Equal(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
 
-        assertEqualsChars(text, seq);
+        Assert.EqualChars(text, seq);
 
         seq.reset();
-        assertEquals(0, seq.length());
+        Assert.Equal(0, seq.length());
     }
 
-    private static  void assertEqualsChars(CharSequence seq1, CharSequence seq2) {
-        assertEquals(seq1.length(), seq2.length());
+    private static  void Assert.EqualChars(CharSequence seq1, CharSequence seq2) {
+        Assert.Equal(seq1.length(), seq2.length());
         for (int i = 0; i < seq1.length(); i++) {
-            assertEquals(seq1.charAt(i), seq2.charAt(i));
+            Assert.Equal(seq1.charAt(i), seq2.charAt(i));
         }
     }
 }

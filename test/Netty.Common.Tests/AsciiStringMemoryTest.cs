@@ -45,10 +45,10 @@ public class AsciiStringMemoryTest {
         ++a[aOffset];
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
         AsciiString aAsciiString2 = new AsciiString(a, aOffset, length, false);
-        assertEquals(aAsciiString, aAsciiString1);
-        assertEquals(aAsciiString, aAsciiString2);
+        Assert.Equal(aAsciiString, aAsciiString1);
+        Assert.Equal(aAsciiString, aAsciiString2);
         for (int i = aOffset; i < length; ++i) {
-            assertEquals(a[i], aAsciiString.byteAt(i - aOffset));
+            Assert.Equal(a[i], aAsciiString.byteAt(i - aOffset));
         }
     }
 
@@ -61,19 +61,19 @@ public class AsciiStringMemoryTest {
         assertNotEquals(a[i], aAsciiString1.byteAt(i - aOffset));
         ++i;
         for (; i < length; ++i) {
-            assertEquals(a[i], aAsciiString1.byteAt(i - aOffset));
+            Assert.Equal(a[i], aAsciiString1.byteAt(i - aOffset));
         }
     }
 
     [Fact]
-    public void forEachTest() throws Exception {
+    public void forEachTest() {
         final AtomicReference<Integer> aCount = new AtomicReference<Integer>(0);
         final AtomicReference<Integer> bCount = new AtomicReference<Integer>(0);
         aAsciiString.forEachByte(new IByteProcessor() {
             int i;
             @Override
-            public boolean process(byte value) {
-                assertEquals(value, bAsciiString.byteAt(i++), "failed at index: " + i);
+            public bool process(byte value) {
+                Assert.Equal(value, bAsciiString.byteAt(i++), "failed at index: " + i);
                 aCount.set(aCount.get() + 1);
                 return true;
             }
@@ -81,37 +81,37 @@ public class AsciiStringMemoryTest {
         bAsciiString.forEachByte(new IByteProcessor() {
             int i;
             @Override
-            public boolean process(byte value) {
-                assertEquals(value, aAsciiString.byteAt(i++), "failed at index: " + i);
+            public bool process(byte value) {
+                Assert.Equal(value, aAsciiString.byteAt(i++), "failed at index: " + i);
                 bCount.set(bCount.get() + 1);
                 return true;
             }
         });
-        assertEquals(aAsciiString.length(), aCount.get().intValue());
-        assertEquals(bAsciiString.length(), bCount.get().intValue());
+        Assert.Equal(aAsciiString.length(), aCount.get().intValue());
+        Assert.Equal(bAsciiString.length(), bCount.get().intValue());
     }
 
     [Fact]
-    public void forEachWithIndexEndTest() throws Exception {
+    public void forEachWithIndexEndTest() {
         assertNotEquals(-1, aAsciiString.forEachByte(aAsciiString.length() - 1,
                 1, new IndexOfProcessor(aAsciiString.byteAt(aAsciiString.length() - 1))));
     }
 
     [Fact]
-    public void forEachWithIndexBeginTest() throws Exception {
+    public void forEachWithIndexBeginTest() {
         assertNotEquals(-1, aAsciiString.forEachByte(0,
                 1, new IndexOfProcessor(aAsciiString.byteAt(0))));
     }
 
     [Fact]
-    public void forEachDescTest() throws Exception {
+    public void forEachDescTest() {
         final AtomicReference<Integer> aCount = new AtomicReference<Integer>(0);
         final AtomicReference<Integer> bCount = new AtomicReference<Integer>(0);
         aAsciiString.forEachByteDesc(new IByteProcessor() {
             int i = 1;
             @Override
-            public boolean process(byte value) {
-                assertEquals(value, bAsciiString.byteAt(bAsciiString.length() - (i++)), "failed at index: " + i);
+            public bool process(byte value) {
+                Assert.Equal(value, bAsciiString.byteAt(bAsciiString.length() - (i++)), "failed at index: " + i);
                 aCount.set(aCount.get() + 1);
                 return true;
             }
@@ -119,24 +119,24 @@ public class AsciiStringMemoryTest {
         bAsciiString.forEachByteDesc(new IByteProcessor() {
             int i = 1;
             @Override
-            public boolean process(byte value) {
-                assertEquals(value, aAsciiString.byteAt(aAsciiString.length() - (i++)), "failed at index: " + i);
+            public bool process(byte value) {
+                Assert.Equal(value, aAsciiString.byteAt(aAsciiString.length() - (i++)), "failed at index: " + i);
                 bCount.set(bCount.get() + 1);
                 return true;
             }
         });
-        assertEquals(aAsciiString.length(), aCount.get().intValue());
-        assertEquals(bAsciiString.length(), bCount.get().intValue());
+        Assert.Equal(aAsciiString.length(), aCount.get().intValue());
+        Assert.Equal(bAsciiString.length(), bCount.get().intValue());
     }
 
     [Fact]
-    public void forEachDescWithIndexEndTest() throws Exception {
+    public void forEachDescWithIndexEndTest() {
         assertNotEquals(-1, bAsciiString.forEachByteDesc(bAsciiString.length() - 1,
                 1, new IndexOfProcessor(bAsciiString.byteAt(bAsciiString.length() - 1))));
     }
 
     [Fact]
-    public void forEachDescWithIndexBeginTest() throws Exception {
+    public void forEachDescWithIndexBeginTest() {
         assertNotEquals(-1, bAsciiString.forEachByteDesc(0,
                 1, new IndexOfProcessor(bAsciiString.byteAt(0))));
     }
@@ -147,8 +147,8 @@ public class AsciiStringMemoryTest {
         final int end = aAsciiString.length();
         AsciiString aSubSequence = aAsciiString.subSequence(start, end, false);
         AsciiString bSubSequence = bAsciiString.subSequence(start, end, true);
-        assertEquals(aSubSequence, bSubSequence);
-        assertEquals(aSubSequence.hashCode(), bSubSequence.hashCode());
+        Assert.Equal(aSubSequence, bSubSequence);
+        Assert.Equal(aSubSequence.hashCode(), bSubSequence.hashCode());
     }
 
     [Fact]
@@ -156,6 +156,6 @@ public class AsciiStringMemoryTest {
         byte[] aCopy = new byte[aAsciiString.length()];
         aAsciiString.copy(0, aCopy, 0, aCopy.length);
         AsciiString aAsciiStringCopy = new AsciiString(aCopy, false);
-        assertEquals(aAsciiString, aAsciiStringCopy);
+        Assert.Equal(aAsciiString, aAsciiStringCopy);
     }
 }

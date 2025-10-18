@@ -32,7 +32,7 @@ public class JfrEventSafeTest {
     public void simple() throws Throwable {
         try (RecordingStream stream = new RecordingStream()) {
             stream.enable(MyEvent.class.getName());
-            CompletableFuture<String> result = new CompletableFuture<>();
+            CompletableFuture<string> result = new CompletableFuture<>();
             stream.onEvent(MyEvent.class.getName(), e -> result.complete(e.getString("foo")));
             stream.startAsync();
 
@@ -40,7 +40,7 @@ public class JfrEventSafeTest {
             event.foo = "bar";
             event.commit();
 
-            assertEquals("bar", result.get(10, TimeUnit.SECONDS));
+            Assert.Equal("bar", result.get(10, TimeUnit.SECONDS));
         }
     }
 
@@ -48,7 +48,7 @@ public class JfrEventSafeTest {
     @EnabledForJreRange(min = JRE.JAVA_17) // RecordingStream
     public void enableDefaults() throws Throwable {
         try (RecordingStream stream = new RecordingStream()) {
-            CompletableFuture<String> result = new CompletableFuture<>();
+            CompletableFuture<string> result = new CompletableFuture<>();
             stream.onEvent(DisabledEvent.class.getName(),
                     e -> result.completeExceptionally(new Exception("Event mistakenly fired")));
             stream.onEvent(MyEvent.class.getName(),
@@ -63,16 +63,16 @@ public class JfrEventSafeTest {
             event.foo = "bar";
             event.commit();
 
-            assertEquals("bar", result.get(10, TimeUnit.SECONDS));
+            Assert.Equal("bar", result.get(10, TimeUnit.SECONDS));
         }
     }
 
     static final class MyEvent extends Event {
-        String foo;
+        string foo;
     }
 
     @Enabled(false)
     static final class DisabledEvent extends Event {
-        String foo;
+        string foo;
     }
 }

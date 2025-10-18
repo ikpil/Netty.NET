@@ -34,28 +34,28 @@ public class DefaultPriorityQueueTest {
         assertOffer(queue, d);
 
         // Remove the first element
-        assertSame(c, queue.peek());
-        assertSame(c, queue.poll());
-        assertEquals(3, queue.size());
+        Assert.Same(c, queue.peek());
+        Assert.Same(c, queue.poll());
+        Assert.Equal(3, queue.size());
 
         // Test that offering another element preserves the priority queue semantics.
         assertOffer(queue, e);
-        assertEquals(4, queue.size());
-        assertSame(a, queue.peek());
-        assertSame(a, queue.poll());
-        assertEquals(3, queue.size());
+        Assert.Equal(4, queue.size());
+        Assert.Same(a, queue.peek());
+        Assert.Same(a, queue.poll());
+        Assert.Equal(3, queue.size());
 
         // Keep removing the remaining elements
-        assertSame(e, queue.peek());
-        assertSame(e, queue.poll());
-        assertEquals(2, queue.size());
+        Assert.Same(e, queue.peek());
+        Assert.Same(e, queue.poll());
+        Assert.Equal(2, queue.size());
 
-        assertSame(d, queue.peek());
-        assertSame(d, queue.poll());
-        assertEquals(1, queue.size());
+        Assert.Same(d, queue.peek());
+        Assert.Same(d, queue.poll());
+        Assert.Equal(1, queue.size());
 
-        assertSame(b, queue.peek());
-        assertSame(b, queue.poll());
+        Assert.Same(b, queue.peek());
+        Assert.Same(b, queue.poll());
         assertEmptyQueue(queue);
     }
 
@@ -79,16 +79,16 @@ public class DefaultPriorityQueueTest {
 
         // Test that elements can be re-inserted after the clear operation
         assertOffer(queue, a);
-        assertSame(a, queue.peek());
+        Assert.Same(a, queue.peek());
 
         assertOffer(queue, b);
-        assertSame(a, queue.peek());
+        Assert.Same(a, queue.peek());
 
         assertOffer(queue, c);
-        assertSame(c, queue.peek());
+        Assert.Same(c, queue.peek());
 
         assertOffer(queue, d);
-        assertSame(c, queue.peek());
+        Assert.Same(c, queue.peek());
     }
 
     [Fact]
@@ -113,13 +113,13 @@ public class DefaultPriorityQueueTest {
         // Elements cannot be re-inserted but new ones can.
         try {
             queue.offer(a);
-            fail();
+            Assert.Fail();
         } catch (ArgumentException t) {
             // expected
         }
 
         assertOffer(queue, e);
-        assertSame(e, queue.peek());
+        Assert.Same(e, queue.peek());
     }
 
     [Fact]
@@ -147,8 +147,8 @@ public class DefaultPriorityQueueTest {
 
         for (int i = 0; i < values.length; ++i) {
             try {
-                assertTrue(queue.removeTyped(values[i]));
-                assertEquals(queue.size(), values.length - (i + 1));
+                Assert.True(queue.removeTyped(values[i]));
+                Assert.Equal(queue.size(), values.length - (i + 1));
             } catch (Throwable cause) {
                 StringBuilder sb = new StringBuilder(values.length * 2);
                 sb.append("error on removal of index: ").append(i).append(" [");
@@ -162,7 +162,7 @@ public class DefaultPriorityQueueTest {
         assertEmptyQueue(queue);
     }
 
-    private static void testRemoval(boolean typed) {
+    private static void testRemoval(bool typed) {
         PriorityQueue<TestElement> queue = new DefaultPriorityQueue<>(TestElementComparator.INSTANCE, 4);
         assertEmptyQueue(queue);
 
@@ -178,35 +178,35 @@ public class DefaultPriorityQueueTest {
         assertOffer(queue, d);
 
         // Remove an element that isn't in the queue.
-        assertFalse(typed ? queue.removeTyped(notInQueue) : queue.remove(notInQueue));
-        assertSame(c, queue.peek());
-        assertEquals(4, queue.size());
+        Assert.False(typed ? queue.removeTyped(notInQueue) : queue.remove(notInQueue));
+        Assert.Same(c, queue.peek());
+        Assert.Equal(4, queue.size());
 
         // Remove the last element in the array, when the array is non-empty.
-        assertTrue(typed ? queue.removeTyped(b) : queue.remove(b));
-        assertSame(c, queue.peek());
-        assertEquals(3, queue.size());
+        Assert.True(typed ? queue.removeTyped(b) : queue.remove(b));
+        Assert.Same(c, queue.peek());
+        Assert.Equal(3, queue.size());
 
         // Re-insert the element after removal
         assertOffer(queue, b);
-        assertSame(c, queue.peek());
-        assertEquals(4, queue.size());
+        Assert.Same(c, queue.peek());
+        Assert.Equal(4, queue.size());
 
         // Repeat remove the last element in the array, when the array is non-empty.
-        assertTrue(typed ? queue.removeTyped(d) : queue.remove(d));
-        assertSame(c, queue.peek());
-        assertEquals(3, queue.size());
+        Assert.True(typed ? queue.removeTyped(d) : queue.remove(d));
+        Assert.Same(c, queue.peek());
+        Assert.Equal(3, queue.size());
 
-        assertTrue(typed ? queue.removeTyped(b) : queue.remove(b));
-        assertSame(c, queue.peek());
-        assertEquals(2, queue.size());
+        Assert.True(typed ? queue.removeTyped(b) : queue.remove(b));
+        Assert.Same(c, queue.peek());
+        Assert.Equal(2, queue.size());
 
         // Remove the head of the queue.
-        assertTrue(typed ? queue.removeTyped(c) : queue.remove(c));
-        assertSame(a, queue.peek());
-        assertEquals(1, queue.size());
+        Assert.True(typed ? queue.removeTyped(c) : queue.remove(c));
+        Assert.Same(a, queue.peek());
+        Assert.Equal(1, queue.size());
 
-        assertTrue(typed ? queue.removeTyped(a) : queue.remove(a));
+        Assert.True(typed ? queue.removeTyped(a) : queue.remove(a));
         assertEmptyQueue(queue);
     }
 
@@ -216,10 +216,10 @@ public class DefaultPriorityQueueTest {
         assertEmptyQueue(queue);
         TestElement e = new TestElement(1);
         assertOffer(queue, e);
-        assertSame(e, queue.peek());
-        assertEquals(1, queue.size());
-        assertFalse(queue.isEmpty());
-        assertSame(e, queue.poll());
+        Assert.Same(e, queue.peek());
+        Assert.Equal(1, queue.size());
+        Assert.False(queue.isEmpty());
+        Assert.Same(e, queue.poll());
         assertEmptyQueue(queue);
     }
 
@@ -259,26 +259,26 @@ public class DefaultPriorityQueueTest {
         expectedOrderList.addAll(Arrays.asList(a, b, c, d, e, f));
         expectedOrderList.sort(TestElementComparator.INSTANCE);
 
-        assertEquals(expectedOrderList.size(), queue.size());
-        assertEquals(expectedOrderList.isEmpty(), queue.isEmpty());
+        Assert.Equal(expectedOrderList.size(), queue.size());
+        Assert.Equal(expectedOrderList.isEmpty(), queue.isEmpty());
         Iterator<TestElement> itr = expectedOrderList.iterator();
         while (itr.hasNext()) {
             TestElement next = itr.next();
             TestElement poll = queue.poll();
-            assertEquals(next, poll);
+            Assert.Equal(next, poll);
             itr.remove();
-            assertEquals(expectedOrderList.size(), queue.size());
-            assertEquals(expectedOrderList.isEmpty(), queue.isEmpty());
+            Assert.Equal(expectedOrderList.size(), queue.size());
+            Assert.Equal(expectedOrderList.isEmpty(), queue.isEmpty());
         }
     }
 
     private static void assertOffer(PriorityQueue<TestElement> queue, TestElement a) {
-        assertTrue(queue.offer(a));
-        assertTrue(queue.contains(a));
-        assertTrue(queue.containsTyped(a));
+        Assert.True(queue.offer(a));
+        Assert.True(queue.contains(a));
+        Assert.True(queue.containsTyped(a));
         try { // An element can not be inserted more than 1 time.
             queue.offer(a);
-            fail();
+            Assert.Fail();
         } catch (ArgumentException ignored) {
             // ignored
         }
@@ -287,8 +287,8 @@ public class DefaultPriorityQueueTest {
     private static void assertEmptyQueue(PriorityQueue<TestElement> queue) {
         assertNull(queue.peek());
         assertNull(queue.poll());
-        assertEquals(0, queue.size());
-        assertTrue(queue.isEmpty());
+        Assert.Equal(0, queue.size());
+        Assert.True(queue.isEmpty());
     }
 
     private static final class TestElementComparator implements Comparator<TestElement>, Serializable {
@@ -314,7 +314,7 @@ public class DefaultPriorityQueueTest {
         }
 
         @Override
-        public boolean equals(Object o) {
+        public bool equals(Object o) {
             return o instanceof TestElement && ((TestElement) o).value == value;
         }
 

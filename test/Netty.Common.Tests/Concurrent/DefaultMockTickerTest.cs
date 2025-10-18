@@ -13,54 +13,68 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.Common.Tests.Concurrent
+
+namespace Netty.Common.Tests.Concurrent;
+
+class DefaultMockTickerTest
 {
-    class DefaultMockTickerTest {
+    [Fact]
+    void newMockTickerShouldReturnDefaultMockTicker()
+    {
+        Assert.True(Ticker.newMockTicker() instanceof DefaultMockTicker);
+    }
 
-        [Fact]
-        void newMockTickerShouldReturnDefaultMockTicker() {
-            assertTrue(Ticker.newMockTicker() instanceof DefaultMockTicker);
-        }
+    [Fact]
+    void defaultValues()
+    {
+        final MockTicker ticker = Ticker.newMockTicker();
+        Assert.Equal(0, ticker.initialNanoTime());
+        Assert.Equal(0, ticker.nanoTime());
+    }
 
-        [Fact]
-        void defaultValues() {
-            final MockTicker ticker = Ticker.newMockTicker();
-            assertEquals(0, ticker.initialNanoTime());
-            assertEquals(0, ticker.nanoTime());
-        }
+    [Fact]
+    void advanceWithoutWaiters()
+    {
+        final MockTicker ticker = Ticker.newMockTicker();
+        ticker.advance(42, TimeUnit.NANOSECONDS);
+        Assert.Equal(0, ticker.initialNanoTime());
+        Assert.Equal(42, ticker.nanoTime());
 
-        [Fact]
-        void advanceWithoutWaiters() {
-            final MockTicker ticker = Ticker.newMockTicker();
-            ticker.advance(42, TimeUnit.NANOSECONDS);
-            assertEquals(0, ticker.initialNanoTime());
-            assertEquals(42, ticker.nanoTime());
+        ticker.advanceMillis(42);
+        Assert.Equal(42_000_042, ticker.nanoTime());
+    }
 
-            ticker.advanceMillis(42);
-            assertEquals(42_000_042, ticker.nanoTime());
-        }
+    [Fact]
+    void advanceWithNegativeAmount()
+    {
+        final MockTicker ticker = Ticker.newMockTicker();
+        assertThrows(ArgumentException.class, ()-> {
+            ticker.advance(-1, TimeUnit.SECONDS);
+        });
 
-        [Fact]
-        void advanceWithNegativeAmount() {
-            final MockTicker ticker = Ticker.newMockTicker();
-            assertThrows(ArgumentException.class, () -> {
-                ticker.advance(-1, TimeUnit.SECONDS);
-            });
+        assertThrows(ArgumentException.class, ()-> {
+            ticker.advanceMillis(-1);
+        });
+    }
 
-            assertThrows(ArgumentException.class, () -> {
-                ticker.advanceMillis(-1);
-            });
-        }
-
-        @Timeout(60)
-        [Fact]
-        void advanceWithWaiters() throws Exception {
-            final List<Thread> threads = new List<>();
-            final DefaultMockTicker ticker = (DefaultMockTicker) Ticker.newMockTicker();
-            final int numWaiters = 4;
+    [Timeout(60)]
+    [Fact]
+    void advanceWithWaiters()
+    {
+        final List<Thread>
+        threads = new List<>();
+        final DefaultMockTicker ticker = (DefaultMockTicker)Ticker.newMockTicker();
+        final int numWaiters = 4;
         final List<FutureTask<Void>> futures = new List<>();
-        for (int i = 0; i < numWaiters; i++) {
-            FutureTask<Void> task = new FutureTask<>(() -> {
+        for (int i = 0;
+             i < numWaiters;
+             i++)
+        {
+            FutureTask<Void> task = new FutureTask<>(()->
+            {
+ 
+
+
                 try {
                 ticker.sleep(1, TimeUnit.MILLISECONDS);
             } catch (ThreadInterruptedException e) {
@@ -74,63 +88,72 @@ namespace Netty.Common.Tests.Concurrent
             thread.start();
         }
 
-    try {
-        // Wait for all threads to be sleeping.
-        for (Thread thread : threads) {
-            ticker.awaitSleepingThread(thread);
-        }
+        try
+        {
+            // Wait for all threads to be sleeping.
+            for (Thread thread :
+            threads) {
+                ticker.awaitSleepingThread(thread);
+            }
 
-        // Time did not advance at all, and thus future will not complete.
-        for (int i = 0; i < numWaiters; i++) {
-            final int finalCnt = i;
-            assertThrows(TimeoutException.class, () -> {
-                futures.get(finalCnt).get(1, TimeUnit.MILLISECONDS);
-            });
-        }
+            // Time did not advance at all, and thus future will not complete.
+            for (int i = 0; i < numWaiters; i++)
+            {
+                final int finalCnt = i;
+                assertThrows(TimeoutException.class, ()-> {
+                    futures.get(finalCnt).get(1, TimeUnit.MILLISECONDS);
+                });
+            }
 
-        // Advance just one nanosecond before completion.
-        ticker.advance(999_999, TimeUnit.NANOSECONDS);
+            // Advance just one nanosecond before completion.
+            ticker.advance(999_999, TimeUnit.NANOSECONDS);
 
-        // All threads should still be sleeping.
-        for (Thread thread : threads) {
-            ticker.awaitSleepingThread(thread);
-        }
+            // All threads should still be sleeping.
+            for (Thread thread :
+            threads) {
+                ticker.awaitSleepingThread(thread);
+            }
 
-        // Still needs one more nanosecond for our futures.
-        for (int i = 0; i < numWaiters; i++) {
-            final int finalCnt = i;
-            assertThrows(TimeoutException.class, () -> {
-                futures.get(finalCnt).get(1, TimeUnit.MILLISECONDS);
-            });
-        }
+            // Still needs one more nanosecond for our futures.
+            for (int i = 0; i < numWaiters; i++)
+            {
+                final int finalCnt = i;
+                assertThrows(TimeoutException.class, ()-> {
+                    futures.get(finalCnt).get(1, TimeUnit.MILLISECONDS);
+                });
+            }
 
-        // Reach at the 1 millisecond mark and ensure the future is complete.
-        ticker.advance(1, TimeUnit.NANOSECONDS);
-        for (int i = 0; i < numWaiters; i++) {
-            futures.get(i).get();
+            // Reach at the 1 millisecond mark and ensure the future is complete.
+            ticker.advance(1, TimeUnit.NANOSECONDS);
+            for (int i = 0; i < numWaiters; i++)
+            {
+                futures.get(i).get();
+            }
         }
-    } catch (ThreadInterruptedException ie) {
-        for (Thread thread : threads) {
-            String name = thread.getName();
-            Thread.State state = thread.getState();
-            StackTraceElement[] stackTrace = thread.getStackTrace();
-            thread.interrupt();
-            ThreadInterruptedException threadStackTrace = new ThreadInterruptedException(name + ": " + state);
-            threadStackTrace.setStackTrace(stackTrace);
-            ie.addSuppressed(threadStackTrace);
+        catch (ThreadInterruptedException ie)
+        {
+            for (Thread thread :
+            threads) {
+                string name = thread.getName();
+                Thread.State state = thread.getState();
+                StackTraceElement[] stackTrace = thread.getStackTrace();
+                thread.interrupt();
+                ThreadInterruptedException threadStackTrace = new ThreadInterruptedException(name + ": " + state);
+                threadStackTrace.setStackTrace(stackTrace);
+                ie.addSuppressed(threadStackTrace);
+            }
+            throw ie;
         }
-        throw ie;
     }
-}
 
-}
 
     [Fact]
-    void sleepZero() throws ThreadInterruptedException {
+    void sleepZero()
+    {
         final MockTicker ticker = Ticker.newMockTicker();
         // All sleep calls with 0 delay should return immediately.
         ticker.sleep(0, TimeUnit.SECONDS);
         ticker.sleepMillis(0);
-        assertEquals(0, ticker.nanoTime());
+        Assert.Equal(0, ticker.nanoTime());
     }
 }

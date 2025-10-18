@@ -25,18 +25,18 @@ public class DefaultAttributeMapTest {
 
     [Fact]
     public void testMapExists() {
-        assertNotNull(map);
+        Assert.NotNull(map);
     }
 
     [Fact]
     public void testGetSetString() {
-        AttributeKey<String> key = AttributeKey.valueOf("Nothing");
-        IAttribute<String> one = map.attr(key);
+        AttributeKey<string> key = AttributeKey.valueOf("Nothing");
+        IAttribute<string> one = map.attr(key);
 
-        assertSame(one, map.attr(key));
+        Assert.Same(one, map.attr(key));
 
         one.setIfAbsent("Whoohoo");
-        assertSame("Whoohoo", one.get());
+        Assert.Same("Whoohoo", one.get());
 
         one.setIfAbsent("What");
         assertNotSame("What", one.get());
@@ -50,10 +50,10 @@ public class DefaultAttributeMapTest {
         AttributeKey<Integer> key = AttributeKey.valueOf("Nada");
         IAttribute<Integer> one = map.attr(key);
 
-        assertSame(one, map.attr(key));
+        Assert.Same(one, map.attr(key));
 
         one.setIfAbsent(3653);
-        assertEquals(Integer.valueOf(3653), one.get());
+        Assert.Equal(Integer.valueOf(3653), one.get());
 
         one.setIfAbsent(1);
         assertNotSame(1, one.get());
@@ -69,11 +69,11 @@ public class DefaultAttributeMapTest {
 
         IAttribute<Integer> attr = map.attr(key);
         attr.set(1);
-        assertSame(1, attr.getAndRemove());
+        Assert.Same(1, attr.getAndRemove());
 
         IAttribute<Integer> attr2 = map.attr(key);
         attr2.set(2);
-        assertSame(2, attr2.get());
+        Assert.Same(2, attr2.get());
         assertNotSame(attr, attr2);
     }
 
@@ -91,15 +91,15 @@ public class DefaultAttributeMapTest {
         }
         for (int i = 10; i < 20; i++) {
             AttributeKey<Integer> key = AttributeKey.valueOf(Integer.toString(i));
-            assertTrue(map.hasAttr(key));
+            Assert.True(map.hasAttr(key));
             map.attr(key).remove();
-            assertFalse(map.hasAttr(key));
+            Assert.False(map.hasAttr(key));
         }
         for (int i = 0; i < 10; i++) {
             AttributeKey<Integer> key = AttributeKey.valueOf(Integer.toString(i));
-            assertTrue(map.hasAttr(key));
+            Assert.True(map.hasAttr(key));
             map.attr(key).remove();
-            assertFalse(map.hasAttr(key));
+            Assert.False(map.hasAttr(key));
         }
     }
 
@@ -109,11 +109,11 @@ public class DefaultAttributeMapTest {
 
         IAttribute<Integer> attr = map.attr(key);
         attr.set(1);
-        assertSame(1, attr.getAndSet(null));
+        Assert.Same(1, attr.getAndSet(null));
 
         IAttribute<Integer> attr2 = map.attr(key);
         attr2.set(2);
-        assertSame(2, attr2.get());
-        assertSame(attr, attr2);
+        Assert.Same(2, attr2.get());
+        Assert.Same(attr, attr2);
     }
 }

@@ -28,7 +28,7 @@ public class NettyRuntimeTests {
         for (final int i : new int[] { -1, 0 }) {
             try {
                 holder.setAvailableProcessors(i);
-                fail();
+                Assert.Fail();
             } catch (final ArgumentException e) {
                 assertThat(e.getMessage()).contains("(expected: > 0)");
             }
@@ -41,7 +41,7 @@ public class NettyRuntimeTests {
         holder.setAvailableProcessors(1);
         try {
             holder.setAvailableProcessors(2);
-            fail();
+            Assert.Fail();
         } catch (final IllegalStateException e) {
             assertThat(e.getMessage()).contains("availableProcessors is already set to [1], rejecting [2]");
         }
@@ -53,7 +53,7 @@ public class NettyRuntimeTests {
         holder.availableProcessors();
         try {
             holder.setAvailableProcessors(1);
-            fail();
+            Assert.Fail();
         } catch (final IllegalStateException e) {
             assertThat(e.getMessage()).contains("availableProcessors is already set");
         }
@@ -144,19 +144,19 @@ public class NettyRuntimeTests {
         set.join();
 
         if (setException.get() == null) {
-            assertEquals(2048, holder.availableProcessors());
+            Assert.Equal(2048, holder.availableProcessors());
         } else {
-            assertNotNull(setException.get());
+            Assert.NotNull(setException.get());
         }
     }
 
     [Fact]
     public void testGetWithSystemProperty() {
-        final String availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
+        final string availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
         try {
             System.setProperty("io.netty.availableProcessors", "2048");
             final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
-            assertEquals(2048, holder.availableProcessors());
+            Assert.Equal(2048, holder.availableProcessors());
         } finally {
             if (availableProcessorsSystemProperty != null) {
                 System.setProperty("io.netty.availableProcessors", availableProcessorsSystemProperty);
@@ -169,11 +169,11 @@ public class NettyRuntimeTests {
     [Fact]
     [SuppressForbidden("testing fallback to Runtime#availableProcessors")]
     public void testGet() {
-        final String availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
+        final string availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
         try {
             System.clearProperty("io.netty.availableProcessors");
             final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
-            assertEquals(Runtime.getRuntime().availableProcessors(), holder.availableProcessors());
+            Assert.Equal(Runtime.getRuntime().availableProcessors(), holder.availableProcessors());
         } finally {
             if (availableProcessorsSystemProperty != null) {
                 System.setProperty("io.netty.availableProcessors", availableProcessorsSystemProperty);

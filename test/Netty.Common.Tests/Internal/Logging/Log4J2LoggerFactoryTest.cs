@@ -24,8 +24,8 @@ namespace Netty.Common.Tests.Internal.Logging
         [Fact]
         public void testCreation() {
             InternalLogger logger = Log4J2LoggerFactory.INSTANCE.newInstance("foo");
-            assertTrue(logger instanceof Log4J2Logger);
-            assertEquals("foo", logger.name());
+            Assert.True(logger instanceof Log4J2Logger);
+            Assert.Equal("foo", logger.name());
         }
     }
 }

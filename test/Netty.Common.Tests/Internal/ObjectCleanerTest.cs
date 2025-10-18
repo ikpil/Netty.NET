@@ -24,7 +24,7 @@ namespace Netty.Common.Tests.Internal
 
         [Fact]
             @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-        public void testCleanup() throws Exception {
+        public void testCleanup() {
             final AtomicBoolean freeCalled = new AtomicBoolean();
             final CountDownLatch latch = new CountDownLatch(1);
             temporaryThread = new Thread(new IRunnable() {
@@ -49,7 +49,7 @@ namespace Netty.Common.Tests.Internal
 
         latch.countDown();
         temporaryThread.join();
-        assertFalse(freeCalled.get());
+        Assert.False(freeCalled.get());
 
         // Null out the temporary object to ensure it is enqueued for GC.
         temporaryThread = null;
@@ -95,7 +95,7 @@ namespace Netty.Common.Tests.Internal
 
         latch.countDown();
         temporaryThread.join();
-        assertEquals(0, freeCalledCount.get());
+        Assert.Equal(0, freeCalledCount.get());
 
         // Null out the temporary object to ensure it is enqueued for GC.
         temporaryThread = null;
@@ -110,7 +110,7 @@ namespace Netty.Common.Tests.Internal
 
     [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testCleanerThreadIsDaemon() throws Exception {
+    public void testCleanerThreadIsDaemon() {
         temporaryObject = new Object();
         ObjectCleaner.register(temporaryObject, new IRunnable() {
             @Override
@@ -127,7 +127,7 @@ namespace Netty.Common.Tests.Internal
                 break;
             }
         }
-        assertNotNull(cleanerThread);
-        assertTrue(cleanerThread.isDaemon());
+        Assert.NotNull(cleanerThread);
+        Assert.True(cleanerThread.isDaemon());
     }
 }

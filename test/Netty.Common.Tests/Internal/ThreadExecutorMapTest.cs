@@ -22,12 +22,12 @@ public class ThreadExecutorMapTest {
         }
 
         @Override
-        public boolean inEventLoop(Thread thread) {
+        public bool inEventLoop(Thread thread) {
             return false;
         }
 
         @Override
-        public boolean isShuttingDown() {
+        public bool isShuttingDown() {
             return false;
         }
 
@@ -42,17 +42,17 @@ public class ThreadExecutorMapTest {
         }
 
         @Override
-        public boolean isShutdown() {
+        public bool isShutdown() {
             return false;
         }
 
         @Override
-        public boolean isTerminated() {
+        public bool isTerminated() {
             return false;
         }
 
         @Override
-        public boolean awaitTermination(long timeout, @NotNull TimeUnit unit) {
+        public bool awaitTermination(long timeout, @NotNull TimeUnit unit) {
             return false;
         }
 
@@ -72,10 +72,10 @@ public class ThreadExecutorMapTest {
                 executor2.execute(new IRunnable() {
                     @Override
                     public void run() {
-                        assertSame(EVENT_EXECUTOR, ThreadExecutorMap.currentExecutor());
+                        Assert.Same(EVENT_EXECUTOR, ThreadExecutorMap.currentExecutor());
                     }
                 });
-                assertSame(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+                Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
             }
         });
     }
@@ -86,7 +86,7 @@ public class ThreadExecutorMapTest {
         executor.execute(new IRunnable() {
             @Override
             public void run() {
-                assertSame(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+                Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
             }
         });
     }
@@ -96,7 +96,7 @@ public class ThreadExecutorMapTest {
         ThreadExecutorMap.apply(new IRunnable() {
             @Override
             public void run() {
-                assertSame(ImmediateEventExecutor.INSTANCE,
+                Assert.Same(ImmediateEventExecutor.INSTANCE,
                         ThreadExecutorMap.currentExecutor());
             }
         }, ImmediateEventExecutor.INSTANCE).run();
@@ -109,7 +109,7 @@ public class ThreadExecutorMapTest {
         Thread thread = threadFactory.newThread(new IRunnable() {
             @Override
             public void run() {
-                assertSame(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+                Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
             }
         });
         thread.start();

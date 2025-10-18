@@ -25,14 +25,14 @@ public class AbstractReferenceCountedTest
     public void testRetainOverflow() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(Integer.MAX_VALUE);
-        assertEquals(Integer.MAX_VALUE, referenceCounted.refCnt());
+        Assert.Equal(Integer.MAX_VALUE, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, referenceCounted::retain);
     }
 
     [Fact]
     public void testRetainOverflow2() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        assertEquals(1, referenceCounted.refCnt());
+        Assert.Equal(1, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.retain(Integer.MAX_VALUE));
     }
 
@@ -40,41 +40,41 @@ public class AbstractReferenceCountedTest
     public void testReleaseOverflow() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(0);
-        assertEquals(0, referenceCounted.refCnt());
+        Assert.Equal(0, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.release(Integer.MAX_VALUE));
     }
 
     [Fact]
     public void testReleaseErrorMessage() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        assertTrue(referenceCounted.release());
+        Assert.True(referenceCounted.release());
         try {
             referenceCounted.release(1);
             fail("IllegalReferenceCountException didn't occur");
         } catch (IllegalReferenceCountException e) {
-            assertEquals("refCnt: 0, decrement: 1", e.getMessage());
+            Assert.Equal("refCnt: 0, decrement: 1", e.getMessage());
         }
     }
 
     [Fact]
     public void testRetainResurrect() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        assertTrue(referenceCounted.release());
-        assertEquals(0, referenceCounted.refCnt());
+        Assert.True(referenceCounted.release());
+        Assert.Equal(0, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, referenceCounted::retain);
     }
 
     [Fact]
     public void testRetainResurrect2() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        assertTrue(referenceCounted.release());
-        assertEquals(0, referenceCounted.refCnt());
+        Assert.True(referenceCounted.release());
+        Assert.Equal(0, referenceCounted.refCnt());
         assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.retain(2));
     }
 
     [Fact]
     @Timeout(value = 30000, unit = TimeUnit.MILLISECONDS)
-    public void testRetainFromMultipleThreadsThrowsReferenceCountException() throws Exception {
+    public void testRetainFromMultipleThreadsThrowsReferenceCountException() {
         int threads = 4;
         Queue<Future<?>> futures = new ArrayDeque<>(threads);
         ExecutorService service = Executors.newFixedThreadPool(threads);
@@ -84,7 +84,7 @@ public class AbstractReferenceCountedTest
             for (int i = 0; i < 10000; i++) {
                 AbstractReferenceCounted referenceCounted = newReferenceCounted();
                 CountDownLatch retainLatch = new CountDownLatch(1);
-                assertTrue(referenceCounted.release());
+                Assert.True(referenceCounted.release());
 
                 for (int a = 0; a < threads; a++) {
                     int retainCnt = ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
@@ -110,7 +110,7 @@ public class AbstractReferenceCountedTest
                     }
                     f.get();
                 }
-                assertEquals(4, refCountExceptions.get());
+                Assert.Equal(4, refCountExceptions.get());
                 refCountExceptions.set(0);
             }
         } finally {
@@ -120,7 +120,7 @@ public class AbstractReferenceCountedTest
 
     [Fact]
     @Timeout(value = 30000, unit = TimeUnit.MILLISECONDS)
-    public void testReleaseFromMultipleThreadsThrowsReferenceCountException() throws Exception {
+    public void testReleaseFromMultipleThreadsThrowsReferenceCountException() {
         int threads = 4;
         Queue<Future<?>> futures = new ArrayDeque<>(threads);
         ExecutorService service = Executors.newFixedThreadPool(threads);
@@ -159,8 +159,8 @@ public class AbstractReferenceCountedTest
                     }
                     f.get();
                 }
-                assertEquals(3, refCountExceptions.get());
-                assertEquals(1, releasedCount.get());
+                Assert.Equal(3, refCountExceptions.get());
+                Assert.Equal(1, releasedCount.get());
 
                 refCountExceptions.set(0);
             }

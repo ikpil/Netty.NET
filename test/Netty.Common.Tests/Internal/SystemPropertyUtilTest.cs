@@ -45,88 +45,88 @@ public class SystemPropertyUtilTest {
 
     [Fact]
     public void testGetDefaultValueWithPropertyNull() {
-        assertEquals("default", SystemPropertyUtil.get("key", "default"));
+        Assert.Equal("default", SystemPropertyUtil.get("key", "default"));
     }
 
     [Fact]
     public void testGetPropertyValue() {
         System.setProperty("key", "value");
-        assertEquals("value", SystemPropertyUtil.get("key"));
+        Assert.Equal("value", SystemPropertyUtil.get("key"));
     }
 
     [Fact]
     public void testGetBooleanDefaultValueWithPropertyNull() {
-        assertTrue(SystemPropertyUtil.getBoolean("key", true));
-        assertFalse(SystemPropertyUtil.getBoolean("key", false));
+        Assert.True(SystemPropertyUtil.getBoolean("key", true));
+        Assert.False(SystemPropertyUtil.getBoolean("key", false));
     }
 
     [Fact]
     public void testGetBooleanDefaultValueWithEmptyString() {
         System.setProperty("key", "");
-        assertTrue(SystemPropertyUtil.getBoolean("key", true));
-        assertFalse(SystemPropertyUtil.getBoolean("key", false));
+        Assert.True(SystemPropertyUtil.getBoolean("key", true));
+        Assert.False(SystemPropertyUtil.getBoolean("key", false));
     }
 
     [Fact]
     public void testGetBooleanWithTrueValue() {
         System.setProperty("key", "true");
-        assertTrue(SystemPropertyUtil.getBoolean("key", false));
+        Assert.True(SystemPropertyUtil.getBoolean("key", false));
         System.setProperty("key", "yes");
-        assertTrue(SystemPropertyUtil.getBoolean("key", false));
+        Assert.True(SystemPropertyUtil.getBoolean("key", false));
         System.setProperty("key", "1");
-        assertTrue(SystemPropertyUtil.getBoolean("key", true));
+        Assert.True(SystemPropertyUtil.getBoolean("key", true));
     }
 
     [Fact]
     public void testGetBooleanWithFalseValue() {
         System.setProperty("key", "false");
-        assertFalse(SystemPropertyUtil.getBoolean("key", true));
+        Assert.False(SystemPropertyUtil.getBoolean("key", true));
         System.setProperty("key", "no");
-        assertFalse(SystemPropertyUtil.getBoolean("key", false));
+        Assert.False(SystemPropertyUtil.getBoolean("key", false));
         System.setProperty("key", "0");
-        assertFalse(SystemPropertyUtil.getBoolean("key", true));
+        Assert.False(SystemPropertyUtil.getBoolean("key", true));
     }
 
     [Fact]
     public void testGetBooleanDefaultValueWithWrongValue() {
         System.setProperty("key", "abc");
-        assertTrue(SystemPropertyUtil.getBoolean("key", true));
+        Assert.True(SystemPropertyUtil.getBoolean("key", true));
         System.setProperty("key", "123");
-        assertFalse(SystemPropertyUtil.getBoolean("key", false));
+        Assert.False(SystemPropertyUtil.getBoolean("key", false));
     }
 
     [Fact]
     public void getIntDefaultValueWithPropertyNull() {
-        assertEquals(1, SystemPropertyUtil.getInt("key", 1));
+        Assert.Equal(1, SystemPropertyUtil.getInt("key", 1));
     }
 
     [Fact]
     public void getIntWithPropertValueIsInt() {
         System.setProperty("key", "123");
-        assertEquals(123, SystemPropertyUtil.getInt("key", 1));
+        Assert.Equal(123, SystemPropertyUtil.getInt("key", 1));
     }
 
     [Fact]
     public void getIntDefaultValueWithPropertValueIsNotInt() {
         System.setProperty("key", "NotInt");
-        assertEquals(1, SystemPropertyUtil.getInt("key", 1));
+        Assert.Equal(1, SystemPropertyUtil.getInt("key", 1));
     }
 
     [Fact]
     public void getLongDefaultValueWithPropertyNull() {
-        assertEquals(1, SystemPropertyUtil.getLong("key", 1));
+        Assert.Equal(1, SystemPropertyUtil.getLong("key", 1));
     }
 
     [Fact]
     public void getLongWithPropertValueIsLong() {
         System.setProperty("key", "123");
-        assertEquals(123, SystemPropertyUtil.getLong("key", 1));
+        Assert.Equal(123, SystemPropertyUtil.getLong("key", 1));
     }
 
     [Fact]
     public void getLongDefaultValueWithPropertValueIsNotLong() {
         System.setProperty("key", "NotInt");
-        assertEquals(1, SystemPropertyUtil.getLong("key", 1));
+        Assert.Equal(1, SystemPropertyUtil.getLong("key", 1));
     }
 
 }

@@ -24,8 +24,8 @@ namespace Netty.Common.Tests.Internal.Logging
         [Fact]
         public void testCreation() {
             InternalLogger logger = Slf4JLoggerFactory.INSTANCE.newInstance("foo");
-            assertTrue(logger instanceof Slf4JLogger || logger instanceof LocationAwareSlf4JLogger);
-            assertEquals("foo", logger.name());
+            Assert.True(logger instanceof Slf4JLogger || logger instanceof LocationAwareSlf4JLogger);
+            Assert.Equal("foo", logger.name());
         }
 
         [Fact]
@@ -33,8 +33,8 @@ namespace Netty.Common.Tests.Internal.Logging
             Logger logger = mock(Logger.class);
             when(logger.getName()).thenReturn("testlogger");
             InternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
-            assertTrue(internalLogger instanceof Slf4JLogger);
-            assertEquals("testlogger", internalLogger.name());
+            Assert.True(internalLogger instanceof Slf4JLogger);
+            Assert.Equal("testlogger", internalLogger.name());
         }
 
         [Fact]
@@ -42,13 +42,13 @@ namespace Netty.Common.Tests.Internal.Logging
             Logger logger = mock(LocationAwareLogger.class);
             when(logger.getName()).thenReturn("testlogger");
             InternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
-            assertTrue(internalLogger instanceof LocationAwareSlf4JLogger);
-            assertEquals("testlogger", internalLogger.name());
+            Assert.True(internalLogger instanceof LocationAwareSlf4JLogger);
+            Assert.Equal("testlogger", internalLogger.name());
         }
 
         [Fact]
         public void testFormatMessage() {
-            ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<string> captor = ArgumentCaptor.forClass(string.class);
             LocationAwareLogger logger = mock(LocationAwareLogger.class);
             when(logger.isDebugEnabled()).thenReturn(true);
             when(logger.isErrorEnabled()).thenReturn(true);
@@ -94,23 +94,23 @@ namespace Netty.Common.Tests.Internal.Logging
             eq(LocationAwareLogger.WARN_INT), captor.capture(), ArgumentMatchers.<Object[]>isNull(),
             ArgumentMatchers.<Throwable>isNull());
 
-            Iterator<String> logMessages = captor.getAllValues().iterator();
-            assertEquals("debug", logMessages.next());
-            assertEquals("debug1 debug2", logMessages.next());
-            assertEquals("debug1 debug2 debug3", logMessages.next());
-            assertEquals("error", logMessages.next());
-            assertEquals("error1 error2", logMessages.next());
-            assertEquals("error1 error2 error3", logMessages.next());
-            assertEquals("info", logMessages.next());
-            assertEquals("info1 info2", logMessages.next());
-            assertEquals("info1 info2 info3", logMessages.next());
-            assertEquals("trace", logMessages.next());
-            assertEquals("trace1 trace2", logMessages.next());
-            assertEquals("trace1 trace2 trace3", logMessages.next());
-            assertEquals("warn", logMessages.next());
-            assertEquals("warn1 warn2", logMessages.next());
-            assertEquals("warn1 warn2 warn3", logMessages.next());
-            assertFalse(logMessages.hasNext());
+            Iterator<string> logMessages = captor.getAllValues().iterator();
+            Assert.Equal("debug", logMessages.next());
+            Assert.Equal("debug1 debug2", logMessages.next());
+            Assert.Equal("debug1 debug2 debug3", logMessages.next());
+            Assert.Equal("error", logMessages.next());
+            Assert.Equal("error1 error2", logMessages.next());
+            Assert.Equal("error1 error2 error3", logMessages.next());
+            Assert.Equal("info", logMessages.next());
+            Assert.Equal("info1 info2", logMessages.next());
+            Assert.Equal("info1 info2 info3", logMessages.next());
+            Assert.Equal("trace", logMessages.next());
+            Assert.Equal("trace1 trace2", logMessages.next());
+            Assert.Equal("trace1 trace2 trace3", logMessages.next());
+            Assert.Equal("warn", logMessages.next());
+            Assert.Equal("warn1 warn2", logMessages.next());
+            Assert.Equal("warn1 warn2 warn3", logMessages.next());
+            Assert.False(logMessages.hasNext());
         }
     }
 }

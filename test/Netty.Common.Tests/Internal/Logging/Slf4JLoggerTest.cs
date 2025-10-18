@@ -30,7 +30,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isTraceEnabled()).thenReturn(true);
 
             InternalLogger logger = new Slf4JLogger(mockLogger);
-            assertTrue(logger.isTraceEnabled());
+            Assert.True(logger.isTraceEnabled());
 
             verify(mockLogger).getName();
             verify(mockLogger).isTraceEnabled();
@@ -44,7 +44,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isDebugEnabled()).thenReturn(true);
 
             InternalLogger logger = new Slf4JLogger(mockLogger);
-            assertTrue(logger.isDebugEnabled());
+            Assert.True(logger.isDebugEnabled());
 
             verify(mockLogger).getName();
             verify(mockLogger).isDebugEnabled();
@@ -58,7 +58,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isInfoEnabled()).thenReturn(true);
 
             InternalLogger logger = new Slf4JLogger(mockLogger);
-            assertTrue(logger.isInfoEnabled());
+            Assert.True(logger.isInfoEnabled());
 
             verify(mockLogger).getName();
             verify(mockLogger).isInfoEnabled();
@@ -72,7 +72,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isWarnEnabled()).thenReturn(true);
 
             InternalLogger logger = new Slf4JLogger(mockLogger);
-            assertTrue(logger.isWarnEnabled());
+            Assert.True(logger.isWarnEnabled());
 
             verify(mockLogger).getName();
             verify(mockLogger).isWarnEnabled();
@@ -86,7 +86,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLogger.isErrorEnabled()).thenReturn(true);
 
             InternalLogger logger = new Slf4JLogger(mockLogger);
-            assertTrue(logger.isErrorEnabled());
+            Assert.True(logger.isErrorEnabled());
 
             verify(mockLogger).getName();
             verify(mockLogger).isErrorEnabled();

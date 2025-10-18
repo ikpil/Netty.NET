@@ -23,7 +23,7 @@ namespace Netty.Common.Tests.Concurrent
         public void testDescendantThreadGroups() throws ThreadInterruptedException {
             final SecurityManager current = System.getSecurityManager();
 
-            boolean securityManagerSet = false;
+            bool securityManagerSet = false;
             try {
             try {
             // install security manager that only allows parent thread groups to mess with descendant thread groups
@@ -107,7 +107,7 @@ namespace Netty.Common.Tests.Concurrent
 
             assertNull(interrupted.get());
 
-            assertEquals(2, counter.get());
+            Assert.Equal(2, counter.get());
         } finally {
             if (securityManagerSet) {
                 System.setSecurityManager(current);
@@ -124,7 +124,7 @@ namespace Netty.Common.Tests.Concurrent
         runStickyThreadGroupTest(
                 new Callable<DefaultThreadFactory>() {
                     @Override
-                    public DefaultThreadFactory call() throws Exception {
+                    public DefaultThreadFactory call() {
                         return new DefaultThreadFactory("test", false, ThreadPriority.Normal, sticky);
                     }
                 },
@@ -138,7 +138,7 @@ namespace Netty.Common.Tests.Concurrent
     public void testDefaultThreadFactoryInheritsThreadGroupFromSecurityManager() throws ThreadInterruptedException {
         final SecurityManager current = System.getSecurityManager();
 
-        boolean securityManagerSet = false;
+        bool securityManagerSet = false;
         try {
             final ThreadGroup sticky = new ThreadGroup("sticky");
             try {
@@ -161,7 +161,7 @@ namespace Netty.Common.Tests.Concurrent
             runStickyThreadGroupTest(
                     new Callable<DefaultThreadFactory>() {
                         @Override
-                        public DefaultThreadFactory call() throws Exception {
+                        public DefaultThreadFactory call() {
                             return new DefaultThreadFactory("test");
                         }
                     },
@@ -202,7 +202,7 @@ namespace Netty.Common.Tests.Concurrent
 
         assertNull(exception.get());
 
-        assertEquals(expected, captured.get());
+        Assert.Equal(expected, captured.get());
     }
 
     // test that when DefaultThreadFactory is constructed without a sticky thread group, threads
@@ -230,7 +230,7 @@ namespace Netty.Common.Tests.Concurrent
         first.start();
         first.join();
 
-        assertEquals(firstGroup, firstCaptured.get());
+        Assert.Equal(firstGroup, firstCaptured.get());
 
         final AtomicReference<ThreadGroup> secondCaptured = new AtomicReference<ThreadGroup>();
 
@@ -249,7 +249,7 @@ namespace Netty.Common.Tests.Concurrent
         second.start();
         second.join();
 
-        assertEquals(secondGroup, secondCaptured.get());
+        Assert.Equal(secondGroup, secondCaptured.get());
     }
 
     // test that when DefaultThreadFactory is constructed without a sticky thread group, threads
@@ -271,7 +271,7 @@ namespace Netty.Common.Tests.Concurrent
         });
         first.start();
         first.join();
-        assertEquals(group, firstCaptured.get());
+        Assert.Equal(group, firstCaptured.get());
 
         ThreadGroup currentThreadGroup = Thread.CurrentThread.getThreadGroup();
         Thread second = factory.get().newThread(new IRunnable() {
@@ -281,6 +281,6 @@ namespace Netty.Common.Tests.Concurrent
             }
         });
         second.join();
-        assertEquals(currentThreadGroup, currentThreadGroup);
+        Assert.Equal(currentThreadGroup, currentThreadGroup);
     }
 }

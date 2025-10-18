@@ -24,7 +24,7 @@ namespace Netty.Common.Tests.Internal
             final byte[] bytes = new byte[64];
         ThreadLocalRandom.current().nextBytes(bytes);
             try (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), bytes.length - 1)) {
-            assertEquals(bytes[0], (byte) reader.read());
+            Assert.Equal(bytes[0], (byte) reader.read());
 
             assertThrows(IOException.class, () -> {
                 int max = bytes.length;
@@ -45,7 +45,7 @@ namespace Netty.Common.Tests.Internal
     }
     try (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), bytes.length - 1)) {
         for (byte expectedByte : bytes) {
-            assertEquals(expectedByte, (byte) reader.read());
+            Assert.Equal(expectedByte, (byte) reader.read());
         }
 
         assertThrows(IOException.class, reader::read);
@@ -62,7 +62,7 @@ namespace Netty.Common.Tests.Internal
         try (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), 8192)) {
             final byte[] buffer = new byte[10000];
             assertThat(reader.read(buffer, 0, 10000)).isEqualTo(64);
-            assertArrayEquals(bytes, Arrays.copyOfRange(buffer, 0, 64));
+            Assert.Equal(bytes, Arrays.copyOfRange(buffer, 0, 64));
         }
     }
 }

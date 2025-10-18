@@ -29,7 +29,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLog.isTraceEnabled()).thenReturn(true);
 
             InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            assertTrue(logger.isTraceEnabled());
+            Assert.True(logger.isTraceEnabled());
 
             verify(mockLog).isTraceEnabled();
         }
@@ -41,7 +41,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLog.isDebugEnabled()).thenReturn(true);
 
             InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            assertTrue(logger.isDebugEnabled());
+            Assert.True(logger.isDebugEnabled());
 
             verify(mockLog).isDebugEnabled();
         }
@@ -53,7 +53,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLog.isInfoEnabled()).thenReturn(true);
 
             InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            assertTrue(logger.isInfoEnabled());
+            Assert.True(logger.isInfoEnabled());
 
             verify(mockLog).isInfoEnabled();
         }
@@ -65,7 +65,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLog.isWarnEnabled()).thenReturn(true);
 
             InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            assertTrue(logger.isWarnEnabled());
+            Assert.True(logger.isWarnEnabled());
 
             verify(mockLog).isWarnEnabled();
         }
@@ -77,7 +77,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(mockLog.isErrorEnabled()).thenReturn(true);
 
             InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            assertTrue(logger.isErrorEnabled());
+            Assert.True(logger.isErrorEnabled());
 
             verify(mockLog).isErrorEnabled();
         }

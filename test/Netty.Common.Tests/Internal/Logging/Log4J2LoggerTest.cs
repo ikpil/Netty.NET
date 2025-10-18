@@ -34,7 +34,7 @@ namespace Netty.Common.Tests.Internal.Logging
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void logMessage(String fqcn, Level level, Marker marker, Message message, Throwable t) {
+            public void logMessage(string fqcn, Level level, Marker marker, Message message, Throwable t) {
             result.put("level", level.name());
             result.put("t", t);
             super.logMessage(fqcn, level, marker, message, t);
@@ -53,7 +53,7 @@ namespace Netty.Common.Tests.Internal.Logging
     }
 
     @Override
-    protected void setLevelEnable(InternalLogLevel level, boolean enable) {
+    protected void setLevelEnable(InternalLogLevel level, bool enable) {
         Level targetLevel = Level.valueOf(level.name());
         if (!enable) {
             targetLevel = DISABLING_LEVEL.get(level);
@@ -63,10 +63,10 @@ namespace Netty.Common.Tests.Internal.Logging
     }
 
     @Override
-    protected void assertResult(InternalLogLevel level, String format, Throwable t, Object... args) {
+    protected void assertResult(InternalLogLevel level, string format, Throwable t, Object... args) {
         super.assertResult(level, format, t, args);
-        assertEquals(t, result.get("t"));
-        assertEquals(level.name(), result.get("level"));
+        Assert.Equal(t, result.get("t"));
+        Assert.Equal(level.name(), result.get("level"));
     }
     }
 }

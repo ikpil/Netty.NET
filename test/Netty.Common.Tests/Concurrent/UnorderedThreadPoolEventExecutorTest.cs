@@ -19,7 +19,7 @@ namespace Netty.Common.Tests.Concurrent
 
         // See https://github.com/netty/netty/issues/6507
         [Fact]
-        public void testNotEndlessExecute() throws Exception {
+        public void testNotEndlessExecute() {
             UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
 
             try {
@@ -50,7 +50,7 @@ namespace Netty.Common.Tests.Concurrent
 
 }).addListener(new FutureListener<Object>() {
                 @Override
-                public void operationComplete(Future<Object> future) throws Exception {
+                public void operationComplete(Future<Object> future) {
                     latch.countDown();
                 }
             });
@@ -61,7 +61,7 @@ namespace Netty.Common.Tests.Concurrent
             // Now just check if the queue stays empty multiple times. This is needed as the submit to execute(...)
             // by DefaultPromise may happen in an async fashion
             for (int i = 0; i < 10000; i++) {
-                assertTrue(executor.getQueue().isEmpty());
+                Assert.True(executor.getQueue().isEmpty());
             }
         } finally {
             executor.shutdownGracefully();
@@ -88,47 +88,47 @@ namespace Netty.Common.Tests.Concurrent
     }
 
     [Fact]
-    public void testGetReturnsCorrectValueOnSuccess() throws Exception {
+    public void testGetReturnsCorrectValueOnSuccess() {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         try {
-            final String expected = "expected";
-            Future<String> f = executor.submit(new Callable<String>() {
+            final string expected = "expected";
+            Future<string> f = executor.submit(new Callable<string>() {
                 @Override
-                public String call() {
+                public string call() {
                     return expected;
                 }
             });
 
-            assertEquals(expected, f.get());
+            Assert.Equal(expected, f.get());
         } finally {
             executor.shutdownGracefully();
         }
     }
 
     [Fact]
-    public void testGetReturnsCorrectValueOnFailure() throws Exception {
+    public void testGetReturnsCorrectValueOnFailure() {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         try {
             final Exception cause = new Exception();
-            Future<String> f = executor.submit(new Callable<String>() {
+            Future<string> f = executor.submit(new Callable<string>() {
                 @Override
-                public String call() {
+                public string call() {
                     throw cause;
                 }
             });
 
-            assertSame(cause, f.await().cause());
+            Assert.Same(cause, f.await().cause());
         } finally {
             executor.shutdownGracefully();
         }
     }
 
     [Fact]
-    void tasksRunningInUnorderedExecutorAreInEventLoop() throws Exception {
+    void tasksRunningInUnorderedExecutorAreInEventLoop() {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         try {
             Future<Boolean> future = executor.submit(() -> executor.inEventLoop());
-            assertTrue(future.get());
+            Assert.True(future.get());
         } finally {
             executor.shutdownGracefully();
         }

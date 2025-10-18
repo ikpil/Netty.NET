@@ -26,7 +26,7 @@ public class RecyclerFastThreadLocalTest extends RecyclerTest {
     @Override
     [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced() throws Exception {
+    public void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced() {
         final Recycler<HandledObject> recycler = newRecycler(1024);
         final AtomicBoolean collected = new AtomicBoolean();
         final AtomicReference<HandledObject> reference = new AtomicReference<HandledObject>();
@@ -44,7 +44,7 @@ public class RecyclerFastThreadLocalTest extends RecyclerTest {
                 collected.set(true);
             }
         };
-        assertFalse(collected.get());
+        Assert.False(collected.get());
         thread.start();
         thread.join();
 

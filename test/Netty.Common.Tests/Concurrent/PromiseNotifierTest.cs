@@ -40,7 +40,7 @@ public class PromiseNotifierTest {
     }
 
     [Fact]
-    public void testListenerSuccess() throws Exception {
+    public void testListenerSuccess() {
         //@SuppressWarnings("unchecked")
         Promise<Void> p1 = mock(Promise.class);
         //@SuppressWarnings("unchecked")
@@ -63,7 +63,7 @@ public class PromiseNotifierTest {
     }
 
     [Fact]
-    public void testListenerFailure() throws Exception {
+    public void testListenerFailure() {
         //@SuppressWarnings("unchecked")
         Promise<Void> p1 = mock(Promise.class);
         //@SuppressWarnings("unchecked")
@@ -93,10 +93,10 @@ public class PromiseNotifierTest {
         Promise<Void> p2 = ImmediateEventExecutor.INSTANCE.newPromise();
 
         Promise<Void> returned = PromiseNotifier.cascade(p1, p2);
-        assertSame(p1, returned);
+        Assert.Same(p1, returned);
 
-        assertTrue(returned.cancel(false));
-        assertTrue(returned.isCancelled());
-        assertTrue(p2.isCancelled());
+        Assert.True(returned.cancel(false));
+        Assert.True(returned.isCancelled());
+        Assert.True(p2.isCancelled());
     }
 }
