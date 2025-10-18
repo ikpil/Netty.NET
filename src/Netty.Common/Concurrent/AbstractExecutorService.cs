@@ -93,85 +93,87 @@ public abstract class AbstractExecutorService : IExecutorService
      */
     private T doInvokeAny<T>(ICollection<T> tasks, bool timed, long nanos) where T : ICallable<T>
     {
-        if (tasks == null)
-            throw new NullReferenceException();
-        int ntasks = tasks.Count;
-        if (ntasks == 0)
-            throw new ArgumentException();
-
-        var futures = new List<QueueingTaskNode<T>>(ntasks);
-        ExecutorCompletionService<T> ecs =
-            new ExecutorCompletionService<T>(this);
-
-        // For efficiency, especially in executors with limited
-        // parallelism, check to see if previously submitted tasks are
-        // done before submitting more of them. This interleaving
-        // plus the exception mechanics account for messiness of main
-        // loop.
-
-        try
-        {
-            // Record exceptions so that if we fail to obtain any
-            // result, we can throw the last exception we got.
-            AggregateException ee = null;
-            long deadline = timed ? SystemTimer.nanoTime() + nanos : 0L;
-            IEnumerable<T> it = tasks;
-
-            // Start one task for sure; the rest incrementally
-            futures.Add(ecs.submit(it.next()));
-            --ntasks;
-            int active = 1;
-
-            for (;;)
-            {
-                Task<T> f = ecs.poll();
-                if (f == null)
-                {
-                    if (ntasks > 0)
-                    {
-                        --ntasks;
-                        futures.Add(ecs.submit(it.next()));
-                        ++active;
-                    }
-                    else if (active == 0)
-                        break;
-                    else if (timed)
-                    {
-                        f = ecs.poll(nanos, NANOSECONDS);
-                        if (f == null)
-                            throw new TimeoutException();
-                        nanos = deadline - SystemTimer.nanoTime();
-                    }
-                    else
-                        f = ecs.take();
-                }
-
-                if (f != null)
-                {
-                    --active;
-                    try
-                    {
-                        return f.get();
-                    }
-                    catch (AggregateException eex)
-                    {
-                        ee = eex;
-                    }
-                    catch (Exception rex)
-                    {
-                        ee = new AggregateException(rex);
-                    }
-                }
-            }
-
-            if (ee == null)
-                ee = new AggregateException();
-            throw ee;
-        }
-        finally
-        {
-            cancelAll(futures);
-        }
+        throw new NotImplementedException();
+            
+        // if (tasks == null)
+        //     throw new NullReferenceException();
+        // int ntasks = tasks.Count;
+        // if (ntasks == 0)
+        //     throw new ArgumentException();
+        //
+        // var futures = new List<QueueingTaskNode<T>>(ntasks);
+        // ExecutorCompletionService<T> ecs =
+        //     new ExecutorCompletionService<T>(this);
+        //
+        // // For efficiency, especially in executors with limited
+        // // parallelism, check to see if previously submitted tasks are
+        // // done before submitting more of them. This interleaving
+        // // plus the exception mechanics account for messiness of main
+        // // loop.
+        //
+        // try
+        // {
+        //     // Record exceptions so that if we fail to obtain any
+        //     // result, we can throw the last exception we got.
+        //     AggregateException ee = null;
+        //     long deadline = timed ? SystemTimer.nanoTime() + nanos : 0L;
+        //     IEnumerable<T> it = tasks;
+        //
+        //     // Start one task for sure; the rest incrementally
+        //     futures.Add(ecs.submit(it.next()));
+        //     --ntasks;
+        //     int active = 1;
+        //
+        //     for (;;)
+        //     {
+        //         Task<T> f = ecs.poll();
+        //         if (f == null)
+        //         {
+        //             if (ntasks > 0)
+        //             {
+        //                 --ntasks;
+        //                 futures.Add(ecs.submit(it.next()));
+        //                 ++active;
+        //             }
+        //             else if (active == 0)
+        //                 break;
+        //             else if (timed)
+        //             {
+        //                 f = ecs.poll(nanos, NANOSECONDS);
+        //                 if (f == null)
+        //                     throw new TimeoutException();
+        //                 nanos = deadline - SystemTimer.nanoTime();
+        //             }
+        //             else
+        //                 f = ecs.take();
+        //         }
+        //
+        //         if (f != null)
+        //         {
+        //             --active;
+        //             try
+        //             {
+        //                 return f.get();
+        //             }
+        //             catch (AggregateException eex)
+        //             {
+        //                 ee = eex;
+        //             }
+        //             catch (Exception rex)
+        //             {
+        //                 ee = new AggregateException(rex);
+        //             }
+        //         }
+        //     }
+        //
+        //     if (ee == null)
+        //         ee = new AggregateException();
+        //     throw ee;
+        // }
+        // finally
+        // {
+        //     cancelAll(futures);
+        // }
     }
 
     public virtual T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>

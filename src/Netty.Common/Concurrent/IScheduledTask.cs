@@ -35,7 +35,6 @@ public interface IScheduledTask : IComparable<IScheduledTask>, IRunnable
     long delayNanos(long nanos);
     long delayNanos();
     IScheduledTask setId(long id);
-    TaskAwaiter GetAwaiter();
     void setConsumed();
 }
 
@@ -43,4 +42,5 @@ public interface IScheduledTask<T> : IScheduledTask
 {
     T Result { get; }
     Task<T> Completion { get; }
+    TaskAwaiter<T> GetAwaiter();
 }

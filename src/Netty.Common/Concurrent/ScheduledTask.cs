@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -100,6 +99,26 @@ public class ScheduledTask<T> : IScheduledTask<T>
         }
     }
 
+    private T runTask()
+    {
+        throw new NotImplementedException();
+    }
+
+    private bool setUncancellableInternal()
+    {
+        throw new NotImplementedException();
+    }
+
+    private bool setSuccessInternal(T result)
+    {
+        throw new NotImplementedException();
+    }
+
+    private bool setFailureInternal(Exception e)
+    {
+        throw new NotImplementedException();
+    }
+
     public virtual void run()
     {
         Debug.Assert(Executor.inEventLoop());
@@ -124,7 +143,7 @@ public class ScheduledTask<T> : IScheduledTask<T>
             {
                 if (setUncancellableInternal())
                 {
-                    V result = runTask();
+                    T result = runTask();
                     setSuccessInternal(result);
                 }
             }
@@ -211,7 +230,7 @@ public class ScheduledTask<T> : IScheduledTask<T>
     }
 
 
-    public TaskAwaiter GetAwaiter()
+    public TaskAwaiter<T> GetAwaiter()
     {
         return Completion.GetAwaiter();
     }
