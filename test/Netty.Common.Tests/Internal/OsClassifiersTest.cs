@@ -55,7 +55,7 @@ public class OsClassifiersTest {
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, ",");
         final Set<string> available = new LinkedHashSet<>(2);
         Assertions.assertThrows(ArgumentException.class,
-                () -> PlatformDependent.addPropertyOsClassifiers(available));
+                () => PlatformDependent.addPropertyOsClassifiers(available));
     }
 
     [Fact]
@@ -86,6 +86,6 @@ public class OsClassifiersTest {
         systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "manjaro,arch,slackware");
         final Set<string> available = new LinkedHashSet<>(2);
         Assertions.assertThrows(ArgumentException.class,
-                () -> PlatformDependent.addPropertyOsClassifiers(available));
+                () => PlatformDependent.addPropertyOsClassifiers(available));
     }
 }

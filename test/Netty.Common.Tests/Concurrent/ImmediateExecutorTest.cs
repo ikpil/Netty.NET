@@ -19,7 +19,7 @@ public class ImmediateExecutorTest {
 
     [Fact]
     public void testExecuteNullRunnable() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 ImmediateExecutor.INSTANCE.execute(null);

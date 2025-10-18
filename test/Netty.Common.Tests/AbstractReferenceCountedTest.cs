@@ -24,16 +24,16 @@ public class AbstractReferenceCountedTest
     [Fact]
     public void testRetainOverflow() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        referenceCounted.setRefCnt(Integer.MAX_VALUE);
-        Assert.Equal(Integer.MAX_VALUE, referenceCounted.refCnt());
-        assertThrows(IllegalReferenceCountException.class, referenceCounted::retain);
+        referenceCounted.setRefCnt(int.MaxValue);
+        Assert.Equal(int.MaxValue, referenceCounted.refCnt());
+        Assert.Throws<IllegalReferenceCountException>(referenceCounted.retain);
     }
 
     [Fact]
     public void testRetainOverflow2() {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         Assert.Equal(1, referenceCounted.refCnt());
-        assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.retain(Integer.MAX_VALUE));
+        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.retain(int.MaxValue));
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class AbstractReferenceCountedTest
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(0);
         Assert.Equal(0, referenceCounted.refCnt());
-        assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.release(Integer.MAX_VALUE));
+        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.release(int.MaxValue));
     }
 
     [Fact]
@@ -50,9 +50,9 @@ public class AbstractReferenceCountedTest
         Assert.True(referenceCounted.release());
         try {
             referenceCounted.release(1);
-            fail("IllegalReferenceCountException didn't occur");
+            Assert.Fail("IllegalReferenceCountException didn't occur");
         } catch (IllegalReferenceCountException e) {
-            Assert.Equal("refCnt: 0, decrement: 1", e.getMessage());
+            Assert.Equal("refCnt: 0, decrement: 1", e.Message);
         }
     }
 
@@ -61,7 +61,7 @@ public class AbstractReferenceCountedTest
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         Assert.True(referenceCounted.release());
         Assert.Equal(0, referenceCounted.refCnt());
-        assertThrows(IllegalReferenceCountException.class, referenceCounted::retain);
+        Assert.Throws<IllegalReferenceCountException>(referenceCounted.retain);
     }
 
     [Fact]
@@ -69,11 +69,10 @@ public class AbstractReferenceCountedTest
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         Assert.True(referenceCounted.release());
         Assert.Equal(0, referenceCounted.refCnt());
-        assertThrows(IllegalReferenceCountException.class, () -> referenceCounted.retain(2));
+        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.retain(2));
     }
 
-    [Fact]
-    @Timeout(value = 30000, unit = TimeUnit.MILLISECONDS)
+    [Fact(Timeout = 30000)]
     public void testRetainFromMultipleThreadsThrowsReferenceCountException() {
         int threads = 4;
         Queue<Future<?>> futures = new ArrayDeque<>(threads);
@@ -87,8 +86,8 @@ public class AbstractReferenceCountedTest
                 Assert.True(referenceCounted.release());
 
                 for (int a = 0; a < threads; a++) {
-                    int retainCnt = ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
-                    futures.add(service.submit(() -> {
+                    int retainCnt = ThreadLocalRandom.current().nextInt(1, int.MaxValue);
+                    futures.add(service.submit(()() => {
                         try {
                             retainLatch.await();
                             try {
@@ -135,7 +134,7 @@ public class AbstractReferenceCountedTest
                 for (int a = 0; a < threads; a++) {
                     AtomicInteger releaseCnt = new AtomicInteger(0);
 
-                    futures.add(service.submit(() -> {
+                    futures.add(service.submit(()() => {
                         try {
                             releaseLatch.await();
                             try {

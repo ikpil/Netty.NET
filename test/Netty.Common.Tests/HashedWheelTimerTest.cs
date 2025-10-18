@@ -25,7 +25,7 @@ public class HashedWheelTimerTest {
         final Timeout timeout = timer.newTimeout(new ITimerTask() {
             @Override
             public void run(Timeout timeout) {
-                fail("This should not have run");
+                Assert.Fail("This should not have run");
                 barrier.countDown();
             }
         }, 10, TimeUnit.SECONDS);
@@ -97,7 +97,7 @@ public class HashedWheelTimerTest {
 
         try {
             timer.newTimeout(createNoOpTimerTask(), 1, TimeUnit.MILLISECONDS);
-            fail("Expected exception didn't occur.");
+            Assert.Fail("Expected exception didn't occur.");
         } catch (IllegalStateException ignored) {
             // expected
         }
@@ -188,7 +188,7 @@ public class HashedWheelTimerTest {
         timer.newTimeout(createNoOpTimerTask(), 5, TimeUnit.SECONDS);
         try {
             timer.newTimeout(createNoOpTimerTask(), 1, TimeUnit.MILLISECONDS);
-            fail("Timer allowed adding 3 timeouts when maxPendingTimeouts was 2");
+            Assert.Fail("Timer allowed adding 3 timeouts when maxPendingTimeouts was 2");
         } catch (RejectedExecutionException e) {
             // Expected
         } finally {

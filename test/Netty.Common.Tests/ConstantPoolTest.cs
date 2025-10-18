@@ -33,7 +33,7 @@ public class ConstantPoolTest {
 
     [Fact]
     public void testCannotProvideNullName() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 pool.valueOf(null);

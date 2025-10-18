@@ -47,7 +47,7 @@ public class ThreadDeathWatcherTest {
 
         try {
             ThreadDeathWatcher.watch(t, task);
-            fail("must reject to watch a non-alive thread.");
+            Assert.Fail("must reject to watch a non-alive thread.");
         } catch (ArgumentException e) {
             // expected
         }

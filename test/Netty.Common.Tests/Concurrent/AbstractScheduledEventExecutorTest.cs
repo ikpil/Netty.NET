@@ -64,7 +64,7 @@ public class AbstractScheduledEventExecutorTest
     [Fact]
     public void testScheduleAtFixedRateRunnableZero() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 executor.scheduleAtFixedRate(TEST_RUNNABLE, 0, 0, TimeUnit.DAYS);
@@ -75,7 +75,7 @@ public class AbstractScheduledEventExecutorTest
     [Fact]
     public void testScheduleAtFixedRateRunnableNegative() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 executor.scheduleAtFixedRate(TEST_RUNNABLE, 0, -1, TimeUnit.DAYS);
@@ -86,7 +86,7 @@ public class AbstractScheduledEventExecutorTest
     [Fact]
     public void testScheduleWithFixedDelayZero() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 executor.scheduleWithFixedDelay(TEST_RUNNABLE, 0, -1, TimeUnit.DAYS);
@@ -97,7 +97,7 @@ public class AbstractScheduledEventExecutorTest
     [Fact]
     public void testScheduleWithFixedDelayNegative() {
         final TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 executor.scheduleWithFixedDelay(TEST_RUNNABLE, 0, -1, TimeUnit.DAYS);

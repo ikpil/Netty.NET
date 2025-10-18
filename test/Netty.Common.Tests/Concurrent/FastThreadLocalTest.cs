@@ -165,7 +165,7 @@ public void testMultipleSetRemove_multipleThreadLocal() {
 public void testWrappedProperties() {
     Assert.False(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
     Assert.False(FastThreadLocalThread.currentThreadHasFastThreadLocal());
-    FastThreadLocalThread.runWithFastThreadLocal(() -> {
+    FastThreadLocalThread.runWithFastThreadLocal(()() => {
         Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
         Assert.True(FastThreadLocalThread.currentThreadHasFastThreadLocal());
     });
@@ -182,7 +182,7 @@ class Worker implements IRunnable {
     Assert.False(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
     Assert.False(FastThreadLocalThread.currentThreadHasFastThreadLocal());
     semaphore.acquireUninterruptibly();
-    FastThreadLocalThread.runWithFastThreadLocal(() -> {
+    FastThreadLocalThread.runWithFastThreadLocal(()() => {
         Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
         Assert.True(FastThreadLocalThread.currentThreadHasFastThreadLocal());
         semaphore.acquireUninterruptibly();
@@ -273,7 +273,7 @@ throws Exception {
     };
     if (wrap) {
         IRunnable r = runnable;
-        runnable = () -> FastThreadLocalThread.runWithFastThreadLocal(r);
+        runnable = () => FastThreadLocalThread.runWithFastThreadLocal(r);
     }
     Thread thread = fastThreadLocal ? new FastThreadLocalThread(runnable) : new Thread(runnable);
     thread.start();
@@ -312,7 +312,7 @@ private static final class TestFastThreadLocal extends FastThreadLocal<string> {
 
 [Fact]
 public void testConstructionWithIndex() {
-    int ARRAY_LIST_CAPACITY_MAX_SIZE = Integer.MAX_VALUE - 8;
+    int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
     Field nextIndexField =
         InternalThreadLocalMap.class.getDeclaredField("nextIndex");
     nextIndexField.setAccessible(true);

@@ -77,23 +77,23 @@ public class DefaultPromiseTest {
 
 @Override
 public ScheduledFuture<?> schedule(IRunnable command, long delay, TimeUnit unit) {
-    return fail("Cannot schedule commands");
+    return Assert.Fail("Cannot schedule commands");
 }
 
 @Override
 public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeUnit unit) {
-    return fail("Cannot schedule commands");
+    return Assert.Fail("Cannot schedule commands");
 }
 
 @Override
 public ScheduledFuture<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeUnit unit) {
-    return fail("Cannot schedule commands");
+    return Assert.Fail("Cannot schedule commands");
 }
 
 @Override
 public ScheduledFuture<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay,
     TimeUnit unit) {
-    return fail("Cannot schedule commands");
+    return Assert.Fail("Cannot schedule commands");
 }
 
 @Override
@@ -103,7 +103,7 @@ public bool inEventLoop(Thread thread) {
 
 @Override
 public void execute(IRunnable command) {
-    fail("Cannot schedule commands");
+    Assert.Fail("Cannot schedule commands");
 }
 
 }
@@ -141,7 +141,7 @@ public void testFailureDoesNotScheduleWhenNoListeners() {
 public void testCancellationExceptionIsThrownWhenBlockingGet() {
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     Assert.True(promise.cancel(false));
-    assertThrows(TaskCanceledException.class, new Executable() {
+    Assert.Throws<TaskCanceledException>(new Executable() {
         @Override
         public void execute() throws Throwable {
         promise.get();
@@ -153,7 +153,7 @@ public void testCancellationExceptionIsThrownWhenBlockingGet() {
 public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout() {
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     Assert.True(promise.cancel(false));
-    assertThrows(TaskCanceledException.class, new Executable() {
+    Assert.Throws<TaskCanceledException>(new Executable() {
         @Override
         public void execute() throws Throwable {
         promise.get(1, TimeUnit.SECONDS);

@@ -62,7 +62,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
     [Fact]
     public void testAddNullPromise() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 combiner.add(null);
@@ -72,7 +72,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
     [Fact]
     public void testAddAllNullPromise() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 combiner.addAll(null);
@@ -83,7 +83,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     [Fact]
     public void testAddAfterFinish() {
         combiner.finish(p1);
-        assertThrows(IllegalStateException.class, new Executable() {
+        Assert.Throws<IllegalStateException>(new Executable() {
             @Override
             public void execute() {
                 combiner.add(p2);
@@ -95,7 +95,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     [Fact]
     public void testAddAllAfterFinish() {
         combiner.finish(p1);
-        assertThrows(IllegalStateException.class, new Executable() {
+        Assert.Throws<IllegalStateException>(new Executable() {
             @Override
             public void execute() {
                 combiner.addAll(p2);
@@ -107,7 +107,7 @@ namespace Netty.Common.Tests.Concurrent;public class PromiseCombinerTest {
     [Fact]
     public void testFinishCalledTwiceThrows() {
         combiner.finish(p1);
-        assertThrows(IllegalStateException.class, new Executable() {
+        Assert.Throws<IllegalStateException>(new Executable() {
             @Override
             public void execute() {
                 combiner.finish(p1);

@@ -52,7 +52,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     private readonly IThreadFactory _threadFactory;
     private readonly TaskRunner _taskRunner;
     private readonly AtomicBoolean _started = new AtomicBoolean();
-    private volatile Thread _thread;
+    internal volatile Thread _thread;
 
     private readonly TaskCompletionSource<Void> _terminationSource;
 

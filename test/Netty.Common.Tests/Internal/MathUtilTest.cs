@@ -38,7 +38,7 @@ public class MathUtilTest {
         Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo((1 << 30) - 1));
         Assert.Equal(1, safeFindNextPositivePowerOfTwo(-1));
         Assert.Equal(1, safeFindNextPositivePowerOfTwo(-10000));
-        Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo(Integer.MAX_VALUE));
+        Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo(int.MaxValue));
         Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo((1 << 30) + 1));
         Assert.Equal(1, safeFindNextPositivePowerOfTwo(Integer.MIN_VALUE));
         Assert.Equal(1, safeFindNextPositivePowerOfTwo(Integer.MIN_VALUE + 1));
@@ -50,19 +50,19 @@ public class MathUtilTest {
         Assert.False(isOutOfBounds(0, 0, 1));
         Assert.False(isOutOfBounds(0, 1, 1));
         Assert.True(isOutOfBounds(1, 1, 1));
-        Assert.True(isOutOfBounds(Integer.MAX_VALUE, 1, 1));
-        Assert.True(isOutOfBounds(Integer.MAX_VALUE, Integer.MAX_VALUE, 1));
-        Assert.True(isOutOfBounds(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE));
-        Assert.False(isOutOfBounds(0, Integer.MAX_VALUE, Integer.MAX_VALUE));
-        Assert.False(isOutOfBounds(0, Integer.MAX_VALUE - 1, Integer.MAX_VALUE));
-        Assert.True(isOutOfBounds(0, Integer.MAX_VALUE, Integer.MAX_VALUE - 1));
-        Assert.False(isOutOfBounds(Integer.MAX_VALUE - 1, 1, Integer.MAX_VALUE));
-        Assert.True(isOutOfBounds(Integer.MAX_VALUE - 1, 1, Integer.MAX_VALUE - 1));
-        Assert.True(isOutOfBounds(Integer.MAX_VALUE - 1, 2, Integer.MAX_VALUE));
-        Assert.True(isOutOfBounds(1, Integer.MAX_VALUE, Integer.MAX_VALUE));
+        Assert.True(isOutOfBounds(int.MaxValue, 1, 1));
+        Assert.True(isOutOfBounds(int.MaxValue, int.MaxValue, 1));
+        Assert.True(isOutOfBounds(int.MaxValue, int.MaxValue, int.MaxValue));
+        Assert.False(isOutOfBounds(0, int.MaxValue, int.MaxValue));
+        Assert.False(isOutOfBounds(0, int.MaxValue - 1, int.MaxValue));
+        Assert.True(isOutOfBounds(0, int.MaxValue, int.MaxValue - 1));
+        Assert.False(isOutOfBounds(int.MaxValue - 1, 1, int.MaxValue));
+        Assert.True(isOutOfBounds(int.MaxValue - 1, 1, int.MaxValue - 1));
+        Assert.True(isOutOfBounds(int.MaxValue - 1, 2, int.MaxValue));
+        Assert.True(isOutOfBounds(1, int.MaxValue, int.MaxValue));
         Assert.True(isOutOfBounds(0, 1, Integer.MIN_VALUE));
         Assert.True(isOutOfBounds(0, 1, -1));
-        Assert.True(isOutOfBounds(0, Integer.MAX_VALUE, 0));
+        Assert.True(isOutOfBounds(0, int.MaxValue, 0));
     }
 
 }

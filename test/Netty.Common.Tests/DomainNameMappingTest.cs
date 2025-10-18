@@ -23,7 +23,7 @@ public class DomainNameMappingTest {
 
     [Fact]
     public void testNullDefaultValueInDeprecatedApi() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 new DomainNameMapping<string>(null);
@@ -33,7 +33,7 @@ public class DomainNameMappingTest {
 
     [Fact]
     public void testNullDomainNamePatternsAreForbiddenInDeprecatedApi() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 new DomainNameMapping<string>("NotFound").add(null, "Some value");
@@ -43,7 +43,7 @@ public class DomainNameMappingTest {
 
     [Fact]
     public void testNullValuesAreForbiddenInDeprecatedApi() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 new DomainNameMapping<string>("NotFound").add("Some key", null);
@@ -116,7 +116,7 @@ public class DomainNameMappingTest {
 
     [Fact]
     public void testNullDefaultValue() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 new DomainNameMappingBuilder<string>(null);
@@ -126,7 +126,7 @@ public class DomainNameMappingTest {
 
     [Fact]
     public void testNullDomainNamePatternsAreForbidden() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 new DomainNameMappingBuilder<string>("NotFound").add(null, "Some value");
@@ -137,7 +137,7 @@ public class DomainNameMappingTest {
     [Fact]
     public void testNullValuesAreForbidden() {
 
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 new DomainNameMappingBuilder<string>("NotFound").add("Some key", null);

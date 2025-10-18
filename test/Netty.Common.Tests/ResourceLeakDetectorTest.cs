@@ -134,7 +134,7 @@ public void testLeakBrokenHint() throws Throwable {
     };
     try {
         leakResource();
-        fail("expected failure");
+        Assert.Fail("expected failure");
     } catch (Exception e) {
         assertThat(e.getMessage()).isEqualTo("expected failure");
     }
@@ -186,7 +186,7 @@ public bool close() {
 private static final class DefaultResource implements Resource {
     // Sample every allocation
     static final TestResourceLeakDetector<Resource> detector = new TestResourceLeakDetector<Resource>(
-        Resource.class, 1, Integer.MAX_VALUE);
+        Resource.class, 1, int.MaxValue);
     static final CreationRecordLeakDetector<Resource> detectorWithSetupHint =
         new CreationRecordLeakDetector<Resource>(Resource.class, 1);
 

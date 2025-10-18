@@ -20,7 +20,7 @@ public class PromiseNotifierTest {
 
     [Fact]
     public void testNullPromisesArray() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 new PromiseNotifier<Void, Future<Void>>((Promise<Void>[]) null);
@@ -31,7 +31,7 @@ public class PromiseNotifierTest {
     //@SuppressWarnings("unchecked")
     [Fact]
     public void testNullPromiseInArray() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 new PromiseNotifier<Void, Future<Void>>((Promise<Void>) null);

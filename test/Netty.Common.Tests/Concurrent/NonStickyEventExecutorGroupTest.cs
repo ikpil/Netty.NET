@@ -21,7 +21,7 @@ public class NonStickyEventExecutorGroupTest {
     public void testInvalidGroup() {
         final EventExecutorGroup group = new DefaultEventExecutorGroup(1);
         try {
-            assertThrows(ArgumentException.class, new Executable() {
+            Assert.Throws<ArgumentException>(new Executable() {
                 @Override
                 public void execute() {
                     new NonStickyEventExecutorGroup(group);
@@ -37,7 +37,7 @@ public class NonStickyEventExecutorGroupTest {
         params.add(new Object[] {64});
         params.add(new Object[] {256});
         params.add(new Object[] {1024});
-        params.add(new Object[] {Integer.MAX_VALUE});
+        params.add(new Object[] {int.MaxValue});
         return params;
     }
 

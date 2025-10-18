@@ -90,7 +90,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalid7HexGroupsA() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00-AA-11-BB-22-CC-FF");
@@ -100,7 +100,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalid7HexGroupsB() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00:AA:11:BB:22:CC:FF");
@@ -110,7 +110,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalidEUI48MixedSeparatorA() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00-AA:11-BB-22-CC");
@@ -120,7 +120,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalidEUI48MixedSeparatorB() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00:AA-11:BB:22:CC");
@@ -130,7 +130,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalidEUI64MixedSeparatorA() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00-AA-11-FF-FE-BB-22:CC");
@@ -140,7 +140,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalidEUI64MixedSeparatorB() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00:AA:11:FF:FE:BB:22-CC");
@@ -150,7 +150,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalidEUI48TrailingSeparatorA() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00-AA-11-BB-22-CC-");
@@ -160,7 +160,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalidEUI48TrailingSeparatorB() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00:AA:11:BB:22:CC:");
@@ -170,7 +170,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalidEUI64TrailingSeparatorA() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00-AA-11-FF-FE-BB-22-CC-");
@@ -180,7 +180,7 @@ public class MacAddressUtilTest {
 
     [Fact]
     public void testParseMacInvalidEUI64TrailingSeparatorB() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 parseMAC("00:AA:11:FF:FE:BB:22:CC:");

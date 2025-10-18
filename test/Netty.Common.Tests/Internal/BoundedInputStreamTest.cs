@@ -26,7 +26,7 @@ namespace Netty.Common.Tests.Internal
             try (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), bytes.length - 1)) {
             Assert.Equal(bytes[0], (byte) reader.read());
 
-            assertThrows(IOException.class, () -> {
+            Assert.Throws<IOException>(()() => {
                 int max = bytes.length;
                 do {
                     int result = reader.read(new byte[max], 0, max);
@@ -48,8 +48,8 @@ namespace Netty.Common.Tests.Internal
             Assert.Equal(expectedByte, (byte) reader.read());
         }
 
-        assertThrows(IOException.class, reader::read);
-        assertThrows(IOException.class, () -> reader.read(new byte[1], 0, 1));
+        Assert.Throws<IOException>(reader::read);
+        Assert.Throws<IOException>(()() => reader.read(new byte[1], 0, 1));
     }
 }
 

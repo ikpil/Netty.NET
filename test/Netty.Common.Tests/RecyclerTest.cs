@@ -86,7 +86,7 @@ public void testMultipleRecycle() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     object.recycle();
-    assertThrows(IllegalStateException.class, new Executable() {
+    Assert.Throws<IllegalStateException>(new Executable() {
         @Override
         public void execute() {
         object.recycle();

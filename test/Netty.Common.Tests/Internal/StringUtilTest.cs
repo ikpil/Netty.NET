@@ -138,7 +138,7 @@ public class StringUtilTest {
 
     [Fact]
     public void escapeCsvNull() {
-        assertThrows(NullReferenceException.class, new Executable() {
+        Assert.Throws<NullReferenceException>(new Executable() {
             @Override
             public void execute() {
                 StringUtil.escapeCsv(null);
@@ -387,7 +387,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvWithSingleQuote() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsv("\"");
@@ -397,7 +397,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvWithOddQuote() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsv("\"\"\"");
@@ -407,7 +407,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvWithCRAndWithoutQuote() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsv("\r");
@@ -417,7 +417,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvWithLFAndWithoutQuote() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsv("\n");
@@ -427,7 +427,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvWithCommaAndWithoutQuote() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsv(",");
@@ -469,7 +469,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvFieldsWithCRWithoutQuote() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("a,\r");
@@ -479,7 +479,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvFieldsWithLFWithoutQuote() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("a,\r");
@@ -489,7 +489,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvFieldsWithQuote() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("a,\"");
@@ -499,7 +499,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvFieldsWithQuote2() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("\",a");
@@ -509,7 +509,7 @@ public class StringUtilTest {
 
     [Fact]
     public void unescapeCsvFieldsWithQuote3() {
-        assertThrows(ArgumentException.class, new Executable() {
+        Assert.Throws<ArgumentException>(new Executable() {
             @Override
             public void execute() {
                 unescapeCsvFields("a\"b,a");
@@ -604,7 +604,7 @@ public class StringUtilTest {
         Assert.Equal(3, indexOfWhiteSpace("foo\r\nbar", 1));
         Assert.Equal(-1, indexOfWhiteSpace("foo\r\nbar", 10));
         Assert.Equal(7, indexOfWhiteSpace("foo\tbar\r\n", 6));
-        Assert.Equal(-1, indexOfWhiteSpace("foo\tbar\r\n", Integer.MAX_VALUE));
+        Assert.Equal(-1, indexOfWhiteSpace("foo\tbar\r\n", int.MaxValue));
     }
 
     [Fact]
@@ -617,6 +617,6 @@ public class StringUtilTest {
         Assert.Equal(2, indexOfNonWhiteSpace(" \tfoo\r\n", 1));
         Assert.Equal(4, indexOfNonWhiteSpace(" \tfoo\r\n", 4));
         Assert.Equal(-1, indexOfNonWhiteSpace(" \tfoo\r\n", 10));
-        Assert.Equal(-1, indexOfNonWhiteSpace(" \tfoo\r\n", Integer.MAX_VALUE));
+        Assert.Equal(-1, indexOfNonWhiteSpace(" \tfoo\r\n", int.MaxValue));
     }
 }

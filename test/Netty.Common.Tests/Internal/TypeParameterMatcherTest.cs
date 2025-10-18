@@ -35,7 +35,7 @@ public class TypeParameterMatcherTest {
 
     [Fact]
     public void testUnsolvedParameter() {
-        assertThrows(IllegalStateException.class, new Executable() {
+        Assert.Throws<IllegalStateException>(new Executable() {
         @Override
         public void execute() {
         TypeParameterMatcher.find(new TypeQ(), TypeX.class, "B");
@@ -138,7 +138,7 @@ private static class X<T, E> extends W<E> {
 
 [Fact]
 public void testErasure() {
-    assertThrows(IllegalStateException.class, new Executable() {
+    Assert.Throws<IllegalStateException>(new Executable() {
         @Override
         public void execute() {
         TypeParameterMatcher m = TypeParameterMatcher.find(new X<string, Date>(), W.class, "E");

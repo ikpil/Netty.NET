@@ -127,7 +127,7 @@ namespace Netty.Common.Tests.Concurrent
     void tasksRunningInUnorderedExecutorAreInEventLoop() {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         try {
-            Future<Boolean> future = executor.submit(() -> executor.inEventLoop());
+            Future<Boolean> future = executor.submit(()() => executor.inEventLoop());
             Assert.True(future.get());
         } finally {
             executor.shutdownGracefully();

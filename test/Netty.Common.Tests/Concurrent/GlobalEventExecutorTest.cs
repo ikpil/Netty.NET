@@ -14,27 +14,28 @@
  * under the License.
  */
 
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+
 namespace Netty.Common.Tests.Concurrent;
 
 
 public class GlobalEventExecutorTest {
 
-    private static final GlobalEventExecutor e = GlobalEventExecutor.INSTANCE;
+    private static readonly GlobalEventExecutor e = GlobalEventExecutor.INSTANCE;
 
-    @BeforeEach
-    public void setUp() {
+    public GlobalEventExecutorTest() {
         // Wait until the global executor is stopped (just in case there is a task running due to previous test cases)
         for (;;) {
-            if (e.thread == null || !e.thread.isAlive()) {
+            if (e._thread == null || !e._thread.isAlive()) {
                 break;
             }
 
-            Thread.sleep(50);
+            Thread.Sleep(50);
         }
     }
 
-    [Fact]
-    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
+    [Fact(Timeout = 5000)]
     public void testAutomaticStartStop() {
         final TestRunnable task = new TestRunnable(500);
         e.execute(task);
@@ -58,8 +59,7 @@ public class GlobalEventExecutorTest {
         Assert.True(task.ran.get());
     }
 
-    [Fact]
-    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
+    [Fact(Timeout = 5000)]
     public void testScheduledTasks() {
         TestRunnable task = new TestRunnable(0);
         ScheduledFuture<?> f = e.schedule(task, 1500, TimeUnit.MILLISECONDS);

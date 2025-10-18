@@ -34,7 +34,7 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
     /**
      * An unsafe operation intended for use by a subclass that sets the reference count of the buffer directly
      */
-    protected void setRefCnt(int refCnt)
+    internal void setRefCnt(int refCnt)
     {
         Interlocked.Exchange(ref _refCnt, refCnt);
     }

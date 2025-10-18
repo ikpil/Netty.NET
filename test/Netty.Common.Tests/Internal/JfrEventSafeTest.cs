@@ -33,7 +33,7 @@ public class JfrEventSafeTest {
         try (RecordingStream stream = new RecordingStream()) {
             stream.enable(MyEvent.class.getName());
             CompletableFuture<string> result = new CompletableFuture<>();
-            stream.onEvent(MyEvent.class.getName(), e -> result.complete(e.getString("foo")));
+            stream.onEvent(MyEvent.class.getName(), e() => result.complete(e.getString("foo")));
             stream.startAsync();
 
             MyEvent event = new MyEvent();
@@ -50,9 +50,9 @@ public class JfrEventSafeTest {
         try (RecordingStream stream = new RecordingStream()) {
             CompletableFuture<string> result = new CompletableFuture<>();
             stream.onEvent(DisabledEvent.class.getName(),
-                    e -> result.completeExceptionally(new Exception("Event mistakenly fired")));
+                    e() => result.completeExceptionally(new Exception("Event mistakenly fired")));
             stream.onEvent(MyEvent.class.getName(),
-                    e -> result.complete(e.getString("foo")));
+                    e() => result.complete(e.getString("foo")));
             stream.startAsync();
 
             DisabledEvent disabled = new DisabledEvent();

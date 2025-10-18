@@ -48,11 +48,11 @@ class DefaultMockTickerTest
     void advanceWithNegativeAmount()
     {
         final MockTicker ticker = Ticker.newMockTicker();
-        assertThrows(ArgumentException.class, ()-> {
+        Assert.Throws<ArgumentException>(()-> {
             ticker.advance(-1, TimeUnit.SECONDS);
         });
 
-        assertThrows(ArgumentException.class, ()-> {
+        Assert.Throws<ArgumentException>(()-> {
             ticker.advanceMillis(-1);
         });
     }
@@ -100,7 +100,7 @@ class DefaultMockTickerTest
             for (int i = 0; i < numWaiters; i++)
             {
                 final int finalCnt = i;
-                assertThrows(TimeoutException.class, ()-> {
+                Assert.Throws<TimeoutException>(()-> {
                     futures.get(finalCnt).get(1, TimeUnit.MILLISECONDS);
                 });
             }
@@ -118,7 +118,7 @@ class DefaultMockTickerTest
             for (int i = 0; i < numWaiters; i++)
             {
                 final int finalCnt = i;
-                assertThrows(TimeoutException.class, ()-> {
+                Assert.Throws<TimeoutException>(()-> {
                     futures.get(finalCnt).get(1, TimeUnit.MILLISECONDS);
                 });
             }

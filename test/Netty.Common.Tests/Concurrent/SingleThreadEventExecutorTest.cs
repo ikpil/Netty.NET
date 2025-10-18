@@ -60,7 +60,7 @@ public class SingleThreadEventExecutorTest {
 
         SuspendingSingleThreadEventExecutor(IThreadFactory threadFactory) {
             super(null, threadFactory, false, true,
-                    Integer.MAX_VALUE, RejectedExecutionHandlers.reject());
+                    int.MaxValue, RejectedExecutionHandlers.reject());
         }
 
         @Override
@@ -122,7 +122,7 @@ public class SingleThreadEventExecutorTest {
         final SingleThreadEventExecutor executor = new SuspendingSingleThreadEventExecutor(threadFactory);
 
         // Schedule a task which is so far in the future that we are sure it will not run at all.
-        Future<?> future = executor.schedule(() -> { }, 1, TimeUnit.DAYS);
+        Future<?> future = executor.schedule(()() => { }, 1, TimeUnit.DAYS);
         TestThread currentThread = threadFactory.threads.take();
         // Let's wait until the thread is started
         currentThread.awaitStarted();
@@ -161,7 +161,7 @@ public class SingleThreadEventExecutorTest {
 
         final CountDownLatch latch = new CountDownLatch(1);
         // Schedule a task which is so far in the future that we are sure it will not run at all.
-        Future<?> future = executor.schedule(() -> {
+        Future<?> future = executor.schedule(()() => {
             try {
                 latch.await();
             } catch (ThreadInterruptedException ignore) {
@@ -214,7 +214,7 @@ public class SingleThreadEventExecutorTest {
         executorService.shutdownNow();
         executeShouldFail(executor);
         executeShouldFail(executor);
-        assertThrows(RejectedExecutionException.class, new Executable() {
+        Assert.Throws<RejectedExecutionException>(new Executable() {
             @Override
             public void execute() {
                 executor.shutdownGracefully().syncUninterruptibly();
@@ -224,7 +224,7 @@ public class SingleThreadEventExecutorTest {
     }
 
     private static void executeShouldFail(final IExecutor executor) {
-        assertThrows(RejectedExecutionException.class, new Executable() {
+        Assert.Throws<RejectedExecutionException>(new Executable() {
             @Override
             public void execute() {
                 executor.execute(new IRunnable() {
@@ -303,7 +303,7 @@ public class SingleThreadEventExecutorTest {
             }
         };
         try {
-            assertThrows(RejectedExecutionException.class, new Executable() {
+            Assert.Throws<RejectedExecutionException>(new Executable() {
                 @Override
                 public void execute() throws Throwable {
                     final Promise<Void> promise = executor.newPromise();
