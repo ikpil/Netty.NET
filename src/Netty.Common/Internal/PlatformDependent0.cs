@@ -627,7 +627,8 @@ public class PlatformDependent0
 
     public static bool hasDirectBufferNoCleanerConstructor()
     {
-        return DIRECT_BUFFER_CONSTRUCTOR != null;
+        throw new NotImplementedException();
+        //return DIRECT_BUFFER_CONSTRUCTOR != null;
     }
 
     public static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity)

@@ -36,23 +36,23 @@ public interface IFuture<V> : IFuture
  */
 public abstract class AbstractFuture<V> : TaskCompletionSource<V>, IFuture
 {
-    public AbstractFuture() : base(() => default)
+    public AbstractFuture() //: base(() => default)
     {
     }
 
     public virtual AggregateException cause()
     {
-        return Exception;
+        return Task.Exception;
     }
 
     public virtual V get()
     {
-        Wait();
+        Task.Wait();
 
         AggregateException cause = this.cause();
         if (cause == null)
         {
-            return Result;
+            return Task.Result;
         }
 
         if (cause.GetBaseException() is TaskCanceledException)
@@ -65,12 +65,12 @@ public abstract class AbstractFuture<V> : TaskCompletionSource<V>, IFuture
 
     public virtual V get(TimeSpan timeout)
     {
-        if (Wait(timeout))
+        if (Task.Wait(timeout))
         {
             AggregateException cause = this.cause();
             if (cause == null)
             {
-                return Result;
+                return Task.Result;
             }
 
             if (cause.GetBaseException() is TaskCanceledException)

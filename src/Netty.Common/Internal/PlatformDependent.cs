@@ -97,109 +97,109 @@ public static class PlatformDependent
 
     static PlatformDependent()
     {
-        // Here is how the system property is used:
+        // // Here is how the system property is used:
+        // //
+        // // * <  0  - Don't use cleaner, and inherit max direct memory from java. In this case the
+        // //           "practical max direct memory" would be 2 * max memory as defined by the JDK.
+        // // * == 0  - Use cleaner, Netty will not enforce max memory, and instead will defer to JDK.
+        // // * >  0  - Don't use cleaner. This will limit Netty's total direct memory
+        // //           (note: that JDK's direct memory limit is independent of this).
+        // long maxDirectMemory = SystemPropertyUtil.getLong("io.netty.maxDirectMemory", -1);
         //
-        // * <  0  - Don't use cleaner, and inherit max direct memory from java. In this case the
-        //           "practical max direct memory" would be 2 * max memory as defined by the JDK.
-        // * == 0  - Use cleaner, Netty will not enforce max memory, and instead will defer to JDK.
-        // * >  0  - Don't use cleaner. This will limit Netty's total direct memory
-        //           (note: that JDK's direct memory limit is independent of this).
-        long maxDirectMemory = SystemPropertyUtil.getLong("io.netty.maxDirectMemory", -1);
-
-        if (maxDirectMemory == 0 || !hasUnsafe() || !PlatformDependent0.hasDirectBufferNoCleanerConstructor()) {
-            USE_DIRECT_BUFFER_NO_CLEANER = false;
-            DIRECT_CLEANER = NOOP;
-            DIRECT_MEMORY_COUNTER = null;
-        } else {
-            USE_DIRECT_BUFFER_NO_CLEANER = true;
-            DIRECT_CLEANER = new DirectCleaner();
-            if (maxDirectMemory < 0) {
-                maxDirectMemory = MAX_DIRECT_MEMORY;
-                if (maxDirectMemory <= 0) {
-                    DIRECT_MEMORY_COUNTER = null;
-                } else {
-                    DIRECT_MEMORY_COUNTER = new AtomicLong();
-                }
-            } else {
-                DIRECT_MEMORY_COUNTER = new AtomicLong();
-            }
-        }
-        logger.debug("-Dio.netty.maxDirectMemory: {} bytes", maxDirectMemory);
-        DIRECT_MEMORY_LIMIT = maxDirectMemory >= 1 ? maxDirectMemory : MAX_DIRECT_MEMORY;
-        HAS_ALLOCATE_UNINIT_ARRAY = javaVersion() >= 9 && PlatformDependent0.hasAllocateArrayMethod();
-
-        MAYBE_SUPER_USER = maybeSuperUser0();
-
-        if (!isAndroid()) {
-            // only direct to method if we are not running on android.
-            // See https://github.com/netty/netty/issues/2604
-            if (javaVersion() >= 9) {
-                // Try Java 9 cleaner first, because it's based on Unsafe and can skip a few steps.
-                if (CleanerJava9.isSupported()) {
-                    LEGACY_CLEANER = new CleanerJava9();
-                } else if (CleanerJava24Linker.isSupported()) {
-                    // On Java 24+ we'd like to not use Unsafe because it produces warnings. We have MemorySegment,
-                    // but we cannot use "shared" arenas due to JDK bugs.
-                    // If the "linker" implementation is supported, then we have native access permissions
-                    // in the "io.netty.common" module, and we can link directly to malloc() and free() from libc.
-                    LEGACY_CLEANER = new CleanerJava24Linker();
-                } else if (CleanerJava25.isSupported()) {
-                    // On Java 25+ we can't use Unsafe, but we have functioning MemorySegment support.
-                    // We don't have native access permissions to link malloc() and free() directly, but we can
-                    // use shared memory segment instances.
-                    LEGACY_CLEANER = new CleanerJava25();
-                } else {
-                    LEGACY_CLEANER = NOOP;
-                }
-            } else {
-                LEGACY_CLEANER = CleanerJava6.isSupported() ? new CleanerJava6() : NOOP;
-            }
-        } else {
-            LEGACY_CLEANER = NOOP;
-        }
-        CLEANER = USE_DIRECT_BUFFER_NO_CLEANER ? DIRECT_CLEANER : LEGACY_CLEANER;
-
-        EXPLICIT_NO_PREFER_DIRECT = SystemPropertyUtil.getBoolean("io.netty.noPreferDirect", false);
-        // We should always prefer direct buffers by default if we can use a Cleaner to release direct buffers.
-        DIRECT_BUFFER_PREFERRED = CLEANER != NOOP
-                                  && !EXPLICIT_NO_PREFER_DIRECT;
-        if (logger.isDebugEnabled()) {
-            logger.debug("-Dio.netty.noPreferDirect: {}", EXPLICIT_NO_PREFER_DIRECT);
-        }
-
-        /*
-         * We do not want to log this message if unsafe is explicitly disabled. Do not remove the explicit no unsafe
-         * guard.
-         */
-        if (CLEANER == NOOP && !PlatformDependent0.isExplicitNoUnsafe()) {
-            logger.info(
-                    "Your platform does not provide complete low-level API for accessing direct buffers reliably. " +
-                    "Unless explicitly requested, heap buffer will always be preferred to avoid potential system " +
-                    "instability.");
-        }
-
-        ISet<string> availableClassifiers = new LinkedHashSet<string>();
-
-        if (!addPropertyOsClassifiers(availableClassifiers)) {
-            addFilesystemOsClassifiers(availableClassifiers);
-        }
-        LINUX_OS_CLASSIFIERS = Collections.unmodifiableSet(availableClassifiers);
-
-        bool jfrAvailable;
-        Exception jfrFailure = null;
-        try {
-            //noinspection Since15
-            jfrAvailable = FlightRecorder.isAvailable();
-        } catch (Exception t) {
-            jfrFailure = t;
-            jfrAvailable = false;
-        }
-        JFR = SystemPropertyUtil.getBoolean("io.netty.jfr.enabled", jfrAvailable);
-        if (logger.isTraceEnabled() && jfrFailure != null) {
-            logger.debug("-Dio.netty.jfr.enabled: {}", JFR, jfrFailure);
-        } else if (logger.isDebugEnabled()) {
-            logger.debug("-Dio.netty.jfr.enabled: {}", JFR);
-        }
+        // if (maxDirectMemory == 0 || !hasUnsafe() || !PlatformDependent0.hasDirectBufferNoCleanerConstructor()) {
+        //     USE_DIRECT_BUFFER_NO_CLEANER = false;
+        //     DIRECT_CLEANER = NOOP;
+        //     DIRECT_MEMORY_COUNTER = null;
+        // } else {
+        //     USE_DIRECT_BUFFER_NO_CLEANER = true;
+        //     DIRECT_CLEANER = new DirectCleaner();
+        //     if (maxDirectMemory < 0) {
+        //         maxDirectMemory = MAX_DIRECT_MEMORY;
+        //         if (maxDirectMemory <= 0) {
+        //             DIRECT_MEMORY_COUNTER = null;
+        //         } else {
+        //             DIRECT_MEMORY_COUNTER = new AtomicLong();
+        //         }
+        //     } else {
+        //         DIRECT_MEMORY_COUNTER = new AtomicLong();
+        //     }
+        // }
+        // logger.debug("-Dio.netty.maxDirectMemory: {} bytes", maxDirectMemory);
+        // DIRECT_MEMORY_LIMIT = maxDirectMemory >= 1 ? maxDirectMemory : MAX_DIRECT_MEMORY;
+        // HAS_ALLOCATE_UNINIT_ARRAY = javaVersion() >= 9 && PlatformDependent0.hasAllocateArrayMethod();
+        //
+        // MAYBE_SUPER_USER = maybeSuperUser0();
+        //
+        // if (!isAndroid()) {
+        //     // only direct to method if we are not running on android.
+        //     // See https://github.com/netty/netty/issues/2604
+        //     if (javaVersion() >= 9) {
+        //         // Try Java 9 cleaner first, because it's based on Unsafe and can skip a few steps.
+        //         if (CleanerJava9.isSupported()) {
+        //             LEGACY_CLEANER = new CleanerJava9();
+        //         } else if (CleanerJava24Linker.isSupported()) {
+        //             // On Java 24+ we'd like to not use Unsafe because it produces warnings. We have MemorySegment,
+        //             // but we cannot use "shared" arenas due to JDK bugs.
+        //             // If the "linker" implementation is supported, then we have native access permissions
+        //             // in the "io.netty.common" module, and we can link directly to malloc() and free() from libc.
+        //             LEGACY_CLEANER = new CleanerJava24Linker();
+        //         } else if (CleanerJava25.isSupported()) {
+        //             // On Java 25+ we can't use Unsafe, but we have functioning MemorySegment support.
+        //             // We don't have native access permissions to link malloc() and free() directly, but we can
+        //             // use shared memory segment instances.
+        //             LEGACY_CLEANER = new CleanerJava25();
+        //         } else {
+        //             LEGACY_CLEANER = NOOP;
+        //         }
+        //     } else {
+        //         LEGACY_CLEANER = CleanerJava6.isSupported() ? new CleanerJava6() : NOOP;
+        //     }
+        // } else {
+        //     LEGACY_CLEANER = NOOP;
+        // }
+        // CLEANER = USE_DIRECT_BUFFER_NO_CLEANER ? DIRECT_CLEANER : LEGACY_CLEANER;
+        //
+        // EXPLICIT_NO_PREFER_DIRECT = SystemPropertyUtil.getBoolean("io.netty.noPreferDirect", false);
+        // // We should always prefer direct buffers by default if we can use a Cleaner to release direct buffers.
+        // DIRECT_BUFFER_PREFERRED = CLEANER != NOOP
+        //                           && !EXPLICIT_NO_PREFER_DIRECT;
+        // if (logger.isDebugEnabled()) {
+        //     logger.debug("-Dio.netty.noPreferDirect: {}", EXPLICIT_NO_PREFER_DIRECT);
+        // }
+        //
+        // /*
+        //  * We do not want to log this message if unsafe is explicitly disabled. Do not remove the explicit no unsafe
+        //  * guard.
+        //  */
+        // if (CLEANER == NOOP && !PlatformDependent0.isExplicitNoUnsafe()) {
+        //     logger.info(
+        //             "Your platform does not provide complete low-level API for accessing direct buffers reliably. " +
+        //             "Unless explicitly requested, heap buffer will always be preferred to avoid potential system " +
+        //             "instability.");
+        // }
+        //
+        // ISet<string> availableClassifiers = new LinkedHashSet<string>();
+        //
+        // if (!addPropertyOsClassifiers(availableClassifiers)) {
+        //     addFilesystemOsClassifiers(availableClassifiers);
+        // }
+        // LINUX_OS_CLASSIFIERS = Collections.unmodifiableSet(availableClassifiers);
+        //
+        // bool jfrAvailable;
+        // Exception jfrFailure = null;
+        // try {
+        //     //noinspection Since15
+        //     jfrAvailable = FlightRecorder.isAvailable();
+        // } catch (Exception t) {
+        //     jfrFailure = t;
+        //     jfrAvailable = false;
+        // }
+        // JFR = SystemPropertyUtil.getBoolean("io.netty.jfr.enabled", jfrAvailable);
+        // if (logger.isTraceEnabled() && jfrFailure != null) {
+        //     logger.debug("-Dio.netty.jfr.enabled: {}", JFR, jfrFailure);
+        // } else if (logger.isDebugEnabled()) {
+        //     logger.debug("-Dio.netty.jfr.enabled: {}", JFR);
+        // }
     }
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
