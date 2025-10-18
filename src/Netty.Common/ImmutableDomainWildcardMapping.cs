@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using System.Text;
+using Netty.NET.Common.Collections;
 
 namespace Netty.NET.Common;
 
-public class ImmutableDomainWildcardMapping<T> : IMapping<string, T>
+public class ImmutableDomainWildcardMapping<T> : IMapping<string, T> where T : class
 {
     private static readonly string REPR_HEADER = "ImmutableDomainWildcardMapping(default: ";
     private static readonly string REPR_MAP_OPENING = ", map: ";

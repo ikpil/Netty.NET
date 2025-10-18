@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Netty.NET.Common.Collections;
@@ -25,6 +26,11 @@ public static class CollectionExtensions
     }
 
     public static bool IsEmpty<T>(this ConcurrentHashSet<T> c)
+    {
+        return 0 >= c.Count;
+    }
+
+    public static bool IsEmpty<T>(this BlockingCollection<T> c)
     {
         return 0 >= c.Count;
     }

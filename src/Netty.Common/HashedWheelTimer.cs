@@ -476,7 +476,7 @@ public class HashedWheelTimer : ITimer
         }
 
         HashedWheelTimeout timeout = new HashedWheelTimeout(this, task, deadline);
-        _timeouts.Enqueue(timeout);
+        _timeouts.tryEnqueue(timeout);
         return timeout;
     }
 

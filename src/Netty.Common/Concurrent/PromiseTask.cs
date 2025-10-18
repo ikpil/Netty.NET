@@ -25,7 +25,7 @@ public interface IRunnableFuture<V> : IRunnable, IFuture<V>
 {
 }
 
-public class DefaultPromise<V> : TaskCompletionSource<V>
+public class DefaultPromise<V> : TaskCompletionSource<V>, IPromise<V>
 {
     public DefaultPromise(IEventExecutor executor)
     {
