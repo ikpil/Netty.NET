@@ -60,7 +60,7 @@ public static class NetUtil
     /**
      * An unmodifiable ICollection of all the interfaces on this machine.
      */
-    public static readonly ICollection<NetworkInterface> NETWORK_INTERFACES;
+    public static readonly IReadOnlyList<NetworkInterface> NETWORK_INTERFACES;
 
     /**
      * The SOMAXCONN value of the current machine.  If failed to get the value,  {@code 200} is used as a

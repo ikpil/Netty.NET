@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
@@ -24,7 +25,9 @@ public class RejectedBackOffExecutionHandler : IRejectedExecutionHandler
                 // Try to wake up the executor so it will empty its task queue.
                 executor.wakeup(false);
 
-                LockSupport.parkNanos(backOffNanos);
+                TimeSpan timeout = TimeSpan.FromTicks(backOffNanos / 100); // 100
+                Thread.Sleep(timeout);
+                //LockSupport.parkNanos(backOffNanos);
                 if (executor.offerTask(task))
                 {
                     return;

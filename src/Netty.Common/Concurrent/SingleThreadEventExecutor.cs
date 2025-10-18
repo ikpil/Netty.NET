@@ -639,7 +639,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         // NOOP
     }
 
-    protected void wakeup(bool inEventLoop)
+    internal void wakeup(bool inEventLoop)
     {
         if (!inEventLoop)
         {
