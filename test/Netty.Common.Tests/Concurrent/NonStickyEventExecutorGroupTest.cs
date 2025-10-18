@@ -49,7 +49,7 @@ public class NonStickyEventExecutorGroupTest {
         final EventExecutorGroup group = new UnorderedThreadPoolEventExecutor(threads);
         final NonStickyEventExecutorGroup nonStickyGroup = new NonStickyEventExecutorGroup(group, maxTaskExecutePerRun);
         try {
-            final CountDownLatch startLatch = new CountDownLatch(1);
+            final CountdownEvent startLatch = new CountdownEvent(1);
             final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
             List<Thread> threadList = new List<Thread>(threads);
             for (int i = 0 ; i < threads; i++) {
@@ -89,8 +89,8 @@ public class NonStickyEventExecutorGroupTest {
             EventExecutor executor = nonStickyGroup.next();
 
             for (int j = 0; j < 5000; j++) {
-                final CountDownLatch firstCompleted = new CountDownLatch(1);
-                final CountDownLatch latch = new CountDownLatch(2);
+                final CountdownEvent firstCompleted = new CountdownEvent(1);
+                final CountdownEvent latch = new CountdownEvent(2);
                 for (int i = 0; i < 2; i++) {
                     executor.execute(new IRunnable() {
                         @Override
@@ -109,14 +109,14 @@ public class NonStickyEventExecutorGroupTest {
         }
     }
 
-    private static void execute(EventExecutorGroup group, CountDownLatch startLatch) throws Throwable {
+    private static void execute(EventExecutorGroup group, CountdownEvent startLatch) throws Throwable {
         final EventExecutor executor = group.next();
         Assert.True(executor instanceof OrderedEventExecutor);
         final AtomicReference<Throwable> cause = new AtomicReference<Throwable>();
         final AtomicInteger last = new AtomicInteger();
         int tasks = 10000;
         List<Future<?>> futures = new List<Future<?>>(tasks);
-        final CountDownLatch latch = new CountDownLatch(tasks);
+        final CountdownEvent latch = new CountdownEvent(tasks);
         startLatch.await();
 
         for (int i = 1 ; i <= tasks; i++) {

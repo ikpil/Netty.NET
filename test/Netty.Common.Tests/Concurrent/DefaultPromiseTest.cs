@@ -369,7 +369,7 @@ private static void testStackOverFlowChainedFuturesA(int promiseChainLength, fin
 bool runTestInExecutorThread)
 throws ThreadInterruptedException {
     final Promise<Void>[] p = new DefaultPromise[promiseChainLength];
-    final CountDownLatch latch = new CountDownLatch(promiseChainLength);
+    final CountdownEvent latch = new CountdownEvent(promiseChainLength);
 
     if (runTestInExecutorThread) {
         executor.execute(new IRunnable() {
@@ -389,7 +389,7 @@ throws ThreadInterruptedException {
 }
 
 private static void testStackOverFlowChainedFuturesA(EventExecutor executor, final Promise<Void>[] p,
-final CountDownLatch latch) {
+final CountdownEvent latch) {
     for (int i = 0; i < p.length; i ++) {
         final int finalI = i;
         p[i] = new DefaultPromise<Void>(executor);
@@ -411,7 +411,7 @@ private static void testStackOverFlowChainedFuturesB(int promiseChainLength, fin
 bool runTestInExecutorThread)
 throws ThreadInterruptedException {
     final Promise<Void>[] p = new DefaultPromise[promiseChainLength];
-    final CountDownLatch latch = new CountDownLatch(promiseChainLength);
+    final CountdownEvent latch = new CountdownEvent(promiseChainLength);
 
     if (runTestInExecutorThread) {
         executor.execute(new IRunnable() {
@@ -431,7 +431,7 @@ throws ThreadInterruptedException {
 }
 
 private static void testStackOverFlowChainedFuturesB(EventExecutor executor, final Promise<Void>[] p,
-final CountDownLatch latch) {
+final CountdownEvent latch) {
     for (int i = 0; i < p.length; i ++) {
         final int finalI = i;
         p[i] = new DefaultPromise<Void>(executor);
@@ -468,8 +468,8 @@ private static void testLateListenerIsOrderedCorrectly(Throwable cause) throws T
     final EventExecutor executor = new TestEventExecutor();
     try {
         final AtomicInteger state = new AtomicInteger();
-        final CountDownLatch latch1 = new CountDownLatch(1);
-        final CountDownLatch latch2 = new CountDownLatch(2);
+        final CountdownEvent latch1 = new CountdownEvent(1);
+        final CountdownEvent latch2 = new CountdownEvent(2);
         final Promise<Void> promise = new DefaultPromise<Void>(executor);
 
         // Add a listener before completion so "lateListener" is used next time we add a listener.
@@ -532,7 +532,7 @@ private static void testLateListenerIsOrderedCorrectly(Throwable cause) throws T
 }
 
 private static void testPromiseListenerAddWhenComplete(Throwable cause) throws ThreadInterruptedException {
-    final CountDownLatch latch = new CountDownLatch(1);
+    final CountdownEvent latch = new CountdownEvent(1);
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     promise.addListener(new FutureListener<Void>() {
         @Override
@@ -556,7 +556,7 @@ private static void testPromiseListenerAddWhenComplete(Throwable cause) throws T
 private static void testListenerNotifyLater(final int numListenersBefore) {
     EventExecutor executor = new TestEventExecutor();
     int expectedCount = numListenersBefore + 2;
-    final CountDownLatch latch = new CountDownLatch(expectedCount);
+    final CountdownEvent latch = new CountdownEvent(expectedCount);
     final FutureListener<Void> listener = new FutureListener<Void>() {
         @Override
         public void operationComplete(Future<Void> future) {

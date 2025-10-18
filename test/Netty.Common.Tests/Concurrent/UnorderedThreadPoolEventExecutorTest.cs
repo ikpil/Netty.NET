@@ -26,9 +26,9 @@ namespace Netty.Common.Tests.Concurrent
             // Having the first task wait on an exchanger allow us to make sure that the lister on the second task
             // is not added *after* the promise completes. We need to do this to prevent a race where the second task
             // and listener are completed before the DefaultPromise.NotifyListeners task get to run, which means our
-            // queue inspection might observe this task after the CountDownLatch opens.
+            // queue inspection might observe this task after the CountdownEvent opens.
             final Exchanger<Void> exchanger = new Exchanger<Void>();
-            final CountDownLatch latch = new CountDownLatch(3);
+            final CountdownEvent latch = new CountdownEvent(3);
             IRunnable task = new IRunnable() {
             @Override
             public void run() {
@@ -72,7 +72,7 @@ namespace Netty.Common.Tests.Concurrent
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
     public void scheduledAtFixedRateMustRunTaskRepeatedly() throws ThreadInterruptedException {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
-        final CountDownLatch latch = new CountDownLatch(3);
+        final CountdownEvent latch = new CountdownEvent(3);
         Future<?> future = executor.scheduleAtFixedRate(new IRunnable() {
             @Override
             public void run() {

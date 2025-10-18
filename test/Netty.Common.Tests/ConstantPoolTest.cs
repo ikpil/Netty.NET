@@ -13,14 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common;
+
 namespace Netty.Common.Tests;
 
 
 public class ConstantPoolTest {
 
-    static final class TestConstant extends AbstractConstant<TestConstant> {
-        TestConstant(int id, string name) {
-            super(id, name);
+    public class TestConstant : AbstractConstant<TestConstant> 
+    {
+        public TestConstant(int id, string name) 
+        : base(id, name)
+        {
         }
     }
 

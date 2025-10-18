@@ -15,6 +15,8 @@
  */
 
 using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.Common.Tests;
 
@@ -82,7 +84,7 @@ public class AbstractReferenceCountedTest
         try {
             for (int i = 0; i < 10000; i++) {
                 AbstractReferenceCounted referenceCounted = newReferenceCounted();
-                CountDownLatch retainLatch = new CountDownLatch(1);
+                CountdownEvent retainLatch = new CountdownEvent(1);
                 Assert.True(referenceCounted.release());
 
                 for (int a = 0; a < threads; a++) {
@@ -117,8 +119,7 @@ public class AbstractReferenceCountedTest
         }
     }
 
-    [Fact]
-    @Timeout(value = 30000, unit = TimeUnit.MILLISECONDS)
+    [Fact(Timeout = 30000)]
     public void testReleaseFromMultipleThreadsThrowsReferenceCountException() {
         int threads = 4;
         Queue<Future<?>> futures = new ArrayDeque<>(threads);
@@ -128,7 +129,7 @@ public class AbstractReferenceCountedTest
         try {
             for (int i = 0; i < 10000; i++) {
                 AbstractReferenceCounted referenceCounted = newReferenceCounted();
-                CountDownLatch releaseLatch = new CountDownLatch(1);
+                CountdownEvent releaseLatch = new CountdownEvent(1);
                 AtomicInteger releasedCount = new AtomicInteger();
 
                 for (int a = 0; a < threads; a++) {

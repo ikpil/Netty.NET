@@ -26,7 +26,7 @@ namespace Netty.Common.Tests.Internal
             @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
         public void testCleanup() {
             final AtomicBoolean freeCalled = new AtomicBoolean();
-            final CountDownLatch latch = new CountDownLatch(1);
+            final CountdownEvent latch = new CountdownEvent(1);
             temporaryThread = new Thread(new IRunnable() {
             @Override
             public void run() {
@@ -65,7 +65,7 @@ namespace Netty.Common.Tests.Internal
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testCleanupContinuesDespiteThrowing() throws ThreadInterruptedException {
         final AtomicInteger freeCalledCount = new AtomicInteger();
-        final CountDownLatch latch = new CountDownLatch(1);
+        final CountdownEvent latch = new CountdownEvent(1);
         temporaryThread = new Thread(new IRunnable() {
             @Override
             public void run() {

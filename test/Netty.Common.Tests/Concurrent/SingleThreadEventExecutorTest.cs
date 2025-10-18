@@ -18,8 +18,8 @@ namespace Netty.Common.Tests.Concurrent;
 public class SingleThreadEventExecutorTest {
 
     private static final class TestThread extends Thread {
-        private final CountDownLatch startedLatch = new CountDownLatch(1);
-        private final CountDownLatch runLatch = new CountDownLatch(1);
+        private final CountdownEvent startedLatch = new CountdownEvent(1);
+        private final CountdownEvent runLatch = new CountdownEvent(1);
 
         TestThread(IRunnable task) {
             super(task);
@@ -159,7 +159,7 @@ public class SingleThreadEventExecutorTest {
         TestThreadFactory threadFactory = new TestThreadFactory();
         final SingleThreadEventExecutor executor = new SuspendingSingleThreadEventExecutor(threadFactory);
 
-        final CountDownLatch latch = new CountDownLatch(1);
+        final CountdownEvent latch = new CountdownEvent(1);
         // Schedule a task which is so far in the future that we are sure it will not run at all.
         Future<?> future = executor.schedule(()() => {
             try {
@@ -346,7 +346,7 @@ public class SingleThreadEventExecutorTest {
         }
     }
 
-    static class LatchTask extends CountDownLatch implements IRunnable {
+    static class LatchTask extends CountdownEvent implements IRunnable {
         LatchTask() {
             super(1);
         }

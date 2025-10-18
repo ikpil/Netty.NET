@@ -133,7 +133,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterrupte
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
 
-    final CountDownLatch countDownLatch = new CountDownLatch(2);
+    final CountdownEvent countDownLatch = new CountdownEvent(2);
     final Thread thread1 = newThread(new IRunnable() {
         @Override
         public void run() {
@@ -190,7 +190,7 @@ public void testMultipleRecycleRacing() throws ThreadInterruptedException {
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
 
-    final CountDownLatch countDownLatch = new CountDownLatch(1);
+    final CountdownEvent countDownLatch = new CountdownEvent(1);
     final Thread thread1 = newThread(new IRunnable() {
         @Override
         public void run() {
@@ -324,7 +324,7 @@ public void testRecycleAtTwoThreadsMulti() {
     }
     });
 
-    final CountDownLatch latch1 = new CountDownLatch(1);
+    final CountdownEvent latch1 = new CountdownEvent(1);
     single.execute(new IRunnable() {
         @Override
         public void run() {
@@ -337,7 +337,7 @@ public void testRecycleAtTwoThreadsMulti() {
     // Always recycler the first object, that is Ok
     Assert.Same(o2, o);
 
-    final CountDownLatch latch2 = new CountDownLatch(1);
+    final CountdownEvent latch2 = new CountdownEvent(1);
     single.execute(new IRunnable() {
         @Override
         public void run() {

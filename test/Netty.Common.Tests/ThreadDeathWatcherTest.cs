@@ -22,7 +22,7 @@ public class ThreadDeathWatcherTest {
     [Fact]
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
     public void testWatch() {
-        final CountDownLatch latch = new CountDownLatch(1);
+        final CountdownEvent latch = new CountdownEvent(1);
         final Thread t = new Thread() {
             @Override
             public void run() {
