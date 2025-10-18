@@ -22,7 +22,30 @@ namespace Netty.NET.Common.Internal;
 
 public class AtomicIntegerFieldUpdater<T>
 {
-    
+    public int get(T instance)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void set(T instance, int v)
+    {
+        throw new NotImplementedException();
+    }
+
+    public int getAndAdd(T instance, int v)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void lazySet(T instance, int v)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool compareAndSet(T instance, int v1, int v2)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 /**

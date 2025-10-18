@@ -62,7 +62,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
         // If a task should be canceled we put this to another queue which will be processed on each tick.
         // So this means that we will have a GC latency of max. 1 tick duration which is good enough. This way
         // we can make again use of our MpscLinkedQueue and so minimize the locking / overhead as much as possible.
-        _timer._cancelledTimeouts.Enqueue(this);
+        _timer._cancelledTimeouts.tryEnqueue(this);
         return true;
     }
 
@@ -90,7 +90,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
 
     public int state()
     {
-        return _state.read();
+        return _state.get();
     }
 
     public bool isCancelled()
@@ -143,7 +143,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
     public override string ToString()
     {
         long currentTime = SystemTimer.nanoTime();
-        long remaining = _deadline - currentTime + _timer._startTime.read();
+        long remaining = _deadline - currentTime + _timer._startTime.get();
 
         StringBuilder buf = new StringBuilder(192)
             .Append(StringUtil.simpleClassName(this))

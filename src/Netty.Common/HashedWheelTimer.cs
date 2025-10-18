@@ -347,7 +347,7 @@ public class HashedWheelTimer : ITimer
      */
     public void start()
     {
-        switch (_workerState.read())
+        switch (_workerState.get())
         {
             case WORKER_STATE_INIT:
                 if (_workerState.compareAndSet(WORKER_STATE_INIT, WORKER_STATE_STARTED))
@@ -365,7 +365,7 @@ public class HashedWheelTimer : ITimer
         }
 
         // Wait until the startTime is initialized by the worker.
-        while (_startTime.read() == 0)
+        while (_startTime.get() == 0)
         {
             try
             {
@@ -467,7 +467,7 @@ public class HashedWheelTimer : ITimer
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
         long delayNano = delay.Ticks * TimeSpan.NanosecondsPerTick;
-        long deadline = SystemTimer.nanoTime() + delayNano - _startTime.read();
+        long deadline = SystemTimer.nanoTime() + delayNano - _startTime.get();
 
         // Guard against overflow.
         if (delay.Ticks > 0 && deadline < 0)

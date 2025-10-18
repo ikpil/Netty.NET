@@ -374,7 +374,7 @@ public static class ObjectUtil
     public static T checkNonEmpty<T>(T collection, string name) where T : ICollection<T>
     {
         //No string concatenation for check
-        if (checkNotNull(collection, name).Count == 0)
+        if (!checkNotNull(collection, name).Any())
         {
             throw new ArgumentException("Param '" + name + "' must not be empty");
         }

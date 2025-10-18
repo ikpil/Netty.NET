@@ -94,7 +94,7 @@ public static class SocketUtils
         return new IPEndPoint(ipAddress, port);
     }
 
-    public static IEnumerable<IPAddress> addressesFromNetworkInterface(NetworkInterface intf)
+    public static List<IPAddress> addressesFromNetworkInterface(NetworkInterface intf)
     {
         IPInterfaceProperties properties = intf.GetIPProperties();
 

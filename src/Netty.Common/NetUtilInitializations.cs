@@ -79,7 +79,7 @@ internal static class NetUtilInitializations
         foreach (NetworkInterface iface in networkInterfaces)
         {
             // Use the interface with proper INET addresses only.
-            if (0 < SocketUtils.addressesFromNetworkInterface(iface).Count)
+            if (SocketUtils.addressesFromNetworkInterface(iface).Count != 0)
             {
                 ifaces.Add(iface);
             }

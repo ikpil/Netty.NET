@@ -103,6 +103,12 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
         return template.Equals(hostName);
     }
 
+    private static IdnMapping IDN = new IdnMapping()
+    {
+        AllowUnassigned = true, // ALLOW_UNASSIGNED: 할당되지 않은 유니코드 코드 포인트 허용
+        UseStd3AsciiRules = false // IDN.ALLOW_UNASSIGNED에
+    };
+
     /**
      * IDNA ASCII conversion and case normalization
      */
@@ -110,10 +116,10 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
     {
         if (needsNormalization(hostname))
         {
-            hostname = IDN.toASCII(hostname, IDN.ALLOW_UNASSIGNED);
+            hostname = IDN.GetAscii(hostname);
         }
 
-        return hostname.toLowerCase(CultureInfo.GetCultureInfo("en-US"));
+        return hostname.ToLower(CultureInfo.GetCultureInfo("en-US"));
     }
 
     private static bool needsNormalization(string hostname)

@@ -25,7 +25,7 @@ public class HashedWheelWorker : IRunnable
     {
         // Initialize the startTime.
         _timer._startTime.set(SystemTimer.nanoTime());
-        if (_timer._startTime.read() == 0)
+        if (_timer._startTime.get() == 0)
         {
             // We use 0 as an indicator for the uninitialized value here, so make sure it's not 0 when initialized.
             _timer._startTime.set(1);
@@ -47,7 +47,7 @@ public class HashedWheelWorker : IRunnable
                 bucket.expireTimeouts(deadline);
                 _tick++;
             }
-        } while (_timer._workerState.read() == HashedWheelTimer.WORKER_STATE_STARTED);
+        } while (_timer._workerState.get() == HashedWheelTimer.WORKER_STATE_STARTED);
 
         // Fill the unprocessedTimeouts so we can return them from stop() method.
         foreach (HashedWheelBucket bucket in _timer._wheel)
@@ -57,7 +57,7 @@ public class HashedWheelWorker : IRunnable
 
         for (;;)
         {
-            _timer._timeouts.TryDequeue(out var timeout);
+            _timer._timeouts.tryDequeue(out var timeout);
             if (timeout == null)
             {
                 break;
@@ -78,7 +78,7 @@ public class HashedWheelWorker : IRunnable
         // adds new timeouts in a loop.
         for (int i = 0; i < 100000; i++)
         {
-            _timer._timeouts.TryDequeue(out var timeout);
+            _timer._timeouts.tryDequeue(out var timeout);
             if (timeout == null)
             {
                 // all processed
@@ -106,7 +106,7 @@ public class HashedWheelWorker : IRunnable
     {
         for (;;)
         {
-            _timer._cancelledTimeouts.TryDequeue(out var timeout);
+            _timer._cancelledTimeouts.tryDequeue(out var timeout);
             if (timeout == null)
             {
                 // all processed
@@ -139,7 +139,7 @@ public class HashedWheelWorker : IRunnable
 
         for (;;)
         {
-            long currentTime = SystemTimer.nanoTime() - _timer._startTime.read();
+            long currentTime = SystemTimer.nanoTime() - _timer._startTime.get();
             long sleepTimeMs = (deadline - currentTime + 999999) / 1000000;
 
             if (sleepTimeMs <= 0)
@@ -174,7 +174,7 @@ public class HashedWheelWorker : IRunnable
             }
             catch (ThreadInterruptedException ignored)
             {
-                if (_timer._workerState.read() == HashedWheelTimer.WORKER_STATE_SHUTDOWN)
+                if (_timer._workerState.get() == HashedWheelTimer.WORKER_STATE_SHUTDOWN)
                 {
                     return long.MinValue;
                 }
