@@ -29,12 +29,14 @@ public class ConstantPoolTest {
         }
     }
 
-    private static final ConstantPool<TestConstant> pool = new ConstantPool<TestConstant>() {
-        @Override
-        protected TestConstant newConstant(int id, string name) {
+    public class TestContentPool : ConstantPool<TestConstant>
+    {
+        protected override TestConstant newConstant(int id, string name) {
             return new TestConstant(id, name);
         }
-    };
+    }
+
+    private static readonly ConstantPool<TestConstant> pool = new TestContentPool();
 
     [Fact]
     public void testCannotProvideNullName() {
