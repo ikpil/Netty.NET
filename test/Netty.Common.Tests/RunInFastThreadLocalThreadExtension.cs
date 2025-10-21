@@ -23,7 +23,7 @@ namespace Netty.Common.Tests;
  * <a href="https://junit.org/junit5/docs/current/user-guide/#extensions-intercepting-invocations">
  * intercepting invocations</a> example.
  */
-public class RunInFastThreadLocalThreadExtension implements InvocationInterceptor {
+public class RunInFastThreadLocalThreadExtension : InvocationInterceptor {
     @Override
     public void interceptTestMethod(
             final Invocation<Void> invocation,
