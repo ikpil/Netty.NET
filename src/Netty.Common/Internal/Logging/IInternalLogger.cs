@@ -49,7 +49,7 @@ namespace Netty.NET.Common.Internal.Logging;
 public interface IInternalLogger
 {
     /**
-     * Return the name of this {@link InternalLogger} instance.
+     * Return the name of this {@link IInternalLogger} instance.
      *
      * @return name of this logger instance
      */

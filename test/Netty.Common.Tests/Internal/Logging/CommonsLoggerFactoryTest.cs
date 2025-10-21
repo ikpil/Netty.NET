@@ -15,17 +15,17 @@
  */
 
 
-internal.logging;
+using Netty.NET.Common.Internal.Logging;
 
-namespace Netty.Common.Tests.Internal.Logging
+namespace Netty.Common.Tests.Internal.Logging;
+
+public class CommonsLoggerFactoryTest
 {
-    public class CommonsLoggerFactoryTest {
-
-        [Fact]
-        public void testCreation() {
-            InternalLogger logger = CommonsLoggerFactory.INSTANCE.newInstance("foo");
-            Assert.True(logger instanceof CommonsLogger);
-            Assert.Equal("foo", logger.name());
-        }
+    [Fact]
+    public void testCreation()
+    {
+        IInternalLogger logger = CommonsLoggerFactory.INSTANCE.newInstance("foo");
+        Assert.True(logger is CommonsLogger);
+        Assert.Equal("foo", logger.name());
     }
 }

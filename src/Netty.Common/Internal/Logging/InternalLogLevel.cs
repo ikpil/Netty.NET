@@ -17,7 +17,7 @@
 namespace Netty.NET.Common.Internal.Logging;
 
 /**
- * The log level that {@link InternalLogger} can log at.
+ * The log level that {@link IInternalLogger} can log at.
  */
 public enum InternalLogLevel
 {

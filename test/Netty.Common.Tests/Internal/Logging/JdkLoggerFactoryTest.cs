@@ -23,7 +23,7 @@ namespace Netty.Common.Tests.Internal.Logging
 
         [Fact]
         public void testCreation() {
-            InternalLogger logger = JdkLoggerFactory.INSTANCE.newInstance("foo");
+            IInternalLogger logger = JdkLoggerFactory.INSTANCE.newInstance("foo");
             Assert.True(logger instanceof JdkLogger);
             Assert.Equal("foo", logger.name());
         }

@@ -20,10 +20,10 @@ internal.logging;
 namespace Netty.Common.Tests.Internal.Logging
 {
     /**
- * {@linkplain Log4J2Logger} extends {@linkplain ExtendedLoggerWrapper} implements {@linkplain InternalLogger}.<br>
+ * {@linkplain Log4J2Logger} extends {@linkplain ExtendedLoggerWrapper} implements {@linkplain IInternalLogger}.<br>
  * {@linkplain ExtendedLoggerWrapper} is Log4j2 wrapper class to support wrapped loggers,
  * so There is no need to test it's method.<br>
- * We only need to test the netty's {@linkplain InternalLogger} interface method.<br>
+ * We only need to test the netty's {@linkplain IInternalLogger} interface method.<br>
  * It's meaning that we only need to test the Override method in the {@linkplain Log4J2Logger}.
  */
     public class Log4J2LoggerTest extends AbstractInternalLoggerTest<Logger> {

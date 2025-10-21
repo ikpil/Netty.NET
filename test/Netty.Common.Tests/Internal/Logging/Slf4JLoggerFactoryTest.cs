@@ -23,7 +23,7 @@ namespace Netty.Common.Tests.Internal.Logging
 
         [Fact]
         public void testCreation() {
-            InternalLogger logger = Slf4JLoggerFactory.INSTANCE.newInstance("foo");
+            IInternalLogger logger = Slf4JLoggerFactory.INSTANCE.newInstance("foo");
             Assert.True(logger instanceof Slf4JLogger || logger instanceof LocationAwareSlf4JLogger);
             Assert.Equal("foo", logger.name());
         }
@@ -32,7 +32,7 @@ namespace Netty.Common.Tests.Internal.Logging
         public void testCreationLogger() {
             Logger logger = mock(Logger.class);
             when(logger.getName()).thenReturn("testlogger");
-            InternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
+            IInternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
             Assert.True(internalLogger instanceof Slf4JLogger);
             Assert.Equal("testlogger", internalLogger.name());
         }
@@ -41,7 +41,7 @@ namespace Netty.Common.Tests.Internal.Logging
         public void testCreationLocationAwareLogger() {
             Logger logger = mock(LocationAwareLogger.class);
             when(logger.getName()).thenReturn("testlogger");
-            InternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
+            IInternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
             Assert.True(internalLogger instanceof LocationAwareSlf4JLogger);
             Assert.Equal("testlogger", internalLogger.name());
         }
@@ -57,7 +57,7 @@ namespace Netty.Common.Tests.Internal.Logging
             when(logger.isWarnEnabled()).thenReturn(true);
             when(logger.getName()).thenReturn("testlogger");
 
-            InternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
+            IInternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
             internalLogger.debug("{}", "debug");
             internalLogger.debug("{} {}", "debug1", "debug2");
             internalLogger.debug("{} {} {}", "debug1", "debug2", "debug3");

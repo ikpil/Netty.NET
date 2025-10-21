@@ -24,7 +24,7 @@ using Netty.NET.Common.Internal.Logging;
 namespace Netty.Common.Tests.Internal.Logging;
 
 /**
- * We only need to test methods defined by {@link InternalLogger}.
+ * We only need to test methods defined by {@link IInternalLogger}.
  */
 public abstract class AbstractInternalLoggerTest<T>
 {

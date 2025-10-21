@@ -83,8 +83,8 @@ public sealed class InternalThreadLocalMap
         STRING_BUILDER_MAX_SIZE =
             SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.maxSize", 1024 * 4);
 
-        // Ensure the InternalLogger is initialized as last field in this class as InternalThreadLocalMap might be used
-        // by the InternalLogger itself. For this its important that all the other static fields are correctly
+        // Ensure the IInternalLogger is initialized as last field in this class as InternalThreadLocalMap might be used
+        // by the IInternalLogger itself. For this its important that all the other static fields are correctly
         // initialized.
         //
         // See https://github.com/netty/netty/issues/12931.

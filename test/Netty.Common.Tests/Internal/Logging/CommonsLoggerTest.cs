@@ -15,171 +15,187 @@
  */
 
 
-internal.logging;
+using System;
+using Netty.NET.Common.Internal.Logging;
 
-namespace Netty.Common.Tests.Internal.Logging
+namespace Netty.Common.Tests.Internal.Logging;
+
+public class CommonsLoggerTest
 {
-    public class CommonsLoggerTest {
-        private static final Exception e = new Exception();
+    private static readonly Exception e = new Exception();
 
-        [Fact]
-        public void testIsTraceEnabled() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testIsTraceEnabled()
+    {
+        Log mockLog = mock(Log.class);
 
-            when(mockLog.isTraceEnabled()).thenReturn(true);
+        when(mockLog.isTraceEnabled()).thenReturn(true);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            Assert.True(logger.isTraceEnabled());
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        Assert.True(logger.isTraceEnabled());
 
-            verify(mockLog).isTraceEnabled();
-        }
+        verify(mockLog).isTraceEnabled();
+    }
 
-        [Fact]
-        public void testIsDebugEnabled() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testIsDebugEnabled()
+    {
+        Log mockLog = mock(Log.class);
 
-            when(mockLog.isDebugEnabled()).thenReturn(true);
+        when(mockLog.isDebugEnabled()).thenReturn(true);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            Assert.True(logger.isDebugEnabled());
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        Assert.True(logger.isDebugEnabled());
 
-            verify(mockLog).isDebugEnabled();
-        }
+        verify(mockLog).isDebugEnabled();
+    }
 
-        [Fact]
-        public void testIsInfoEnabled() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testIsInfoEnabled()
+    {
+        Log mockLog = mock(Log.class);
 
-            when(mockLog.isInfoEnabled()).thenReturn(true);
+        when(mockLog.isInfoEnabled()).thenReturn(true);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            Assert.True(logger.isInfoEnabled());
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        Assert.True(logger.isInfoEnabled());
 
-            verify(mockLog).isInfoEnabled();
-        }
+        verify(mockLog).isInfoEnabled();
+    }
 
-        [Fact]
-        public void testIsWarnEnabled() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testIsWarnEnabled()
+    {
+        Log mockLog = mock(Log.class);
 
-            when(mockLog.isWarnEnabled()).thenReturn(true);
+        when(mockLog.isWarnEnabled()).thenReturn(true);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            Assert.True(logger.isWarnEnabled());
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        Assert.True(logger.isWarnEnabled());
 
-            verify(mockLog).isWarnEnabled();
-        }
+        verify(mockLog).isWarnEnabled();
+    }
 
-        [Fact]
-        public void testIsErrorEnabled() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testIsErrorEnabled()
+    {
+        Log mockLog = mock(Log.class);
 
-            when(mockLog.isErrorEnabled()).thenReturn(true);
+        when(mockLog.isErrorEnabled()).thenReturn(true);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            Assert.True(logger.isErrorEnabled());
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        Assert.True(logger.isErrorEnabled());
 
-            verify(mockLog).isErrorEnabled();
-        }
+        verify(mockLog).isErrorEnabled();
+    }
 
-        [Fact]
-        public void testTrace() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testTrace()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.trace("a");
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.trace("a");
 
-            verify(mockLog).trace("a");
-        }
+        verify(mockLog).trace("a");
+    }
 
-        [Fact]
-        public void testTraceWithException() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testTraceWithException()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.trace("a", e);
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.trace("a", e);
 
-            verify(mockLog).trace("a", e);
-        }
+        verify(mockLog).trace("a", e);
+    }
 
-        [Fact]
-        public void testDebug() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testDebug()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.debug("a");
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.debug("a");
 
-            verify(mockLog).debug("a");
-        }
+        verify(mockLog).debug("a");
+    }
 
-        [Fact]
-        public void testDebugWithException() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testDebugWithException()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.debug("a", e);
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.debug("a", e);
 
-            verify(mockLog).debug("a", e);
-        }
+        verify(mockLog).debug("a", e);
+    }
 
-        [Fact]
-        public void testInfo() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testInfo()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.info("a");
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.info("a");
 
-            verify(mockLog).info("a");
-        }
+        verify(mockLog).info("a");
+    }
 
-        [Fact]
-        public void testInfoWithException() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testInfoWithException()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.info("a", e);
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.info("a", e);
 
-            verify(mockLog).info("a", e);
-        }
+        verify(mockLog).info("a", e);
+    }
 
-        [Fact]
-        public void testWarn() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testWarn()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.warn("a");
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.warn("a");
 
-            verify(mockLog).warn("a");
-        }
+        verify(mockLog).warn("a");
+    }
 
-        [Fact]
-        public void testWarnWithException() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testWarnWithException()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.warn("a", e);
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.warn("a", e);
 
-            verify(mockLog).warn("a", e);
-        }
+        verify(mockLog).warn("a", e);
+    }
 
-        [Fact]
-        public void testError() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testError()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.error("a");
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.error("a");
 
-            verify(mockLog).error("a");
-        }
+        verify(mockLog).error("a");
+    }
 
-        [Fact]
-        public void testErrorWithException() {
-            Log mockLog = mock(Log.class);
+    [Fact]
+    public void testErrorWithException()
+    {
+        Log mockLog = mock(Log.class);
 
-            InternalLogger logger = new CommonsLogger(mockLog, "foo");
-            logger.error("a", e);
+        IInternalLogger logger = new CommonsLogger(mockLog, "foo");
+        logger.error("a", e);
 
-            verify(mockLog).error("a", e);
-        }
+        verify(mockLog).error("a", e);
     }
 }

@@ -17,7 +17,7 @@
 namespace Netty.Common.Tests.Concurrent;
 
 public class DefaultPromiseTest {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromiseTest.class);
+    private static final IInternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromiseTest.class);
     private static int stackOverflowDepth;
 
     @BeforeAll

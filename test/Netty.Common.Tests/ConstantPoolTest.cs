@@ -87,7 +87,7 @@ public class ConstantPoolTest
         Assert.Equal(5, array.Count);
 
         // Sort by name
-        array.Sort((o1, o2) => String.Compare(o1.name(), o2.name(), StringComparison.Ordinal));
+        array.Sort((o1, o2) => string.Compare(o1.name(), o2.name(), StringComparison.Ordinal));
 
         Assert.Same(a, array[0]);
         Assert.Same(b, array[1]);
