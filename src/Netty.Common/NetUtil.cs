@@ -335,7 +335,7 @@ public static class NetUtil
     }
 
     // visible for tests
-    static byte[] validIpV4ToBytes(string ip)
+    public static byte[] validIpV4ToBytes(string ip)
     {
         int i;
         return new byte[]

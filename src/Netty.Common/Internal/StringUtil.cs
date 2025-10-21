@@ -376,6 +376,11 @@ public static class StringUtil
     {
         return decodeHexDump(hexDump, 0, hexDump.length());
     }
+    public static byte[] decodeHexDump(string hexDump)
+    {
+        var str = new StringCharSequence(hexDump);
+        return decodeHexDump(str, 0, str.length());
+    }
 
     public static string simpleClassName<T>()
     {
