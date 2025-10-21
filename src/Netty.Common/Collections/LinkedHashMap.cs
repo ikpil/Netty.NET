@@ -5,13 +5,17 @@ using System.Linq;
 
 namespace Netty.NET.Common.Collections;
 
-public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue> where TKey : notnull
+public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue> 
+    where TKey : notnull
 {
     public int Count => _linkedList.Count;
     public bool IsReadOnly => false;
 
+    // todo: performance ..
     public ICollection<TKey> Keys => _linkedList.Select(x => x.Key).ToArray();
     public ICollection<TValue> Values => _linkedList.Select(x => x.Value).ToArray();
+    IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
+    IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
 
     private readonly Dictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue>>> _dictionary;
     private readonly LinkedList<KeyValuePair<TKey, TValue>> _linkedList;
