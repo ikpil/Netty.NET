@@ -308,7 +308,7 @@ public void testSignalRace() {
         executor = new TestEventExecutor();
 
         final int numberOfAttempts = 4096;
-        final Map<Thread, DefaultPromise<Void>> promises = new HashMap<Thread, DefaultPromise<Void>>();
+        final Map<Thread, DefaultPromise<Void>> promises = new Dictionary<Thread, DefaultPromise<Void>>();
         for (int i = 0; i < numberOfAttempts; i++) {
             final DefaultPromise<Void> promise = new DefaultPromise<Void>(executor);
             final Thread thread = new Thread(new IRunnable() {
