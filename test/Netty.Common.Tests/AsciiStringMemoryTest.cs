@@ -13,6 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common;
+using Netty.NET.Common.Concurrent;
+
 namespace Netty.Common.Tests;/**
  * Test the underlying memory methods for the {@link AsciiString} class.
  */
@@ -24,7 +28,7 @@ public class AsciiStringMemoryTest {
     private int length = 100;
     private AsciiString aAsciiString;
     private AsciiString bAsciiString;
-    private final Random r = new Random();
+    private readonly Random r = new Random();
 
     @BeforeEach
     public void setup() {

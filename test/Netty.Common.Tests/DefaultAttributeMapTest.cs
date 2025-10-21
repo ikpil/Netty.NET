@@ -13,6 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common;
+
 namespace Netty.Common.Tests;
 public class DefaultAttributeMapTest {
 
