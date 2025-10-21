@@ -56,9 +56,9 @@ public class AsciiStringMemoryTest {
     public void testNotSharedMemory() {
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
         ++a[aOffset];
-        assertNotEquals(aAsciiString, aAsciiString1);
+        Assert.NotEqual(aAsciiString, aAsciiString1);
         int i = aOffset;
-        assertNotEquals(a[i], aAsciiString1.byteAt(i - aOffset));
+        Assert.NotEqual(a[i], aAsciiString1.byteAt(i - aOffset));
         ++i;
         for (; i < length; ++i) {
             Assert.Equal(a[i], aAsciiString1.byteAt(i - aOffset));
@@ -93,13 +93,13 @@ public class AsciiStringMemoryTest {
 
     [Fact]
     public void forEachWithIndexEndTest() {
-        assertNotEquals(-1, aAsciiString.forEachByte(aAsciiString.length() - 1,
+        Assert.NotEqual(-1, aAsciiString.forEachByte(aAsciiString.length() - 1,
                 1, new IndexOfProcessor(aAsciiString.byteAt(aAsciiString.length() - 1))));
     }
 
     [Fact]
     public void forEachWithIndexBeginTest() {
-        assertNotEquals(-1, aAsciiString.forEachByte(0,
+        Assert.NotEqual(-1, aAsciiString.forEachByte(0,
                 1, new IndexOfProcessor(aAsciiString.byteAt(0))));
     }
 
@@ -131,13 +131,13 @@ public class AsciiStringMemoryTest {
 
     [Fact]
     public void forEachDescWithIndexEndTest() {
-        assertNotEquals(-1, bAsciiString.forEachByteDesc(bAsciiString.length() - 1,
+        Assert.NotEqual(-1, bAsciiString.forEachByteDesc(bAsciiString.length() - 1,
                 1, new IndexOfProcessor(bAsciiString.byteAt(bAsciiString.length() - 1))));
     }
 
     [Fact]
     public void forEachDescWithIndexBeginTest() {
-        assertNotEquals(-1, bAsciiString.forEachByteDesc(0,
+        Assert.NotEqual(-1, bAsciiString.forEachByteDesc(0,
                 1, new IndexOfProcessor(bAsciiString.byteAt(0))));
     }
 

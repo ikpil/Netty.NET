@@ -18,20 +18,20 @@ using Netty.NET.Common;
 
 namespace Netty.Common.Tests;
 
-
-public class ConstantPoolTest {
-
-    public class TestConstant : AbstractConstant<TestConstant> 
+public class ConstantPoolTest
+{
+    public class TestConstant : AbstractConstant<TestConstant>
     {
-        public TestConstant(int id, string name) 
-        : base(id, name)
+        public TestConstant(int id, string name)
+            : base(id, name)
         {
         }
     }
 
     public class TestContentPool : ConstantPool<TestConstant>
     {
-        protected override TestConstant newConstant(int id, string name) {
+        protected override TestConstant newConstant(int id, string name)
+        {
             return new TestConstant(id, name);
         }
     }
@@ -39,55 +39,52 @@ public class ConstantPoolTest {
     private static readonly ConstantPool<TestConstant> pool = new TestContentPool();
 
     [Fact]
-    public void testCannotProvideNullName() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                pool.valueOf(null);
-            }
+    public void testCannotProvideNullName()
+    {
+        Assert.Throws<NullReferenceException>(() =>
+        {
+            pool.valueOf(null);
         });
     }
 
     [Fact]
     //@SuppressWarnings("RedundantStringConstructorCall")
-    public void testUniqueness() {
+    public void testUniqueness()
+    {
         TestConstant a = pool.valueOf(new string("Leroy"));
         TestConstant b = pool.valueOf(new string("Leroy"));
         Assert.Same(a, b);
     }
 
     [Fact]
-    public void testIdUniqueness() {
+    public void testIdUniqueness()
+    {
         TestConstant one = pool.valueOf("one");
         TestConstant two = pool.valueOf("two");
-        assertNotEquals(one.id(), two.id());
+        Assert.NotEqual(one.id(), two.id());
     }
 
     [Fact]
-    public void testCompare() {
+    public void testCompare()
+    {
         TestConstant a = pool.valueOf("a_alpha");
         TestConstant b = pool.valueOf("b_beta");
         TestConstant c = pool.valueOf("c_gamma");
         TestConstant d = pool.valueOf("d_delta");
         TestConstant e = pool.valueOf("e_epsilon");
 
-        Set<TestConstant> set = new TreeSet<TestConstant>();
-        set.add(b);
-        set.add(c);
-        set.add(e);
-        set.add(d);
-        set.add(a);
+        ISet<TestConstant> set = new SortedSet<TestConstant>();
+        set.Add(b);
+        set.Add(c);
+        set.Add(e);
+        set.Add(d);
+        set.Add(a);
 
-        TestConstant[] array = set.toArray(new TestConstant[0]);
-        Assert.Equal(5, array.length);
+        var array = set.ToList();
+        Assert.Equal(5, array.Count);
 
         // Sort by name
-        Arrays.sort(array, new Comparator<TestConstant>() {
-            @Override
-            public int compare(TestConstant o1, TestConstant o2) {
-                return o1.name().compareTo(o2.name());
-            }
-        });
+        array.Sort((o1, o2) => String.Compare(o1.name(), o2.name(), StringComparison.Ordinal));
 
         Assert.Same(a, array[0]);
         Assert.Same(b, array[1]);
@@ -97,8 +94,9 @@ public class ConstantPoolTest {
     }
 
     [Fact]
-    public void testComposedName() {
-        TestConstant a = pool.valueOf(Object.class, "A");
+    public void testComposedName()
+    {
+        TestConstant a = pool.valueOf("A");
         Assert.Equal("java.lang.Object#A", a.name());
     }
 }

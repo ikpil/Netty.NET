@@ -140,7 +140,7 @@ public class PlatformDependentTest {
     public void testAllocateWithCapacity0() {
         assumeTrue(PlatformDependent.hasDirectBufferNoCleanerConstructor());
         ByteBuffer buffer = PlatformDependent.allocateDirectNoCleaner(0);
-        assertNotEquals(0, PlatformDependent.directBufferAddress(buffer));
+        Assert.NotEqual(0, PlatformDependent.directBufferAddress(buffer));
         Assert.Equal(0, buffer.capacity());
         PlatformDependent.freeDirectNoCleaner(buffer);
     }
