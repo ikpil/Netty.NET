@@ -81,7 +81,7 @@ public class NonStickyEventExecutorGroupTest {
 
     @ParameterizedTest(name = PARAMETERIZED_NAME)
     @MethodSource("data")
-    public void testRaceCondition(int maxTaskExecutePerRun) throws ThreadInterruptedException {
+    public void testRaceCondition(int maxTaskExecutePerRun) {
         EventExecutorGroup group = new UnorderedThreadPoolEventExecutor(1);
         NonStickyEventExecutorGroup nonStickyGroup = new NonStickyEventExecutorGroup(group, maxTaskExecutePerRun);
 

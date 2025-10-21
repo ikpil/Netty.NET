@@ -63,7 +63,7 @@ namespace Netty.Common.Tests.Internal
 
     [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testCleanupContinuesDespiteThrowing() throws ThreadInterruptedException {
+    public void testCleanupContinuesDespiteThrowing() {
         final AtomicInteger freeCalledCount = new AtomicInteger();
         final CountdownEvent latch = new CountdownEvent(1);
         temporaryThread = new Thread(new IRunnable() {

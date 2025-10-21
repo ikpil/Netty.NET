@@ -38,6 +38,6 @@ public class ImmediateExecutorTest {
         ImmediateExecutor.INSTANCE.execute(task);
         Assert.True(task.isDone());
         Assert.False(task.isCancelled());
-        assertNull(task.get());
+        Assert.Null(task.get());
     }
 }

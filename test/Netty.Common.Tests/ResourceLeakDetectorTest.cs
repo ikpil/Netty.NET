@@ -25,7 +25,6 @@ namespace Netty.Common.Tests;
 public class ResourceLeakDetectorTest {
     //@SuppressWarnings("unused")
     private static volatile int sink;
-
     [Fact]
         @Timeout(value = 60000, unit = TimeUnit.MILLISECONDS)
     public void testConcurrentUsage() throws Throwable {

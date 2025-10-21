@@ -95,7 +95,7 @@ public void testMultipleRecycle() {
 }
 
 [Fact]
-public void testMultipleRecycleAtDifferentThread() throws ThreadInterruptedException {
+public void testMultipleRecycleAtDifferentThread() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
@@ -122,13 +122,13 @@ public void testMultipleRecycleAtDifferentThread() throws ThreadInterruptedExcep
     thread2.join();
     HandledObject a = recycler.get();
     HandledObject b = recycler.get();
-    assertNotSame(a, b);
+    Assert.NotSame(a, b);
     IllegalStateException exception = exceptionStore.get();
     Assert.NotNull(exception);
 }
 
 [Fact]
-public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterruptedException {
+public void testMultipleRecycleAtDifferentThreadRacing() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
@@ -172,7 +172,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterrupte
         countDownLatch.await();
         HandledObject a = recycler.get();
         HandledObject b = recycler.get();
-        assertNotSame(a, b);
+        Assert.NotSame(a, b);
         IllegalStateException exception = exceptionStore.get();
         if (exception != null) {
             assertThat(exception).hasMessageContaining("recycled already");
@@ -185,7 +185,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() throws ThreadInterrupte
 }
 
 [Fact]
-public void testMultipleRecycleRacing() throws ThreadInterruptedException {
+public void testMultipleRecycleRacing() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
@@ -221,7 +221,7 @@ public void testMultipleRecycleRacing() throws ThreadInterruptedException {
         countDownLatch.await();
         HandledObject a = recycler.get();
         HandledObject b = recycler.get();
-        assertNotSame(a, b);
+        Assert.NotSame(a, b);
         IllegalStateException exception = exceptionStore.get();
         Assert.NotNull(exception); // Object got recycled twice, so at least one of the calls must throw.
     } finally {
@@ -245,7 +245,7 @@ public void testRecycleDisable() {
     HandledObject object = recycler.get();
     object.recycle();
     HandledObject object2 = recycler.get();
-    assertNotSame(object, object2);
+    Assert.NotSame(object, object2);
     object2.recycle();
 }
 
@@ -309,7 +309,7 @@ public void testRecycleAtDifferentThread() {
     thread.join();
 
     Assert.Same(recycler.get(), o);
-    assertNotSame(recycler.get(), o2);
+    Assert.NotSame(recycler.get(), o2);
 }
 
 [Fact]

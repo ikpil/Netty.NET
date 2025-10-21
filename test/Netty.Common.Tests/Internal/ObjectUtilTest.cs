@@ -73,7 +73,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -93,7 +93,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -113,7 +113,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -133,7 +133,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -162,7 +162,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -191,7 +191,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -220,7 +220,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -249,7 +249,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -257,7 +257,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -277,7 +277,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -285,7 +285,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -305,7 +305,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -313,7 +313,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -333,7 +333,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -341,7 +341,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -371,7 +371,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -401,7 +401,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -431,7 +431,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -460,7 +460,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -490,7 +490,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -507,7 +507,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
     }
 
     [Fact]
@@ -528,7 +528,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {
@@ -545,7 +545,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
     }
 
     [Fact]
@@ -566,7 +566,7 @@ public class ObjectUtilTest {
         } catch (Exception e) {
             actualEx = e;
         }
-        assertNull(actualEx, TEST_RESULT_NULLEX_NOK);
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
         try {

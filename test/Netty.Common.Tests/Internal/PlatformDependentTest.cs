@@ -58,13 +58,13 @@ public class PlatformDependentTest {
     private static void testEquals(EqualityChecker equalsChecker) {
         byte[] bytes1 = {'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd'};
         byte[] bytes2 = {'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd'};
-        assertNotSame(bytes1, bytes2);
+        Assert.NotSame(bytes1, bytes2);
         Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, bytes1.length));
         Assert.True(equalsChecker.equals(bytes1, 2, bytes2, 2, bytes1.length - 2));
 
         bytes1 = new byte[] {1, 2, 3, 4, 5, 6};
         bytes2 = new byte[] {1, 2, 3, 4, 5, 6, 7};
-        assertNotSame(bytes1, bytes2);
+        Assert.NotSame(bytes1, bytes2);
         Assert.False(equalsChecker.equals(bytes1, 0, bytes2, 1, bytes1.length));
         Assert.True(equalsChecker.equals(bytes2, 0, bytes1, 0, bytes1.length));
 
@@ -80,7 +80,7 @@ public class PlatformDependentTest {
 
         bytes1 = new byte[0];
         bytes2 = new byte[0];
-        assertNotSame(bytes1, bytes2);
+        Assert.NotSame(bytes1, bytes2);
         Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, 0));
 
         bytes1 = new byte[100];

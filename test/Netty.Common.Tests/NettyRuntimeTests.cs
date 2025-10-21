@@ -60,7 +60,7 @@ public class NettyRuntimeTests {
     }
 
     [Fact]
-    public void testRacingGetAndGet() throws ThreadInterruptedException {
+    public void testRacingGetAndGet() {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         final CyclicBarrier barrier = new CyclicBarrier(3);
 
@@ -83,8 +83,8 @@ public class NettyRuntimeTests {
         firstGet.join();
         secondGet.join();
 
-        assertNull(firstReference.get());
-        assertNull(secondRefernce.get());
+        Assert.Null(firstReference.get());
+        Assert.Null(secondRefernce.get());
     }
 
     private static IRunnable getRunnable(
@@ -106,7 +106,7 @@ public class NettyRuntimeTests {
     }
 
     [Fact]
-    public void testRacingGetAndSet() throws ThreadInterruptedException {
+    public void testRacingGetAndSet() {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         final CyclicBarrier barrier = new CyclicBarrier(3);
         final Thread get = new Thread(new IRunnable() {

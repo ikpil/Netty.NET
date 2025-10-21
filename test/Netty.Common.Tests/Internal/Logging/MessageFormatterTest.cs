@@ -47,7 +47,7 @@ namespace Netty.Common.Tests.Internal.Logging
         [Fact]
         public void testNull() {
             string result = MessageFormatter.format(null, 1).getMessage();
-            assertNull(result);
+            Assert.Null(result);
         }
 
         [Fact]
@@ -319,7 +319,7 @@ namespace Netty.Common.Tests.Internal.Logging
 
             ft = MessageFormatter.arrayFormat("{}{}{}{}", ia);
             Assert.Equal("123java.lang.Throwable", ft.getMessage());
-            assertNull(ft.getThrowable());
+            Assert.Null(ft.getThrowable());
         }
     }
 }

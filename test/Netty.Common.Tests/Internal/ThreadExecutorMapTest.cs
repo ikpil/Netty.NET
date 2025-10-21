@@ -103,7 +103,7 @@ public class ThreadExecutorMapTest {
     }
 
     [Fact]
-    public void testDecorateThreadFactory() throws ThreadInterruptedException {
+    public void testDecorateThreadFactory() {
         IThreadFactory threadFactory =
                 ThreadExecutorMap.apply(Executors.defaultThreadFactory(), ImmediateEventExecutor.INSTANCE);
         Thread thread = threadFactory.newThread(new IRunnable() {

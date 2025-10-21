@@ -70,7 +70,7 @@ namespace Netty.Common.Tests.Concurrent
 
     [Fact]
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void scheduledAtFixedRateMustRunTaskRepeatedly() throws ThreadInterruptedException {
+    public void scheduledAtFixedRateMustRunTaskRepeatedly() {
         UnorderedThreadPoolEventExecutor executor = new UnorderedThreadPoolEventExecutor(1);
         final CountdownEvent latch = new CountdownEvent(3);
         Future<?> future = executor.scheduleAtFixedRate(new IRunnable() {

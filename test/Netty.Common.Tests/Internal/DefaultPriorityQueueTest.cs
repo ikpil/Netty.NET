@@ -285,8 +285,8 @@ public class DefaultPriorityQueueTest {
     }
 
     private static void assertEmptyQueue(PriorityQueue<TestElement> queue) {
-        assertNull(queue.peek());
-        assertNull(queue.poll());
+        Assert.Null(queue.peek());
+        Assert.Null(queue.poll());
         Assert.Equal(0, queue.size());
         Assert.True(queue.isEmpty());
     }

@@ -61,7 +61,7 @@ namespace Netty.Common.Tests.Internal.Logging
 
             Assert.NotNull(one);
             Assert.NotNull(two);
-            assertNotSame(one, two);
+            Assert.NotSame(one, two);
         }
 
         [Fact]

@@ -31,7 +31,7 @@ public class AbstractScheduledEventExecutorTest
         ScheduledFuture<?> future = executor.schedule(TEST_RUNNABLE, 0, TimeUnit.NANOSECONDS);
         Assert.Equal(0, future.getDelay(TimeUnit.NANOSECONDS));
         Assert.NotNull(executor.pollScheduledTask());
-        assertNull(executor.pollScheduledTask());
+        Assert.Null(executor.pollScheduledTask());
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class AbstractScheduledEventExecutorTest
         ScheduledFuture<?> future = executor.schedule(TEST_RUNNABLE, -1, TimeUnit.NANOSECONDS);
         Assert.Equal(0, future.getDelay(TimeUnit.NANOSECONDS));
         Assert.NotNull(executor.pollScheduledTask());
-        assertNull(executor.pollScheduledTask());
+        Assert.Null(executor.pollScheduledTask());
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class AbstractScheduledEventExecutorTest
         ScheduledFuture<?> future = executor.schedule(TEST_CALLABLE, 0, TimeUnit.NANOSECONDS);
         Assert.Equal(0, future.getDelay(TimeUnit.NANOSECONDS));
         Assert.NotNull(executor.pollScheduledTask());
-        assertNull(executor.pollScheduledTask());
+        Assert.Null(executor.pollScheduledTask());
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class AbstractScheduledEventExecutorTest
         ScheduledFuture<?> future = executor.schedule(TEST_CALLABLE, -1, TimeUnit.NANOSECONDS);
         Assert.Equal(0, future.getDelay(TimeUnit.NANOSECONDS));
         Assert.NotNull(executor.pollScheduledTask());
-        assertNull(executor.pollScheduledTask());
+        Assert.Null(executor.pollScheduledTask());
     }
 
     [Fact]

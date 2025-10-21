@@ -1,53 +1,55 @@
 /*
-* Copyright 2015 The Netty Project
-*
-* The Netty Project licenses this file to you under the Apache License,
-* version 2.0 (the "License"); you may not use this file except in compliance
-* with the License. You may obtain a copy of the License at:
-*
-*   https://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-* License for the specific language governing permissions and limitations
-* under the License.
-*/
+ * Copyright 2015 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 
-namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
+using Netty.NET.Common;
 
+namespace Netty.Common.Tests;
+
+public class DomainWildcardMappingBuilderTest
+{
     [Fact]
-    public void testNullDefaultValue() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                new DomainWildcardMappingBuilder<string>(null);
-            }
+    public void testNullDefaultValue()
+    {
+        Assert.Throws<NullReferenceException>(() =>
+        {
+            new DomainWildcardMappingBuilder<string>(null);
         });
     }
 
     [Fact]
-    public void testNullDomainNamePatternsAreForbidden() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                new DomainWildcardMappingBuilder<string>("NotFound").add(null, "Some value");
-            }
+    public void testNullDomainNamePatternsAreForbidden()
+    {
+        Assert.Throws<NullReferenceException>(() =>
+        {
+            new DomainWildcardMappingBuilder<string>("NotFound").add(null, "Some value");
         });
     }
 
     [Fact]
-    public void testNullValuesAreForbidden() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                new DomainWildcardMappingBuilder<string>("NotFound").add("Some key", null);
-            }
+    public void testNullValuesAreForbidden()
+    {
+        Assert.Throws<NullReferenceException>(() =>
+        {
+            new DomainWildcardMappingBuilder<string>("NotFound").add("Some key", null);
         });
     }
 
     [Fact]
-    public void testDefaultValue() {
+    public void testDefaultValue()
+    {
         IMapping<string, string> mapping = new DomainWildcardMappingBuilder<string>("NotFound")
             .add("*.netty.io", "Netty")
             .build();
@@ -56,7 +58,8 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
     }
 
     [Fact]
-    public void testStrictEquality() {
+    public void testStrictEquality()
+    {
         IMapping<string, string> mapping = new DomainWildcardMappingBuilder<string>("NotFound")
             .add("netty.io", "Netty")
             .add("downloads.netty.io", "Netty-Downloads")
@@ -69,7 +72,8 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
     }
 
     [Fact]
-    public void testWildcardMatchesNotAnyPrefix() {
+    public void testWildcardMatchesNotAnyPrefix()
+    {
         IMapping<string, string> mapping = new DomainWildcardMappingBuilder<string>("NotFound")
             .add("*.netty.io", "Netty")
             .build();
@@ -82,7 +86,8 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
     }
 
     [Fact]
-    public void testExactMatchWins() {
+    public void testExactMatchWins()
+    {
         Assert.Equal("Netty-Downloads",
             new DomainWildcardMappingBuilder<string>("NotFound")
                 .add("*.netty.io", "Netty")
@@ -99,7 +104,8 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
     }
 
     [Fact]
-    public void testToString() {
+    public void testToString()
+    {
         IMapping<string, string> mapping = new DomainWildcardMappingBuilder<string>("NotFound")
             .add("*.netty.io", "Netty")
             .add("downloads.netty.io", "Netty-Download")
@@ -107,7 +113,7 @@ namespace Netty.Common.Tests;public class DomainWildcardMappingBuilderTest {
 
         Assert.Equal(
             "ImmutableDomainWildcardMapping(default: NotFound, map: " +
-                    "{*.netty.io=Netty, downloads.netty.io=Netty-Download})",
-            mapping.toString());
+            "{*.netty.io=Netty, downloads.netty.io=Netty-Download})",
+            mapping.ToString());
     }
 }

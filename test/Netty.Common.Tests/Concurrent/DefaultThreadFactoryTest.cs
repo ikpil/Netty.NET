@@ -20,7 +20,7 @@ namespace Netty.Common.Tests.Concurrent
 
         [Fact]
             @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-        public void testDescendantThreadGroups() throws ThreadInterruptedException {
+        public void testDescendantThreadGroups() {
             final SecurityManager current = System.getSecurityManager();
 
             bool securityManagerSet = false;
@@ -84,7 +84,7 @@ namespace Netty.Common.Tests.Concurrent
             first.start();
             first.join();
 
-            assertNull(interrupted.get());
+            Assert.Null(interrupted.get());
 
             // now we will use factory again, this time from a sibling thread group sister
             // if DefaultThreadFactory is "sticky" about thread groups, a security manager
@@ -105,7 +105,7 @@ namespace Netty.Common.Tests.Concurrent
             second.start();
             second.join();
 
-            assertNull(interrupted.get());
+            Assert.Null(interrupted.get());
 
             Assert.Equal(2, counter.get());
         } finally {
@@ -119,7 +119,7 @@ namespace Netty.Common.Tests.Concurrent
     // created by it have the sticky thread group
     [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testDefaultThreadFactoryStickyThreadGroupConstructor() throws ThreadInterruptedException {
+    public void testDefaultThreadFactoryStickyThreadGroupConstructor() {
         final ThreadGroup sticky = new ThreadGroup("sticky");
         runStickyThreadGroupTest(
                 new Callable<DefaultThreadFactory>() {
@@ -135,7 +135,7 @@ namespace Netty.Common.Tests.Concurrent
     // the security manager
     [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testDefaultThreadFactoryInheritsThreadGroupFromSecurityManager() throws ThreadInterruptedException {
+    public void testDefaultThreadFactoryInheritsThreadGroupFromSecurityManager() {
         final SecurityManager current = System.getSecurityManager();
 
         bool securityManagerSet = false;
@@ -175,7 +175,7 @@ namespace Netty.Common.Tests.Concurrent
 
     private static void runStickyThreadGroupTest(
             final Callable<DefaultThreadFactory> callable,
-            final ThreadGroup expected) throws ThreadInterruptedException {
+            final ThreadGroup expected) {
         final AtomicReference<ThreadGroup> captured = new AtomicReference<ThreadGroup>();
         final AtomicReference<Throwable> exception = new AtomicReference<Throwable>();
 
@@ -200,7 +200,7 @@ namespace Netty.Common.Tests.Concurrent
         first.start();
         first.join();
 
-        assertNull(exception.get());
+        Assert.Null(exception.get());
 
         Assert.Equal(expected, captured.get());
     }
@@ -209,7 +209,7 @@ namespace Netty.Common.Tests.Concurrent
     // created by it inherit the correct thread group
     [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testDefaultThreadFactoryNonStickyThreadGroupConstructor() throws ThreadInterruptedException {
+    public void testDefaultThreadFactoryNonStickyThreadGroupConstructor() {
 
         final AtomicReference<DefaultThreadFactory> factory = new AtomicReference<DefaultThreadFactory>();
         final AtomicReference<ThreadGroup> firstCaptured = new AtomicReference<ThreadGroup>();
@@ -256,7 +256,7 @@ namespace Netty.Common.Tests.Concurrent
     // created by it inherit the correct thread group
     [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testCurrentThreadGroupIsUsed() throws ThreadInterruptedException {
+    public void testCurrentThreadGroupIsUsed() {
         final AtomicReference<DefaultThreadFactory> factory = new AtomicReference<DefaultThreadFactory>();
         final AtomicReference<ThreadGroup> firstCaptured = new AtomicReference<ThreadGroup>();
 

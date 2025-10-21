@@ -51,7 +51,7 @@ public class GlobalEventExecutorTest {
         // Ensure another new thread starts again.
         task.ran.set(false);
         e.execute(task);
-        assertNotSame(e.thread, thread);
+        Assert.NotSame(e.thread, thread);
         thread = e.thread;
 
         thread.join();
@@ -78,7 +78,7 @@ public class GlobalEventExecutorTest {
     // submitting thread
     [Fact]
     @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testThreadGroup() throws ThreadInterruptedException {
+    public void testThreadGroup() {
         final ThreadGroup group = new ThreadGroup("group");
         final AtomicReference<ThreadGroup> capturedGroup = new AtomicReference<ThreadGroup>();
         final Thread thread = new Thread(group, new IRunnable() {

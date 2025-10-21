@@ -37,11 +37,11 @@ public class SingleThreadEventExecutorTest {
             super.run();
         }
 
-        void awaitStarted() throws ThreadInterruptedException {
+        void awaitStarted() {
             startedLatch.await();
         }
 
-        void awaitRunnableExecution() throws ThreadInterruptedException {
+        void awaitRunnableExecution() {
             runLatch.await();
         }
     }

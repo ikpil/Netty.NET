@@ -32,7 +32,7 @@ public class FastThreadLocalTest {
         }
         };
 
-        assertNull(threadLocal.getAndSet(Boolean.FALSE));
+        Assert.Null(threadLocal.getAndSet(Boolean.FALSE));
         Assert.Equal(Boolean.FALSE, threadLocal.get());
         Assert.Equal(Boolean.FALSE, threadLocal.getAndSet(Boolean.TRUE));
         Assert.Equal(Boolean.TRUE, threadLocal.get());
@@ -48,12 +48,12 @@ public class FastThreadLocalTest {
         }
         };
 
-        assertNull(threadLocal.getIfExists());
+        Assert.Null(threadLocal.getIfExists());
         Assert.True(threadLocal.get());
         Assert.True(threadLocal.getIfExists());
 
         FastThreadLocal.removeAll();
-        assertNull(threadLocal.getIfExists());
+        Assert.Null(threadLocal.getIfExists());
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class FastThreadLocalTest {
 };
 
 // Initialize a thread-local variable.
-assertNull(var.get());
+Assert.Null(var.get());
 Assert.Equal(1, FastThreadLocal.size());
 
 // And then remove it.

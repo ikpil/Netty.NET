@@ -14,8 +14,10 @@
  * under the License.
  */
 
+using System;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.Common.Tests;/**
  * Test the underlying memory methods for the {@link AsciiString} class.

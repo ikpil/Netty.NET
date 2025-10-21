@@ -629,7 +629,7 @@ public class NetUtilTest {
         }
         for (string host : invalidIpV6Hosts.keySet()) {
             Assert.False(isValidIpV6Address(host), host);
-            assertNull(getByName(host), host);
+            Assert.Null(getByName(host), host);
 
             string hostMod = '[' + host + ']';
             Assert.False(isValidIpV6Address(hostMod), hostMod);
@@ -750,11 +750,11 @@ public class NetUtilTest {
     [Fact]
     public void testInvalidIpv4MappedIp6GetByName() {
         for (string host : invalidIpV4Hosts.keySet()) {
-            assertNull(getByName(host, true), host);
+            Assert.Null(getByName(host, true), host);
         }
 
         for (string host : invalidIpV6Hosts.keySet()) {
-            assertNull(getByName(host, true), host);
+            Assert.Null(getByName(host, true), host);
         }
     }
 
