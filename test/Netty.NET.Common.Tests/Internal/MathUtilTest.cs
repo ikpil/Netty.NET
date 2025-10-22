@@ -13,11 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Tests.Internal;
-public class MathUtilTest {
 
+namespace Netty.NET.Common.Tests.Internal;
+
+using static Netty.NET.Common.Internal.MathUtil;
+
+public class MathUtilTest
+{
     [Fact]
-    public void testFindNextPositivePowerOfTwo() {
+    public void testFindNextPositivePowerOfTwo()
+    {
         Assert.Equal(1, findNextPositivePowerOfTwo(0));
         Assert.Equal(1, findNextPositivePowerOfTwo(1));
         Assert.Equal(1024, findNextPositivePowerOfTwo(1000));
@@ -29,7 +34,8 @@ public class MathUtilTest {
     }
 
     [Fact]
-    public void testSafeFindNextPositivePowerOfTwo() {
+    public void testSafeFindNextPositivePowerOfTwo()
+    {
         Assert.Equal(1, safeFindNextPositivePowerOfTwo(0));
         Assert.Equal(1, safeFindNextPositivePowerOfTwo(1));
         Assert.Equal(1024, safeFindNextPositivePowerOfTwo(1000));
@@ -40,12 +46,13 @@ public class MathUtilTest {
         Assert.Equal(1, safeFindNextPositivePowerOfTwo(-10000));
         Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo(int.MaxValue));
         Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo((1 << 30) + 1));
-        Assert.Equal(1, safeFindNextPositivePowerOfTwo(Integer.MIN_VALUE));
-        Assert.Equal(1, safeFindNextPositivePowerOfTwo(Integer.MIN_VALUE + 1));
+        Assert.Equal(1, safeFindNextPositivePowerOfTwo(int.MinValue));
+        Assert.Equal(1, safeFindNextPositivePowerOfTwo(int.MinValue + 1));
     }
 
     [Fact]
-    public void testIsOutOfBounds() {
+    public void testIsOutOfBounds()
+    {
         Assert.False(isOutOfBounds(0, 0, 0));
         Assert.False(isOutOfBounds(0, 0, 1));
         Assert.False(isOutOfBounds(0, 1, 1));
@@ -60,9 +67,8 @@ public class MathUtilTest {
         Assert.True(isOutOfBounds(int.MaxValue - 1, 1, int.MaxValue - 1));
         Assert.True(isOutOfBounds(int.MaxValue - 1, 2, int.MaxValue));
         Assert.True(isOutOfBounds(1, int.MaxValue, int.MaxValue));
-        Assert.True(isOutOfBounds(0, 1, Integer.MIN_VALUE));
+        Assert.True(isOutOfBounds(0, 1, int.MinValue));
         Assert.True(isOutOfBounds(0, 1, -1));
         Assert.True(isOutOfBounds(0, int.MaxValue, 0));
     }
-
 }
