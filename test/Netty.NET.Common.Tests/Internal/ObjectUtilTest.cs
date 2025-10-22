@@ -12,6 +12,10 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+
+using System;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
 /**
@@ -21,21 +25,21 @@ namespace Netty.NET.Common.Tests.Internal;
  * presence and type, to have really regression character.
  *
  */
-public class ObjectUtilTest {
-
+public class ObjectUtilTest
+{
     private static readonly object NULL_OBJECT = null;
 
-    private static readonly object NON_NULL_OBJECT = "object is not null";
+    private static readonly string NON_NULL_OBJECT = "object is not null";
     private static readonly string NON_NULL_EMPTY_STRING = "";
     private static readonly string NON_NULL_WHITESPACE_STRING = "  ";
-    private static readonly object[] NON_NULL_EMPTY_OBJECT_ARRAY = {};
+    private static readonly object[] NON_NULL_EMPTY_OBJECT_ARRAY = { };
     private static readonly object[] NON_NULL_FILLED_OBJECT_ARRAY = { NON_NULL_OBJECT };
-    private static readonly CharSequence NULL_CHARSEQUENCE = (CharSequence) NULL_OBJECT;
-    private static readonly CharSequence NON_NULL_CHARSEQUENCE = (CharSequence) NON_NULL_OBJECT;
-    private static readonly CharSequence NON_NULL_EMPTY_CHARSEQUENCE = (CharSequence) NON_NULL_EMPTY_STRING;
-    private static readonly byte[] NON_NULL_EMPTY_BYTE_ARRAY = {};
-    private static readonly byte[] NON_NULL_FILLED_BYTE_ARRAY = { (byte) 0xa };
-    private static readonly char[] NON_NULL_EMPTY_CHAR_ARRAY = {};
+    private static readonly ICharSequence NULL_CHARSEQUENCE = (ICharSequence)NULL_OBJECT;
+    private static readonly ICharSequence NON_NULL_CHARSEQUENCE = new StringCharSequence(NON_NULL_OBJECT);
+    private static readonly ICharSequence NON_NULL_EMPTY_CHARSEQUENCE = new StringCharSequence(NON_NULL_EMPTY_STRING);
+    private static readonly byte[] NON_NULL_EMPTY_BYTE_ARRAY = { };
+    private static readonly byte[] NON_NULL_FILLED_BYTE_ARRAY = { (byte)0xa };
+    private static readonly char[] NON_NULL_EMPTY_CHAR_ARRAY = { };
     private static readonly char[] NON_NULL_FILLED_CHAR_ARRAY = { 'A' };
 
     private static readonly string NULL_NAME = "IS_NULL";
@@ -66,524 +70,758 @@ public class ObjectUtilTest {
     private static readonly string NUM_NEG_NAME = "NUMBER_NEGATIVE";
 
     [Fact]
-    public void testCheckNotNull() {
+    public void testCheckNotNull()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkNotNull(NON_NULL_OBJECT, NON_NULL_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkNotNull(NULL_OBJECT, NULL_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckNotNullWithIAE() {
+    public void testCheckNotNullWithIAE()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkNotNullWithIAE(NON_NULL_OBJECT, NON_NULL_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkNotNullWithIAE(NULL_OBJECT, NULL_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckNotNullArrayParam() {
+    public void testCheckNotNullArrayParam()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkNotNullArrayParam(NON_NULL_OBJECT, 1, NON_NULL_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkNotNullArrayParam(NULL_OBJECT, 1, NULL_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckPositiveIntString() {
+    public void testCheckPositiveIntString()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(POS_ONE_INT, NUM_POS_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(ZERO_INT, NUM_ZERO_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(NEG_ONE_INT, NUM_NEG_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckPositiveLongString() {
+    public void testCheckPositiveLongString()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(POS_ONE_LONG, NUM_POS_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(ZERO_LONG, NUM_ZERO_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(NEG_ONE_LONG, NUM_NEG_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckPositiveDoubleString() {
+    public void testCheckPositiveDoubleString()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(POS_ONE_DOUBLE, NUM_POS_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(ZERO_DOUBLE, NUM_ZERO_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(NEG_ONE_DOUBLE, NUM_NEG_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckPositiveFloatString() {
+    public void testCheckPositiveFloatString()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(POS_ONE_FLOAT, NUM_POS_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(ZERO_FLOAT, NUM_ZERO_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositive(NEG_ONE_FLOAT, NUM_NEG_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckPositiveOrZeroIntString() {
+    public void testCheckPositiveOrZeroIntString()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(POS_ONE_INT, NUM_POS_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(ZERO_INT, NUM_ZERO_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(NEG_ONE_INT, NUM_NEG_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckPositiveOrZeroLongString() {
+    public void testCheckPositiveOrZeroLongString()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(POS_ONE_LONG, NUM_POS_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(ZERO_LONG, NUM_ZERO_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(NEG_ONE_LONG, NUM_NEG_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckPositiveOrZeroDoubleString() {
+    public void testCheckPositiveOrZeroDoubleString()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(POS_ONE_DOUBLE, NUM_POS_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(ZERO_DOUBLE, NUM_ZERO_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(NEG_ONE_DOUBLE, NUM_NEG_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckPositiveOrZeroFloatString() {
+    public void testCheckPositiveOrZeroFloatString()
+    {
         Exception actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(POS_ONE_FLOAT, NUM_POS_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(ZERO_FLOAT, NUM_ZERO_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkPositiveOrZero(NEG_ONE_FLOAT, NUM_NEG_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckNonEmptyTArrayString() {
+    public void testCheckNonEmptyTArrayString()
+    {
         Exception actualEx = null;
 
-        try {
-            ObjectUtil.checkNonEmpty((object[]) NULL_OBJECT, NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((object[])NULL_OBJECT, NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((object[]) NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((object[])NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((object[]) NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((object[])NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckNonEmptyByteArrayString() {
+    public void testCheckNonEmptyByteArrayString()
+    {
         Exception actualEx = null;
 
-        try {
-            ObjectUtil.checkNonEmpty((byte[]) NULL_OBJECT, NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((byte[])NULL_OBJECT, NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((byte[]) NON_NULL_FILLED_BYTE_ARRAY, NON_NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((byte[])NON_NULL_FILLED_BYTE_ARRAY, NON_NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((byte[]) NON_NULL_EMPTY_BYTE_ARRAY, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((byte[])NON_NULL_EMPTY_BYTE_ARRAY, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckNonEmptyCharArrayString() {
+    public void testCheckNonEmptyCharArrayString()
+    {
         Exception actualEx = null;
 
-        try {
-            ObjectUtil.checkNonEmpty((char[]) NULL_OBJECT, NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((char[])NULL_OBJECT, NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((char[]) NON_NULL_FILLED_CHAR_ARRAY, NON_NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((char[])NON_NULL_FILLED_CHAR_ARRAY, NON_NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((char[]) NON_NULL_EMPTY_CHAR_ARRAY, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((char[])NON_NULL_EMPTY_CHAR_ARRAY, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckNonEmptyTString() {
+    public void testCheckNonEmptyTString()
+    {
         Exception actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((object[]) NULL_OBJECT, NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((object[])NULL_OBJECT, NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((object[]) NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((object[])NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((object[]) NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((object[])NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
-    public void testCheckNonEmptyStringString() {
+    public void testCheckNonEmptyStringString()
+    {
         Exception actualEx = null;
 
-        try {
-            ObjectUtil.checkNonEmpty((string) NULL_OBJECT, NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((string)NULL_OBJECT, NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((string) NON_NULL_OBJECT, NON_NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((string)NON_NULL_OBJECT, NON_NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((string) NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((string)NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((string) NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((string)NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
-        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
-    }
 
-    [Fact]
-    public void testCheckNonEmptyCharSequenceString() {
-        Exception actualEx = null;
-
-        try {
-            ObjectUtil.checkNonEmpty((CharSequence) NULL_CHARSEQUENCE, NULL_NAME);
-        } catch (Exception e) {
-            actualEx = e;
-        }
-        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
-
-        actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((CharSequence) NON_NULL_CHARSEQUENCE, NON_NULL_NAME);
-        } catch (Exception e) {
-            actualEx = e;
-        }
-        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
-
-        actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((CharSequence) NON_NULL_EMPTY_CHARSEQUENCE, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
-            actualEx = e;
-        }
-        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
-
-        actualEx = null;
-        try {
-            ObjectUtil.checkNonEmpty((CharSequence) NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
-            actualEx = e;
-        }
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
     }
 
     [Fact]
-    public void testCheckNonEmptyAfterTrim() {
+    public void testCheckNonEmptyCharSequenceString()
+    {
         Exception actualEx = null;
 
-        try {
-            ObjectUtil.checkNonEmptyAfterTrim((string) NULL_OBJECT, NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((ICharSequence)NULL_CHARSEQUENCE, NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
-            ObjectUtil.checkNonEmptyAfterTrim((string) NON_NULL_OBJECT, NON_NULL_NAME);
-        } catch (Exception e) {
+        try
+        {
+            ObjectUtil.checkNonEmpty((ICharSequence)NON_NULL_CHARSEQUENCE, NON_NULL_NAME);
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
+            ObjectUtil.checkNonEmpty((ICharSequence)NON_NULL_EMPTY_CHARSEQUENCE, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
+
+        actualEx = null;
+        try
+        {
+            ObjectUtil.checkNonEmpty((CharSequence)NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
+    }
+
+    [Fact]
+    public void testCheckNonEmptyAfterTrim()
+    {
+        Exception actualEx = null;
+
+        try
+        {
+            ObjectUtil.checkNonEmptyAfterTrim((string)NULL_OBJECT, NULL_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+
+        actualEx = null;
+        try
+        {
+            ObjectUtil.checkNonEmptyAfterTrim((string)NON_NULL_OBJECT, NON_NULL_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
+
+        actualEx = null;
+        try
+        {
             ObjectUtil.checkNonEmptyAfterTrim(NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
-        try {
+        try
+        {
             ObjectUtil.checkNonEmptyAfterTrim(NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             actualEx = e;
         }
+
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx instanceof ArgumentException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
     }
 }
