@@ -44,13 +44,13 @@ public class NonStickyEventExecutorGroupTest {
     @ParameterizedTest(name = PARAMETERIZED_NAME)
     @MethodSource("data")
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void testOrdering(int maxTaskExecutePerRun) throws Throwable {
+    public void testOrdering(int maxTaskExecutePerRun) throws Exception {
         final int threads = NettyRuntime.availableProcessors() * 2;
         final EventExecutorGroup group = new UnorderedThreadPoolEventExecutor(threads);
         final NonStickyEventExecutorGroup nonStickyGroup = new NonStickyEventExecutorGroup(group, maxTaskExecutePerRun);
         try {
             final CountdownEvent startLatch = new CountdownEvent(1);
-            final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
+            final AtomicReference<Exception> error = new AtomicReference<Exception>();
             List<Thread> threadList = new List<Thread>(threads);
             for (int i = 0 ; i < threads; i++) {
                 Thread thread = new Thread(new IRunnable() {
@@ -58,7 +58,7 @@ public class NonStickyEventExecutorGroupTest {
                     public void run() {
                         try {
                             execute(nonStickyGroup, startLatch);
-                        } catch (Throwable cause) {
+                        } catch (Exception cause) {
                             error.compareAndSet(null, cause);
                         }
                     }
@@ -70,7 +70,7 @@ public class NonStickyEventExecutorGroupTest {
             for (Thread t: threadList) {
                 t.join();
             }
-            Throwable cause = error.get();
+            Exception cause = error.get();
             if (cause != null) {
                 throw cause;
             }
@@ -109,10 +109,10 @@ public class NonStickyEventExecutorGroupTest {
         }
     }
 
-    private static void execute(EventExecutorGroup group, CountdownEvent startLatch) throws Throwable {
+    private static void execute(EventExecutorGroup group, CountdownEvent startLatch) throws Exception {
         final EventExecutor executor = group.next();
         Assert.True(executor instanceof OrderedEventExecutor);
-        final AtomicReference<Throwable> cause = new AtomicReference<Throwable>();
+        final AtomicReference<Exception> cause = new AtomicReference<Exception>();
         final AtomicInteger last = new AtomicInteger();
         int tasks = 10000;
         List<Future<?>> futures = new List<Future<?>>(tasks);
@@ -150,7 +150,7 @@ public class NonStickyEventExecutorGroupTest {
         for (Future<?> future: futures) {
             future.syncUninterruptibly();
         }
-        Throwable error = cause.get();
+        Exception error = cause.get();
         if (error != null) {
             throw error;
         }

@@ -27,9 +27,9 @@ public class ResourceLeakDetectorTest {
     private static volatile int sink;
     [Fact]
         @Timeout(value = 60000, unit = TimeUnit.MILLISECONDS)
-    public void testConcurrentUsage() throws Throwable {
+    public void testConcurrentUsage() throws Exception {
         final AtomicBoolean finished = new AtomicBoolean();
-        final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
+        final AtomicReference<Exception> error = new AtomicReference<Exception>();
         // With 50 threads issue #6087 is reproducible on every run.
         Thread[] threads = new Thread[50];
         final CyclicBarrier barrier = new CyclicBarrier(threads.length);
@@ -58,7 +58,7 @@ public class ResourceLeakDetectorTest {
         }
         } catch (ThreadInterruptedException e) {
             Thread.CurrentThread.interrupt();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             error.compareAndSet(null, e);
         } finally {
             // Just close all resource now without assert it to eliminate more reports.
@@ -99,7 +99,7 @@ assertNoErrors(error);
 
 @Timeout(10)
 [Fact]
-public void testLeakSetupHints() throws Throwable {
+public void testLeakSetupHints() throws Exception {
     DefaultResource.detectorWithSetupHint.initialise();
     leakResource();
 
@@ -121,7 +121,7 @@ public void testLeakSetupHints() throws Throwable {
 
 @Timeout(10)
 [Fact]
-public void testLeakBrokenHint() throws Throwable {
+public void testLeakBrokenHint() throws Exception {
     DefaultResource.detectorWithSetupHint.initialise();
 
     DefaultResource.detectorWithSetupHint.failOnUntraced = false;
@@ -199,8 +199,8 @@ private interface Resource {
     bool close();
 }
 
-private static void assertNoErrors(AtomicReference<Throwable> ref) throws Throwable {
-    Throwable error = ref.get();
+private static void assertNoErrors(AtomicReference<Exception> ref) throws Exception {
+    Exception error = ref.get();
     if (error != null) {
         throw error;
     }
@@ -208,7 +208,7 @@ private static void assertNoErrors(AtomicReference<Throwable> ref) throws Throwa
 
 private static final class TestResourceLeakDetector<T> extends ResourceLeakDetector<T> {
 
-    private final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
+    private final AtomicReference<Exception> error = new AtomicReference<Exception>();
 
     TestResourceLeakDetector(Class<?> resourceType, int samplingInterval, long maxActive) {
         super(resourceType, samplingInterval, maxActive);
@@ -233,7 +233,7 @@ private static final class TestResourceLeakDetector<T> extends ResourceLeakDetec
         error.compareAndSet(null, cause);
     }
 
-    void assertNoErrors() throws Throwable {
+    void assertNoErrors() throws Exception {
         ResourceLeakDetectorTest.assertNoErrors(error);
     }
 }
@@ -243,7 +243,7 @@ private static final class CreationRecordLeakDetector<T> extends ResourceLeakDet
     Object initialHint;
     bool failOnUntraced = true;
 
-    private final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
+    private final AtomicReference<Exception> error = new AtomicReference<Exception>();
 private final AtomicInteger leaksFound = new AtomicInteger(0);
 
 CreationRecordLeakDetector(Class<?> resourceType, int samplingInterval) {
@@ -290,7 +290,7 @@ int getLeaksFound() {
     return leaksFound.get();
 }
 
-void assertNoErrors() throws Throwable {
+void assertNoErrors() throws Exception {
     ResourceLeakDetectorTest.assertNoErrors(error);
 }
 }

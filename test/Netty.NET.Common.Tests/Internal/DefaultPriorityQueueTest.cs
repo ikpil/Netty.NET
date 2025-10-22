@@ -149,7 +149,7 @@ public class DefaultPriorityQueueTest {
             try {
                 Assert.True(queue.removeTyped(values[i]));
                 Assert.Equal(queue.size(), values.length - (i + 1));
-            } catch (Throwable cause) {
+            } catch (Exception cause) {
                 StringBuilder sb = new StringBuilder(values.length * 2);
                 sb.append("error on removal of index: ").append(i).append(" [");
                 for (TestElement value : values) {

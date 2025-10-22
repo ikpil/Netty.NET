@@ -94,7 +94,7 @@ public class PromiseAggregatorTest {
                 new PromiseAggregator<Void, Future<Void>>(p);
         Promise<Void> p1 = mock(Promise.class);
         Promise<Void> p2 = mock(Promise.class);
-        Throwable t = mock(Throwable.class);
+        Exception t = mock(Exception.class);
 
         when(p1.addListener(a)).thenReturn(p1);
         when(p2.addListener(a)).thenReturn(p2);
@@ -121,7 +121,7 @@ public class PromiseAggregatorTest {
                 new PromiseAggregator<Void, Future<Void>>(p, false);
         Promise<Void> p1 = mock(Promise.class);
         Promise<Void> p2 = mock(Promise.class);
-        Throwable t = mock(Throwable.class);
+        Exception t = mock(Exception.class);
 
         when(p1.addListener(a)).thenReturn(p1);
         when(p2.addListener(a)).thenReturn(p2);

@@ -201,7 +201,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
         }
     }
 
-    private static void verifyFail(Promise<Void> p, Throwable cause) {
+    private static void verifyFail(Promise<Void> p, Exception cause) {
         verify(p).tryFailure(eq(cause));
     }
 
@@ -211,9 +211,9 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
     private static void verifyNotCompleted(Promise<Void> p) {
         verify(p, never()).trySuccess(any(Void.class));
-        verify(p, never()).tryFailure(any(Throwable.class));
+        verify(p, never()).tryFailure(any(Exception.class));
         verify(p, never()).setSuccess(any(Void.class));
-        verify(p, never()).setFailure(any(Throwable.class));
+        verify(p, never()).setFailure(any(Exception.class));
     }
 
     private static void mockSuccessPromise(Promise<Void> p, GenericFutureListenerConsumer consumer) {
@@ -222,7 +222,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
         mockListener(p, consumer);
     }
 
-    private static void mockFailedPromise(Promise<Void> p, Throwable cause, GenericFutureListenerConsumer consumer) {
+    private static void mockFailedPromise(Promise<Void> p, Exception cause, GenericFutureListenerConsumer consumer) {
         when(p.isDone()).thenReturn(true);
         when(p.isSuccess()).thenReturn(false);
         when(p.cause()).thenReturn(cause);
@@ -234,7 +234,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
         doAnswer(new Answer<Promise<Void>>() {
             @SuppressWarnings({ "unchecked", "raw-types" })
             @Override
-            public Promise<Void> answer(InvocationOnMock invocation) throws Throwable {
+            public Promise<Void> answer(InvocationOnMock invocation) throws Exception {
                 consumer.accept((GenericFutureListener) invocation.getArgument(0));
                 return p;
             }

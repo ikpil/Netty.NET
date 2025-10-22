@@ -35,7 +35,7 @@ public class DefaultThreadFactory : IThreadFactory
     //protected readonly ThreadGroup _threadGroup;
 
     public DefaultThreadFactory(Type poolType, bool daemon = false, ThreadPriority priority = ThreadPriority.Normal)
-        : this(toPoolName(poolType), daemon, priority)
+        : this(toPoolName(poolType), daemon, priority, null)
     {
     }
 
@@ -63,7 +63,7 @@ public class DefaultThreadFactory : IThreadFactory
     }
 
 
-    public DefaultThreadFactory(string poolName, bool daemon, ThreadPriority priority)
+    public DefaultThreadFactory(string poolName, bool daemon, ThreadPriority priority, ThreadGroup threadGroup)
     {
         ObjectUtil.checkNotNull(poolName, "poolName");
 

@@ -143,7 +143,7 @@ public void testCancellationExceptionIsThrownWhenBlockingGet() {
     Assert.True(promise.cancel(false));
     Assert.Throws<TaskCanceledException>(new Executable() {
         @Override
-        public void execute() throws Throwable {
+        public void execute() throws Exception {
         promise.get();
     }
     });
@@ -155,7 +155,7 @@ public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout() {
     Assert.True(promise.cancel(false));
     Assert.Throws<TaskCanceledException>(new Executable() {
         @Override
-        public void execute() throws Throwable {
+        public void execute() throws Exception {
         promise.get(1, TimeUnit.SECONDS);
     }
     });
@@ -464,7 +464,7 @@ final CountdownEvent latch) {
      * <li>The write operation</li>
      * </ol>
      */
-private static void testLateListenerIsOrderedCorrectly(Throwable cause) {
+private static void testLateListenerIsOrderedCorrectly(Exception cause) {
     final EventExecutor executor = new TestEventExecutor();
     try {
         final AtomicInteger state = new AtomicInteger();
@@ -531,7 +531,7 @@ private static void testLateListenerIsOrderedCorrectly(Throwable cause) {
     }
 }
 
-private static void testPromiseListenerAddWhenComplete(Throwable cause) {
+private static void testPromiseListenerAddWhenComplete(Exception cause) {
     final CountdownEvent latch = new CountdownEvent(1);
     final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
     promise.addListener(new FutureListener<Void>() {

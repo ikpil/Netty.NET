@@ -80,14 +80,14 @@ Assert.Equal(0, FastThreadLocal.size());
 
 [Fact]
 @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-public void testRemoveAllFromFTLThread() throws Throwable {
-    final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
+public void testRemoveAllFromFTLThread() throws Exception {
+    final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
     final Thread thread = new FastThreadLocalThread() {
         @Override
         public void run() {
         try {
         testRemoveAll();
-    } catch (Throwable t) {
+    } catch (Exception t) {
         throwable.set(t);
     }
     }
@@ -96,7 +96,7 @@ public void testRemoveAllFromFTLThread() throws Throwable {
     thread.start();
     thread.join();
 
-    Throwable t = throwable.get();
+    Exception t = throwable.get();
     if (t != null) {
         throw t;
     }
@@ -318,7 +318,7 @@ public void testConstructionWithIndex() {
     nextIndexField.setAccessible(true);
     AtomicInteger nextIndex = (AtomicInteger) nextIndexField.get(AtomicInteger.class);
     int nextIndex_before = nextIndex.get();
-    final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
+    final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
     try {
         while (nextIndex.get() < ARRAY_LIST_CAPACITY_MAX_SIZE) {
             new FastThreadLocal<Boolean>();
@@ -326,7 +326,7 @@ public void testConstructionWithIndex() {
         Assert.Equal(ARRAY_LIST_CAPACITY_MAX_SIZE - 1, InternalThreadLocalMap.lastVariableIndex());
         try {
             new FastThreadLocal<Boolean>();
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throwable.set(t);
         } finally {
             // Assert the max index cannot greater than (ARRAY_LIST_CAPACITY_MAX_SIZE - 1).
@@ -349,14 +349,14 @@ public void testConstructionWithIndex() {
                                                                                "This matches what Github Actions is doing for us currently.")
 [Fact]
 public void testInternalThreadLocalMapExpand() {
-    final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
+    final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
     IRunnable runnable = new IRunnable() {
         @Override
         public void run() {
         int expand_threshold = 1 << 30;
         try {
         InternalThreadLocalMap.get().setIndexedVariable(expand_threshold, null);
-    } catch (Throwable t) {
+    } catch (Exception t) {
         throwable.set(t);
     }
     }
@@ -403,7 +403,7 @@ public void testFastThreadLocalSize() {
 
 [Fact]
 public void testFastThreadLocalInitialValueWithUnset() {
-    final AtomicReference<Throwable> throwable = new AtomicReference<Throwable>();
+    final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
     final FastThreadLocal fst = new FastThreadLocal() {
         @Override
         protected Object initialValue() {
@@ -415,7 +415,7 @@ public void testFastThreadLocalInitialValueWithUnset() {
         public void run() {
         try {
         fst.get();
-    } catch (Throwable t) {
+    } catch (Exception t) {
         throwable.set(t);
     }
     }

@@ -52,7 +52,7 @@ public class RecyclerTest {
     }
 }) {
 @Override
-protected void finalize() throws Throwable {
+protected void finalize() throws Exception {
     super.finalize();
     collected.set(true);
 }

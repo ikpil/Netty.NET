@@ -92,15 +92,15 @@ public abstract class AbstractInternalLoggerTest<T>
         clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, msg, msg, msg });
         Assert.True(result.IsEmpty());
 
-        // test xx(format, ...arguments), the last argument is Throwable
+        // test xx(format, ...arguments), the last argument is Exception
         clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, msg, msg, msg, ex });
         Assert.True(result.IsEmpty());
 
-        // test xx(msg, Throwable)
+        // test xx(msg, Exception)
         clazz.GetMethod(logMethod, [typeof(string), typeof(object)]).Invoke(logger, new object[] { msg, ex });
         Assert.True(result.IsEmpty());
 
-        // test xx(Throwable)
+        // test xx(Exception)
         clazz.GetMethod(logMethod, [typeof(Exception)]).Invoke(logger, new object[] { ex });
         Assert.True(result.IsEmpty());
 
@@ -128,17 +128,17 @@ public abstract class AbstractInternalLoggerTest<T>
         clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, msg, msg, msg });
         assertResult(level, format3, null, msg, msg, msg);
 
-        // test xx(format, ...arguments), the last argument is Throwable
+        // test xx(format, ...arguments), the last argument is Exception
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, msg, msg, msg, ex });
         assertResult(level, format3, ex, msg, msg, msg, ex);
 
-        // test xx(msg, Throwable)
+        // test xx(msg, Exception)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string), typeof(Exception)]).Invoke(logger, new object[] { msg, ex });
         assertResult(level, null, ex, msg);
 
-        // test xx(Throwable)
+        // test xx(Exception)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(Exception)]).Invoke(logger, [ex]);
         assertResult(level, null, ex);

@@ -93,7 +93,7 @@ class NativeLibraryLoaderTest {
     private static void verifySuppressedException(UnsatisfiedLinkError error,
             Class<?> expectedSuppressedExceptionClass) {
         try {
-            Throwable[] suppressed = error.getCause().getSuppressed();
+            Exception[] suppressed = error.getCause().getSuppressed();
             Assert.True(suppressed.length == 1);
             Assert.True(suppressed[0] instanceof UnsatisfiedLinkError);
             suppressed = (suppressed[0]).getSuppressed();

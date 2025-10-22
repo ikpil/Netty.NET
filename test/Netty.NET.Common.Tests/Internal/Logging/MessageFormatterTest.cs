@@ -282,7 +282,7 @@ namespace Netty.NET.Common.Tests.Internal.Logging
         [Fact]
         public void testArrayThrowable() {
             FormattingTuple ft;
-            Throwable t = new Throwable();
+            Exception t = new Exception();
             Object[] ia = { 1, 2, 3, t };
 
             ft = MessageFormatter.arrayFormat("Value {} is smaller than {} and {}.", ia);
@@ -318,7 +318,7 @@ namespace Netty.NET.Common.Tests.Internal.Logging
             Assert.Equal(t, ft.getThrowable());
 
             ft = MessageFormatter.arrayFormat("{}{}{}{}", ia);
-            Assert.Equal("123java.lang.Throwable", ft.getMessage());
+            Assert.Equal("123java.lang.Exception", ft.getMessage());
             Assert.Null(ft.getThrowable());
         }
     }

@@ -67,7 +67,7 @@ Assert.True(PlatformDependent.isVirtualThread(virtualThread));
 }
 
 [Fact]
-public void testGetVirtualThreadCheckMethod() throws Throwable {
+public void testGetVirtualThreadCheckMethod() throws Exception {
     if (PlatformDependent.javaVersion() < 19) {
         Assert.Null(IS_VIRTUAL_THREAD_METHOD_HANDLE);
     } else {

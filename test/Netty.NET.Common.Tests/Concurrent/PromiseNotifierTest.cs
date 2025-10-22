@@ -75,7 +75,7 @@ public class PromiseNotifierTest {
 
         //@SuppressWarnings("unchecked")
         Future<Void> future = mock(Future.class);
-        Throwable t = mock(Throwable.class);
+        Exception t = mock(Exception.class);
         when(future.isSuccess()).thenReturn(false);
         when(future.isCancelled()).thenReturn(false);
         when(future.cause()).thenReturn(t);

@@ -305,7 +305,7 @@ public class SingleThreadEventExecutorTest {
         try {
             Assert.Throws<RejectedExecutionException>(new Executable() {
                 @Override
-                public void execute() throws Throwable {
+                public void execute() throws Exception {
                     final Promise<Void> promise = executor.newPromise();
                     executor.execute(new IRunnable() {
                         @Override
@@ -333,7 +333,7 @@ public class SingleThreadEventExecutorTest {
                                     }
                                 }
                                 promise.setFailure(new AssertionError("Should never reach here"));
-                            } catch (Throwable cause) {
+                            } catch (Exception cause) {
                                 promise.setFailure(cause);
                             }
                         }

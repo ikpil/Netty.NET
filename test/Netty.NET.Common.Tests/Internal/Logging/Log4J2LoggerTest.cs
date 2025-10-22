@@ -34,7 +34,7 @@ namespace Netty.NET.Common.Tests.Internal.Logging
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void logMessage(string fqcn, Level level, Marker marker, Message message, Throwable t) {
+            public void logMessage(string fqcn, Level level, Marker marker, Message message, Exception t) {
             result.put("level", level.name());
             result.put("t", t);
             super.logMessage(fqcn, level, marker, message, t);
@@ -63,7 +63,7 @@ namespace Netty.NET.Common.Tests.Internal.Logging
     }
 
     @Override
-    protected void assertResult(InternalLogLevel level, string format, Throwable t, Object... args) {
+    protected void assertResult(InternalLogLevel level, string format, Exception t, Object... args) {
         super.assertResult(level, format, t, args);
         Assert.Equal(t, result.get("t"));
         Assert.Equal(level.name(), result.get("level"));

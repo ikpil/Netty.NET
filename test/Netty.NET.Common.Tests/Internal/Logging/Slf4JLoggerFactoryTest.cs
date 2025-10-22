@@ -80,19 +80,19 @@ namespace Netty.NET.Common.Tests.Internal.Logging
 
             verify(logger, times(3)).log(ArgumentMatchers.<Marker>isNull(), eq(LocationAwareSlf4JLogger.FQCN),
             eq(LocationAwareLogger.DEBUG_INT), captor.capture(), ArgumentMatchers.<Object[]>isNull(),
-            ArgumentMatchers.<Throwable>isNull());
+            ArgumentMatchers.<Exception>isNull());
             verify(logger, times(3)).log(ArgumentMatchers.<Marker>isNull(), eq(LocationAwareSlf4JLogger.FQCN),
             eq(LocationAwareLogger.ERROR_INT), captor.capture(), ArgumentMatchers.<Object[]>isNull(),
-            ArgumentMatchers.<Throwable>isNull());
+            ArgumentMatchers.<Exception>isNull());
             verify(logger, times(3)).log(ArgumentMatchers.<Marker>isNull(), eq(LocationAwareSlf4JLogger.FQCN),
             eq(LocationAwareLogger.INFO_INT), captor.capture(), ArgumentMatchers.<Object[]>isNull(),
-            ArgumentMatchers.<Throwable>isNull());
+            ArgumentMatchers.<Exception>isNull());
             verify(logger, times(3)).log(ArgumentMatchers.<Marker>isNull(), eq(LocationAwareSlf4JLogger.FQCN),
             eq(LocationAwareLogger.TRACE_INT), captor.capture(), ArgumentMatchers.<Object[]>isNull(),
-            ArgumentMatchers.<Throwable>isNull());
+            ArgumentMatchers.<Exception>isNull());
             verify(logger, times(3)).log(ArgumentMatchers.<Marker>isNull(), eq(LocationAwareSlf4JLogger.FQCN),
             eq(LocationAwareLogger.WARN_INT), captor.capture(), ArgumentMatchers.<Object[]>isNull(),
-            ArgumentMatchers.<Throwable>isNull());
+            ArgumentMatchers.<Exception>isNull());
 
             Iterator<string> logMessages = captor.getAllValues().iterator();
             Assert.Equal("debug", logMessages.next());
