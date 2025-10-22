@@ -32,12 +32,12 @@ public class NonStickyEventExecutorGroupTest {
         }
     }
 
-    public static ICollection<Object[]> data() {
-        List<Object[]> params = new List<Object[]>();
-        params.add(new Object[] {64});
-        params.add(new Object[] {256});
-        params.add(new Object[] {1024});
-        params.add(new Object[] {int.MaxValue});
+    public static ICollection<object[]> data() {
+        List<object[]> params = new List<object[]>();
+        params.add(new object[] {64});
+        params.add(new object[] {256});
+        params.add(new object[] {1024});
+        params.add(new object[] {int.MaxValue});
         return params;
     }
 

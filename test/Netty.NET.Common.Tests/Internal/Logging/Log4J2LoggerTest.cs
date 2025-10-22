@@ -60,7 +60,7 @@ namespace Netty.NET.Common.Tests.Internal.Logging
     }
 
     @Override
-    protected void assertResult(InternalLogLevel level, string format, Exception t, Object... args) {
+    protected void assertResult(InternalLogLevel level, string format, Exception t, object... args) {
         super.assertResult(level, format, t, args);
         Assert.Equal(t, result.get("t"));
         Assert.Equal(level.name(), result.get("level"));

@@ -174,7 +174,7 @@ public class MessageFormatterTest
         string msg2 = "msg2 {} {}";
         string msg3 = "msg3 {} {} {}";
 
-        Object[] args = null;
+        object[] args = null;
 
         string result = MessageFormatter.arrayFormat(msg0, args).getMessage();
         Assert.Equal(msg0, result);
@@ -264,11 +264,11 @@ public class MessageFormatterTest
         result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", multiFloatA }).getMessage();
         Assert.Equal("a[[1.0, 2.0], [10.0, 20.0]]", result);
 
-        Object[][] multiOA = { ia0, ia1 };
+        object[][] multiOA = { ia0, ia1 };
         result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", multiOA }).getMessage();
         Assert.Equal("a[[1, 2, 3], [10, 20, 30]]", result);
 
-        Object[][][] _3DOA = { multiOA, multiOA };
+        object[][][] _3DOA = { multiOA, multiOA };
         result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", _3DOA }).getMessage();
         Assert.Equal("a[[[1, 2, 3], [10, 20, 30]], [[1, 2, 3], [10, 20, 30]]]", result);
 
@@ -281,14 +281,14 @@ public class MessageFormatterTest
     [Fact]
     public void testCyclicArrays()
     {
-        Object[] cyclicA = new Object[1];
+        object[] cyclicA = new object[1];
         cyclicA[0] = cyclicA;
         Assert.Equal("[[...]]", MessageFormatter.arrayFormat("{}", cyclicA).getMessage());
 
-        Object[] a = new Object[2];
+        object[] a = new object[2];
         a[0] = 1;
-        Object[] c = { 3, a };
-        Object[] b = { 2, c };
+        object[] c = { 3, a };
+        object[] b = { 2, c };
         a[1] = b;
         Assert.Equal("1[2, [3, [1, [...]]]]",
             MessageFormatter.arrayFormat("{}{}", a).getMessage());
@@ -299,7 +299,7 @@ public class MessageFormatterTest
     {
         FormattingTuple ft;
         Exception t = new Exception();
-        Object[] ia = { 1, 2, 3, t };
+        object[] ia = { 1, 2, 3, t };
 
         ft = MessageFormatter.arrayFormat("Value {} is smaller than {} and {}.", ia);
         Assert.Equal("Value 1 is smaller than 2 and 3.", ft.getMessage());

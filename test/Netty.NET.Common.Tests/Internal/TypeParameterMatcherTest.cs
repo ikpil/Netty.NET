@@ -22,7 +22,7 @@ public class TypeParameterMatcherTest {
     [Fact]
     public void testConcreteClass() {
         TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<>(), TypeX.class, "A");
-        Assert.False(m.match(new Object()));
+        Assert.False(m.match(new object()));
         Assert.False(m.match(new A()));
         Assert.False(m.match(new AA()));
         Assert.True(m.match(new AAA()));
@@ -47,7 +47,7 @@ public class TypeParameterMatcherTest {
 [Fact]
 public void testAnonymousClass() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>() { }, TypeX.class, "B");
-    Assert.False(m.match(new Object()));
+    Assert.False(m.match(new object()));
     Assert.False(m.match(new A()));
     Assert.False(m.match(new AA()));
     Assert.False(m.match(new AAA()));
@@ -61,7 +61,7 @@ public void testAnonymousClass() {
 [Fact]
 public void testAbstractClass() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<>(), TypeX.class, "C");
-    Assert.False(m.match(new Object()));
+    Assert.False(m.match(new object()));
     Assert.False(m.match(new A()));
     Assert.False(m.match(new AA()));
     Assert.False(m.match(new AAA()));
@@ -98,7 +98,7 @@ public static class CC extends C { }
 [Fact]
 public void testInaccessibleClass() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U<T>() { }, U<>.class, "E");
-    Assert.False(m.match(new Object()));
+    Assert.False(m.match(new object()));
     Assert.True(m.match(new T()));
 }
 
@@ -108,14 +108,14 @@ private static class U<E> { E a; }
 [Fact]
 public void testArrayAsTypeParam() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U<byte[]>() { }, U<>.class, "E");
-    Assert.False(m.match(new Object()));
+    Assert.False(m.match(new object()));
     Assert.True(m.match(new byte[1]));
 }
 
 [Fact]
 public void testRawType() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new U<>() { }, U<>.class, "E");
-    Assert.True(m.match(new Object()));
+    Assert.True(m.match(new object()));
 }
 
 private static class V<E> {
@@ -125,7 +125,7 @@ private static class V<E> {
 [Fact]
 public void testInnerClass() {
     TypeParameterMatcher m = TypeParameterMatcher.find(new V<string>().u, U<>.class, "E");
-    Assert.True(m.match(new Object()));
+    Assert.True(m.match(new object()));
 }
 
 private abstract static class W<E> {
@@ -143,7 +143,7 @@ public void testErasure() {
         public void execute() {
         TypeParameterMatcher m = TypeParameterMatcher.find(new X<string, Date>(), W.class, "E");
         Assert.True(m.match(new Date()));
-        Assert.False(m.match(new Object()));
+        Assert.False(m.match(new object()));
     }
     });
 }

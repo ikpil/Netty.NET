@@ -411,7 +411,7 @@ public class FastThreadLocalTest {
         final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
         final FastThreadLocal fst = new FastThreadLocal() {
             @Override
-            protected Object initialValue() {
+            protected object initialValue() {
             return InternalThreadLocalMap.UNSET;
         }
         };

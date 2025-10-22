@@ -223,7 +223,7 @@ public void testMultipleRecycleRacing() {
         HandledObject b = recycler.get();
         Assert.NotSame(a, b);
         IllegalStateException exception = exceptionStore.get();
-        Assert.NotNull(exception); // Object got recycled twice, so at least one of the calls must throw.
+        Assert.NotNull(exception); // object got recycled twice, so at least one of the calls must throw.
     } finally {
         thread1.join(1000);
     }

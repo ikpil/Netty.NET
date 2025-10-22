@@ -432,7 +432,7 @@ public class SingleThreadEventExecutorTest {
         // A queue that doesn't support remove, so tasks once added cannot be rejected anymore
         LinkedBlockingQueue<IRunnable> taskQueue = new LinkedBlockingQueue<IRunnable>() {
             @Override
-            public bool remove(Object o) {
+            public bool remove(object o) {
                 throw new NotSupportedException();
             }
         };

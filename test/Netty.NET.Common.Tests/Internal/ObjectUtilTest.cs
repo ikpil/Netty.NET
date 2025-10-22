@@ -23,47 +23,47 @@ namespace Netty.NET.Common.Tests.Internal;
  */
 public class ObjectUtilTest {
 
-    private static final Object NULL_OBJECT = null;
+    private static readonly object NULL_OBJECT = null;
 
-    private static final Object NON_NULL_OBJECT = "Object is not null";
-    private static final string NON_NULL_EMPTY_STRING = "";
-    private static final string NON_NULL_WHITESPACE_STRING = "  ";
-    private static final Object[] NON_NULL_EMPTY_OBJECT_ARRAY = {};
-    private static final Object[] NON_NULL_FILLED_OBJECT_ARRAY = { NON_NULL_OBJECT };
-    private static final CharSequence NULL_CHARSEQUENCE = (CharSequence) NULL_OBJECT;
-    private static final CharSequence NON_NULL_CHARSEQUENCE = (CharSequence) NON_NULL_OBJECT;
-    private static final CharSequence NON_NULL_EMPTY_CHARSEQUENCE = (CharSequence) NON_NULL_EMPTY_STRING;
-    private static final byte[] NON_NULL_EMPTY_BYTE_ARRAY = {};
-    private static final byte[] NON_NULL_FILLED_BYTE_ARRAY = { (byte) 0xa };
-    private static final char[] NON_NULL_EMPTY_CHAR_ARRAY = {};
-    private static final char[] NON_NULL_FILLED_CHAR_ARRAY = { 'A' };
+    private static readonly object NON_NULL_OBJECT = "object is not null";
+    private static readonly string NON_NULL_EMPTY_STRING = "";
+    private static readonly string NON_NULL_WHITESPACE_STRING = "  ";
+    private static readonly object[] NON_NULL_EMPTY_OBJECT_ARRAY = {};
+    private static readonly object[] NON_NULL_FILLED_OBJECT_ARRAY = { NON_NULL_OBJECT };
+    private static readonly CharSequence NULL_CHARSEQUENCE = (CharSequence) NULL_OBJECT;
+    private static readonly CharSequence NON_NULL_CHARSEQUENCE = (CharSequence) NON_NULL_OBJECT;
+    private static readonly CharSequence NON_NULL_EMPTY_CHARSEQUENCE = (CharSequence) NON_NULL_EMPTY_STRING;
+    private static readonly byte[] NON_NULL_EMPTY_BYTE_ARRAY = {};
+    private static readonly byte[] NON_NULL_FILLED_BYTE_ARRAY = { (byte) 0xa };
+    private static readonly char[] NON_NULL_EMPTY_CHAR_ARRAY = {};
+    private static readonly char[] NON_NULL_FILLED_CHAR_ARRAY = { 'A' };
 
-    private static final string NULL_NAME = "IS_NULL";
-    private static final string NON_NULL_NAME = "NOT_NULL";
-    private static final string NON_NULL_EMPTY_NAME = "NOT_NULL_BUT_EMPTY";
+    private static readonly string NULL_NAME = "IS_NULL";
+    private static readonly string NON_NULL_NAME = "NOT_NULL";
+    private static readonly string NON_NULL_EMPTY_NAME = "NOT_NULL_BUT_EMPTY";
 
-    private static final string TEST_RESULT_NULLEX_OK = "Expected a NPE/IAE";
-    private static final string TEST_RESULT_NULLEX_NOK = "Expected no exception";
-    private static final string TEST_RESULT_EXTYPE_NOK = "Expected type not found";
+    private static readonly string TEST_RESULT_NULLEX_OK = "Expected a NPE/IAE";
+    private static readonly string TEST_RESULT_NULLEX_NOK = "Expected no exception";
+    private static readonly string TEST_RESULT_EXTYPE_NOK = "Expected type not found";
 
-    private static final int ZERO_INT = 0;
-    private static final long ZERO_LONG = 0;
-    private static final double ZERO_DOUBLE = 0.0d;
-    private static final float ZERO_FLOAT = 0.0f;
+    private static readonly int ZERO_INT = 0;
+    private static readonly long ZERO_LONG = 0;
+    private static readonly double ZERO_DOUBLE = 0.0d;
+    private static readonly float ZERO_FLOAT = 0.0f;
 
-    private static final int POS_ONE_INT = 1;
-    private static final long POS_ONE_LONG = 1;
-    private static final double POS_ONE_DOUBLE = 1.0d;
-    private static final float POS_ONE_FLOAT = 1.0f;
+    private static readonly int POS_ONE_INT = 1;
+    private static readonly long POS_ONE_LONG = 1;
+    private static readonly double POS_ONE_DOUBLE = 1.0d;
+    private static readonly float POS_ONE_FLOAT = 1.0f;
 
-    private static final int NEG_ONE_INT = -1;
-    private static final long NEG_ONE_LONG = -1;
-    private static final double NEG_ONE_DOUBLE = -1.0d;
-    private static final float NEG_ONE_FLOAT = -1.0f;
+    private static readonly int NEG_ONE_INT = -1;
+    private static readonly long NEG_ONE_LONG = -1;
+    private static readonly double NEG_ONE_DOUBLE = -1.0d;
+    private static readonly float NEG_ONE_FLOAT = -1.0f;
 
-    private static final string NUM_POS_NAME = "NUMBER_POSITIVE";
-    private static final string NUM_ZERO_NAME = "NUMBER_ZERO";
-    private static final string NUM_NEG_NAME = "NUMBER_NEGATIVE";
+    private static readonly string NUM_POS_NAME = "NUMBER_POSITIVE";
+    private static readonly string NUM_ZERO_NAME = "NUMBER_ZERO";
+    private static readonly string NUM_NEG_NAME = "NUMBER_NEGATIVE";
 
     [Fact]
     public void testCheckNotNull() {
@@ -358,7 +358,7 @@ public class ObjectUtilTest {
         Exception actualEx = null;
 
         try {
-            ObjectUtil.checkNonEmpty((Object[]) NULL_OBJECT, NULL_NAME);
+            ObjectUtil.checkNonEmpty((object[]) NULL_OBJECT, NULL_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
@@ -367,7 +367,7 @@ public class ObjectUtilTest {
 
         actualEx = null;
         try {
-            ObjectUtil.checkNonEmpty((Object[]) NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
+            ObjectUtil.checkNonEmpty((object[]) NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
@@ -375,7 +375,7 @@ public class ObjectUtilTest {
 
         actualEx = null;
         try {
-            ObjectUtil.checkNonEmpty((Object[]) NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
+            ObjectUtil.checkNonEmpty((object[]) NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
@@ -447,7 +447,7 @@ public class ObjectUtilTest {
     public void testCheckNonEmptyTString() {
         Exception actualEx = null;
         try {
-            ObjectUtil.checkNonEmpty((Object[]) NULL_OBJECT, NULL_NAME);
+            ObjectUtil.checkNonEmpty((object[]) NULL_OBJECT, NULL_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
@@ -456,7 +456,7 @@ public class ObjectUtilTest {
 
         actualEx = null;
         try {
-            ObjectUtil.checkNonEmpty((Object[]) NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
+            ObjectUtil.checkNonEmpty((object[]) NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
         } catch (Exception e) {
             actualEx = e;
         }
@@ -464,7 +464,7 @@ public class ObjectUtilTest {
 
         actualEx = null;
         try {
-            ObjectUtil.checkNonEmpty((Object[]) NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
+            ObjectUtil.checkNonEmpty((object[]) NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
         } catch (Exception e) {
             actualEx = e;
         }

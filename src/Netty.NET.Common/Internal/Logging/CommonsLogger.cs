@@ -71,7 +71,7 @@ public class CommonsLogger : AbstractInternalLogger
     }
 
     /**
-     * Delegates to the {@link Log#trace(Object)} method of the underlying
+     * Delegates to the {@link Log#trace(object)} method of the underlying
      * {@link Log} instance.
      *
      * @param msg - the message object to be logged
@@ -82,7 +82,7 @@ public class CommonsLogger : AbstractInternalLogger
     }
 
     /**
-     * Delegates to the {@link Log#trace(Object)} method of the underlying
+     * Delegates to the {@link Log#trace(object)} method of the underlying
      * {@link Log} instance.
      *
      * <p>

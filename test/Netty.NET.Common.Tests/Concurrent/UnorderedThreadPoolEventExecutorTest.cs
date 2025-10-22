@@ -48,9 +48,9 @@ namespace Netty.NET.Common.Tests.Concurrent
     }
 }
 
-}).addListener(new FutureListener<Object>() {
+}).addListener(new FutureListener<object>() {
                 @Override
-                public void operationComplete(Future<Object> future) {
+                public void operationComplete(Future<object> future) {
                     latch.countDown();
                 }
             });

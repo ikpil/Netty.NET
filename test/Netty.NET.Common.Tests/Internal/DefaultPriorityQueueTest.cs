@@ -322,7 +322,7 @@ public class DefaultPriorityQueueTest
         }
 
         @Override
-        public bool equals(Object o) {
+        public bool equals(object o) {
             return o instanceof TestElement && ((TestElement) o).value == value;
         }
 

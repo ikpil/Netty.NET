@@ -121,8 +121,8 @@ public void testCancelDoesNotScheduleWhenNoListeners() {
 public void testSuccessDoesNotScheduleWhenNoListeners() {
     EventExecutor executor = new RejectingEventExecutor();
 
-    Object value = new Object();
-    Promise<Object> promise = new DefaultPromise<Object>(executor);
+    object value = new object();
+    Promise<object> promise = new DefaultPromise<object>(executor);
     promise.setSuccess(value);
     Assert.Same(value, promise.getNow());
 }

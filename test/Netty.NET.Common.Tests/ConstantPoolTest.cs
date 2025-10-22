@@ -100,6 +100,6 @@ public class ConstantPoolTest
     public void testComposedName()
     {
         TestConstant a = pool.valueOf("A");
-        Assert.Equal("java.lang.Object#A", a.name());
+        Assert.Equal("java.lang.object#A", a.name());
     }
 }

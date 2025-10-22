@@ -66,7 +66,7 @@ public class RecyclerDefaultHandle<T> : RecyclerEnhancedHandle<T>
         int prev = Interlocked.Exchange(ref _state, RecyclerDefaultHandle.STATE_AVAILABLE);
         if (prev == RecyclerDefaultHandle.STATE_AVAILABLE)
         {
-            throw new InvalidOperationException("Object has been recycled already.");
+            throw new InvalidOperationException("object has been recycled already.");
         }
     }
 

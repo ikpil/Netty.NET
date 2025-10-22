@@ -240,7 +240,7 @@ private static final class TestResourceLeakDetector<T> extends ResourceLeakDetec
 
 private static final class CreationRecordLeakDetector<T> extends ResourceLeakDetector<T> {
     string canaryString;
-    Object initialHint;
+    object initialHint;
     bool failOnUntraced = true;
 
     private final AtomicReference<Exception> error = new AtomicReference<Exception>();
@@ -282,7 +282,7 @@ private void reportError(AssertionError cause) {
 }
 
 @Override
-protected Object getInitialHint(string resourceType) {
+protected object getInitialHint(string resourceType) {
     return initialHint;
 }
 
