@@ -253,7 +253,7 @@ public static class PlatformDependent
         return false;
     }
 
-    static bool addPropertyOsClassifiers(ISet<string> availableClassifiers) {
+    public static bool addPropertyOsClassifiers(ISet<string> availableClassifiers) {
         // empty: -Dio.netty.osClassifiers (no distro specific classifiers for native libs)
         // single ID: -Dio.netty.osClassifiers=ubuntu
         // pair ID, ID_LIKE: -Dio.netty.osClassifiers=ubuntu,debian

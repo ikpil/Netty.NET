@@ -759,7 +759,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((CharSequence)NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
+            ObjectUtil.checkNonEmpty(new StringCharSequence(NON_NULL_WHITESPACE_STRING), NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {

@@ -15,6 +15,8 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Netty.NET.Common.Internal.Logging;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
@@ -27,6 +29,8 @@ public static class SystemPropertyUtil
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SystemPropertyUtil));
 
+    
+    
     /**
      * Returns {@code true} if and only if the system property with the specified {@code key}
      * exists.
@@ -36,6 +40,17 @@ public static class SystemPropertyUtil
         return get(key) != null;
     }
 
+    public static Dictionary<string, string> getProperties()
+    {
+        var properties = new Dictionary<string, string>();
+        foreach (var kvp in Environment.GetEnvironmentVariables())
+        {
+            var entry = (DictionaryEntry)kvp;
+            properties.Add((string)entry.Key, (string)entry.Value);
+        }
+
+        return properties;
+    }
     /**
      * Returns the value of the Java system property with the specified
      * {@code key}, while falling back to {@code null} if the property access fails.

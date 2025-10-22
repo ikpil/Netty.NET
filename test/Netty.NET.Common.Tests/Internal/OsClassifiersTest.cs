@@ -13,79 +13,89 @@
  * the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Netty.NET.Common.Collections;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
+public class OsClassifiersTest : IDisposable
+{
+    private static readonly string OS_CLASSIFIERS_PROPERTY = "io.netty.osClassifiers";
 
-public class OsClassifiersTest {
-    private static final string OS_CLASSIFIERS_PROPERTY = "io.netty.osClassifiers";
+    private Dictionary<string, string> systemProperties;
 
-    private Properties systemProperties;
-
-    @BeforeEach
-    void setUp() {
-        systemProperties = System.getProperties();
+    public OsClassifiersTest()
+    {
+        systemProperties = SystemPropertyUtil.getProperties();
     }
 
-    @AfterEach
-    void tearDown() {
-        systemProperties.remove(OS_CLASSIFIERS_PROPERTY);
+    public void Dispose()
+    {
+        systemProperties.Remove(OS_CLASSIFIERS_PROPERTY);
     }
 
     [Fact]
-    void testOsClassifiersPropertyAbsent() {
-        Set<string> available = new LinkedHashSet<>(2);
+    void testOsClassifiersPropertyAbsent()
+    {
+        ISet<string> available = new LinkedHashSet<string>(2);
         bool added = PlatformDependent.addPropertyOsClassifiers(available);
         Assert.False(added);
-        Assert.True(available.isEmpty());
+        Assert.True(available.IsEmpty());
     }
 
     [Fact]
-    void testOsClassifiersPropertyEmpty() {
+    void testOsClassifiersPropertyEmpty()
+    {
         // empty property -Dio.netty.osClassifiers
-        systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "");
-        Set<string> available = new LinkedHashSet<>(2);
+        systemProperties[OS_CLASSIFIERS_PROPERTY] = "";
+        ISet<string> available = new LinkedHashSet<string>(2);
         bool added = PlatformDependent.addPropertyOsClassifiers(available);
         Assert.True(added);
-        Assert.True(available.isEmpty());
+        Assert.True(available.IsEmpty());
     }
 
     [Fact]
-    void testOsClassifiersPropertyNotEmptyNoClassifiers() {
+    void testOsClassifiersPropertyNotEmptyNoClassifiers()
+    {
         // ID
-        systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, ",");
-        final Set<string> available = new LinkedHashSet<>(2);
-        Assertions.assertThrows(ArgumentException.class,
-                () => PlatformDependent.addPropertyOsClassifiers(available));
+        systemProperties[OS_CLASSIFIERS_PROPERTY] = ",";
+        ISet<string> available = new LinkedHashSet<string>(2);
+        Assert.Throws<ArgumentException>(() => PlatformDependent.addPropertyOsClassifiers(available));
     }
 
     [Fact]
-    void testOsClassifiersPropertySingle() {
+    void testOsClassifiersPropertySingle()
+    {
         // ID
-        systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "fedora");
-        Set<string> available = new LinkedHashSet<>(2);
+        systemProperties[OS_CLASSIFIERS_PROPERTY] = "fedora";
+        ISet<string> available = new LinkedHashSet<string>(2);
         bool added = PlatformDependent.addPropertyOsClassifiers(available);
         Assert.True(added);
-        Assert.Equal(1, available.size());
-        Assert.Equal("fedora", available.iterator().next());
+        Assert.Equal(1, available.Count);
+        Assert.Equal("fedora", available.First());
     }
 
     [Fact]
-    void testOsClassifiersPropertyPair() {
+    void testOsClassifiersPropertyPair()
+    {
         // ID, ID_LIKE
-        systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "manjaro,arch");
-        Set<string> available = new LinkedHashSet<>(2);
+        systemProperties[OS_CLASSIFIERS_PROPERTY] = "manjaro,arch";
+        ISet<string> available = new LinkedHashSet<string>(2);
         bool added = PlatformDependent.addPropertyOsClassifiers(available);
         Assert.True(added);
-        Assert.Equal(1, available.size());
-        Assert.Equal("arch", available.iterator().next());
+        Assert.Equal(1, available.Count);
+        Assert.Equal("arch", available.First());
     }
 
     [Fact]
-    void testOsClassifiersPropertyExcessive() {
+    void testOsClassifiersPropertyExcessive()
+    {
         // ID, ID_LIKE, excessive
-        systemProperties.setProperty(OS_CLASSIFIERS_PROPERTY, "manjaro,arch,slackware");
-        final Set<string> available = new LinkedHashSet<>(2);
-        Assertions.assertThrows(ArgumentException.class,
-                () => PlatformDependent.addPropertyOsClassifiers(available));
+        systemProperties[OS_CLASSIFIERS_PROPERTY] = "manjaro,arch,slackware";
+        ISet<string> available = new LinkedHashSet<string>(2);
+        Assert.Throws<ArgumentException>(() => PlatformDependent.addPropertyOsClassifiers(available));
     }
 }
