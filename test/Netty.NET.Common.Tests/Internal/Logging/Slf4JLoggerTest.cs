@@ -15,211 +15,227 @@
  */
 
 
-internal.logging;
+using System;
+using Netty.NET.Common.Internal.Logging;
 
-namespace Netty.NET.Common.Tests.Internal.Logging
+namespace Netty.NET.Common.Tests.Internal.Logging;
+
+public class Slf4JLoggerTest
 {
-    public class Slf4JLoggerTest {
-        private static final Exception e = new Exception();
+    private static readonly Exception e = new Exception();
 
-        [Fact]
-        public void testIsTraceEnabled() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testIsTraceEnabled()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
-            when(mockLogger.isTraceEnabled()).thenReturn(true);
+        when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.isTraceEnabled()).thenReturn(true);
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            Assert.True(logger.isTraceEnabled());
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        Assert.True(logger.isTraceEnabled());
 
-            verify(mockLogger).getName();
-            verify(mockLogger).isTraceEnabled();
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).isTraceEnabled();
+    }
 
-        [Fact]
-        public void testIsDebugEnabled() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testIsDebugEnabled()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
-            when(mockLogger.isDebugEnabled()).thenReturn(true);
+        when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.isDebugEnabled()).thenReturn(true);
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            Assert.True(logger.isDebugEnabled());
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        Assert.True(logger.isDebugEnabled());
 
-            verify(mockLogger).getName();
-            verify(mockLogger).isDebugEnabled();
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).isDebugEnabled();
+    }
 
-        [Fact]
-        public void testIsInfoEnabled() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testIsInfoEnabled()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
-            when(mockLogger.isInfoEnabled()).thenReturn(true);
+        when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.isInfoEnabled()).thenReturn(true);
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            Assert.True(logger.isInfoEnabled());
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        Assert.True(logger.isInfoEnabled());
 
-            verify(mockLogger).getName();
-            verify(mockLogger).isInfoEnabled();
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).isInfoEnabled();
+    }
 
-        [Fact]
-        public void testIsWarnEnabled() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testIsWarnEnabled()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
-            when(mockLogger.isWarnEnabled()).thenReturn(true);
+        when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.isWarnEnabled()).thenReturn(true);
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            Assert.True(logger.isWarnEnabled());
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        Assert.True(logger.isWarnEnabled());
 
-            verify(mockLogger).getName();
-            verify(mockLogger).isWarnEnabled();
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).isWarnEnabled();
+    }
 
-        [Fact]
-        public void testIsErrorEnabled() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testIsErrorEnabled()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
-            when(mockLogger.isErrorEnabled()).thenReturn(true);
+        when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.isErrorEnabled()).thenReturn(true);
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            Assert.True(logger.isErrorEnabled());
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        Assert.True(logger.isErrorEnabled());
 
-            verify(mockLogger).getName();
-            verify(mockLogger).isErrorEnabled();
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).isErrorEnabled();
+    }
 
-        [Fact]
-        public void testTrace() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testTrace()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.trace("a");
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.trace("a");
 
-            verify(mockLogger).getName();
-            verify(mockLogger).trace("a");
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).trace("a");
+    }
 
-        [Fact]
-        public void testTraceWithException() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testTraceWithException()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.trace("a", e);
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.trace("a", e);
 
-            verify(mockLogger).getName();
-            verify(mockLogger).trace("a", e);
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).trace("a", e);
+    }
 
-        [Fact]
-        public void testDebug() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testDebug()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.debug("a");
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.debug("a");
 
-            verify(mockLogger).getName();
-            verify(mockLogger).debug("a");
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).debug("a");
+    }
 
-        [Fact]
-        public void testDebugWithException() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testDebugWithException()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.debug("a", e);
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.debug("a", e);
 
-            verify(mockLogger).getName();
-            verify(mockLogger).debug("a", e);
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).debug("a", e);
+    }
 
-        [Fact]
-        public void testInfo() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testInfo()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.info("a");
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.info("a");
 
-            verify(mockLogger).getName();
-            verify(mockLogger).info("a");
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).info("a");
+    }
 
-        [Fact]
-        public void testInfoWithException() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testInfoWithException()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.info("a", e);
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.info("a", e);
 
-            verify(mockLogger).getName();
-            verify(mockLogger).info("a", e);
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).info("a", e);
+    }
 
-        [Fact]
-        public void testWarn() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testWarn()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.warn("a");
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.warn("a");
 
-            verify(mockLogger).getName();
-            verify(mockLogger).warn("a");
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).warn("a");
+    }
 
-        [Fact]
-        public void testWarnWithException() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testWarnWithException()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.warn("a", e);
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.warn("a", e);
 
-            verify(mockLogger).getName();
-            verify(mockLogger).warn("a", e);
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).warn("a", e);
+    }
 
-        [Fact]
-        public void testError() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testError()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.error("a");
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.error("a");
 
-            verify(mockLogger).getName();
-            verify(mockLogger).error("a");
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).error("a");
+    }
 
-        [Fact]
-        public void testErrorWithException() {
-            Logger mockLogger = mock(Logger.class);
+    [Fact]
+    public void testErrorWithException()
+    {
+        Logger mockLogger = mock(Logger.class);
 
-            when(mockLogger.getName()).thenReturn("foo");
+        when(mockLogger.getName()).thenReturn("foo");
 
-            IInternalLogger logger = new Slf4JLogger(mockLogger);
-            logger.error("a", e);
+        IInternalLogger logger = new Slf4JLogger(mockLogger);
+        logger.error("a", e);
 
-            verify(mockLogger).getName();
-            verify(mockLogger).error("a", e);
-        }
+        verify(mockLogger).getName();
+        verify(mockLogger).error("a", e);
     }
 }

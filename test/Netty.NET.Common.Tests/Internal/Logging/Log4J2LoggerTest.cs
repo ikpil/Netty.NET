@@ -15,8 +15,6 @@
  */
 
 
-internal.logging;
-
 namespace Netty.NET.Common.Tests.Internal.Logging
 {
     /**
@@ -26,8 +24,7 @@ namespace Netty.NET.Common.Tests.Internal.Logging
  * We only need to test the netty's {@linkplain IInternalLogger} interface method.<br>
  * It's meaning that we only need to test the Override method in the {@linkplain Log4J2Logger}.
  */
-    public class Log4J2LoggerTest extends AbstractInternalLoggerTest<Logger> {
-
+    public class Log4J2LoggerTest : AbstractInternalLoggerTest<Logger> {
     {
         mockLog = LogManager.getLogger(loggerName);
         logger = new Log4J2Logger(mockLog) {
@@ -42,7 +39,7 @@ namespace Netty.NET.Common.Tests.Internal.Logging
     };
     }
 
-    private static final EnumMap<InternalLogLevel, Level> DISABLING_LEVEL = new EnumMap<>(InternalLogLevel.class);
+    private static readonly EnumMap<InternalLogLevel, Level> DISABLING_LEVEL = new EnumMap<>(InternalLogLevel.class);
 
     static {
         DISABLING_LEVEL.put(InternalLogLevel.TRACE, Level.DEBUG);

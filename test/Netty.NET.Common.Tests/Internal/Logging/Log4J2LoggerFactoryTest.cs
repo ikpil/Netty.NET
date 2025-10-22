@@ -15,17 +15,17 @@
  */
 
 
-internal.logging;
+using Netty.NET.Common.Internal.Logging;
 
-namespace Netty.NET.Common.Tests.Internal.Logging
+namespace Netty.NET.Common.Tests.Internal.Logging;
+
+public class Log4J2LoggerFactoryTest
 {
-    public class Log4J2LoggerFactoryTest {
-
-        [Fact]
-        public void testCreation() {
-            IInternalLogger logger = Log4J2LoggerFactory.INSTANCE.newInstance("foo");
-            Assert.True(logger instanceof Log4J2Logger);
-            Assert.Equal("foo", logger.name());
-        }
+    [Fact]
+    public void testCreation()
+    {
+        IInternalLogger logger = Log4J2LoggerFactory.INSTANCE.newInstance("foo");
+        Assert.True(logger instanceof Log4J2Logger);
+        Assert.Equal("foo", logger.name());
     }
 }
