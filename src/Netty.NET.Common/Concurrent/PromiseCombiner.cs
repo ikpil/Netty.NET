@@ -60,7 +60,7 @@ public class PromiseCombiner
             if (_combiner._executor.inEventLoop()) {
                 operationComplete0(future);
             } else {
-                _combiner._executor.execute(AnonymousRunnable.Create(() =>
+                _combiner._executor.execute(Runnables.Create(() =>
                 {
                     operationComplete0(future);
                 }));

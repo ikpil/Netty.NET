@@ -13,14 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
 
-class NativeLibraryLoaderTest {
+public class NativeLibraryLoaderTest {
 
-    private static final string OS_ARCH = System.getProperty("os.arch");
+    private static string OS_ARCH = SystemPropertyUtil.get("os.arch");
     private bool is_x86_64() {
-        return "x86_64".equals(OS_ARCH) || "amd64".equals(OS_ARCH);
+        return "x86_64".Equals(OS_ARCH) || "amd64".Equals(OS_ARCH);
     }
 
     [Fact]

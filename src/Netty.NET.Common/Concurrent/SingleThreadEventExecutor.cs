@@ -670,7 +670,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
         else
         {
-            execute(AnonymousRunnable.Create(() => _shutdownHooks.Add(task)));
+            execute(Runnables.Create(() => _shutdownHooks.Add(task)));
         }
     }
 
@@ -685,7 +685,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
         else
         {
-            execute(AnonymousRunnable.Create(() => _shutdownHooks.Remove(task)));
+            execute(Runnables.Create(() => _shutdownHooks.Remove(task)));
         }
     }
 
@@ -997,7 +997,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             // In the case of scheduling for removal we need to also ensure we will recover the "suspend" state
             // after it if it was set before. Otherwise we will always end up "unsuspending" things on cancellation
             // which is not optimal.
-            execute(AnonymousRunnable.Create(() =>
+            execute(Runnables.Create(() =>
             {
                 task.run();
                 if (canSuspend(ST_SUSPENDED))
@@ -1193,7 +1193,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     private void doStartThread()
     {
-        _executor.execute(AnonymousRunnable.Create(doStartThreadInternal));
+        _executor.execute(Runnables.Create(doStartThreadInternal));
     }
 
     private void doStartThreadInternal()

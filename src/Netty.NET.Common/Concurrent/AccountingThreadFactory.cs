@@ -18,7 +18,7 @@ internal sealed class AccountingThreadFactory : IThreadFactory
 
     public Thread newThread([NotNull] IRunnable r)
     {
-        return _factory.newThread(AnonymousRunnable.Create(() =>
+        return _factory.newThread(Runnables.Create(() =>
         {
             _threads.Add(Thread.CurrentThread);
             try

@@ -6,12 +6,7 @@ public class AnonymousRunnable : IRunnable
 {
     private readonly Action _action;
 
-    public static AnonymousRunnable Create(Action action)
-    {
-        return new AnonymousRunnable(action);
-    }
-
-    private AnonymousRunnable(Action action)
+    internal AnonymousRunnable(Action action)
     {
         _action = action;
     }

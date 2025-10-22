@@ -87,7 +87,7 @@ public class GlobalEventExecutorTest
     {
         ThreadGroup group = new ThreadGroup("group");
         AtomicReference<ThreadGroup> capturedGroup = new AtomicReference<ThreadGroup>();
-        Thread thread = new Thread(group, AnonymousRunnable.Create(() =>
+        Thread thread = new Thread(group, Runnables.Create(() =>
         {
             Thread t = e._threadFactory.newThread(EmptyRunnable.Shared);
             capturedGroup.set(t.getThreadGroup());
@@ -130,7 +130,7 @@ public class GlobalEventExecutorTest
 
         //ensure always has at least one task in taskQueue
         //check if scheduled tasks are triggered
-        e.execute(AnonymousRunnable.Create(() =>
+        e.execute(Runnables.Create(() =>
         {
             if (!f.isDone())
             {

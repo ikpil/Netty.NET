@@ -63,7 +63,7 @@ public static class ThreadExecutorMap
     {
         ObjectUtil.checkNotNull(command, "command");
         ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
-        return AnonymousRunnable.Create(() =>
+        return Runnables.Create(() =>
         {
             IEventExecutor old = setCurrentExecutor(eventExecutor);
             try

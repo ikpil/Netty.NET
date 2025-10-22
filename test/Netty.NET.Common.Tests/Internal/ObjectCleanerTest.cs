@@ -13,84 +13,93 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Tests.Internal
-{;
 
+using System;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
 
-    public class ObjectCleanerTest {
+namespace Netty.NET.Common.Tests.Internal;
 
-        private Thread temporaryThread;
-        private Object temporaryObject;
+public class ObjectCleanerTest
+{
+    private Thread temporaryThread;
+    private object temporaryObject;
 
-        [Fact]
-            @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-        public void testCleanup() {
-            final AtomicBoolean freeCalled = new AtomicBoolean();
-            final CountdownEvent latch = new CountdownEvent(1);
-            temporaryThread = new Thread(new IRunnable() {
-            @Override
-            public void run() {
-            try {
-                latch.await();
-            } catch (ThreadInterruptedException ignore) {
-                // just ignore
+    [Fact(Timeout = 5000)]
+    public void testCleanup()
+    {
+        AtomicBoolean freeCalled = new AtomicBoolean();
+        CountdownEvent latch = new CountdownEvent(1);
+        temporaryThread = new Thread(() =>
+            {
+                try
+                {
+                    latch.Wait();
+                }
+                catch (ThreadInterruptedException ignore)
+                {
+                    // just ignore
+                }
             }
-        }
-    });
-    temporaryThread.start();
-    ObjectCleaner.register(temporaryThread, new IRunnable() {
-        @Override
-        public void run() {
-        freeCalled.set(true);
-    }
-}
+        );
+        temporaryThread.Start();
+        ObjectCleaner.register(temporaryThread, Runnables.Create(() =>
+        {
+            freeCalled.set(true);
+        }));
 
-});
 
-        latch.countDown();
-        temporaryThread.join();
+        latch.Signal();
+        temporaryThread.Join();
         Assert.False(freeCalled.get());
 
         // Null out the temporary object to ensure it is enqueued for GC.
         temporaryThread = null;
 
-        while (!freeCalled.get()) {
-            System.gc();
-            System.runFinalization();
-            Thread.sleep(100);
+        while (!freeCalled.get())
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(100);
         }
     }
 
-    [Fact]
-    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testCleanupContinuesDespiteThrowing() {
-        final AtomicInteger freeCalledCount = new AtomicInteger();
-        final CountdownEvent latch = new CountdownEvent(1);
-        temporaryThread = new Thread(new IRunnable() {
+    [Fact(Timeout = 5000)]
+    public void testCleanupContinuesDespiteThrowing()
+    {
+        AtomicInteger freeCalledCount = new AtomicInteger();
+        CountdownEvent latch = new CountdownEvent(1);
+        temporaryThread = new Thread(new IRunnable()
+        {
             @Override
             public void run() {
-                try {
-                    latch.await();
-                } catch (ThreadInterruptedException ignore) {
-                    // just ignore
-                }
-            }
+            try {
+            latch.await();
+        } catch (ThreadInterruptedException ignore)
+        {
+            // just ignore
+        }
+        }
         });
         temporaryThread.start();
         temporaryObject = new Object();
-        ObjectCleaner.register(temporaryThread, new IRunnable() {
+        ObjectCleaner.register(temporaryThread, new IRunnable()
+        {
             @Override
             public void run() {
-                freeCalledCount.incrementAndGet();
-                throw new Exception("expected");
-            }
+            freeCalledCount.incrementAndGet();
+            throw new Exception("expected");
+        }
         });
-        ObjectCleaner.register(temporaryObject, new IRunnable() {
+        ObjectCleaner.register(temporaryObject, new IRunnable()
+        {
             @Override
             public void run() {
-                freeCalledCount.incrementAndGet();
-                throw new Exception("expected");
-            }
+            freeCalledCount.incrementAndGet();
+            throw new Exception("expected");
+        }
         });
 
         latch.countDown();
@@ -101,7 +110,8 @@ namespace Netty.NET.Common.Tests.Internal
         temporaryThread = null;
         temporaryObject = null;
 
-        while (freeCalledCount.get() != 2) {
+        while (freeCalledCount.get() != 2)
+        {
             System.gc();
             System.runFinalization();
             Thread.sleep(100);
@@ -110,19 +120,24 @@ namespace Netty.NET.Common.Tests.Internal
 
     [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testCleanerThreadIsDaemon() {
+
+    public void testCleanerThreadIsDaemon()
+    {
         temporaryObject = new Object();
-        ObjectCleaner.register(temporaryObject, new IRunnable() {
+        ObjectCleaner.register(temporaryObject, new IRunnable()
+        {
             @Override
             public void run() {
-                // NOOP
-            }
+            // NOOP
+        }
         });
 
         Thread cleanerThread = null;
 
-        for (Thread thread : Thread.getAllStackTraces().keySet()) {
-            if (thread.getName().equals(ObjectCleaner.CLEANER_THREAD_NAME)) {
+        for (Thread thread :
+        Thread.getAllStackTraces().keySet()) {
+            if (thread.getName().equals(ObjectCleaner.CLEANER_THREAD_NAME))
+            {
                 cleanerThread = thread;
                 break;
             }

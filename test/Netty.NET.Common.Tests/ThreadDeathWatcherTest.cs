@@ -43,7 +43,7 @@ public class ThreadDeathWatcherTest
             }
         });
 
-        IRunnable task = AnonymousRunnable.Create(() =>
+        IRunnable task = Runnables.Create(() =>
         {
             if (!t.IsAlive)
             {
@@ -93,7 +93,7 @@ public class ThreadDeathWatcherTest
             }
         });
 
-        IRunnable task = AnonymousRunnable.Create(() =>
+        IRunnable task = Runnables.Create(() =>
         {
             run.set(true);
         });

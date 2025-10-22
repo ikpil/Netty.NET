@@ -81,7 +81,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
             -SCHEDULE_QUIET_PERIOD_INTERVAL
         );
         _threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
-            DefaultThreadFactory.toPoolName(GetType()), false, ThreadPriority.Normal), this);
+            GetType(), false, ThreadPriority.Normal), this);
 
 
         NotSupportedException terminationFailure = new NotSupportedException();
