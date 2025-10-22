@@ -13,10 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
 
-public class DefaultPriorityQueueTest {
+public class DefaultPriorityQueueTest 
+{
     [Fact]
     public void testPoll() {
         PriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
@@ -305,8 +312,9 @@ public class DefaultPriorityQueueTest {
         }
     }
 
-    private static final class TestElement implements PriorityQueueNode {
-        int value;
+    class TestElement : IPriorityQueueNode 
+    {
+        internal int value;
         private int priorityQueueIndex = INDEX_NOT_IN_QUEUE;
 
         TestElement(int value) {

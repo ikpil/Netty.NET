@@ -227,7 +227,7 @@ public static class MacAddressUtil
      * @return positive - current is better, 0 - cannot tell from MAC addr, negative - candidate is better.
      */
     // visible for testing
-    static int compareAddresses(byte[] current, byte[] candidate)
+    public static int compareAddresses(byte[] current, byte[] candidate)
     {
         if (candidate == null || candidate.Length < EUI48_MAC_ADDRESS_LENGTH)
         {

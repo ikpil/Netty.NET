@@ -13,6 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
 //@SuppressWarnings("Since15")
@@ -21,9 +25,9 @@ public class JfrEventSafeTest {
     public void test() {
         // This code should work even on java 8. Other details are tested in JfrEventTest.
         if (PlatformDependent.isJfrEnabled()) {
-            MyEvent event = new MyEvent();
-            event.foo = "bar";
-            event.commit();
+            MyEvent @event = new MyEvent();
+            @event.foo = "bar";
+            @event.commit();
         }
     }
 
@@ -67,12 +71,12 @@ public class JfrEventSafeTest {
         }
     }
 
-    static final class MyEvent extends Event {
-        string foo;
+    class MyEvent : Event {
+        internal string foo;
     }
 
     @Enabled(false)
-    static final class DisabledEvent extends Event {
+    class DisabledEvent : Event {
         string foo;
     }
 }

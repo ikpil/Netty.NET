@@ -13,22 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Tests.Internal
-{;
 
+namespace Netty.NET.Common.Tests.Internal;
 
-    public class BoundedInputStreamTest {
-
-        @RepeatedTest(50)
-        void testBoundEnforced() throws IOException {
-            final byte[] bytes = new byte[64];
+public class BoundedInputStreamTest
+{
+    [Fact]
+    @RepeatedTest(50)
+    void testBoundEnforced()
+    {
+        final byte[] bytes = new byte[64];
         ThreadLocalRandom.current().nextBytes(bytes);
-            try (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), bytes.length - 1)) {
-            Assert.Equal(bytes[0], (byte) reader.read());
+        try
 
-            Assert.Throws<IOException>(()() => {
+        (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), bytes.length - 1)) {
+            Assert.Equal(bytes[0], (byte)reader.read());
+
+            Assert.Throws<IOException>(() =>
+            {
                 int max = bytes.length;
-                do {
+                do
+                {
                     int result = reader.read(new byte[max], 0, max);
                     assertThat(result).isNotEqualTo(-1);
                     max -= result;
@@ -38,28 +43,37 @@ namespace Netty.NET.Common.Tests.Internal
     }
 
     [Fact]
-    void testBoundEnforced256() throws IOException {
-    final byte[] bytes = new byte[256];
-        for (int i = 0; i < bytes.length; i++) {
-        bytes[i] = (byte) i;
-    }
-    try (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), bytes.length - 1)) {
-        for (byte expectedByte : bytes) {
-            Assert.Equal(expectedByte, (byte) reader.read());
+    void testBoundEnforced256()
+    {
+        final byte[] bytes = new byte[256];
+        for (int i = 0; i < bytes.length; i++)
+        {
+            bytes[i] = (byte)i;
         }
 
-        Assert.Throws<IOException>(reader::read);
-        Assert.Throws<IOException>(()() => reader.read(new byte[1], 0, 1));
-    }
-}
+        try
 
-}
+        (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), bytes.length - 1)) {
+            for (byte expectedByte :
+            bytes) {
+                Assert.Equal(expectedByte, (byte)reader.read());
+            }
+
+            Assert.Throws<IOException>(reader::read);
+            Assert.Throws<IOException>(()() => reader.read(new byte[1], 0, 1));
+        }
+    }
+
 
     @RepeatedTest(50)
-    void testBigReadsPermittedIfUnderlyingStreamIsSmall() throws IOException {
+
+    void testBigReadsPermittedIfUnderlyingStreamIsSmall()
+    {
         final byte[] bytes = new byte[64];
         ThreadLocalRandom.current().nextBytes(bytes);
-        try (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), 8192)) {
+        try
+
+        (BoundedInputStream reader = new BoundedInputStream(new ByteArrayInputStream(bytes), 8192)) {
             final byte[] buffer = new byte[10000];
             assertThat(reader.read(buffer, 0, 10000)).isEqualTo(64);
             Assert.Equal(bytes, Arrays.copyOfRange(buffer, 0, 64));
