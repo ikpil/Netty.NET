@@ -13,34 +13,50 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Runtime.InteropServices;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
+public class PlatformDependent0Test
+{
+    // ....?
+    private readonly bool _assumeUnsafe;
 
-public class PlatformDependent0Test {
+    public PlatformDependent0Test()
+    {
+        _assumeUnsafe = assumeUnsafe();
+    }
 
-    @BeforeAll
-    public static void assumeUnsafe() {
-        assumeTrue(PlatformDependent0.hasUnsafe());
-        assumeTrue(PlatformDependent0.hasDirectBufferNoCleanerConstructor());
+    public static bool assumeUnsafe()
+    {
+        return PlatformDependent0.hasUnsafe() &&
+               PlatformDependent0.hasDirectBufferNoCleanerConstructor();
     }
 
     [Fact]
-    public void testNewDirectBufferNegativeMemoryAddress() {
+    public void testNewDirectBufferNegativeMemoryAddress()
+    {
         testNewDirectBufferMemoryAddress(-1);
     }
 
     [Fact]
-    public void testNewDirectBufferNonNegativeMemoryAddress() {
+    public void testNewDirectBufferNonNegativeMemoryAddress()
+    {
         testNewDirectBufferMemoryAddress(10);
     }
 
     [Fact]
-    public void testNewDirectBufferZeroMemoryAddress() {
+    public void testNewDirectBufferZeroMemoryAddress()
+    {
         PlatformDependent0.newDirectBuffer(0, 10);
     }
 
-    private static void testNewDirectBufferMemoryAddress(long address) {
-        assumeTrue(PlatformDependent0.hasDirectBufferNoCleanerConstructor());
+    private static void testNewDirectBufferMemoryAddress(long address)
+    {
+        if (!PlatformDependent0.hasDirectBufferNoCleanerConstructor())
+            return;
 
         int capacity = 10;
         ByteBuffer buffer = PlatformDependent0.newDirectBuffer(address, capacity);
@@ -49,33 +65,15 @@ public class PlatformDependent0Test {
     }
 
     [Fact]
-    public void testMajorVersionFromJavaSpecificationVersion() {
-        final SecurityManager current = System.getSecurityManager();
-
-        try {
-            System.setSecurityManager(new SecurityManager() {
-                @Override
-                public void checkPropertyAccess(string key) {
-                    if (key.equals("java.specification.version")) {
-                        // deny
-                        throw new SecurityException(key);
-                    }
-                }
-
-                // so we can restore the security manager
-                @Override
-                public void checkPermission(Permission perm) {
-                }
-            });
-
-            Assert.Equal(6, PlatformDependent0.majorVersionFromJavaSpecificationVersion());
-        } finally {
-            System.setSecurityManager(current);
-        }
+    public void testMajorVersionFromDotNetSpecificationVersion()
+    {
+        Assert.Equal(PlatformDependent0.majorVersion(RuntimeInformation.FrameworkDescription), PlatformDependent0.majorVersionFromDotNetSpecificationVersion());
     }
 
     [Fact]
-    public void testMajorVersion() {
+    public void testMajorVersion()
+    {
+        // ..?
         Assert.Equal(6, PlatformDependent0.majorVersion("1.6"));
         Assert.Equal(7, PlatformDependent0.majorVersion("1.7"));
         Assert.Equal(8, PlatformDependent0.majorVersion("1.8"));

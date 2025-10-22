@@ -1216,17 +1216,7 @@ public class PlatformDependent0
 
     private static int dotnetVersion0()
     {
-        int majorVersion;
-
-        if (isAndroid())
-        {
-            majorVersion = 6;
-        }
-        else
-        {
-            majorVersion = majorVersionFromDotNetSpecificationVersion();
-        }
-
+        int majorVersion = majorVersionFromDotNetSpecificationVersion();
         logger.debug($".NET version: {majorVersion}");
 
         return majorVersion;
@@ -1237,4 +1227,15 @@ public class PlatformDependent0
     {
         return Environment.Version.Major;
     }
+    
+    public static int majorVersion(string dotnetSpecVersion) {
+        string[] components = dotnetSpecVersion.Split("\\.");
+        int[] version = new int[components.Length];
+        for (int i = 0; i < components.Length; i++) {
+            return int.Parse(components[i]);
+        }
+
+        return -1;
+    }
+
 }
