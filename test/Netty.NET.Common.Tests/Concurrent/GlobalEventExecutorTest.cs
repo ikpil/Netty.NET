@@ -14,20 +14,24 @@
  * under the License.
  */
 
+using System;
+using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 
-
-public class GlobalEventExecutorTest {
-
+public class GlobalEventExecutorTest
+{
     private static readonly GlobalEventExecutor e = GlobalEventExecutor.INSTANCE;
 
-    public GlobalEventExecutorTest() {
+    public GlobalEventExecutorTest()
+    {
         // Wait until the global executor is stopped (just in case there is a task running due to previous test cases)
-        for (;;) {
-            if (e._thread == null || !e._thread.isAlive()) {
+        for (;;)
+        {
+            if (e._thread == null || !e._thread.IsAlive)
+            {
                 break;
             }
 
@@ -36,78 +40,74 @@ public class GlobalEventExecutorTest {
     }
 
     [Fact(Timeout = 5000)]
-    public void testAutomaticStartStop() {
-        final TestRunnable task = new TestRunnable(500);
+    public void testAutomaticStartStop()
+    {
+        TestRunnable task = new TestRunnable(500);
         e.execute(task);
 
         // Ensure the new thread has started.
-        Thread thread = e.thread;
+        Thread thread = e._thread;
         Assert.NotNull(thread);
-        Assert.True(thread.isAlive());
+        Assert.True(thread.IsAlive);
 
-        thread.join();
+        thread.Join();
         Assert.True(task.ran.get());
 
         // Ensure another new thread starts again.
         task.ran.set(false);
         e.execute(task);
-        Assert.NotSame(e.thread, thread);
-        thread = e.thread;
+        Assert.NotSame(e._thread, thread);
+        thread = e._thread;
 
-        thread.join();
+        thread.Join();
 
         Assert.True(task.ran.get());
     }
 
     [Fact(Timeout = 5000)]
-    public void testScheduledTasks() {
+    public void testScheduledTasks()
+    {
         TestRunnable task = new TestRunnable(0);
-        ScheduledFuture<?> f = e.schedule(task, 1500, TimeUnit.MILLISECONDS);
+        IScheduledTask f = e.schedule(task, TimeSpan.FromMilliseconds(1500));
         f.sync();
         Assert.True(task.ran.get());
 
         // Ensure the thread is still running.
-        Thread thread = e.thread;
+        Thread thread = e._thread;
         Assert.NotNull(thread);
-        Assert.True(thread.isAlive());
+        Assert.True(thread.IsAlive);
 
-        thread.join();
+        thread.Join();
     }
 
     // ensure that when a task submission causes a new thread to be created, the thread inherits the thread group of the
     // submitting thread
-    [Fact]
-    @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testThreadGroup() {
-        final ThreadGroup group = new ThreadGroup("group");
-        final AtomicReference<ThreadGroup> capturedGroup = new AtomicReference<ThreadGroup>();
-        final Thread thread = new Thread(group, new IRunnable() {
-            @Override
-            public void run() {
-                final Thread t = e.threadFactory.newThread(new IRunnable() {
-                    @Override
-                    public void run() {
-                    }
-                });
-                capturedGroup.set(t.getThreadGroup());
-            }
-        });
-        thread.start();
-        thread.join();
+    [Fact(Timeout = 2000)]
+    public void testThreadGroup()
+    {
+        ThreadGroup group = new ThreadGroup("group");
+        AtomicReference<ThreadGroup> capturedGroup = new AtomicReference<ThreadGroup>();
+        Thread thread = new Thread(group, AnonymousRunnable.Create(() =>
+        {
+            Thread t = e._threadFactory.newThread(EmptyRunnable.Shared);
+            capturedGroup.set(t.getThreadGroup());
+        }));
+        thread.Start();
+        thread.Join();
 
         Assert.Equal(group, capturedGroup.get());
     }
 
-    [Fact]
-    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testTakeTask() {
+    [Fact(Timeout = 5000)]
+    public void testTakeTask()
+    {
         //add task
         TestRunnable beforeTask = new TestRunnable(0);
         e.execute(beforeTask);
 
         //add scheduled task
         TestRunnable scheduledTask = new TestRunnable(0);
-        ScheduledFuture<?> f = e.schedule(scheduledTask , 1500, TimeUnit.MILLISECONDS);
+        IScheduledTask f = e.schedule(scheduledTask, TimeSpan.FromMilliseconds(1500));
 
         //add task
         TestRunnable afterTask = new TestRunnable(0);
@@ -120,44 +120,48 @@ public class GlobalEventExecutorTest {
         Assert.True(afterTask.ran.get());
     }
 
-    [Fact]
-    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testTakeTaskAlwaysHasTask() {
+    [Fact(Timeout = 5000)]
+    public void testTakeTaskAlwaysHasTask()
+    {
         //for https://github.com/netty/netty/issues/1614
         //add scheduled task
         TestRunnable t = new TestRunnable(0);
-        final ScheduledFuture<?> f = e.schedule(t, 1500, TimeUnit.MILLISECONDS);
+        IScheduledTask f = e.schedule(t, TimeSpan.FromMilliseconds(1500);
 
         //ensure always has at least one task in taskQueue
         //check if scheduled tasks are triggered
-        e.execute(new IRunnable() {
-            @Override
-            public void run() {
-                if (!f.isDone()) {
-                    e.execute(this);
-                }
+        e.execute(AnonymousRunnable.Create(() =>
+        {
+            if (!f.isDone())
+            {
+                e.execute(this);
             }
-        });
+        }));
 
         f.sync();
 
         Assert.True(t.ran.get());
     }
 
-    private static final class TestRunnable implements IRunnable {
-        final AtomicBoolean ran = new AtomicBoolean();
-        final long delay;
+    internal class TestRunnable : IRunnable
+    {
+        internal AtomicBoolean ran = new AtomicBoolean();
+        internal int delay;
 
-        TestRunnable(long delay) {
+        public TestRunnable(int delay)
+        {
             this.delay = delay;
         }
 
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(delay);
+        public void run()
+        {
+            try
+            {
+                Thread.Sleep(delay);
                 ran.set(true);
-            } catch (ThreadInterruptedException ignored) {
+            }
+            catch (ThreadInterruptedException ignored)
+            {
                 // Ignore
             }
         }
