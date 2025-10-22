@@ -158,6 +158,12 @@ public sealed class AppendableCharSequence : ICharSequence
     {
         return append(csq, 0, csq.Count);
     }
+    
+    public AppendableCharSequence append(string str)
+    {
+        var csq = new StringCharSequence(str);
+        return append(csq, 0, csq.Count);
+    }
 
     public AppendableCharSequence append(ICharSequence csq, int start, int end)
     {
