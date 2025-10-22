@@ -32,12 +32,13 @@ public static class ObjectCleaner
         Math.Max(500, SystemPropertyUtil.getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
 
     // Package-private for testing
-    static readonly string CLEANER_THREAD_NAME = nameof(ObjectCleaner) + "Thread";
+    public static readonly string CLEANER_THREAD_NAME = nameof(ObjectCleaner) + "Thread";
 
     // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
     private static readonly ConcurrentHashSet<AutomaticCleanerReference> LIVE_SET = new ConcurrentHashSet<AutomaticCleanerReference>();
     private static readonly WeakReferenceQueue<object> REFERENCE_QUEUE = new WeakReferenceQueue<object>();
     private static readonly AtomicBoolean CLEANER_RUNNING = new AtomicBoolean(false);
+    public static Thread CLEANUP_THREAD { get; private set; }
 
     private static void CLEANER_TASK()
     {
@@ -77,6 +78,7 @@ public static class ObjectCleaner
             }
 
             CLEANER_RUNNING.set(false);
+            CLEANUP_THREAD = null;
 
             // Its important to first access the LIVE_SET and then CLEANER_RUNNING to ensure correct
             // behavior in multi-threaded environments.
@@ -92,6 +94,7 @@ public static class ObjectCleaner
         {
             // As we caught the ThreadInterruptedException above we should mark the Thread as interrupted.
             Thread.CurrentThread.Interrupt();
+            CLEANUP_THREAD = null;
         }
     }
 
@@ -120,6 +123,7 @@ public static class ObjectCleaner
             // running.
             cleanupThread.IsBackground = true;
             cleanupThread.Start();
+            CLEANUP_THREAD = cleanupThread;
         }
     }
 

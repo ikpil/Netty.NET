@@ -71,39 +71,32 @@ public class ObjectCleanerTest
     {
         AtomicInteger freeCalledCount = new AtomicInteger();
         CountdownEvent latch = new CountdownEvent(1);
-        temporaryThread = new Thread(new IRunnable()
+        temporaryThread = new Thread(() =>
         {
-            @Override
-            public void run() {
-            try {
-            latch.await();
-        } catch (ThreadInterruptedException ignore)
-        {
-            // just ignore
-        }
-        }
+            try
+            {
+                latch.Wait();
+            }
+            catch (ThreadInterruptedException ignore)
+            {
+                // just ignore
+            }
         });
-        temporaryThread.start();
-        temporaryObject = new Object();
-        ObjectCleaner.register(temporaryThread, new IRunnable()
+        temporaryThread.Start();
+        temporaryObject = new object();
+        ObjectCleaner.register(temporaryThread, Runnables.Create(() =>
         {
-            @Override
-            public void run() {
             freeCalledCount.incrementAndGet();
             throw new Exception("expected");
-        }
-        });
-        ObjectCleaner.register(temporaryObject, new IRunnable()
+        }));
+        ObjectCleaner.register(temporaryObject, Runnables.Create(() =>
         {
-            @Override
-            public void run() {
             freeCalledCount.incrementAndGet();
             throw new Exception("expected");
-        }
-        });
+        }));
 
-        latch.countDown();
-        temporaryThread.join();
+        latch.Signal();
+        temporaryThread.Join();
         Assert.Equal(0, freeCalledCount.get());
 
         // Null out the temporary object to ensure it is enqueued for GC.
@@ -112,37 +105,30 @@ public class ObjectCleanerTest
 
         while (freeCalledCount.get() != 2)
         {
-            System.gc();
-            System.runFinalization();
-            Thread.sleep(100);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(100);
         }
     }
 
-    [Fact]
-    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-
+    [Fact(Timeout = 5000)]
     public void testCleanerThreadIsDaemon()
     {
-        temporaryObject = new Object();
-        ObjectCleaner.register(temporaryObject, new IRunnable()
+        temporaryObject = new object();
+        ObjectCleaner.register(temporaryObject, Runnables.Create(() =>
         {
-            @Override
-            public void run() {
             // NOOP
-        }
-        });
+        }));
 
-        Thread cleanerThread = null;
-
-        for (Thread thread :
-        Thread.getAllStackTraces().keySet()) {
-            if (thread.getName().equals(ObjectCleaner.CLEANER_THREAD_NAME))
-            {
-                cleanerThread = thread;
-                break;
-            }
-        }
+        Thread cleanerThread = ObjectCleaner.CLEANUP_THREAD;
+        // foreach (Thread thread in Thread.getAllStackTraces().keySet()) {
+        //     if (thread.Name.Equals(ObjectCleaner.CLEANER_THREAD_NAME))
+        //     {
+        //         cleanerThread = thread;
+        //         break;
+        //     }
+        // }
         Assert.NotNull(cleanerThread);
-        Assert.True(cleanerThread.isDaemon());
+        Assert.True(cleanerThread.IsBackground);
     }
 }

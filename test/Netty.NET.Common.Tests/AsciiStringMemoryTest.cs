@@ -32,8 +32,7 @@ public class AsciiStringMemoryTest {
     private AsciiString bAsciiString;
     private readonly Random r = new Random();
 
-    @BeforeEach
-    public void setup() {
+    public AsciiStringMemoryTest() {
         a = new byte[128];
         b = new byte[256];
         r.nextBytes(a);
@@ -41,7 +40,7 @@ public class AsciiStringMemoryTest {
         aOffset = 22;
         bOffset = 53;
         length = 100;
-        System.arraycopy(a, aOffset, b, bOffset, length);
+        Arrays.arraycopy(a, aOffset, b, bOffset, length);
         aAsciiString = new AsciiString(a, aOffset, length, false);
         bAsciiString = new AsciiString(b, bOffset, length, false);
     }
@@ -73,8 +72,8 @@ public class AsciiStringMemoryTest {
 
     [Fact]
     public void forEachTest() {
-        final AtomicReference<Integer> aCount = new AtomicReference<Integer>(0);
-        final AtomicReference<Integer> bCount = new AtomicReference<Integer>(0);
+        AtomicReference<Integer> aCount = new AtomicReference<Integer>(0);
+        AtomicReference<Integer> bCount = new AtomicReference<Integer>(0);
         aAsciiString.forEachByte(new IByteProcessor() {
             int i;
             @Override
