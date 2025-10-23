@@ -1,3 +1,5 @@
+using Netty.NET.Common.Functional;
+
 namespace Netty.NET.Common.Concurrent;
 
 public static class Executors
@@ -9,6 +11,11 @@ public static class Executors
     }
 
     public static IExecutorService newFixedThreadPool(int thread)
+    {
+        return null;
+    }
+
+    public static ICallable<Void> callable(IRunnable runnable)
     {
         return null;
     }

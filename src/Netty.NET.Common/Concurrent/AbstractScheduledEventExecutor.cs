@@ -169,7 +169,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * @see #pollScheduledTask(long)
      */
-    protected IRunnable pollScheduledTask()
+    internal IRunnable pollScheduledTask()
     {
         return pollScheduledTask(getCurrentTimeNanos());
     }
