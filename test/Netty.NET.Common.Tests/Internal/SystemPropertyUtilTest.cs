@@ -13,120 +13,138 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
+public class SystemPropertyUtilTest
+{
+    public SystemPropertyUtilTest()
+    {
+        clearSystemPropertyBeforeEach();
+    }
 
-public class SystemPropertyUtilTest {
-
-    @BeforeEach
-    public void clearSystemPropertyBeforeEach() {
-        System.clearProperty("key");
+    private void clearSystemPropertyBeforeEach()
+    {
+        Environment.SetEnvironmentVariable("key", null);
     }
 
     [Fact]
-    public void testGetWithKeyNull() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                SystemPropertyUtil.get(null, null);
-            }
+    public void testGetWithKeyNull()
+    {
+        Assert.Throws<NullReferenceException>(() =>
+        {
+            SystemPropertyUtil.get(null, null);
         });
     }
 
     [Fact]
-    public void testGetWithKeyEmpty() {
-        Assert.Throws<ArgumentException>(new Executable() {
-            @Override
-            public void execute() {
-                SystemPropertyUtil.get("", null);
-            }
+    public void testGetWithKeyEmpty()
+    {
+        Assert.Throws<ArgumentException>(() =>
+        {
+            SystemPropertyUtil.get("", null);
         });
     }
 
     [Fact]
-    public void testGetDefaultValueWithPropertyNull() {
+    public void testGetDefaultValueWithPropertyNull()
+    {
         Assert.Equal("default", SystemPropertyUtil.get("key", "default"));
     }
 
     [Fact]
-    public void testGetPropertyValue() {
-        System.setProperty("key", "value");
+    public void testGetPropertyValue()
+    {
+        Environment.SetEnvironmentVariable("key", "value");
         Assert.Equal("value", SystemPropertyUtil.get("key"));
     }
 
     [Fact]
-    public void testGetBooleanDefaultValueWithPropertyNull() {
+    public void testGetBooleanDefaultValueWithPropertyNull()
+    {
         Assert.True(SystemPropertyUtil.getBoolean("key", true));
         Assert.False(SystemPropertyUtil.getBoolean("key", false));
     }
 
     [Fact]
-    public void testGetBooleanDefaultValueWithEmptyString() {
-        System.setProperty("key", "");
+    public void testGetBooleanDefaultValueWithEmptyString()
+    {
+        Environment.SetEnvironmentVariable("key", "");
         Assert.True(SystemPropertyUtil.getBoolean("key", true));
         Assert.False(SystemPropertyUtil.getBoolean("key", false));
     }
 
     [Fact]
-    public void testGetBooleanWithTrueValue() {
-        System.setProperty("key", "true");
+    public void testGetBooleanWithTrueValue()
+    {
+        Environment.SetEnvironmentVariable("key", "true");
         Assert.True(SystemPropertyUtil.getBoolean("key", false));
-        System.setProperty("key", "yes");
+        Environment.SetEnvironmentVariable("key", "yes");
         Assert.True(SystemPropertyUtil.getBoolean("key", false));
-        System.setProperty("key", "1");
+        Environment.SetEnvironmentVariable("key", "1");
         Assert.True(SystemPropertyUtil.getBoolean("key", true));
     }
 
     [Fact]
-    public void testGetBooleanWithFalseValue() {
-        System.setProperty("key", "false");
+    public void testGetBooleanWithFalseValue()
+    {
+        Environment.SetEnvironmentVariable("key", "false");
         Assert.False(SystemPropertyUtil.getBoolean("key", true));
-        System.setProperty("key", "no");
+        Environment.SetEnvironmentVariable("key", "no");
         Assert.False(SystemPropertyUtil.getBoolean("key", false));
-        System.setProperty("key", "0");
+        Environment.SetEnvironmentVariable("key", "0");
         Assert.False(SystemPropertyUtil.getBoolean("key", true));
     }
 
     [Fact]
-    public void testGetBooleanDefaultValueWithWrongValue() {
-        System.setProperty("key", "abc");
+    public void testGetBooleanDefaultValueWithWrongValue()
+    {
+        Environment.SetEnvironmentVariable("key", "abc");
         Assert.True(SystemPropertyUtil.getBoolean("key", true));
-        System.setProperty("key", "123");
+        Environment.SetEnvironmentVariable("key", "123");
         Assert.False(SystemPropertyUtil.getBoolean("key", false));
     }
 
     [Fact]
-    public void getIntDefaultValueWithPropertyNull() {
+    public void getIntDefaultValueWithPropertyNull()
+    {
         Assert.Equal(1, SystemPropertyUtil.getInt("key", 1));
     }
 
     [Fact]
-    public void getIntWithPropertValueIsInt() {
-        System.setProperty("key", "123");
+    public void getIntWithPropertValueIsInt()
+    {
+        Environment.SetEnvironmentVariable("key", "123");
         Assert.Equal(123, SystemPropertyUtil.getInt("key", 1));
     }
 
     [Fact]
-    public void getIntDefaultValueWithPropertValueIsNotInt() {
-        System.setProperty("key", "NotInt");
+    public void getIntDefaultValueWithPropertValueIsNotInt()
+    {
+        Environment.SetEnvironmentVariable("key", "NotInt");
         Assert.Equal(1, SystemPropertyUtil.getInt("key", 1));
     }
 
     [Fact]
-    public void getLongDefaultValueWithPropertyNull() {
+    public void getLongDefaultValueWithPropertyNull()
+    {
         Assert.Equal(1, SystemPropertyUtil.getLong("key", 1));
     }
 
     [Fact]
-    public void getLongWithPropertValueIsLong() {
-        System.setProperty("key", "123");
+    public void getLongWithPropertValueIsLong()
+    {
+        Environment.SetEnvironmentVariable("key", "123");
         Assert.Equal(123, SystemPropertyUtil.getLong("key", 1));
     }
 
     [Fact]
-    public void getLongDefaultValueWithPropertValueIsNotLong() {
-        System.setProperty("key", "NotInt");
+    public void getLongDefaultValueWithPropertValueIsNotLong()
+    {
+        Environment.SetEnvironmentVariable("key", "NotInt");
         Assert.Equal(1, SystemPropertyUtil.getLong("key", 1));
     }
-
 }

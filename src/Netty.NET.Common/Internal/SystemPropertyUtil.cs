@@ -29,8 +29,6 @@ public static class SystemPropertyUtil
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SystemPropertyUtil));
 
-    
-    
     /**
      * Returns {@code true} if and only if the system property with the specified {@code key}
      * exists.
@@ -51,6 +49,7 @@ public static class SystemPropertyUtil
 
         return properties;
     }
+
     /**
      * Returns the value of the Java system property with the specified
      * {@code key}, while falling back to {@code null} if the property access fails.

@@ -154,12 +154,12 @@ public class NettyRuntimeTests {
     public void testGetWithSystemProperty() {
         final string availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
         try {
-            System.setProperty("io.netty.availableProcessors", "2048");
+            Environment.SetEnvironmentVariable("io.netty.availableProcessors", "2048");
             final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
             Assert.Equal(2048, holder.availableProcessors());
         } finally {
             if (availableProcessorsSystemProperty != null) {
-                System.setProperty("io.netty.availableProcessors", availableProcessorsSystemProperty);
+                Environment.SetEnvironmentVariable("io.netty.availableProcessors", availableProcessorsSystemProperty);
             } else {
                 System.clearProperty("io.netty.availableProcessors");
             }
@@ -176,7 +176,7 @@ public class NettyRuntimeTests {
             Assert.Equal(Runtime.getRuntime().availableProcessors(), holder.availableProcessors());
         } finally {
             if (availableProcessorsSystemProperty != null) {
-                System.setProperty("io.netty.availableProcessors", availableProcessorsSystemProperty);
+                Environment.SetEnvironmentVariable("io.netty.availableProcessors", availableProcessorsSystemProperty);
             } else {
                 System.clearProperty("io.netty.availableProcessors");
             }
