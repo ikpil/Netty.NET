@@ -13,21 +13,35 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System.Threading;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
-public class ThreadLocalRandomTest {
-
+public class ThreadLocalRandomTest
+{
     [Fact]
-    public void getInitialSeedUniquifierPreservesInterrupt() {
-        try {
-            Thread.CurrentThread.interrupt();
-            Assert.True(Thread.CurrentThread.isInterrupted(),
+    public void getInitialSeedUniquifierPreservesInterrupt()
+    {
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                Thread.CurrentThread.Interrupt();
+                Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(100), 
                     "Assert that thread is interrupted before invocation of getInitialSeedUniquifier()");
-            ThreadLocalRandom.getInitialSeedUniquifier();
-            Assert.True(Thread.CurrentThread.isInterrupted(),
+                ThreadLocalRandom.current();
+                Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(100), 
                     "Assert that thread is interrupted after invocation of getInitialSeedUniquifier()");
-        } finally {
-            Thread.interrupted(); // clear interrupted status in order to not affect other tests
-        }
+            }
+            finally
+            {
+                //Thread.interrupted(); // clear interrupted status in order to not affect other tests
+            }
+        });
+
+        thread.Start();
+        thread.Join();
     }
 }

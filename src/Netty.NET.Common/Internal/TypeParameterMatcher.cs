@@ -46,8 +46,7 @@ public abstract class TypeParameterMatcher
         return matcher;
     }
 
-    public static TypeParameterMatcher find(
-        object obj, Type parametrizedSuperclass, string typeParamName)
+    public static TypeParameterMatcher find(object obj, Type parametrizedSuperclass, string typeParamName)
     {
         IDictionary<Type, IDictionary<string, TypeParameterMatcher>> findCache =
             InternalThreadLocalMap.get().typeParameterMatcherFindCache();
