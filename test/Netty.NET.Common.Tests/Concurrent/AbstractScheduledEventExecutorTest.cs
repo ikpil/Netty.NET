@@ -21,7 +21,7 @@ namespace Netty.NET.Common.Tests.Concurrent;
 
 public class AbstractScheduledEventExecutorTest
 {
-    private static readonly IRunnable TEST_RUNNABLE = EmptyRunnable.Shared;
+    private static readonly IRunnable TEST_RUNNABLE = Runnables.Empty;
 
     private static final Callable<?> TEST_CALLABLE = Executors.callable(TEST_RUNNABLE);
 

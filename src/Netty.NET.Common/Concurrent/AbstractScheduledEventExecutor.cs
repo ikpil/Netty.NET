@@ -31,7 +31,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     private static readonly IComparer<IScheduledTask> SCHEDULED_FUTURE_TASK_COMPARATOR =
         Comparer<IScheduledTask>.Create((o1, o2) => o1.CompareTo(o2));
 
-    protected static readonly IRunnable WAKEUP_TASK = EmptyRunnable.Shared;
+    protected static readonly IRunnable WAKEUP_TASK = Runnables.Empty;
 
     protected IPriorityQueue<IScheduledTask> _scheduledTaskQueue;
 

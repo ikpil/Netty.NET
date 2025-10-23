@@ -14,88 +14,87 @@
  * under the License.
  */
 
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
-public class VirtualThreadCheckTest {
+public class VirtualThreadCheckTest
+{
+    private static class SubThread : Thread
+    {
+        // For test
+    }
+
+    private static class SubOfSubThread : SubThread
+    {
+        // For test
+    }
 
     [Fact]
-    public void testCheckVirtualThread() {
+    public void testCheckVirtualThread()
+    {
         Assert.False(PlatformDependent.isVirtualThread(null));
         Assert.False(PlatformDependent.isVirtualThread(Thread.CurrentThread));
-        FastThreadLocalThread fastThreadLocalThread = new FastThreadLocalThread();
+        FastThreadLocalThread fastThreadLocalThread = new FastThreadLocalThread(Runnables.Empty);
         Assert.False(PlatformDependent.isVirtualThread(fastThreadLocalThread));
-        final AtomicReference<Boolean> atomicRes = new AtomicReference<Boolean>();
-        Thread subThread = new Thread() {
-        @Override
-        public void run() {
-        atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
-    }
-};
-subThread.start();
-subThread.join();
-Assert.False(atomicRes.get());
-
-Thread subOfSubThread = new SubThread() {
-    @Override
-    public void run() {
-    atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
-}
-
-};
-subOfSubThread.start();
-subOfSubThread.join();
-Assert.False(atomicRes.get());
-
-Thread subOfSubOfSubThread = new SubOfSubThread() {
-    @Override
-    public void run() {
-    atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
-}
-};
-subOfSubOfSubThread.start();
-subOfSubOfSubThread.join();
-Assert.False(atomicRes.get());
-
-assumeTrue(PlatformDependent.javaVersion() >= 21);
-Method startVirtualThread = getStartVirtualThreadMethod();
-Thread virtualThread = (Thread) startVirtualThread.invoke(null, new IRunnable() {
-    @Override
-    public void run() {
-}
-});
-Assert.True(PlatformDependent.isVirtualThread(virtualThread));
-}
-
-[Fact]
-public void testGetVirtualThreadCheckMethod() throws Exception {
-    if (PlatformDependent.javaVersion() < 19) {
-        Assert.Null(IS_VIRTUAL_THREAD_METHOD_HANDLE);
-    } else {
-        assumeTrue(PlatformDependent.javaVersion() >= 21);
-        assumeTrue(IS_VIRTUAL_THREAD_METHOD_HANDLE != null);
-        bool isVirtual = (bool) IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(Thread.CurrentThread);
-        Assert.False(isVirtual);
-
-        Method startVirtualThread = getStartVirtualThreadMethod();
-        Thread virtualThread = (Thread) startVirtualThread.invoke(null, new IRunnable() {
-            @Override
-            public void run() {
-        }
+        AtomicBoolean atomicRes = new AtomicBoolean();
+        Thread subThread = new Thread(() =>
+        {
+            atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
         });
-        isVirtual = (bool) IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(virtualThread);
-        Assert.True(isVirtual);
+
+        subThread.Start();
+        subThread.Join();
+        Assert.False(atomicRes.get());
+
+        Thread subOfSubThread = new SubThread(() =>
+        {
+            atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
+        });
+        subOfSubThread.Start();
+        subOfSubThread.Join();
+        Assert.False(atomicRes.get());
+
+        Thread subOfSubOfSubThread = new SubOfSubThread(() =>
+        {
+            atomicRes.set(PlatformDependent.isVirtualThread(Thread.CurrentThread));
+        });
+        subOfSubOfSubThread.Start();
+        subOfSubOfSubThread.Join();
+        Assert.False(atomicRes.get());
+
+        assumeTrue(PlatformDependent.javaVersion() >= 21);
+        Method startVirtualThread = getStartVirtualThreadMethod();
+        Thread virtualThread = (Thread)startVirtualThread.invoke(null, Runnables.Empty);
+        Assert.True(PlatformDependent.isVirtualThread(virtualThread));
     }
-}
 
-private Method getStartVirtualThreadMethod() throws NoSuchMethodException {
-    return Thread.class.getMethod("startVirtualThread", IRunnable.class);
-}
+    [Fact]
+    public void testGetVirtualThreadCheckMethod()
+    {
+        if (PlatformDependent.javaVersion() < 19)
+        {
+            Assert.Null(IS_VIRTUAL_THREAD_METHOD_HANDLE);
+        }
+        else
+        {
+            assumeTrue(PlatformDependent.javaVersion() >= 21);
+            assumeTrue(IS_VIRTUAL_THREAD_METHOD_HANDLE != null);
+            bool isVirtual = (bool)IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(Thread.CurrentThread);
+            Assert.False(isVirtual);
 
-private static class SubThread extends Thread {
-    // For test
-}
+            Method startVirtualThread = getStartVirtualThreadMethod();
+            Thread virtualThread = (Thread)startVirtualThread.invoke(null, Runnables.Empty);
+            isVirtual = (bool)IS_VIRTUAL_THREAD_METHOD_HANDLE.invokeExact(virtualThread);
+            Assert.True(isVirtual);
+        }
+    }
 
-private static class SubOfSubThread extends SubThread {
-    // For test
-}
+    private Method getStartVirtualThreadMethod()
+    {
+        return Thread.class.getMethod("startVirtualThread", IRunnable.class);
+    }
 }

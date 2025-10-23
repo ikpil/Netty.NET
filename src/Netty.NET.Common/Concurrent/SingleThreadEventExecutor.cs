@@ -45,7 +45,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private const int ST_SHUTDOWN = 6;
     private const int ST_TERMINATED = 7;
 
-    private static readonly IRunnable NOOP_TASK = EmptyRunnable.Shared;
+    private static readonly IRunnable NOOP_TASK = Runnables.Empty;
 
     private readonly IQueue<IRunnable> _taskQueue;
 

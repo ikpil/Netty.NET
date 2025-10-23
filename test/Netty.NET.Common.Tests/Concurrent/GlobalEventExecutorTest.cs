@@ -89,7 +89,7 @@ public class GlobalEventExecutorTest
         AtomicReference<ThreadGroup> capturedGroup = new AtomicReference<ThreadGroup>();
         Thread thread = new Thread(group, Runnables.Create(() =>
         {
-            Thread t = e._threadFactory.newThread(EmptyRunnable.Shared);
+            Thread t = e._threadFactory.newThread(Runnables.Empty);
             capturedGroup.set(t.getThreadGroup());
         }));
         thread.Start();

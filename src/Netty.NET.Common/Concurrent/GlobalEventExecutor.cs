@@ -75,7 +75,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
         // // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
         // // could be overridden leading to unsafe initialization here!
-        _quietPeriodTask = new ScheduledRunnableTask(this, EmptyRunnable.Shared,
+        _quietPeriodTask = new ScheduledRunnableTask(this, Runnables.Empty,
             deadlineNanos(getCurrentTimeNanos(),
                 SCHEDULE_QUIET_PERIOD_INTERVAL),
             -SCHEDULE_QUIET_PERIOD_INTERVAL
