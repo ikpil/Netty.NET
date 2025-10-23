@@ -1424,7 +1424,7 @@ public static class PlatformDependent
     /**
      * Package private for testing purposes only!
      */
-    static int hashCodeAsciiSafe(byte[] bytes, int startPos, int length) {
+    public static int hashCodeAsciiSafe(byte[] bytes, int startPos, int length) {
         int hash = HASH_CODE_ASCII_SEED;
         int remainingBytes = length & 7;
         int end = startPos + remainingBytes;
