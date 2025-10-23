@@ -14,17 +14,20 @@
  * under the License.
  */
 
-using Netty.NET.Common;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests;
 
-public class AbstractReferenceCountedTest 
+public class AbstractReferenceCountedTest
 {
-
     [Fact]
-    public void testRetainOverflow() {
+    public void testRetainOverflow()
+    {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(int.MaxValue);
         Assert.Equal(int.MaxValue, referenceCounted.refCnt());
@@ -32,14 +35,16 @@ public class AbstractReferenceCountedTest
     }
 
     [Fact]
-    public void testRetainOverflow2() {
+    public void testRetainOverflow2()
+    {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         Assert.Equal(1, referenceCounted.refCnt());
         Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.retain(int.MaxValue));
     }
 
     [Fact]
-    public void testReleaseOverflow() {
+    public void testReleaseOverflow()
+    {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         referenceCounted.setRefCnt(0);
         Assert.Equal(0, referenceCounted.refCnt());
@@ -47,19 +52,24 @@ public class AbstractReferenceCountedTest
     }
 
     [Fact]
-    public void testReleaseErrorMessage() {
+    public void testReleaseErrorMessage()
+    {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         Assert.True(referenceCounted.release());
-        try {
+        try
+        {
             referenceCounted.release(1);
             Assert.Fail("IllegalReferenceCountException didn't occur");
-        } catch (IllegalReferenceCountException e) {
+        }
+        catch (IllegalReferenceCountException e)
+        {
             Assert.Equal("refCnt: 0, decrement: 1", e.Message);
         }
     }
 
     [Fact]
-    public void testRetainResurrect() {
+    public void testRetainResurrect()
+    {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         Assert.True(referenceCounted.release());
         Assert.Equal(0, referenceCounted.refCnt());
@@ -67,7 +77,8 @@ public class AbstractReferenceCountedTest
     }
 
     [Fact]
-    public void testRetainResurrect2() {
+    public void testRetainResurrect2()
+    {
         AbstractReferenceCounted referenceCounted = newReferenceCounted();
         Assert.True(referenceCounted.release());
         Assert.Equal(0, referenceCounted.refCnt());
@@ -75,111 +86,152 @@ public class AbstractReferenceCountedTest
     }
 
     [Fact(Timeout = 30000)]
-    public void testRetainFromMultipleThreadsThrowsReferenceCountException() {
+    public void testRetainFromMultipleThreadsThrowsReferenceCountException()
+    {
         int threads = 4;
-        Queue<Future<?>> futures = new ArrayDeque<>(threads);
-        ExecutorService service = Executors.newFixedThreadPool(threads);
+        Queue<Task> futures = new Queue<Task>(threads);
+        IExecutorService service = Executors.newFixedThreadPool(threads);
         AtomicInteger refCountExceptions = new AtomicInteger();
 
-        try {
-            for (int i = 0; i < 10000; i++) {
+        try
+        {
+            for (int i = 0; i < 10000; i++)
+            {
                 AbstractReferenceCounted referenceCounted = newReferenceCounted();
                 CountdownEvent retainLatch = new CountdownEvent(1);
                 Assert.True(referenceCounted.release());
 
-                for (int a = 0; a < threads; a++) {
-                    int retainCnt = ThreadLocalRandom.current().nextInt(1, int.MaxValue);
-                    futures.add(service.submit(()() => {
-                        try {
-                            retainLatch.await();
-                            try {
+                for (int a = 0; a < threads; a++)
+                {
+                    int retainCnt = ThreadLocalRandom.current().Next(1, int.MaxValue);
+                    futures.Enqueue(service.submit(Runnables.Create(() =>
+                    {
+                        try
+                        {
+                            retainLatch.Wait();
+                            try
+                            {
                                 referenceCounted.retain(retainCnt);
-                            } catch (IllegalReferenceCountException e) {
+                            }
+                            catch (IllegalReferenceCountException e)
+                            {
                                 refCountExceptions.incrementAndGet();
                             }
-                        } catch (ThreadInterruptedException e) {
-                            Thread.CurrentThread.interrupt();
                         }
-                    }));
+                        catch (ThreadInterruptedException e)
+                        {
+                            Thread.CurrentThread.Interrupt();
+                        }
+                    })));
                 }
-                retainLatch.countDown();
 
-                for (;;) {
-                    Future<?> f = futures.poll();
-                    if (f == null) {
+                retainLatch.Signal();
+
+                for (;;)
+                {
+                    futures.TryDequeue(out var f);
+                    if (f == null)
+                    {
                         break;
                     }
-                    f.get();
+
+                    f.Wait();
                 }
+
                 Assert.Equal(4, refCountExceptions.get());
                 refCountExceptions.set(0);
             }
-        } finally {
+        }
+        finally
+        {
             service.shutdown();
         }
     }
 
     [Fact(Timeout = 30000)]
-    public void testReleaseFromMultipleThreadsThrowsReferenceCountException() {
+    public void testReleaseFromMultipleThreadsThrowsReferenceCountException()
+    {
         int threads = 4;
-        Queue<Future<?>> futures = new ArrayDeque<>(threads);
-        ExecutorService service = Executors.newFixedThreadPool(threads);
+        Queue<Task> futures = new Queue<Task>(threads);
+        IExecutorService service = Executors.newFixedThreadPool(threads);
         AtomicInteger refCountExceptions = new AtomicInteger();
 
-        try {
-            for (int i = 0; i < 10000; i++) {
+        try
+        {
+            for (int i = 0; i < 10000; i++)
+            {
                 AbstractReferenceCounted referenceCounted = newReferenceCounted();
                 CountdownEvent releaseLatch = new CountdownEvent(1);
                 AtomicInteger releasedCount = new AtomicInteger();
 
-                for (int a = 0; a < threads; a++) {
+                for (int a = 0; a < threads; a++)
+                {
                     AtomicInteger releaseCnt = new AtomicInteger(0);
 
-                    futures.add(service.submit(()() => {
-                        try {
-                            releaseLatch.await();
-                            try {
-                                if (referenceCounted.release(releaseCnt.incrementAndGet())) {
+                    futures.Enqueue(service.submit(Runnables.Create(() =>
+                    {
+                        try
+                        {
+                            releaseLatch.Wait();
+                            try
+                            {
+                                if (referenceCounted.release(releaseCnt.incrementAndGet()))
+                                {
                                     releasedCount.incrementAndGet();
                                 }
-                            } catch (IllegalReferenceCountException e) {
+                            }
+                            catch (IllegalReferenceCountException e)
+                            {
                                 refCountExceptions.incrementAndGet();
                             }
-                        } catch (ThreadInterruptedException e) {
-                            Thread.CurrentThread.interrupt();
                         }
-                    }));
+                        catch (ThreadInterruptedException e)
+                        {
+                            Thread.CurrentThread.Interrupt();
+                        }
+                    })));
                 }
-                releaseLatch.countDown();
 
-                for (;;) {
-                    Future<?> f = futures.poll();
-                    if (f == null) {
+                releaseLatch.Signal();
+
+                for (;;)
+                {
+                    futures.TryDequeue(out var f);
+                    if (f == null)
+                    {
                         break;
                     }
-                    f.get();
+
+                    f.Wait();
                 }
+
                 Assert.Equal(3, refCountExceptions.get());
                 Assert.Equal(1, releasedCount.get());
 
                 refCountExceptions.set(0);
             }
-        } finally {
+        }
+        finally
+        {
             service.shutdown();
         }
     }
 
-    public static AbstractReferenceCounted newReferenceCounted() {
-        return new AbstractReferenceCounted() {
-            @Override
-            protected void deallocate() {
-                // NOOP
-            }
+    public class TestReferenceCounted : AbstractReferenceCounted
+    {
+        protected override void deallocate()
+        {
+            // NOOP
+        }
 
-            @Override
-            public IReferenceCounted touch(object hint) {
-                return this;
-            }
-        };
+        public override IReferenceCounted touch(object hint)
+        {
+            return this;
+        }
+    }
+
+    public static AbstractReferenceCounted newReferenceCounted()
+    {
+        return new TestReferenceCounted();
     }
 }

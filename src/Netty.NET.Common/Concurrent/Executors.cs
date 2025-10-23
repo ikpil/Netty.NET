@@ -7,4 +7,9 @@ public static class Executors
         // todo!!
         return null;
     }
+
+    public static IExecutorService newFixedThreadPool(int thread)
+    {
+        return null;
+    }
 }
