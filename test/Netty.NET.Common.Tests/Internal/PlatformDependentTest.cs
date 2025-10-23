@@ -17,7 +17,6 @@
 using System;
 using System.Linq;
 using Netty.NET.Common.Internal;
-using static Netty.NET.Common.Internal.PlatformDependent;
 
 namespace Netty.NET.Common.Tests.Internal;
 
@@ -164,12 +163,16 @@ public class PlatformDependentTest
             }
 
             string str = new string(bytesChar);
-            Assert.Equal(hashCodeAsciiSafe(bytes, 0, bytes.Length),
-                hashCodeAscii(bytes, 0, bytes.Length),
-                "length=" + i);
-            Assert.Equal(hashCodeAscii(bytes, 0, bytes.Length),
-                hashCodeAscii(str),
-                "length=" + i);
+            Assert.Equal(
+                PlatformDependent.hashCodeAsciiSafe(bytes, 0, bytes.Length),
+                PlatformDependent.hashCodeAscii(bytes, 0, bytes.Length),
+                "length=" + i
+            );
+            Assert.Equal(
+                PlatformDependent.hashCodeAscii(bytes, 0, bytes.Length),
+                PlatformDependent.hashCodeAscii(str),
+                "length=" + i
+            );
         }
     }
 
@@ -185,12 +188,11 @@ public class PlatformDependentTest
         PlatformDependent.freeDirectNoCleaner(buffer);
     }
 
-    @EnabledForJreRange(min = JRE.JAVA_25)
-
+    //@EnabledForJreRange(min = JRE.JAVA_25)
     [Fact]
     void java25MustHaveCleanerImplAvailable()
     {
-        Assert.True(CleanerJava25.isSupported(),
+        Assert.True(false, //CleanerJava25.isSupported(),
             "The CleanerJava25 implementation must be supported on Java 25+");
         // Note: we're not testing on `PlatformDependent.directBufferPreferred()` because some builds
         // might intentionally disable it, in order to exercise those code paths.

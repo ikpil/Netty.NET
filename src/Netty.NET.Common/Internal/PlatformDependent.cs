@@ -971,6 +971,12 @@ public static class PlatformDependent
                 PlatformDependent0.hashCodeAscii(bytes, startPos, length);
     }
 
+    public static int hashCodeAscii(string bytes)
+    {
+        var scs = new StringCharSequence(bytes);
+        return hashCodeAscii(scs);
+    }
+
     /**
      * Calculate a hash code of a byte array assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
@@ -981,7 +987,8 @@ public static class PlatformDependent
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      */
-    public static int hashCodeAscii(ICharSequence bytes) {
+    public static int hashCodeAscii(ICharSequence bytes) 
+    {
         int length = bytes.length();
         int remainingBytes = length & 7;
         int hash = HASH_CODE_ASCII_SEED;
