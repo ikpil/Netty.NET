@@ -14,18 +14,22 @@
  * under the License.
  */
 
+using System;
 using System.Text;
-using Netty.NET.Common;
 
-namespace Netty.NET.Common.Tests;/**
+namespace Netty.NET.Common.Tests;
+
+/**
  * Test character encoding and case insensitivity for the {@link AsciiString} class
  */
-public class AsciiStringCharacterTest {
+public class AsciiStringCharacterTest
+{
     private static readonly Random r = new Random();
 
     [Fact]
-    public void testContentEqualsIgnoreCase() {
-        byte[] bytes = { 32, 'a' };
+    public void testContentEqualsIgnoreCase()
+    {
+        byte[] bytes = { 32, (byte)'a' };
         AsciiString asciiString = new AsciiString(bytes, 1, 1, false);
         // https://github.com/netty/netty/issues/9475
         Assert.False(asciiString.contentEqualsIgnoreCase("b"));
@@ -33,14 +37,18 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testGetBytesStringBuilder() {
+    public void testGetBytesStringBuilder()
+    {
         StringBuilder b = new StringBuilder();
-        for (int i = 0; i < 1 << 16; ++i) {
+        for (int i = 0; i < 1 << 16; ++i)
+        {
             b.Append("eéaà");
         }
+
         string bString = b.ToString();
         Encoding[] charsets = CharsetUtil.values();
-        for (int i = 0; i < charsets.Length; ++i) {
+        for (int i = 0; i < charsets.Length; ++i)
+        {
             Encoding charset = charsets[i];
             byte[] expected = bString.getBytes(charset);
             byte[] actual = new AsciiString(b, charset).toByteArray();
@@ -49,15 +57,19 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testGetBytesString() {
+    public void testGetBytesString()
+    {
         StringBuilder b = new StringBuilder();
-        for (int i = 0; i < 1 << 16; ++i) {
+        for (int i = 0; i < 1 << 16; ++i)
+        {
             b.Append("eéaà");
         }
+
         string bString = b.ToString();
         Encoding[] charsets = CharsetUtil.values();
-        for (int i = 0; i < charsets.Length; ++i) {
-            final Encoding charset = charsets[i];
+        for (int i = 0; i < charsets.Length; ++i)
+        {
+            Encoding charset = charsets[i];
             byte[] expected = bString.getBytes(charset);
             byte[] actual = new AsciiString(bString, charset).toByteArray();
             Assert.Equal(expected, actual, "failure for " + charset);
@@ -65,11 +77,14 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testGetBytesAsciiString() {
+    public void testGetBytesAsciiString()
+    {
         StringBuilder b = new StringBuilder();
-        for (int i = 0; i < 1 << 16; ++i) {
+        for (int i = 0; i < 1 << 16; ++i)
+        {
             b.Append("eéaà");
         }
+
         string bString = b.ToString();
         // The AsciiString class actually limits the Encoding to ISO_8859_1
         byte[] expected = bString.getBytes(CharsetUtil.ISO_8859_1);
@@ -78,14 +93,16 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testComparisonWithString() {
+    public void testComparisonWithString()
+    {
         string str = "shouldn't fail";
         AsciiString ascii = new AsciiString(str.toCharArray());
         Assert.Equal(str, ascii.ToString());
     }
 
     [Fact]
-    public void subSequenceTest() {
+    public void subSequenceTest()
+    {
         byte[] init = { 't', 'h', 'i', 's', ' ', 'i', 's', ' ', 'a', ' ', 't', 'e', 's', 't' };
         AsciiString ascii = new AsciiString(init);
         int start = 2;
@@ -94,17 +111,21 @@ public class AsciiStringCharacterTest {
         AsciiString sub2 = ascii.subSequence(start, end, true);
         Assert.Equal(sub1.hashCode(), sub2.hashCode());
         Assert.Equal(sub1, sub2);
-        for (int i = start; i < end; ++i) {
+        for (int i = start; i < end; ++i)
+        {
             Assert.Equal(init[i], sub1.byteAt(i - start));
         }
     }
 
     [Fact]
-    public void testContains() {
+    public void testContains()
+    {
         string[] falseLhs = { null, "a", "aa", "aaa" };
         string[] falseRhs = { null, "b", "ba", "baa" };
-        for (int i = 0; i < falseLhs.length; ++i) {
-            for (int j = 0; j < falseRhs.length; ++j) {
+        for (int i = 0; i < falseLhs.Length; ++i)
+        {
+            for (int j = 0; j < falseRhs.Length; ++j)
+            {
                 assertContains(falseLhs[i], falseRhs[i], false, false);
             }
         }
@@ -147,54 +168,61 @@ public class AsciiStringCharacterTest {
         assertContains(a, b, false, true);
     }
 
-    private static void assertContains(string a, string b, bool caseSensitiveEquals, bool caseInsenstaiveEquals) {
+    private static void assertContains(string a, string b, bool caseSensitiveEquals, bool caseInsenstaiveEquals)
+    {
         Assert.Equal(caseSensitiveEquals, contains(a, b));
         Assert.Equal(caseInsenstaiveEquals, containsIgnoreCase(a, b));
     }
 
     [Fact]
-    public void testCaseSensitivity() {
+    public void testCaseSensitivity()
+    {
         int i = 0;
-        for (; i < 32; i++) {
+        for (; i < 32; i++)
+        {
             doCaseSensitivity(i);
         }
+
         int min = i;
         int max = 4000;
-        int len = r.nextInt((max - min) + 1) + min;
+        int len = r.Next((max - min) + 1) + min;
         doCaseSensitivity(len);
     }
 
-    private static void doCaseSensitivity(int len) {
+    private static void doCaseSensitivity(int len)
+    {
         // Build an upper case and lower case string
         int upperA = 'A';
         int upperZ = 'Z';
-        int upperToLower = (int) 'a' - upperA;
+        int upperToLower = (int)'a' - upperA;
         byte[] lowerCaseBytes = new byte[len];
         StringBuilder upperCaseBuilder = new StringBuilder(len);
-        for (int i = 0; i < len; ++i) {
-            char upper = (char) (r.Next((upperZ - upperA) + 1) + upperA);
+        for (int i = 0; i < len; ++i)
+        {
+            char upper = (char)(r.Next((upperZ - upperA) + 1) + upperA);
             upperCaseBuilder.Append(upper);
-            lowerCaseBytes[i] = (byte) (upper + upperToLower);
+            lowerCaseBytes[i] = (byte)(upper + upperToLower);
         }
+
         string upperCaseString = upperCaseBuilder.ToString();
         string lowerCaseString = new string(lowerCaseBytes);
         AsciiString lowerCaseAscii = new AsciiString(lowerCaseBytes, false);
         AsciiString upperCaseAscii = new AsciiString(upperCaseString);
-        final string errorString = "len: " + len;
+        string errorString = "len: " + len;
         // Test upper case hash codes are equal
-        final int upperCaseExpected = upperCaseAscii.hashCode();
+        int upperCaseExpected = upperCaseAscii.hashCode();
         Assert.Equal(upperCaseExpected, AsciiString.hashCode(upperCaseBuilder), errorString);
         Assert.Equal(upperCaseExpected, AsciiString.hashCode(upperCaseString), errorString);
         Assert.Equal(upperCaseExpected, upperCaseAscii.hashCode(), errorString);
 
         // Test lower case hash codes are equal
-        final int lowerCaseExpected = lowerCaseAscii.hashCode();
+        int lowerCaseExpected = lowerCaseAscii.hashCode();
         Assert.Equal(lowerCaseExpected, AsciiString.hashCode(lowerCaseAscii), errorString);
         Assert.Equal(lowerCaseExpected, AsciiString.hashCode(lowerCaseString), errorString);
         Assert.Equal(lowerCaseExpected, lowerCaseAscii.hashCode(), errorString);
 
         // Test case insensitive hash codes are equal
-        final int expectedCaseInsensitive = lowerCaseAscii.hashCode();
+        int expectedCaseInsensitive = lowerCaseAscii.hashCode();
         Assert.Equal(expectedCaseInsensitive, AsciiString.hashCode(upperCaseBuilder), errorString);
         Assert.Equal(expectedCaseInsensitive, AsciiString.hashCode(upperCaseString), errorString);
         Assert.Equal(expectedCaseInsensitive, AsciiString.hashCode(lowerCaseString), errorString);
@@ -209,19 +237,23 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void caseInsensitiveHasherCharBuffer() {
+    public void caseInsensitiveHasherCharBuffer()
+    {
         string s1 = new string("TRANSFER-ENCODING");
         char[] array = new char[128];
-        final int offset = 100;
-        for (int i = 0; i < s1.length(); ++i) {
+        int offset = 100;
+        for (int i = 0; i < s1.length(); ++i)
+        {
             array[offset + i] = s1.charAt(i);
         }
+
         CharBuffer buffer = CharBuffer.wrap(array, offset, s1.length());
         Assert.Equal(AsciiString.hashCode(s1), AsciiString.hashCode(buffer));
     }
 
     [Fact]
-    public void testBooleanUtilityMethods() {
+    public void testBooleanUtilityMethods()
+    {
         Assert.True(new AsciiString(new byte[] { 1 }).parseBoolean());
         Assert.False(AsciiString.EMPTY_STRING.parseBoolean());
         Assert.False(new AsciiString(new byte[] { 0 }).parseBoolean());
@@ -230,7 +262,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testEqualsIgnoreCase() {
+    public void testEqualsIgnoreCase()
+    {
         Assert.True(AsciiString.contentEqualsIgnoreCase(null, null));
         Assert.False(AsciiString.contentEqualsIgnoreCase(null, "foo"));
         Assert.False(AsciiString.contentEqualsIgnoreCase("bar", null));
@@ -251,7 +284,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testIndexOfIgnoreCase() {
+    public void testIndexOfIgnoreCase()
+    {
         Assert.Equal(-1, AsciiString.indexOfIgnoreCase(null, "abc", 1));
         Assert.Equal(-1, AsciiString.indexOfIgnoreCase("abc", null, 1));
         Assert.Equal(0, AsciiString.indexOfIgnoreCase("", "", 0));
@@ -267,7 +301,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testIndexOfIgnoreCaseAscii() {
+    public void testIndexOfIgnoreCaseAscii()
+    {
         Assert.Equal(-1, AsciiString.indexOfIgnoreCaseAscii(null, "abc", 1));
         Assert.Equal(-1, AsciiString.indexOfIgnoreCaseAscii("abc", null, 1));
         Assert.Equal(0, AsciiString.indexOfIgnoreCaseAscii("", "", 0));
@@ -282,7 +317,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testTrim() {
+    public void testTrim()
+    {
         Assert.Equal("", AsciiString.EMPTY_STRING.trim().toString());
         Assert.Equal("abc", new AsciiString("  abc").trim().toString());
         Assert.Equal("abc", new AsciiString("abc  ").trim().toString());
@@ -290,7 +326,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testIndexOfChar() {
+    public void testIndexOfChar()
+    {
         Assert.Equal(-1, AsciiString.indexOf(null, 'a', 0));
         Assert.Equal(-1, AsciiString.of("").indexOf('a', 0));
         Assert.Equal(-1, AsciiString.of("abc").indexOf('d', 0));
@@ -307,7 +344,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testIndexOfCharSequence() {
+    public void testIndexOfCharSequence()
+    {
         Assert.Equal(0, new AsciiString("abcd").indexOf("abcd", 0));
         Assert.Equal(0, new AsciiString("abcd").indexOf("abc", 0));
         Assert.Equal(1, new AsciiString("abcd").indexOf("bcd", 0));
@@ -337,7 +375,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testStaticIndexOfChar() {
+    public void testStaticIndexOfChar()
+    {
         Assert.Equal(-1, AsciiString.indexOf(null, 'a', 0));
         Assert.Equal(-1, AsciiString.indexOf("", 'a', 0));
         Assert.Equal(-1, AsciiString.indexOf("abc", 'd', 0));
@@ -349,9 +388,10 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testLastIndexOfCharSequence() {
-        final byte[] bytes = { 'a', 'b', 'c', 'd', 'e' };
-        final AsciiString ascii = new AsciiString(bytes, 2, 3, false);
+    public void testLastIndexOfCharSequence()
+    {
+        byte[] bytes = { 'a', 'b', 'c', 'd', 'e' };
+        AsciiString ascii = new AsciiString(bytes, 2, 3, false);
 
         Assert.Equal(0, new AsciiString("abcd").lastIndexOf("abcd", 0));
         Assert.Equal(0, new AsciiString("abcd").lastIndexOf("abc", 4));
@@ -388,7 +428,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testReplace() {
+    public void testReplace()
+    {
         AsciiString abcd = new AsciiString("abcd");
         Assert.Equal(new AsciiString("adcd"), abcd.replace('b', 'd'));
         Assert.Equal(new AsciiString("dbcd"), abcd.replace('a', 'd'));
@@ -401,13 +442,15 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testSubStringHashCode() {
+    public void testSubStringHashCode()
+    {
         //two "123"s
         Assert.Equal(AsciiString.hashCode("123"), AsciiString.hashCode("a123".substring(1)));
     }
 
     [Fact]
-    public void testIndexOf() {
+    public void testIndexOf()
+    {
         AsciiString foo = AsciiString.of("This is a test");
         int i1 = foo.indexOf(' ', 0);
         Assert.Equal(4, i1);
@@ -421,37 +464,43 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testToLowerCase() {
+    public void testToLowerCase()
+    {
         AsciiString foo = AsciiString.of("This is a tesT");
-        Assert.Equal("this is a test", foo.ToLower().toString());
+        Assert.Equal("this is a test", foo.toLowerCase().toString());
     }
 
     [Fact]
-    public void testToLowerCaseForOddLengths() {
+    public void testToLowerCaseForOddLengths()
+    {
         AsciiString foo = AsciiString.of("This is a test!");
-        Assert.Equal("this is a test!", foo.ToLower().toString());
+        Assert.Equal("this is a test!", foo.toLowerCase().toString());
     }
 
     [Fact]
-    public void testToLowerCaseLong() {
+    public void testToLowerCaseLong()
+    {
         AsciiString foo = AsciiString.of("This is a test for longer sequences");
-        Assert.Equal("this is a test for longer sequences", foo.ToLower().toString());
+        Assert.Equal("this is a test for longer sequences", foo.toLowerCase().toString());
     }
 
     [Fact]
-    public void testToUpperCase() {
+    public void testToUpperCase()
+    {
         AsciiString foo = AsciiString.of("This is a tesT");
         Assert.Equal("THIS IS A TEST", foo.toUpperCase().toString());
     }
 
     [Fact]
-    public void testToUpperCaseLong() {
+    public void testToUpperCaseLong()
+    {
         AsciiString foo = AsciiString.of("This is a test for longer sequences");
         Assert.Equal("THIS IS A TEST FOR LONGER SEQUENCES", foo.toUpperCase().toString());
     }
 
     [Fact]
-    public void testRegionMatchesReturnsTrueForEqualRegions() {
+    public void testRegionMatchesReturnsTrueForEqualRegions()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString hello = new AsciiString("Hello");
         AsciiString world = new AsciiString("World");
@@ -460,7 +509,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesReturnsFalseForDifferentRegions() {
+    public void testRegionMatchesReturnsFalseForDifferentRegions()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString world = new AsciiString("world");
         AsciiString hello = new AsciiString("hello");
@@ -469,7 +519,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesIgnoreCaseReturnsTrueForEqualRegions() {
+    public void testRegionMatchesIgnoreCaseReturnsTrueForEqualRegions()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString hello = new AsciiString("hello");
         AsciiString world = new AsciiString("world");
@@ -478,7 +529,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesIgnoreCaseReturnsFalseForDifferentRegions() {
+    public void testRegionMatchesIgnoreCaseReturnsFalseForDifferentRegions()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString world = new AsciiString("world");
         AsciiString hello = new AsciiString("hello");
@@ -487,7 +539,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesAsciiReturnsTrueForEqualRegions() {
+    public void testRegionMatchesAsciiReturnsTrueForEqualRegions()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString hello = new AsciiString("Hello");
         AsciiString world = new AsciiString("World");
@@ -496,7 +549,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesAsciiReturnsFalseForDifferentRegions() {
+    public void testRegionMatchesAsciiReturnsFalseForDifferentRegions()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString world = new AsciiString("world");
         AsciiString hello = new AsciiString("hello");
@@ -505,7 +559,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesAsciiIgnoreCaseReturnsTrueForEqualRegions() {
+    public void testRegionMatchesAsciiIgnoreCaseReturnsTrueForEqualRegions()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString hello = new AsciiString("hello");
         AsciiString world = new AsciiString("world");
@@ -514,7 +569,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesAsciiIgnoreCaseReturnsFalseForDifferentRegions() {
+    public void testRegionMatchesAsciiIgnoreCaseReturnsFalseForDifferentRegions()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString world = new AsciiString("world");
         AsciiString hello = new AsciiString("hello");
@@ -523,7 +579,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesHandlesOutOfBounds() {
+    public void testRegionMatchesHandlesOutOfBounds()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString hello = new AsciiString("Hello");
         Assert.False(AsciiString.regionMatches(str, false, -1, hello, 0, 5));
@@ -532,7 +589,8 @@ public class AsciiStringCharacterTest {
     }
 
     [Fact]
-    public void testRegionMatchesAsciiHandlesOutOfBounds() {
+    public void testRegionMatchesAsciiHandlesOutOfBounds()
+    {
         AsciiString str = new AsciiString("Hello, World!");
         AsciiString hello = new AsciiString("Hello");
         Assert.False(AsciiString.regionMatchesAscii(str, false, -1, hello, 0, 5));
