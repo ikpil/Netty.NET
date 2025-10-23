@@ -15,7 +15,6 @@
  */
 
 using System;
-using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 
@@ -78,31 +77,43 @@ public class AsciiStringMemoryTest
         }
     }
 
+    public class TestByteProcessor : IByteProcessor
+    {
+        public int i;
+        private readonly Func<byte, TestByteProcessor, bool> _processor;
+
+        public TestByteProcessor(int start, Func<byte, TestByteProcessor, bool> processor)
+        {
+            i = start;
+            _processor = processor;
+        }
+
+        public bool process(byte value)
+        {
+            return _processor.Invoke(value, this);
+        }
+    }
+
+
     [Fact]
     public void forEachTest()
     {
         AtomicInteger aCount = new AtomicInteger(0);
         AtomicInteger bCount = new AtomicInteger(0);
-        aAsciiString.forEachByte(new IByteProcessor()
+        aAsciiString.forEachByte(new TestByteProcessor(0, (value, p) =>
         {
-            int i;
-            @Override
-            public bool process(byte value) {
-            Assert.Equal(value, bAsciiString.byteAt(i++), "failed at index: " + i);
+            Assert.Equal(value, bAsciiString.byteAt(p.i++), "failed at index: " + p.i);
             aCount.set(aCount.get() + 1);
             return true;
-        }
-        });
-        bAsciiString.forEachByte(new IByteProcessor()
+        }));
+
+
+        bAsciiString.forEachByte(new TestByteProcessor(0, (value, p) =>
         {
-            int i;
-            @Override
-            public bool process(byte value) {
-            Assert.Equal(value, aAsciiString.byteAt(i++), "failed at index: " + i);
+            Assert.Equal(value, aAsciiString.byteAt(p.i++), "failed at index: " + p.i);
             bCount.set(bCount.get() + 1);
             return true;
-        }
-        });
+        }));
         Assert.Equal(aAsciiString.length(), aCount.get());
         Assert.Equal(bAsciiString.length(), bCount.get());
     }
@@ -126,26 +137,19 @@ public class AsciiStringMemoryTest
     {
         AtomicInteger aCount = new AtomicInteger(0);
         AtomicInteger bCount = new AtomicInteger(0);
-        aAsciiString.forEachByteDesc(new IByteProcessor()
+        aAsciiString.forEachByteDesc(new TestByteProcessor(1, (value, p) =>
         {
-            int i = 1;
-            @Override
-            public bool process(byte value) {
-            Assert.Equal(value, bAsciiString.byteAt(bAsciiString.length() - (i++)), "failed at index: " + i);
+            Assert.Equal(value, bAsciiString.byteAt(bAsciiString.length() - (p.i++)), "failed at index: " + p.i);
             aCount.set(aCount.get() + 1);
             return true;
-        }
-        });
-        bAsciiString.forEachByteDesc(new IByteProcessor()
+        }));
+
+        bAsciiString.forEachByteDesc(new TestByteProcessor(1, (value, p) =>
         {
-            int i = 1;
-            @Override
-            public bool process(byte value) {
-            Assert.Equal(value, aAsciiString.byteAt(aAsciiString.length() - (i++)), "failed at index: " + i);
+            Assert.Equal(value, aAsciiString.byteAt(aAsciiString.length() - (p.i++)), "failed at index: " + p.i);
             bCount.set(bCount.get() + 1);
             return true;
-        }
-        });
+        }));
         Assert.Equal(aAsciiString.length(), aCount.get());
         Assert.Equal(bAsciiString.length(), bCount.get());
     }
@@ -172,7 +176,7 @@ public class AsciiStringMemoryTest
         AsciiString aSubSequence = aAsciiString.subSequence(start, end, false);
         AsciiString bSubSequence = bAsciiString.subSequence(start, end, true);
         Assert.Equal(aSubSequence, bSubSequence);
-        Assert.Equal(aSubSequence.hashCode(), bSubSequence.hashCode());
+        Assert.Equal(aSubSequence.GetHashCode(), bSubSequence.GetHashCode());
     }
 
     [Fact]
