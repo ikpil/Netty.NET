@@ -13,106 +13,112 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
-public class ThreadExecutorMapTest {
-    private static final EventExecutor EVENT_EXECUTOR = new AbstractEventExecutor() {
-        @Override
-        public void shutdown() {
+
+public class ThreadExecutorMapTest
+{
+    class TestEventExecutor : AbstractEventExecutor
+    {
+        public override void shutdown()
+        {
             throw new NotSupportedException();
         }
 
-        @Override
-        public bool inEventLoop(Thread thread) {
+        public override bool inEventLoop(Thread thread)
+        {
             return false;
         }
 
-        @Override
-        public bool isShuttingDown() {
+        public override bool isShuttingDown()
+        {
             return false;
         }
 
-        @Override
-        public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+        public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
             throw new NotSupportedException();
         }
 
-        @Override
-        public Task terminationTask() {
+        public override Task terminationTask()
+        {
             throw new NotSupportedException();
         }
 
-        @Override
-        public bool isShutdown() {
+        public override bool isShutdown()
+        {
             return false;
         }
 
-        @Override
-        public bool isTerminated() {
+        public override bool isTerminated()
+        {
             return false;
         }
 
-        @Override
-        public bool awaitTermination(long timeout, @NotNull TimeUnit unit) {
+        public override bool awaitTermination(TimeSpan timeout)
+        {
             return false;
         }
 
-        @Override
-        public void execute(@NotNull IRunnable command) {
+        public override void execute(IRunnable command)
+        {
             throw new NotSupportedException();
         }
-    };
+    }
+
+    private static readonly IEventExecutor EVENT_EXECUTOR = new TestEventExecutor();
 
     [Fact]
-    public void testOldExecutorIsRestored() {
+    public void testOldExecutorIsRestored()
+    {
         IExecutor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
         IExecutor executor2 = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, EVENT_EXECUTOR);
-        executor.execute(new IRunnable() {
-            @Override
-            public void run() {
-                executor2.execute(new IRunnable() {
-                    @Override
-                    public void run() {
-                        Assert.Same(EVENT_EXECUTOR, ThreadExecutorMap.currentExecutor());
-                    }
-                });
-                Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
-            }
-        });
+        executor.execute(Runnables.Create(() =>
+        {
+            executor2.execute(Runnables.Create(() =>
+            {
+                Assert.Same(EVENT_EXECUTOR, ThreadExecutorMap.currentExecutor());
+            }));
+
+            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+        }));
     }
 
     [Fact]
-    public void testDecorateExecutor() {
+    public void testDecorateExecutor()
+    {
         IExecutor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
-        executor.execute(new IRunnable() {
-            @Override
-            public void run() {
-                Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
-            }
-        });
+        executor.execute(Runnables.Create(() =>
+        {
+            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+        }));
     }
 
     [Fact]
-    public void testDecorateRunnable() {
-        ThreadExecutorMap.apply(new IRunnable() {
-            @Override
-            public void run() {
-                Assert.Same(ImmediateEventExecutor.INSTANCE,
-                        ThreadExecutorMap.currentExecutor());
-            }
-        }, ImmediateEventExecutor.INSTANCE).run();
+    public void testDecorateRunnable()
+    {
+        ThreadExecutorMap.apply(Runnables.Create(() =>
+        {
+            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+        }), ImmediateEventExecutor.INSTANCE).run();
     }
 
     [Fact]
-    public void testDecorateThreadFactory() {
-        IThreadFactory threadFactory =
-                ThreadExecutorMap.apply(Executors.defaultThreadFactory(), ImmediateEventExecutor.INSTANCE);
-        Thread thread = threadFactory.newThread(new IRunnable() {
-            @Override
-            public void run() {
-                Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
-            }
-        });
-        thread.start();
-        thread.join();
+    public void testDecorateThreadFactory()
+    {
+        IThreadFactory threadFactory = ThreadExecutorMap.apply(Executors.defaultThreadFactory(), ImmediateEventExecutor.INSTANCE);
+        Thread thread = threadFactory.newThread(Runnables.Create(() =>
+        {
+            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+        }));
+        thread.Start();
+        thread.Join();
     }
 }
