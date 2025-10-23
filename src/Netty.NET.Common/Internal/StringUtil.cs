@@ -804,7 +804,7 @@ public static class StringUtil
      * @param c the tested char
      * @return true if {@code s} ends with the char {@code c}
      */
-    public static bool endsWith(ICharSequence s, char c)
+    public static bool endsWith(string s, char c)
     {
         int len = s.length();
         return len > 0 && s.charAt(len - 1) == c;

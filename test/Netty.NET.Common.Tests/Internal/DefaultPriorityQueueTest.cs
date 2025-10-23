@@ -263,7 +263,7 @@ public class DefaultPriorityQueueTest
         queue.priorityChanged(f);
 
         List<TestElement> expectedOrderList = new List<>(queue.size());
-        expectedOrderList.addAll(Arrays.asList(a, b, c, d, e, f));
+        expectedOrderList.addAll(Collectives.asList(a, b, c, d, e, f));
         expectedOrderList.sort(TestElementComparator.INSTANCE);
 
         Assert.Equal(expectedOrderList.size(), queue.size());
