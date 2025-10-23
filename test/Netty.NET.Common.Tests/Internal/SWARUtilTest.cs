@@ -13,199 +13,243 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Diagnostics;
+using Netty.NET.Common.Internal;
+
 namespace Netty.NET.Common.Tests.Internal;
 
-class SWARUtilTest {
-
-    private final Random random = new Random();
+public class SWARUtilTest
+{
+    private readonly Random random = new Random();
 
     [Fact]
-    void containsUpperCaseLong() {
+    void containsUpperCaseLong()
+    {
         // given
-        final byte[] asciiTable = getExtendedAsciiTable();
+        byte[] asciiTable = getExtendedAsciiTable();
         shuffleArray(asciiTable, random);
 
         // when
-        for (int idx = 0; idx < asciiTable.length; idx += Long.BYTES) {
-            final long value = getLong(asciiTable, idx);
-            final bool actual = SWARUtil.containsUpperCase(value);
+        for (int idx = 0; idx < asciiTable.Length; idx += sizeof(long))
+        {
+            long value = getLong(asciiTable, idx);
+            bool actual = SWARUtil.containsUpperCase(value);
             bool expected = false;
-            for (int i = 0; i < Long.BYTES; i++) {
-                expected |= Character.isUpperCase(asciiTable[idx + i]);
+            for (int i = 0; i < sizeof(long); i++)
+            {
+                expected |= char.IsUpper((char)asciiTable[idx + i]);
             }
+
             // then
             Assert.Equal(expected, actual);
         }
     }
 
     [Fact]
-    void containsUpperCaseInt() {
+    void containsUpperCaseInt()
+    {
         // given
-        final byte[] asciiTable = getExtendedAsciiTable();
+        byte[] asciiTable = getExtendedAsciiTable();
         shuffleArray(asciiTable, random);
 
         // when
-        for (int idx = 0; idx < asciiTable.length; idx += Integer.BYTES) {
-            final int value = getInt(asciiTable, idx);
-            final bool containsUpperCase = SWARUtil.containsUpperCase(value);
+        for (int idx = 0; idx < asciiTable.Length; idx += sizeof(int))
+        {
+            int value = getInt(asciiTable, idx);
+            bool containsUpperCase = SWARUtil.containsUpperCase(value);
             bool expectedContainsUpperCase = false;
-            for (int i = 0; i < Integer.BYTES; i++) {
-                expectedContainsUpperCase |= Character.isUpperCase(asciiTable[idx + i]);
+            for (int i = 0; i < sizeof(int); i++)
+            {
+                expectedContainsUpperCase |= char.IsUpper((char)asciiTable[idx + i]);
             }
+
             // then
             Assert.Equal(expectedContainsUpperCase, containsUpperCase);
         }
     }
 
     [Fact]
-    void containsLowerCaseLong() {
+    void containsLowerCaseLong()
+    {
         // given
-        final byte[] asciiTable = getExtendedAsciiTable();
+        byte[] asciiTable = getExtendedAsciiTable();
         shuffleArray(asciiTable, random);
 
         // when
-        for (int idx = 0; idx < asciiTable.length; idx += Long.BYTES) {
-            final long value = getLong(asciiTable, idx);
-            final bool actual = SWARUtil.containsLowerCase(value);
+        for (int idx = 0; idx < asciiTable.Length; idx += sizeof(long))
+        {
+            long value = getLong(asciiTable, idx);
+            bool actual = SWARUtil.containsLowerCase(value);
             bool expected = false;
-            for (int i = 0; i < Long.BYTES; i++) {
-                expected |= Character.isLowerCase(asciiTable[idx + i]);
+            for (int i = 0; i < sizeof(long); i++)
+            {
+                expected |= char.IsLower((char)asciiTable[idx + i]);
             }
+
             // then
             Assert.Equal(expected, actual);
         }
     }
 
     [Fact]
-    void containsLowerCaseInt() {
+    void containsLowerCaseInt()
+    {
         // given
-        final byte[] asciiTable = getExtendedAsciiTable();
+        byte[] asciiTable = getExtendedAsciiTable();
         shuffleArray(asciiTable, random);
 
         // when
-        for (int idx = 0; idx < asciiTable.length; idx += Integer.BYTES) {
-            final int value = getInt(asciiTable, idx);
-            final bool actual = SWARUtil.containsLowerCase(value);
+        for (int idx = 0; idx < asciiTable.Length; idx += sizeof(int))
+        {
+            int value = getInt(asciiTable, idx);
+            bool actual = SWARUtil.containsLowerCase(value);
             bool expected = false;
-            for (int i = 0; i < Integer.BYTES; i++) {
-                expected |= Character.isLowerCase(asciiTable[idx + i]);
+            for (int i = 0; i < sizeof(int); i++)
+            {
+                expected |= char.IsLower((char)asciiTable[idx + i]);
             }
+
             // then
             Assert.Equal(expected, actual);
         }
     }
 
     [Fact]
-    void toUpperCaseLong() {
+    void toUpperCaseLong()
+    {
         // given
-        final byte[] asciiTable = getExtendedAsciiTable();
+        byte[] asciiTable = getExtendedAsciiTable();
         shuffleArray(asciiTable, random);
 
         // when
-        for (int idx = 0; idx < asciiTable.length; idx += Long.BYTES) {
-            final long value = getLong(asciiTable, idx);
-            final long actual = SWARUtil.toUpperCase(value);
+        for (int idx = 0; idx < asciiTable.Length; idx += sizeof(long))
+        {
+            long value = getLong(asciiTable, idx);
+            long actual = SWARUtil.toUpperCase(value);
             long expected = 0L;
-            for (int i = 0; i < Long.BYTES; i++) {
-                final byte b = (byte) char.ToUpperInvariant(asciiTable[idx + i]);
-                expected |= (long) ((b & 0xff)) << (56 - (Long.BYTES * i));
+            for (int i = 0; i < sizeof(long); i++)
+            {
+                byte b = (byte)char.ToUpperInvariant((char)asciiTable[idx + i]);
+                expected |= (long)((b & 0xff)) << (56 - (sizeof(long) * i));
             }
+
             // then
             Assert.Equal(expected, actual);
         }
     }
 
     [Fact]
-    void toUpperCaseInt() {
+    void toUpperCaseInt()
+    {
         // given
-        final byte[] asciiTable = getExtendedAsciiTable();
+        byte[] asciiTable = getExtendedAsciiTable();
         shuffleArray(asciiTable, random);
 
         // when
-        for (int idx = 0; idx < asciiTable.length; idx += Integer.BYTES) {
-            final int value = getInt(asciiTable, idx);
-            final int actual = SWARUtil.toUpperCase(value);
+        for (int idx = 0; idx < asciiTable.Length; idx += sizeof(int))
+        {
+            int value = getInt(asciiTable, idx);
+            int actual = SWARUtil.toUpperCase(value);
             int expected = 0;
-            for (int i = 0; i < Integer.BYTES; i++) {
-                final byte b = (byte) char.ToUpperInvariant(asciiTable[idx + i]);
-                expected |= (b & 0xff) << (24 - (Byte.SIZE * i));
+            for (int i = 0; i < sizeof(int); i++)
+            {
+                byte b = (byte)char.ToUpperInvariant((char)asciiTable[idx + i]);
+                expected |= (b & 0xff) << (24 - (sizeof(byte) * i));
             }
+
             // then
             Assert.Equal(expected, actual);
         }
     }
 
     [Fact]
-    void toLowerCaseLong() {
+    void toLowerCaseLong()
+    {
         // given
-        final byte[] asciiTable = getExtendedAsciiTable();
+        byte[] asciiTable = getExtendedAsciiTable();
         shuffleArray(asciiTable, random);
 
         // when
-        for (int idx = 0; idx < asciiTable.length; idx += Long.BYTES) {
-            final long value = getLong(asciiTable, idx);
-            final long actual = SWARUtil.toLowerCase(value);
+        for (int idx = 0; idx < asciiTable.Length; idx += sizeof(long))
+        {
+            long value = getLong(asciiTable, idx);
+            long actual = SWARUtil.toLowerCase(value);
             long expected = 0L;
-            for (int i = 0; i < Long.BYTES; i++) {
-                final byte b = (byte) char.ToLowerInvariant(asciiTable[idx + i]);
-                expected |= (long) ((b & 0xff)) << (56 - (Byte.SIZE * i));
+            for (int i = 0; i < sizeof(long); i++)
+            {
+                byte b = (byte)char.ToLowerInvariant((char)asciiTable[idx + i]);
+                expected |= (long)((b & 0xff)) << (56 - (sizeof(byte) * i));
             }
+
             // then
             Assert.Equal(expected, actual);
         }
     }
 
     [Fact]
-    void toLowerCaseInt() {
+    void toLowerCaseInt()
+    {
         // given
-        final byte[] asciiTable = getExtendedAsciiTable();
+        byte[] asciiTable = getExtendedAsciiTable();
         shuffleArray(asciiTable, random);
 
         // when
-        for (int idx = 0; idx < asciiTable.length; idx += Integer.BYTES) {
-            final int value = getInt(asciiTable, idx);
-            final int actual = SWARUtil.toLowerCase(value);
+        for (int idx = 0; idx < asciiTable.Length; idx += sizeof(int))
+        {
+            int value = getInt(asciiTable, idx);
+            int actual = SWARUtil.toLowerCase(value);
             int expected = 0;
-            for (int i = 0; i < Integer.BYTES; i++) {
-                final byte b = (byte) char.ToLowerInvariant(asciiTable[idx + i]);
-                expected |= (b & 0xff) << (24 - (Byte.SIZE * i));
+            for (int i = 0; i < sizeof(int); i++)
+            {
+                byte b = (byte)char.ToLowerInvariant((char)asciiTable[idx + i]);
+                expected |= (b & 0xff) << (24 - (sizeof(byte) * i));
             }
+
             // then
             Assert.Equal(expected, actual);
         }
     }
 
-    private static void shuffleArray(byte[] array, Random random) {
-        for (int i = array.length - 1; i > 0; i--) {
-            final int index = random.nextInt(i + 1);
-            final byte tmp = array[index];
+    private static void shuffleArray(byte[] array, Random random)
+    {
+        for (int i = array.Length - 1; i > 0; i--)
+        {
+            int index = random.Next(i + 1);
+            byte tmp = array[index];
             array[index] = array[i];
             array[i] = tmp;
         }
     }
 
-    private static byte[] getExtendedAsciiTable() {
-        final byte[] table = new byte[256];
-        for (int i = 0; i < 256; i++) {
-            table[i] = (byte) i;
+    private static byte[] getExtendedAsciiTable()
+    {
+        byte[] table = new byte[256];
+        for (int i = 0; i < 256; i++)
+        {
+            table[i] = (byte)i;
         }
+
         return table;
     }
 
-    private static long getLong(byte[] bytes, int idx) {
-        Debug.Assert(idx >= 0 && bytes.length >= idx + 8);
-        return (long) bytes[idx] << 56 |
-               ((long) bytes[idx + 1] & 0xff) << 48 |
-               ((long) bytes[idx + 2] & 0xff) << 40 |
-               ((long) bytes[idx + 3] & 0xff) << 32 |
-               ((long) bytes[idx + 4] & 0xff) << 24 |
-               ((long) bytes[idx + 5] & 0xff) << 16 |
-               ((long) bytes[idx + 6] & 0xff) << 8 |
-               (long) bytes[idx + 7] & 0xff;
+    private static long getLong(byte[] bytes, int idx)
+    {
+        Debug.Assert(idx >= 0 && bytes.Length >= idx + 8);
+        return (long)bytes[idx] << 56 |
+               ((long)bytes[idx + 1] & 0xff) << 48 |
+               ((long)bytes[idx + 2] & 0xff) << 40 |
+               ((long)bytes[idx + 3] & 0xff) << 32 |
+               ((long)bytes[idx + 4] & 0xff) << 24 |
+               ((long)bytes[idx + 5] & 0xff) << 16 |
+               ((long)bytes[idx + 6] & 0xff) << 8 |
+               (long)bytes[idx + 7] & 0xff;
     }
 
-    private static int getInt(byte[] bytes, int idx) {
-        Debug.Assert(idx >= 0 && bytes.length >= idx + 4);
+    private static int getInt(byte[] bytes, int idx)
+    {
+        Debug.Assert(idx >= 0 && bytes.Length >= idx + 4);
         return bytes[idx] << 24 |
                (bytes[idx + 1] & 0xff) << 16 |
                (bytes[idx + 2] & 0xff) << 8 |
