@@ -40,16 +40,16 @@ public sealed class DefaultMockTicker : MockTicker
         return _nanoTime.get();
     }
 
-    public override void sleep(TimeSpan delay)
+    // nano time
+    public override void sleep(long delayNanos)
     {
-        checkPositiveOrZero(delay, "delay");
+        checkPositiveOrZero(delayNanos, "delayNanos");
 
-        if (delay.Ticks == 0)
+        if (delayNanos == 0)
         {
             return;
         }
 
-        long delayNanos = (long)delay.TotalNanoseconds;
         lock (_lock)
         {
             try
@@ -83,16 +83,15 @@ public sealed class DefaultMockTicker : MockTicker
         }
     }
 
-    public override void advance(TimeSpan amount)
+    public override void advance(long amountNanos)
     {
-        checkPositiveOrZero(amount, "amount");
+        checkPositiveOrZero(amountNanos, "amountNanos");
 
-        if (amount.Ticks == 0)
+        if (amountNanos == 0)
         {
             return;
         }
 
-        long amountNanos = (long)amount.TotalNanoseconds;
         lock (_lock)
         {
             _nanoTime.addAndGet(amountNanos);

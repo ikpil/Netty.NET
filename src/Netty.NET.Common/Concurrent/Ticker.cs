@@ -63,7 +63,7 @@ public abstract class Ticker
      *
      * @see Thread#sleep(long)
      */
-    public abstract void sleep(TimeSpan delay);
+    public abstract void sleep(long delayNanos);
 
     /**
      * Waits until the given amount of time goes by.
@@ -72,8 +72,13 @@ public abstract class Ticker
      *
      * @see Thread#sleep(long)
      */
-    public virtual void sleepMillis(long delayMillis)
+    public void sleepMillis(long delayMillis)
     {
         sleep(TimeSpan.FromMilliseconds(delayMillis));
+    }
+
+    public void sleep(TimeSpan delay)
+    {
+        sleep((long)delay.TotalNanoseconds);
     }
 }

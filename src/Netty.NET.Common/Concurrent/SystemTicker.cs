@@ -34,9 +34,10 @@ sealed class SystemTicker : Ticker
         return SystemTimer.nanoTime() - START_TIME;
     }
 
-    public override void sleep(TimeSpan delay)
+    public override void sleep(long delayNanos)
     {
         //Objects.requireNonNull(unit, "unit");
-        Thread.Sleep(delay);
+        var millis = (int)Math.Max(1, delayNanos / 1_000_000);
+        Thread.Sleep(millis);
     }
 }

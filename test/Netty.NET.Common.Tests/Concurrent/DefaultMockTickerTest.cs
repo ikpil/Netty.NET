@@ -14,20 +14,26 @@
  * under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Void = Netty.NET.Common.Concurrent.Void;
+
 namespace Netty.NET.Common.Tests.Concurrent;
 
-class DefaultMockTickerTest
+public class DefaultMockTickerTest
 {
     [Fact]
     void newMockTickerShouldReturnDefaultMockTicker()
     {
-        Assert.True(Ticker.newMockTicker() instanceof DefaultMockTicker);
+        Assert.True(Ticker.newMockTicker() is DefaultMockTicker);
     }
 
     [Fact]
     void defaultValues()
     {
-        final MockTicker ticker = Ticker.newMockTicker();
+        MockTicker ticker = Ticker.newMockTicker();
         Assert.Equal(0, ticker.initialNanoTime());
         Assert.Equal(0, ticker.nanoTime());
     }
@@ -35,7 +41,7 @@ class DefaultMockTickerTest
     [Fact]
     void advanceWithoutWaiters()
     {
-        final MockTicker ticker = Ticker.newMockTicker();
+        MockTicker ticker = Ticker.newMockTicker();
         ticker.advance(42, TimeUnit.NANOSECONDS);
         Assert.Equal(0, ticker.initialNanoTime());
         Assert.Equal(42, ticker.nanoTime());
@@ -47,34 +53,27 @@ class DefaultMockTickerTest
     [Fact]
     void advanceWithNegativeAmount()
     {
-        final MockTicker ticker = Ticker.newMockTicker();
-        Assert.Throws<ArgumentException>(()-> {
+        MockTicker ticker = Ticker.newMockTicker();
+        Assert.Throws<ArgumentException>(() => {
             ticker.advance(-1, TimeUnit.SECONDS);
         });
 
-        Assert.Throws<ArgumentException>(()-> {
+        Assert.Throws<ArgumentException>(() => {
             ticker.advanceMillis(-1);
         });
     }
 
-    [Timeout(60)]
-    [Fact]
+    [Fact(Timeout = 60)]
     void advanceWithWaiters()
     {
-        final List<Thread>
-        threads = new List<>();
-        final DefaultMockTicker ticker = (DefaultMockTicker)Ticker.newMockTicker();
-        final int numWaiters = 4;
-        final List<FutureTask<Void>> futures = new List<>();
-        for (int i = 0;
-             i < numWaiters;
-             i++)
+        List<Thread> threads = new List<>();
+        DefaultMockTicker ticker = (DefaultMockTicker)Ticker.newMockTicker();
+        int numWaiters = 4;
+        List<FutureTask<Void>> futures = new List<>();
+        for (int i = 0; i < numWaiters; i++)
         {
-            FutureTask<Void> task = new FutureTask<>(()->
+            FutureTask<Void> task = new FutureTask<>(() =>
             {
- 
-
-
                 try {
                 ticker.sleep(1, TimeUnit.MILLISECONDS);
             } catch (ThreadInterruptedException e) {
@@ -91,16 +90,15 @@ class DefaultMockTickerTest
         try
         {
             // Wait for all threads to be sleeping.
-            for (Thread thread :
-            threads) {
+            foreach (Thread thread in threads) {
                 ticker.awaitSleepingThread(thread);
             }
 
             // Time did not advance at all, and thus future will not complete.
             for (int i = 0; i < numWaiters; i++)
             {
-                final int finalCnt = i;
-                Assert.Throws<TimeoutException>(()-> {
+                int finalCnt = i;
+                Assert.Throws<TimeoutException>(() => {
                     futures.get(finalCnt).get(1, TimeUnit.MILLISECONDS);
                 });
             }
@@ -109,16 +107,15 @@ class DefaultMockTickerTest
             ticker.advance(999_999, TimeUnit.NANOSECONDS);
 
             // All threads should still be sleeping.
-            for (Thread thread :
-            threads) {
+            foreach (Thread thread in threads) {
                 ticker.awaitSleepingThread(thread);
             }
 
             // Still needs one more nanosecond for our futures.
             for (int i = 0; i < numWaiters; i++)
             {
-                final int finalCnt = i;
-                Assert.Throws<TimeoutException>(()-> {
+                int finalCnt = i;
+                Assert.Throws<TimeoutException>(() => {
                     futures.get(finalCnt).get(1, TimeUnit.MILLISECONDS);
                 });
             }
@@ -132,8 +129,7 @@ class DefaultMockTickerTest
         }
         catch (ThreadInterruptedException ie)
         {
-            for (Thread thread :
-            threads) {
+            foreach (Thread thread in threads) {
                 string name = thread.getName();
                 Thread.State state = thread.getState();
                 StackTraceElement[] stackTrace = thread.getStackTrace();
@@ -150,7 +146,7 @@ class DefaultMockTickerTest
     [Fact]
     void sleepZero()
     {
-        final MockTicker ticker = Ticker.newMockTicker();
+        MockTicker ticker = Ticker.newMockTicker();
         // All sleep calls with 0 delay should return immediately.
         ticker.sleep(0, TimeUnit.SECONDS);
         ticker.sleepMillis(0);

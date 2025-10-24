@@ -36,15 +36,20 @@ public abstract class MockTicker : Ticker
      * @param amount the amount of time to advance this ticker by.
      * @param unit the {@link TimeSpan} of {@code amount}.
      */
-    public abstract void advance(TimeSpan amount);
+    public abstract void advance(long amountNanos);
 
     /**
      * Advances the current {@link #nanoTime()} by the given amount of time.
      *
      * @param amountMillis the number of milliseconds to advance this ticker by.
      */
-    public virtual void advanceMillis(long amountMillis)
+    public void advanceMillis(long amountMillis)
     {
         advance(TimeSpan.FromMilliseconds(amountMillis));
+    }
+
+    public void advance(TimeSpan amount)
+    {
+        advance((long)amount.TotalNanoseconds);
     }
 }
