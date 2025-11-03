@@ -33,7 +33,7 @@ public class Slf4JLoggerFactoryTest
     [Fact]
     public void testCreationLogger()
     {
-        Logger logger = mock(Logger.class);
+        Logger logger = Mock.Of<Logger>();
         when(logger.getName()).thenReturn("testlogger");
         IInternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
         Assert.True(internalLogger is Slf4JLogger);
@@ -43,7 +43,7 @@ public class Slf4JLoggerFactoryTest
     [Fact]
     public void testCreationLocationAwareLogger()
     {
-        Logger logger = mock(LocationAwareLogger.class);
+        Logger logger = Mock.Of<LocationAwareLogger>();
         when(logger.getName()).thenReturn("testlogger");
         IInternalLogger internalLogger = Slf4JLoggerFactory.wrapLogger(logger);
         Assert.True(internalLogger is LocationAwareSlf4JLogger);
@@ -54,7 +54,7 @@ public class Slf4JLoggerFactoryTest
     public void testFormatMessage()
     {
         ArgumentCaptor<string> captor = ArgumentCaptor.forClass(string.class);
-        LocationAwareLogger logger = mock(LocationAwareLogger.class);
+        LocationAwareLogger logger = Mock.Of<LocationAwareLogger>();
         when(logger.isDebugEnabled()).thenReturn(true);
         when(logger.isErrorEnabled()).thenReturn(true);
         when(logger.isInfoEnabled()).thenReturn(true);

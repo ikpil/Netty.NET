@@ -171,11 +171,11 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
 
     [Fact]
     public void testEventExecutor() {
-        EventExecutor executor = mock(EventExecutor.class);
+        EventExecutor executor = Mock.Of<EventExecutor>();
         when(executor.inEventLoop()).thenReturn(false);
         combiner = new PromiseCombiner(executor);
 
-        Future<?> future = mock(Future.class);
+        Future<?> future = Mock.Of<Future>();
 
         try {
             combiner.add(future);
@@ -192,7 +192,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
         }
 
         //@SuppressWarnings("unchecked")
-        Promise<Void> promise = (Promise<Void>) mock(Promise.class);
+        Promise<Void> promise = (Promise<Void>) Mock.Of<Promise>();
         try {
             combiner.finish(promise);
             Assert.Fail();
@@ -234,7 +234,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
         doAnswer(new Answer<Promise<Void>>() {
             @SuppressWarnings({ "unchecked", "raw-types" })
             @Override
-            public Promise<Void> answer(InvocationOnMock invocation) throws Exception {
+            public Promise<Void> answer(InvocationOnMock invocation) {
                 consumer.accept((GenericFutureListener) invocation.getArgument(0));
                 return p;
             }

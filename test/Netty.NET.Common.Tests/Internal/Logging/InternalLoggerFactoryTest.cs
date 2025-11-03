@@ -16,6 +16,7 @@
 
 
 using System;
+using Moq;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Tests.Internal.Logging;
@@ -23,15 +24,15 @@ namespace Netty.NET.Common.Tests.Internal.Logging;
 public class InternalLoggerFactoryTest : IDisposable
 {
     private static readonly Exception e = new Exception();
-    private InternalLoggerFactory oldLoggerFactory;
+    private IInternalLoggerFactory oldLoggerFactory;
     private IInternalLogger mockLogger;
 
     public InternalLoggerFactoryTest()
     {
         oldLoggerFactory = InternalLoggerFactory.getDefaultFactory();
 
-        final InternalLoggerFactory mockFactory = mock(InternalLoggerFactory.class);
-        mockLogger = mock(IInternalLogger.class);
+        InternalLoggerFactory mockFactory = Mock.Of<InternalLoggerFactory>();
+        mockLogger = Mock.Of<IInternalLogger>();
         when(mockFactory.newInstance("mock")).thenReturn(mockLogger);
         InternalLoggerFactory.setDefaultFactory(mockFactory);
     }

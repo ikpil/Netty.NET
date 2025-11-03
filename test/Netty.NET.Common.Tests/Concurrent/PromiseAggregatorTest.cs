@@ -31,7 +31,7 @@ public class PromiseAggregatorTest {
     [Fact]
     public void testAddNullFuture() {
         //@SuppressWarnings("unchecked")
-        Promise<Void> p = mock(Promise.class);
+        Promise<Void> p = Mock.Of<Promise>();
         //@SuppressWarnings("deprecation")
         final PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
@@ -46,12 +46,12 @@ public class PromiseAggregatorTest {
     //@SuppressWarnings("unchecked")
     [Fact]
     public void testSuccessfulNoPending() {
-        Promise<Void> p = mock(Promise.class);
+        Promise<Void> p = Mock.Of<Promise>();
         //@SuppressWarnings("deprecation")
         PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
 
-        Future<Void> future = mock(Future.class);
+        Future<Void> future = Mock.Of<Future>();
         when(p.setSuccess(null)).thenReturn(p);
 
         a.add();
@@ -63,11 +63,11 @@ public class PromiseAggregatorTest {
     //@SuppressWarnings("unchecked")
     [Fact]
     public void testSuccessfulPending() {
-        Promise<Void> p = mock(Promise.class);
+        Promise<Void> p = Mock.Of<Promise>();
         PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
-        Promise<Void> p1 = mock(Promise.class);
-        Promise<Void> p2 = mock(Promise.class);
+        Promise<Void> p1 = Mock.Of<Promise>();
+        Promise<Void> p2 = Mock.Of<Promise>();
 
         when(p1.addListener(a)).thenReturn(p1);
         when(p2.addListener(a)).thenReturn(p2);
@@ -89,12 +89,12 @@ public class PromiseAggregatorTest {
     //@SuppressWarnings("unchecked")
     [Fact]
     public void testFailedFutureFailPending() {
-        Promise<Void> p = mock(Promise.class);
+        Promise<Void> p = Mock.Of<Promise>();
         PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p);
-        Promise<Void> p1 = mock(Promise.class);
-        Promise<Void> p2 = mock(Promise.class);
-        Exception t = mock(Exception.class);
+        Promise<Void> p1 = Mock.Of<Promise>();
+        Promise<Void> p2 = Mock.Of<Promise>();
+        Exception t = Mock.Of<Exception>();
 
         when(p1.addListener(a)).thenReturn(p1);
         when(p2.addListener(a)).thenReturn(p2);
@@ -116,12 +116,12 @@ public class PromiseAggregatorTest {
     //@SuppressWarnings("unchecked")
     [Fact]
     public void testFailedFutureNoFailPending() {
-        Promise<Void> p = mock(Promise.class);
+        Promise<Void> p = Mock.Of<Promise>();
         PromiseAggregator<Void, Future<Void>> a =
                 new PromiseAggregator<Void, Future<Void>>(p, false);
-        Promise<Void> p1 = mock(Promise.class);
-        Promise<Void> p2 = mock(Promise.class);
-        Exception t = mock(Exception.class);
+        Promise<Void> p1 = Mock.Of<Promise>();
+        Promise<Void> p2 = Mock.Of<Promise>();
+        Exception t = Mock.Of<Exception>();
 
         when(p1.addListener(a)).thenReturn(p1);
         when(p2.addListener(a)).thenReturn(p2);

@@ -42,16 +42,16 @@ public class PromiseNotifierTest {
     [Fact]
     public void testListenerSuccess() {
         //@SuppressWarnings("unchecked")
-        Promise<Void> p1 = mock(Promise.class);
+        Promise<Void> p1 = Mock.Of<Promise>();
         //@SuppressWarnings("unchecked")
-        Promise<Void> p2 = mock(Promise.class);
+        Promise<Void> p2 = Mock.Of<Promise>();
 
         //@SuppressWarnings("unchecked")
         PromiseNotifier<Void, Future<Void>> notifier =
                 new PromiseNotifier<Void, Future<Void>>(p1, p2);
 
         //@SuppressWarnings("unchecked")
-        Future<Void> future = mock(Future.class);
+        Future<Void> future = Mock.Of<Future>();
         when(future.isSuccess()).thenReturn(true);
         when(future.get()).thenReturn(null);
         when(p1.trySuccess(null)).thenReturn(true);
@@ -65,17 +65,17 @@ public class PromiseNotifierTest {
     [Fact]
     public void testListenerFailure() {
         //@SuppressWarnings("unchecked")
-        Promise<Void> p1 = mock(Promise.class);
+        Promise<Void> p1 = Mock.Of<Promise>();
         //@SuppressWarnings("unchecked")
-        Promise<Void> p2 = mock(Promise.class);
+        Promise<Void> p2 = Mock.Of<Promise>();
 
         //@SuppressWarnings("unchecked")
         PromiseNotifier<Void, Future<Void>> notifier =
                 new PromiseNotifier<Void, Future<Void>>(p1, p2);
 
         //@SuppressWarnings("unchecked")
-        Future<Void> future = mock(Future.class);
-        Exception t = mock(Exception.class);
+        Future<Void> future = Mock.Of<Future>();
+        Exception t = Mock.Of<Exception>();
         when(future.isSuccess()).thenReturn(false);
         when(future.isCancelled()).thenReturn(false);
         when(future.cause()).thenReturn(t);

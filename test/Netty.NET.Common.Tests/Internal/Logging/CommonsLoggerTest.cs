@@ -16,6 +16,7 @@
 
 
 using System;
+using Moq;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Tests.Internal.Logging;
@@ -27,7 +28,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testIsTraceEnabled()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         when(mockLog.isTraceEnabled()).thenReturn(true);
 
@@ -40,7 +41,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testIsDebugEnabled()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         when(mockLog.isDebugEnabled()).thenReturn(true);
 
@@ -53,7 +54,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testIsInfoEnabled()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         when(mockLog.isInfoEnabled()).thenReturn(true);
 
@@ -66,7 +67,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testIsWarnEnabled()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         when(mockLog.isWarnEnabled()).thenReturn(true);
 
@@ -79,7 +80,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testIsErrorEnabled()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         when(mockLog.isErrorEnabled()).thenReturn(true);
 
@@ -92,7 +93,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testTrace()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.trace("a");
@@ -103,7 +104,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testTraceWithException()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.trace("a", e);
@@ -114,7 +115,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testDebug()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.debug("a");
@@ -125,7 +126,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testDebugWithException()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.debug("a", e);
@@ -136,7 +137,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testInfo()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.info("a");
@@ -147,7 +148,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testInfoWithException()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.info("a", e);
@@ -158,7 +159,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testWarn()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.warn("a");
@@ -169,7 +170,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testWarnWithException()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.warn("a", e);
@@ -180,7 +181,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testError()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.error("a");
@@ -191,7 +192,7 @@ public class CommonsLoggerTest
     [Fact]
     public void testErrorWithException()
     {
-        Log mockLog = mock(Log.class);
+        Log mockLog = Mock.Of<Log>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.error("a", e);

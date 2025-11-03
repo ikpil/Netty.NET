@@ -27,7 +27,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testIsTraceEnabled()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
         when(mockLogger.isTraceEnabled()).thenReturn(true);
@@ -42,7 +42,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testIsDebugEnabled()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
         when(mockLogger.isDebugEnabled()).thenReturn(true);
@@ -57,7 +57,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testIsInfoEnabled()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
         when(mockLogger.isInfoEnabled()).thenReturn(true);
@@ -72,7 +72,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testIsWarnEnabled()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
         when(mockLogger.isWarnEnabled()).thenReturn(true);
@@ -87,7 +87,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testIsErrorEnabled()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
         when(mockLogger.isErrorEnabled()).thenReturn(true);
@@ -102,7 +102,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testTrace()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -116,7 +116,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testTraceWithException()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -130,7 +130,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testDebug()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -144,7 +144,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testDebugWithException()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -158,7 +158,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testInfo()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -172,7 +172,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testInfoWithException()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -186,7 +186,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testWarn()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -200,7 +200,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testWarnWithException()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -214,7 +214,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testError()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
@@ -228,7 +228,7 @@ public class Slf4JLoggerTest
     [Fact]
     public void testErrorWithException()
     {
-        Logger mockLogger = mock(Logger.class);
+        Logger mockLogger = Mock.Of<Logger>();
 
         when(mockLogger.getName()).thenReturn("foo");
 
