@@ -13,145 +13,181 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+
 namespace Netty.NET.Common.Tests.Concurrent;
-public class NonStickyEventExecutorGroupTest {
+
+public class NonStickyEventExecutorGroupTest
+{
     private static readonly string PARAMETERIZED_NAME = "{index}: maxTaskExecutePerRun = {0}";
 
     [Fact]
-    public void testInvalidGroup() {
-        final EventExecutorGroup group = new DefaultEventExecutorGroup(1);
-        try {
-            Assert.Throws<ArgumentException>(new Executable() {
-                @Override
-                public void execute() {
-                    new NonStickyEventExecutorGroup(group);
-                }
+    public void testInvalidGroup()
+    {
+        IEventExecutorGroup group = new DefaultEventExecutorGroup(1);
+        try
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                new NonStickyEventExecutorGroup(group);
             });
-        } finally {
-            group.shutdownGracefully();
+        }
+        finally
+        {
+            group.shutdownGracefullyAsync();
         }
     }
 
-    public static ICollection<object[]> data() {
-        List<object[]> params = new List<object[]>();
-        params.add(new object[] {64});
-        params.add(new object[] {256});
-        params.add(new object[] {1024});
-        params.add(new object[] {int.MaxValue});
-        return params;
+    public static IEnumerable<object[]> data()
+    {
+        yield return new object[] { 64 };
+        yield return new object[] { 256 };
+        yield return new object[] { 1024 };
+        yield return new object[] { int.MaxValue };
     }
 
-    @ParameterizedTest(name = PARAMETERIZED_NAME)
-    @MethodSource("data")
-    @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void testOrdering(int maxTaskExecutePerRun) {
-        final int threads = NettyRuntime.availableProcessors() * 2;
-        final EventExecutorGroup group = new UnorderedThreadPoolEventExecutor(threads);
-        final NonStickyEventExecutorGroup nonStickyGroup = new NonStickyEventExecutorGroup(group, maxTaskExecutePerRun);
-        try {
-            final CountdownEvent startLatch = new CountdownEvent(1);
-            final AtomicReference<Exception> error = new AtomicReference<Exception>();
+    [Theory(Timeout = 10000)]
+    [MemberData(nameof(data))]
+    public void testOrdering(int maxTaskExecutePerRun)
+    {
+        int threads = NettyRuntime.availableProcessors() * 2;
+        IEventExecutorGroup group = new UnorderedThreadPoolEventExecutor(threads);
+        NonStickyEventExecutorGroup nonStickyGroup = new NonStickyEventExecutorGroup(group, maxTaskExecutePerRun);
+        try
+        {
+            CountdownEvent startLatch = new CountdownEvent(1);
+            AtomicReference<Exception> error = new AtomicReference<Exception>();
             List<Thread> threadList = new List<Thread>(threads);
-            for (int i = 0 ; i < threads; i++) {
-                Thread thread = new Thread(new IRunnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            execute(nonStickyGroup, startLatch);
-                        } catch (Exception cause) {
-                            error.compareAndSet(null, cause);
-                        }
+            for (int i = 0; i < threads; i++)
+            {
+                Thread thread = new Thread(() =>
+                {
+                    try
+                    {
+                        execute(nonStickyGroup, startLatch);
+                    }
+                    catch (Exception cause)
+                    {
+                        error.compareAndSet(null, cause);
                     }
                 });
-                threadList.add(thread);
-                thread.start();
+                threadList.Add(thread);
+                thread.Start();
             }
-            startLatch.countDown();
-            for (Thread t: threadList) {
-                t.join();
+
+            startLatch.Signal();
+            foreach (Thread t in threadList)
+            {
+                t.Join();
             }
+
             Exception cause = error.get();
-            if (cause != null) {
+            if (cause != null)
+            {
                 throw cause;
             }
-        } finally {
-            nonStickyGroup.shutdownGracefully();
+        }
+        finally
+        {
+            nonStickyGroup.shutdownGracefullyAsync();
         }
     }
 
-    @ParameterizedTest(name = PARAMETERIZED_NAME)
-    @MethodSource("data")
-    public void testRaceCondition(int maxTaskExecutePerRun) {
-        EventExecutorGroup group = new UnorderedThreadPoolEventExecutor(1);
+    [Theory]
+    [MemberData(nameof(data))]
+    public void testRaceCondition(int maxTaskExecutePerRun)
+    {
+        IEventExecutorGroup group = new UnorderedThreadPoolEventExecutor(1);
         NonStickyEventExecutorGroup nonStickyGroup = new NonStickyEventExecutorGroup(group, maxTaskExecutePerRun);
 
-        try {
-            EventExecutor executor = nonStickyGroup.next();
+        try
+        {
+            IEventExecutor executor = nonStickyGroup.next();
 
-            for (int j = 0; j < 5000; j++) {
-                final CountdownEvent firstCompleted = new CountdownEvent(1);
-                final CountdownEvent latch = new CountdownEvent(2);
-                for (int i = 0; i < 2; i++) {
-                    executor.execute(new IRunnable() {
-                        @Override
-                        public void run() {
-                            firstCompleted.countDown();
-                            latch.countDown();
-                        }
-                    });
-                    Assert.True(firstCompleted.await(1, TimeUnit.SECONDS));
+            for (int j = 0; j < 5000; j++)
+            {
+                CountdownEvent firstCompleted = new CountdownEvent(1);
+                CountdownEvent latch = new CountdownEvent(2);
+                for (int i = 0; i < 2; i++)
+                {
+                    executor.execute(Runnables.Create(() =>
+                    {
+                        firstCompleted.Signal();
+                        latch.Signal();
+                    }));
+
+                    Assert.True(firstCompleted.Wait(TimeSpan.FromSeconds(1)));
                 }
 
-                Assert.True(latch.await(5, TimeUnit.SECONDS));
+                Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
             }
-        } finally {
-            nonStickyGroup.shutdownGracefully();
+        }
+        finally
+        {
+            nonStickyGroup.shutdownGracefullyAsync();
         }
     }
 
-    private static void execute(EventExecutorGroup group, CountdownEvent startLatch) {
-        final EventExecutor executor = group.next();
-        Assert.True(executor instanceof OrderedEventExecutor);
-        final AtomicReference<Exception> cause = new AtomicReference<Exception>();
-        final AtomicInteger last = new AtomicInteger();
+    private static void execute(IEventExecutorGroup group, CountdownEvent startLatch)
+    {
+        IEventExecutor executor = group.next();
+        Assert.True(executor is IOrderedEventExecutor);
+        AtomicReference<Exception> cause = new AtomicReference<Exception>();
+        AtomicInteger last = new AtomicInteger();
         int tasks = 10000;
-        List<Future<?>> futures = new List<Future<?>>(tasks);
-        final CountdownEvent latch = new CountdownEvent(tasks);
-        startLatch.await();
+        List<Task> futures = new List<Task>(tasks);
+        CountdownEvent latch = new CountdownEvent(tasks);
+        startLatch.Wait();
 
-        for (int i = 1 ; i <= tasks; i++) {
-            final int id = i;
+        for (int i = 1; i <= tasks; i++)
+        {
+            int id = i;
             Assert.False(executor.inEventLoop());
             Assert.False(executor.inEventLoop(Thread.CurrentThread));
-            futures.add(executor.submit(new IRunnable() {
-                @Override
-                public void run() {
-                    try {
-                        Assert.True(executor.inEventLoop(Thread.CurrentThread));
-                        Assert.True(executor.inEventLoop());
+            futures.Add(executor.submit(Runnables.Create(() =>
+            {
+                try
+                {
+                    Assert.True(executor.inEventLoop(Thread.CurrentThread));
+                    Assert.True(executor.inEventLoop());
 
-                        if (cause.get() == null) {
-                            int lastId = last.get();
-                            if (lastId >= id) {
-                                cause.compareAndSet(null, new AssertionError(
-                                        "Out of order execution id(" + id + ") >= lastId(" + lastId + ')'));
-                            }
-                            if (!last.compareAndSet(lastId, id)) {
-                                cause.compareAndSet(null, new AssertionError("Concurrent execution of tasks"));
-                            }
+                    if (cause.get() == null)
+                    {
+                        int lastId = last.get();
+                        if (lastId >= id)
+                        {
+                            cause.compareAndSet(null, new InvalidOperationException(
+                                "Out of order execution id(" + id + ") >= lastId(" + lastId + ')'));
                         }
-                    } finally {
-                        latch.countDown();
+
+                        if (!last.compareAndSet(lastId, id))
+                        {
+                            cause.compareAndSet(null, new InvalidOperationException("Concurrent execution of tasks"));
+                        }
                     }
                 }
-            }));
+                finally
+                {
+                    latch.Signal();
+                }
+            })));
         }
-        latch.await();
-        for (Future<?> future: futures) {
-            future.syncUninterruptibly();
+
+        latch.Wait();
+        foreach (Task future in futures)
+        {
+            future.Wait();
         }
+
         Exception error = cause.get();
-        if (error != null) {
+        if (error != null)
+        {
             throw error;
         }
     }
