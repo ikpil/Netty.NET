@@ -85,7 +85,7 @@ public class FastThreadLocalTest {
 
     [Fact]
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void testRemoveAllFromFTLThread() throws Exception {
+    public void testRemoveAllFromFTLThread() {
         final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
         final Thread thread = new FastThreadLocalThread() {
             @Override

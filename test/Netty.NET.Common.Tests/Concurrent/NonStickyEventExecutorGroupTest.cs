@@ -44,7 +44,7 @@ public class NonStickyEventExecutorGroupTest {
     @ParameterizedTest(name = PARAMETERIZED_NAME)
     @MethodSource("data")
     @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void testOrdering(int maxTaskExecutePerRun) throws Exception {
+    public void testOrdering(int maxTaskExecutePerRun) {
         final int threads = NettyRuntime.availableProcessors() * 2;
         final EventExecutorGroup group = new UnorderedThreadPoolEventExecutor(threads);
         final NonStickyEventExecutorGroup nonStickyGroup = new NonStickyEventExecutorGroup(group, maxTaskExecutePerRun);
@@ -109,7 +109,7 @@ public class NonStickyEventExecutorGroupTest {
         }
     }
 
-    private static void execute(EventExecutorGroup group, CountdownEvent startLatch) throws Exception {
+    private static void execute(EventExecutorGroup group, CountdownEvent startLatch) {
         final EventExecutor executor = group.next();
         Assert.True(executor instanceof OrderedEventExecutor);
         final AtomicReference<Exception> cause = new AtomicReference<Exception>();

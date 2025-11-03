@@ -143,7 +143,7 @@ public void testCancellationExceptionIsThrownWhenBlockingGet() {
     Assert.True(promise.cancel(false));
     Assert.Throws<TaskCanceledException>(new Executable() {
         @Override
-        public void execute() throws Exception {
+        public void execute() {
         promise.get();
     }
     });
@@ -155,7 +155,7 @@ public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout() {
     Assert.True(promise.cancel(false));
     Assert.Throws<TaskCanceledException>(new Executable() {
         @Override
-        public void execute() throws Exception {
+        public void execute() {
         promise.get(1, TimeUnit.SECONDS);
     }
     });

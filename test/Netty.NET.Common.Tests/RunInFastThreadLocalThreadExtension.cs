@@ -28,7 +28,7 @@ public class RunInFastThreadLocalThreadExtension : InvocationInterceptor {
     public void interceptTestMethod(
             final Invocation<Void> invocation,
             final ReflectiveInvocationContext<Method> invocationContext,
-            final ExtensionContext extensionContext) throws Exception {
+            final ExtensionContext extensionContext) {
         final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
         Thread thread = new FastThreadLocalThread(new IRunnable() {
             @Override

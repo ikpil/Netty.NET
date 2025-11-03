@@ -39,7 +39,7 @@ public class RecyclerFastThreadLocalTest extends RecyclerTest {
             }
         }) {
             @Override
-            protected void finalize() throws Exception {
+            protected void finalize() {
                 super.finalize();
                 collected.set(true);
             }

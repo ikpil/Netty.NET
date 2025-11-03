@@ -14,7 +14,9 @@
  * under the License.
  */
 
+using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Netty.NET.Common.Tests;
 using Netty.NET.Common;
 using Netty.NET.Common.Concurrent;
@@ -25,11 +27,11 @@ namespace Netty.NET.Common.Tests;
 public class ResourceLeakDetectorTest {
     //@SuppressWarnings("unused")
     private static volatile int sink;
-    [Fact]
-        @Timeout(value = 60000, unit = TimeUnit.MILLISECONDS)
-    public void testConcurrentUsage() throws Exception {
-        final AtomicBoolean finished = new AtomicBoolean();
-        final AtomicReference<Exception> error = new AtomicReference<Exception>();
+    
+    [Fact(Timeout = 60000)]
+    public void testConcurrentUsage() {
+        AtomicBoolean finished = new AtomicBoolean();
+        AtomicReference<Exception> error = new AtomicReference<Exception>();
         // With 50 threads issue #6087 is reproducible on every run.
         Thread[] threads = new Thread[50];
         final CyclicBarrier barrier = new CyclicBarrier(threads.length);
@@ -99,7 +101,7 @@ assertNoErrors(error);
 
 @Timeout(10)
 [Fact]
-public void testLeakSetupHints() throws Exception {
+public void testLeakSetupHints() {
     DefaultResource.detectorWithSetupHint.initialise();
     leakResource();
 
@@ -121,7 +123,7 @@ public void testLeakSetupHints() throws Exception {
 
 @Timeout(10)
 [Fact]
-public void testLeakBrokenHint() throws Exception {
+public void testLeakBrokenHint() {
     DefaultResource.detectorWithSetupHint.initialise();
 
     DefaultResource.detectorWithSetupHint.failOnUntraced = false;
@@ -199,7 +201,7 @@ private interface Resource {
     bool close();
 }
 
-private static void assertNoErrors(AtomicReference<Exception> ref) throws Exception {
+private static void assertNoErrors(AtomicReference<Exception> ref) {
     Exception error = ref.get();
     if (error != null) {
         throw error;
@@ -233,7 +235,7 @@ private static final class TestResourceLeakDetector<T> extends ResourceLeakDetec
         error.compareAndSet(null, cause);
     }
 
-    void assertNoErrors() throws Exception {
+    void assertNoErrors() {
         ResourceLeakDetectorTest.assertNoErrors(error);
     }
 }
@@ -290,7 +292,7 @@ int getLeaksFound() {
     return leaksFound.get();
 }
 
-void assertNoErrors() throws Exception {
+void assertNoErrors() {
     ResourceLeakDetectorTest.assertNoErrors(error);
 }
 }

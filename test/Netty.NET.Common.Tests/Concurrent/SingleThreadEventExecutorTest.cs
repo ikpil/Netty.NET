@@ -305,7 +305,7 @@ public class SingleThreadEventExecutorTest {
         try {
             Assert.Throws<RejectedExecutionException>(new Executable() {
                 @Override
-                public void execute() throws Exception {
+                public void execute() {
                     final Promise<Void> promise = executor.newPromise();
                     executor.execute(new IRunnable() {
                         @Override
