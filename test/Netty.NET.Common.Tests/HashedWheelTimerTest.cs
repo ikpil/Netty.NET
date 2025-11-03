@@ -20,7 +20,6 @@ using System.Threading;
 using Netty.NET.Common;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
-using ITimer = Netty.NET.Common.ITimer;
 
 namespace Netty.NET.Common.Tests;
 
