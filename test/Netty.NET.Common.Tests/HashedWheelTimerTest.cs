@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Netty.NET.Common;
@@ -29,29 +30,25 @@ public class HashedWheelTimerTest {
     public void testScheduleTimeoutShouldNotRunBeforeDelay() {
         ITimer timer = new HashedWheelTimer();
         CountdownEvent barrier = new CountdownEvent(1);
-        ITimeout timeout = timer.newTimeout(new ITimerTask() {
-            @Override
-            public void run(Timeout timeout) {
-                Assert.Fail("This should not have run");
-                barrier.countDown();
-            }
-        }, 10, TimeUnit.SECONDS);
-        Assert.False(barrier.await(3, TimeUnit.SECONDS));
+        ITimeout timeout = timer.newTimeout(TimerTask.Create(timeout =>
+        {
+            Assert.Fail("This should not have run");
+            barrier.Signal();
+        }), TimeSpan.FromSeconds(10));
+        Assert.False(barrier.Wait(TimeSpan.FromSeconds(3)));
         Assert.False(timeout.isExpired(), "timer should not expire");
         timer.stop();
     }
 
     [Fact]
     public void testScheduleTimeoutShouldRunAfterDelay() {
-        final Timer timer = new HashedWheelTimer();
-        final CountdownEvent barrier = new CountdownEvent(1);
-        final Timeout timeout = timer.newTimeout(new ITimerTask() {
-            @Override
-            public void run(Timeout timeout) {
-                barrier.countDown();
-            }
-        }, 2, TimeUnit.SECONDS);
-        Assert.True(barrier.await(3, TimeUnit.SECONDS));
+        ITimer timer = new HashedWheelTimer();
+        CountdownEvent barrier = new CountdownEvent(1);
+        ITimeout timeout = timer.newTimeout(TimerTask.Create(timeout =>
+        {
+            barrier.Signal();
+        }), TimeSpan.FromSeconds(2));
+        Assert.True(barrier.Wait(TimeSpan.FromSeconds(3)));
         Assert.True(timeout.isExpired(), "timer should expire");
         timer.stop();
     }
