@@ -23,10 +23,11 @@ using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Common.Tests;
 
-public class HashedWheelTimerTest {
-
+public class HashedWheelTimerTest
+{
     [Fact]
-    public void testScheduleTimeoutShouldNotRunBeforeDelay() {
+    public void testScheduleTimeoutShouldNotRunBeforeDelay()
+    {
         ITimer timer = new HashedWheelTimer();
         CountdownEvent barrier = new CountdownEvent(1);
         ITimeout timeout = timer.newTimeout(TimerTask.Create(timeout =>
@@ -40,7 +41,8 @@ public class HashedWheelTimerTest {
     }
 
     [Fact]
-    public void testScheduleTimeoutShouldRunAfterDelay() {
+    public void testScheduleTimeoutShouldRunAfterDelay()
+    {
         ITimer timer = new HashedWheelTimer();
         CountdownEvent barrier = new CountdownEvent(1);
         ITimeout timeout = timer.newTimeout(TimerTask.Create(timeout =>
@@ -53,97 +55,98 @@ public class HashedWheelTimerTest {
     }
 
     [Fact(Timeout = 3000)]
-    public void testStopTimer() {
-        final CountdownEvent latch = new CountdownEvent(3);
-        final Timer timerProcessed = new HashedWheelTimer();
-        for (int i = 0; i < 3; i ++) {
-            timerProcessed.newTimeout(new ITimerTask() {
-                @Override
-                public void run(final Timeout timeout) {
-                    latch.countDown();
-                }
-            }, 1, TimeUnit.MILLISECONDS);
+    public void testStopTimer()
+    {
+        CountdownEvent latch = new CountdownEvent(3);
+        ITimer timerProcessed = new HashedWheelTimer();
+        for (int i = 0; i < 3; i++)
+        {
+            timerProcessed.newTimeout(TimerTask.Create(timeout =>
+            {
+                latch.Signal();
+            }), TimeSpan.FromMilliseconds(1));
         }
 
-        latch.await();
-        Assert.Equal(0, timerProcessed.stop().size(), "Number of unprocessed timeouts should be 0");
+        latch.Wait();
+        Assert.Equal(0, timerProcessed.stop().Count, "Number of unprocessed timeouts should be 0");
 
-        final Timer timerUnprocessed = new HashedWheelTimer();
-        for (int i = 0; i < 5; i ++) {
-            timerUnprocessed.newTimeout(new ITimerTask() {
-                @Override
-                public void run(Timeout timeout) {
-                }
-            }, 5, TimeUnit.SECONDS);
+        ITimer timerUnprocessed = new HashedWheelTimer();
+        for (int i = 0; i < 5; i++)
+        {
+            timerUnprocessed.newTimeout(TimerTask.Create(timeout =>
+            {
+            }), TimeSpan.FromSeconds(5));
         }
-        Thread.sleep(1000L); // sleep for a second
-        Assert.False(timerUnprocessed.stop().isEmpty(), "Number of unprocessed timeouts should be greater than 0");
+
+        Thread.Sleep(1000); // sleep for a second
+        Assert.False(timerUnprocessed.stop().IsEmpty(), "Number of unprocessed timeouts should be greater than 0");
     }
 
-    [Fact]
-    @org.junit.jupiter.api.Timeout(value = 3000, unit = TimeUnit.MILLISECONDS)
-    public void testTimerShouldThrowExceptionAfterShutdownForNewTimeouts() {
-        final CountdownEvent latch = new CountdownEvent(3);
-        final Timer timer = new HashedWheelTimer();
-        for (int i = 0; i < 3; i ++) {
-            timer.newTimeout(new ITimerTask() {
-                @Override
-                public void run(Timeout timeout) {
-                    latch.countDown();
-                }
-            }, 1, TimeUnit.MILLISECONDS);
+    [Fact(Timeout = 3000)]
+    public void testTimerShouldThrowExceptionAfterShutdownForNewTimeouts()
+    {
+        CountdownEvent latch = new CountdownEvent(3);
+        ITimer timer = new HashedWheelTimer();
+        for (int i = 0; i < 3; i++)
+        {
+            timer.newTimeout(TimerTask.Create(timeout =>
+            {
+                latch.Signal();
+            }), TimeSpan.FromMilliseconds(1));
         }
 
-        latch.await();
+        latch.Wait();
         timer.stop();
 
-        try {
-            timer.newTimeout(createNoOpTimerTask(), 1, TimeUnit.MILLISECONDS);
+        try
+        {
+            timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromMilliseconds(1));
             Assert.Fail("Expected exception didn't occur.");
-        } catch (IllegalStateException ignored) {
+        }
+        catch (InvalidOperationException ignored)
+        {
             // expected
         }
     }
 
-    [Fact]
-    @org.junit.jupiter.api.Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testTimerOverflowWheelLength() {
-        final HashedWheelTimer timer = new HashedWheelTimer(
-            Executors.defaultThreadFactory(), 100, TimeUnit.MILLISECONDS, 32);
-        final CountdownEvent latch = new CountdownEvent(3);
+    [Fact(Timeout = 5000)]
+    public void testTimerOverflowWheelLength()
+    {
+        HashedWheelTimer timer = new HashedWheelTimer(
+            Executors.defaultThreadFactory(), TimeSpan.FromMilliseconds(100), 32);
+        CountdownEvent latch = new CountdownEvent(3);
 
-        timer.newTimeout(new ITimerTask() {
-            @Override
-            public void run(final Timeout timeout) {
-                timer.newTimeout(this, 100, TimeUnit.MILLISECONDS);
-                latch.countDown();
-            }
-        }, 100, TimeUnit.MILLISECONDS);
+        timer.newTimeout(TimerTask.Create(timeout =>
+        {
+            timer.newTimeout(this, TimeSpan.FromMilliseconds(100));
+            latch.Signal();
+        }), TimeSpan.FromMilliseconds(100));
 
-        latch.await();
-        Assert.False(timer.stop().isEmpty());
+        latch.Wait();
+        Assert.False(timer.stop().IsEmpty());
     }
 
     [Fact]
-    public void testExecutionOnTime() {
+    public void testExecutionOnTime()
+    {
         int tickDuration = 200;
         int timeout = 125;
         int maxTimeout = 2 * (tickDuration + timeout);
-        final HashedWheelTimer timer = new HashedWheelTimer(tickDuration, TimeUnit.MILLISECONDS);
-        final IBlockingQueue<Long> queue = new LinkedBlockingQueue<Long>();
+        HashedWheelTimer timer = new HashedWheelTimer(TimeSpan.FromMilliseconds(tickDuration));
+        IBlockingQueue<long> queue = new LinkedBlockingQueue<long>(100000);
 
         int scheduledTasks = 100000;
-        for (int i = 0; i < scheduledTasks; i++) {
-            final long start = PreciseTimer.nanoTime();
-            timer.newTimeout(new ITimerTask() {
-                @Override
-                public void run(final Timeout timeout) {
-                    queue.add(TimeUnit.NANOSECONDS.toMillis(PreciseTimer.nanoTime() - start));
-                }
-            }, timeout, TimeUnit.MILLISECONDS);
+        for (int i = 0; i < scheduledTasks; i++)
+        {
+            long start = SystemTimer.nanoTime();
+            timer.newTimeout(TimerTask.Create(timeout =>
+            {
+                queue.add(TimeUnit.NANOSECONDS.toMillis(SystemTimer.nanoTime() - start));
+            }), TimeSpan.FromMilliseconds(timeout));
         }
 
-        for (int i = 0; i < scheduledTasks; i++) {
+        for (int i = 0; i < scheduledTasks; i++)
+        {
             long delay = queue.take();
             Assert.True(delay >= timeout && delay < maxTimeout,
                 "Timeout + " + scheduledTasks + " delay " + delay + " must be " + timeout + " < " + maxTimeout);
@@ -153,202 +156,200 @@ public class HashedWheelTimerTest {
     }
 
     [Fact]
-    public void testExecutionOnTaskExecutor() {
+    public void testExecutionOnTaskExecutor()
+    {
         int timeout = 10;
 
-        final CountdownEvent latch = new CountdownEvent(1);
-        final CountdownEvent timeoutLatch = new CountdownEvent(1);
-        IExecutor executor = new IExecutor() {
-            @Override
-            public void execute(IRunnable command) {
-                try {
-                    command.run();
-                } finally {
-                    latch.countDown();
-                }
+        CountdownEvent latch = new CountdownEvent(1);
+        CountdownEvent timeoutLatch = new CountdownEvent(1);
+        IExecutor executor = new AnonymousExecutor(command =>
+        {
+            try
+            {
+                command.run();
             }
-        };
-        final HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(), 100,
-                TimeUnit.MILLISECONDS, 32, true, 2, executor);
-        timer.newTimeout(new ITimerTask() {
-            @Override
-            public void run(final Timeout timeout) {
-                timeoutLatch.countDown();
+            finally
+            {
+                latch.Signal();
             }
-        }, timeout, TimeUnit.MILLISECONDS);
+        });
+        HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(),
+            TimeSpan.FromMilliseconds(100), 32, true, 2, executor);
+        timer.newTimeout(TimerTask.Create(timeout =>
+        {
+            timeoutLatch.Signal();
+        }), TimeSpan.FromMilliseconds(timeout));
 
-        latch.await();
-        timeoutLatch.await();
+        latch.Wait();
+        timeoutLatch.Wait();
         timer.stop();
     }
 
     [Fact]
-    public void testRejectedExecutionExceptionWhenTooManyTimeoutsAreAddedBackToBack() {
-        HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(), 100,
-            TimeUnit.MILLISECONDS, 32, true, 2);
-        timer.newTimeout(createNoOpTimerTask(), 5, TimeUnit.SECONDS);
-        timer.newTimeout(createNoOpTimerTask(), 5, TimeUnit.SECONDS);
-        try {
-            timer.newTimeout(createNoOpTimerTask(), 1, TimeUnit.MILLISECONDS);
+    public void testRejectedExecutionExceptionWhenTooManyTimeoutsAreAddedBackToBack()
+    {
+        HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(),
+            TimeSpan.FromMilliseconds(100), 32, true, 2);
+        timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromSeconds(5));
+        timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromSeconds(5));
+        try
+        {
+            timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromMilliseconds(1));
             Assert.Fail("Timer allowed adding 3 timeouts when maxPendingTimeouts was 2");
-        } catch (RejectedExecutionException e) {
+        }
+        catch (RejectedExecutionException e)
+        {
             // Expected
-        } finally {
+        }
+        finally
+        {
             timer.stop();
         }
     }
 
     [Fact]
     public void testNewTimeoutShouldStopThrowingRejectedExecutionExceptionWhenExistingTimeoutIsCancelled()
-        {
-        final int tickDurationMs = 100;
-        final HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(), tickDurationMs,
-            TimeUnit.MILLISECONDS, 32, true, 2);
-        timer.newTimeout(createNoOpTimerTask(), 5, TimeUnit.SECONDS);
-        Timeout timeoutToCancel = timer.newTimeout(createNoOpTimerTask(), 5, TimeUnit.SECONDS);
+    {
+        int tickDurationMs = 100;
+        HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(),
+            TimeSpan.FromMilliseconds(tickDurationMs), 32, true, 2);
+        timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromSeconds(5));
+        ITimeout timeoutToCancel = timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromSeconds(5));
         Assert.True(timeoutToCancel.cancel());
 
-        Thread.sleep(tickDurationMs * 5);
+        Thread.Sleep(tickDurationMs * 5);
 
-        final CountdownEvent secondLatch = new CountdownEvent(1);
-        timer.newTimeout(createCountDownLatchTimerTask(secondLatch), 90, TimeUnit.MILLISECONDS);
+        CountdownEvent secondLatch = new CountdownEvent(1);
+        timer.newTimeout(createCountDownLatchTimerTask(secondLatch), TimeSpan.FromMilliseconds(90));
 
-        secondLatch.await();
+        secondLatch.Wait();
+        timer.stop();
+    }
+
+    [Fact(Timeout = 3000)]
+    public void testNewTimeoutShouldStopThrowingRejectedExecutionExceptionWhenExistingTimeoutIsExecuted()
+    {
+        CountdownEvent latch = new CountdownEvent(1);
+        HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(),
+            TimeSpan.FromMilliseconds(25), 4, true, 2);
+        timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromSeconds(5));
+        timer.newTimeout(createCountDownLatchTimerTask(latch), TimeSpan.FromMilliseconds(90));
+
+        latch.Wait();
+
+        CountdownEvent secondLatch = new CountdownEvent(1);
+        timer.newTimeout(createCountDownLatchTimerTask(secondLatch), TimeSpan.FromMilliseconds(90));
+
+        secondLatch.Wait();
         timer.stop();
     }
 
     [Fact]
-    @org.junit.jupiter.api.Timeout(value = 3000, unit = TimeUnit.MILLISECONDS)
-    public void testNewTimeoutShouldStopThrowingRejectedExecutionExceptionWhenExistingTimeoutIsExecuted()
-        {
-        final CountdownEvent latch = new CountdownEvent(1);
-        final HashedWheelTimer timer = new HashedWheelTimer(Executors.defaultThreadFactory(), 25,
-            TimeUnit.MILLISECONDS, 4, true, 2);
-        timer.newTimeout(createNoOpTimerTask(), 5, TimeUnit.SECONDS);
-        timer.newTimeout(createCountDownLatchTimerTask(latch), 90, TimeUnit.MILLISECONDS);
-
-        latch.await();
-
-        final CountdownEvent secondLatch = new CountdownEvent(1);
-        timer.newTimeout(createCountDownLatchTimerTask(secondLatch), 90, TimeUnit.MILLISECONDS);
-
-        secondLatch.await();
-        timer.stop();
-    }
-
-    [Fact]()
-    public void reportPendingTimeouts() {
-        final CountdownEvent latch = new CountdownEvent(1);
-        final HashedWheelTimer timer = new HashedWheelTimer();
-        final Timeout t1 = timer.newTimeout(createNoOpTimerTask(), 100, TimeUnit.MINUTES);
-        final Timeout t2 = timer.newTimeout(createNoOpTimerTask(), 100, TimeUnit.MINUTES);
-        timer.newTimeout(createCountDownLatchTimerTask(latch), 90, TimeUnit.MILLISECONDS);
+    public void reportPendingTimeouts()
+    {
+        CountdownEvent latch = new CountdownEvent(1);
+        HashedWheelTimer timer = new HashedWheelTimer();
+        ITimeout t1 = timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromMinutes(100));
+        ITimeout t2 = timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromMinutes(100));
+        timer.newTimeout(createCountDownLatchTimerTask(latch), TimeSpan.FromMilliseconds(90));
 
         Assert.Equal(3, timer.pendingTimeouts());
         t1.cancel();
         t2.cancel();
-        latch.await();
+        latch.Wait();
 
         Assert.Equal(0, timer.pendingTimeouts());
         timer.stop();
     }
 
     [Fact]
-    public void testOverflow() throws ThreadInterruptedException  {
-        final HashedWheelTimer timer = new HashedWheelTimer();
-        final CountdownEvent latch = new CountdownEvent(1);
-        Timeout timeout = timer.newTimeout(new ITimerTask() {
-            @Override
-            public void run(Timeout timeout) {
-                latch.countDown();
-            }
-        }, long.MaxValue, TimeUnit.MILLISECONDS);
-        Assert.False(latch.await(1, TimeUnit.SECONDS));
+    public void testOverflow()
+    {
+        HashedWheelTimer timer = new HashedWheelTimer();
+        CountdownEvent latch = new CountdownEvent(1);
+        ITimeout timeout = timer.newTimeout(TimerTask.Create(timeout =>
+        {
+            latch.Signal();
+        }), TimeSpan.FromMilliseconds(long.MaxValue));
+        Assert.False(latch.Wait(TimeSpan.FromSeconds(1)));
         timeout.cancel();
         timer.stop();
     }
 
-    [Fact]
-    @org.junit.jupiter.api.Timeout(value = 3000, unit = TimeUnit.MILLISECONDS)
-    public void testStopTimerCancelsPendingTasks() {
-        final Timer timerUnprocessed = new HashedWheelTimer();
-        for (int i = 0; i < 5; i ++) {
-            timerUnprocessed.newTimeout(new ITimerTask() {
-                @Override
-                public void run(Timeout timeout) {
-                }
-            }, 5, TimeUnit.SECONDS);
+    [Fact(Timeout = 3000)]
+    public void testStopTimerCancelsPendingTasks()
+    {
+        ITimer timerUnprocessed = new HashedWheelTimer();
+        for (int i = 0; i < 5; i++)
+        {
+            timerUnprocessed.newTimeout(TimerTask.Create(timeout =>
+            {
+            }), TimeSpan.FromSeconds(5));
         }
-        Thread.sleep(1000L); // sleep for a second
 
-        for (Timeout timeout : timerUnprocessed.stop()) {
+        Thread.Sleep(1000); // sleep for a second
+
+        foreach (ITimeout timeout in timerUnprocessed.stop())
+        {
             Assert.True(timeout.isCancelled(), "All unprocessed tasks should be canceled");
         }
     }
 
-    @org.junit.jupiter.api.Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void cancelWillCallCallback() {
-        final CountdownEvent latch = new CountdownEvent(1);
-        final HashedWheelTimer timer = new HashedWheelTimer();
-        final Timeout t1 = timer.newTimeout(new ITimerTask() {
-            @Override
-            public void run(Timeout timeout) {
-                Assert.Fail();
-            }
-
-            @Override
-            public void cancelled(Timeout timeout) {
-                latch.countDown();
-            }
-        }, 90, TimeUnit.MILLISECONDS);
+    [Fact(Timeout = 5000)]
+    public void cancelWillCallCallback()
+    {
+        CountdownEvent latch = new CountdownEvent(1);
+        HashedWheelTimer timer = new HashedWheelTimer();
+        ITimeout t1 = timer.newTimeout(TimerTask.Create(timeout =>
+        {
+            Assert.Fail();
+        }, timeout =>
+        {
+            latch.Signal();
+        }), TimeSpan.FromMilliseconds(90));
 
         Assert.Equal(1, timer.pendingTimeouts());
         t1.cancel();
-        latch.await();
+        latch.Wait();
     }
 
     [Fact]
     public void testPendingTimeoutsShouldBeCountedCorrectlyWhenTimeoutCancelledWithinGoalTick()
-        {
-        final HashedWheelTimer timer = new HashedWheelTimer();
-        final CountdownEvent barrier = new CountdownEvent(1);
+    {
+        HashedWheelTimer timer = new HashedWheelTimer();
+        CountdownEvent barrier = new CountdownEvent(1);
         // A total of 11 timeouts with the same delay are submitted, and they will be processed in the same tick.
-        timer.newTimeout(new ITimerTask() {
-            @Override
-            public void run(Timeout timeout) {
-                barrier.countDown();
-                Thread.sleep(1000);
-            }
-        }, 200, TimeUnit.MILLISECONDS);
-        List<Timeout> timeouts = new List<Timeout>();
-        for (int i = 0; i < 10; i++) {
-            timeouts.add(timer.newTimeout(createNoOpTimerTask(), 200, TimeUnit.MILLISECONDS));
+        timer.newTimeout(TimerTask.Create(timeout =>
+        {
+            barrier.Signal();
+            Thread.Sleep(1000);
+        }), TimeSpan.FromMilliseconds(200));
+        List<ITimeout> timeouts = new List<ITimeout>();
+        for (int i = 0; i < 10; i++)
+        {
+            timeouts.Add(timer.newTimeout(createNoOpTimerTask(), TimeSpan.FromMilliseconds(200)));
         }
-        barrier.await();
+
+        barrier.Wait();
         // The simulation here is that the timeout has been transferred to a bucket and is canceled before it is
         // actually expired in the goal tick.
-        for (Timeout timeout : timeouts) {
+        foreach (ITimeout timeout in timeouts)
+        {
             timeout.cancel();
         }
-        Thread.sleep(2000);
+
+        Thread.Sleep(2000);
         Assert.Equal(0, timer.pendingTimeouts());
         timer.stop();
     }
 
-    private static ITimerTask createNoOpTimerTask() {
-        return new ITimerTask() {
-            @Override
-            public void run(final Timeout timeout) {
-            }
-        };
+    private static ITimerTask createNoOpTimerTask()
+    {
+        return TimerTask.Create(timeout => { });
     }
 
-    private static ITimerTask createCountDownLatchTimerTask(final CountdownEvent latch) {
-        return new ITimerTask() {
-            @Override
-            public void run(final Timeout timeout) {
-                latch.countDown();
-            }
-        };
+    private static ITimerTask createCountDownLatchTimerTask(CountdownEvent latch)
+    {
+        return TimerTask.Create(timeout => latch.Signal());
     }
 }

@@ -70,7 +70,7 @@ public class NativeLibraryLoaderTest {
         final URLClassLoader loader = new URLClassLoader(new URL[] {url1, url2});
         final string resourceName = "test1";
 
-        Exception ise = Assert.Throws<IllegalStateException>(new Executable() {
+        Exception ise = Assert.Throws<InvalidOperationException>(new Executable() {
             @Override
             public void execute() {
                 NativeLibraryLoader.load(resourceName, loader);

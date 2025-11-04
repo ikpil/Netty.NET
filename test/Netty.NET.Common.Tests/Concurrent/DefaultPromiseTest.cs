@@ -24,7 +24,7 @@ public class DefaultPromiseTest {
     public static void beforeClass() {
         try {
             findStackOverflowDepth();
-            throw new IllegalStateException("Expected StackOverflowError but didn't get it?!");
+            throw new InvalidOperationException("Expected StackOverflowError but didn't get it?!");
         } catch (StackOverflowError e) {
             logger.debug("StackOverflowError depth: {}", stackOverflowDepth);
         }
@@ -322,9 +322,9 @@ public void testSignalRace() {
 
         for (final Map.Entry<Thread, DefaultPromise<Void>> promise : promises.entrySet()) {
             promise.getKey().start();
-            final long start = PreciseTimer.nanoTime();
+            final long start = SystemTimer.nanoTime();
             promise.getValue().awaitUninterruptibly(wait, TimeUnit.NANOSECONDS);
-            assertThat(PreciseTimer.nanoTime() - start).isLessThan(wait);
+            assertThat(SystemTimer.nanoTime() - start).isLessThan(wait);
         }
     } finally {
         if (executor != null) {
@@ -399,7 +399,7 @@ final CountdownEvent latch) {
             if (finalI + 1 < p.length) {
             p[finalI + 1].setSuccess(null);
         }
-        latch.countDown();
+        latch.Signal();
         }
         });
     }
@@ -444,7 +444,7 @@ final CountdownEvent latch) {
             if (finalI + 1 < p.length) {
             p[finalI + 1].setSuccess(null);
         }
-        latch.countDown();
+        latch.Signal();
         }
         });
         }
@@ -492,7 +492,7 @@ private static void testLateListenerIsOrderedCorrectly(Exception cause) {
             @Override
             public void operationComplete(Future<Void> future) {
             Assert.True(state.compareAndSet(1, 2));
-            latch1.countDown();
+            latch1.Signal();
         }
         });
 
@@ -509,7 +509,7 @@ private static void testLateListenerIsOrderedCorrectly(Exception cause) {
             @Override
             public void operationComplete(Future<Void> future) {
             Assert.True(state.compareAndSet(2, 3));
-            latch2.countDown();
+            latch2.Signal();
         }
         });
         }
@@ -521,7 +521,7 @@ private static void testLateListenerIsOrderedCorrectly(Exception cause) {
             public void run() {
             // This is the key, we depend upon the state being set in the next listener.
             Assert.Equal(3, state.get());
-            latch2.countDown();
+            latch2.Signal();
         }
         });
 
@@ -540,7 +540,7 @@ private static void testPromiseListenerAddWhenComplete(Exception cause) {
         promise.addListener(new FutureListener<Void>() {
         @Override
         public void operationComplete(Future<Void> future) {
-        latch.countDown();
+        latch.Signal();
     }
     });
     }
@@ -560,7 +560,7 @@ private static void testListenerNotifyLater(final int numListenersBefore) {
     final FutureListener<Void> listener = new FutureListener<Void>() {
         @Override
         public void operationComplete(Future<Void> future) {
-        latch.countDown();
+        latch.Signal();
     }
     };
     final Promise<Void> promise = new DefaultPromise<Void>(executor);

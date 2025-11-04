@@ -28,12 +28,12 @@ public class SingleThreadEventExecutorTest {
         @Override
         public void start() {
             super.start();
-            startedLatch.countDown();
+            startedLatch.Signal();
         }
 
         @Override
         public void run() {
-            runLatch.countDown();
+            runLatch.Signal();
             super.run();
         }
 
@@ -172,7 +172,7 @@ public class SingleThreadEventExecutorTest {
         // Let's wait until the thread is started
         currentThread.awaitStarted();
         currentThread.awaitRunnableExecution();
-        latch.countDown();
+        latch.Signal();
         Assert.True(executor.trySuspend());
 
         // Now wait till the scheduled task was run
@@ -353,7 +353,7 @@ public class SingleThreadEventExecutorTest {
 
         @Override
         public void run() {
-            countDown();
+            Signal();
         }
     }
 
@@ -585,7 +585,7 @@ public class SingleThreadEventExecutorTest {
     [Fact]
     @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
     public void testExceptionIsPropagatedToTerminationFuture() {
-        final IllegalStateException exception = new IllegalStateException();
+        final InvalidOperationException exception = new InvalidOperationException();
         final SingleThreadEventExecutor executor =
                 new SingleThreadEventExecutor(null, Executors.defaultThreadFactory(), true) {
                     @Override

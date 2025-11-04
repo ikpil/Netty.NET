@@ -86,7 +86,7 @@ public void testMultipleRecycle() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
     object.recycle();
-    Assert.Throws<IllegalStateException>(new Executable() {
+    Assert.Throws<InvalidOperationException>(new Executable() {
         @Override
         public void execute() {
         object.recycle();
@@ -98,7 +98,7 @@ public void testMultipleRecycle() {
 public void testMultipleRecycleAtDifferentThread() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
-    final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
+    final AtomicReference<InvalidOperationException> exceptionStore = new AtomicReference<InvalidOperationException>();
     final Thread thread1 = newThread(new IRunnable() {
         @Override
         public void run() {
@@ -113,7 +113,7 @@ public void testMultipleRecycleAtDifferentThread() {
         public void run() {
         try {
         object.recycle();
-    } catch (IllegalStateException e) {
+    } catch (InvalidOperationException e) {
         exceptionStore.set(e);
     }
     }
@@ -123,7 +123,7 @@ public void testMultipleRecycleAtDifferentThread() {
     HandledObject a = recycler.get();
     HandledObject b = recycler.get();
     Assert.NotSame(a, b);
-    IllegalStateException exception = exceptionStore.get();
+    InvalidOperationException exception = exceptionStore.get();
     Assert.NotNull(exception);
 }
 
@@ -131,7 +131,7 @@ public void testMultipleRecycleAtDifferentThread() {
 public void testMultipleRecycleAtDifferentThreadRacing() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
-    final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
+    final AtomicReference<InvalidOperationException> exceptionStore = new AtomicReference<InvalidOperationException>();
 
     final CountdownEvent countDownLatch = new CountdownEvent(2);
     final Thread thread1 = newThread(new IRunnable() {
@@ -139,13 +139,13 @@ public void testMultipleRecycleAtDifferentThreadRacing() {
         public void run() {
         try {
         object.recycle();
-    } catch (IllegalStateException e) {
+    } catch (InvalidOperationException e) {
         Exception x = exceptionStore.getAndSet(e);
         if (x != null) {
             e.addSuppressed(x);
         }
     } finally {
-        countDownLatch.countDown();
+        countDownLatch.Signal();
     }
     }
     });
@@ -156,13 +156,13 @@ public void testMultipleRecycleAtDifferentThreadRacing() {
         public void run() {
         try {
         object.recycle();
-    } catch (IllegalStateException e) {
+    } catch (InvalidOperationException e) {
         Exception x = exceptionStore.getAndSet(e);
         if (x != null) {
             e.addSuppressed(x);
         }
     } finally {
-        countDownLatch.countDown();
+        countDownLatch.Signal();
     }
     }
     });
@@ -173,7 +173,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() {
         HandledObject a = recycler.get();
         HandledObject b = recycler.get();
         Assert.NotSame(a, b);
-        IllegalStateException exception = exceptionStore.get();
+        InvalidOperationException exception = exceptionStore.get();
         if (exception != null) {
             assertThat(exception).hasMessageContaining("recycled already");
             Assert.Equal(0, exception.getSuppressed().length);
@@ -188,7 +188,7 @@ public void testMultipleRecycleAtDifferentThreadRacing() {
 public void testMultipleRecycleRacing() {
     Recycler<HandledObject> recycler = newRecycler(1024);
     final HandledObject object = recycler.get();
-    final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<IllegalStateException>();
+    final AtomicReference<InvalidOperationException> exceptionStore = new AtomicReference<InvalidOperationException>();
 
     final CountdownEvent countDownLatch = new CountdownEvent(1);
     final Thread thread1 = newThread(new IRunnable() {
@@ -196,13 +196,13 @@ public void testMultipleRecycleRacing() {
         public void run() {
         try {
         object.recycle();
-    } catch (IllegalStateException e) {
+    } catch (InvalidOperationException e) {
         Exception x = exceptionStore.getAndSet(e);
         if (x != null) {
             e.addSuppressed(x);
         }
     } finally {
-        countDownLatch.countDown();
+        countDownLatch.Signal();
     }
     }
     });
@@ -210,7 +210,7 @@ public void testMultipleRecycleRacing() {
 
     try {
         object.recycle();
-    } catch (IllegalStateException e) {
+    } catch (InvalidOperationException e) {
         Exception x = exceptionStore.getAndSet(e);
         if (x != null) {
             e.addSuppressed(x);
@@ -222,7 +222,7 @@ public void testMultipleRecycleRacing() {
         HandledObject a = recycler.get();
         HandledObject b = recycler.get();
         Assert.NotSame(a, b);
-        IllegalStateException exception = exceptionStore.get();
+        InvalidOperationException exception = exceptionStore.get();
         Assert.NotNull(exception); // object got recycled twice, so at least one of the calls must throw.
     } finally {
         thread1.join(1000);
@@ -329,7 +329,7 @@ public void testRecycleAtTwoThreadsMulti() {
         @Override
         public void run() {
         o.recycle();
-        latch1.countDown();
+        latch1.Signal();
     }
     });
     Assert.True(latch1.await(100, TimeUnit.MILLISECONDS));
@@ -343,7 +343,7 @@ public void testRecycleAtTwoThreadsMulti() {
         public void run() {
         //The object should be recycled
         o2.recycle();
-        latch2.countDown();
+        latch2.Signal();
     }
     });
     Assert.True(latch2.await(100, TimeUnit.MILLISECONDS));

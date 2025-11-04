@@ -37,21 +37,21 @@ namespace Netty.NET.Common.Tests.Concurrent
             } catch (ThreadInterruptedException e) {
                 throw new Exception(e);
             }
-            latch.countDown();
+            latch.Signal();
         }
     };
     executor.execute(task);
     Future<?> future = executor.submit(new IRunnable() {
         @Override
         public void run() {
-        latch.countDown();
+        latch.Signal();
     }
 }
 
 }).addListener(new FutureListener<object>() {
                 @Override
                 public void operationComplete(Future<object> future) {
-                    latch.countDown();
+                    latch.Signal();
                 }
             });
             exchanger.exchange(null);
@@ -76,7 +76,7 @@ namespace Netty.NET.Common.Tests.Concurrent
         Future<?> future = executor.scheduleAtFixedRate(new IRunnable() {
             @Override
             public void run() {
-                latch.countDown();
+                latch.Signal();
             }
         }, 1, 1, TimeUnit.MILLISECONDS);
         try {

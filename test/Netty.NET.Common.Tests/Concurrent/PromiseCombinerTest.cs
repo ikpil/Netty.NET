@@ -83,7 +83,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
     [Fact]
     public void testAddAfterFinish() {
         combiner.finish(p1);
-        Assert.Throws<IllegalStateException>(new Executable() {
+        Assert.Throws<InvalidOperationException>(new Executable() {
             @Override
             public void execute() {
                 combiner.add(p2);
@@ -95,7 +95,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
     [Fact]
     public void testAddAllAfterFinish() {
         combiner.finish(p1);
-        Assert.Throws<IllegalStateException>(new Executable() {
+        Assert.Throws<InvalidOperationException>(new Executable() {
             @Override
             public void execute() {
                 combiner.addAll(p2);
@@ -107,7 +107,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
     [Fact]
     public void testFinishCalledTwiceThrows() {
         combiner.finish(p1);
-        Assert.Throws<IllegalStateException>(new Executable() {
+        Assert.Throws<InvalidOperationException>(new Executable() {
             @Override
             public void execute() {
                 combiner.finish(p1);
@@ -180,14 +180,14 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
         try {
             combiner.add(future);
             Assert.Fail();
-        } catch (IllegalStateException expected) {
+        } catch (InvalidOperationException expected) {
             // expected
         }
 
         try {
             combiner.addAll(future);
             Assert.Fail();
-        } catch (IllegalStateException expected) {
+        } catch (InvalidOperationException expected) {
             // expected
         }
 
@@ -196,7 +196,7 @@ namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
         try {
             combiner.finish(promise);
             Assert.Fail();
-        } catch (IllegalStateException expected) {
+        } catch (InvalidOperationException expected) {
             // expected
         }
     }

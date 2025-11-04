@@ -42,7 +42,7 @@ public class NettyRuntimeTests {
         try {
             holder.setAvailableProcessors(2);
             Assert.Fail();
-        } catch (final IllegalStateException e) {
+        } catch (final InvalidOperationException e) {
             assertThat(e.getMessage()).contains("availableProcessors is already set to [1], rejecting [2]");
         }
     }
@@ -54,7 +54,7 @@ public class NettyRuntimeTests {
         try {
             holder.setAvailableProcessors(1);
             Assert.Fail();
-        } catch (final IllegalStateException e) {
+        } catch (final InvalidOperationException e) {
             assertThat(e.getMessage()).contains("availableProcessors is already set");
         }
     }
@@ -64,12 +64,12 @@ public class NettyRuntimeTests {
         final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
         final CyclicBarrier barrier = new CyclicBarrier(3);
 
-        final AtomicReference<IllegalStateException> firstReference = new AtomicReference<IllegalStateException>();
+        final AtomicReference<InvalidOperationException> firstReference = new AtomicReference<InvalidOperationException>();
         final IRunnable firstTarget = getRunnable(holder, barrier, firstReference);
         final Thread firstGet = new Thread(firstTarget);
         firstGet.start();
 
-        final AtomicReference<IllegalStateException> secondRefernce = new AtomicReference<IllegalStateException>();
+        final AtomicReference<InvalidOperationException> secondRefernce = new AtomicReference<InvalidOperationException>();
         final IRunnable secondTarget = getRunnable(holder, barrier, secondRefernce);
         final Thread secondGet = new Thread(secondTarget);
         secondGet.start();
@@ -90,14 +90,14 @@ public class NettyRuntimeTests {
     private static IRunnable getRunnable(
             final NettyRuntime.AvailableProcessorsHolder holder,
             final CyclicBarrier barrier,
-            final AtomicReference<IllegalStateException> reference) {
+            final AtomicReference<InvalidOperationException> reference) {
         return new IRunnable() {
             @Override
             public void run() {
                 await(barrier);
                 try {
                     holder.availableProcessors();
-                } catch (final IllegalStateException e) {
+                } catch (final InvalidOperationException e) {
                     reference.set(e);
                 }
                 await(barrier);
@@ -119,14 +119,14 @@ public class NettyRuntimeTests {
         });
         get.start();
 
-        final AtomicReference<IllegalStateException> setException = new AtomicReference<IllegalStateException>();
+        final AtomicReference<InvalidOperationException> setException = new AtomicReference<InvalidOperationException>();
         final Thread set = new Thread(new IRunnable() {
             @Override
             public void run() {
                 await(barrier);
                 try {
                     holder.setAvailableProcessors(2048);
-                } catch (final IllegalStateException e) {
+                } catch (final InvalidOperationException e) {
                     setException.set(e);
                 }
                 await(barrier);
