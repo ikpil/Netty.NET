@@ -14,10 +14,22 @@
  * under the License.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices.JavaScript;
+using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Common.Collections;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal.Logging;
+using Netty.NET.Common.Tests.Internal;
+
 namespace Netty.NET.Common.Tests.Concurrent;
 
-public class DefaultPromiseTest {
-    private static final IInternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromiseTest.class);
+public class DefaultPromiseTest
+{
+    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<DefaultPromiseTest>();
     private static int stackOverflowDepth;
 
     @BeforeAll
@@ -81,7 +93,8 @@ public ScheduledFuture<?> schedule(IRunnable command, long delay, TimeUnit unit)
 }
 
 @Override
-public <V> ScheduledFuture<V> schedule(Func<V> callable, long delay, TimeUnit unit) {
+public <
+TypeParameterMatcherTest.V<>> ScheduledFuture<TypeParameterMatcherTest.V<>> schedule(Func<TypeParameterMatcherTest.V<>> callable, long delay, TimeUnit unit) {
     return Assert.Fail("Cannot schedule commands");
 }
 
@@ -112,7 +125,7 @@ public void execute(IRunnable command) {
 public void testCancelDoesNotScheduleWhenNoListeners() {
     EventExecutor executor = new RejectingEventExecutor();
 
-    Promise<Void> promise = new DefaultPromise<Void>(executor);
+    JSType.Promise<Void> promise = new DefaultPromise<Void>(executor);
     Assert.True(promise.cancel(false));
     Assert.True(promise.isCancelled());
 }
@@ -122,7 +135,7 @@ public void testSuccessDoesNotScheduleWhenNoListeners() {
     EventExecutor executor = new RejectingEventExecutor();
 
     object value = new object();
-    Promise<object> promise = new DefaultPromise<object>(executor);
+    JSType.Promise<object> promise = new DefaultPromise<object>(executor);
     promise.setSuccess(value);
     Assert.Same(value, promise.getNow());
 }
@@ -132,7 +145,7 @@ public void testFailureDoesNotScheduleWhenNoListeners() {
     EventExecutor executor = new RejectingEventExecutor();
 
     Exception cause = new Exception();
-    Promise<Void> promise = new DefaultPromise<Void>(executor);
+    JSType.Promise<Void> promise = new DefaultPromise<Void>(executor);
     promise.setFailure(cause);
     Assert.Same(cause, promise.cause());
 }
@@ -351,7 +364,8 @@ public void signalSuccessCompletionValue() {
 
 [Fact]
 public void setUncancellableGetNow() {
-    final Promise<string> promise = new DefaultPromise<string>(ImmediateEventExecutor.INSTANCE);
+    final
+    JSType.Promise<string> promise = new DefaultPromise<string>(ImmediateEventExecutor.INSTANCE);
     Assert.Null(promise.getNow());
     Assert.True(promise.setUncancellable());
     Assert.Null(promise.getNow());
