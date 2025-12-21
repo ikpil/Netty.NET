@@ -22,7 +22,7 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
 
     private readonly string[] _domainNamePatterns;
     private readonly T[] _values;
-    private readonly IDictionary<string, T> _map;
+    private readonly IReadOnlyDictionary<string, T> _map;
 
     public ImmutableDomainNameMapping(T defaultValue, IDictionary<string, T> map)
         : base(null, defaultValue)
@@ -32,7 +32,7 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
         _domainNamePatterns = new string[numberOfMappings];
         _values = new T[numberOfMappings];
 
-        IDictionary<string, T> mapCopy = new LinkedHashMap<string, T>(mappings.Count);
+        LinkedHashMap<string, T> mapCopy = new LinkedHashMap<string, T>(mappings.Count);
         int index = 0;
         foreach (var mapping in map)
         {
@@ -71,7 +71,7 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
         return _defaultValue;
     }
 
-    public override IDictionary<string, T> asMap()
+    public override IReadOnlyDictionary<string, T> asMap()
     {
         return _map;
     }

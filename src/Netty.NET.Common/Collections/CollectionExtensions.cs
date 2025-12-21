@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Collections;
 

@@ -35,7 +35,7 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
 {
     protected readonly T _defaultValue;
     private readonly IDictionary<string, T> _map;
-    private readonly IDictionary<string, T> _unmodifiableMap;
+    private readonly IReadOnlyDictionary<string, T> _unmodifiableMap;
 
     /**
      * Creates a default, order-sensitive mapping. If your hostnames are in conflict, the mapping
@@ -158,7 +158,7 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
     /**
      * Returns a read-only {@link Map} of the domain mapping patterns and their associated value objects.
      */
-    public virtual IDictionary<string, T> asMap()
+    public virtual IReadOnlyDictionary<string, T> asMap()
     {
         return _unmodifiableMap;
     }
