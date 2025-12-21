@@ -14,7 +14,8 @@
  * under the License.
  */
 
-using Netty.NET.Common;
+using System;
+using System.Collections.Generic;
 
 namespace Netty.NET.Common.Tests;
 
