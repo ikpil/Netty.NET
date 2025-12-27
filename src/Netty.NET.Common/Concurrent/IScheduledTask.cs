@@ -36,6 +36,7 @@ public interface IScheduledTask : IComparable<IScheduledTask>, IRunnable
     long delayNanos();
     IScheduledTask setId(long id);
     void setConsumed();
+    long getDelay();
 }
 
 public interface IScheduledTask<T> : IScheduledTask

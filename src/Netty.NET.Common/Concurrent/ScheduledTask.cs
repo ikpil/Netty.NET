@@ -262,4 +262,8 @@ public class ScheduledTask<T> : IScheduledTask<T>
 
         return true;
     }
+
+    public long getDelay() {
+        return delayNanos();
+    }
 }

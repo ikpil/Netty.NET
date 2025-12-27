@@ -34,7 +34,7 @@ public class AbstractScheduledEventExecutorTest
     {
         TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         IScheduledTask future = executor.schedule(TEST_RUNNABLE, TimeSpan.FromTicks(0));
-        Assert.Equal(0, future.getDelay(TimeUnit.NANOSECONDS));
+        Assert.Equal(0, future.getDelay());
         Assert.NotNull(executor.pollScheduledTask());
         Assert.Null(executor.pollScheduledTask());
     }
@@ -44,7 +44,7 @@ public class AbstractScheduledEventExecutorTest
     {
         TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         IScheduledTask future = executor.schedule(TEST_RUNNABLE, TimeSpan.FromTicks(-1));
-        Assert.Equal(0, future.getDelay(TimeUnit.NANOSECONDS));
+        Assert.Equal(0, future.getDelay());
         Assert.NotNull(executor.pollScheduledTask());
         Assert.Null(executor.pollScheduledTask());
     }
@@ -54,7 +54,7 @@ public class AbstractScheduledEventExecutorTest
     {
         TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         IScheduledTask future = executor.schedule(TEST_CALLABLE, TimeSpan.FromTicks(0));
-        Assert.Equal(0, future.getDelay(TimeUnit.NANOSECONDS));
+        Assert.Equal(0, future.getDelay());
         Assert.NotNull(executor.pollScheduledTask());
         Assert.Null(executor.pollScheduledTask());
     }
@@ -64,7 +64,7 @@ public class AbstractScheduledEventExecutorTest
     {
         TestScheduledEventExecutor executor = new TestScheduledEventExecutor();
         IScheduledTask future = executor.schedule(TEST_CALLABLE, TimeSpan.FromTicks(-1));
-        Assert.Equal(0, future.getDelay(TimeUnit.NANOSECONDS));
+        Assert.Equal(0, future.getDelay());
         Assert.NotNull(executor.pollScheduledTask());
         Assert.Null(executor.pollScheduledTask());
     }
