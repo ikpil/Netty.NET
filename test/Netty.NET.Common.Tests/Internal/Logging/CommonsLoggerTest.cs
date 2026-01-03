@@ -28,175 +28,175 @@ public class CommonsLoggerTest
     [Fact]
     public void testIsTraceEnabled()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
-        when(mockLog.isTraceEnabled()).thenReturn(true);
+        Mock.Get(mockLog).Setup(x => x.isTraceEnabled()).Returns(true);
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         Assert.True(logger.isTraceEnabled());
 
-        verify(mockLog).isTraceEnabled();
+        Mock.Get(mockLog).Verify(x => x.isTraceEnabled(), Times.Once);
     }
 
     [Fact]
     public void testIsDebugEnabled()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
-        when(mockLog.isDebugEnabled()).thenReturn(true);
+        Mock.Get(mockLog).Setup(x => x.isDebugEnabled()).Returns(true);
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         Assert.True(logger.isDebugEnabled());
 
-        verify(mockLog).isDebugEnabled();
+        Mock.Get(mockLog).Verify(x => x.isDebugEnabled(), Times.Once);
     }
 
     [Fact]
     public void testIsInfoEnabled()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
-        when(mockLog.isInfoEnabled()).thenReturn(true);
+        Mock.Get(mockLog).Setup(x => x.isInfoEnabled()).Returns(true);
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         Assert.True(logger.isInfoEnabled());
 
-        verify(mockLog).isInfoEnabled();
+        Mock.Get(mockLog).Verify(x => x.isInfoEnabled(), Times.Once);
     }
 
     [Fact]
     public void testIsWarnEnabled()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
-        when(mockLog.isWarnEnabled()).thenReturn(true);
+        Mock.Get(mockLog).Setup(x => x.isWarnEnabled()).Returns(true);
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         Assert.True(logger.isWarnEnabled());
 
-        verify(mockLog).isWarnEnabled();
+        Mock.Get(mockLog).Verify(x => x.isWarnEnabled(), Times.Once);
     }
 
     [Fact]
     public void testIsErrorEnabled()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
-        when(mockLog.isErrorEnabled()).thenReturn(true);
+        Mock.Get(mockLog).Setup(x => x.isErrorEnabled()).Returns(true);
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         Assert.True(logger.isErrorEnabled());
 
-        verify(mockLog).isErrorEnabled();
+        Mock.Get(mockLog).Verify(x => x.isErrorEnabled(), Times.Once);
     }
 
     [Fact]
     public void testTrace()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.trace("a");
 
-        verify(mockLog).trace("a");
+        Mock.Get(mockLog).Verify(x => x.trace("a"), Times.Once);
     }
 
     [Fact]
     public void testTraceWithException()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.trace("a", e);
 
-        verify(mockLog).trace("a", e);
+        Mock.Get(mockLog).Verify(x => x.trace("a", e), Times.Once);
     }
 
     [Fact]
     public void testDebug()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.debug("a");
 
-        verify(mockLog).debug("a");
+        Mock.Get(mockLog).Verify(x => x.debug("a"), Times.Once);
     }
 
     [Fact]
     public void testDebugWithException()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.debug("a", e);
 
-        verify(mockLog).debug("a", e);
+        Mock.Get(mockLog).Verify(x => x.debug("a", e), Times.Once);
     }
 
     [Fact]
     public void testInfo()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.info("a");
 
-        verify(mockLog).info("a");
+        Mock.Get(mockLog).Verify(x => x.info("a"), Times.Once);
     }
 
     [Fact]
     public void testInfoWithException()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.info("a", e);
 
-        verify(mockLog).info("a", e);
+        Mock.Get(mockLog).Verify(x => x.info("a", e), Times.Once);
     }
 
     [Fact]
     public void testWarn()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.warn("a");
 
-        verify(mockLog).warn("a");
+        Mock.Get(mockLog).Verify(x => x.warn("a"), Times.Once);
     }
 
     [Fact]
     public void testWarnWithException()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.warn("a", e);
 
-        verify(mockLog).warn("a", e);
+        Mock.Get(mockLog).Verify(x => x.warn("a", e), Times.Once);
     }
 
     [Fact]
     public void testError()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.error("a");
 
-        verify(mockLog).error("a");
+        Mock.Get(mockLog).Verify(x => x.error("a"), Times.Once);
     }
 
     [Fact]
     public void testErrorWithException()
     {
-        Log mockLog = Mock.Of<Log>();
+        IInternalLogger mockLog = Mock.Of<IInternalLogger>();
 
         IInternalLogger logger = new CommonsLogger(mockLog, "foo");
         logger.error("a", e);
 
-        verify(mockLog).error("a", e);
+        Mock.Get(mockLog).Verify(x => x.error("a", e), Times.Once);
     }
 }
