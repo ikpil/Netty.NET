@@ -33,13 +33,14 @@ public class InternalLoggerFactoryTest : IDisposable
 
         InternalLoggerFactory mockFactory = Mock.Of<InternalLoggerFactory>();
         mockLogger = Mock.Of<IInternalLogger>();
-        when(mockFactory.newInstance("mock")).thenReturn(mockLogger);
+        
+        Mock.Get(mockFactory).Setup(x => x.newInstance("mock")).Returns(mockLogger);
         InternalLoggerFactory.setDefaultFactory(mockFactory);
     }
 
     public void Dispose()
     {
-        reset(mockLogger);
+        Mock.Get(mockLogger).Reset();
         InternalLoggerFactory.setDefaultFactory(oldLoggerFactory);
     }
 
@@ -60,7 +61,7 @@ public class InternalLoggerFactoryTest : IDisposable
         string helloWorld = "Hello, world!";
 
         IInternalLogger one = InternalLoggerFactory.getInstance("helloWorld");
-        IInternalLogger two = InternalLoggerFactory.getInstance(helloWorld.getClass());
+        IInternalLogger two = InternalLoggerFactory.getInstance(helloWorld.GetType());
 
         Assert.NotNull(one);
         Assert.NotNull(two);
@@ -70,51 +71,52 @@ public class InternalLoggerFactoryTest : IDisposable
     [Fact]
     public void testIsTraceEnabled()
     {
-        when(mockLogger.isTraceEnabled()).thenReturn(true);
+        Mock.Get(mockLogger).Setup(x => x.isTraceEnabled()).Returns(true);
 
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         Assert.True(logger.isTraceEnabled());
-        verify(mockLogger).isTraceEnabled();
+        
+        Mock.Get(mockLogger).Verify(x => x.isTraceEnabled(), Times.Once);
     }
 
     [Fact]
     public void testIsDebugEnabled()
     {
-        when(mockLogger.isDebugEnabled()).thenReturn(true);
+        Mock.Get(mockLogger).Setup(x => x.isDebugEnabled()).Returns(true);
 
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         Assert.True(logger.isDebugEnabled());
-        verify(mockLogger).isDebugEnabled();
+        Mock.Get(mockLogger).Verify(x => x.isDebugEnabled(), Times.Once);
     }
 
     [Fact]
     public void testIsInfoEnabled()
     {
-        when(mockLogger.isInfoEnabled()).thenReturn(true);
+        Mock.Get(mockLogger).Setup(x => x.isInfoEnabled()).Returns(true);
 
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         Assert.True(logger.isInfoEnabled());
-        verify(mockLogger).isInfoEnabled();
+        Mock.Get(mockLogger).Verify(x => x.isInfoEnabled(), Times.Once);
     }
 
     [Fact]
     public void testIsWarnEnabled()
     {
-        when(mockLogger.isWarnEnabled()).thenReturn(true);
+        Mock.Get(mockLogger).Setup(x => x.isWarnEnabled()).Returns(true);
 
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         Assert.True(logger.isWarnEnabled());
-        verify(mockLogger).isWarnEnabled();
+        Mock.Get(mockLogger).Verify(x => x.isWarnEnabled(), Times.Once);
     }
 
     [Fact]
     public void testIsErrorEnabled()
     {
-        when(mockLogger.isErrorEnabled()).thenReturn(true);
+        Mock.Get(mockLogger).Setup(x => x.isErrorEnabled()).Returns(true);
 
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         Assert.True(logger.isErrorEnabled());
-        verify(mockLogger).isErrorEnabled();
+        Mock.Get(mockLogger).Verify(x => x.isErrorEnabled(), Times.Once);
     }
 
     [Fact]
@@ -122,7 +124,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.trace("a");
-        verify(mockLogger).trace("a");
+        Mock.Get(mockLogger).Verify(x => x.trace("a"), Times.Once);
     }
 
     [Fact]
@@ -130,7 +132,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.trace("a", e);
-        verify(mockLogger).trace("a", e);
+        Mock.Get(mockLogger).Verify(x => x.trace("a", e), Times.Once);
     }
 
     [Fact]
@@ -138,7 +140,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.debug("a");
-        verify(mockLogger).debug("a");
+        Mock.Get(mockLogger).Verify(x => x.debug("a"), Times.Once);
     }
 
     [Fact]
@@ -146,7 +148,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.debug("a", e);
-        verify(mockLogger).debug("a", e);
+        Mock.Get(mockLogger).Verify(x => x.debug("a", e), Times.Once);
     }
 
     [Fact]
@@ -154,7 +156,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.info("a");
-        verify(mockLogger).info("a");
+        Mock.Get(mockLogger).Verify(x => x.info("a"), Times.Once);
     }
 
     [Fact]
@@ -162,7 +164,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.info("a", e);
-        verify(mockLogger).info("a", e);
+        Mock.Get(mockLogger).Verify(x => x.info("a", e), Times.Once);
     }
 
     [Fact]
@@ -170,7 +172,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.warn("a");
-        verify(mockLogger).warn("a");
+        Mock.Get(mockLogger).Verify(x => x.warn("a"), Times.Once);
     }
 
     [Fact]
@@ -178,7 +180,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.warn("a", e);
-        verify(mockLogger).warn("a", e);
+        Mock.Get(mockLogger).Verify(x => x.warn("a", e), Times.Once);
     }
 
     [Fact]
@@ -186,7 +188,7 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.error("a");
-        verify(mockLogger).error("a");
+        Mock.Get(mockLogger).Verify(x => x.error("a"), Times.Once);
     }
 
     [Fact]
@@ -194,6 +196,6 @@ public class InternalLoggerFactoryTest : IDisposable
     {
         IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
         logger.error("a", e);
-        verify(mockLogger).error("a", e);
+        Mock.Get(mockLogger).Verify(x => x.error("a", e), Times.Once);
     }
 }

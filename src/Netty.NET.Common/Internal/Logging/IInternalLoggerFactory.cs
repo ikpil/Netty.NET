@@ -1,8 +1,6 @@
-using System;
-
 namespace Netty.NET.Common.Internal.Logging
 {
-    public interface IInternalLoggerFactory : IDisposable
+    public interface IInternalLoggerFactory
     {
         IInternalLogger newInstance(string categoryName);
     }

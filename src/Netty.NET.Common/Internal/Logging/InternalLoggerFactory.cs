@@ -34,7 +34,7 @@ namespace Netty.NET.Common.Internal.Logging;
  * {@link #setDefaultFactory(InternalLoggerFactory)} should be called as early
  * as possible and shouldn't be called more than once.
  */
-public abstract class InternalLoggerFactory
+public abstract class InternalLoggerFactory : IInternalLoggerFactory
 {
     private static IInternalLoggerFactory defaultFactory;
 
