@@ -26,7 +26,7 @@ public class DefaultPriorityQueueTest
 {
     [Fact]
     public void testPoll() {
-        PriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
+        DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
 
         TestElement a = new TestElement(5);
@@ -68,7 +68,7 @@ public class DefaultPriorityQueueTest
 
     [Fact]
     public void testClear() {
-        PriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
+        DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
 
         TestElement a = new TestElement(5);
@@ -100,7 +100,7 @@ public class DefaultPriorityQueueTest
 
     [Fact]
     public void testClearIgnoringIndexes() {
-        PriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
+        DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
 
         TestElement a = new TestElement(5);
@@ -131,46 +131,46 @@ public class DefaultPriorityQueueTest
 
     [Fact]
     public void testRemoval() {
-        testRemoval(false);
+        testRemoval0(false);
     }
 
     [Fact]
     public void testRemovalTyped() {
-        testRemoval(true);
+        testRemoval0(true);
     }
 
     [Fact]
     public void testRemovalFuzz() {
-        ThreadLocalRandom threadLocalRandom = ThreadLocalRandom.current();
-        final int numElements = threadLocalRandom.nextInt(0, 30);
-        final TestElement[] values = new TestElement[numElements];
-        PriorityQueue<TestElement> queue =
-                new DefaultPriorityQueue<>(TestElementComparator.INSTANCE, values.length);
-        for (int i = 0; i < values.length; ++i) {
+        var threadLocalRandom = ThreadLocalRandom.current();
+        int numElements = threadLocalRandom.Next(0, 30);
+        TestElement[] values = new TestElement[numElements];
+        DefaultPriorityQueue<TestElement> queue =
+                new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, values.Length);
+        for (int i = 0; i < values.Length; ++i) {
             do {
-                values[i] = new TestElement(threadLocalRandom.nextInt(0, numElements * 2));
-            } while (!queue.add(values[i]));
+                values[i] = new TestElement(threadLocalRandom.Next(0, numElements * 2));
+            } while (!queue.offer(values[i]));
         }
 
-        for (int i = 0; i < values.length; ++i) {
+        for (int i = 0; i < values.Length; ++i) {
             try {
                 Assert.True(queue.removeTyped(values[i]));
-                Assert.Equal(queue.size(), values.length - (i + 1));
+                Assert.Equal(queue.size(), values.Length - (i + 1));
             } catch (Exception cause) {
-                StringBuilder sb = new StringBuilder(values.length * 2);
-                sb.append("error on removal of index: ").append(i).append(" [");
-                for (TestElement value : values) {
-                    sb.append(value).append(" ");
+                StringBuilder sb = new StringBuilder(values.Length * 2);
+                sb.Append("error on removal of index: ").Append(i).Append(" [");
+                foreach (TestElement value in values) {
+                    sb.Append(value).Append(" ");
                 }
-                sb.append("]");
-                throw new AssertionError(sb.ToString(), cause);
+                sb.Append("]");
+                throw new InvalidOperationException(sb.ToString(), cause);
             }
         }
         assertEmptyQueue(queue);
     }
 
-    private static void testRemoval(bool typed) {
-        PriorityQueue<TestElement> queue = new DefaultPriorityQueue<>(TestElementComparator.INSTANCE, 4);
+    private static void testRemoval0(bool typed) {
+        DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 4);
         assertEmptyQueue(queue);
 
         TestElement a = new TestElement(5);
@@ -219,7 +219,7 @@ public class DefaultPriorityQueueTest
 
     [Fact]
     public void testZeroInitialSize() {
-        PriorityQueue<TestElement> queue = new DefaultPriorityQueue<>(TestElementComparator.INSTANCE, 0);
+        DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
         TestElement e = new TestElement(1);
         assertOffer(queue, e);
@@ -232,7 +232,7 @@ public class DefaultPriorityQueueTest
 
     [Fact]
     public void testPriorityChange() {
-        PriorityQueue<TestElement> queue = new DefaultPriorityQueue<>(TestElementComparator.INSTANCE, 0);
+        DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
         assertEmptyQueue(queue);
         TestElement a = new TestElement(10);
         TestElement b = new TestElement(20);
@@ -240,12 +240,12 @@ public class DefaultPriorityQueueTest
         TestElement d = new TestElement(25);
         TestElement e = new TestElement(23);
         TestElement f = new TestElement(15);
-        queue.add(a);
-        queue.add(b);
-        queue.add(c);
-        queue.add(d);
-        queue.add(e);
-        queue.add(f);
+        queue.offer(a);
+        queue.offer(b);
+        queue.offer(c);
+        queue.offer(d);
+        queue.offer(e);
+        queue.offer(f);
 
         e.value = 35;
         queue.priorityChanged(e);
@@ -262,24 +262,19 @@ public class DefaultPriorityQueueTest
         f.value = 5;
         queue.priorityChanged(f);
 
-        List<TestElement> expectedOrderList = new List<>(queue.size());
-        expectedOrderList.addAll(Collectives.asList(a, b, c, d, e, f));
-        expectedOrderList.sort(TestElementComparator.INSTANCE);
-
-        Assert.Equal(expectedOrderList.size(), queue.size());
-        Assert.Equal(expectedOrderList.isEmpty(), queue.isEmpty());
-        Iterator<TestElement> itr = expectedOrderList.iterator();
-        while (itr.hasNext()) {
-            TestElement next = itr.next();
-            TestElement poll = queue.poll();
-            Assert.Equal(next, poll);
-            itr.remove();
-            Assert.Equal(expectedOrderList.size(), queue.size());
-            Assert.Equal(expectedOrderList.isEmpty(), queue.isEmpty());
+        var expectedOrderList = new List<TestElement> { a, b, c, d, e, f };
+        expectedOrderList.Sort(TestElementComparator.INSTANCE);
+        Assert.Equal(expectedOrderList.Count, queue.size());
+        Assert.Equal(expectedOrderList.Count == 0, queue.isEmpty());
+        foreach (TestElement expected in expectedOrderList.ToArray())
+        {
+            Assert.Equal(expected, queue.poll());
+            expectedOrderList.RemoveAt(0);
+            Assert.Equal(expectedOrderList.Count, queue.size());
+            Assert.Equal(expectedOrderList.Count == 0, queue.isEmpty());
         }
     }
-
-    private static void assertOffer(PriorityQueue<TestElement> queue, TestElement a) {
+    private static void assertOffer(DefaultPriorityQueue<TestElement> queue, TestElement a) {
         Assert.True(queue.offer(a));
         Assert.True(queue.contains(a));
         Assert.True(queue.containsTyped(a));
@@ -291,54 +286,27 @@ public class DefaultPriorityQueueTest
         }
     }
 
-    private static void assertEmptyQueue(PriorityQueue<TestElement> queue) {
+    private static void assertEmptyQueue(DefaultPriorityQueue<TestElement> queue) {
         Assert.Null(queue.peek());
         Assert.Null(queue.poll());
         Assert.Equal(0, queue.size());
         Assert.True(queue.isEmpty());
     }
 
-    private static final class TestElementComparator implements Comparator<TestElement>, Serializable {
-        private static final long serialVersionUID = 7930368853384760103L;
-
-        static final TestElementComparator INSTANCE = new TestElementComparator();
-
-        private TestElementComparator() {
-        }
-
-        @Override
-        public int compare(TestElement o1, TestElement o2) {
-            return o1.value - o2.value;
-        }
+    private sealed class TestElementComparator : IComparer<TestElement>
+    {
+        public static readonly TestElementComparator INSTANCE = new();
+        public int Compare(TestElement o1, TestElement o2) => o1.value.CompareTo(o2.value);
     }
 
-    class TestElement : IPriorityQueueNode 
+    private sealed class TestElement : IPriorityQueueNode<TestElement>
     {
         internal int value;
-        private int priorityQueueIndex = INDEX_NOT_IN_QUEUE;
-
-        TestElement(int value) {
-            this.value = value;
-        }
-
-        @Override
-        public bool equals(object o) {
-            return o instanceof TestElement && ((TestElement) o).value == value;
-        }
-
-        @Override
-        public int hashCode() {
-            return value;
-        }
-
-        @Override
-        public int priorityQueueIndex(DefaultPriorityQueue queue) {
-            return priorityQueueIndex;
-        }
-
-        @Override
-        public void priorityQueueIndex(DefaultPriorityQueue queue, int i) {
-            priorityQueueIndex = i;
-        }
+        private int _index = -1;
+        public TestElement(int value) => this.value = value;
+        public override bool Equals(object o) => o is TestElement element && element.value == value;
+        public override int GetHashCode() => value;
+        public int priorityQueueIndex(DefaultPriorityQueue<TestElement> queue) => _index;
+        public void priorityQueueIndex(DefaultPriorityQueue<TestElement> queue, int i) => _index = i;
     }
 }

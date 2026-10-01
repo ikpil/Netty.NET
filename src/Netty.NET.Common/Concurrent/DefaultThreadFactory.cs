@@ -22,7 +22,7 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * A {@link IThreadFactory} implementation with a simple naming rule.
+ * A {@link ThreadFactory} implementation with a simple naming rule.
  */
 public class DefaultThreadFactory : IThreadFactory
 {
@@ -103,10 +103,8 @@ public class DefaultThreadFactory : IThreadFactory
         return t;
     }
 
-    private Thread newThread(IRunnable r, string name)
+    protected virtual Thread newThread(IRunnable r, string name)
     {
-        var t = new Thread(r.run);
-        t.Name = name;
-        return t;
+        return new FastThreadLocalThread(r, name).Thread;
     }
 }

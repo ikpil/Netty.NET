@@ -272,8 +272,8 @@ public class MessageFormatterTest
         result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", _3DOA }).getMessage();
         Assert.Equal("a[[[1, 2, 3], [10, 20, 30]], [[1, 2, 3], [10, 20, 30]]]", result);
 
-        byte[] ba0 = { 0, byte.MaxValue, byte.MinValue };
-        short[] sa0 = { 0, short.MinValue, byte.MaxValue };
+        byte[] ba0 = { 0, (byte)sbyte.MaxValue, unchecked((byte)sbyte.MinValue) };
+        short[] sa0 = { 0, short.MinValue, short.MaxValue };
         result = MessageFormatter.arrayFormat("{}\\{}{}", new object[] { new object[] { ba0, sa0 }, ia1 }).getMessage();
         Assert.Equal("[[0, 127, -128], [0, -32768, 32767]]{}[10, 20, 30]", result);
     }
@@ -334,7 +334,7 @@ public class MessageFormatterTest
         Assert.Equal(t, ft.getThrowable());
 
         ft = MessageFormatter.arrayFormat("{}{}{}{}", ia);
-        Assert.Equal("123java.lang.Exception", ft.getMessage());
+        Assert.Equal("123" + t, ft.getMessage());
         Assert.Null(ft.getThrowable());
     }
 }

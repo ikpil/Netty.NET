@@ -4,7 +4,7 @@ namespace Netty.NET.Common.Functional;
 
 public static class Runnables
 {
-    public static readonly IRunnable Empty = Runnables.Empty;
+    public static readonly IRunnable Empty = new AnonymousRunnable(() => { });
 
     public static AnonymousRunnable Create(Action action)
     {

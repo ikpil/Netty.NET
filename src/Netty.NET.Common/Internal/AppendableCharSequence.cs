@@ -42,7 +42,7 @@ public sealed class AppendableCharSequence : ICharSequence
     {
         get
         {
-            if (index > pos)
+            if (index < 0 || index >= pos)
             {
                 throw new ArgumentOutOfRangeException();
             }
@@ -68,12 +68,12 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public ICharSequence subSequence(int start)
     {
-        throw new NotImplementedException();
+        return subSequence(start, pos);
     }
 
     public char charAt(int index)
     {
-        throw new NotImplementedException();
+        return this[index];
     }
 
     public int length()
@@ -83,41 +83,42 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public int indexOf(char ch, int start = 0)
     {
-        throw new NotImplementedException();
+        start = Math.Max(0, start);
+        return start >= pos ? -1 : Array.IndexOf(chars, ch, start, pos - start);
     }
 
     public bool regionMatches(int thisStart, ICharSequence seq, int start, int length)
     {
-        throw new NotImplementedException();
+        return CharUtil.RegionMatches(this, thisStart, seq, start, length);
     }
 
     public bool regionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length)
     {
-        throw new NotImplementedException();
+        return CharUtil.RegionMatchesIgnoreCase(this, thisStart, seq, start, length);
     }
 
     public bool contentEquals(ICharSequence other)
     {
-        throw new NotImplementedException();
+        return CharUtil.ContentEquals(this, other);
     }
 
     public bool contentEqualsIgnoreCase(ICharSequence other)
     {
-        throw new NotImplementedException();
+        return CharUtil.ContentEqualsIgnoreCase(this, other);
     }
 
     public int hashCode(bool ignoreCase)
     {
-        throw new NotImplementedException();
+        return (ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal).GetHashCode(ToString());
     }
 
     public string ToString(int start)
     {
-        throw new NotImplementedException();
+        return substring(start, pos);
     }
 
     /**
-     * Access a value in this {@link ICharSequence}.
+     * Access a value in this {@link CharSequence}.
      * This method is considered unsafe as index values are assumed to be legitimate.
      * Only underlying array bounds checking is done.
      * @param index The index to access the underlying array at.
@@ -130,6 +131,7 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public AppendableCharSequence subSequence(int start, int end)
     {
+        checkRange(start, end, pos);
         if (start == end)
         {
             // If start and end index is the same we need to return an empty sequence to conform to the interface.
@@ -156,6 +158,7 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public AppendableCharSequence append(ICharSequence csq)
     {
+        checkNotNull(csq, nameof(csq));
         return append(csq, 0, csq.Count);
     }
     
@@ -167,11 +170,8 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public AppendableCharSequence append(ICharSequence csq, int start, int end)
     {
-        if (csq.Count < end)
-        {
-            throw new ArgumentOutOfRangeException("expected: csq.Count >= ("
-                                                  + end + "),but actual is (" + csq.Count + ")");
-        }
+        checkNotNull(csq, nameof(csq));
+        checkRange(start, end, csq.Count);
 
         int length = end - start;
         if (length > chars.Length - pos)
@@ -208,7 +208,7 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public IEnumerator<char> GetEnumerator()
     {
-        throw new NotImplementedException();
+        return new CharSequenceEnumerator(this);
     }
 
     public override string ToString()
@@ -222,22 +222,16 @@ public sealed class AppendableCharSequence : ICharSequence
     }
 
     /**
-     * Create a new {@link string} from the given start to end.
+     * Create a new {@link String} from the given start to end.
      */
     public string substring(int start, int end)
     {
-        int length = end - start;
-        if (start > pos || length > pos)
-        {
-            throw new ArgumentOutOfRangeException("expected: start and length <= ("
-                                                  + pos + ")");
-        }
-
-        return new string(chars, start, length);
+        checkRange(start, end, pos);
+        return new string(chars, start, end - start);
     }
 
     /**
-     * Create a new {@link string} from the given start to end.
+     * Create a new {@link String} from the given start to end.
      * This method is considered unsafe as index values are assumed to be legitimate.
      * Only underlying array bounds checking is done.
      */
@@ -264,5 +258,13 @@ public sealed class AppendableCharSequence : ICharSequence
         Arrays.arraycopy(array, 0, newArray, 0, size);
 
         return newArray;
+    }
+
+    private static void checkRange(int start, int end, int length)
+    {
+        if (start < 0 || end < start || end > length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(start));
+        }
     }
 }

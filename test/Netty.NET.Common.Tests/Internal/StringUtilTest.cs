@@ -56,56 +56,56 @@ public class StringUtilTest
     [Fact]
     public void splitSimple()
     {
-        Assert.Equal(new string[] { "foo", "bar" }, "foo:bar".Split(":"));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo:bar".split(":"));
     }
 
     [Fact]
     public void splitWithTrailingDelimiter()
     {
-        Assert.Equal(new string[] { "foo", "bar" }, "foo,bar,".Split(","));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo,bar,".split(","));
     }
 
     [Fact]
     public void splitWithTrailingDelimiters()
     {
-        Assert.Equal(new string[] { "foo", "bar" }, "foo!bar!!".Split("!"));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo!bar!!".split("!"));
     }
 
     [Fact]
     public void splitWithTrailingDelimitersDot()
     {
-        Assert.Equal(new string[] { "foo", "bar" }, "foo.bar..".Split("\\."));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo.bar..".split("\\."));
     }
 
     [Fact]
     public void splitWithTrailingDelimitersEq()
     {
-        Assert.Equal(new string[] { "foo", "bar" }, "foo=bar==".Split("="));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo=bar==".split("="));
     }
 
     [Fact]
     public void splitWithTrailingDelimitersSpace()
     {
-        Assert.Equal(new string[] { "foo", "bar" }, "foo bar  ".Split(" "));
+        Assert.Equal(new string[] { "foo", "bar" }, "foo bar  ".split(" "));
     }
 
     [Fact]
     public void splitWithConsecutiveDelimiters()
     {
-        Assert.Equal(new string[] { "foo", "", "bar" }, "foo$$bar".Split("\\$"));
+        Assert.Equal(new string[] { "foo", "", "bar" }, "foo$$bar".split("\\$"));
     }
 
     [Fact]
     public void splitWithDelimiterAtBeginning()
     {
-        Assert.Equal(new string[] { "", "foo", "bar" }, "#foo#bar".Split("#"));
+        Assert.Equal(new string[] { "", "foo", "bar" }, "#foo#bar".split("#"));
     }
 
     [Fact]
     public void splitMaxPart()
     {
-        Assert.Equal(new string[] { "foo", "bar:bar2" }, "foo:bar:bar2".Split(":", 2));
-        Assert.Equal(new string[] { "foo", "bar", "bar2" }, "foo:bar:bar2".Split(":", 3));
+        Assert.Equal(new string[] { "foo", "bar:bar2" }, "foo:bar:bar2".split(":", 2));
+        Assert.Equal(new string[] { "foo", "bar", "bar2" }, "foo:bar:bar2".split(":", 3));
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public class StringUtilTest
     [Fact]
     public void escapeCsvNull()
     {
-        Assert.Throws<NullReferenceException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
         {
             StringUtil.escapeCsv(null);
         });

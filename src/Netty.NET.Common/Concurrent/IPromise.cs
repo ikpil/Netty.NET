@@ -22,13 +22,13 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * Special {@link Future} which is writable.
  */
-public interface IPromise<V> : IFuture
+public interface IPromise<V> : IFuture<V>
 {
     /**
      * Marks this future as a success and notifies all
      * listeners.
      *
-     * If it is success or failed already it will throw an {@link InvalidOperationException}.
+     * If it is success or failed already it will throw an {@link IllegalStateException}.
      */
     IPromise<V> setSuccess(V result);
 
@@ -46,7 +46,7 @@ public interface IPromise<V> : IFuture
      * Marks this future as a failure and notifies all
      * listeners.
      *
-     * If it is success or failed already it will throw an {@link InvalidOperationException}.
+     * If it is success or failed already it will throw an {@link IllegalStateException}.
      */
     IPromise<V> setFailure(Exception cause);
 

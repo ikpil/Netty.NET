@@ -21,20 +21,22 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests.Internal;
 
+[Collection("System properties")]
 public class OsClassifiersTest : IDisposable
 {
     private static readonly string OS_CLASSIFIERS_PROPERTY = "io.netty.osClassifiers";
 
-    private Dictionary<string, string> systemProperties;
+    private readonly string previousValue;
 
     public OsClassifiersTest()
     {
-        systemProperties = SystemPropertyUtil.getProperties();
+        previousValue = Environment.GetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY);
+        Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, null);
     }
 
     public void Dispose()
     {
-        systemProperties.Remove(OS_CLASSIFIERS_PROPERTY);
+        Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, previousValue);
     }
 
     [Fact]
@@ -50,7 +52,7 @@ public class OsClassifiersTest : IDisposable
     void testOsClassifiersPropertyEmpty()
     {
         // empty property -Dio.netty.osClassifiers
-        systemProperties[OS_CLASSIFIERS_PROPERTY] = "";
+        Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, "");
         ISet<string> available = new LinkedHashSet<string>(2);
         bool added = PlatformDependent.addPropertyOsClassifiers(available);
         Assert.True(added);
@@ -61,7 +63,7 @@ public class OsClassifiersTest : IDisposable
     void testOsClassifiersPropertyNotEmptyNoClassifiers()
     {
         // ID
-        systemProperties[OS_CLASSIFIERS_PROPERTY] = ",";
+        Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, ",");
         ISet<string> available = new LinkedHashSet<string>(2);
         Assert.Throws<ArgumentException>(() => PlatformDependent.addPropertyOsClassifiers(available));
     }
@@ -70,7 +72,7 @@ public class OsClassifiersTest : IDisposable
     void testOsClassifiersPropertySingle()
     {
         // ID
-        systemProperties[OS_CLASSIFIERS_PROPERTY] = "fedora";
+        Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, "fedora");
         ISet<string> available = new LinkedHashSet<string>(2);
         bool added = PlatformDependent.addPropertyOsClassifiers(available);
         Assert.True(added);
@@ -82,7 +84,7 @@ public class OsClassifiersTest : IDisposable
     void testOsClassifiersPropertyPair()
     {
         // ID, ID_LIKE
-        systemProperties[OS_CLASSIFIERS_PROPERTY] = "manjaro,arch";
+        Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, "manjaro,arch");
         ISet<string> available = new LinkedHashSet<string>(2);
         bool added = PlatformDependent.addPropertyOsClassifiers(available);
         Assert.True(added);
@@ -94,7 +96,7 @@ public class OsClassifiersTest : IDisposable
     void testOsClassifiersPropertyExcessive()
     {
         // ID, ID_LIKE, excessive
-        systemProperties[OS_CLASSIFIERS_PROPERTY] = "manjaro,arch,slackware";
+        Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, "manjaro,arch,slackware");
         ISet<string> available = new LinkedHashSet<string>(2);
         Assert.Throws<ArgumentException>(() => PlatformDependent.addPropertyOsClassifiers(available));
     }

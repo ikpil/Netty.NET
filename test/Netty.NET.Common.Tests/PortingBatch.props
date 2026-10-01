@@ -1,0 +1,10 @@
+<Project>
+  <ItemGroup>
+    <Compile Remove="**/*.cs" />
+    <Compile Include="AbstractReferenceCountedTest.cs;AttributeKeyTest.cs;ConstantPoolTest.cs;DefaultAttributeMapTest.cs;Porting/**/*.cs" />
+    <Compile Include="Internal/AppendableCharSequenceTest.cs;Internal/DefaultPriorityQueueTest.cs;Internal/MathUtilTest.cs;Internal/ObjectUtilTest.cs;Internal/BoundedInputStreamTest.cs" />
+    <Compile Include="DomainNameMappingTest.cs;DomainWildcardMappingBuilderTest.cs;NetUtilTest.cs;Internal/StringUtilTest.cs;Internal/SWARUtilTest.cs;Internal/ThreadLocalRandomTest.cs;Internal/SystemPropertyUtilTest.cs;Internal/OsClassifiersTest.cs;Internal/MacAddressUtilTest.cs;Concurrent/DefaultMockTickerTest.cs" />
+    <Compile Include="Concurrent/FastThreadLocalTest.cs;Concurrent/DefaultPromiseTest.cs" />
+    <Compile Include="Internal/Logging/MessageFormatterTest.cs;Internal/Logging/AbstractInternalLoggerTest.cs;Internal/Logging/InternalLoggerFactoryTest.cs;Internal/Logging/CommonsLoggerTest.cs;Internal/Logging/CommonsLoggerFactoryTest.cs" />
+  </ItemGroup>
+</Project>

@@ -41,8 +41,8 @@ public sealed class InternalThreadLocalMap
 
     private static readonly int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
 
-    // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/List.java#l229
-    private static readonly int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
+    // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/ArrayList.java#l229
+    private const int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
 
     private static readonly int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
     private static readonly int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
@@ -65,12 +65,12 @@ public sealed class InternalThreadLocalMap
     private Dictionary<Type, TypeParameterMatcher> _typeParameterMatcherGetCache;
     private Dictionary<Type, IDictionary<string, TypeParameterMatcher>> _typeParameterMatcherFindCache;
 
-    // string-related thread-locals
+    // String-related thread-locals
     private StringBuilder _stringBuilder;
     private Dictionary<Encoding, Encoder> _charsetEncoderCache;
     private Dictionary<Encoding, Decoder> _charsetDecoderCache;
 
-    // List-related thread-locals
+    // ArrayList-related thread-locals
     private System.Collections.IList _arrayList;
 
     /** @deprecated These padding fields will be removed in the future. */
@@ -83,8 +83,8 @@ public sealed class InternalThreadLocalMap
         STRING_BUILDER_MAX_SIZE =
             SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.maxSize", 1024 * 4);
 
-        // Ensure the IInternalLogger is initialized as last field in this class as InternalThreadLocalMap might be used
-        // by the IInternalLogger itself. For this its important that all the other static fields are correctly
+        // Ensure the InternalLogger is initialized as last field in this class as InternalThreadLocalMap might be used
+        // by the InternalLogger itself. For this its important that all the other static fields are correctly
         // initialized.
         //
         // See https://github.com/netty/netty/issues/12931.
@@ -100,12 +100,17 @@ public sealed class InternalThreadLocalMap
 
     public static InternalThreadLocalMap getIfSet()
     {
-        return _slowThreadLocalMap;
+        var thread = FastThreadLocalThread.currentFastThreadLocalThread();
+        return thread == null ? _slowThreadLocalMap : thread.threadLocalMap();
     }
 
     public static InternalThreadLocalMap get()
     {
-        return slowGet();
+        var thread = FastThreadLocalThread.currentFastThreadLocalThread();
+        if (thread == null) return slowGet();
+        var map = thread.threadLocalMap();
+        if (map == null) thread.setThreadLocalMap(map = new InternalThreadLocalMap());
+        return map;
     }
 
     private static InternalThreadLocalMap slowGet()
@@ -122,7 +127,9 @@ public sealed class InternalThreadLocalMap
 
     public static void remove()
     {
-        _slowThreadLocalMap = null;
+        var thread = FastThreadLocalThread.currentFastThreadLocalThread();
+        if (thread == null) _slowThreadLocalMap = null;
+        else thread.setThreadLocalMap(null);
     }
 
     public static void destroy()
@@ -225,8 +232,8 @@ public sealed class InternalThreadLocalMap
 
         if (sb.Capacity > STRING_BUILDER_MAX_SIZE)
         {
-            sb.Length = STRING_BUILDER_INITIAL_SIZE;
-            //sb.trimToSize();
+            sb.Clear();
+            sb.Capacity = STRING_BUILDER_INITIAL_SIZE;
         }
 
         sb.Length = 0;
@@ -263,9 +270,11 @@ public sealed class InternalThreadLocalMap
     //@SuppressWarnings("unchecked")
     public List<E> arrayList<E>(int minCapacity)
     {
-        List<E> list = (List<E>)_arrayList;
-        if (list == null)
+        // CLR generic lists cannot share storage across different element types.
+        // Clear the old list before replacing it so cached objects are released.
+        if (_arrayList is not List<E> list)
         {
+            _arrayList?.Clear();
             _arrayList = new List<E>(minCapacity);
             return (List<E>)_arrayList;
         }
@@ -278,6 +287,18 @@ public sealed class InternalThreadLocalMap
     public int futureListenerStackDepth()
     {
         return _futureListenerStackDepth;
+    }
+
+    /**
+     * @deprecated Use {@link java.util.concurrent.ThreadLocalRandom#current()} instead.
+     */
+    public Random random() => ThreadLocalRandom.current();
+
+    public IntegerHolder counterHashCode() => new IntegerHolder();
+
+    public void setCounterHashCode(IntegerHolder counterHashCode)
+    {
+        // No-op.
     }
 
     public void setFutureListenerStackDepth(int futureListenerStackDepth)

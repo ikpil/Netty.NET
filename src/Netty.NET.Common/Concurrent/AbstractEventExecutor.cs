@@ -69,24 +69,24 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
 
     public abstract bool inEventLoop(Thread thread);
 
-    public virtual TaskCompletionSource<V> newPromise<V>()
+    public virtual IPromise<V> newPromise<V>()
     {
-        throw new NotImplementedException();
+        return new DefaultPromise<V>(this);
     }
 
-    public virtual TaskCompletionSource<V> newProgressivePromise<V>()
+    public virtual IProgressivePromise<V> newProgressivePromise<V>()
     {
-        throw new NotImplementedException();
+        return new DefaultProgressivePromise<V>(this);
     }
 
-    public virtual Task<V> newSucceededFuture<V>(V result)
+    public virtual IFuture<V> newSucceededFuture<V>(V result)
     {
-        throw new NotImplementedException();
+        return new SucceededFuture<V>(this, result);
     }
 
-    public virtual Task<V> newFailedFuture<V>(Exception cause)
+    public virtual IFuture<V> newFailedFuture<V>(Exception cause)
     {
-        throw new NotImplementedException();
+        return new FailedFuture<V>(this, cause);
     }
 
     public abstract Task terminationTask();

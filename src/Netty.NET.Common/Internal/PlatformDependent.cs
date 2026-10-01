@@ -69,8 +69,10 @@ public static class PlatformDependent
     private static readonly DirectoryInfo TMPDIR = tmpdir0();
 
     private static readonly int BIT_MODE = bitMode0();
-    private static readonly string NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", ""));
-    private static readonly string NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name", ""));
+    private static readonly string NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", RuntimeInformation.ProcessArchitecture.ToString()));
+    private static readonly string NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name",
+        OperatingSystem.IsWindows() ? "Windows" : OperatingSystem.IsMacOS() ? "Mac OS X" :
+        OperatingSystem.IsLinux() ? "Linux" : RuntimeInformation.OSDescription));
 
     private static readonly ISet<string> LINUX_OS_CLASSIFIERS;
 
@@ -267,7 +269,11 @@ public static class PlatformDependent
             // let users omit classifiers with just -Dio.netty.osClassifiers
             return true;
         }
-        string[] classifiers = osClassifiers.Split(",");
+        string[] classifiers = osClassifiers.Split(',');
+        // String.split(regex) discards trailing empty fields on the JVM.
+        int classifierCount = classifiers.Length;
+        while (classifierCount > 0 && classifiers[classifierCount - 1].Length == 0) classifierCount--;
+        Array.Resize(ref classifiers, classifierCount);
         if (classifiers.Length == 0) {
             throw new ArgumentException(
                     osClassifiersPropertyName + " property is not empty, but contains no classifiers: "
@@ -390,7 +396,7 @@ public static class PlatformDependent
     /**
      * Return {@code true} if the selected cleaner can free direct buffers in a controlled way. This guarantee only
      * applies for buffers allocated via {@link #allocateDirect(int)} and when using the {@code clean} method of the
-     * returned {@link ICleanableDirectBuffer}.
+     * returned {@link CleanableDirectBuffer}.
      */
     public static bool canReliabilyFreeDirectBuffers() {
         return CLEANER != NOOP;
@@ -504,7 +510,7 @@ public static class PlatformDependent
     /**
      * Allocate a direct {@link ByteBuffer} of the given capacity, and return it alongside its deallocation mechanism.
      * @param capacity The desired capacity of the direct byte buffer.
-     * @return The {@link ICleanableDirectBuffer} instance that contain the buffer and its deallocation mechanism.
+     * @return The {@link CleanableDirectBuffer} instance that contain the buffer and its deallocation mechanism.
      */
     public static ICleanableDirectBuffer allocateDirect(int capacity) {
         return CLEANER.allocate(capacity);
@@ -514,7 +520,7 @@ public static class PlatformDependent
      * Try to deallocate the specified direct {@link ByteBuffer}. Please note this method does nothing if
      * the current platform does not support this operation or the specified buffer is not a direct buffer.
      *
-     * @deprecated Use the {@link ICleanableDirectBuffer#clean()} from {@link #allocateDirect(int)} instead.
+     * @deprecated Use the {@link CleanableDirectBuffer#clean()} from {@link #allocateDirect(int)} instead.
      */
     [Obsolete]
     public static void freeDirectBuffer(ByteBuffer buffer) {
@@ -584,11 +590,11 @@ public static class PlatformDependent
     }
 
     public static short getShort(byte[] data, int index) {
-        return hasUnsafe() ? PlatformDependent0.getShort(data, index) : data[index];
+        return hasUnsafe() ? PlatformDependent0.getShort(data, index) : getShortSafe(data, index);
     }
 
     public static int getInt(byte[] data, int index) {
-        return hasUnsafe() ? PlatformDependent0.getInt(data, index) : data[index];
+        return hasUnsafe() ? PlatformDependent0.getInt(data, index) : getIntSafe(data, index);
     }
 
     public static int getInt(int[] data, long index) {
@@ -596,7 +602,7 @@ public static class PlatformDependent
     }
 
     public static long getLong(byte[] data, int index) {
-        return hasUnsafe() ? PlatformDependent0.getLong(data, index) : data[index];
+        return hasUnsafe() ? PlatformDependent0.getLong(data, index) : getLongSafe(data, index);
     }
 
     public static long getLong(long[] data, long index) {
@@ -654,7 +660,7 @@ public static class PlatformDependent
     }
 
     /**
-     * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link ICharSequence}.
+     * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link CharSequence}.
      */
     private static int hashCodeAsciiCompute(ICharSequence value, int offset, int hash) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
@@ -672,7 +678,7 @@ public static class PlatformDependent
     }
 
     /**
-     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(int)} but for {@link ICharSequence}.
+     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(int)} but for {@link CharSequence}.
      */
     private static int hashCodeAsciiSanitizeInt(ICharSequence value, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
@@ -689,7 +695,7 @@ public static class PlatformDependent
     }
 
     /**
-     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(short)} but for {@link ICharSequence}.
+     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(short)} but for {@link CharSequence}.
      */
     private static int hashCodeAsciiSanitizeShort(ICharSequence value, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
@@ -702,7 +708,7 @@ public static class PlatformDependent
     }
 
     /**
-     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(byte)} but for {@link ICharSequence}.
+     * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(byte)} but for {@link CharSequence}.
      */
     private static int hashCodeAsciiSanitizeByte(char value) {
         return value & 0x1f;
@@ -909,7 +915,7 @@ public static class PlatformDependent
      */
     public static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         if (javaVersion() > 8 && (startPos2 | startPos1 | (bytes1.Length - length) | bytes2.Length - length) == 0) {
-            return Arrays.Equals(bytes1, bytes2);
+            return bytes1.AsSpan().SequenceEqual(bytes2);
         }
         return !hasUnsafe() || !unalignedAccess() ?
                   equalsSafe(bytes1, startPos1, bytes2, startPos2, length) :
@@ -981,7 +987,7 @@ public static class PlatformDependent
      * Calculate a hash code of a byte array assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      * <p>
-     * This method assumes that {@code bytes} is equivalent to a {@code byte[]} but just using {@link ICharSequence}
+     * This method assumes that {@code bytes} is equivalent to a {@code byte[]} but just using {@link CharSequence}
      * for storage. The upper most byte of each {@code char} from {@code bytes} is ignored.
      * @param bytes The array which contains the data to hash (assumed to be equivalent to a {@code byte[]}).
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
@@ -1278,7 +1284,7 @@ public static class PlatformDependent
                 return f;
             }
 
-            f = toDirectory(SystemPropertyUtil.get("java.io.tmpdir"));
+            f = toDirectory(SystemPropertyUtil.get("java.io.tmpdir", Path.GetTempPath()));
             if (f != null) {
                 logger.debug("-Dio.netty.tmpdir: {} (java.io.tmpdir)", f);
                 return f;
@@ -1347,7 +1353,7 @@ public static class PlatformDependent
         }
         catch
         {
-            return dir;
+            return null;
         }
     }
 
@@ -1390,15 +1396,14 @@ public static class PlatformDependent
         if (m.Success) {
             return int.Parse(m.Groups[1].Value);
         } else {
-            return 64;
+            // CLR adaptation: use the running process width rather than a JVM-name guess.
+            return IntPtr.Size * 8;
         }
     }
 
     private static int addressSize0() {
-        if (!hasUnsafe()) {
-            return -1;
-        }
-        return PlatformDependent0.addressSize();
+        // CLR pointer width is available independently of JVM Unsafe.
+        return IntPtr.Size;
     }
 
     private static long byteArrayBaseOffset0() {
@@ -1576,6 +1581,7 @@ public static class PlatformDependent
                 return "arm_32";
 
             case "aarch64":
+            case "arm64":
                 return "aarch_64";
 
             case "riscv64":

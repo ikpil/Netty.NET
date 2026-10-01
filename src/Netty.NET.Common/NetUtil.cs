@@ -34,20 +34,25 @@ namespace Netty.NET.Common;
  * <a href="https://svn.apache.org/repos/asf/harmony/enhanced/java/branches/java6/classlib/modules/luni/
  * src/main/java/org/apache/harmony/luni/util/Inet6Util.java">Inet6Util class</a> which was part of Apache Harmony.
  */
+/**
+     * A constructor to stop this class being constructed.
+     */
+// Unused
+// CLR adaptation: the static class declaration prevents construction.
 public static class NetUtil
 {
     /**
-     * The {@link IPAddress} that represents the IPv4 loopback address '127.0.0.1'
+     * The {@link Inet4Address} that represents the IPv4 loopback address '127.0.0.1'
      */
     public static readonly IPAddress LOCALHOST4;
 
     /**
-     * The {@link IPAddress} that represents the IPv6 loopback address '::1'
+     * The {@link Inet6Address} that represents the IPv6 loopback address '::1'
      */
     public static readonly IPAddress LOCALHOST6;
 
     /**
-     * The {@link IPAddress} that represents the loopback address. If IPv6 stack is available, it will refer to
+     * The {@link InetAddress} that represents the loopback address. If IPv6 stack is available, it will refer to
      * {@link #LOCALHOST6}.  Otherwise, {@link #LOCALHOST4}.
      */
     public static readonly IPAddress LOCALHOST;
@@ -58,7 +63,7 @@ public static class NetUtil
     public static readonly NetworkInterface LOOPBACK_IF;
 
     /**
-     * An unmodifiable ICollection of all the interfaces on this machine.
+     * An unmodifiable Collection of all the interfaces on this machine.
      */
     public static readonly IReadOnlyList<NetworkInterface> NETWORK_INTERFACES;
 
@@ -139,7 +144,8 @@ public static class NetUtil
         logger.debug("-Djava.net.preferIPv4Stack: {}", IPV4_PREFERRED);
         logger.debug("-Djava.net.preferIPv6Addresses: {}", prefer);
 
-        NETWORK_INTERFACES = NetUtilInitializations.networkInterfaces();
+        NETWORK_INTERFACES = new System.Collections.ObjectModel.ReadOnlyCollection<NetworkInterface>(
+            NetUtilInitializations.networkInterfaces().ToArray());
 
         // Create IPv4 loopback address.
         LOCALHOST4 = NetUtilInitializations.createLocalhost4();
@@ -248,7 +254,7 @@ public static class NetUtil
         {
             if (ipAddressString.charAt(0) == '[')
             {
-                ipAddressString = ipAddressString.Substring(1, ipAddressString.Length - 1);
+                ipAddressString = ipAddressString.substring(1, ipAddressString.Length - 1);
             }
 
             int percentPos = ipAddressString.IndexOf('%');
@@ -264,7 +270,7 @@ public static class NetUtil
     }
 
     /**
-     * Creates an {@link IPAddress} based on an ipAddressString or might return null if it can't be parsed.
+     * Creates an {@link InetAddress} based on an ipAddressString or might return null if it can't be parsed.
      * No error handling is performed here.
      */
     public static IPAddress createInetAddressFromIpAddressString(string ipAddressString)
@@ -272,6 +278,8 @@ public static class NetUtil
         if (isValidIpV4Address(ipAddressString))
         {
             byte[] bytes = validIpV4ToBytes(ipAddressString);
+            // Should never happen!
+            // CLR IPAddress(byte[]) has no UnknownHostException for a validated four-byte array.
             return new IPAddress(bytes);
         }
 
@@ -293,6 +301,8 @@ public static class NetUtil
                     return null;
                 }
 
+                // Should never happen!
+                // CLR adaptation: numeric scope IDs are passed to the IPv6 constructor directly.
                 return new IPAddress(bytes, scopeId);
             }
 
@@ -303,6 +313,7 @@ public static class NetUtil
                     return null;
                 }
 
+                // Should never happen!
                 return new IPAddress(bytes);
             }
         }
@@ -348,10 +359,12 @@ public static class NetUtil
     }
 
     /**
-     * Convert {@link IPAddress} into {@code int}
+     * Convert {@link Inet4Address} into {@code int}
      */
     public static int ipv4AddressToInt(IPAddress ipAddress)
     {
+        if (ipAddress.AddressFamily != AddressFamily.InterNetwork)
+            throw new ArgumentException("An IPv4 address is required.", nameof(ipAddress));
         byte[] octets = ipAddress.GetAddressBytes();
 
         return (octets[0] & 0xff) << 24 |
@@ -379,7 +392,7 @@ public static class NetUtil
     /**
      * Converts 4-byte or 16-byte data into an IPv4 or IPv6 string respectively.
      *
-     * @throws ArgumentException
+     * @throws IllegalArgumentException
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
     public static string bytesToIpAddress(byte[] bytes)
@@ -390,7 +403,7 @@ public static class NetUtil
     /**
      * Converts 4-byte or 16-byte data into an IPv4 or IPv6 string respectively.
      *
-     * @throws ArgumentException
+     * @throws IllegalArgumentException
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
     public static string bytesToIpAddress(byte[] bytes, int offset, int length)
@@ -414,6 +427,8 @@ public static class NetUtil
                 throw new ArgumentException("length: " + length + " (expected: 4 or 16)");
         }
     }
+
+    public static bool isValidIpV6Address(ICharSequence ip) => isValidIpV6Address(ip.ToString());
 
     public static bool isValidIpV6Address(string ip)
     {
@@ -464,7 +479,6 @@ public static class NetUtil
         }
 
         int wordLen = 0;
-        loop:
         for (int i = start; i < end; i++)
         {
             c = ip.charAt(i);
@@ -552,12 +566,13 @@ public static class NetUtil
                 case '%':
                     // strip the interface name/index after the percent sign
                     end = i;
-                    goto loop;
+                    goto endLoop;
                 default:
                     return false;
             }
         }
 
+        endLoop:
         // normal case without compression
         if (compressBegin < 0)
         {
@@ -609,7 +624,8 @@ public static class NetUtil
         // We allow IPv4 Mapped (https://tools.ietf.org/html/rfc4291#section-2.5.5.1)
         // and IPv4 compatible (https://tools.ietf.org/html/rfc4291#section-2.5.5.1).
         // The IPv4 compatible is deprecated, but it allows parsing of plain IPv4 addressed into IPv6-Mapped addresses.
-        return b0 == b1 && (b0 == 0 || !mustBeZero && b1 == -1);
+        // Java byte -1 has the same bit pattern as CLR byte 255.
+        return b0 == b1 && (b0 == 0 || !mustBeZero && b1 == 0xff);
     }
 
     private static bool isValidIPv4Mapped(byte[] bytes, int currentIndex, int compressBegin, int compressLength)
@@ -621,7 +637,15 @@ public static class NetUtil
     }
 
     /**
-     * Takes a {@link string} and parses it to see if it is a valid IPV4 address.
+     * Takes a {@link CharSequence} and parses it to see if it is a valid IPV4 address.
+     *
+     * @return true, if the string represents an IPV4 address in dotted
+     *         notation, false otherwise
+     */
+    public static bool isValidIpV4Address(ICharSequence ip) => isValidIpV4Address(ip.ToString());
+
+    /**
+     * Takes a {@link String} and parses it to see if it is a valid IPV4 address.
      *
      * @return true, if the string represents an IPV4 address in dotted
      *         notation, false otherwise
@@ -644,31 +668,35 @@ public static class NetUtil
     }
 
     /**
-     * Returns the {@link IPAddress} representation of a {@link ICharSequence} IP address.
+     * Returns the {@link Inet6Address} representation of a {@link CharSequence} IP address.
      * <p>
-     * This method will treat all IPv4 type addresses as "IPv4 mapped" (see {@link #getByName(ICharSequence, bool)})
-     * @param ip {@link ICharSequence} IP address to be converted to a {@link IPAddress}
-     * @return {@link IPAddress} representation of the {@code ip} or {@code null} if not a valid IP address.
+     * This method will treat all IPv4 type addresses as "IPv4 mapped" (see {@link #getByName(CharSequence, boolean)})
+     * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
+     * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
+    public static IPAddress getByName(ICharSequence ip) => getByName(ip.ToString());
+
     public static IPAddress getByName(string ip)
     {
         return getByName(ip, true);
     }
 
     /**
-     * Returns the {@link IPAddress} representation of a {@link ICharSequence} IP address.
+     * Returns the {@link Inet6Address} representation of a {@link CharSequence} IP address.
      * <p>
      * The {@code ipv4Mapped} parameter specifies how IPv4 addresses should be treated.
      * "IPv4 mapped" format as
      * defined in <a href="https://tools.ietf.org/html/rfc4291#section-2.5.5">rfc 4291 section 2</a> is supported.
-     * @param ip {@link ICharSequence} IP address to be converted to a {@link IPAddress}
+     * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
      * @param ipv4Mapped
      * <ul>
-     * <li>{@code true} To allow IPv4 mapped inputs to be translated into {@link IPAddress}</li>
+     * <li>{@code true} To allow IPv4 mapped inputs to be translated into {@link Inet6Address}</li>
      * <li>{@code false} Consider IPv4 mapped addresses as invalid.</li>
      * </ul>
-     * @return {@link IPAddress} representation of the {@code ip} or {@code null} if not a valid IP address.
+     * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
+    public static IPAddress getByName(ICharSequence ip, bool ipv4Mapped) => getByName(ip.ToString(), ipv4Mapped);
+
     public static IPAddress getByName(string ip, bool ipv4Mapped)
     {
         byte[] bytes = getIPv6ByName(ip, ipv4Mapped);
@@ -677,24 +705,28 @@ public static class NetUtil
             return null;
         }
 
-        return new IPAddress(bytes, -1);
+        // Should never happen
+        // CLR adaptation: scope 0 means an unspecified zone; CLR rejects Java's -1 sentinel.
+        return new IPAddress(bytes, 0);
     }
 
     /**
-     * Returns the byte array representation of a {@link ICharSequence} IP address.
+     * Returns the byte array representation of a {@link CharSequence} IP address.
      * <p>
      * The {@code ipv4Mapped} parameter specifies how IPv4 addresses should be treated.
      * "IPv4 mapped" format as
      * defined in <a href="https://tools.ietf.org/html/rfc4291#section-2.5.5">rfc 4291 section 2</a> is supported.
-     * @param ip {@link ICharSequence} IP address to be converted to a {@link IPAddress}
+     * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
      * @param ipv4Mapped
      * <ul>
-     * <li>{@code true} To allow IPv4 mapped inputs to be translated into {@link IPAddress}</li>
+     * <li>{@code true} To allow IPv4 mapped inputs to be translated into {@link Inet6Address}</li>
      * <li>{@code false} Consider IPv4 mapped addresses as invalid.</li>
      * </ul>
      * @return byte array representation of the {@code ip} or {@code null} if not a valid IP address.
      */
     // visible for test
+    public static byte[] getIPv6ByName(ICharSequence ip, bool ipv4Mapped) => getIPv6ByName(ip.ToString(), ipv4Mapped);
+
     public static byte[] getIPv6ByName(string ip, bool ipv4Mapped)
     {
         byte[] bytes = new byte[IPV6_BYTE_COUNT];
@@ -897,35 +929,26 @@ public static class NetUtil
     }
 
     /**
-     * Returns the {@link string} representation of an {@link InetSocketAddress}.
+     * Returns the {@link String} representation of an {@link InetSocketAddress}.
      * <p>
      * The output does not include Scope ID.
      * @param addr {@link InetSocketAddress} to be converted to an address string
-     * @return {@code string} containing the text-formatted IP address
+     * @return {@code String} containing the text-formatted IP address
      */
     public static string toSocketAddressString(IPEndPoint addr)
     {
         string port = addr.Port.ToString();
         StringBuilder sb;
 
-        string hostname = getHostname(addr);
-        IPAddress[] addresses = Dns.GetHostAddresses(hostname);
-        if (0 >= addresses.Length)
-        {
-            sb = newSocketAddressStringBuilder(hostname, port, !isValidIpV6Address(hostname));
-        }
-        else
-        {
-            IPAddress address = addr.Address;
-            string hostString = toAddressString(address);
-            sb = newSocketAddressStringBuilder(hostString, port, address.AddressFamily == AddressFamily.InterNetwork);
-        }
-
+        // CLR adaptation: IPEndPoint always contains a resolved address; formatting needs no DNS lookup.
+        IPAddress address = addr.Address;
+        string hostString = toAddressString(address);
+        sb = newSocketAddressStringBuilder(hostString, port, address.AddressFamily == AddressFamily.InterNetwork);
         return sb.Append(':').Append(port).ToString();
     }
 
     /**
-     * Returns the {@link string} representation of a host port combo.
+     * Returns the {@link String} representation of a host port combo.
      */
     public static string toSocketAddressString(string host, int port)
     {
@@ -954,16 +977,16 @@ public static class NetUtil
     }
 
     /**
-     * Returns the {@link string} representation of an {@link IPAddress}.
+     * Returns the {@link String} representation of an {@link InetAddress}.
      * <ul>
-     * <li>IPAddress results are identical to {@link IPAddress#getHostAddress()}</li>
-     * <li>IPAddress results adhere to
+     * <li>Inet4Address results are identical to {@link InetAddress#getHostAddress()}</li>
+     * <li>Inet6Address results adhere to
      * <a href="https://tools.ietf.org/html/rfc5952#section-4">rfc 5952 section 4</a></li>
      * </ul>
      * <p>
      * The output does not include Scope ID.
-     * @param ip {@link IPAddress} to be converted to an address string
-     * @return {@code string} containing the text-formatted IP address
+     * @param ip {@link InetAddress} to be converted to an address string
+     * @return {@code String} containing the text-formatted IP address
      */
     public static string toAddressString(IPAddress ip)
     {
@@ -971,10 +994,10 @@ public static class NetUtil
     }
 
     /**
-     * Returns the {@link string} representation of an {@link IPAddress}.
+     * Returns the {@link String} representation of an {@link InetAddress}.
      * <ul>
-     * <li>IPAddress results are identical to {@link IPAddress#getHostAddress()}</li>
-     * <li>IPAddress results adhere to
+     * <li>Inet4Address results are identical to {@link InetAddress#getHostAddress()}</li>
+     * <li>Inet6Address results adhere to
      * <a href="https://tools.ietf.org/html/rfc5952#section-4">rfc 5952 section 4</a> if
      * {@code ipv4Mapped} is false.  If {@code ipv4Mapped} is true then "IPv4 mapped" format
      * from <a href="https://tools.ietf.org/html/rfc4291#section-2.5.5">rfc 4291 section 2</a> will be supported.
@@ -983,7 +1006,7 @@ public static class NetUtil
      * </ul>
      * <p>
      * The output does not include Scope ID.
-     * @param ip {@link IPAddress} to be converted to an address string
+     * @param ip {@link InetAddress} to be converted to an address string
      * @param ipv4Mapped
      * <ul>
      * <li>{@code true} to stray from strict rfc 5952 and support the "IPv4 mapped" format
@@ -992,14 +1015,14 @@ public static class NetUtil
      * <a href="https://tools.ietf.org/html/rfc5952#section-4">rfc 5952 section 4</a></li>
      * <li>{@code false} to strictly follow rfc 5952</li>
      * </ul>
-     * @return {@code string} containing the text-formatted IP address
+     * @return {@code String} containing the text-formatted IP address
      */
     public static string toAddressString(IPAddress ip, bool ipv4Mapped)
     {
         if (ip.AddressFamily == AddressFamily.InterNetwork)
             return ip.ToString();
 
-        if (ip.AddressFamily != AddressFamily.InterNetwork)
+        if (ip.AddressFamily != AddressFamily.InterNetworkV6)
         {
             throw new ArgumentException("Unhandled type: " + ip);
         }
@@ -1067,11 +1090,11 @@ public static class NetUtil
         if (shortestEnd < 0)
         {
             // Optimization when there is no compressing needed
-            b.Append(words[0].ToString("X2"));
+            b.Append(words[0].ToString("x"));
             for (int i = 1; i < words.Length; ++i)
             {
                 b.Append(':');
-                b.Append(words[i].ToString("X2"));
+                b.Append(words[i].ToString("x"));
                 ;
             }
         }
@@ -1087,7 +1110,7 @@ public static class NetUtil
             }
             else
             {
-                b.Append(words[0].ToString("X2"));
+                b.Append(words[0].ToString("x"));
                 isIpv4Mapped = false;
             }
 
@@ -1116,7 +1139,7 @@ public static class NetUtil
                     }
                     else
                     {
-                        b.Append(words[i].ToString("X2"));
+                        b.Append(words[i].ToString("x"));
                     }
                 }
                 else if (!inRangeEndExclusive(i - 1, shortestStart, shortestEnd))

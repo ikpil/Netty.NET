@@ -22,10 +22,10 @@ namespace Netty.NET.Common.Internal;
 public class BoundedStream : Stream
 {
     private readonly Stream _innerStream;
-    private readonly int _maxBytesRead;
-    private int _numRead;
+    private readonly long _maxBytesRead;
+    private long _numRead;
 
-    public BoundedStream(Stream innerStream, int maxBytesRead)
+    public BoundedStream(Stream innerStream, long maxBytesRead)
     {
         if (innerStream == null)
             throw new ArgumentNullException(nameof(innerStream));
@@ -77,10 +77,12 @@ public class BoundedStream : Stream
     {
         CheckMaxBytesRead();
         
-        int num = Math.Min(count, _maxBytesRead - _numRead + 1);
+        // Calculate the maximum number of bytes that we should try to read.
+        long remaining = _maxBytesRead - _numRead;
+        int num = remaining >= count ? count : (int)(remaining + 1);
 
         int bytesRead = _innerStream.Read(buffer, offset, num);
-        if (bytesRead != -1)
+        if (bytesRead > 0)
         {
             _numRead += bytesRead;
         }

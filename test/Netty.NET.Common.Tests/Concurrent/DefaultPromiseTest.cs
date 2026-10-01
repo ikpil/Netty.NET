@@ -13,610 +13,351 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.InteropServices.JavaScript;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
-using Netty.NET.Common.Internal.Logging;
-using Netty.NET.Common.Tests.Internal;
+using Xunit;
+using Void = Netty.NET.Common.Concurrent.Void;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 
 public class DefaultPromiseTest
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance<DefaultPromiseTest>();
-    private static int stackOverflowDepth;
-
-    @BeforeAll
-    public static void beforeClass() {
-        try {
-            findStackOverflowDepth();
-            throw new InvalidOperationException("Expected StackOverflowError but didn't get it?!");
-        } catch (StackOverflowError e) {
-            logger.debug("StackOverflowError depth: {}", stackOverflowDepth);
-        }
-    }
-
-    //@SuppressWarnings("InfiniteRecursion")
-    private static void findStackOverflowDepth() {
-        ++stackOverflowDepth;
-        findStackOverflowDepth();
-    }
-
-    private static int stackOverflowTestDepth() {
-        return Math.Max(stackOverflowDepth << 1, stackOverflowDepth);
-    }
-
-    protected class RejectingEventExecutor : AbstractEventExecutor 
+    // CLR adaptation: a StackOverflowException terminates the process and cannot be used to discover stack depth.
+    // Both original chain shapes are exercised at 20,000 promises, inside and outside the executor thread.
+    private static int stackOverflowTestDepth() => 20000;
+    private sealed class RejectingEventExecutor : AbstractEventExecutor
     {
-        public override bool isShuttingDown() {
-            return false;
+        public int submissions;
+        public override bool isShuttingDown() => false;
+        public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => null;
+        public override Task terminationTask() => null;
+        public override void shutdown() { }
+        public override bool isShutdown() => false;
+        public override bool isTerminated() => false;
+        public override bool awaitTermination(TimeSpan timeout) => false;
+        public override IScheduledTask schedule(IRunnable command, TimeSpan delay) => throw new InvalidOperationException("Cannot schedule commands");
+        public override IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay) => throw new InvalidOperationException("Cannot schedule commands");
+        public override IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period) => throw new InvalidOperationException("Cannot schedule commands");
+        public override IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay) => throw new InvalidOperationException("Cannot schedule commands");
+        public override bool inEventLoop(Thread thread) => false;
+        public override void execute(IRunnable command)
+        {
+            Interlocked.Increment(ref submissions);
+            throw new InvalidOperationException("Cannot schedule commands");
         }
-
-        public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) {
-            return null;
-        }
-
-        public override Task terminationTask() {
-            return null;
-        }
-
-        public override void shutdown() {
-        }
-
-        public override bool isShutdown() {
-            return false;
-        }
-
-        public override bool isTerminated() {
-            return false;
-        }
-
-        public override bool awaitTermination(TimeSpan timeout) {
-            return false;
-        }
-
-        @Override
-        public ScheduledFuture<?> schedule(IRunnable command, long delay, TimeUnit unit) {
-            return Assert.Fail("Cannot schedule commands");
-        }
-
-        @Override
-        public <
-        TypeParameterMatcherTest.V<>> ScheduledFuture<TypeParameterMatcherTest.V<>> schedule(Func<TypeParameterMatcherTest.V<>> callable, long delay, TimeUnit unit) {
-            return Assert.Fail("Cannot schedule commands");
-        }
-
-        @Override
-        public ScheduledFuture<?> scheduleAtFixedRate(IRunnable command, long initialDelay, long period, TimeUnit unit) {
-            return Assert.Fail("Cannot schedule commands");
-        }
-
-        @Override
-        public ScheduledFuture<?> scheduleWithFixedDelay(IRunnable command, long initialDelay, long delay,
-            TimeUnit unit) {
-            return Assert.Fail("Cannot schedule commands");
-        }
-
-        @Override
-        public bool inEventLoop(Thread thread) {
-            return false;
-        }
-
-        @Override
-        public void execute(IRunnable command) {
-            Assert.Fail("Cannot schedule commands");
-        }
-
     }
-
+    private sealed class Listener : IFutureListener<Void>
+    {
+        private readonly Action<IFuture<Void>> action;
+        internal Listener(Action<IFuture<Void>> action) { this.action = action; }
+        public void operationComplete(IFuture<Void> future) => action(future);
+    }
     [Fact]
-    public void testCancelDoesNotScheduleWhenNoListeners() {
-        EventExecutor executor = new RejectingEventExecutor();
-
-        JSType.Promise<Void> promise = new DefaultPromise<Void>(executor);
+    public void testCancelDoesNotScheduleWhenNoListeners()
+    {
+        var executor = new RejectingEventExecutor();
+        IPromise<Void> promise = new DefaultPromise<Void>(executor);
         Assert.True(promise.cancel(false));
         Assert.True(promise.isCancelled());
+        Assert.Equal(0, executor.submissions);
     }
-
     [Fact]
-    public void testSuccessDoesNotScheduleWhenNoListeners() {
-        EventExecutor executor = new RejectingEventExecutor();
-
+    public void testSuccessDoesNotScheduleWhenNoListeners()
+    {
+        var executor = new RejectingEventExecutor();
         object value = new object();
-        JSType.Promise<object> promise = new DefaultPromise<object>(executor);
+        IPromise<object> promise = new DefaultPromise<object>(executor);
         promise.setSuccess(value);
         Assert.Same(value, promise.getNow());
+        Assert.Equal(0, executor.submissions);
     }
-
     [Fact]
-    public void testFailureDoesNotScheduleWhenNoListeners() {
-        EventExecutor executor = new RejectingEventExecutor();
-
+    public void testFailureDoesNotScheduleWhenNoListeners()
+    {
+        var executor = new RejectingEventExecutor();
         Exception cause = new Exception();
-        JSType.Promise<Void> promise = new DefaultPromise<Void>(executor);
+        IPromise<Void> promise = new DefaultPromise<Void>(executor);
         promise.setFailure(cause);
         Assert.Same(cause, promise.cause());
+        Assert.Equal(0, executor.submissions);
     }
-
     [Fact]
-    public void testCancellationExceptionIsThrownWhenBlockingGet() {
-        final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
+    public void testCancellationExceptionIsThrownWhenBlockingGet()
+    {
+        IPromise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
         Assert.True(promise.cancel(false));
-        Assert.Throws<TaskCanceledException>(new Executable() {
-            @Override
-            public void execute() {
-            promise.get();
-        }
-        });
+        Assert.ThrowsAny<OperationCanceledException>(() => promise.get());
     }
-
     [Fact]
-    public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout() {
-        final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
+    public void testCancellationExceptionIsThrownWhenBlockingGetWithTimeout()
+    {
+        IPromise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
         Assert.True(promise.cancel(false));
-        Assert.Throws<TaskCanceledException>(new Executable() {
-            @Override
-            public void execute() {
-            promise.get(1, TimeUnit.SECONDS);
-        }
-        });
+        Assert.ThrowsAny<OperationCanceledException>(() => promise.get(TimeSpan.FromSeconds(1)));
     }
-
     [Fact]
-    public void testCancellationExceptionIsReturnedAsCause() {
-        final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
+    public void testCancellationExceptionIsReturnedAsCause()
+    {
+        IPromise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
         Assert.True(promise.cancel(false));
-        assertThat(promise.cause()).isInstanceOf(TaskCanceledException.class);
+        Assert.IsAssignableFrom<OperationCanceledException>(promise.cause());
     }
-
     [Fact]
-    public void testStackOverflowWithImmediateEventExecutorA() {
-        testStackOverFlowChainedFuturesA(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true);
-        testStackOverFlowChainedFuturesA(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false);
+    public void testStackOverflowWithImmediateEventExecutorA()
+    {
+        testStackOverFlowChainedFutures(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true, false);
+        testStackOverFlowChainedFutures(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false, false);
     }
-
     [Fact]
-    public void testNoStackOverflowWithDefaultEventExecutorA() {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        try {
-            EventExecutor executor = new DefaultEventExecutor(executorService);
-            try {
-                testStackOverFlowChainedFuturesA(stackOverflowTestDepth(), executor, true);
-                testStackOverFlowChainedFuturesA(stackOverflowTestDepth(), executor, false);
-            } finally {
-                executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS);
-            }
-        } finally {
-            executorService.shutdown();
+    public void testNoStackOverflowWithDefaultEventExecutorA()
+    {
+        IEventExecutor executor = new DefaultEventExecutor();
+        try
+        {
+            testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, true, false);
+            testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, false, false);
         }
+        finally { shutdown(executor); }
     }
-
     [Fact]
-    public void testNoStackOverflowWithImmediateEventExecutorB() {
-        testStackOverFlowChainedFuturesB(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true);
-        testStackOverFlowChainedFuturesB(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false);
+    public void testNoStackOverflowWithImmediateEventExecutorB()
+    {
+        testStackOverFlowChainedFutures(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true, true);
+        testStackOverFlowChainedFutures(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false, true);
     }
-
     [Fact]
-    public void testNoStackOverflowWithDefaultEventExecutorB() {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        try {
-            EventExecutor executor = new DefaultEventExecutor(executorService);
-            try {
-                testStackOverFlowChainedFuturesB(stackOverflowTestDepth(), executor, true);
-                testStackOverFlowChainedFuturesB(stackOverflowTestDepth(), executor, false);
-            } finally {
-                executor.shutdownGracefully(0, 0, TimeUnit.MILLISECONDS);
-            }
-        } finally {
-            executorService.shutdown();
+    public void testNoStackOverflowWithDefaultEventExecutorB()
+    {
+        IEventExecutor executor = new DefaultEventExecutor();
+        try
+        {
+            testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, true, true);
+            testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, false, true);
         }
+        finally { shutdown(executor); }
     }
-
     [Fact]
-    public void testListenerNotifyOrder() {
-        EventExecutor executor = new TestEventExecutor();
-        try {
-            final IBlockingQueue<FutureListener<Void>> listeners = new LinkedBlockingQueue<FutureListener<Void>>();
+    public void testListenerNotifyOrder()
+    {
+        IEventExecutor executor = new TestEventExecutor();
+        try
+        {
+            using var listeners = new BlockingCollection<Listener>();
             int runs = 100000;
-
-            for (int i = 0; i < runs; i++) {
-                final Promise<Void> promise = new DefaultPromise<Void>(executor);
-                final FutureListener<Void> listener1 = new FutureListener<Void>() {
-                    @Override
-                    public void operationComplete(Future<Void> future) {
-                    listeners.add(this);
-                }
-                };
-                final FutureListener<Void> listener2 = new FutureListener<Void>() {
-                    @Override
-                    public void operationComplete(Future<Void> future) {
-                    listeners.add(this);
-                }
-                };
-                final FutureListener<Void> listener4 = new FutureListener<Void>() {
-                    @Override
-                    public void operationComplete(Future<Void> future) {
-                    listeners.add(this);
-                }
-                };
-                final FutureListener<Void> listener3 = new FutureListener<Void>() {
-                    @Override
-                    public void operationComplete(Future<Void> future) {
-                    listeners.add(this);
-                    future.addListener(listener4);
-                }
-                };
-
-                GlobalEventExecutor.INSTANCE.execute(new IRunnable() {
-                    @Override
-                    public void run() {
-                    promise.setSuccess(null);
-                }
-                });
-
+            for (int i = 0; i < runs; i++)
+            {
+                IPromise<Void> promise = new DefaultPromise<Void>(executor);
+                Listener listener1 = null, listener2 = null, listener3 = null, listener4 = null;
+                listener1 = new Listener(_ => listeners.Add(listener1));
+                listener2 = new Listener(_ => listeners.Add(listener2));
+                listener4 = new Listener(_ => listeners.Add(listener4));
+                listener3 = new Listener(future => { listeners.Add(listener3); future.addListener(listener4); });
+                GlobalEventExecutor.INSTANCE.execute(Runnables.Create(() => promise.setSuccess(null)));
                 promise.addListener(listener1).addListener(listener2).addListener(listener3);
-
-                Assert.Same(listener1, listeners.take(), "Fail 1 during run " + i + " / " + runs);
-                Assert.Same(listener2, listeners.take(), "Fail 2 during run " + i + " / " + runs);
-                Assert.Same(listener3, listeners.take(), "Fail 3 during run " + i + " / " + runs);
-                Assert.Same(listener4, listeners.take(), "Fail 4 during run " + i + " / " + runs);
-                Assert.True(listeners.isEmpty(), "Fail during run " + i + " / " + runs);
-            }
-        } finally {
-            executor.shutdownGracefully(0, 0, TimeUnit.SECONDS).sync();
-        }
-    }
-
-    [Fact]
-    public void testListenerNotifyLater() {
-        // Testing first execution path in DefaultPromise
-        testListenerNotifyLater(1);
-
-        // Testing second execution path in DefaultPromise
-        testListenerNotifyLater(2);
-    }
-
-    [Fact]
-    @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testPromiseListenerAddWhenCompleteFailure() {
-        testPromiseListenerAddWhenComplete(fakeException());
-    }
-
-    [Fact]
-    @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testPromiseListenerAddWhenCompleteSuccess() {
-        testPromiseListenerAddWhenComplete(null);
-    }
-
-    [Fact]
-    @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testLateListenerIsOrderedCorrectlySuccess() {
-        testLateListenerIsOrderedCorrectly(null);
-    }
-
-    [Fact]
-    @Timeout(value = 2000, unit = TimeUnit.MILLISECONDS)
-    public void testLateListenerIsOrderedCorrectlyFailure() {
-        testLateListenerIsOrderedCorrectly(fakeException());
-    }
-
-    [Fact]
-    public void testSignalRace() {
-        final long wait = TimeUnit.NANOSECONDS.convert(10, TimeUnit.SECONDS);
-        EventExecutor executor = null;
-        try {
-            executor = new TestEventExecutor();
-
-            final int numberOfAttempts = 4096;
-            final Map<Thread, DefaultPromise<Void>> promises = new Dictionary<Thread, DefaultPromise<Void>>();
-            for (int i = 0; i < numberOfAttempts; i++) {
-                final DefaultPromise<Void> promise = new DefaultPromise<Void>(executor);
-                final Thread thread = new Thread(new IRunnable() {
-                    @Override
-                    public void run() {
-                    promise.setSuccess(null);
+                foreach (var expected in new[] { listener1, listener2, listener3, listener4 })
+                {
+                    Assert.True(listeners.TryTake(out var actual, TimeSpan.FromSeconds(5)), "Listener timeout during run " + i);
+                    Assert.Same(expected, actual);
                 }
-                });
-                promises.put(thread, promise);
-            }
-
-            for (final Map.Entry<Thread, DefaultPromise<Void>> promise : promises.entrySet()) {
-                promise.getKey().start();
-                final long start = SystemTimer.nanoTime();
-                promise.getValue().awaitUninterruptibly(wait, TimeUnit.NANOSECONDS);
-                assertThat(SystemTimer.nanoTime() - start).isLessThan(wait);
-            }
-        } finally {
-            if (executor != null) {
-                executor.shutdownGracefully();
+                Assert.Empty(listeners);
             }
         }
+        finally { shutdown(executor); }
     }
-
     [Fact]
-    public void signalUncancellableCompletionValue() {
-        final Promise<Signal> promise = new DefaultPromise<Signal>(ImmediateEventExecutor.INSTANCE);
-        promise.setSuccess(Signal.valueOf(DefaultPromise.class, "UNCANCELLABLE"));
+    public void testListenerNotifyLater()
+    {
+        // Testing first execution path in DefaultPromise
+        runListenerNotifyLater(1);
+        // Testing second execution path in DefaultPromise
+        runListenerNotifyLater(2);
+    }
+    [Fact]
+    public void testPromiseListenerAddWhenCompleteFailure() => testPromiseListenerAddWhenComplete(fakeException());
+    [Fact]
+    public void testPromiseListenerAddWhenCompleteSuccess() => testPromiseListenerAddWhenComplete(null);
+    [Fact]
+    public void testLateListenerIsOrderedCorrectlySuccess() => testLateListenerIsOrderedCorrectly(null);
+    [Fact]
+    public void testLateListenerIsOrderedCorrectlyFailure() => testLateListenerIsOrderedCorrectly(fakeException());
+    [Fact]
+    public void testSignalRace()
+    {
+        TimeSpan wait = TimeSpan.FromSeconds(10);
+        IEventExecutor executor = new TestEventExecutor();
+        var promises = new Dictionary<Thread, DefaultPromise<Void>>();
+        try
+        {
+            const int numberOfAttempts = 4096;
+            for (int i = 0; i < numberOfAttempts; i++)
+            {
+                var promise = new DefaultPromise<Void>(executor);
+                var thread = new Thread(() => promise.setSuccess(null)) { IsBackground = true };
+                promises.Add(thread, promise);
+            }
+            foreach (var pair in promises)
+            {
+                pair.Key.Start();
+                long start = Stopwatch.GetTimestamp();
+                Assert.True(pair.Value.awaitUninterruptibly(wait));
+                Assert.True(Stopwatch.GetElapsedTime(start) < wait);
+                Assert.True(pair.Key.Join(wait));
+            }
+        }
+        finally { shutdown(executor); }
+    }
+    [Fact]
+    public void signalUncancellableCompletionValue()
+    {
+        IPromise<Signal> promise = new DefaultPromise<Signal>(ImmediateEventExecutor.INSTANCE);
+        promise.setSuccess(Signal.valueOf(typeof(DefaultPromise<Signal>), "UNCANCELLABLE"));
         Assert.True(promise.isDone());
         Assert.True(promise.isSuccess());
     }
-
     [Fact]
-    public void signalSuccessCompletionValue() {
-        final Promise<Signal> promise = new DefaultPromise<Signal>(ImmediateEventExecutor.INSTANCE);
-        promise.setSuccess(Signal.valueOf(DefaultPromise.class, "SUCCESS"));
+    public void signalSuccessCompletionValue()
+    {
+        IPromise<Signal> promise = new DefaultPromise<Signal>(ImmediateEventExecutor.INSTANCE);
+        promise.setSuccess(Signal.valueOf(typeof(DefaultPromise<Signal>), "SUCCESS"));
         Assert.True(promise.isDone());
         Assert.True(promise.isSuccess());
     }
-
     [Fact]
-    public void setUncancellableGetNow() {
-        final
-        JSType.Promise<string> promise = new DefaultPromise<string>(ImmediateEventExecutor.INSTANCE);
+    public void setUncancellableGetNow()
+    {
+        IPromise<string> promise = new DefaultPromise<string>(ImmediateEventExecutor.INSTANCE);
         Assert.Null(promise.getNow());
         Assert.True(promise.setUncancellable());
         Assert.Null(promise.getNow());
         Assert.False(promise.isDone());
         Assert.False(promise.isSuccess());
-
         promise.setSuccess("success");
-
         Assert.True(promise.isDone());
         Assert.True(promise.isSuccess());
         Assert.Equal("success", promise.getNow());
     }
-
-    private static void testStackOverFlowChainedFuturesA(int promiseChainLength, final EventExecutor executor,
-    bool runTestInExecutorThread)
+    private static void testStackOverFlowChainedFutures(int promiseChainLength, IEventExecutor executor, bool runTestInExecutorThread, bool lateListener)
     {
-        final Promise<Void>[] p = new DefaultPromise[promiseChainLength];
-        final CountdownEvent latch = new CountdownEvent(promiseChainLength);
-
-        if (runTestInExecutorThread) {
-            executor.execute(new IRunnable() {
-                @Override
-                public void run() {
-                testStackOverFlowChainedFuturesA(executor, p, latch);
+        var promises = new IPromise<Void>[promiseChainLength];
+        using var latch = new CountdownEvent(promiseChainLength);
+        void initialize()
+        {
+            for (int i = 0; i < promises.Length; i++)
+            {
+                int index = i;
+                promises[i] = new DefaultPromise<Void>(executor);
+                var completeNext = new Listener(_ =>
+                {
+                    if (index + 1 < promises.Length) promises[index + 1].setSuccess(null);
+                    latch.Signal();
+                });
+                promises[i].addListener(lateListener ? new Listener(future => future.addListener(completeNext)) : completeNext);
             }
-            });
-        } else {
-            testStackOverFlowChainedFuturesA(executor, p, latch);
+            promises[0].setSuccess(null);
         }
-
-        Assert.True(latch.await(2, TimeUnit.SECONDS));
-        for (int i = 0; i < p.length; ++i) {
-            Assert.True(p[i].isSuccess(), "index " + i);
-        }
+        if (runTestInExecutorThread) executor.execute(Runnables.Create(initialize));
+        else initialize();
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
+        foreach (var promise in promises) Assert.True(promise.isSuccess());
     }
-
-    private static void testStackOverFlowChainedFuturesA(EventExecutor executor, final Promise<Void>[] p,
-    final CountdownEvent latch) {
-        for (int i = 0; i < p.length; i ++) {
-            final int finalI = i;
-            p[i] = new DefaultPromise<Void>(executor);
-            p[i].addListener(new FutureListener<Void>() {
-                @Override
-                public void operationComplete(Future<Void> future) {
-                if (finalI + 1 < p.length) {
-                p[finalI + 1].setSuccess(null);
-            }
-            latch.Signal();
-            }
-            });
-        }
-
-        p[0].setSuccess(null);
-    }
-
-    private static void testStackOverFlowChainedFuturesB(int promiseChainLength, final EventExecutor executor,
-    bool runTestInExecutorThread)
-    {
-        final Promise<Void>[] p = new DefaultPromise[promiseChainLength];
-        final CountdownEvent latch = new CountdownEvent(promiseChainLength);
-
-        if (runTestInExecutorThread) {
-            executor.execute(new IRunnable() {
-                @Override
-                public void run() {
-                testStackOverFlowChainedFuturesB(executor, p, latch);
-            }
-            });
-        } else {
-            testStackOverFlowChainedFuturesB(executor, p, latch);
-        }
-
-        Assert.True(latch.await(2, TimeUnit.SECONDS));
-        for (int i = 0; i < p.length; ++i) {
-            Assert.True(p[i].isSuccess(), "index " + i);
-        }
-    }
-
-    private static void testStackOverFlowChainedFuturesB(EventExecutor executor, final Promise<Void>[] p,
-    final CountdownEvent latch) {
-        for (int i = 0; i < p.length; i ++) {
-            final int finalI = i;
-            p[i] = new DefaultPromise<Void>(executor);
-            p[i].addListener(new FutureListener<Void>() {
-                @Override
-                public void operationComplete(Future<Void> future) {
-                future.addListener(new FutureListener<Void>() {
-                @Override
-                public void operationComplete(Future<Void> future) {
-                if (finalI + 1 < p.length) {
-                p[finalI + 1].setSuccess(null);
-            }
-            latch.Signal();
-            }
-            });
-            }
-            });
-        }
-
-        p[0].setSuccess(null);
-    }
-
     /**
-         * This test is mean to simulate the following sequence of events, which all take place on the I/O thread:
-         * <ol>
-         * <li>A write is done</li>
-         * <li>The write operation completes, and the promise state is changed to done</li>
-         * <li>A listener is added to the return from the write. The {@link IFutureListener#operationComplete(Future)}
-         * updates state which must be invoked before the response to the previous write is read.</li>
-         * <li>The write operation</li>
-         * </ol>
-         */
-    private static void testLateListenerIsOrderedCorrectly(Exception cause) {
-        final EventExecutor executor = new TestEventExecutor();
-        try {
-            final AtomicInteger state = new AtomicInteger();
-            final CountdownEvent latch1 = new CountdownEvent(1);
-            final CountdownEvent latch2 = new CountdownEvent(2);
-            final Promise<Void> promise = new DefaultPromise<Void>(executor);
-
+     * This test is mean to simulate the following sequence of events, which all take place on the I/O thread:
+     * <ol>
+     * <li>A write is done</li>
+     * <li>The write operation completes, and the promise state is changed to done</li>
+     * <li>A listener is added to the return from the write. The {@link FutureListener#operationComplete(Future)}
+     * updates state which must be invoked before the response to the previous write is read.</li>
+     * <li>The write operation</li>
+     * </ol>
+     */
+    private static void testLateListenerIsOrderedCorrectly(Exception cause)
+    {
+        IEventExecutor executor = new TestEventExecutor();
+        try
+        {
+            int state = 0;
+            using var latch1 = new CountdownEvent(1);
+            using var latch2 = new CountdownEvent(2);
+            IPromise<Void> promise = new DefaultPromise<Void>(executor);
             // Add a listener before completion so "lateListener" is used next time we add a listener.
-            promise.addListener(new FutureListener<Void>() {
-                @Override
-                public void operationComplete(Future<Void> future) {
-                Assert.True(state.compareAndSet(0, 1));
-            }
-            });
-
+            promise.addListener(new Listener(_ => Assert.Equal(0, Interlocked.CompareExchange(ref state, 1, 0))));
             // Simulate write operation completing, which will execute listeners in another thread.
-            if (cause == null) {
-                promise.setSuccess(null);
-            } else {
-                promise.setFailure(cause);
-            }
-
+            if (cause == null) promise.setSuccess(null);
+            else promise.setFailure(cause);
             // Add a "late listener"
-            promise.addListener(new FutureListener<Void>() {
-                @Override
-                public void operationComplete(Future<Void> future) {
-                Assert.True(state.compareAndSet(1, 2));
-                latch1.Signal();
-            }
-            });
-
+            promise.addListener(new Listener(_ => { Assert.Equal(1, Interlocked.CompareExchange(ref state, 2, 1)); latch1.Signal(); }));
             // Wait for the listeners and late listeners to be completed.
-            latch1.await();
-            Assert.Equal(2, state.get());
-
+            Assert.True(latch1.Wait(TimeSpan.FromSeconds(2)));
+            Assert.Equal(2, Volatile.Read(ref state));
             // This is the important listener. A late listener that is added after all late listeners
             // have completed, and needs to update state before a read operation (on the same executor).
-            executor.execute(new IRunnable() {
-                @Override
-                public void run() {
-                promise.addListener(new FutureListener<Void>() {
-                @Override
-                public void operationComplete(Future<Void> future) {
-                Assert.True(state.compareAndSet(2, 3));
+            executor.execute(Runnables.Create(() => promise.addListener(new Listener(_ =>
+            {
+                Assert.Equal(2, Interlocked.CompareExchange(ref state, 3, 2));
                 latch2.Signal();
-            }
-            });
-            }
-            });
-
+            }))));
             // Simulate a read operation being queued up in the executor.
-            executor.execute(new IRunnable() {
-                @Override
-                public void run() {
+            executor.execute(Runnables.Create(() =>
+            {
                 // This is the key, we depend upon the state being set in the next listener.
-                Assert.Equal(3, state.get());
+                Assert.Equal(3, Volatile.Read(ref state));
                 latch2.Signal();
-            }
-            });
-
-            latch2.await();
-        } finally {
-            executor.shutdownGracefully(0, 0, TimeUnit.SECONDS).sync();
+            }));
+            Assert.True(latch2.Wait(TimeSpan.FromSeconds(2)));
         }
+        finally { shutdown(executor); }
     }
-
-    private static void testPromiseListenerAddWhenComplete(Exception cause) {
-        final CountdownEvent latch = new CountdownEvent(1);
-        final Promise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
-        promise.addListener(new FutureListener<Void>() {
-            @Override
-            public void operationComplete(Future<Void> future) {
-            promise.addListener(new FutureListener<Void>() {
-            @Override
-            public void operationComplete(Future<Void> future) {
-            latch.Signal();
-        }
-        });
-        }
-        });
-        if (cause == null) {
-            promise.setSuccess(null);
-        } else {
-            promise.setFailure(cause);
-        }
-        latch.await();
+    private static void testPromiseListenerAddWhenComplete(Exception cause)
+    {
+        using var latch = new CountdownEvent(1);
+        IPromise<Void> promise = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
+        promise.addListener(new Listener(_ => promise.addListener(new Listener(_ => latch.Signal()))));
+        if (cause == null) promise.setSuccess(null);
+        else promise.setFailure(cause);
+        Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
     }
-
-    private static void testListenerNotifyLater(final int numListenersBefore) {
-        EventExecutor executor = new TestEventExecutor();
-        int expectedCount = numListenersBefore + 2;
-        final CountdownEvent latch = new CountdownEvent(expectedCount);
-        final FutureListener<Void> listener = new FutureListener<Void>() {
-            @Override
-            public void operationComplete(Future<Void> future) {
-            latch.Signal();
+    private static void runListenerNotifyLater(int numListenersBefore)
+    {
+        IEventExecutor executor = new TestEventExecutor();
+        try
+        {
+            int expectedCount = numListenersBefore + 2;
+            using var latch = new CountdownEvent(expectedCount);
+            var listener = new Listener(_ => latch.Signal());
+            IPromise<Void> promise = new DefaultPromise<Void>(executor);
+            executor.execute(Runnables.Create(() =>
+            {
+                for (int i = 0; i < numListenersBefore; i++) promise.addListener(listener);
+                promise.setSuccess(null);
+                GlobalEventExecutor.INSTANCE.execute(Runnables.Create(() => promise.addListener(listener)));
+                promise.addListener(listener);
+            }));
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(5)), "Should have notified " + expectedCount + " listeners");
         }
-        };
-        final Promise<Void> promise = new DefaultPromise<Void>(executor);
-        executor.execute(new IRunnable() {
-            @Override
-            public void run() {
-            for (int i = 0; i < numListenersBefore; i++) {
-            promise.addListener(listener);
-        }
-        promise.setSuccess(null);
-
-        GlobalEventExecutor.INSTANCE.execute(new IRunnable() {
-            @Override
-            public void run() {
-            promise.addListener(listener);
-        }
-        });
-        promise.addListener(listener);
-        }
-        });
-
-        Assert.True(latch.await(5, TimeUnit.SECONDS),
-            "Should have notified " + expectedCount + " listeners");
-        executor.shutdownGracefully().sync();
+        finally { shutdown(executor); }
     }
-
-    private static final class TestEventExecutor extends SingleThreadEventExecutor {
-        TestEventExecutor() {
-            super(null, Executors.defaultThreadFactory(), true);
-        }
-
-        @Override
-        protected void run() {
-            for (;;) {
+    private sealed class TestEventExecutor : SingleThreadEventExecutor
+    {
+        internal TestEventExecutor() : base(null, new DefaultThreadFactory(typeof(TestEventExecutor)), true) { }
+        protected override void run()
+        {
+            for (;;)
+            {
                 IRunnable task = takeTask();
-                if (task != null) {
-                    task.run();
-                    updateLastExecutionTime();
-                }
-
-                if (confirmShutdown()) {
-                    break;
-                }
+                if (task != null) { task.run(); updateLastExecutionTime(); }
+                if (confirmShutdown()) break;
             }
         }
     }
-
-    private static Exception fakeException() {
-        return new Exception("fake exception");
+    private static void shutdown(IEventExecutor executor)
+    {
+        Assert.True(executor.shutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
     }
+    private static Exception fakeException() => new Exception("fake exception");
 }

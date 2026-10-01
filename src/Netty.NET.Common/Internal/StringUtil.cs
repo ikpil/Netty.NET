@@ -25,7 +25,7 @@ using System.Text;
 namespace Netty.NET.Common.Internal;
 
 /**
- * string utility class.
+ * String utility class.
  */
 public static class StringUtil
 {
@@ -51,12 +51,14 @@ public static class StringUtil
 
     private static readonly char PACKAGE_SEPARATOR_CHAR = '.';
 
+    // Unused.
+    // CLR adaptation: the private Java constructor is replaced by a static class.
     static StringUtil()
     {
         // Generate the lookup table that converts a byte into a 2-digit hexadecimal integer.
         for (int i = 0; i < BYTE2HEX_PAD.Length; i++)
         {
-            string str = i.ToString("X2");
+            string str = i.ToString("x");
             BYTE2HEX_PAD[i] = i > 0xf ? str : ('0' + str);
             BYTE2HEX_NOPAD[i] = str;
         }
@@ -93,7 +95,7 @@ public static class StringUtil
     /**
      * Get the item after one char delim if the delim is found (else null).
      * This operation is a simplified and optimized
-     * version of {@link string#split(string, int)}.
+     * version of {@link String#split(String, int)}.
      */
     public static string substringAfter(string value, char delim)
     {
@@ -109,7 +111,7 @@ public static class StringUtil
     /**
      * Get the item before one char delim if the delim is found (else null).
      * This operation is a simplified and optimized
-     * version of {@link string#split(string, int)}.
+     * version of {@link String#split(String, int)}.
      */
     public static string substringBefore(string value, char delim)
     {
@@ -289,7 +291,7 @@ public static class StringUtil
     {
         // Character.digit() is not used here, as it addresses a larger
         // set of characters (both ASCII and full-width latin letters).
-        return HEX2B[c];
+        return HEX2B[c] == byte.MaxValue ? -1 : HEX2B[c];
     }
 
     /**
@@ -303,7 +305,7 @@ public static class StringUtil
     {
         // Character.digit() is not used here, as it addresses a larger
         // set of characters (both ASCII and full-width latin letters).
-        return HEX2B[b];
+        return HEX2B[b] == byte.MaxValue ? -1 : HEX2B[b];
     }
 
     /**
@@ -344,7 +346,7 @@ public static class StringUtil
     /**
      * Decodes part of a string with <a href="https://en.wikipedia.org/wiki/Hex_dump">hex dump</a>
      *
-     * @param hexDump a {@link ICharSequence} which contains the hex dump
+     * @param hexDump a {@link CharSequence} which contains the hex dump
      * @param fromIndex start of hex dump in {@code hexDump}
      * @param length hex string length
      */
@@ -382,6 +384,13 @@ public static class StringUtil
         return decodeHexDump(str, 0, str.length());
     }
 
+    /**
+     * Generates a class name from a {@link Class}. Similar to {@link Class#getName()}, but null-safe.
+     */
+    public static string className(object o)
+    {
+        return o == null ? "null_object" : o.GetType().FullName;
+    }
     public static string simpleClassName<T>()
     {
         return simpleClassName(typeof(T));
@@ -408,18 +417,12 @@ public static class StringUtil
      */
     public static string simpleClassName(Type t)
     {
-        if (!t.IsGenericType || t.IsGenericTypeDefinition)
-        {
-            return !t.IsGenericTypeDefinition
-                ? t.Name
-                : t.Name.Remove(t.Name.IndexOf('`'));
-        }
-
-        var baseName = simpleClassName(t.GetGenericTypeDefinition());
-        var genericArgNames = t.GetGenericArguments().Select(simpleClassName);
-        var fullGenericArgName = string.Join(',', genericArgNames);
-
-        return $"{baseName}<{fullGenericArgName}>";
+        ObjectUtil.checkNotNull(t, nameof(t));
+        if (t.IsGenericType) t = t.GetGenericTypeDefinition();
+        string name = t.FullName ?? t.Name;
+        int namespaceEnd = name.LastIndexOf('.');
+        if (namespaceEnd >= 0) name = name.Substring(namespaceEnd + 1);
+        return System.Text.RegularExpressions.Regex.Replace(name, @"`\d+", "");
     }
 
     /**
@@ -428,7 +431,7 @@ public static class StringUtil
      *
      * @param value The value which will be escaped according to
      *              <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
-     * @return {@link ICharSequence} the escaped value if necessary, or the value unchanged
+     * @return {@link CharSequence} the escaped value if necessary, or the value unchanged
      */
     public static string escapeCsv(string value)
     {
@@ -443,7 +446,7 @@ public static class StringUtil
      *                       <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
      * @param trimWhiteSpace The value will first be trimmed of its optional white-space characters,
      *                       according to <a href="https://tools.ietf.org/html/rfc7230#section-7">RFC-7230</a>
-     * @return {@link ICharSequence} the escaped value if necessary, or the value unchanged
+     * @return {@link CharSequence} the escaped value if necessary, or the value unchanged
      */
     public static string escapeCsv(string value, bool trimWhiteSpace)
     {
@@ -534,7 +537,7 @@ public static class StringUtil
         }
 
         StringBuilder result = new StringBuilder(last - start + 1 + CSV_NUMBER_ESCAPE_CHARACTERS);
-        result.Append(DOUBLE_QUOTE).Append(value, start, firstUnescapedSpecial);
+        result.Append(DOUBLE_QUOTE).Append(value, start, firstUnescapedSpecial - start);
         for (int i = firstUnescapedSpecial; i <= last; i++)
         {
             char c = value.charAt(i);
@@ -559,7 +562,7 @@ public static class StringUtil
      *
      * @param value The escaped CSV field which will be unescaped according to
      *              <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
-     * @return {@link ICharSequence} the unescaped value if necessary, or the value unchanged
+     * @return {@link CharSequence} the unescaped value if necessary, or the value unchanged
      */
     public static string unescapeCsv(string value)
     {
@@ -668,9 +671,9 @@ public static class StringUtil
                         if (current.Length == 0)
                         {
                             quoted = true;
+                            break;
                         }
-
-                        break;
+                        throw newInvalidEscapedCsvFieldException(value, i);
                     // double-quote appears without being enclosed with double-quotes
                     // fall through
                     case LINE_FEED:
@@ -697,7 +700,7 @@ public static class StringUtil
     /**
      * Validate if {@code value} is a valid csv field without double-quotes.
      *
-     * @throws ArgumentException if {@code value} needs to be encoded with double-quotes.
+     * @throws IllegalArgumentException if {@code value} needs to be encoded with double-quotes.
      */
     private static void validateCsvFormat(string value)
     {
@@ -732,7 +735,7 @@ public static class StringUtil
     }
 
     /**
-     * Determine if a string is {@code null} or {@link string#isEmpty()} returns {@code true}.
+     * Determine if a string is {@code null} or {@link String#isEmpty()} returns {@code true}.
      */
     public static bool isNullOrEmpty(string s)
     {
@@ -815,7 +818,7 @@ public static class StringUtil
      * according to <a href="https://tools.ietf.org/html/rfc7230#section-7">RFC-7230</a>.
      *
      * @param value the value to trim
-     * @return {@link ICharSequence} the trimmed value if necessary, or the value unchanged
+     * @return {@link CharSequence} the trimmed value if necessary, or the value unchanged
      */
     public static string trimOws(string value)
     {
@@ -840,7 +843,9 @@ public static class StringUtil
      */
     public static string join(string separator, IEnumerable<string> elements)
     {
-        return string.Join(separator, elements);
+        ObjectUtil.checkNotNull(separator, nameof(separator));
+        ObjectUtil.checkNotNull(elements, nameof(elements));
+        return string.Join(separator, elements.Select(element => element ?? "null"));
     }
 
     /**

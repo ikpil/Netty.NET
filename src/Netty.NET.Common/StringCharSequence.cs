@@ -16,18 +16,18 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
 
     public StringCharSequence(string value)
     {
-        Contract.Requires(value != null);
-
-        _value = value;
+        _value = ObjectUtil.checkNotNull(value, nameof(value));
         _offset = 0;
         _count = _value.Length;
     }
 
     public StringCharSequence(string value, int offset, int count)
     {
-        Contract.Requires(value != null);
-        Contract.Requires(offset >= 0 && count >= 0);
-        Contract.Requires(offset <= value.Length - count);
+        ObjectUtil.checkNotNull(value, nameof(value));
+        if (MathUtil.isOutOfBounds(offset, count, value.Length))
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        }
 
         _value = value;
         _offset = offset;
@@ -53,7 +53,7 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
 
     public char charAt(int index)
     {
-        return _value[index];
+        return this[index];
     }
 
     public int length()
@@ -63,8 +63,10 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
 
     public ICharSequence subSequence(int start, int end)
     {
-        Contract.Requires(start >= 0 && end >= start);
-        Contract.Requires(end <= _count);
+        if (start < 0 || end < start || end > _count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(start));
+        }
 
         return end == start
             ? Empty
@@ -75,7 +77,10 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
     {
         get
         {
-            Contract.Requires(index >= 0 && index < _count);
+            if (index < 0 || index >= _count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
             return _value[_offset + index];
         }
     }
@@ -92,19 +97,28 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
 
     public int indexOf(char ch, int start = 0)
     {
-        Contract.Requires(start >= 0 && start < _count);
-
-        int index = _value.IndexOf(ch, _offset + start);
+        start = Math.Max(0, start);
+        if (start >= _count) return -1;
+        int index = _value.IndexOf(ch, _offset + start, _count - start);
         return index < 0 ? index : index - _offset;
     }
 
-    public int indexOf(string target, int start = 0) => _value.IndexOf(target, StringComparison.Ordinal);
+    public int indexOf(string target, int start = 0)
+    {
+        ObjectUtil.checkNotNull(target, nameof(target));
+        start = Math.Max(0, start);
+        if (start > _count) return target.Length == 0 ? _count : -1;
+        int index = _value.IndexOf(target, _offset + start, _count - start, StringComparison.Ordinal);
+        return index < 0 ? -1 : index - _offset;
+    }
 
     public string ToString(int start)
     {
-        Contract.Requires(start >= 0 && start < _count);
-
-        return _value.Substring(_offset + start, _count);
+        if (start < 0 || start > _count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(start));
+        }
+        return _value.Substring(_offset + start, _count - start);
     }
 
     public override string ToString() => _count == 0 ? string.Empty : ToString(0);

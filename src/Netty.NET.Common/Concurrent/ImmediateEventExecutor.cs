@@ -52,7 +52,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
     private static readonly StrongBox<bool> StrongTrue = new StrongBox<bool>(true);
     private static readonly FastThreadLocal<StrongBox<bool>> RUNNING = new FastThreadLocalFunc<StrongBox<bool>>(() => StrongFalse);
 
-    private readonly TaskCompletionSource<Void> _terminationSource = FailedFuture.Create<Void>(GlobalEventExecutor.INSTANCE, new NotSupportedException());
+    private readonly IFuture<Void> _terminationSource = FailedFuture.Create<Void>(GlobalEventExecutor.INSTANCE, new NotSupportedException());
 
     private ImmediateEventExecutor() { }
 
@@ -140,12 +140,12 @@ public class ImmediateEventExecutor : AbstractEventExecutor
         }
     }
 
-    public override TaskCompletionSource<V> newPromise<V>()
+    public override IPromise<V> newPromise<V>()
     {
         return new ImmediatePromise<V>(this);
     }
 
-    public override TaskCompletionSource<V> newProgressivePromise<V>()
+    public override IProgressivePromise<V> newProgressivePromise<V>()
     {
         return new ImmediateProgressivePromise<V>(this);
     }

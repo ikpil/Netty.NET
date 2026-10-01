@@ -44,7 +44,7 @@ public class ConstantPoolTest
     [Fact]
     public void testCannotProvideNullName()
     {
-        Assert.Throws<NullReferenceException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
         {
             pool.valueOf(null);
         });
@@ -99,7 +99,7 @@ public class ConstantPoolTest
     [Fact]
     public void testComposedName()
     {
-        TestConstant a = pool.valueOf("A");
-        Assert.Equal("java.lang.object#A", a.name());
+        TestConstant a = pool.valueOf(typeof(object), "A");
+        Assert.Equal(typeof(object).FullName + "#A", a.name());
     }
 }

@@ -47,7 +47,7 @@ public class InternalLoggerFactoryTest : IDisposable
     [Fact]
     public void shouldNotAllowNullDefaultFactory()
     {
-        Assert.Throws<NullReferenceException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
         {
             InternalLoggerFactory.setDefaultFactory(null);
         });

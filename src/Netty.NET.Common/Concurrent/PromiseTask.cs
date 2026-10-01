@@ -25,97 +25,6 @@ public interface IRunnableFuture<V> : IRunnable, IFuture<V>
 {
 }
 
-public class DefaultPromise<V> : TaskCompletionSource<V>, IPromise<V>
-{
-    public DefaultPromise(IEventExecutor executor)
-    {
-    }
-
-    public virtual AggregateException cause()
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual bool cancel(bool mayInterruptIfRunning)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> setSuccess(V result)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual bool trySuccess(V result)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> setFailure(Exception cause)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual bool tryFailure(Exception cause)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual bool setUncancellable()
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> addListener(IGenericFutureListener<IFuture<V>> listener)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> await()
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> awaitUninterruptibly()
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> sync()
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual IPromise<V> syncUninterruptibly()
-    {
-        throw new NotImplementedException();
-    }
-    
-    protected virtual void checkDeadLock() {
-        throw new NotImplementedException();
-    }
-
-    protected virtual StringBuilder toStringBuilder()
-    {
-        throw new NotImplementedException();
-    }
-}
-
 public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
 {
     private static readonly IRunnable COMPLETED = new SentinelRunnable("COMPLETED");
@@ -234,7 +143,7 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
         return base.setUncancellable();
     }
 
-    public bool cancel(bool mayInterruptIfRunning)
+    public override bool cancel(bool mayInterruptIfRunning)
     {
         return clearTaskAfterCompletion(base.cancel(mayInterruptIfRunning), CANCELLED);
     }

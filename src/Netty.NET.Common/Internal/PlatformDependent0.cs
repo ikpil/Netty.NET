@@ -49,7 +49,9 @@ public class PlatformDependent0
     private static readonly int DOTNET_VERSION = dotnetVersion0();
     private static readonly Exception EXPLICIT_NO_UNSAFE_CAUSE = explicitNoUnsafeCause0();
 
-    private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE;
+    // CLR adaptation: JVM Unsafe is unavailable; native CLR operations are ported explicitly.
+    private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE =
+        new NotSupportedException("sun.misc.Unsafe is not available on the CLR.");
 
     // See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/
     // ImageInfo.java
@@ -508,7 +510,8 @@ public class PlatformDependent0
      */
     public static bool isVirtualThread(Thread thread)
     {
-        return thread.IsThreadPoolThread;
+        // CLR thread-pool workers are native threads, not Java virtual threads.
+        return false;
         // if (thread == null || IS_VIRTUAL_THREAD_METHOD_HANDLE == null) {
         //     return false;
         // }
@@ -1148,9 +1151,8 @@ public class PlatformDependent0
 
     public static int addressSize()
     {
-        throwException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.addressSize();
+        // CLR adaptation: native pointer width is available without sun.misc.Unsafe.
+        return IntPtr.Size;
     }
 
     public static long allocateMemory(long size)

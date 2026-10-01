@@ -1,0 +1,62 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Netty.NET.Common.Internal;
+
+namespace Netty.NET.Common.Tests.Porting;
+
+public class UtilityContractTest
+{
+    [Fact]
+    public void ObjectChecksDistinguishRootFromDeepNulls()
+    {
+        IEnumerable<object> values = new object[] { null };
+        Assert.Same(values, ObjectUtil.checkNotNull(values, "values"));
+        Assert.Throws<ArgumentNullException>(() => ObjectUtil.deepCheckNotNull("values", new object[] { null }));
+        ICollection<object> collection = new List<object> { null };
+        Assert.Same(collection, ObjectUtil.checkNonEmpty(collection, "collection"));
+        Assert.Throws<ArgumentException>(() => ObjectUtil.checkNonEmpty(new List<object>(), "collection"));
+        Assert.Equal("\u00a0", ObjectUtil.checkNonEmptyAfterTrim(" \u00a0 ", "value"));
+    }
+
+    [Fact]
+    public void BoundedStreamPreservesEofAndClosesUnderlyingStream()
+    {
+        var inner = new MemoryStream(new byte[] { 1 });
+        using (var bounded = new BoundedInputStream(inner))
+        {
+            Assert.Equal(1, bounded.ReadByte());
+            Assert.Equal(-1, bounded.ReadByte());
+            Assert.Equal(0, bounded.Read(new byte[4], 0, 4));
+        }
+        Assert.False(inner.CanRead);
+        Assert.Throws<ArgumentException>(() => new BoundedInputStream(new MemoryStream(), 0));
+    }
+
+    [Fact]
+    public void EmptyPriorityQueueNeverAcceptsElements()
+    {
+        var queue = EmptyPriorityQueue<object>.instance();
+        Assert.False(queue.tryEnqueue(new object()));
+        Assert.False(queue.tryDequeue(out var item));
+        Assert.Null(item);
+        Assert.Empty(queue.toArray());
+        Assert.Empty(queue);
+    }
+
+    [Fact]
+    public void PriorityQueueHandlesValueTypeEntriesAndNonzeroCapacity()
+    {
+        var queue = new DefaultPriorityQueue<int>(Comparer<int>.Default, 4);
+        foreach (int value in new[] { 4, 0, 2, 1 }) Assert.True(queue.tryEnqueue(value));
+        foreach (int expected in new[] { 0, 1, 2, 4 })
+        {
+            Assert.True(queue.tryDequeue(out var value));
+            Assert.Equal(expected, value);
+        }
+        Assert.False(queue.tryDequeue(out _));
+        queue.tryEnqueue(5);
+        queue.clear();
+        Assert.False(queue.contains(5));
+    }
+}

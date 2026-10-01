@@ -19,8 +19,12 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests.Internal;
 
-public class SystemPropertyUtilTest
+[Collection("System properties")]
+public class SystemPropertyUtilTest : IDisposable
 {
+    private readonly string previousValue = Environment.GetEnvironmentVariable("key");
+    public void Dispose() => Environment.SetEnvironmentVariable("key", previousValue);
+
     public SystemPropertyUtilTest()
     {
         clearSystemPropertyBeforeEach();
@@ -34,7 +38,7 @@ public class SystemPropertyUtilTest
     [Fact]
     public void testGetWithKeyNull()
     {
-        Assert.Throws<NullReferenceException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
         {
             SystemPropertyUtil.get(null, null);
         });

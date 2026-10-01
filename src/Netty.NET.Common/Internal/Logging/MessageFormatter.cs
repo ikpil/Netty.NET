@@ -40,6 +40,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace Netty.NET.Common.Internal.Logging;
@@ -204,11 +205,11 @@ public static class MessageFormatter
             if (notEscaped)
             {
                 // normal case
-                sbuf.Append(messagePattern, i, j);
+                sbuf.Append(messagePattern, i, j - i);
             }
             else
             {
-                sbuf.Append(messagePattern, i, j - 1);
+                sbuf.Append(messagePattern, i, j - 1 - i);
                 // check that escape char is not is escaped: "abc x:\\{}"
                 notEscaped = j >= 2 && messagePattern[j - 2] == ESCAPE_CHAR;
             }
@@ -232,7 +233,7 @@ public static class MessageFormatter
         } while (j != -1);
 
         // append the characters following the last {} pair.
-        sbuf.Append(messagePattern, i, messagePattern.Length);
+        sbuf.Append(messagePattern, i, messagePattern.Length - i);
         return new FormattingTuple(sbuf.ToString(), L <= lastArrIdx ? throwable : null);
     }
 
@@ -247,6 +248,8 @@ public static class MessageFormatter
 
         if (!o.GetType().IsArray)
         {
+            // Prevent String instantiation for some number types
+            // CLR adaptation: formatting is culture-independent, but boxes are handled by the shared formatter.
             safeObjectAppend(sbuf, o);
         }
         else
@@ -299,7 +302,14 @@ public static class MessageFormatter
     {
         try
         {
-            string oAsString = o.ToString();
+            string oAsString = o switch
+            {
+                bool value => value ? "true" : "false",
+                float value => floatingPointString(value.ToString("R", CultureInfo.InvariantCulture)),
+                double value => floatingPointString(value.ToString("R", CultureInfo.InvariantCulture)),
+                IFormattable value => value.ToString(null, CultureInfo.InvariantCulture),
+                _ => o.ToString()
+            };
             sbuf.Append(oAsString);
         }
         catch (Exception t)
@@ -352,11 +362,11 @@ public static class MessageFormatter
             return;
         }
 
-        sbuf.Append(a[0]);
+        sbuf.Append(a[0] ? "true" : "false");
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            sbuf.Append(a[i]);
+            sbuf.Append(a[i] ? "true" : "false");
         }
     }
 
@@ -367,11 +377,11 @@ public static class MessageFormatter
             return;
         }
 
-        sbuf.Append(a[0]);
+        sbuf.Append(unchecked((sbyte)a[0]));
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            sbuf.Append(a[i]);
+            sbuf.Append(unchecked((sbyte)a[i]));
         }
     }
 
@@ -435,6 +445,13 @@ public static class MessageFormatter
         }
     }
 
+    // CLR adaptation: retain Java's decimal marker for integral floating-point values.
+    private static string floatingPointString(string value)
+    {
+        return value.IndexOfAny(new[] { '.', 'E', 'e' }) >= 0 ||
+               value == "NaN" || value.EndsWith("Infinity", StringComparison.Ordinal)
+            ? value : value + ".0";
+    }
     private static void floatArrayAppend(StringBuilder sbuf, float[] a)
     {
         if (a.Length == 0)
@@ -442,11 +459,11 @@ public static class MessageFormatter
             return;
         }
 
-        sbuf.Append(a[0]);
+        safeObjectAppend(sbuf, a[0]);
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            sbuf.Append(a[i]);
+            safeObjectAppend(sbuf, a[i]);
         }
     }
 
@@ -457,11 +474,11 @@ public static class MessageFormatter
             return;
         }
 
-        sbuf.Append(a[0]);
+        safeObjectAppend(sbuf, a[0]);
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            sbuf.Append(a[i]);
+            safeObjectAppend(sbuf, a[i]);
         }
     }
 }

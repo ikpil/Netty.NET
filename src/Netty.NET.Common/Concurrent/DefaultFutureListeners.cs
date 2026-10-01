@@ -16,7 +16,7 @@
 
 namespace Netty.NET.Common.Concurrent;
 
-public class DefaultFutureListeners<T> where T : IFuture<T>
+public class DefaultFutureListeners<T> where T : IFuture
 {
     private IGenericFutureListener<T>[] _listeners;
     private int _size;
@@ -29,12 +29,12 @@ public class DefaultFutureListeners<T> where T : IFuture<T>
         _listeners[0] = first;
         _listeners[1] = second;
         _size = 2;
-        if (first is IGenericProgressiveFutureListener<IProgressiveFuture<T>>)
+        if (first is IGenericProgressiveFutureListener<T>)
         {
             _progressiveSize++;
         }
 
-        if (second is IGenericProgressiveFutureListener<IProgressiveFuture<T>>)
+        if (second is IGenericProgressiveFutureListener<T>)
         {
             _progressiveSize++;
         }

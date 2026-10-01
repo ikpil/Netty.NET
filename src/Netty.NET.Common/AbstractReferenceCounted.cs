@@ -16,11 +16,12 @@
 
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common;
 
 /**
- * Abstract base class for classes wants to implement {@link IReferenceCounted}.
+ * Abstract base class for classes wants to implement {@link ReferenceCounted}.
  */
 public abstract class AbstractReferenceCounted : IReferenceCounted
 {
@@ -28,13 +29,13 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
 
     public int refCnt()
     {
-        return _refCnt;
+        return Volatile.Read(ref _refCnt);
     }
 
     /**
-     * An unsafe operation intended for use by a subclass that sets the reference count of the buffer directly
+     * An unsafe operation intended for use by a subclass that sets the reference count of the object directly
      */
-    internal void setRefCnt(int refCnt)
+    protected internal void setRefCnt(int refCnt)
     {
         Interlocked.Exchange(ref _refCnt, refCnt);
     }
@@ -46,17 +47,16 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
 
     public virtual IReferenceCounted retain(int increment)
     {
+        ObjectUtil.checkPositive(increment, nameof(increment));
         while (true)
         {
-            int count = _refCnt;
-            int nextCount = count + increment;
-
-            // check
-            if (nextCount <= increment)
+            int count = Volatile.Read(ref _refCnt);
+            if (count == 0 || count > int.MaxValue - increment)
             {
                 ThrowIllegalReferenceCountException(count, increment);
             }
 
+            int nextCount = count + increment;
             if (Interlocked.CompareExchange(ref _refCnt, nextCount, count) == count)
             {
                 break;
@@ -80,15 +80,21 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
 
     public bool release(int decrement)
     {
+        ObjectUtil.checkPositive(decrement, nameof(decrement));
         while (true)
         {
-            int count = _refCnt;
+            int count = Volatile.Read(ref _refCnt);
             if (count < decrement)
             {
-                ThrowIllegalReferenceCountException(count, decrement);
+                ThrowIllegalReferenceCountException(count, -decrement);
             }
 
-            if (Interlocked.CompareExchange(ref _refCnt, count - decrement, count) == decrement)
+            if (Interlocked.CompareExchange(ref _refCnt, count - decrement, count) != count)
+            {
+                continue;
+            }
+
+            if (count == decrement)
             {
                 deallocate();
                 return true;

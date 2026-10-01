@@ -49,26 +49,26 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
     /**
      * Return a new {@link IPromise}.
      */
-    TaskCompletionSource<V> newPromise<V>();
+    IPromise<V> newPromise<V>();
 
     /**
      * Create a new {@link ProgressivePromise}.
      */
-    TaskCompletionSource<V> newProgressivePromise<V>();
+    IProgressivePromise<V> newProgressivePromise<V>();
 
     /**
      * Create a new {@link Future} which is marked as succeeded already. So {@link Future#isSuccess()}
      * will return {@code true}. All {@link IFutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
-    Task<V> newSucceededFuture<V>(V result);
+    IFuture<V> newSucceededFuture<V>(V result);
 
     /**
      * Create a new {@link Future} which is marked as failed already. So {@link Future#isSuccess()}
      * will return {@code false}. All {@link IFutureListener} added to it will be notified directly. Also
      * every call of blocking methods will just return without blocking.
      */
-    Task<V> newFailedFuture<V>(Exception cause);
+    IFuture<V> newFailedFuture<V>(Exception cause);
 
     /**
      * Returns {@code true} if the {@link IEventExecutor} is considered suspended.

@@ -27,6 +27,25 @@ namespace Netty.NET.Common.Tests.Internal;
  */
 public class ObjectUtilTest
 {
+    [Fact]
+    public void testCheckInRangeDouble()
+    {
+        Assert.Equal(0.5, ObjectUtil.checkInRange(0.5, 0.0, 1.0, "in range"));
+        Assert.Equal(0.0, ObjectUtil.checkInRange(0.0, 0.0, 1.0, "start of range"));
+        Assert.Equal(1.0, ObjectUtil.checkInRange(1.0, 0.0, 1.0, "end of range"));
+        Assert.Throws<ArgumentException>(() => ObjectUtil.checkInRange(-0.1, 0.0, 1.0, "below range"));
+        Assert.Throws<ArgumentException>(() => ObjectUtil.checkInRange(1.1, 0.0, 1.0, "above range"));
+    }
+
+    [Fact]
+    public void NullableNumberWrappersPreserveDefaultValues()
+    {
+        Assert.Equal(7, ObjectUtil.intValue(null, 7));
+        Assert.Equal(0, ObjectUtil.intValue(0, 7));
+        Assert.Equal(9L, ObjectUtil.longValue(null, 9L));
+        Assert.Equal(0L, ObjectUtil.longValue(0L, 9L));
+    }
+
     private static readonly object NULL_OBJECT = null;
 
     private static readonly string NON_NULL_OBJECT = "object is not null";
@@ -95,7 +114,7 @@ public class ObjectUtilTest
         }
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
     }
 
     [Fact]
@@ -503,7 +522,7 @@ public class ObjectUtilTest
         }
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try
@@ -546,7 +565,7 @@ public class ObjectUtilTest
         }
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try
@@ -589,7 +608,7 @@ public class ObjectUtilTest
         }
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try
@@ -631,7 +650,7 @@ public class ObjectUtilTest
         }
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try
@@ -674,7 +693,7 @@ public class ObjectUtilTest
         }
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try
@@ -729,7 +748,7 @@ public class ObjectUtilTest
         }
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try
@@ -784,7 +803,7 @@ public class ObjectUtilTest
         }
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is NullReferenceException, TEST_RESULT_EXTYPE_NOK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
         try

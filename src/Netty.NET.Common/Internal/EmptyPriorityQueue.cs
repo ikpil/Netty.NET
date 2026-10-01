@@ -67,7 +67,7 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
 
     public T[] toArray()
     {
-        throw new NotImplementedException();
+        return Array.Empty<T>();
     }
 
     public void clearIgnoringIndexes()
@@ -126,7 +126,7 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
 
     public bool tryEnqueue(T item)
     {
-        throw new NotImplementedException();
+        return false;
     }
 
     public bool tryDequeue(out T item)

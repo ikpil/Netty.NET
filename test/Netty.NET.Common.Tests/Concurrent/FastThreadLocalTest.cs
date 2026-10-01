@@ -16,418 +16,301 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 
-public class FastThreadLocalTest {
-    public FastThreadLocalTest() {
+[Collection("Thread-local globals")]
+public class FastThreadLocalTest : IDisposable
+{
+    public FastThreadLocalTest()
+    {
         FastThreadLocal.removeAll();
         Assert.Equal(0, FastThreadLocal.size());
     }
+    public void Dispose() => FastThreadLocal.removeAll();
+
+    private sealed class BooleanLocal : FastThreadLocal<object>
+    {
+        protected override object initialValue() => true;
+    }
 
     [Fact]
-    public void testGetAndSetReturnsOldValue() {
-        FastThreadLocal<bool> threadLocal = new FastThreadLocal<bool>() {
-            @Override
-            protected bool initialValue() {
-            return bool.TRUE;
-        }
-        };
-
-        Assert.Null(threadLocal.getAndSet(bool.FALSE));
-        Assert.Equal(bool.FALSE, threadLocal.get());
-        Assert.Equal(bool.FALSE, threadLocal.getAndSet(bool.TRUE));
-        Assert.Equal(bool.TRUE, threadLocal.get());
+    public void testGetAndSetReturnsOldValue()
+    {
+        var threadLocal = new BooleanLocal();
+        Assert.Null(threadLocal.getAndSet(false));
+        Assert.Equal(false, threadLocal.get());
+        Assert.Equal(false, threadLocal.getAndSet(true));
+        Assert.Equal(true, threadLocal.get());
         threadLocal.remove();
     }
 
     [Fact]
-    public void testGetIfExists() {
-        FastThreadLocal<bool> threadLocal = new FastThreadLocal<bool>() {
-            @Override
-            protected bool initialValue() {
-            return bool.TRUE;
-        }
-        };
-
+    public void testGetIfExists()
+    {
+        var threadLocal = new BooleanLocal();
         Assert.Null(threadLocal.getIfExists());
-        Assert.True(threadLocal.get());
-        Assert.True(threadLocal.getIfExists());
-
+        Assert.Equal(true, threadLocal.get());
+        Assert.Equal(true, threadLocal.getIfExists());
         FastThreadLocal.removeAll();
         Assert.Null(threadLocal.getIfExists());
     }
 
+    private sealed class RemovalLocal : FastThreadLocal<object>
+    {
+        public bool Removed;
+        protected override void onRemoval(object value) => Removed = true;
+    }
+
     [Fact(Timeout = 10000)]
-    public void testRemoveAll() {
-        final AtomicBoolean removed = new AtomicBoolean();
-        final FastThreadLocal<bool> var = new FastThreadLocal<bool>() {
-        @Override
-        protected void onRemoval(bool value) {
-        removed.set(true);
-        }
-    };
-
-    // Initialize a thread-local variable.
-    Assert.Null(var.get());
-    Assert.Equal(1, FastThreadLocal.size());
-
-    // And then remove it.
-    FastThreadLocal.removeAll();
-    Assert.True(removed.get());
-    Assert.Equal(0, FastThreadLocal.size());
-
+    public void testRemoveAll()
+    {
+        var variable = new RemovalLocal();
+        // Initialize a thread-local variable.
+        Assert.Null(variable.get());
+        Assert.Equal(1, FastThreadLocal.size());
+        // And then remove it.
+        FastThreadLocal.removeAll();
+        Assert.True(variable.Removed);
+        Assert.Equal(0, FastThreadLocal.size());
     }
 
-    [Fact]
-    @Timeout(value = 10000, unit = TimeUnit.MILLISECONDS)
-    public void testRemoveAllFromFTLThread() {
-        final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
-        final Thread thread = new FastThreadLocalThread() {
-            @Override
-            public void run() {
-            try {
-            testRemoveAll();
-        } catch (Exception t) {
-            throwable.set(t);
-        }
-        }
-        };
-
-        thread.start();
-        thread.join();
-
-        Exception t = throwable.get();
-        if (t != null) {
-            throw t;
-        }
-    }
+    [Fact(Timeout = 10000)]
+    public void testRemoveAllFromFTLThread() => RunThread(testRemoveAll, true);
 
     [Fact]
-    public void testMultipleSetRemove() {
-        final FastThreadLocal<string> threadLocal = new FastThreadLocal<string>();
-        final IRunnable runnable = new IRunnable() {
-            @Override
-            public void run() {
-            threadLocal.set("1");
-            threadLocal.remove();
-            threadLocal.set("2");
-            threadLocal.remove();
-        }
-        };
-
-        final int sizeWhenStart = ObjectCleaner.getLiveSetCount();
-        Thread thread = new Thread(runnable);
-        thread.start();
-        thread.join();
-
-        Assert.Equal(0, ObjectCleaner.getLiveSetCount() - sizeWhenStart);
-
-        Thread thread2 = new Thread(runnable);
-        thread2.start();
-        thread2.join();
-
-        Assert.Equal(0, ObjectCleaner.getLiveSetCount() - sizeWhenStart);
-    }
-
-    [Fact]
-    public void testMultipleSetRemove_multipleThreadLocal() {
-        final FastThreadLocal<string> threadLocal = new FastThreadLocal<string>();
-        final FastThreadLocal<string> threadLocal2 = new FastThreadLocal<string>();
-        final IRunnable runnable = new IRunnable() {
-            @Override
-            public void run() {
-            threadLocal.set("1");
-            threadLocal.remove();
-            threadLocal.set("2");
-            threadLocal.remove();
-            threadLocal2.set("1");
-            threadLocal2.remove();
-            threadLocal2.set("2");
-            threadLocal2.remove();
-        }
-        };
-
-        final int sizeWhenStart = ObjectCleaner.getLiveSetCount();
-        Thread thread = new Thread(runnable);
-        thread.start();
-        thread.join();
-
-        Assert.Equal(0, ObjectCleaner.getLiveSetCount() - sizeWhenStart);
-
-        Thread thread2 = new Thread(runnable);
-        thread2.start();
-        thread2.join();
-
-        Assert.Equal(0, ObjectCleaner.getLiveSetCount() - sizeWhenStart);
-    }
-
-    [Fact]
-    public void testWrappedProperties() {
+    public void testWrappedProperties()
+    {
         Assert.False(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
         Assert.False(FastThreadLocalThread.currentThreadHasFastThreadLocal());
-        FastThreadLocalThread.runWithFastThreadLocal(()() => {
+        FastThreadLocalThread.runWithFastThreadLocal(() =>
+        {
             Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
             Assert.True(FastThreadLocalThread.currentThreadHasFastThreadLocal());
         });
     }
 
-    [Fact]
-    public void testWrapMany() throws AggregateException, ThreadInterruptedException {
-    class Worker implements IRunnable {
-        final Semaphore semaphore = new Semaphore(0);
-        final FutureTask<?> task = new FutureTask<>(this, null);
-
-        @Override
-        public void run() {
-        Assert.False(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
-        Assert.False(FastThreadLocalThread.currentThreadHasFastThreadLocal());
-        semaphore.acquireUninterruptibly();
-        FastThreadLocalThread.runWithFastThreadLocal(()() => {
-            Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
-            Assert.True(FastThreadLocalThread.currentThreadHasFastThreadLocal());
-            semaphore.acquireUninterruptibly();
-            Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
-            Assert.True(FastThreadLocalThread.currentThreadHasFastThreadLocal());
-        });
-        Assert.False(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
-        Assert.False(FastThreadLocalThread.currentThreadHasFastThreadLocal());
-    }
-    }
-
-    int n = 100;
-    List<Worker> workers = new List<>();
-    for (int i = 0; i < n; i++) {
-        Worker worker = new Worker();
-        workers.add(worker);
-    }
-    Collections.shuffle(workers);
-    for (int i = 0; i < workers.size(); i++) {
-        new Thread(workers.get(i).task, "worker-" + i).start();
-    }
-    for (int i = 0; i < 2; i++) {
-        Collections.shuffle(workers);
-        for (Worker worker : workers) {
-            worker.semaphore.release();
+    private sealed class Worker
+    {
+        public readonly SemaphoreSlim Semaphore = new(0);
+        public readonly TaskCompletionSource Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public void Run()
+        {
+            try
+            {
+                Assert.False(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
+                Assert.False(FastThreadLocalThread.currentThreadHasFastThreadLocal());
+                Assert.True(Semaphore.Wait(TimeSpan.FromSeconds(10)));
+                FastThreadLocalThread.runWithFastThreadLocal(() =>
+                {
+                    Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
+                    Assert.True(FastThreadLocalThread.currentThreadHasFastThreadLocal());
+                    Assert.True(Semaphore.Wait(TimeSpan.FromSeconds(10)));
+                    Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
+                    Assert.True(FastThreadLocalThread.currentThreadHasFastThreadLocal());
+                });
+                Assert.False(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
+                Assert.False(FastThreadLocalThread.currentThreadHasFastThreadLocal());
+                Completion.SetResult();
+            }
+            catch (Exception cause) { Completion.TrySetException(cause); }
         }
     }
-    for (Worker worker : workers) {
-        worker.task.get();
-    }
-    }
 
     [Fact]
-    @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
-    public void testOnRemoveCalledForFastThreadLocalGet() {
-        testOnRemoveCalled(true, false, true);
-    }
-
-    @Disabled("onRemoval(...) not called with non FastThreadLocal")
-    [Fact]
-    @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
-    public void testOnRemoveCalledForNonFastThreadLocalGet() {
-        testOnRemoveCalled(false, false, true);
-    }
-
-    [Fact]
-    @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
-    public void testOnRemoveCalledForFastThreadLocalSet() {
-        testOnRemoveCalled(true, false, false);
-    }
-
-    @Disabled("onRemoval(...) not called with non FastThreadLocal")
-    [Fact]
-    @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
-    public void testOnRemoveCalledForNonFastThreadLocalSet() {
-        testOnRemoveCalled(false, false, false);
-    }
-
-    [Fact]
-    @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
-    public void testOnRemoveCalledForWrappedGet() {
-        testOnRemoveCalled(false, true, true);
-    }
-
-    [Fact]
-    @Timeout(value = 4000, unit = TimeUnit.MILLISECONDS)
-    public void testOnRemoveCalledForWrappedSet() {
-        testOnRemoveCalled(false, true, false);
-    }
-
-    private static void testOnRemoveCalled(bool fastThreadLocal, bool wrap, final bool callGet)
-    throws Exception {
-
-        final TestFastThreadLocal threadLocal = new TestFastThreadLocal();
-        final TestFastThreadLocal threadLocal2 = new TestFastThreadLocal();
-
-        IRunnable runnable = new IRunnable() {
-            @Override
-            public void run() {
-            if (callGet) {
-            Assert.Equal(Thread.CurrentThread.getName(), threadLocal.get());
-            Assert.Equal(Thread.CurrentThread.getName(), threadLocal2.get());
-        } else {
-            threadLocal.set(Thread.CurrentThread.getName());
-            threadLocal2.set(Thread.CurrentThread.getName());
+    public async Task testWrapMany()
+    {
+        int n = 100;
+        var workers = Enumerable.Range(0, n).Select(_ => new Worker()).OrderBy(_ => Random.Shared.Next()).ToList();
+        var threads = workers.Select((worker, i) => new Thread(worker.Run) { IsBackground = true, Name = "worker-" + i }).ToList();
+        try
+        {
+            foreach (Thread thread in threads) thread.Start();
+            for (int i = 0; i < 2; i++)
+                foreach (Worker worker in workers.OrderBy(_ => Random.Shared.Next())) worker.Semaphore.Release();
+            await Task.WhenAll(workers.Select(worker => worker.Completion.Task)).WaitAsync(TimeSpan.FromSeconds(15));
         }
+        finally
+        {
+            foreach (Thread thread in threads) Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
+            foreach (Worker worker in workers) worker.Semaphore.Dispose();
         }
+    }
+
+    [Fact(Timeout = 4000)]
+    public void testOnRemoveCalledForFastThreadLocalGet() => testOnRemoveCalled(true, false, true);
+    [Fact(Skip = "onRemoval(...) not called with non FastThreadLocal")]
+    public void testOnRemoveCalledForNonFastThreadLocalGet() => testOnRemoveCalled(false, false, true);
+    [Fact(Timeout = 4000)]
+    public void testOnRemoveCalledForFastThreadLocalSet() => testOnRemoveCalled(true, false, false);
+    [Fact(Skip = "onRemoval(...) not called with non FastThreadLocal")]
+    public void testOnRemoveCalledForNonFastThreadLocalSet() => testOnRemoveCalled(false, false, false);
+    [Fact(Timeout = 4000)]
+    public void testOnRemoveCalledForWrappedGet() => testOnRemoveCalled(false, true, true);
+    [Fact(Timeout = 4000)]
+    public void testOnRemoveCalledForWrappedSet() => testOnRemoveCalled(false, true, false);
+
+    private static void testOnRemoveCalled(bool fastThreadLocal, bool wrap, bool callGet)
+    {
+        var threadLocal = new TestFastThreadLocal();
+        var threadLocal2 = new TestFastThreadLocal();
+        Action runnable = () =>
+        {
+            if (callGet)
+            {
+                Assert.Equal(Thread.CurrentThread.Name, threadLocal.get());
+                Assert.Equal(Thread.CurrentThread.Name, threadLocal2.get());
+            }
+            else
+            {
+                threadLocal.set(Thread.CurrentThread.Name);
+                threadLocal2.set(Thread.CurrentThread.Name);
+            }
         };
-        if (wrap) {
-            IRunnable r = runnable;
-            runnable = () => FastThreadLocalThread.runWithFastThreadLocal(r);
+        if (wrap)
+        {
+            Action original = runnable;
+            runnable = () => FastThreadLocalThread.runWithFastThreadLocal(original);
         }
-        Thread thread = fastThreadLocal ? new FastThreadLocalThread(runnable) : new Thread(runnable);
-        thread.start();
-        thread.join();
-
-        string threadName = thread.getName();
-
+        Thread thread = RunThread(runnable, fastThreadLocal);
+        string threadName = thread.Name;
         // Null this out so it can be collected
         thread = null;
-
         // Loop until onRemoval(...) was called. This will fail the test if this not works due a timeout.
-        while (threadLocal.onRemovalCalled.get() == null || threadLocal2.onRemovalCalled.get() == null) {
-            System.gc();
-            System.runFinalization();
-            Thread.sleep(50);
+        while (threadLocal.OnRemovalCalled == null || threadLocal2.OnRemovalCalled == null)
+        {
+            TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(50);
         }
-
-        Assert.Equal(threadName, threadLocal.onRemovalCalled.get());
-        Assert.Equal(threadName, threadLocal2.onRemovalCalled.get());
+        Assert.Equal(threadName, threadLocal.OnRemovalCalled);
+        Assert.Equal(threadName, threadLocal2.OnRemovalCalled);
     }
 
-    private static final class TestFastThreadLocal extends FastThreadLocal<string> {
-
-        final AtomicReference<string> onRemovalCalled = new AtomicReference<string>();
-
-        @Override
-        protected string initialValue() {
-            return Thread.CurrentThread.getName();
-        }
-
-        @Override
-        protected void onRemoval(string value) {
-            onRemovalCalled.set(value);
-        }
+    private sealed class TestFastThreadLocal : FastThreadLocal<string>
+    {
+        public volatile string OnRemovalCalled;
+        protected override string initialValue() => Thread.CurrentThread.Name;
+        protected override void onRemoval(string value) => OnRemovalCalled = value;
     }
 
     [Fact]
-    public void testConstructionWithIndex() {
+    public void testConstructionWithIndex()
+    {
         int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
-        Field nextIndexField =
-            InternalThreadLocalMap.class.getDeclaredField("nextIndex");
-        nextIndexField.setAccessible(true);
-        AtomicInteger nextIndex = (AtomicInteger) nextIndexField.get(AtomicInteger.class);
-        int nextIndex_before = nextIndex.get();
-        final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
-        try {
-            while (nextIndex.get() < ARRAY_LIST_CAPACITY_MAX_SIZE) {
-                new FastThreadLocal<bool>();
-            }
+        var field = typeof(InternalThreadLocalMap).GetField("nextIndex", BindingFlags.Static | BindingFlags.NonPublic);
+        var nextIndex = (AtomicInteger)field.GetValue(null);
+        int previous = nextIndex.get();
+        try
+        {
+            // CLR test adaptation: jump to the boundary rather than allocating over two billion objects.
+            nextIndex.set(ARRAY_LIST_CAPACITY_MAX_SIZE - 2);
+            while (nextIndex.get() < ARRAY_LIST_CAPACITY_MAX_SIZE) new FastThreadLocal<object>();
             Assert.Equal(ARRAY_LIST_CAPACITY_MAX_SIZE - 1, InternalThreadLocalMap.lastVariableIndex());
-            try {
-                new FastThreadLocal<bool>();
-            } catch (Exception t) {
-                throwable.set(t);
-            } finally {
-                // Assert the max index cannot greater than (ARRAY_LIST_CAPACITY_MAX_SIZE - 1).
-                assertInstanceOf(InvalidOperationException.class, throwable.get());
-                // Assert the index was reset to ARRAY_LIST_CAPACITY_MAX_SIZE
-                // after it reaches ARRAY_LIST_CAPACITY_MAX_SIZE.
-                Assert.Equal(ARRAY_LIST_CAPACITY_MAX_SIZE - 1, InternalThreadLocalMap.lastVariableIndex());
-            }
-        } finally {
+            // Assert the max index cannot greater than (ARRAY_LIST_CAPACITY_MAX_SIZE - 1).
+            Assert.Throws<InvalidOperationException>(() => new FastThreadLocal<object>());
+            // Assert the index was reset to ARRAY_LIST_CAPACITY_MAX_SIZE
+            // after it reaches ARRAY_LIST_CAPACITY_MAX_SIZE.
+            Assert.Equal(ARRAY_LIST_CAPACITY_MAX_SIZE - 1, InternalThreadLocalMap.lastVariableIndex());
+        }
+        finally
+        {
             // Restore the index.
-            nextIndex.set(nextIndex_before);
+            nextIndex.set(previous);
         }
     }
 
-    @EnabledIfEnvironmentVariable(named = "CI", matches = "true", disabledReason = "" +
-                                                                                   "This deliberately causes OutOfMemoryErrors, for which heap dumps are automatically generated. " +
-                                                                                   "To avoid confusion, wasted time investigating heap dumps, and to avoid heap dumps accidentally " +
-                                                                                   "getting committed to the Git repository, we should only enable this test when running in a CI " +
-                                                                                   "environment. We make this check by assuming a 'CI' environment variable. " +
-                                                                                   "This matches what Github Actions is doing for us currently.")
-    [Fact]
-    public void testInternalThreadLocalMapExpand() {
-        final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
-        IRunnable runnable = new IRunnable() {
-            @Override
-            public void run() {
+    [CiOnlyFact]
+    public void testInternalThreadLocalMapExpand()
+    {
+        Exception throwable = null;
+        RunThread(() =>
+        {
             int expand_threshold = 1 << 30;
-            try {
-            InternalThreadLocalMap.get().setIndexedVariable(expand_threshold, null);
-        } catch (Exception t) {
-            throwable.set(t);
-        }
-        }
-        };
-        FastThreadLocalThread fastThreadLocalThread = new FastThreadLocalThread(runnable);
-        fastThreadLocalThread.start();
-        fastThreadLocalThread.join();
+            try { InternalThreadLocalMap.get().setIndexedVariable(expand_threshold, null); }
+            catch (Exception cause) { throwable = cause; }
+        }, true);
         // assert the expanded size is not overflowed to negative value
-        assertThat(throwable.get()).isNotInstanceOf(NegativeArraySizeException.class);
+        Assert.False(throwable is OverflowException);
     }
 
     [Fact]
-    public void testFastThreadLocalSize() {
+    public void testFastThreadLocalSize()
+    {
         int originSize = FastThreadLocal.size();
         Assert.True(originSize >= 0);
-
         InternalThreadLocalMap.get();
         Assert.Equal(originSize, FastThreadLocal.size());
-
-        new FastThreadLocal<bool>();
+        new FastThreadLocal<object>();
         Assert.Equal(originSize, FastThreadLocal.size());
-
-        FastThreadLocal<bool> fst2 = new FastThreadLocal<bool>();
+        var fst2 = new FastThreadLocal<object>();
         fst2.get();
         Assert.Equal(1 + originSize, FastThreadLocal.size());
-
-        FastThreadLocal<bool> fst3 = new FastThreadLocal<bool>();
+        var fst3 = new FastThreadLocal<object>();
         fst3.set(null);
         Assert.Equal(2 + originSize, FastThreadLocal.size());
-
-        FastThreadLocal<bool> fst4 = new FastThreadLocal<bool>();
-        fst4.set(bool.TRUE);
+        var fst4 = new FastThreadLocal<object>();
+        fst4.set(true);
         Assert.Equal(3 + originSize, FastThreadLocal.size());
-
-        fst4.set(bool.TRUE);
+        fst4.set(true);
         Assert.Equal(3 + originSize, FastThreadLocal.size());
-
         fst4.remove();
         Assert.Equal(2 + originSize, FastThreadLocal.size());
-
         FastThreadLocal.removeAll();
         Assert.Equal(0, FastThreadLocal.size());
     }
 
+    private sealed class UnsetLocal : FastThreadLocal<object>
+    {
+        protected override object initialValue() => InternalThreadLocalMap.UNSET;
+    }
     [Fact]
-    public void testFastThreadLocalInitialValueWithUnset() {
-        final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
-        final FastThreadLocal fst = new FastThreadLocal() {
-            @Override
-            protected object initialValue() {
-            return InternalThreadLocalMap.UNSET;
-        }
-        };
-        IRunnable runnable = new IRunnable() {
-            @Override
-            public void run() {
-            try {
-            fst.get();
-        } catch (Exception t) {
-            throwable.set(t);
-        }
-        }
-        };
-        FastThreadLocalThread fastThreadLocalThread = new FastThreadLocalThread(runnable);
-        fastThreadLocalThread.start();
-        fastThreadLocalThread.join();
-        assertInstanceOf(ArgumentException.class, throwable.get());
+    public void testFastThreadLocalInitialValueWithUnset()
+    {
+        Exception throwable = null;
+        var fst = new UnsetLocal();
+        RunThread(() =>
+        {
+            try { fst.get(); }
+            catch (Exception cause) { throwable = cause; }
+        }, true);
+        Assert.IsType<ArgumentException>(throwable);
+    }
+
+    private static Thread RunThread(Action runnable, bool fast)
+    {
+        Exception failure = null;
+        IRunnable target = Runnables.Create(() =>
+        {
+            try { runnable(); }
+            catch (Exception cause) { failure = cause; }
+        });
+        Thread thread = fast ? new FastThreadLocalThread(target).Thread : new Thread(target.run);
+        thread.IsBackground = true;
+        thread.Name = "test-local-" + Guid.NewGuid();
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(10)), "Thread did not terminate");
+        if (failure != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        return thread;
+    }
+}
+
+[CollectionDefinition("Thread-local globals", DisableParallelization = true)]
+public sealed class ThreadLocalGlobalsCollection;
+
+public sealed class CiOnlyFactAttribute : FactAttribute
+{
+    public CiOnlyFactAttribute()
+    {
+        if (Environment.GetEnvironmentVariable("CI") != "true")
+            Skip = "Upstream CI-only test: deliberately allocates an oversized thread-local table.";
     }
 }

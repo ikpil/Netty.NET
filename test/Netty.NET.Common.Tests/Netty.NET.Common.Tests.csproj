@@ -27,4 +27,8 @@
     <ProjectReference Include="..\..\src\Netty.NET.Common\Netty.NET.Common.csproj"/>
   </ItemGroup>
 
+  <!-- Opt-in batch verification while the remaining upstream tests are ported.
+       Default builds still compile every test; this is not the full suite. -->
+  <Import Project="PortingBatch.props" Condition="'$(PortingBatch)' == 'true'" />
+
 </Project>

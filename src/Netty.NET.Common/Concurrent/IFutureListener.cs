@@ -22,11 +22,11 @@ namespace Netty.NET.Common.Concurrent;
  * A subtype of {@link GenericFutureListener} that hides type parameter for convenience.
  * <pre>
  * Future f = new DefaultPromise(..);
- * f.addListener(new IFutureListener() {
+ * f.addListener(new FutureListener() {
  *     public void operationComplete(Future f) { .. }
  * });
  * </pre>
  */
-public interface IFutureListener<V> : IGenericFutureListener<Task<V>>
+public interface IFutureListener<V> : IGenericFutureListener<IFuture<V>>
 {
 }

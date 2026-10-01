@@ -76,8 +76,8 @@ public static class FastThreadLocal
     }
 
     /**
- * Returns the number of thread local variables bound to the current thread.
- */
+     * Returns the number of thread local variables bound to the current thread.
+     */
     public static int size()
     {
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.getIfSet();
@@ -109,7 +109,7 @@ public static class FastThreadLocal
         Dictionary<IFastThreadLocal, bool> variablesToRemove;
         if (v == InternalThreadLocalMap.UNSET || v == null)
         {
-            variablesToRemove = new Dictionary<IFastThreadLocal, bool>();
+            variablesToRemove = new Dictionary<IFastThreadLocal, bool>(System.Collections.Generic.ReferenceEqualityComparer.Instance);
             threadLocalMap.setIndexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX, variablesToRemove);
         }
         else
@@ -117,7 +117,7 @@ public static class FastThreadLocal
             variablesToRemove = (Dictionary<IFastThreadLocal, bool>)v;
         }
 
-        variablesToRemove.Add(variable, true);
+        variablesToRemove[variable] = true;
     }
 
     internal static void removeFromVariablesToRemove<V>(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable) where V : class
@@ -261,19 +261,20 @@ public class FastThreadLocal<V> : IFastThreadLocal where V : class
     }
 
     /**
-     * @see InternalThreadLocalMap#setIndexedVariable(int, object).
+     * @see InternalThreadLocalMap#setIndexedVariable(int, Object).
      */
     //@SuppressWarnings("unchecked")
     private V setKnownNotUnset(InternalThreadLocalMap threadLocalMap, V value)
     {
-        V old = (V)threadLocalMap.getAndSetIndexedVariable(_index, value);
+        // CLR casts must follow the sentinel check; Java's erased generic cast does not check V here.
+        object old = threadLocalMap.getAndSetIndexedVariable(_index, value);
         if (old == InternalThreadLocalMap.UNSET)
         {
             FastThreadLocal.addToVariablesToRemove(threadLocalMap, this);
             return null;
         }
 
-        return old;
+        return (V)old;
     }
 
     /**

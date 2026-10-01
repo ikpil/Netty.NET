@@ -21,9 +21,14 @@ namespace Netty.NET.Common.Tests.Internal;
 
 public class BoundedInputStreamTest
 {
-    [Fact]
-    //@RepeatedTest(50)
-    public void testBoundEnforced()
+    public static System.Collections.Generic.IEnumerable<object[]> Repetitions()
+    {
+        for (int i = 0; i < 50; i++) yield return new object[] { i };
+    }
+
+    [Theory]
+    [MemberData(nameof(Repetitions))]
+    public void testBoundEnforced(int repetition)
     {
         byte[] bytes = new byte[64];
         ThreadLocalRandom.current().nextBytes(bytes);
@@ -36,7 +41,7 @@ public class BoundedInputStreamTest
             do
             {
                 int result = reader.Read(new byte[max], 0, max);
-                Assert.NotEqual(result, -1);
+                Assert.True(result > 0, "Unexpected EOF before the bound was exceeded");
                 max -= result;
             } while (max > 0);
         });
@@ -63,8 +68,9 @@ public class BoundedInputStreamTest
     }
 
 
-    [Fact]
-    public void testBigReadsPermittedIfUnderlyingStreamIsSmall()
+    [Theory]
+    [MemberData(nameof(Repetitions))]
+    public void testBigReadsPermittedIfUnderlyingStreamIsSmall(int repetition)
     {
         byte[] bytes = new byte[64];
         ThreadLocalRandom.current().nextBytes(bytes);

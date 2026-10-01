@@ -41,7 +41,7 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
      * Creates a default, order-sensitive mapping. If your hostnames are in conflict, the mapping
      * will choose the one you add first.
      *
-     * @param defaultValue the default value for {@link #map(string)} to return when nothing matches the input
+     * @param defaultValue the default value for {@link #map(String)} to return when nothing matches the input
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
     public DomainNameMapping(T defaultValue)
@@ -54,7 +54,7 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
      * will choose the one you add first.
      *
      * @param initialCapacity initial capacity for the internal map
-     * @param defaultValue    the default value for {@link #map(string)} to return when nothing matches the input
+     * @param defaultValue    the default value for {@link #map(String)} to return when nothing matches the input
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
     public DomainNameMapping(int initialCapacity, T defaultValue)
@@ -79,7 +79,7 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
      * </p>
      *
      * @param hostname the host name (optionally wildcard)
-     * @param output   the output value that will be returned by {@link #map(string)} when the specified host name
+     * @param output   the output value that will be returned by {@link #map(String)} when the specified host name
      *                 matches the specified input host name
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
@@ -165,6 +165,6 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
 
     public override string ToString()
     {
-        return StringUtil.simpleClassName(this) + "(default: " + _defaultValue + ", map: " + map + ')';
+        return StringUtil.simpleClassName(this) + "(default: " + _defaultValue + ", map: " + _map + ')';
     }
 }

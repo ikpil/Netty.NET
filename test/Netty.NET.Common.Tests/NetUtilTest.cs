@@ -33,7 +33,7 @@ public class NetUtilTest
             {
                 string key = values[i];
                 string value = values[i + 1];
-                Add(key, value);
+                this[key] = value;
             }
         }
     }
@@ -644,7 +644,7 @@ public class NetUtilTest
             Assert.True(isValidIpV6Address(host), host);
             if (host.charAt(0) != '[' && !host.Contains("%"))
             {
-                Assert.NotNull(getByName(host, true)); //, host);
+                Assert.NotNull(getByName(host, true), host);
 
                 string hostMod = '[' + host + ']';
                 Assert.True(isValidIpV6Address(hostMod), hostMod);

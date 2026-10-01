@@ -29,22 +29,13 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
     }
 
     public LinkedHashMap(IDictionary<TKey, TValue> dictionary, bool accessOrder = false)
+        : this(dictionary?.Count ?? throw new ArgumentNullException(nameof(dictionary)), accessOrder)
     {
-        if (dictionary is LinkedHashMap<TKey, TValue> linkedHashMap)
+        foreach (var pair in dictionary)
         {
-            _dictionary = new Dictionary<TKey, LinkedListNode<KeyValuePair<TKey, TValue>>>(linkedHashMap._dictionary);
-            _linkedList = new LinkedList<KeyValuePair<TKey, TValue>>(linkedHashMap._linkedList);
-            _accessOrder = linkedHashMap._accessOrder;
-        }
-        else
-        {
-            foreach (var knv in dictionary)
-            {
-                Add(knv.Key, knv.Value);
-            }
+            Add(pair.Key, pair.Value);
         }
     }
-
     public void Clear()
     {
         _dictionary.Clear();
@@ -53,7 +44,7 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
 
     public bool Contains(KeyValuePair<TKey, TValue> item)
     {
-        return _dictionary.TryGetValue(item.Key, out var node) && node.Value.Value.Equals(item.Value);
+        return _dictionary.TryGetValue(item.Key, out var node) && EqualityComparer<TValue>.Default.Equals(node.Value.Value, item.Value);
     }
 
     public bool ContainsKey(TKey key)
@@ -73,9 +64,9 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
 
         if (_dictionary.TryGetValue(key, out var existingNode))
         {
-            _linkedList.Remove(existingNode);
+            if (_accessOrder) _linkedList.Remove(existingNode);
             existingNode.Value = new KeyValuePair<TKey, TValue>(key, value);
-            _linkedList.AddLast(existingNode);
+            if (_accessOrder) _linkedList.AddLast(existingNode);
         }
         else
         {
@@ -86,7 +77,7 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
 
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
-        return Remove(item.Key);
+        return Contains(item) && Remove(item.Key);
     }
 
     public bool Remove(TKey key)
@@ -126,15 +117,19 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        var maxLen = Math.Max(array.Length, arrayIndex + Count);
-        using var enumerator = GetEnumerator();
-        for (var i = arrayIndex; i < maxLen; i++)
-        {
-            array[i] = enumerator.Current;
-            enumerator.MoveNext();
-        }
+        ArgumentNullException.ThrowIfNull(array);
+        if (arrayIndex < 0 || arrayIndex > array.Length)
+            throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+        if (array.Length - arrayIndex < Count)
+            throw new ArgumentException("The destination array is too small.", nameof(array));
+        foreach (var pair in this) array[arrayIndex++] = pair;
     }
 
+    public override string ToString()
+    {
+        return "{" + string.Join(", ", this.Select(pair =>
+            pair.Key + "=" + (pair.Value is null ? "null" : pair.Value.ToString()))) + "}";
+    }
     public TValue this[TKey key]
     {
         get

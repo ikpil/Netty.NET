@@ -70,7 +70,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private readonly AtomicLong _gracefulShutdownTimeout = new AtomicLong();
     private long gracefulShutdownStartTime;
 
-    private readonly TaskCompletionSource<Void> _terminationSource = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    private readonly IPromise<Void> _terminationSource = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
 
     /**
      * Create a new instance
@@ -1176,7 +1176,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             catch (Exception cause)
             {
                 _state.set(ST_TERMINATED);
-                _terminationSource.SetException(cause);
+                _terminationSource.setFailure(cause);
 
                 if (!(cause is OutOfMemoryException || cause is StackOverflowException || cause is ThreadAbortException))
                 {
@@ -1333,11 +1333,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
                                 if (unexpectedException == null)
                                 {
-                                    _terminationSource.SetResult(null);
+                                    _terminationSource.setSuccess(null);
                                 }
                                 else
                                 {
-                                    _terminationSource.SetException(unexpectedException);
+                                    _terminationSource.setFailure(unexpectedException);
                                 }
                             }
                         }

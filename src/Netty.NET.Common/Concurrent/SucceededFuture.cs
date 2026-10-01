@@ -15,41 +15,30 @@
  */
 
 using System;
+using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
 
-public class CompleteFuture<T>
-{
-    public CompleteFuture(IEventExecutor executor)
-    {
-        // ..
-    }
-
-    public virtual Exception cause()
-    {
-        return null;
-        // ..
-    }
-}
-
 /**
  * The {@link CompleteFuture} which is succeeded already.  It is
- * recommended to use {@link IEventExecutor#newSucceededFuture(object)} instead of
+ * recommended to use {@link EventExecutor#newSucceededFuture(Object)} instead of
  * calling the constructor of this future.
  */
 public sealed class SucceededFuture<V> : CompleteFuture<V>
 {
     private readonly V result;
+    public override Task<V> Task { get; }
 
     /**
      * Creates a new instance.
      *
-     * @param executor the {@link IEventExecutor} associated with this future
+     * @param executor the {@link EventExecutor} associated with this future
      */
     public SucceededFuture(IEventExecutor executor, V result)
         : base(executor)
     {
         this.result = result;
+        Task = System.Threading.Tasks.Task.FromResult(result);
     }
 
     public override Exception cause()
@@ -57,12 +46,12 @@ public sealed class SucceededFuture<V> : CompleteFuture<V>
         return null;
     }
 
-    public bool isSuccess()
+    public override bool isSuccess()
     {
         return true;
     }
 
-    public V getNow()
+    public override V getNow()
     {
         return result;
     }

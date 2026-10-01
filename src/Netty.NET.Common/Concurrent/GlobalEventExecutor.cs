@@ -39,7 +39,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     private static readonly long SCHEDULE_QUIET_PERIOD_INTERVAL;
 
-    public static readonly GlobalEventExecutor INSTANCE = new GlobalEventExecutor();
+    public static readonly GlobalEventExecutor INSTANCE;
 
     private readonly BlockingCollection<IRunnable> _taskQueue = new BlockingCollection<IRunnable>();
 
@@ -54,7 +54,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     private readonly AtomicBoolean _started = new AtomicBoolean();
     internal volatile Thread _thread;
 
-    private readonly TaskCompletionSource<Void> _terminationSource;
+    private readonly IFuture<Void> _terminationSource;
 
     static GlobalEventExecutor()
     {
@@ -67,19 +67,20 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         logger.debug("-Dio.netty.globalEventExecutor.quietPeriodSeconds: {}", quietPeriod);
 
         SCHEDULE_QUIET_PERIOD_INTERVAL = quietPeriod * SystemTimer.NanosecondsPerSecond;
+        // CLR static field initializers precede the static constructor body.
+        INSTANCE = new GlobalEventExecutor();
     }
 
     private GlobalEventExecutor() : base(null)
     {
-        scheduledTaskQueue().tryEnqueue(_quietPeriodTask);
-
-        // // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
-        // // could be overridden leading to unsafe initialization here!
+        // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
+        // could be overridden leading to unsafe initialization here!
         _quietPeriodTask = new ScheduledRunnableTask(this, Runnables.Empty,
             deadlineNanos(getCurrentTimeNanos(),
                 SCHEDULE_QUIET_PERIOD_INTERVAL),
             -SCHEDULE_QUIET_PERIOD_INTERVAL
         );
+        scheduledTaskQueue().tryEnqueue(_quietPeriodTask);
         _threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
             GetType(), false, ThreadPriority.Normal), this);
 

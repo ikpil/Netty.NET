@@ -19,7 +19,7 @@ namespace Netty.NET.Common.Concurrent;
 
 /**
  * Listens to the result of a {@link Future}.  The result of the asynchronous operation is notified once this listener
- * is added by calling {@link Future#addListener(IGenericFutureListener)}.
+ * is added by calling {@link Future#addListener(GenericFutureListener)}.
  */
 public interface IGenericFutureListener : IEventListener
 {

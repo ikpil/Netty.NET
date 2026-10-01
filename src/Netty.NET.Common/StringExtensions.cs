@@ -20,9 +20,9 @@ public static class StringExtensions
         return s.Substring(start);
     }
 
-    public static string substring(this string s, int start, int length)
+    public static string substring(this string s, int start, int end)
     {
-        return s.Substring(start, length);
+        return s.Substring(start, end - start);
     }
 
     public static int length(this string s)
@@ -37,7 +37,8 @@ public static class StringExtensions
 
     public static int indexOf(this string s, char c, int startIndex)
     {
-        return s.IndexOf(c, startIndex);
+        // Java String.indexOf clamps negative offsets and returns -1 past the end.
+        return startIndex >= s.Length ? -1 : s.IndexOf(c, Math.Max(0, startIndex));
     }
 
     public static int lastIndexOf(this string s, char c)
@@ -55,11 +56,11 @@ public static class StringExtensions
         if (str == null || other == null)
             throw new ArgumentNullException(str == null ? nameof(str) : nameof(other));
 
-        if (toffset < 0 || ooffset < 0 || len < 0 ||
-            toffset + len > str.Length || ooffset + len > other.Length)
-            throw new ArgumentOutOfRangeException("Invalid offset or length");
+        if (toffset < 0 || ooffset < 0 ||
+            len > str.Length - toffset || len > other.Length - ooffset)
+            return false;
 
-        if (len == 0)
+        if (len <= 0)
             return true;
 
         string strRegion = str.Substring(toffset, len);

@@ -27,17 +27,14 @@ public static class MathUtil
      * Fast method of finding the next power of 2 greater than or equal to the supplied value.
      *
      * <p>If the value is {@code <= 0} then 1 will be returned.
-     * This method is not suitable for {@link int#MIN_VALUE} or numbers greater than 2^30.
+     * This method is not suitable for {@link Integer#MIN_VALUE} or numbers greater than 2^30.
      *
      * @param value from which to search for next power of 2
      * @return The next power of 2 or the value itself if it is a power of 2
      */
     public static int findNextPositivePowerOfTwo(int value)
     {
-        if (value <= 0 || value >= 0x40000000)
-            throw new ArgumentOutOfRangeException(nameof(value), "Must be > 0 and < 0x40000000");
-
-        uint adjusted = (uint)(value - 1);
+        uint adjusted = unchecked((uint)(value - 1));
         int leadingZeros = BitOperations.LeadingZeroCount(adjusted);
         return 1 << (32 - leadingZeros);
     }
@@ -71,4 +68,39 @@ public static class MathUtil
     {
         return (index | length | capacity | (index + length) | (capacity - (index + length))) < 0;
     }
+
+    public static bool isOutOfBounds(int index, int length, int capacity)
+    {
+        int end = unchecked(index + length);
+        return (index | length | capacity | end) < 0 || end > capacity;
+    }
+
+    /**
+     * @deprecated not used anymore. User Integer.compare() instead. For removal.
+     * Compares two {@code int} values.
+     *
+     * @param  x the first {@code int} to compare
+     * @param  y the second {@code int} to compare
+     * @return the value {@code 0} if {@code x == y};
+     *         {@code -1} if {@code x < y}; and
+     *         {@code 1} if {@code x > y}
+     */
+    [Obsolete("Use int.CompareTo instead.")]
+    // do not subtract for comparison, it could overflow
+    public static int compare(int x, int y) => x.CompareTo(y);
+
+    /**
+     * @deprecated not used anymore. User Long.compare() instead. For removal.
+     * Compare two {@code long} values.
+     * @param x the first {@code long} to compare.
+     * @param y the second {@code long} to compare.
+     * @return
+     * <ul>
+     * <li>0 if {@code x == y}</li>
+     * <li>{@code > 0} if {@code x > y}</li>
+     * <li>{@code < 0} if {@code x < y}</li>
+     * </ul>
+     */
+    [Obsolete("Use long.CompareTo instead.")]
+    public static int compare(long x, long y) => x.CompareTo(y);
 }

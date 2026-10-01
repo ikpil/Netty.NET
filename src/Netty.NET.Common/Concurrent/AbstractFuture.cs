@@ -19,68 +19,56 @@ using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Concurrent;
 
-public interface IFuture
-{
-    AggregateException cause();
-}
-
-public interface IFuture<V> : IFuture
-{
-}
-
-
 /**
  * Abstract {@link Future} implementation which does not allow for cancellation.
  *
  * @param <V>
  */
-public abstract class AbstractFuture<V> : TaskCompletionSource<V>, IFuture
+public abstract class AbstractFuture<V> : IFuture<V>
 {
-    public AbstractFuture() //: base(() => default)
-    {
-    }
-
-    public virtual AggregateException cause()
-    {
-        return Task.Exception;
-    }
+    public abstract Task<V> Task { get; }
+    public abstract Exception cause();
+    public abstract bool isSuccess();
+    public abstract bool isCancellable();
+    public abstract bool isCancelled();
+    public abstract bool isDone();
+    public abstract bool cancel(bool mayInterruptIfRunning);
+    public abstract V getNow();
+    public abstract IFuture<V> addListener(IGenericFutureListener<IFuture<V>> listener);
+    public abstract IFuture<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    public abstract IFuture<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
+    public abstract IFuture<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    public abstract IFuture<V> await();
+    public abstract IFuture<V> awaitUninterruptibly();
+    public abstract bool await(TimeSpan timeout);
+    public abstract bool await(long timeoutMillis);
+    public abstract bool awaitUninterruptibly(TimeSpan timeout);
+    public abstract bool awaitUninterruptibly(long timeoutMillis);
+    public abstract IFuture<V> sync();
+    public abstract IFuture<V> syncUninterruptibly();
 
     public virtual V get()
     {
-        Task.Wait();
-
-        AggregateException cause = this.cause();
-        if (cause == null)
-        {
-            return Task.Result;
-        }
-
-        if (cause.GetBaseException() is TaskCanceledException)
-        {
-            throw (TaskCanceledException)cause.GetBaseException();
-        }
-
-        throw cause;
+        this.await();
+        return resultOrThrow();
     }
-
     public virtual V get(TimeSpan timeout)
     {
-        if (Task.Wait(timeout))
-        {
-            AggregateException cause = this.cause();
-            if (cause == null)
-            {
-                return Task.Result;
-            }
-
-            if (cause.GetBaseException() is TaskCanceledException)
-            {
-                throw (TaskCanceledException)cause.GetBaseException();
-            }
-
-            throw cause;
-        }
-
-        throw new TimeoutException();
+        if (!this.await(timeout)) throw new TimeoutException("timeout after " + timeout);
+        return resultOrThrow();
+    }
+    public virtual V get(long timeoutMillis)
+    {
+        if (!this.await(timeoutMillis)) throw new TimeoutException("timeout after " + timeoutMillis + " milliseconds");
+        return resultOrThrow();
+    }
+    private V resultOrThrow()
+    {
+        Exception error = cause();
+        if (error == null) return getNow();
+        if (error is OperationCanceledException) throw error;
+        // CLR adaptation: Java ExecutionException is represented by AggregateException;
+        // cause() and sync() preserve the original exception object.
+        throw new AggregateException(error);
     }
 }

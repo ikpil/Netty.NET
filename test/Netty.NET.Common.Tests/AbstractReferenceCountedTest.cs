@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,11 +87,11 @@ public class AbstractReferenceCountedTest
     }
 
     [Fact(Timeout = 30000)]
-    public void testRetainFromMultipleThreadsThrowsReferenceCountException()
+    public async Task testRetainFromMultipleThreadsThrowsReferenceCountException()
     {
         int threads = 4;
         Queue<Task> futures = new Queue<Task>(threads);
-        IExecutorService service = Executors.newFixedThreadPool(threads);
+        // BCL Task.Run supplies the Java ExecutorService test harness.
         AtomicInteger refCountExceptions = new AtomicInteger();
 
         try
@@ -98,13 +99,13 @@ public class AbstractReferenceCountedTest
             for (int i = 0; i < 10000; i++)
             {
                 AbstractReferenceCounted referenceCounted = newReferenceCounted();
-                CountdownEvent retainLatch = new CountdownEvent(1);
+                using CountdownEvent retainLatch = new CountdownEvent(1);
                 Assert.True(referenceCounted.release());
 
                 for (int a = 0; a < threads; a++)
                 {
                     int retainCnt = ThreadLocalRandom.current().Next(1, int.MaxValue);
-                    futures.Enqueue(service.submit(Runnables.Create(() =>
+                    futures.Enqueue(Task.Run(() =>
                     {
                         try
                         {
@@ -122,7 +123,7 @@ public class AbstractReferenceCountedTest
                         {
                             Thread.CurrentThread.Interrupt();
                         }
-                    })));
+                    }));
                 }
 
                 retainLatch.Signal();
@@ -135,7 +136,7 @@ public class AbstractReferenceCountedTest
                         break;
                     }
 
-                    f.Wait();
+                    await f;
                 }
 
                 Assert.Equal(4, refCountExceptions.get());
@@ -144,16 +145,16 @@ public class AbstractReferenceCountedTest
         }
         finally
         {
-            service.shutdown();
+            // All submitted tasks are awaited before the next iteration.
         }
     }
 
     [Fact(Timeout = 30000)]
-    public void testReleaseFromMultipleThreadsThrowsReferenceCountException()
+    public async Task testReleaseFromMultipleThreadsThrowsReferenceCountException()
     {
         int threads = 4;
         Queue<Task> futures = new Queue<Task>(threads);
-        IExecutorService service = Executors.newFixedThreadPool(threads);
+        // BCL Task.Run supplies the Java ExecutorService test harness.
         AtomicInteger refCountExceptions = new AtomicInteger();
 
         try
@@ -161,14 +162,14 @@ public class AbstractReferenceCountedTest
             for (int i = 0; i < 10000; i++)
             {
                 AbstractReferenceCounted referenceCounted = newReferenceCounted();
-                CountdownEvent releaseLatch = new CountdownEvent(1);
+                using CountdownEvent releaseLatch = new CountdownEvent(1);
                 AtomicInteger releasedCount = new AtomicInteger();
 
                 for (int a = 0; a < threads; a++)
                 {
                     AtomicInteger releaseCnt = new AtomicInteger(0);
 
-                    futures.Enqueue(service.submit(Runnables.Create(() =>
+                    futures.Enqueue(Task.Run(() =>
                     {
                         try
                         {
@@ -189,7 +190,7 @@ public class AbstractReferenceCountedTest
                         {
                             Thread.CurrentThread.Interrupt();
                         }
-                    })));
+                    }));
                 }
 
                 releaseLatch.Signal();
@@ -202,7 +203,7 @@ public class AbstractReferenceCountedTest
                         break;
                     }
 
-                    f.Wait();
+                    await f;
                 }
 
                 Assert.Equal(3, refCountExceptions.get());
@@ -213,7 +214,7 @@ public class AbstractReferenceCountedTest
         }
         finally
         {
-            service.shutdown();
+            // All submitted tasks are awaited before the next iteration.
         }
     }
 

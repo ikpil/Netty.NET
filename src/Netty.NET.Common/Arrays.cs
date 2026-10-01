@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Netty.NET.Common;
@@ -18,7 +18,7 @@ public static class Arrays
     public static T[] copyOf<T>(T[] src, int size)
     {
         var dest = new T[size];
-        Array.Copy(src, dest, size);
+        Array.Copy(src, dest, Math.Min(src.Length, size));
         return dest;
     }
 

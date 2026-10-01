@@ -33,12 +33,12 @@ public abstract class ConstantPool<T> where T : IConstant<T>
     private readonly AtomicInteger _nextId = new AtomicInteger(1);
 
     /**
-     * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
+     * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
     public T valueOf(Type firstNameComponent, string secondNameComponent)
     {
         return valueOf(
-            checkNotNull(firstNameComponent, "firstNameComponent").Name +
+            checkNotNull(firstNameComponent, "firstNameComponent").FullName +
             '#' +
             checkNotNull(secondNameComponent, "secondNameComponent"));
     }
@@ -76,7 +76,7 @@ public abstract class ConstantPool<T> where T : IConstant<T>
 
     /**
      * Creates a new {@link Constant} for the given {@code name} or fail with an
-     * {@link ArgumentException} if a {@link Constant} for the given {@code name} exists.
+     * {@link IllegalArgumentException} if a {@link Constant} for the given {@code name} exists.
      */
     public T newInstance(string name)
     {

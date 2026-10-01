@@ -63,94 +63,49 @@ public class DefaultMockTickerTest
         });
     }
 
-    [Fact(Timeout = 60)]
-    void advanceWithWaiters()
+    [Fact(Timeout = 60000)]
+    public async Task advanceWithWaiters()
     {
-        List<Thread> threads = new List<Thread>();
-        DefaultMockTicker ticker = (DefaultMockTicker)Ticker.newMockTicker();
-        int numWaiters = 4;
-        List<Task> futures = new List<Task>();
-        for (int i = 0; i < numWaiters; i++)
-        {
-            var tcs = new TaskCompletionSource();
-            var action = () =>
-            {
-                try
-                {
-                    ticker.sleep(TimeSpan.FromMilliseconds(1));
-                    tcs.SetResult();
-                }
-                catch (ThreadInterruptedException e)
-                {
-                    var e2 = new AggregateException(e);
-                    tcs.SetException(e2);
-                }
-            };
-
-            Thread thread = new Thread(k => action.Invoke());
-            threads.Add(thread);
-            futures.Add(tcs.Task);
-            thread.Start();
-        }
-
+        var threads = new List<Thread>();
+        var futures = new List<Task>();
+        var ticker = (DefaultMockTicker)Ticker.newMockTicker();
         try
         {
-            // Wait for all threads to be sleeping.
-            foreach (Thread thread in threads) {
-                ticker.awaitSleepingThread(thread);
-            }
-
-            // Time did not advance at all, and thus future will not complete.
-            for (int i = 0; i < numWaiters; i++)
+            for (int i = 0; i < 4; i++)
             {
-                int finalCnt = i;
-                Assert.Throws<TimeoutException>(() =>
+                var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                var thread = new Thread(() =>
                 {
-                    futures[finalCnt].Wait(TimeSpan.FromMilliseconds(1));
-                });
+                    try { ticker.sleep(TimeSpan.FromMilliseconds(1)); completion.SetResult(); }
+                    catch (Exception cause) { completion.TrySetException(cause); }
+                }) { IsBackground = true };
+                threads.Add(thread);
+                futures.Add(completion.Task);
+                thread.Start();
             }
-
+            // Wait for all threads to be sleeping.
+            foreach (Thread thread in threads) ticker.awaitSleepingThread(thread);
+            // Time did not advance at all, and thus future will not complete.
+            foreach (Task future in futures) Assert.False(future.Wait(TimeSpan.FromMilliseconds(1)));
             // Advance just one nanosecond before completion.
             ticker.advance(999_999);
-
             // All threads should still be sleeping.
-            foreach (Thread thread in threads) {
-                ticker.awaitSleepingThread(thread);
-            }
-
+            foreach (Thread thread in threads) ticker.awaitSleepingThread(thread);
             // Still needs one more nanosecond for our futures.
-            for (int i = 0; i < numWaiters; i++)
-            {
-                int finalCnt = i;
-                Assert.Throws<TimeoutException>(() =>
-                {
-                    futures[finalCnt].Wait(TimeSpan.FromMilliseconds(1));
-                });
-            }
-
+            foreach (Task future in futures) Assert.False(future.Wait(TimeSpan.FromMilliseconds(1)));
             // Reach at the 1 millisecond mark and ensure the future is complete.
             ticker.advance(1);
-            for (int i = 0; i < numWaiters; i++)
-            {
-                futures[i].Wait();
-            }
+            await Task.WhenAll(futures).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         }
-        catch (ThreadInterruptedException ie)
+        finally
         {
-            foreach (Thread thread in threads) {
-                string name = thread.Name;
-                ThreadState state = thread.ThreadState;
-                //StackTraceElement[] stackTrace = thread.getStackTrace();
-                thread.Interrupt();
-                ThreadInterruptedException threadStackTrace = new ThreadInterruptedException(name + ": " + state);
-                //threadStackTrace.setStackTrace(stackTrace);
-                //ie.addSuppressed(threadStackTrace);
+            foreach (Thread thread in threads)
+            {
+                if (thread.IsAlive) thread.Interrupt();
+                Assert.True(thread.Join(TimeSpan.FromSeconds(5)), "Ticker waiter did not stop");
             }
-            throw ie;
         }
     }
-
-
     [Fact]
     void sleepZero()
     {

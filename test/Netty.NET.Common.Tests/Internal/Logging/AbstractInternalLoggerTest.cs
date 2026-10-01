@@ -24,7 +24,7 @@ using Netty.NET.Common.Internal.Logging;
 namespace Netty.NET.Common.Tests.Internal.Logging;
 
 /**
- * We only need to test methods defined by {@link IInternalLogger}.
+ * We only need to test methods defined by {@link InternalLogger}.
  */
 public abstract class AbstractInternalLoggerTest<T>
 {
@@ -89,18 +89,18 @@ public abstract class AbstractInternalLoggerTest<T>
         Assert.True(result.IsEmpty());
 
         // test xx(format, ...arguments)
-        clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, msg, msg, msg });
+        clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, new object[] { msg, msg, msg } });
         Assert.True(result.IsEmpty());
 
-        // test xx(format, ...arguments), the last argument is Exception
-        clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, msg, msg, msg, ex });
+        // test xx(format, ...arguments), the last argument is Throwable
+        clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, new object[] { msg, msg, msg, ex } });
         Assert.True(result.IsEmpty());
 
-        // test xx(msg, Exception)
-        clazz.GetMethod(logMethod, [typeof(string), typeof(object)]).Invoke(logger, new object[] { msg, ex });
+        // test xx(msg, Throwable)
+        clazz.GetMethod(logMethod, [typeof(string), typeof(Exception)]).Invoke(logger, new object[] { msg, ex });
         Assert.True(result.IsEmpty());
 
-        // test xx(Exception)
+        // test xx(Throwable)
         clazz.GetMethod(logMethod, [typeof(Exception)]).Invoke(logger, new object[] { ex });
         Assert.True(result.IsEmpty());
 
@@ -125,20 +125,20 @@ public abstract class AbstractInternalLoggerTest<T>
 
         // test xx(format, ...arguments)
         result.Clear();
-        clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, msg, msg, msg });
+        clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, new object[] { msg, msg, msg } });
         assertResult(level, format3, null, msg, msg, msg);
 
-        // test xx(format, ...arguments), the last argument is Exception
+        // test xx(format, ...arguments), the last argument is Throwable
         result.Clear();
-        clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, msg, msg, msg, ex });
+        clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, new object[] { msg, msg, msg, ex } });
         assertResult(level, format3, ex, msg, msg, msg, ex);
 
-        // test xx(msg, Exception)
+        // test xx(msg, Throwable)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string), typeof(Exception)]).Invoke(logger, new object[] { msg, ex });
         assertResult(level, null, ex, msg);
 
-        // test xx(Exception)
+        // test xx(Throwable)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(Exception)]).Invoke(logger, [ex]);
         assertResult(level, null, ex);

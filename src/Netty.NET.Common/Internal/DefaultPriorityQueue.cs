@@ -41,6 +41,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
         _items = initialSize != 0
             ? new T[initialSize]
             : Array.Empty<T>();
+        _capacity = _items.Length;
     }
 
     public DefaultPriorityQueue() : this(Comparer<T>.Default, 11)
@@ -60,38 +61,54 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
 
     public bool tryRemove(T item)
     {
-        throw new NotImplementedException();
+        return remove(item);
     }
 
     public bool tryEnqueue(T item)
     {
-        throw new NotImplementedException();
+        return offer(item);
     }
 
     public bool tryDequeue(out T item)
     {
-        throw new NotImplementedException();
+        if (_count == 0) { item = default; return false; }
+        item = poll();
+        return true;
     }
 
     public bool tryPeek(out T item)
     {
-        throw new NotImplementedException();
+        item = peek();
+        return _count != 0;
     }
 
     public bool contains(T o)
     {
-        return 0 <= Array.IndexOf(_items, o);
+        int index = indexOf(o);
+        return index >= 0 && index < _count && EqualityComparer<T>.Default.Equals(o, _items[index]);
     }
+
+    public bool containsTyped(T node) => contains(node);
+    public bool removeTyped(T node) => remove(node);
 
     public void clear()
     {
+        for (int i = 0; i < _count; i++) setIndex(_items[i], -1);
+        Array.Clear(_items, 0, _count);
         _count = 0;
-        Array.Clear(_items, 0, 0);
     }
 
     public int drain(IConsumer<T> consumer, int limit)
     {
-        throw new NotImplementedException();
+        ObjectUtil.checkNotNull(consumer, nameof(consumer));
+        ObjectUtil.checkPositiveOrZero(limit, nameof(limit));
+        int drained = 0;
+        while (drained < limit && tryDequeue(out var item))
+        {
+            consumer.accept(item);
+            drained++;
+        }
+        return drained;
     }
 
     public void clearIgnoringIndexes()
@@ -101,7 +118,11 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
 
     public bool offer(T e)
     {
+        if (e == null) throw new ArgumentNullException(nameof(e));
+        if (e is IPriorityQueueNode<T> node && node.priorityQueueIndex(this) != -1)
+            throw new ArgumentException("Element already belongs to a priority queue.", nameof(e));
         int oldCount = _count;
+        // Check that the array capacity is enough to hold values by doubling capacity.
         if (oldCount == _capacity)
         {
             growHeap();
@@ -115,15 +136,17 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
 
     public T poll()
     {
-        T result = peek();
-        if (result == null)
+        if (_count == 0)
         {
             return default;
         }
 
+        T result = _items[0];
+        setIndex(result, -1);
         int newCount = --_count;
         T lastItem = _items[newCount];
         _items[newCount] = default;
+        // Make sure we don't add the last element back.
         if (newCount > 0)
         {
             trickleDown(0, lastItem);
@@ -139,26 +162,31 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
 
     public bool remove(T item)
     {
-        int index = Array.IndexOf(_items, item);
-        if (index == -1)
+        int index = indexOf(item);
+        if (!contains(item))
         {
             return false;
         }
 
+        setIndex(item, -1);
         _count--;
+        // If there are no node left, or this is the last node in the array just remove and return.
         if (index == _count)
         {
             _items[index] = default;
         }
         else
         {
+            // Move the last element where node currently lives in the array.
             T last = _items[_count];
             _items[_count] = default;
-            trickleDown(index, last);
-            if (_items[index].Equals(last))
+            // priorityQueueIndex will be updated below in bubbleUp or bubbleDown
+            // Make sure the moved node still preserves the min-heap properties.
+            if (_comparer.Compare(item, last) < 0)
             {
-                bubbleUp(index, last);
+                trickleDown(index, last);
             }
+            else bubbleUp(index, last);
         }
 
         return true;
@@ -166,8 +194,8 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
 
     public void priorityChanged(T item)
     {
-        int index = Array.IndexOf(_items, item);
-        if (-1 >= index)
+        int index = indexOf(item);
+        if (!contains(item))
         {
             return;
         }
@@ -196,7 +224,9 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
     private void growHeap()
     {
         int oldCapacity = _capacity;
-        _capacity = oldCapacity + (oldCapacity <= 64 ? oldCapacity + 2 : (oldCapacity >> 1));
+        // Use a policy which allows for a 0 initial capacity. Same policy as JDK's priority queue, double when
+        // "small", then grow by 50% when "large".
+        _capacity = oldCapacity + (oldCapacity < 64 ? oldCapacity + 2 : (oldCapacity >> 1));
         var newHeap = new T[_capacity];
         Array.Copy(_items, 0, newHeap, 0, _count);
         _items = newHeap;
@@ -207,9 +237,11 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
         int middleIndex = _count >> 1;
         while (index < middleIndex)
         {
+            // Compare node to the children of index k.
             int childIndex = (index << 1) + 1;
             T childItem = _items[childIndex];
             int rightChildIndex = childIndex + 1;
+            // Make sure we get the smallest child to compare against.
             if (rightChildIndex < _count
                 && _comparer.Compare(childItem, _items[rightChildIndex]) > 0)
             {
@@ -217,16 +249,23 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
                 childItem = _items[rightChildIndex];
             }
 
+            // If the bubbleDown node is less than or equal to the smallest child then we will preserve the min-heap
+            // property by inserting the bubbleDown node here.
             if (_comparer.Compare(item, childItem) <= 0)
             {
                 break;
             }
 
+            // Bubble the child up.
             _items[index] = childItem;
+            setIndex(childItem, index);
+            // Move down k down the tree for the next iteration.
             index = childIndex;
         }
 
+        // We have found where node should live and still satisfy the min-heap property, so put it in the queue.
         _items[index] = item;
+        setIndex(item, index);
     }
 
     private void bubbleUp(int index, T item)
@@ -235,18 +274,36 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
         {
             int parentIndex = (index - 1) >> 1;
             T parentItem = _items[parentIndex];
+            // If the bubbleUp node is less than the parent, then we have found a spot to insert and still maintain
+            // min-heap properties.
             if (_comparer.Compare(item, parentItem) >= 0)
             {
                 break;
             }
 
+            // Bubble the parent down.
             _items[index] = parentItem;
+            setIndex(parentItem, index);
+            // Move k up the tree for the next iteration.
             index = parentIndex;
         }
 
+        // We have found where node should live and still satisfy the min-heap property, so put it in the queue.
         _items[index] = item;
+        setIndex(item, index);
     }
 
+    private int indexOf(T item) => item is IPriorityQueueNode<T> node
+        ? node.priorityQueueIndex(this) : Array.IndexOf(_items, item, 0, _count);
+
+    private void setIndex(T item, int index)
+    {
+        if (item is IPriorityQueueNode<T> node) node.priorityQueueIndex(this, index);
+    }
+
+    /**
+     * This iterator does not return elements in any particular order.
+     */
     public IEnumerator<T> GetEnumerator()
     {
         for (int i = 0; i < _count; i++)
