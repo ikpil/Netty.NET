@@ -33,11 +33,11 @@ worker still owns an invocation. A reentrant factory's creation reservation also
 prevents completion until its call returns, even when it returns no Thread.
 
 Queue clear transfers no work handles to the caller. It therefore cancels removed
-native submission/scheduling reservations before publishing an empty queue. The
-legacy Future queue-removal behavior is retained for its separately unfinished
-backend migration. After Termination completes, queue-view insertion returns
-false: otherwise a settled lifecycle could become nonterminated again. Existing
-pre-completion transfer/removal/reinsertion contracts remain exercised.
+native submission/scheduling reservations before publishing an empty queue.
+The subsequent native scheduling migration removes legacy Future queue results.
+The subsequent graceful-shutdown review refuses queue insertion at admission
+closure and prevents detached periodic work from requeueing after Termination.
+Open-admission transfer/removal/reinsertion contracts remain exercised.
 
 The lifetime boundary covers executor queue work and worker-loop ownership. It
 does not join extra code a custom thread factory runs after workerLoop returns,
@@ -71,13 +71,19 @@ the current matrix and historical checkpoints.
 This is one lifecycle correction within the unfinished backend review. The subsequent
 bulk review removes invokeAll/invokeAny (common-native-bulk-composition.md);
 the subsequent unordered scheduling migration removes concrete Java scheduler/JDK
-result wrappers (common-native-unordered-scheduling-migration.md). Remaining plain
-Future fixtures and final pool configuration/queue/shutdown review remain open.
+result wrappers (common-native-unordered-scheduling-migration.md). The subsequent
+fixture migration retires plain Future/Promise (common-native-future-retirement.md).
+The subsequent native queue review removes public mutators and uses owned token
+withdrawal with PendingTaskCount diagnostics; see common-unordered-native-queue.md.
+Final pool configuration and immediate interruption policy remain open.
 Search of all pinned modules finds bulk invocation only in forwarding/guard
 implementations, common/transport blocking-guard tests and benchmark stubs; no
 production operation requires a custom bulk-result API. Useful composition now
 uses native SubmitAsync plus BCL Task composition and owned cancellation.
-The unordered graceful-shutdown quietPeriod/timeout TODO and inherited pool
-configuration still need explicit native API decisions; this correction does not
-claim those parameters are implemented. All original Java comments stay beside
-the mapped implementation, including that TODO.
+The subsequent graceful-shutdown review implements quietPeriod/timeout admission
+from the documented EventExecutorGroup contract, then applies existing drain
+policies; see common-unordered-graceful-shutdown.md. Queue insertion is now refused
+at admission closure, including before Termination completes. The subsequent queue
+review removes that public mutation surface altogether. Final inherited pool
+configuration remains open. All original Java comments stay
+beside the mapped implementation or its provenance, including the upstream TODO.

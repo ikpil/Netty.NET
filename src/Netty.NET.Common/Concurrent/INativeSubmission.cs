@@ -12,6 +12,13 @@ internal interface INativeSubmission : IRunnable
     void Reject(Exception error);
 }
 
+// Only operations with caller-owned pre-invocation cancellation need this hook.
+// The queue owns membership; the submission's existing TCS still owns its result.
+internal interface ICancelableNativeSubmission : INativeSubmission
+{
+    void SetCancellationRemoval(Action remove);
+}
+
 // A forwarding executor may hide the actual queue. Bind each runner reservation
 // to the pool that admits it so shutdown policy follows that reservation.
 internal interface IQueueBoundNativeSubmission : INativeSubmission

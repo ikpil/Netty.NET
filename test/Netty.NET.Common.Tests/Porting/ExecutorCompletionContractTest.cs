@@ -390,10 +390,10 @@ public class ExecutorCompletionContractTest
         using var registration = observation.Register(_ => ++calls);
         try
         {
-            Assert.Equal(1, executor.getQueue().Count);
-            Assert.True(executor.getQueue().tryPeek(out IRunnable queued));
+            Assert.Equal(1, executor.PendingTaskCount);
+            IRunnable queued = Assert.Single(executor.shutdownNow());
             Assert.False((object)queued is System.Threading.Tasks.Task);
-            executor.shutdownNow();
+            queued.run();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);

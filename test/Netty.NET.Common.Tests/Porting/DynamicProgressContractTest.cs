@@ -242,10 +242,10 @@ public class DynamicProgressContractTest
             if (terminal)
             {
                 source.SetResult();
-                Assert.True(SpinWait.SpinUntil(() => pool.getQueue().Count == 1, TimeSpan.FromSeconds(5)));
+                Assert.True(SpinWait.SpinUntil(() => pool.PendingTaskCount == 1, TimeSpan.FromSeconds(5)));
             }
             else reporter.Report(new TransferProgress(1));
-            Assert.Equal(1, pool.getQueue().Count);
+            Assert.Equal(1, pool.PendingTaskCount);
             pool.shutdownNow();
             foreach (var task in new[] { reporter.NotificationsCompleted, first.NotificationsCompleted, second.NotificationsCompleted })
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task.WaitAsync(TimeSpan.FromSeconds(5)));

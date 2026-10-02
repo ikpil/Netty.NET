@@ -121,8 +121,8 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default, non-batch suite executes **1365 cases** on Windows/net10.0:
-**1351 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default, non-batch suite executes **1380 cases** on Windows/net10.0:
+**1366 passed / 0 failed / 14 skipped** in final Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Evidence:
 `native-completion-final-contracts.trx`,
@@ -157,12 +157,52 @@ and analyzer warnings are not claimed resolved. Evidence:
 `native-submission-wrapper-cleanup-full-release.trx`,
 `native-future-retirement-final-contracts-debug.trx`,
 `native-future-retirement-chain-contracts-debug.trx`,
-`native-future-retirement-final-full-debug.trx` and
-`native-future-retirement-final-full-release.trx` in the ignored TestResults directory.
+`native-future-retirement-final-full-debug.trx`,
+`native-future-retirement-final-full-release.trx`,
+`unordered-graceful-final-contracts-v3-debug.trx`,
+`unordered-graceful-final-full-debug.trx`,
+`unordered-graceful-final-full-release.trx`,
+`unordered-native-queue-final-contracts-v2-debug.trx`,
+`unordered-native-queue-full-debug.trx` and
+`unordered-native-queue-final-full-release.trx` in the ignored TestResults directory.
 Whole-suite files use the full default common test project, without PortingBatch.
 Files named contracts record focused execution; the worker-identity before file
-retains the expected failing regression run. The two newest native-future-retirement final full
+retains the expected failing regression run. The newest unordered-native-queue full
 files establish the current Debug/Release counts above.
+
+The unordered public mutable queue/remove API and unused metadata forwarding are
+removed. PendingTaskCount preserves the original 10000 empty-queue checks; owned
+tokens withdraw native submissions and schedules. Two migrated probes reproduce
+canceled submission entries keeping a workerless queue alive, repaired by a single
+membership hook without another result owner. Shutdown cancellation iterates a BCL
+snapshot because withdrawal can reenter and mutate membership. The expanded affected
+Debug selection passes 250 cases, including 256 admission/cancellation/claim races
+and weak pool-owner lifetime. All 759 non-Porting identities and 14 skips match the
+graceful checkpoint; changes are nine explicitly documented CLR-only mappings plus
+two new cases. All 98 verified comment entries have zero missing. See
+[native queue ownership](common-unordered-native-queue.md),
+unordered-native-queue-identity-comparison.json and unordered-native-queue-comment-audit.json.
+The first full Release retains one failure in the existing real-time
+AutoScalingEventExecutorChooserFactoryTest.testScaleUpDoesNotExceedMaxThreads
+(unordered-native-queue-full-release.trx). Its seven original fixtures and an
+unchanged full Release rerun pass. Timing stability remains an explicit follow-up;
+the failed run is not erased or counted as a successful validation.
+
+Unordered graceful shutdown now implements the group contract despite the pinned
+implementation's ignored-parameter TODO. Quiet waiting accepts new work and
+restarts on admission and worker completion; timeout closes admission without
+interrupting running work or completing Termination early. Delayed/periodic
+shutdown policies still govern drain. The lifecycle timer does not capture ambient
+ExecutionContext, including already-suppressed flow and long TimeSpan periods.
+Queue insertion after closure and detached periodic requeue after termination
+cannot reopen the pool. Nine initial regressions and a separate periodic reentry
+regression fail before their repairs; final affected Debug 128 cases pass.
+The full matrix adds 13 CLR cases without removing or renaming any fixture;
+all 759 non-Porting identities and 14 skips remain unchanged. All 98 verified
+comment entries have zero missing, including 21 unordered, ten group-contract
+and eight original unordered test comments. See
+[graceful shutdown admission and drain](common-unordered-graceful-shutdown.md),
+unordered-graceful-identity-comparison.json and unordered-graceful-final-comment-audit.json.
 
 The plain Future/Promise hierarchy and its Java blocking/listener facades are
 removed after all runtime consumers and the 20 original fixture scenarios use
@@ -177,7 +217,8 @@ Inline-capable chain producers retain 20000 operations and the original two-seco
 bound, and the final matrix passes. All 70 removed-source comments, seven PendingWrite
 and 12 fixture comments are preserved. See
 [native completion ownership](common-native-future-retirement.md). Final unordered
-queue/configuration/shutdown policies and 100 pending source decisions remain open.
+configuration and immediate interruption policies and 100 pending source
+decisions remain open.
 
 After native submission and scheduling migration, unused PromiseTask/IRunnableFuture
 and six Callable/Queueing glue files are removed. Their actual consumers already

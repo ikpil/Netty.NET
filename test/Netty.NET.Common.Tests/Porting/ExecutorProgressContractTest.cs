@@ -360,7 +360,7 @@ public class ExecutorProgressContractTest
         if (!completedSource) Assert.True(reporter.TryReport(1, 10));
         try
         {
-            Assert.Equal(1, pool.getQueue().Count);
+            Assert.Equal(1, pool.PendingTaskCount);
             pool.shutdownNow();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await reporter.NotificationsCompleted.WaitAsync(TimeSpan.FromSeconds(2)));

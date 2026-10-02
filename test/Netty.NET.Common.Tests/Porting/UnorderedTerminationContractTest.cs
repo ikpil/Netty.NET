@@ -77,7 +77,7 @@ public class UnorderedTerminationContractTest
         try
         {
             Assert.Equal(0, executor.getPoolSize());
-            Assert.Equal(1, executor.getQueue().Count);
+            Assert.Equal(1, executor.PendingTaskCount);
             Task termination = executor.ShutdownGracefullyAsync();
             Assert.False(termination.IsCompleted);
             cancellation.Cancel();
@@ -124,16 +124,17 @@ public class UnorderedTerminationContractTest
     }
 
     [Fact]
-    public async Task ClearingTheQueueSettlesNativeWorkBeforeCompletingShutdown()
+    public async Task OwnerCancellationSettlesWorkerlessWorkBeforeCompletingShutdown()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
-        Task submitted = executor.SubmitAsync(() => Assert.Fail("Cleared invocation ran"));
-        Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Cleared deadline ran"), TimeSpan.FromDays(1));
+        using var cancellation = new CancellationTokenSource();
+        Task submitted = executor.SubmitAsync(() => Assert.Fail("Canceled invocation ran"), cancellation.Token);
+        Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Canceled deadline ran"), TimeSpan.FromDays(1), cancellation.Token);
         try
         {
             Task termination = executor.ShutdownGracefullyAsync();
             Assert.False(termination.IsCompleted);
-            executor.getQueue().clear();
+            cancellation.Cancel();
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(submitted.IsCanceled);
             Assert.True(scheduled.IsCanceled);
@@ -143,15 +144,16 @@ public class UnorderedTerminationContractTest
     }
 
     [Fact]
-    public void ACompletedLifecycleCannotBeReopenedThroughItsQueueView()
+    public void ACompletedLifecycleRejectsNewWorkAndRemovedHandleInvocation()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
         var scheduled = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
         IRunnable saved = Assert.Single(executor.shutdownNow());
         Assert.True(executor.Termination.IsCompletedSuccessfully);
-        Assert.False(executor.getQueue().tryEnqueue(saved));
+        Assert.Throws<RejectedExecutionException>(() => executor.execute(Runnables.Empty));
+        saved.run();
         Assert.True(executor.isTerminated());
-        Assert.Equal(0, executor.getQueue().Count);
+        Assert.Equal(0, executor.PendingTaskCount);
         Assert.True(scheduled.IsCanceled);
     }
 }

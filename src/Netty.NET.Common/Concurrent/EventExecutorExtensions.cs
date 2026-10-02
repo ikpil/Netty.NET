@@ -107,13 +107,14 @@ public static class EventExecutorExtensions
     // This CLR work item implements the execution boundary used by upstream
     // PromiseTask.run()/setUncancellableInternal(), without a Java Future or Runnable
     // in the consumer API. TaskCompletionSource alone owns the terminal result.
-    private sealed class SubmittedTask<T> : INativeSubmission
+    private sealed class SubmittedTask<T> : ICancelableNativeSubmission
     {
         private readonly TaskCompletionSource<T> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly CancellationToken _cancellationToken;
         private readonly CancellationTokenRegistration _registration;
         private Func<CancellationToken, T> _function;
         private ExecutionContext _context;
+        private Action _removeCanceled;
         // A single claim selects invocation, pre-start cancellation, or rejection.
         // It describes ownership of the invocation, not a second completion state.
         private int _claimed;
@@ -133,6 +134,15 @@ public static class EventExecutorExtensions
         internal Task<T> Task => _completion.Task;
         public bool IsCanceled => Task.IsCanceled;
 
+        public void SetCancellationRemoval(Action remove)
+        {
+            Volatile.Write(ref _removeCanceled, remove);
+            // Cancellation may have won before binding, or race the publication.
+            // Either binder or canceler consumes this single membership hook.
+            if (Task.IsCanceled) RemoveCanceled();
+            else if (Task.IsCompleted) Interlocked.Exchange(ref _removeCanceled, null);
+        }
+
         public void CancelForShutdown()
         {
             CancelBeforeStart();
@@ -144,10 +154,14 @@ public static class EventExecutorExtensions
             if (Interlocked.CompareExchange(ref _claimed, 1, 0) != 0) return;
             ReleaseInvocation();
             _completion.SetCanceled(_cancellationToken);
+            RemoveCanceled();
         }
+
+        private void RemoveCanceled() => Interlocked.Exchange(ref _removeCanceled, null)?.Invoke();
 
         public void Reject(Exception error)
         {
+            Interlocked.Exchange(ref _removeCanceled, null);
             if (Interlocked.CompareExchange(ref _claimed, 1, 0) == 0)
             {
                 ReleaseInvocation();
@@ -159,6 +173,7 @@ public static class EventExecutorExtensions
         public void run()
         {
             bool execute = Interlocked.CompareExchange(ref _claimed, 1, 0) == 0;
+            Interlocked.Exchange(ref _removeCanceled, null);
             // Ownership is already decided by the claim. Never block an event
             // loop waiting for a cancellation callback that can no longer win.
             _registration.Unregister();

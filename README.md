@@ -22,4 +22,8 @@ The remaining [Future/Promise result and listener hierarchy](docs/common-native-
 is replaced by Task/TCS results, native operation claims and explicit completion observation.
 The unordered executor's [termination signal](docs/common-unordered-termination.md)
 waits for its queue and worker reservations to drain.
+Its [graceful shutdown](docs/common-unordered-graceful-shutdown.md) accepts work
+during quiet waiting and closes admission at quiet expiry or timeout, then drains.
 Its [worker identity](docs/common-unordered-worker-identity.md) also survives thread-factory replacement.
+Its [queue API](docs/common-unordered-native-queue.md) exposes pending counts;
+native token cancellation withdraws work without exporting mutable queue handles.

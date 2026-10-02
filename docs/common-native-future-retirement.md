@@ -139,10 +139,12 @@ all 70 comments of the eight retired source entries, all seven PendingWrite and
 git diff --check passes. Existing compiler/analyzer warnings remain.
 Common completion is not established by this migration: executor shutdown/config
 policies, collections/queues, strings/encoding/platform and all unreviewed source
-decisions remain required work. The next backend boundary is the unordered
-ShutdownGracefullyAsync quietPeriod/timeout policy, currently ignored by its
-inherited shutdown path; decide it from pinned pool/ordered shutdown consumers
-and implement/test the actual native lifecycle rather than masking it as success.
+decisions remain required work. The subsequent unordered graceful-shutdown review
+implements quiet/timeout admission and actual drain from the documented group
+contract; see common-unordered-graceful-shutdown.md. The subsequent native queue
+review removes public mutators and implements submission cancellation withdrawal;
+see common-unordered-native-queue.md. Final inherited configuration and immediate
+interruption decisions remain open.
 
 ## Original pinned comment provenance
 

@@ -75,7 +75,7 @@ public class UnorderedExecutorContractTest
         {
             var work = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 17; });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            var future = executor.ShutdownGracefullyAsync(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(-2));
+            var future = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             Assert.Same(executor.Termination, future);
             Assert.False(future.IsCompleted);
             Assert.True(executor.isShutdown());
@@ -131,9 +131,9 @@ public class UnorderedExecutorContractTest
             });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1));
-            IRunnable reservation = peek(executor);
+            IRunnable reservation = Assert.Single(executor.shutdownNow());
             Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(reservation);
-            Assert.Same(reservation, Assert.Single(executor.shutdownNow()));
+            reservation.run();
             Assert.True(running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.True(delayed.IsCanceled);
             Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
@@ -192,7 +192,7 @@ public class UnorderedExecutorContractTest
                 future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
             Thread.Sleep(30);
             Assert.Equal(1, Volatile.Read(ref calls));
-            Assert.True(executor.getQueue().isEmpty());
+            Assert.Equal(0, executor.PendingTaskCount);
             Assert.True(future.IsFaulted);
         }
         finally { stop(executor); }
@@ -207,20 +207,14 @@ public class UnorderedExecutorContractTest
             using var cancellation = new CancellationTokenSource();
             var future = executor.ScheduleAsync(int () => throw new InvalidOperationException(),
                 TimeSpan.FromDays(1), cancellation.Token);
-            IRunnable reservation = peek(executor);
-            Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(reservation);
+            Assert.Equal(1, executor.PendingTaskCount);
             cancellation.Cancel();
-            Assert.True(executor.getQueue().isEmpty());
-            Assert.False(executor.getQueue().tryRemove(reservation));
+            Assert.Equal(0, executor.PendingTaskCount);
+            cancellation.Cancel();
+            Assert.Equal(0, executor.PendingTaskCount);
             Assert.ThrowsAny<OperationCanceledException>(() => future.GetAwaiter().GetResult());
         }
         finally { stop(executor); }
-    }
-
-    private static IRunnable peek(UnorderedThreadPoolEventExecutor executor)
-    {
-        Assert.True(executor.getQueue().tryPeek(out var task));
-        return task;
     }
 
     [Fact]
@@ -285,11 +279,10 @@ public class UnorderedExecutorContractTest
         try
         {
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.MaxValue, cancellation.Token);
-            var reservation = Assert.IsAssignableFrom<IScheduledWork>(peek(executor));
-            Assert.True(reservation.delayNanos() > 1_000_000_000);
-            Assert.False(executor.getQueue().tryDequeue(out _));
+            Assert.Equal(1, executor.PendingTaskCount);
+            Assert.False(delayed.IsCompleted);
             Assert.Equal(2, executor.ScheduleAsync(() => 2, TimeSpan.MinValue).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.True(reservation.delayNanos() > long.MaxValue / 2);
+            Assert.False(delayed.IsCompleted);
             cancellation.Cancel();
             Assert.True(delayed.IsCanceled);
         }
@@ -306,9 +299,9 @@ public class UnorderedExecutorContractTest
         {
             var periodic = executor.ScheduleAtFixedRateAsync(() => entered.Signal(), TimeSpan.Zero, TimeSpan.MaxValue, cancellation.Token);
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            Assert.True(SpinWait.SpinUntil(() => executor.getQueue().Count == 1, TimeSpan.FromSeconds(5)));
+            Assert.True(SpinWait.SpinUntil(() => executor.PendingTaskCount == 1, TimeSpan.FromSeconds(5)));
             Assert.Equal(42, executor.SubmitAsync<int>(() => 42).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.True(Assert.IsAssignableFrom<IScheduledWork>(peek(executor)).delayNanos() > 1_000_000_000);
+            Assert.False(periodic.IsCompleted);
             cancellation.Cancel();
             Assert.True(periodic.IsCanceled);
         }
@@ -415,7 +408,7 @@ public class UnorderedExecutorContractTest
                     if (continued.IsSet) release.Wait();
                 }
             }, TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(5));
-            var termination = executor.ShutdownGracefullyAsync();
+            var termination = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             Assert.False(termination.IsCompleted);
             Assert.True(continued.Wait(TimeSpan.FromSeconds(5)));
             Assert.False(executor.isTerminated());
@@ -429,25 +422,23 @@ public class UnorderedExecutorContractTest
     }
 
     [Fact]
-    public void RemovedPeriodicReservationCancelsWhenShutdownPolicyPreventsReentry()
+    public void OwnerCancellationPreventsPeriodicReentryAfterShutdown()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         int calls = 0;
+        using var cancellation = new CancellationTokenSource();
         try
         {
             executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
             var future = executor.ScheduleAtFixedRateAsync(() => ++calls,
-                TimeSpan.FromDays(1), TimeSpan.FromDays(1));
-            IRunnable reservation = peek(executor);
-            Assert.True(executor.remove(reservation));
+                TimeSpan.FromDays(1), TimeSpan.FromDays(1), cancellation.Token);
             executor.shutdown();
-            executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+            Assert.False(future.IsCompleted);
+            cancellation.Cancel();
             Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
-            // Model a dequeued reservation re-entering after its policy changed.
-            reservation.run();
             Assert.Equal(0, calls);
             Assert.True(future.IsCanceled);
-            Assert.True(executor.getQueue().isEmpty());
+            Assert.Equal(0, executor.PendingTaskCount);
         }
         finally { stop(executor); }
     }
@@ -495,7 +486,7 @@ public class UnorderedExecutorContractTest
     }
 
     [Fact]
-    public void RawQueueRemovalAndNativeCancellationNeedNoFutureDecorationPolicy()
+    public void NativeOwnerCancellationWithdrawsQueuedWorkWithoutInterruptingItsWorker()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
@@ -505,16 +496,16 @@ public class UnorderedExecutorContractTest
             var running = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 1; });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             int executions = 0;
-            executor.execute(Runnables.Create(() => ++executions));
-            var raw = peek(executor);
-            Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(raw);
-            Assert.True(executor.remove(raw));
-            Assert.True(executor.getQueue().isEmpty());
+            using var submittedCancellation = new CancellationTokenSource();
+            Task removed = executor.SubmitAsync(() => ++executions, submittedCancellation.Token);
+            submittedCancellation.Cancel();
+            Assert.True(removed.IsCanceled);
+            Assert.Equal(0, executor.PendingTaskCount);
             using var cancellation = new CancellationTokenSource();
             var scheduled = executor.ScheduleAsync(() => 7, TimeSpan.FromDays(1), cancellation.Token);
             cancellation.Cancel();
             Assert.True(scheduled.IsCanceled);
-            Assert.True(executor.getQueue().isEmpty());
+            Assert.Equal(0, executor.PendingTaskCount);
             release.Signal();
             Assert.Equal(1, running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(0, executions);
@@ -597,7 +588,7 @@ public class UnorderedExecutorContractTest
     }
 
     [Fact]
-    public void NativeQueueCanRemoveAndReinsertMembershipWithoutUsingTaskIdentity()
+    public void PendingCountTracksCancellationAndAReplacementAdmission()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
@@ -606,14 +597,14 @@ public class UnorderedExecutorContractTest
         {
             var running = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 1; });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+            using var cancellation = new CancellationTokenSource();
+            var removed = executor.ScheduleAsync(() => 7, TimeSpan.Zero, cancellation.Token);
+            Assert.Equal(1, executor.PendingTaskCount);
+            cancellation.Cancel();
+            Assert.True(removed.IsCanceled);
+            Assert.Equal(0, executor.PendingTaskCount);
             var queued = executor.ScheduleAsync(() => 7, TimeSpan.Zero);
-            IRunnable reservation = peek(executor);
-            Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(reservation);
-            Assert.NotSame(queued, reservation);
-            Assert.True(executor.remove(reservation));
-            Assert.True(executor.getQueue().isEmpty());
-            Assert.True(executor.getQueue().tryEnqueue(reservation));
-            Assert.Same(reservation, peek(executor));
+            Assert.Equal(1, executor.PendingTaskCount);
             release.Signal();
             Assert.Equal(1, running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(7, queued.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
@@ -769,7 +760,7 @@ public class UnorderedExecutorContractTest
             Assert.Same(expected, Assert.Throws<InvalidOperationException>(() =>
                 failed.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
             Assert.Equal(0, executor.getPoolSize());
-            Assert.True(executor.getQueue().isEmpty());
+            Assert.Equal(0, executor.PendingTaskCount);
             Assert.Equal(7, executor.SubmitAsync<int>(() => 7).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(2, attempts);
             Assert.Equal(0, executions);
@@ -833,7 +824,7 @@ public class UnorderedExecutorContractTest
             Assert.Throws<ArgumentNullException>(() => executor.execute(null));
             Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.Zero));
             Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(-1)));
-            Assert.True(executor.getQueue().isEmpty());
+            Assert.Equal(0, executor.PendingTaskCount);
         }
         finally { stop(executor); }
     }

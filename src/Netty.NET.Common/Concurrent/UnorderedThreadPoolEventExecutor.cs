@@ -20,7 +20,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Collections;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -70,10 +69,15 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private bool executeDelayedAfterShutdown = true;
     private IThreadFactory threadFactory;
     private Action<IRunnable, UnorderedThreadPoolEventExecutor> rejectedHandler;
+    private bool gracefulRequested;
+    private long gracefulStartNanos;
+    private long gracefulActivityNanos;
+    private long gracefulQuietNanos;
+    private long gracefulTimeoutNanos;
+    private Timer gracefulTimer;
     private bool shutdownRequested;
     private bool stopping;
     private static long nextSequence;
-    private readonly QueueView queueView;
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int, ThreadFactory)}
@@ -108,7 +112,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         this.corePoolSize = corePoolSize;
         this.threadFactory = threadFactory;
         rejectedHandler = handler;
-        queueView = new QueueView(this);
     }
 
     public IEventExecutorGroup parent() => this;
@@ -118,7 +121,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     public bool inEventLoop() => inEventLoop(Thread.CurrentThread);
     public bool inEventLoop(Thread thread) => thread != null && eventLoopThreads.ContainsKey(thread);
     public bool isExecutorThread(Thread thread) => inEventLoop(thread);
-    public bool isShuttingDown() => isShutdown();
+    public bool isShuttingDown() { using (UninterruptibleMonitor.enter(gate)) return gracefulRequested || shutdownRequested; }
     public bool isSuspended() => false;
     public bool trySuspend() => false;
     public bool isShutdown() { using (UninterruptibleMonitor.enter(gate)) return shutdownRequested; }
@@ -131,13 +134,20 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     // factory returns a Thread; shutdown cannot finish underneath that factory.
     private void PublishPoolState()
     {
+        AdvanceGracefulShutdown();
         Monitor.PulseAll(gate);
         if (shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0)
             termination.TrySetResult();
     }
     public Task Termination => termination.Task;
     public Task ShutdownGracefullyAsync() => ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(15));
-    public IQueue<IRunnable> getQueue() => queueView;
+    /// <summary>Gets the number of pending invocation reservations, including future deadlines.</summary>
+    /// <remarks>
+    /// This is a momentary observation under the pool gate, not an admission guarantee.
+    /// Running invocations are excluded. CancellationToken ownership removes native work;
+    /// callers cannot mutate the executor's queue or transfer reservations between pools.
+    /// </remarks>
+    public int PendingTaskCount { get { using (UninterruptibleMonitor.enter(gate)) return queue.Count; } }
     public int getCorePoolSize() { using (UninterruptibleMonitor.enter(gate)) return corePoolSize; }
 
     // CLR TimeSpan/delegate equivalents of inherited JDK pool configuration.
@@ -241,7 +251,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             if (!value && shutdownRequested) onShutdown();
         }
     }
-    public bool remove(IRunnable task) => queueView.tryRemove(task);
     private void wakeIdleWorkers()
     {
         ++configurationGeneration;
@@ -254,10 +263,14 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         using (UninterruptibleMonitor.enter(gate))
         {
             shutdownRequested = stopping = true;
-            tasks = queue.UnorderedItems.Select(item => item.Element.outer).ToList();
+            DisposeGracefulTimer();
+            Work[] pending = queue.UnorderedItems.Select(item => item.Element).ToArray();
+            tasks = pending.Select(work => work.outer).ToList();
             // Queue handles are membership, not results. Every removed reservation
             // settles cancellation or releases its raw callback before termination.
-            foreach (var item in queue.UnorderedItems) item.Element.cancelOuter();
+            // Canceling a submission can remove itself through its membership
+            // hook. Iterate the owned snapshot rather than a live BCL enumerator.
+            foreach (Work work in pending) work.cancelOuter();
             queue.Clear();
             foreach (var worker in workers) worker.Interrupt();
             PublishPoolState();
@@ -269,8 +282,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         using (UninterruptibleMonitor.enter(gate))
         {
-            shutdownRequested = true;
-            onShutdown();
+            CloseAdmission();
         }
         // Upstream completes this promise when shutdown is requested, before the pool has terminated.
         // CLR Termination instead follows the drained queue and released worker reservations.
@@ -280,8 +292,74 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         // TODO: At the moment this just calls shutdown but we may be able to do something more smart here which
         //       respects the quietPeriod and timeout.
-        shutdown();
+        // Upstream TODO preserved above. CLR implements the EventExecutorGroup
+        // contract: admission remains open until quiet or timeout, then work drains.
+        if (quietPeriod < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(quietPeriod));
+        if (timeout < quietPeriod) throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be at least the quiet period.");
+        using (UninterruptibleMonitor.enter(gate))
+        {
+            if (!gracefulRequested && !shutdownRequested)
+            {
+                gracefulStartNanos = gracefulActivityNanos = ticker().nanoTime();
+                gracefulQuietNanos = AbstractScheduledEventExecutor.toNanos(quietPeriod);
+                gracefulTimeoutNanos = AbstractScheduledEventExecutor.toNanos(timeout);
+                // A lifecycle timer must work even with no worker (or a factory
+                // returning null), without retaining the caller's ExecutionContext.
+                using (ExecutionContext.IsFlowSuppressed() ? default : ExecutionContext.SuppressFlow())
+                    gracefulTimer = new Timer(static state => ((UnorderedThreadPoolEventExecutor)state).CheckGracefulShutdown(),
+                        this, Timeout.Infinite, Timeout.Infinite);
+                gracefulRequested = true;
+                PublishPoolState();
+            }
+        }
         return Termination;
+    }
+
+    private void CheckGracefulShutdown()
+    {
+        using (UninterruptibleMonitor.enter(gate)) PublishPoolState();
+    }
+
+    // All lifecycle decisions and admission share gate. Timer lateness cannot
+    // extend admission: each submission checks the monotonic deadline itself.
+    private void AdvanceGracefulShutdown()
+    {
+        if (!gracefulRequested || shutdownRequested) return;
+        long now = ticker().nanoTime();
+        long timeoutRemaining = gracefulTimeoutNanos - unchecked(now - gracefulStartNanos);
+        long quietRemaining = gracefulQuietNanos - unchecked(now - gracefulActivityNanos);
+        if (timeoutRemaining <= 0 || gracefulQuietNanos == 0 ||
+            (quietRemaining <= 0 && activeWorkers.Count == 0 && startingWorkers == 0))
+        {
+            CloseAdmission();
+            return;
+        }
+        long remaining = activeWorkers.Count != 0 || startingWorkers != 0 ? timeoutRemaining :
+            Math.Min(timeoutRemaining, quietRemaining);
+        // Timer's millisecond range is smaller than TimeSpan's; long periods
+        // are checked in chunks without overflowing or closing prematurely.
+        int milliseconds = (int)Math.Min(int.MaxValue, (remaining - 1) / 1_000_000 + 1);
+        gracefulTimer.Change(milliseconds, Timeout.Infinite);
+    }
+
+    private void RecordGracefulActivity()
+    {
+        if (gracefulRequested && !shutdownRequested) gracefulActivityNanos = ticker().nanoTime();
+    }
+
+    private void CloseAdmission()
+    {
+        shutdownRequested = true;
+        DisposeGracefulTimer();
+        // Retain the pool's explicit delayed/periodic shutdown policies. Timeout
+        // closes admission; it neither interrupts running code nor fakes drain.
+        onShutdown();
+    }
+
+    private void DisposeGracefulTimer()
+    {
+        gracefulTimer?.Dispose();
+        gracefulTimer = null;
     }
 
     public bool awaitTermination(TimeSpan timeout)
@@ -326,13 +404,17 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         Action<IRunnable, UnorderedThreadPoolEventExecutor> handler;
         using (UninterruptibleMonitor.enter(gate))
         {
+            AdvanceGracefulShutdown();
             if (!shutdownRequested)
             {
                 queue.Enqueue(work, (work.deadline, work.sequence));
+                RecordGracefulActivity();
                 ensureWorker();
                 PublishPoolState();
                 return;
             }
+            if (work is NativeSubmissionBackend or NativeBackend)
+                throw new RejectedExecutionException("Executor has been shut down.");
             handler = rejectedHandler;
         }
         handler(work.outer, this);
@@ -473,6 +555,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     {
                         activeWorkers.Remove(Thread.CurrentThread);
                         ++completedTaskCount;
+                        RecordGracefulActivity();
                         PublishPoolState();
                     }
                 }
@@ -509,7 +592,9 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         using (UninterruptibleMonitor.enter(gate))
         {
-            if (!stopping && (!shutdownRequested || continuePeriodicAfterShutdown))
+            // A detached queue handle belongs to its caller. It cannot re-create
+            // pool ownership after the persistent Termination result was published.
+            if (!stopping && !termination.Task.IsCompleted && (!shutdownRequested || continuePeriodicAfterShutdown))
             {
                 queue.Enqueue(work, (work.deadline, work.sequence));
                 ensureWorker();
@@ -578,9 +663,21 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             // A discard handler must not leave the producer-owned Task pending.
             if (shutdownRequested) throw new RejectedExecutionException("Executor has been shut down.");
+            if (submission is ICancelableNativeSubmission cancelable)
+                cancelable.SetCancellationRemoval(() => RemoveCanceledSubmission(backend));
             if (submission.IsCanceled) return;
             try { enqueue(backend); }
             catch { remove(backend); throw; }
+        }
+    }
+
+    private void RemoveCanceledSubmission(NativeSubmissionBackend backend)
+    {
+        using (UninterruptibleMonitor.enter(gate))
+        {
+            remove(backend);
+            backend.cancelOuter();
+            PublishPoolState();
         }
     }
 
@@ -661,7 +758,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 
     // One native Task result owner; this adapter supplies membership in the pool's
     // existing deadline queue. Metadata does not implement the old Future API.
-    private sealed class NativeBackend : Work, IScheduledWork
+    private sealed class NativeBackend : Work
     {
         private readonly ITaskScheduledWork _task;
         public UnorderedThreadPoolEventExecutor owner { get; }
@@ -679,17 +776,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         public bool isCancelled() => _task.IsCanceled;
         public void cancelOuter() => _task.CancelForShutdown();
         public void run() => _task.run();
-        public bool IsCanceled => _task.IsCanceled;
-        public void CancelForShutdown() => cancelOuter();
-        public long deadlineNanos() => deadline;
-        public long delayNanos(long now) => _task.delayNanos(now);
-        public long delayNanos() => _task.delayNanos();
-        public long getId() => sequence;
-        public void AssignId(long id)
-        {
-            if (id != sequence) throw new InvalidOperationException("The pool owns the queue sequence.");
-        }
-        public void setConsumed() => _task.setConsumed();
     }
 
     // Raw execute owns no asynchronous result. Its queue entry claims and releases
@@ -720,73 +806,4 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
     }
 
-    private sealed class QueueView : IQueue<IRunnable>
-    {
-        private readonly UnorderedThreadPoolEventExecutor executor;
-        internal QueueView(UnorderedThreadPoolEventExecutor executor) => this.executor = executor;
-        public int Count { get { using (UninterruptibleMonitor.enter(executor.gate)) return executor.queue.Count; } }
-        public bool isEmpty() => Count == 0;
-        public bool tryEnqueue(IRunnable item)
-        {
-            ArgumentNullException.ThrowIfNull(item);
-            Work work = item as Work;
-            if (work == null || !ReferenceEquals(work.owner, executor))
-                throw new ArgumentException("A queue reservation owned by this executor is required.", nameof(item));
-            using (UninterruptibleMonitor.enter(executor.gate))
-            {
-                if (executor.termination.Task.IsCompleted) return false;
-                executor.queue.Enqueue(work, (work.deadline, work.sequence));
-                executor.PublishPoolState();
-                return true;
-            }
-        }
-        public bool tryDequeue(out IRunnable item)
-        {
-            using (UninterruptibleMonitor.enter(executor.gate))
-            {
-                if (executor.queue.TryPeek(out Work work, out _) && unchecked(work.deadline - executor.ticker().nanoTime()) <= 0)
-                { item = executor.queue.Dequeue().outer; executor.PublishPoolState(); return true; }
-                item = null; return false;
-            }
-        }
-        public bool tryPeek(out IRunnable item)
-        {
-            using (UninterruptibleMonitor.enter(executor.gate))
-            {
-                if (executor.queue.TryPeek(out Work work, out _)) { item = work.outer; return true; }
-                item = null; return false;
-            }
-        }
-        public bool tryRemove(IRunnable item)
-        {
-            using (UninterruptibleMonitor.enter(executor.gate))
-            {
-                var work = executor.queue.UnorderedItems.Select(entry => entry.Element).FirstOrDefault(w => ReferenceEquals(w.outer, item));
-                if (work == null) return false;
-                bool removed = executor.remove(work);
-                executor.PublishPoolState();
-                return removed;
-            }
-        }
-        public void clear()
-        {
-            using (UninterruptibleMonitor.enter(executor.gate))
-            {
-                // Clearing transfers no handles to a caller. Native reservations
-                // must settle before the empty queue can complete Termination.
-                foreach (var work in executor.queue.UnorderedItems.Select(item => item.Element).ToArray())
-                    work.cancelOuter();
-                executor.queue.Clear();
-                executor.PublishPoolState();
-            }
-        }
-        public int drain(IConsumer<IRunnable> consumer, int limit)
-        {
-            ArgumentNullException.ThrowIfNull(consumer);
-            if (limit < 0) throw new ArgumentOutOfRangeException(nameof(limit));
-            int drained = 0;
-            while (drained < limit && tryDequeue(out var item)) { consumer.accept(item); ++drained; }
-            return drained;
-        }
-    }
 }

@@ -24,7 +24,9 @@ alone do not replace that execution contract. An all-module pinned search finds
 getQueue only in the original unordered empty-queue test, and no removeOnCancel
 or purge consumer. Those inherited JDK cancellation-maintenance APIs are removed:
 native token cancellation already removes pending work, including decorated work.
-Mutable queue/configuration APIs still require their separate final public review.
+The subsequent native queue review removes mutable handles in favor of
+PendingTaskCount and owned token cancellation; see common-unordered-native-queue.md.
+Inherited configuration APIs still require their separate final review.
 
 All unordered schedule callers now use ScheduleAsync/ScheduleAtFixedRateAsync/
 ScheduleWithFixedDelayAsync with caller-owned tokens when cancellation is needed.
@@ -91,9 +93,13 @@ executor policies already implemented. Removed source comments are preserved
 below from pinned Git objects, not transplanted as documentation for retained APIs.
 Subsequent wrapper cleanup removes the unused PromiseTask and Callable glue.
 Subsequent native fixture migration removes the plain Future/Promise hierarchy;
-see common-native-future-retirement.md. Remaining pool configuration/public queue
-design, shutdown parameter policy and all pending
+see common-native-future-retirement.md. The subsequent queue review removes public
+mutators and unused metadata forwarding; see common-unordered-native-queue.md.
+Remaining pool configuration
+design, immediate shutdown interruption policy and all pending
 source reviews still prevent common completion.
+The subsequent graceful-shutdown review implements quiet/timeout admission;
+see common-unordered-graceful-shutdown.md.
 
 ## Verification
 

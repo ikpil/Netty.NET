@@ -237,7 +237,7 @@ public class NativeSchedulingContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, new FailingFactory(error));
         Task task = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await task));
-        Assert.True(executor.getQueue().isEmpty());
+        Assert.Equal(0, executor.PendingTaskCount);
         await Stop(executor);
     }
 

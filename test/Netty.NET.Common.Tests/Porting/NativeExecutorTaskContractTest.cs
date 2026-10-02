@@ -231,10 +231,10 @@ public class NativeExecutorTaskContractTest
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             int calls = 0;
             Task queued = executor.SubmitAsync(() => { ++calls; });
-            Assert.Equal(1, executor.getQueue().Count);
-            Assert.True(executor.getQueue().tryPeek(out IRunnable queuedWork));
+            Assert.Equal(1, executor.PendingTaskCount);
+            IRunnable queuedWork = Assert.Single(executor.shutdownNow());
             Assert.False((object)queuedWork is System.Threading.Tasks.Task);
-            executor.shutdownNow();
+            queuedWork.run();
             Assert.True(queued.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await queued);
             Assert.Equal(0, calls);
@@ -339,10 +339,10 @@ public class NativeExecutorTaskContractTest
             int calls = 0;
             Task first = child.SubmitAsync(() => { ++calls; });
             Task second = child.SubmitAsync(() => { ++calls; });
-            Assert.Equal(1, executor.getQueue().Count);
-            Assert.True(executor.getQueue().tryPeek(out IRunnable runner));
+            Assert.Equal(1, executor.PendingTaskCount);
+            IRunnable runner = Assert.Single(executor.shutdownNow());
             Assert.False((object)runner is System.Threading.Tasks.Task);
-            executor.shutdownNow();
+            runner.run();
             Assert.True(first.IsCanceled);
             Assert.True(second.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);
@@ -470,7 +470,7 @@ public class NativeExecutorTaskContractTest
         {
             Task result = executor.SubmitAsync(() => { });
             Assert.Same(original, await Assert.ThrowsAsync<InvalidOperationException>(async () => await result));
-            Assert.Equal(0, executor.getQueue().Count);
+            Assert.Equal(0, executor.PendingTaskCount);
             Assert.Equal(0, executor.getTaskCount());
         }
         finally
