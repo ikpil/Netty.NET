@@ -13,105 +13,48 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 using System;
 using Netty.NET.Common.Internal;
+using Xunit;
 
 namespace Netty.NET.Common.Tests.Internal;
 
 public class TypeParameterMatcherTest
 {
-    public class A
+    public class TypeX<A, B, C> { private A a; private B b; private C c; }
+    public class TypeY<D, E, F> : TypeX<E, F, D> where D : C where E : A where F : B { }
+    public abstract class TypeZ<G, H> : TypeY<CC, G, H> where G : AA where H : BB { }
+    public class TypeQ<I> : TypeZ<AAA, I> where I : BBB { }
+    public class A { }
+    public class AA : A { }
+    public class AAA : AA { }
+    public class B { }
+    public class BB : B { }
+    public class BBB : BB { }
+    public class C { }
+    public class CC : C { }
+
+    // CLR adaptation: named subclasses carry Java anonymous-class superclass
+    // metadata. The raw binding uses object; constructed CLR generic arguments are
+    // retained, including those belonging to an enclosing class.
+    private sealed class AnonymousQ : TypeQ<BBB> { }
+    private class T { }
+    private class U<E> { private E a; }
+    private sealed class AnonymousPrivateU : U<T> { }
+    private sealed class AnonymousArrayU : U<byte[]> { }
+    private sealed class RawU : U<object> { }
+    private sealed class V<E>
     {
+        private sealed class AnonymousInnerU : U<E> { }
+        internal readonly U<E> u = new AnonymousInnerU();
     }
-
-    public class AA : A
-    {
-    }
-
-    public class AAA : AA
-    {
-    }
-
-    public class B
-    {
-    }
-
-    public class BB : B
-    {
-    }
-
-    public class BBB : BB
-    {
-    }
-
-    public class BBBB : BBB
-    {
-    }
-
-
-    public class C
-    {
-    }
-
-    public class CC : C
-    {
-    }
-
-    public class TypeX<A, B, C>
-    {
-        A a;
-        B b;
-        C c;
-    }
-
-    public class TypeY<D, E, F> : TypeX<E, F, D>
-        where D : C
-        where E : A
-        where F : B
-    {
-    }
-
-    public abstract class TypeZ<G, H> : TypeY<CC, G, H>
-        where G : AA
-        where H : BB
-    {
-    }
-
-    public class TypeQ<I> : TypeZ<AAA, I>
-        where I : BBB
-    {
-    }
-
-    private class T
-    {
-    }
-
-    private class U<E>
-    {
-        E a;
-    }
-
-    public class V<E>
-    {
-        U<E> u = new U<E>() { };
-    }
-
-    public abstract class W<E>
-    {
-        E e;
-    }
-
-    public class X<T, E> : W<E>
-    {
-        T t;
-    }
-
+    private abstract class W<E> { private E e; }
+    private sealed class X<T, E> : W<E> { private T t; }
 
     [Fact]
     public void testConcreteClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>(), TypeX.class,"A");
+        TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>(), typeof(TypeX<,,>), "A");
         Assert.False(m.match(new object()));
         Assert.False(m.match(new A()));
         Assert.False(m.match(new AA()));
@@ -123,19 +66,14 @@ public class TypeParameterMatcherTest
         Assert.False(m.match(new CC()));
     }
 
-    [Fact]
-    public void testUnsolvedParameter()
-    {
-        Assert.Throws<Exception>(() =>
-        {
-            TypeParameterMatcher.find(new TypeQ(), TypeX.class, "B");
-        });
-    }
+    [Fact(Skip = "JVM type erasure leaves this parameter unresolved; CLR retains BBB.")]
+    public void testUnsolvedParameter() => Assert.Throws<InvalidOperationException>(() =>
+        TypeParameterMatcher.find(new TypeQ<BBB>(), typeof(TypeX<,,>), "B"));
 
     [Fact]
     public void testAnonymousClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>(), TypeX.class, "B");
+        TypeParameterMatcher m = TypeParameterMatcher.find(new AnonymousQ(), typeof(TypeX<,,>), "B");
         Assert.False(m.match(new object()));
         Assert.False(m.match(new A()));
         Assert.False(m.match(new AA()));
@@ -150,7 +88,7 @@ public class TypeParameterMatcherTest
     [Fact]
     public void testAbstractClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<>(), TypeX.class, "C");
+        TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>(), typeof(TypeX<,,>), "C");
         Assert.False(m.match(new object()));
         Assert.False(m.match(new A()));
         Assert.False(m.match(new AA()));
@@ -165,16 +103,15 @@ public class TypeParameterMatcherTest
     [Fact]
     public void testInaccessibleClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new U<T>() { }, U<>.class, "E");
+        TypeParameterMatcher m = TypeParameterMatcher.find(new AnonymousPrivateU(), typeof(U<>), "E");
         Assert.False(m.match(new object()));
         Assert.True(m.match(new T()));
     }
 
-
     [Fact]
     public void testArrayAsTypeParam()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new U<byte[]>() { }, U<>.class, "E");
+        TypeParameterMatcher m = TypeParameterMatcher.find(new AnonymousArrayU(), typeof(U<>), "E");
         Assert.False(m.match(new object()));
         Assert.True(m.match(new byte[1]));
     }
@@ -182,27 +119,23 @@ public class TypeParameterMatcherTest
     [Fact]
     public void testRawType()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new U<>() { }, U<>.class, "E");
+        TypeParameterMatcher m = TypeParameterMatcher.find(new RawU(), typeof(U<>), "E");
         Assert.True(m.match(new object()));
     }
-
 
     [Fact]
     public void testInnerClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new V<string>().u, U<>.class, "E");
-        Assert.True(m.match(new object()));
+        TypeParameterMatcher m = TypeParameterMatcher.find(new V<string>().u, typeof(U<>), "E");
+        Assert.False(m.match(new object()));
+        Assert.True(m.match("value"));
     }
 
-
-    [Fact]
-    public void testErasure()
+    [Fact(Skip = "JVM type erasure is not applicable to constructed CLR generic types.")]
+    public void testErasure() => Assert.Throws<InvalidOperationException>(() =>
     {
-        Assert.Throws<Exception>(() =>
-        {
-            TypeParameterMatcher m = TypeParameterMatcher.find(new X<string, DateTime>(), W.class, "E");
-            Assert.True(m.match(new DateTime()));
-            Assert.False(m.match(new object()));
-        });
-    }
+        TypeParameterMatcher m = TypeParameterMatcher.find(new X<string, DateTime>(), typeof(W<>), "E");
+        Assert.True(m.match(new DateTime()));
+        Assert.False(m.match(new object()));
+    });
 }

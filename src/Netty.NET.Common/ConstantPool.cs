@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Concurrent;
-using Netty.NET.Common.Concurrent;
+using System.Threading;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common;
@@ -26,11 +26,13 @@ namespace Netty.NET.Common;
  *
  * @param <T> the type of the constant
  */
-public abstract class ConstantPool<T> where T : IConstant<T>
+// CLR adaptation: singleton identity and the absence sentinel require reference
+// constants, matching Java's T extends Constant<T> reference-type bound.
+public abstract class ConstantPool<T> where T : class, IConstant<T>
 {
     private readonly ConcurrentDictionary<string, T> _constants = new ConcurrentDictionary<string, T>();
 
-    private readonly AtomicInteger _nextId = new AtomicInteger(1);
+    private int _nextId = 1;
 
     /**
      * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
@@ -63,6 +65,9 @@ public abstract class ConstantPool<T> where T : IConstant<T>
      */
     private T getOrCreate(string name)
     {
+        // CLR adaptation: competing factories may create unused constants, just
+        // as upstream get/newConstant/putIfAbsent does. Return the published value,
+        // not the factory's temporary instance; ID gaps are allowed.
         return _constants.GetOrAdd(name, k => newConstant(nextId(), name));
     }
 
@@ -108,6 +113,8 @@ public abstract class ConstantPool<T> where T : IConstant<T>
 
     public int nextId()
     {
-        return _nextId.getAndIncrement();
+        // Preserve Java getAndIncrement, including unchecked integer wrapping,
+        // using the CLR primitive rather than an AtomicInteger compatibility object.
+        return unchecked(Interlocked.Increment(ref _nextId) - 1);
     }
 }

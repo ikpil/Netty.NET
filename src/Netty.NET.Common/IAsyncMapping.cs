@@ -14,16 +14,33 @@
  * under the License.
  */
 
-using Netty.NET.Common.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Netty.NET.Common;
 
-
-public interface IAsyncMapping<IN, OUT> {
-
+/// <summary>Resolves an input asynchronously using a producer-owned Task.</summary>
+/// <remarks>
+/// The mapping owns completion; callers receive only its Task. Task does not bind continuations
+/// to a Netty executor. Consumers must dispatch executor-owned state changes explicitly.
+/// Input contravariance is supported; the output is invariant because Task&lt;T&gt; is invariant.
+/// </remarks>
+public interface IAsyncMapping<in TInput, TOutput>
+{
+    // Upstream contract reference; the CLR completion ownership is documented below.
     /**
-     * Returns the {@link Future} that will provide the result of the mapping. The given {@link IPromise} will
+     * Returns the {@link Future} that will provide the result of the mapping. The given {@link Promise} will
      * be fulfilled when the result is available.
      */
-    IFuture<OUT> map(IN input, IPromise<OUT> promise);
+    // CLR adaptation: the mapper owns its Task/TCS instead of completing a caller-provided Promise.
+    /// <summary>Returns a non-null Task that supplies the mapping result.</summary>
+    /// <remarks>
+    /// The Task may already be complete. Null input/result handling is provider-specific;
+    /// SNI consumers can pass a null hostname to select their default configuration.
+    /// The token requests cooperative producer cancellation. Canceling a WaitAsync wait
+    /// does not cancel this mapping. Providers can throw during invocation or fault the
+    /// returned Task; consumers must handle both paths. A requested token alone does not
+    /// imply a canceled result if the provider successfully completes its work.
+    /// </remarks>
+    Task<TOutput> MapAsync(TInput input, CancellationToken cancellationToken = default);
 }

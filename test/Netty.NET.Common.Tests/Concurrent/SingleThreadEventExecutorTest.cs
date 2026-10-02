@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
@@ -101,11 +102,10 @@ public class SingleThreadEventExecutorTest
     }
     private sealed class LazyLatchTask : LatchTask { }
     private static void shutdown(IEventExecutor executor) =>
-        executor.shutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
-    private static void sync(IFuture<Void> future)
+        executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    private static void sync(Task future)
     {
-        Assert.True(future.await(TimeSpan.FromSeconds(5)));
-        future.sync();
+        future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     }
     private static void suspend(SingleThreadEventExecutor executor, int sleep = 50)
     {
@@ -232,7 +232,8 @@ public class SingleThreadEventExecutorTest
         try
         {
             // Schedule a task which is so far in the future that we are sure it will not run at all.
-            var future = (IFuture<Void>)executor.schedule(Runnables.Empty, TimeSpan.FromDays(1));
+            using var cancellation = new CancellationTokenSource();
+            var future = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1), cancellation.Token);
             var currentThread = factory.take();
             // Let's wait until the thread is started
             currentThread.awaitStarted();
@@ -240,8 +241,8 @@ public class SingleThreadEventExecutorTest
             Assert.True(executor.trySuspend());
 
             // Now cancel the task which should allow the suspension to let the thread die once we call trySuspend() again
-            Assert.True(future.cancel(false));
-            Assert.True(future.await(TimeSpan.FromSeconds(5)));
+            cancellation.Cancel();
+            Assert.True(future.IsCanceled);
 
             // Call in a loop as removal of scheduled tasks from task queue might be lazy
             suspend(executor);
@@ -278,14 +279,15 @@ public class SingleThreadEventExecutorTest
             var executor = new SuspendingSingleThreadEventExecutor(factory);
             try
             {
-                var future = (IFuture<Void>)executor.schedule(Runnables.Empty, TimeSpan.FromDays(1));
+                using var cancellation = new CancellationTokenSource();
+                var future = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1), cancellation.Token);
                 var currentThread = factory.take();
                 currentThread.awaitStarted();
                 currentThread.awaitRunnableExecution();
                 Assert.True(executor.trySuspend(), "iteration " + i);
 
-                Assert.True(future.cancel(false), "iteration " + i);
-                Assert.True(future.await(TimeSpan.FromSeconds(5)));
+                cancellation.Cancel();
+                Assert.True(future.IsCanceled, "iteration " + i);
                 suspend(executor, 1);
                 Assert.True(currentThread.thread.Join(TimeSpan.FromSeconds(2)), "worker did not terminate: " + i);
                 Assert.False(currentThread.thread.IsAlive);
@@ -308,12 +310,12 @@ public class SingleThreadEventExecutorTest
         try
         {
             // Schedule a task which is so far in the future that we are sure it will not run at all.
-            var future = (IFuture<Void>)executor.schedule(Runnables.Create(() =>
+            var future = executor.ScheduleAsync(() =>
             {
                 try { latch.Wait(); }
                 catch (ThreadInterruptedException) { /* ignore */ }
                 // ignore
-            }), TimeSpan.FromMilliseconds(100));
+            }, TimeSpan.FromMilliseconds(100));
             var currentThread = factory.take();
             // Let's wait until the thread is started
             currentThread.awaitStarted();
@@ -355,7 +357,7 @@ public class SingleThreadEventExecutorTest
         executeShouldFail(executor);
         executeShouldFail(executor);
         Assert.Throws<RejectedExecutionException>(() =>
-            executor.shutdownGracefullyAsync().GetAwaiter().GetResult());
+            executor.ShutdownGracefullyAsync().GetAwaiter().GetResult());
         Assert.True(executor.isShutdown());
     }
     private static void executeShouldFail(IExecutor executor) =>
@@ -381,51 +383,47 @@ public class SingleThreadEventExecutorTest
             // CLR cannot inspect another managed thread's stack. Verify native owner
             // stack capture in its loop and explicit failure of a foreign query.
             Assert.Throws<NotSupportedException>(() => properties.stackTrace());
-            var trace = executor.submit(new AnonymousCallable<StackFrame[]>(properties.stackTrace));
-            Assert.NotEmpty(trace.get(TimeSpan.FromSeconds(5)));
+            var trace = executor.SubmitAsync<StackFrame[]>(properties.stackTrace);
+            Assert.NotEmpty(trace.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
         finally { shutdown(executor); }
     }
 
-    [Fact] public void testInvokeAnyInEventLoop() => testInvokeInEventLoop(true, false);
-    [Fact] public void testInvokeAnyInEventLoopWithTimeout() => testInvokeInEventLoop(true, true);
-    [Fact] public void testInvokeAllInEventLoop() => testInvokeInEventLoop(false, false);
-    [Fact] public void testInvokeAllInEventLoopWithTimeout() => testInvokeInEventLoop(false, true);
-    private static void testInvokeInEventLoop(bool any, bool timeout)
+    // The pinned four JDK blocking-guard tests have no retained bulk method.
+    // Native async composition yields the owner and explicitly dispatches owned
+    // state after await. The design record maps these replacement scenarios.
+    [Fact] public Task NativeWhenAnyYieldsInEventLoop() => testNativeCompositionInEventLoop(true, false);
+    [Fact] public Task NativeWhenAnyWithObserverTimeoutYieldsInEventLoop() => testNativeCompositionInEventLoop(true, true);
+    [Fact] public Task NativeWhenAllYieldsInEventLoop() => testNativeCompositionInEventLoop(false, false);
+    [Fact] public Task NativeWhenAllWithObserverTimeoutYieldsInEventLoop() => testNativeCompositionInEventLoop(false, true);
+    private static async Task testNativeCompositionInEventLoop(bool any, bool timeout)
     {
-        var executor = new LoopExecutor(new DefaultThreadFactory("invoke"));
+        var executor = new LoopExecutor(new DefaultThreadFactory("compose"));
+        int calls = 0;
         try
         {
-            var promise = executor.newPromise<Void>();
-            executor.execute(Runnables.Create(() =>
+            Task operation = executor.SubmitAsync(async () =>
             {
-                try
+                Assert.True(executor.inEventLoop());
+                Task<int>[] children =
                 {
-                    ICallable<bool>[] set = { new AnonymousCallable<bool>(() =>
-                    {
-                        promise.setFailure(new Exception("Should never execute the Callable"));
-                        return true;
-                    }) };
-                    if (any)
-                    {
-                        if (timeout) executor.invokeAny(set, TimeSpan.FromSeconds(10));
-                        else executor.invokeAny(set);
-                    }
-                    else
-                    {
-                        if (timeout) executor.invokeAll(set, TimeSpan.FromSeconds(10));
-                        else executor.invokeAll(set);
-                    }
-                    promise.setFailure(new Exception("Should never reach here"));
-                }
-                catch (Exception cause) { promise.setFailure(cause); }
-            }));
-            Assert.True(promise.await(TimeSpan.FromSeconds(3)));
-            Assert.Throws<RejectedExecutionException>(() => promise.syncUninterruptibly());
+                    executor.SubmitAsync(() => { Assert.True(executor.inEventLoop()); return ++calls; }),
+                    executor.SubmitAsync(() => { Assert.True(executor.inEventLoop()); return ++calls; })
+                };
+                Task composition = any ? Task.WhenAny(children) : Task.WhenAll(children);
+                if (timeout) await composition.WaitAsync(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+                else await composition.ConfigureAwait(false);
+                await executor.SubmitAsync(() =>
+                {
+                    Assert.True(executor.inEventLoop());
+                    Assert.Equal(2, calls);
+                }).ConfigureAwait(false);
+                Assert.Equal(new[] { 1, 2 }, await Task.WhenAll(children).ConfigureAwait(false));
+            });
+            await operation.WaitAsync(TimeSpan.FromSeconds(5));
         }
         finally { shutdown(executor); }
     }
-
     private sealed class LazyExecutor : LoopExecutor
     {
         internal LazyExecutor() : base(new DefaultThreadFactory("lazy"), false) { }
@@ -488,7 +486,7 @@ public class SingleThreadEventExecutorTest
     {
         internal int attempts;
         internal int rejects;
-        internal readonly ConcurrentQueue<IFuture<Void>> submittedTasks = new();
+        internal readonly ConcurrentQueue<Task> submittedTasks = new();
         internal AfterShutdownExecutor(IQueue<IRunnable> queue)
             : base(new ThreadPerTaskExecutor(new DefaultThreadFactory("after-shutdown")), queue) { }
         protected override bool confirmShutdown()
@@ -498,12 +496,13 @@ public class SingleThreadEventExecutorTest
             if (result)
             {
                 ++attempts;
-                try { submittedTasks.Enqueue(submit(Runnables.Empty)); }
-                catch (RejectedExecutionException)
+                var submission = this.SubmitAsync(() => { });
+                if (submission.IsFaulted && submission.Exception.InnerException is RejectedExecutionException)
                 {
                     // ignore, tasks are either accepted or rejected
                     ++rejects;
                 }
+                else submittedTasks.Enqueue(submission);
             }
             return result;
         }
@@ -517,9 +516,9 @@ public class SingleThreadEventExecutorTest
         try
         {
             // Start the loop
-            sync(executor.submit(Runnables.Empty));
+            executor.SubmitAsync(() => { }).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             // Shutdown without any quiet period
-            executor.shutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMilliseconds(100))
+            executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMilliseconds(100))
                 .WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             // Ensure there are no user-tasks left.
             Assert.Equal(0, executor.drainTasks());
@@ -527,7 +526,7 @@ public class SingleThreadEventExecutorTest
             Assert.True(taskQueue.isEmpty());
             Assert.True(executor.attempts > 0);
             Assert.Equal(executor.attempts, executor.submittedTasks.Count + executor.rejects);
-            foreach (IFuture<Void> future in executor.submittedTasks) Assert.True(future.isSuccess());
+            foreach (Task future in executor.submittedTasks) Assert.True(future.IsCompletedSuccessfully);
         }
         finally { shutdown(executor); }
     }
@@ -548,7 +547,7 @@ public class SingleThreadEventExecutorTest
             executor.execute(beforeTask);
             //add scheduled task
             var scheduledTask = new TestRunnable();
-            var f = (IFuture<Void>)executor.schedule(scheduledTask, TimeSpan.FromMilliseconds(1500));
+            var f = executor.ScheduleAsync(scheduledTask.run, TimeSpan.FromMilliseconds(1500));
             //add task
             var afterTask = new TestRunnable();
             executor.execute(afterTask);
@@ -568,11 +567,11 @@ public class SingleThreadEventExecutorTest
         {
             //add scheduled task
             var t = new TestRunnable();
-            var f = (IFuture<Void>)executor.schedule(t, TimeSpan.FromMilliseconds(1500));
+            var f = executor.ScheduleAsync(t.run, TimeSpan.FromMilliseconds(1500));
             //ensure always has at least one task in taskQueue
             //check if scheduled tasks are triggered
             IRunnable repeat = null;
-            repeat = Runnables.Create(() => { if (!f.isDone()) executor.execute(repeat); });
+            repeat = Runnables.Create(() => { if (!f.IsCompleted) executor.execute(repeat); });
             executor.execute(repeat);
             sync(f);
             Assert.True(t.ran);
@@ -586,7 +585,7 @@ public class SingleThreadEventExecutorTest
         protected override void run() => throw exception;
     }
     [Fact]
-    public void testExceptionIsPropagatedToTerminationFuture()
+    public async Task testExceptionIsPropagatedToTerminationFuture()
     {
         var exception = new InvalidOperationException();
         var executor = new ThrowingExecutor(exception);
@@ -595,12 +594,10 @@ public class SingleThreadEventExecutorTest
         {
             // Noop.
         }));
-        var future = executor.terminationFuture();
-        Assert.True(future.await(TimeSpan.FromSeconds(5)));
-        Assert.Same(exception, future.cause());
-        var task = future.Task;
-        Assert.Same(exception, Assert.Throws<InvalidOperationException>(() =>
-            task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
+        var future = executor.Termination;
+        var task = future;
+        Assert.Same(exception, await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            task.WaitAsync(TimeSpan.FromSeconds(5))));
         Assert.Same(exception, task.Exception.InnerException);
     }
 }

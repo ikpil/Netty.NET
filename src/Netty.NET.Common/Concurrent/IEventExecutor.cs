@@ -47,30 +47,6 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
     bool inEventLoop(Thread thread);
 
     /**
-     * Return a new {@link Promise}.
-     */
-    IPromise<V> newPromise<V>();
-
-    /**
-     * Create a new {@link ProgressivePromise}.
-     */
-    IProgressivePromise<V> newProgressivePromise<V>();
-
-    /**
-     * Create a new {@link Future} which is marked as succeeded already. So {@link Future#isSuccess()}
-     * will return {@code true}. All {@link FutureListener} added to it will be notified directly. Also
-     * every call of blocking methods will just return without blocking.
-     */
-    IFuture<V> newSucceededFuture<V>(V result);
-
-    /**
-     * Create a new {@link Future} which is marked as failed already. So {@link Future#isSuccess()}
-     * will return {@code false}. All {@link FutureListener} added to it will be notified directly. Also
-     * every call of blocking methods will just return without blocking.
-     */
-    IFuture<V> newFailedFuture<V>(Exception cause);
-
-    /**
      * Returns {@code true} if the {@link EventExecutor} is considered suspended.
      *
      * @return {@code true} if suspended, {@code false} otherwise.

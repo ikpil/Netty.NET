@@ -1,5 +1,21 @@
+/*
+ * Copyright 2012 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 using System;
 using System.Text;
+using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
@@ -7,7 +23,7 @@ using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
-public class HashedWheelTimeout : ITimeout, IRunnable
+internal sealed class HashedWheelTimeout : ITimeout, IRunnable
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
@@ -20,7 +36,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
     internal readonly long _deadline;
 
     //@SuppressWarnings({"unused", "FieldMayBeFinal", "RedundantFieldInitialization" })
-    private readonly AtomicInteger _state = new AtomicInteger(ST_INIT);
+    private int _state = ST_INIT;
 
     // remainingRounds will be calculated and set by Worker.transferTimeoutsToBuckets() before the
     // HashedWheelTimeout will be added to the correct HashedWheelBucket.
@@ -62,7 +78,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
         // If a task should be canceled we put this to another queue which will be processed on each tick.
         // So this means that we will have a GC latency of max. 1 tick duration which is good enough. This way
         // we can make again use of our MpscLinkedQueue and so minimize the locking / overhead as much as possible.
-        _timer._cancelledTimeouts.tryEnqueue(this);
+        _timer._cancelledTimeouts.Enqueue(this);
         return true;
     }
 
@@ -74,7 +90,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
             bucket.remove(this);
         }
 
-        _timer._pendingTimeouts.decrementAndGet();
+        Interlocked.Decrement(ref _timer._pendingTimeouts);
     }
 
     internal void removeAfterCancellation()
@@ -85,12 +101,12 @@ public class HashedWheelTimeout : ITimeout, IRunnable
 
     public bool compareAndSetState(int expected, int state)
     {
-        return _state.compareAndSet(expected, state);
+        return Interlocked.CompareExchange(ref _state, state, expected) == expected;
     }
 
     public int state()
     {
-        return _state.get();
+        return Volatile.Read(ref _state);
     }
 
     public bool isCancelled()
@@ -143,7 +159,7 @@ public class HashedWheelTimeout : ITimeout, IRunnable
     public override string ToString()
     {
         long currentTime = SystemTimer.nanoTime();
-        long remaining = _deadline - currentTime + _timer._startTime.get();
+        long remaining = _deadline - currentTime + Volatile.Read(ref _timer._startTime);
 
         StringBuilder buf = new StringBuilder(192)
             .Append(StringUtil.simpleClassName(this))

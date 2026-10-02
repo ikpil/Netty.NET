@@ -136,7 +136,7 @@ public class NonStickyEventExecutorGroupTest
 
     private static void stop(IEventExecutorGroup group)
     {
-        group.shutdownGracefully(TimeSpan.Zero, TimeSpan.Zero);
+        group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
         if (!group.awaitTermination(TimeSpan.FromSeconds(5))) group.shutdownNow();
         Assert.True(group.awaitTermination(TimeSpan.FromSeconds(5)));
     }
@@ -152,14 +152,14 @@ public class NonStickyEventExecutorGroupTest
         }
         public override IEventExecutor next() => executor;
         public override IEnumerable<IEventExecutor> iterator() => new[] { executor };
-        public override void shutdown() => underlying.shutdownGracefully();
+        public override void shutdown() => underlying.ShutdownGracefullyAsync();
         public override bool isShuttingDown() => underlying.isShuttingDown();
         public override bool isShutdown() => underlying.isShutdown();
         public override bool isTerminated() => underlying.isTerminated();
         public override bool awaitTermination(TimeSpan timeout) => underlying.awaitTermination(timeout);
-        public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture() => underlying.terminationFuture();
-        public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout) =>
-            underlying.shutdownGracefully(quietPeriod, timeout);
+        public override Task Termination => underlying.Termination;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
+            underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
     }
 
     private sealed class RejectSecondExecutor : AbstractEventExecutor
@@ -169,14 +169,14 @@ public class NonStickyEventExecutorGroupTest
         internal RejectSecondExecutor(IEventExecutorGroup parent, UnorderedThreadPoolEventExecutor underlying) : base(parent) =>
             this.underlying = underlying;
         public override bool inEventLoop(Thread thread) => underlying.inEventLoop(thread);
-        public override void shutdown() => underlying.shutdownGracefully();
+        public override void shutdown() => underlying.ShutdownGracefullyAsync();
         public override bool isShuttingDown() => underlying.isShuttingDown();
         public override bool isShutdown() => underlying.isShutdown();
         public override bool isTerminated() => underlying.isTerminated();
         public override bool awaitTermination(TimeSpan timeout) => underlying.awaitTermination(timeout);
-        public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture() => underlying.terminationFuture();
-        public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout) =>
-            underlying.shutdownGracefully(quietPeriod, timeout);
+        public override Task Termination => underlying.Termination;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
+            underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
         public override void execute(IRunnable command)
         {
             // Reject the 2nd execute() call (the reschedule attempt)
@@ -234,7 +234,7 @@ public class NonStickyEventExecutorGroupTest
         AtomicReference<Exception> cause = new AtomicReference<Exception>();
         AtomicInteger last = new AtomicInteger();
         int tasks = 10000;
-        List<IFuture<Netty.NET.Common.Concurrent.Void>> futures = new List<IFuture<Netty.NET.Common.Concurrent.Void>>(tasks);
+        List<Task> completions = new List<Task>(tasks);
         CountdownEvent latch = new CountdownEvent(tasks);
         Assert.True(startLatch.Wait(TimeSpan.FromSeconds(5)));
 
@@ -243,7 +243,7 @@ public class NonStickyEventExecutorGroupTest
             int id = i;
             Assert.False(executor.inEventLoop());
             Assert.False(executor.inEventLoop(Thread.CurrentThread));
-            futures.Add(executor.submit(Runnables.Create(() =>
+            completions.Add(executor.SubmitAsync(() =>
             {
                 try
                 {
@@ -269,14 +269,13 @@ public class NonStickyEventExecutorGroupTest
                 {
                     latch.Signal();
                 }
-            })));
+            }));
         }
 
         Assert.True(latch.Wait(TimeSpan.FromSeconds(30)));
-        foreach (var future in futures)
-        {
-            future.syncUninterruptibly();
-        }
+        // Native Tasks preserve completion/failure observation after every original
+        // ordering/affinity check. This scenario does not exercise Java interruption.
+        Task.WhenAll(completions).GetAwaiter().GetResult();
 
         Exception error = cause.get();
         if (error != null)

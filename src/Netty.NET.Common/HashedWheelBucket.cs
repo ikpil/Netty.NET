@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -5,19 +20,19 @@ using System.Diagnostics;
 namespace Netty.NET.Common;
 
 /**
- * Bucket that stores HashedWheelTimeouts. These are stored in a linked-list like datastructure to allow easy
- * removal of HashedWheelTimeouts in the middle. Also the HashedWheelTimeout act as nodes themself and so no
- * extra object creation is needed.
- */
-public class HashedWheelBucket
+     * Bucket that stores HashedWheelTimeouts. These are stored in a linked-list like datastructure to allow easy
+     * removal of HashedWheelTimeouts in the middle. Also the HashedWheelTimeout act as nodes themself and so no
+     * extra object creation is needed.
+     */
+internal sealed class HashedWheelBucket
 {
     // Used for the linked-list datastructure
     private HashedWheelTimeout _head;
     private HashedWheelTimeout _tail;
 
     /**
-     * Add {@link HashedWheelTimeout} to this bucket.
-     */
+         * Add {@link HashedWheelTimeout} to this bucket.
+         */
     public void addTimeout(HashedWheelTimeout timeout)
     {
         Debug.Assert(timeout._bucket == null);
@@ -35,8 +50,8 @@ public class HashedWheelBucket
     }
 
     /**
-     * Expire all {@link HashedWheelTimeout}s for the given {@code deadline}.
-     */
+         * Expire all {@link HashedWheelTimeout}s for the given {@code deadline}.
+         */
     public void expireTimeouts(long deadline)
     {
         HashedWheelTimeout timeout = _head;
@@ -107,8 +122,8 @@ public class HashedWheelBucket
     }
 
     /**
-     * Clear this bucket and return all not expired / cancelled {@link ITimeout}s.
-     */
+         * Clear this bucket and return all not expired / cancelled {@link Timeout}s.
+         */
     public void clearTimeouts(ISet<ITimeout> set)
     {
         for (;;)

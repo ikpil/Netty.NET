@@ -1,0 +1,157 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+using Xunit;
+
+namespace Netty.NET.Common.Tests.Porting;
+
+public class UnorderedTerminationContractTest
+{
+    private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
+    {
+        public Thread newThread(IRunnable task) => create(task);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShutdownSignalWaitsForEveryAcceptedInvocation(bool immediate)
+    {
+        var executor = new UnorderedThreadPoolEventExecutor(2);
+        using var entered = new CountdownEvent(2);
+        using var firstRelease = new ManualResetEventSlim();
+        using var lastRelease = new ManualResetEventSlim();
+        Task Invoke(ManualResetEventSlim release) => executor.SubmitAsync(() =>
+        {
+            entered.Signal();
+            // Immediate shutdown can request interruption, but cannot force user
+            // code which deliberately defers cancellation to finish.
+            while (!release.IsSet)
+            {
+                try { release.Wait(); }
+                catch (ThreadInterruptedException) { }
+            }
+        });
+        Task first = Invoke(firstRelease), last = Invoke(lastRelease);
+        try
+        {
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+            Task termination = executor.Termination;
+            if (immediate) Assert.Empty(executor.shutdownNow());
+            else Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
+            Assert.True(executor.isShutdown());
+            Assert.False(termination.IsCompleted);
+            firstRelease.Set();
+            await first.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(termination.IsCompleted);
+            Assert.False(last.IsCompleted);
+            using var observer = new CancellationTokenSource();
+            observer.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => termination.WaitAsync(observer.Token));
+            Assert.False(termination.IsCompleted);
+            lastRelease.Set();
+            await last.WaitAsync(TimeSpan.FromSeconds(5));
+            await termination.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(executor.isTerminated());
+            Assert.Equal(0, executor.getPoolSize());
+            Assert.Same(termination, executor.ShutdownGracefullyAsync());
+        }
+        finally
+        {
+            firstRelease.Set();
+            lastRelease.Set();
+            executor.shutdownNow();
+            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+        }
+    }
+
+    [Fact]
+    public async Task RemovingTheLastNativeDeadlineCompletesAWorkerlessShutdown()
+    {
+        var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
+        using var cancellation = new CancellationTokenSource();
+        Task work = executor.ScheduleAsync(() => Assert.Fail("Canceled deadline ran"),
+            TimeSpan.FromDays(1), cancellation.Token);
+        try
+        {
+            Assert.Equal(0, executor.getPoolSize());
+            Assert.Equal(1, executor.getQueue().Count);
+            Task termination = executor.ShutdownGracefullyAsync();
+            Assert.False(termination.IsCompleted);
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => work);
+            await termination.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(executor.isTerminated());
+        }
+        finally { executor.shutdownNow(); }
+    }
+
+    [Fact]
+    public async Task AReentrantShutdownWaitsForTheThreadCreationReservationToBeReleased()
+    {
+        UnorderedThreadPoolEventExecutor executor = null;
+        bool completedInsideFactory = false;
+        executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ =>
+        {
+            executor.shutdownNow();
+            completedInsideFactory = executor.Termination.IsCompleted;
+            return null;
+        }));
+        Task work = executor.SubmitAsync(() => Assert.Fail("Removed invocation ran"));
+        Assert.False(completedInsideFactory);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => work);
+        await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(executor.isTerminated());
+    }
+
+    [Fact]
+    public async Task ShutdownPolicyRemovalCompletesWithoutCreatingAWorker()
+    {
+        var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
+        Task work = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
+        try
+        {
+            Task termination = executor.ShutdownGracefullyAsync();
+            Assert.False(termination.IsCompleted);
+            executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => work);
+            await termination.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(executor.isTerminated());
+        }
+        finally { executor.shutdownNow(); }
+    }
+
+    [Fact]
+    public async Task ClearingTheQueueSettlesNativeWorkBeforeCompletingShutdown()
+    {
+        var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
+        Task submitted = executor.SubmitAsync(() => Assert.Fail("Cleared invocation ran"));
+        Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Cleared deadline ran"), TimeSpan.FromDays(1));
+        try
+        {
+            Task termination = executor.ShutdownGracefullyAsync();
+            Assert.False(termination.IsCompleted);
+            executor.getQueue().clear();
+            await termination.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(submitted.IsCanceled);
+            Assert.True(scheduled.IsCanceled);
+            Assert.True(executor.isTerminated());
+        }
+        finally { executor.shutdownNow(); }
+    }
+
+    [Fact]
+    public void ACompletedLifecycleCannotBeReopenedThroughItsQueueView()
+    {
+        var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
+        var scheduled = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
+        IRunnable saved = Assert.Single(executor.shutdownNow());
+        Assert.True(executor.Termination.IsCompletedSuccessfully);
+        Assert.False(executor.getQueue().tryEnqueue(saved));
+        Assert.True(executor.isTerminated());
+        Assert.Equal(0, executor.getQueue().Count);
+        Assert.True(scheduled.IsCanceled);
+    }
+}

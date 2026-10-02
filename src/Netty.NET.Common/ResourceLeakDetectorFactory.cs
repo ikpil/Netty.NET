@@ -25,7 +25,7 @@ namespace Netty.NET.Common;
  */
 public abstract class ResourceLeakDetectorFactory
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetectorFactory));
+    internal static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetectorFactory));
 
     private static volatile ResourceLeakDetectorFactory factoryInstance = new DefaultResourceLeakDetectorFactory();
 

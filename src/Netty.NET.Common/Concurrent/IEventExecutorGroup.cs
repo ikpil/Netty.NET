@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Concurrent;
  * life-cycle and allows shutting them down in a global fashion.
  *
  */
-public interface IEventExecutorGroup : IScheduledExecutorService
+public interface IEventExecutorGroup : IExecutorService
 {
     /**
      * Returns {@code true} if and only if all {@link EventExecutor}s managed by this {@link EventExecutorGroup}
@@ -39,7 +39,9 @@ public interface IEventExecutorGroup : IScheduledExecutorService
      *
      * @return the {@link #terminationFuture()}
      */
-    IFuture<Void> shutdownGracefully();
+    /// <summary>Requests graceful shutdown using the default quiet period and timeout.</summary>
+    /// <returns>The persistent <see cref="Termination"/> task.</returns>
+    Task ShutdownGracefullyAsync();
 
     /**
      * Signals this executor that the caller wants the executor to be shut down.  Once this method is called,
@@ -55,13 +57,25 @@ public interface IEventExecutorGroup : IScheduledExecutorService
      *
      * @return the {@link #terminationFuture()}
      */
-    IFuture<Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout);
+    /// <summary>Requests graceful shutdown and returns the persistent lifecycle signal.</summary>
+    /// <remarks>
+    /// Canceling a caller's Task.WaitAsync wait does not cancel shutdown.
+    /// Continuations follow CLR Task scheduling; dispatch explicitly when executor affinity is required.
+    /// </remarks>
+    Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
 
     /**
      * Returns the {@link Future} which is notified when all {@link EventExecutor}s managed by this
      * {@link EventExecutorGroup} have been terminated.
      */
-    IFuture<Void> terminationFuture();
+    /// <summary>Gets the persistent lifecycle task owned by this executor group.</summary>
+    /// <remarks>
+    /// Await propagates the original failure. A multithread group completes successfully
+    /// after every child signal completes, including failed children. The unordered pool
+    /// completes after accepted work drains and all worker/start reservations are released.
+    /// This signal does not join custom thread-factory code outside the executor's worker loop.
+    /// </remarks>
+    Task Termination { get; }
 
     /**
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
@@ -93,8 +107,4 @@ public interface IEventExecutorGroup : IScheduledExecutorService
      */
     Ticker ticker() => Ticker.systemTicker();
 
-    // CLR convenience: all Task views use the same Netty Future completion.
-    Task shutdownGracefullyAsync() => shutdownGracefully().Task;
-    Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => shutdownGracefully(quietPeriod, timeout).Task;
-    Task terminationTask() => terminationFuture().Task;
 }

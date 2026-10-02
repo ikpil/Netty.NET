@@ -22,7 +22,7 @@ public static class ObjectPool
      * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link object}
      * that should be pooled.
      */
-    public static ObjectPool<T> newPool<T>(IObjectCreator<T> creator)
+    public static ObjectPool<T> newPool<T>(IObjectCreator<T> creator) where T : class
     {
         return new RecyclerObjectPool<T>(ObjectUtil.checkNotNull(creator, "creator"));
     }

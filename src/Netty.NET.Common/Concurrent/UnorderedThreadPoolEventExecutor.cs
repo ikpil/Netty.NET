@@ -18,7 +18,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Collections;
@@ -41,14 +40,14 @@ namespace Netty.NET.Common.Concurrent;
  * off-loading to their own thread-pools.
  */
 [Obsolete]
-public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, IEventExecutor
+public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(UnorderedThreadPoolEventExecutor));
-    private readonly IPromise<Void> termination = GlobalEventExecutor.INSTANCE.newPromise<Void>();
+    private readonly TaskCompletionSource termination = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly ConcurrentDictionary<Thread, byte> eventLoopThreads = new();
 
     // CLR adaptation of the inherited JDK scheduled pool: dedicated workers share
-    // a deadline queue. The Netty decoration remains separate from backend completion.
+    // a deadline queue. Native reservations own their sole Task result; raw work has no result facade.
     private readonly object gate = new();
     private readonly PriorityQueue<Work, (long deadline, long sequence)> queue = new(
         Comparer<(long deadline, long sequence)>.Create((left, right) =>
@@ -69,7 +68,6 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
     private long configurationGeneration;
     private bool continuePeriodicAfterShutdown;
     private bool executeDelayedAfterShutdown = true;
-    private bool removeOnCancel;
     private IThreadFactory threadFactory;
     private Action<IRunnable, UnorderedThreadPoolEventExecutor> rejectedHandler;
     private bool shutdownRequested;
@@ -108,7 +106,7 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
         ArgumentNullException.ThrowIfNull(threadFactory);
         ArgumentNullException.ThrowIfNull(handler);
         this.corePoolSize = corePoolSize;
-        this.threadFactory = new AccountingThreadFactory(threadFactory, eventLoopThreads);
+        this.threadFactory = threadFactory;
         rejectedHandler = handler;
         queueView = new QueueView(this);
     }
@@ -123,22 +121,22 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
     public bool isShuttingDown() => isShutdown();
     public bool isSuspended() => false;
     public bool trySuspend() => false;
-    public IPromise<T> newPromise<T>() => new DefaultPromise<T>(this);
-    public IProgressivePromise<T> newProgressivePromise<T>() => new DefaultProgressivePromise<T>(this);
-    public IFuture<T> newSucceededFuture<T>(T result) => new SucceededFuture<T>(this, result);
-    public IFuture<T> newFailedFuture<T>(Exception cause) => new FailedFuture<T>(this, cause);
-    protected override IRunnableFuture<T> newTaskFor<T>(IRunnable runnable, T value) => new JdkFutureTask<T>(this, runnable, value);
-    protected override IRunnableFuture<T> newTaskFor<T>(ICallable<T> callable) => new JdkFutureTask<T>(this, callable);
-    public override bool isShutdown() { using (UninterruptibleMonitor.enter(gate)) return shutdownRequested; }
-    public override bool isTerminated()
+    public bool isShutdown() { using (UninterruptibleMonitor.enter(gate)) return shutdownRequested; }
+    public bool isTerminated()
     {
         using (UninterruptibleMonitor.enter(gate)) return shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0;
     }
-    public IFuture<Void> terminationFuture() => termination;
-    public Task terminationTask() => terminationFuture().Task;
-    public Task shutdownGracefullyAsync() => shutdownGracefully().Task;
-    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => shutdownGracefully(quietPeriod, timeout).Task;
-    public IFuture<Void> shutdownGracefully() => shutdownGracefully(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(15));
+    // All callers hold gate. Async continuations cannot run inline while pool
+    // state is being published. A start reservation counts even before its
+    // factory returns a Thread; shutdown cannot finish underneath that factory.
+    private void PublishPoolState()
+    {
+        Monitor.PulseAll(gate);
+        if (shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0)
+            termination.TrySetResult();
+    }
+    public Task Termination => termination.Task;
+    public Task ShutdownGracefullyAsync() => ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(15));
     public IQueue<IRunnable> getQueue() => queueView;
     public int getCorePoolSize() { using (UninterruptibleMonitor.enter(gate)) return corePoolSize; }
 
@@ -243,40 +241,31 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
             if (!value && shutdownRequested) onShutdown();
         }
     }
-    public bool getRemoveOnCancelPolicy() { using (UninterruptibleMonitor.enter(gate)) return removeOnCancel; }
-    public void setRemoveOnCancelPolicy(bool value) { using (UninterruptibleMonitor.enter(gate)) removeOnCancel = value; }
     public bool remove(IRunnable task) => queueView.tryRemove(task);
-    public void purge()
-    {
-        using (UninterruptibleMonitor.enter(gate))
-        {
-            foreach (var work in queue.UnorderedItems.Select(item => item.Element).ToArray())
-                if (work.isCancelled()) remove(work);
-            Monitor.PulseAll(gate);
-        }
-    }
     private void wakeIdleWorkers()
     {
         ++configurationGeneration;
-        Monitor.PulseAll(gate);
+        PublishPoolState();
     }
 
-    public override List<IRunnable> shutdownNow()
+    public List<IRunnable> shutdownNow()
     {
         List<IRunnable> tasks;
         using (UninterruptibleMonitor.enter(gate))
         {
             shutdownRequested = stopping = true;
             tasks = queue.UnorderedItems.Select(item => item.Element.outer).ToList();
+            // Queue handles are membership, not results. Every removed reservation
+            // settles cancellation or releases its raw callback before termination.
+            foreach (var item in queue.UnorderedItems) item.Element.cancelOuter();
             queue.Clear();
             foreach (var worker in workers) worker.Interrupt();
-            Monitor.PulseAll(gate);
+            PublishPoolState();
         }
-        termination.trySuccess(null);
         return tasks;
     }
 
-    public override void shutdown()
+    public void shutdown()
     {
         using (UninterruptibleMonitor.enter(gate))
         {
@@ -284,18 +273,18 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
             onShutdown();
         }
         // Upstream completes this promise when shutdown is requested, before the pool has terminated.
-        termination.trySuccess(null);
+        // CLR Termination instead follows the drained queue and released worker reservations.
     }
 
-    public IFuture<Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
+    public Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
         // TODO: At the moment this just calls shutdown but we may be able to do something more smart here which
         //       respects the quietPeriod and timeout.
         shutdown();
-        return terminationFuture();
+        return Termination;
     }
 
-    public override bool awaitTermination(TimeSpan timeout)
+    public bool awaitTermination(TimeSpan timeout)
     {
         if (timeout <= TimeSpan.Zero) return isTerminated();
         var elapsed = Stopwatch.StartNew();
@@ -313,49 +302,23 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
         }
     }
 
-    public override IFuture<Void> submit(IRunnable task) => (IFuture<Void>)schedule(task, TimeSpan.Zero);
-    public override IFuture<T> submit<T>(IRunnable task, T result)
-    {
-        ArgumentNullException.ThrowIfNull(task);
-        // JDK submit(runnable, result) adapts to a Callable, so decoration must retain its result.
-        return schedule(new AnonymousCallable<T>(() => { task.run(); return result; }), TimeSpan.Zero);
-    }
-    public override IFuture<T> submit<T>(ICallable<T> task) => schedule(task, TimeSpan.Zero);
-
-    public IScheduledTask schedule(IRunnable command, TimeSpan delay)
+    public void execute(IRunnable command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return schedule(new Backend<Void>(this, command, delay, 0), false);
-    }
-    public IScheduledTask<T> schedule<T>(ICallable<T> callable, TimeSpan delay)
-    {
-        ArgumentNullException.ThrowIfNull(callable);
-        return schedule(new Backend<T>(this, callable, delay), true);
-    }
-    public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period)
-    {
-        ArgumentNullException.ThrowIfNull(command);
-        if (period <= TimeSpan.Zero) throw new ArgumentException("period must be positive", nameof(period));
-        return schedule(new Backend<Void>(this, command, initialDelay, AbstractScheduledEventExecutor.toNanos(period)), false);
-    }
-    public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay)
-    {
-        ArgumentNullException.ThrowIfNull(command);
-        if (delay <= TimeSpan.Zero) throw new ArgumentException("delay must be positive", nameof(delay));
-        return schedule(new Backend<Void>(this, command, initialDelay, -AbstractScheduledEventExecutor.toNanos(delay)), false);
-    }
-    private ScheduledFutureTask<T> schedule<T>(Backend<T> backend, bool wasCallable)
-    {
-        var decorated = new ScheduledFutureTask<T>(this, backend, wasCallable);
-        backend.outer = decorated;
-        enqueue(backend);
-        return decorated;
-    }
-
-    public override void execute(IRunnable command)
-    {
-        ArgumentNullException.ThrowIfNull(command);
-        enqueue(new Backend<Void>(this, new NonNotifyRunnable(command), TimeSpan.Zero, 0));
+        if (command is INativeSubmission native)
+        {
+            ExecuteNativeSubmission(native);
+            return;
+        }
+        var work = new RawWork(this, command);
+        try { enqueue(work); }
+        catch
+        {
+            // Throwing admission must not execute the callback later after a retry.
+            using (UninterruptibleMonitor.enter(gate)) { remove(work); PublishPoolState(); }
+            work.cancelOuter();
+            throw;
+        }
     }
 
     private void enqueue(Work work)
@@ -367,7 +330,7 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
             {
                 queue.Enqueue(work, (work.deadline, work.sequence));
                 ensureWorker();
-                Monitor.PulseAll(gate);
+                PublishPoolState();
                 return;
             }
             handler = rejectedHandler;
@@ -396,7 +359,7 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
             started = true;
             return true;
         }
-        finally { --startingWorkers; if (!started) --workerCount; Monitor.PulseAll(gate); }
+        finally { --startingWorkers; if (!started) --workerCount; PublishPoolState(); }
     }
 
     private Work takeWork()
@@ -478,6 +441,9 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
 
     private void workerLoop()
     {
+        // Worker identity belongs to the loop, not to whichever factory created
+        // its Thread. Factory replacement must not bypass native callback affinity.
+        eventLoopThreads.TryAdd(Thread.CurrentThread, 0);
         bool countReleased = false;
         bool abrupt = false;
         try
@@ -507,26 +473,30 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
                     {
                         activeWorkers.Remove(Thread.CurrentThread);
                         ++completedTaskCount;
-                        Monitor.PulseAll(gate);
+                        PublishPoolState();
                     }
                 }
             }
         }
         finally
         {
-            using (UninterruptibleMonitor.enter(gate))
+            try
             {
-                if (!countReleased) --workerCount;
-                workers.Remove(Thread.CurrentThread);
-                if (!stopping)
+                using (UninterruptibleMonitor.enter(gate))
                 {
-                    int minimum = coreThreadTimeout ? 0 : corePoolSize;
-                    if (minimum == 0 && queue.Count != 0) minimum = 1;
-                    if (abrupt) startWorker(maximumPoolSize);
-                    else if (workerCount < minimum) startWorker(Math.Max(1, corePoolSize));
+                    if (!countReleased) --workerCount;
+                    workers.Remove(Thread.CurrentThread);
+                    if (!stopping)
+                    {
+                        int minimum = coreThreadTimeout ? 0 : corePoolSize;
+                        if (minimum == 0 && queue.Count != 0) minimum = 1;
+                        if (abrupt) startWorker(maximumPoolSize);
+                        else if (workerCount < minimum) startWorker(Math.Max(1, corePoolSize));
+                    }
+                    PublishPoolState();
                 }
-                Monitor.PulseAll(gate);
             }
+            finally { eventLoopThreads.TryRemove(Thread.CurrentThread, out _); }
         }
     }
     private bool canRun(Work work)
@@ -543,7 +513,7 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
             {
                 queue.Enqueue(work, (work.deadline, work.sequence));
                 ensureWorker();
-                Monitor.PulseAll(gate);
+                PublishPoolState();
                 return;
             }
         }
@@ -560,7 +530,7 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
                 work.cancelOuter();
             }
         }
-        Monitor.PulseAll(gate);
+        PublishPoolState();
     }
     private bool remove(Work work)
     {
@@ -595,166 +565,159 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
         UnorderedThreadPoolEventExecutor owner { get; }
         long sequence { get; }
         long period { get; }
-        long deadline { get; set; }
-        IRunnable outer { get; set; }
+        long deadline { get; }
+        IRunnable outer { get; }
         bool isCancelled();
         void cancelOuter();
     }
 
-    private interface WorkProvider
+    internal void ExecuteNativeSubmission(INativeSubmission submission)
     {
-        Work backend();
+        var backend = new NativeSubmissionBackend(this, submission);
+        using (UninterruptibleMonitor.enter(gate))
+        {
+            // A discard handler must not leave the producer-owned Task pending.
+            if (shutdownRequested) throw new RejectedExecutionException("Executor has been shut down.");
+            if (submission.IsCanceled) return;
+            try { enqueue(backend); }
+            catch { remove(backend); throw; }
+        }
     }
 
-    // The inherited native FutureTask captures failures separately from the Netty
-    // outer promise. Raw execute() queue entries also expose cancellable Future status.
-    private sealed class Backend<T> : JdkFutureTask<T>, Work
+    internal bool IsImmediateShutdownRequested => Volatile.Read(ref stopping);
+
+    // Submission already has its sole TCS result. This queue entry carries only
+    // membership and a shutdown hook without an additional result owner.
+    private sealed class NativeSubmissionBackend : Work
     {
+        private INativeSubmission _submission;
         public UnorderedThreadPoolEventExecutor owner { get; }
         public long sequence { get; }
-        public long period { get; }
-        public long deadline { get; set; }
-        public IRunnable outer { get; set; }
-
-        internal Backend(UnorderedThreadPoolEventExecutor executor, IRunnable task, TimeSpan delay, long period)
-            : base(executor, task, default)
+        public long period => 0;
+        public long deadline { get; }
+        public IRunnable outer => this;
+        internal NativeSubmissionBackend(UnorderedThreadPoolEventExecutor owner, INativeSubmission submission)
         {
-            owner = executor;
-            this.period = period;
+            this.owner = owner;
+            _submission = submission;
+            if (submission is IQueueBoundNativeSubmission runner) runner.BindQueueOwner(owner);
             sequence = Interlocked.Increment(ref nextSequence) - 1;
-            deadline = owner.triggerTime(AbstractScheduledEventExecutor.toNanos(delay));
-            outer = this;
+            deadline = owner.triggerTime(0);
         }
-        internal Backend(UnorderedThreadPoolEventExecutor executor, ICallable<T> task, TimeSpan delay)
-            : base(executor, task)
+        public bool isCancelled() => Volatile.Read(ref _submission)?.IsCanceled ?? true;
+        public void cancelOuter() => Interlocked.Exchange(ref _submission, null)?.CancelForShutdown();
+        public void run()
         {
-            owner = executor;
+            INativeSubmission submission = Interlocked.Exchange(ref _submission, null);
+            if (submission == null) return;
+            if (!owner.canRun(this)) submission.CancelForShutdown();
+            else submission.run();
+        }
+    }
+
+    internal Task<T> ScheduleNative<T>(Func<CancellationToken, T> function, TimeSpan delay, long period,
+        CancellationToken token)
+    {
+        if (token.IsCancellationRequested) return Task.FromCanceled<T>(token);
+        NativeBackend backend = null;
+        var task = new NativeScheduledWork<T>(function, token, triggerTime(AbstractScheduledEventExecutor.toNanos(delay)),
+            period, () => ticker().nanoTime(), () => canRun(backend),
+            work =>
+            {
+                using (UninterruptibleMonitor.enter(gate))
+                {
+                    if (work.Completion.IsCompleted) return;
+                    try { reExecutePeriodic(backend); }
+                    catch { remove(backend); throw; }
+                }
+            },
+            work =>
+            {
+                using (UninterruptibleMonitor.enter(gate))
+                {
+                    remove(backend);
+                    PublishPoolState();
+                }
+            });
+        backend = new NativeBackend(this, task);
+        try
+        {
+            // Native result publication must not depend on a JDK rejection handler
+            // silently discarding work. It faults if shutdown prevents admission.
+            using (UninterruptibleMonitor.enter(gate))
+            {
+                if (shutdownRequested) throw new RejectedExecutionException("Executor has been shut down.");
+                if (!task.Completion.IsCompleted) enqueue(backend);
+            }
+        }
+        catch (Exception error)
+        {
+            using (UninterruptibleMonitor.enter(gate)) { remove(backend); PublishPoolState(); }
+            task.Reject(error);
+        }
+        task.Publish();
+        return task.ResultTask;
+    }
+
+    // One native Task result owner; this adapter supplies membership in the pool's
+    // existing deadline queue. Metadata does not implement the old Future API.
+    private sealed class NativeBackend : Work, IScheduledWork
+    {
+        private readonly ITaskScheduledWork _task;
+        public UnorderedThreadPoolEventExecutor owner { get; }
+        public long sequence { get; }
+        public long period => _task.PeriodNanos;
+        public long deadline => _task.deadlineNanos();
+        public IRunnable outer => this;
+        internal NativeBackend(UnorderedThreadPoolEventExecutor owner, ITaskScheduledWork task)
+        {
+            this.owner = owner;
+            _task = task;
             sequence = Interlocked.Increment(ref nextSequence) - 1;
-            deadline = owner.triggerTime(AbstractScheduledEventExecutor.toNanos(delay));
-            outer = this;
+            task.AssignId(sequence);
         }
-        bool Work.isCancelled() => outer is IFuture future && future.isCancelled();
-        public void cancelOuter() => ((IFuture)outer).cancel(false);
-        public override bool cancel(bool mayInterruptIfRunning)
+        public bool isCancelled() => _task.IsCanceled;
+        public void cancelOuter() => _task.CancelForShutdown();
+        public void run() => _task.run();
+        public bool IsCanceled => _task.IsCanceled;
+        public void CancelForShutdown() => cancelOuter();
+        public long deadlineNanos() => deadline;
+        public long delayNanos(long now) => _task.delayNanos(now);
+        public long delayNanos() => _task.delayNanos();
+        public long getId() => sequence;
+        public void AssignId(long id)
         {
-            bool cancelled = base.cancel(mayInterruptIfRunning);
-            if (cancelled)
-            {
-                using (UninterruptibleMonitor.enter(owner.gate))
-                {
-                    // JDK remove-on-cancel operates on the inner task. A decorated Netty
-                    // promise is a different queue element, so it is not removed here.
-                    if (owner.removeOnCancel && ReferenceEquals(outer, this))
-                    {
-                        owner.remove(this);
-                        Monitor.PulseAll(owner.gate);
-                    }
-                }
-            }
-            return cancelled;
+            if (id != sequence) throw new InvalidOperationException("The pool owns the queue sequence.");
         }
-        public override void run()
-        {
-            if (!owner.canRun(this)) { cancel(false); return; }
-            if (period == 0) base.run();
-            else if (runAndReset())
-            {
-                deadline = period > 0 ? unchecked(deadline + period) : owner.triggerTime(-period);
-                owner.reExecutePeriodic(this);
-            }
-        }
-    }
-    private sealed class ScheduledFutureTask<T> : PromiseTask<T>, IScheduledTask<T>, WorkProvider
-    {
-        private readonly Backend<T> future;
-        private readonly bool wasCallable;
-        internal ScheduledFutureTask(UnorderedThreadPoolEventExecutor executor, Backend<T> future, bool wasCallable)
-            : base(executor, future) { this.future = future; this.wasCallable = wasCallable; }
-        internal override T runTask()
-        {
-            T result = base.runTask();
-            if (wasCallable)
-            {
-                // If this RunnableScheduledFutureTask wraps a RunnableScheduledFuture that wraps a Callable we need
-                // to ensure that we return the correct result by calling future.get().
-                //
-                // See https://github.com/netty/netty/issues/11072
-                // CLR: base.runTask() yields default(T), including non-nullable value types.
-                try { return future.get(); }
-                catch (AggregateException e)
-                {
-                    // unwrap exception.
-                    PlatformDependent.throwException(e.InnerException);
-                    throw;
-                }
-            }
-            return result;
-        }
-        public override void run()
-        {
-            if (!isPeriodic()) base.run();
-            else if (!isDone())
-            {
-                try
-                {
-                    // Its a periodic task so we need to ignore the return value
-                    runTask();
-                }
-                catch (Exception cause)
-                {
-                    if (!tryFailureInternal(cause)) logger.warn("Failure during execution of task", cause);
-                }
-            }
-        }
-        Work WorkProvider.backend() => future;
-        public bool isPeriodic() => future.period != 0;
-        public long getDelay() => unchecked(future.deadline - future.owner.ticker().nanoTime());
-        public long deadlineNanos() => future.deadline;
-        public long delayNanos() => Math.Max(0, getDelay());
-        public long delayNanos(long nanos) => Math.Max(0, unchecked(future.deadline - nanos));
-        public long getId() => future.sequence;
-        public IScheduledTask setId(long id) => this;
-        public void setConsumed() { }
-        public bool cancel() => cancel(false);
-        public bool cancelWithoutRemove(bool mayInterruptIfRunning) => cancel(mayInterruptIfRunning);
-        public int CompareTo(IScheduledTask other)
-        {
-            if (ReferenceEquals(this, other)) return 0;
-            long delta = unchecked(deadlineNanos() - other.deadlineNanos());
-            int order = delta == 0 ? 0 : delta < 0 ? -1 : 1;
-            return order != 0 ? order : getId().CompareTo(other.getId());
-        }
-        public T Result => get();
-        public Task<T> Completion => Task;
-        public TaskAwaiter<T> GetAwaiter() => Task.GetAwaiter();
+        public void setConsumed() => _task.setConsumed();
     }
 
-    // This is a special wrapper which we will be used in execute(...) to wrap the submitted Runnable. This is needed as
-    // ScheduledThreadPoolExecutor.execute(...) will delegate to submit(...) which will then use decorateTask(...).
-    // The problem with this is that decorateTask(...) needs to ensure we only do our own decoration if we not call
-    // from execute(...) as otherwise we may end up creating an endless loop because DefaultPromise will call
-    // EventExecutor.execute(...) when notify the listeners of the promise.
-    //
-    // See https://github.com/netty/netty/issues/6507
-    private sealed class NonNotifyRunnable : IRunnable
+    // Raw execute owns no asynchronous result. Its queue entry claims and releases
+    // the callback once, including discard during shutdown or clearing.
+    private sealed class RawWork : Work
     {
-        private readonly IRunnable task;
-        internal NonNotifyRunnable(IRunnable task) => this.task = task;
-        public void run() => task.run();
-    }
-
-    private sealed class AccountingThreadFactory : IThreadFactory
-    {
-        private readonly IThreadFactory factory;
-        private readonly ConcurrentDictionary<Thread, byte> threads;
-        internal AccountingThreadFactory(IThreadFactory factory, ConcurrentDictionary<Thread, byte> threads)
-        { this.factory = factory; this.threads = threads; }
-        public Thread newThread(IRunnable task) => factory.newThread(Runnables.Create(() =>
+        private IRunnable command;
+        public UnorderedThreadPoolEventExecutor owner { get; }
+        public long sequence { get; }
+        public long period => 0;
+        public long deadline { get; }
+        public IRunnable outer => this;
+        internal RawWork(UnorderedThreadPoolEventExecutor owner, IRunnable command)
         {
-            threads.TryAdd(Thread.CurrentThread, 0);
-            try { task.run(); }
-            finally { threads.TryRemove(Thread.CurrentThread, out _); }
-        }));
+            this.owner = owner;
+            this.command = command;
+            sequence = Interlocked.Increment(ref nextSequence) - 1;
+            deadline = owner.triggerTime(0);
+        }
+        public bool isCancelled() => Volatile.Read(ref command) == null;
+        public void cancelOuter() => Interlocked.Exchange(ref command, null);
+        public void run()
+        {
+            IRunnable callback = Interlocked.Exchange(ref command, null);
+            if (callback == null || !owner.canRun(this)) return;
+            try { callback.run(); }
+            catch (Exception failure) { logger.warn("Failure during execution of task", failure); }
+        }
     }
 
     private sealed class QueueView : IQueue<IRunnable>
@@ -766,12 +729,14 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
         public bool tryEnqueue(IRunnable item)
         {
             ArgumentNullException.ThrowIfNull(item);
-            Work work = item as Work ?? (item as WorkProvider)?.backend();
-            if (work == null) throw new ArgumentException("A scheduled future is required.", nameof(item));
+            Work work = item as Work;
+            if (work == null || !ReferenceEquals(work.owner, executor))
+                throw new ArgumentException("A queue reservation owned by this executor is required.", nameof(item));
             using (UninterruptibleMonitor.enter(executor.gate))
             {
+                if (executor.termination.Task.IsCompleted) return false;
                 executor.queue.Enqueue(work, (work.deadline, work.sequence));
-                Monitor.PulseAll(executor.gate);
+                executor.PublishPoolState();
                 return true;
             }
         }
@@ -780,7 +745,7 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
             using (UninterruptibleMonitor.enter(executor.gate))
             {
                 if (executor.queue.TryPeek(out Work work, out _) && unchecked(work.deadline - executor.ticker().nanoTime()) <= 0)
-                { item = executor.queue.Dequeue().outer; return true; }
+                { item = executor.queue.Dequeue().outer; executor.PublishPoolState(); return true; }
                 item = null; return false;
             }
         }
@@ -799,13 +764,21 @@ public sealed class UnorderedThreadPoolEventExecutor : AbstractExecutorService, 
                 var work = executor.queue.UnorderedItems.Select(entry => entry.Element).FirstOrDefault(w => ReferenceEquals(w.outer, item));
                 if (work == null) return false;
                 bool removed = executor.remove(work);
-                Monitor.PulseAll(executor.gate);
+                executor.PublishPoolState();
                 return removed;
             }
         }
         public void clear()
         {
-            using (UninterruptibleMonitor.enter(executor.gate)) { executor.queue.Clear(); Monitor.PulseAll(executor.gate); }
+            using (UninterruptibleMonitor.enter(executor.gate))
+            {
+                // Clearing transfers no handles to a caller. Native reservations
+                // must settle before the empty queue can complete Termination.
+                foreach (var work in executor.queue.UnorderedItems.Select(item => item.Element).ToArray())
+                    work.cancelOuter();
+                executor.queue.Clear();
+                executor.PublishPoolState();
+            }
         }
         public int drain(IConsumer<IRunnable> consumer, int limit)
         {

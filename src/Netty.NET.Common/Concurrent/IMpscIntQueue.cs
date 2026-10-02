@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 using System;
 
 namespace Netty.NET.Common.Concurrent;
@@ -22,7 +21,8 @@ namespace Netty.NET.Common.Concurrent;
  * A multi-producer (concurrent and thread-safe {@code offer} and {@code fill}),
  * single-consumer (single-threaded {@code poll} and {@code drain}) queue of primitive integers.
  */
-public interface IMpscIntQueue {
+public interface IMpscIntQueue
+{
     /**
      * Create a new queue instance of the given size.
      * <p>
@@ -34,7 +34,8 @@ public interface IMpscIntQueue {
      * and giving this value to {@link #offer(int)} will cause an exception to be thrown.
      * @return The queue instance.
      */
-    static IMpscIntQueue create(int size, int emptyValue) {
+    static IMpscIntQueue create(int size, int emptyValue)
+    {
         return new MpscAtomicIntegerArrayQueue(size, emptyValue);
     }
 
@@ -67,6 +68,21 @@ public interface IMpscIntQueue {
      * @return The actual number of elements added.
      */
     int fill(int limit, Func<int> supplier);
+
+    /**
+     * Peek at all available elements and compute a reduction.
+     * The elements are not removed, and the iteration is weakly consistent.
+     * @param limit The maximum number of elements to process.
+     * @param initial The initial value to the reduction operation.
+     * @param op The reduction operation, taking a prior result and an element, and producing a new result.
+     * @return The last result of the reduction operation.
+     */
+    int weakPeekReduce(int limit, int initial, Func<int, int, int> op)
+    {
+        // There's no safe way to implement this method in terms of the other operations.
+        // Take the "weak" definition to the extreme and just return the initial value.
+        return initial;
+    }
 
     /**
      * Query if the queue is empty or not.

@@ -9,6 +9,7 @@ public class ReflectiveMatcher : TypeParameterMatcher
 
     public ReflectiveMatcher(Type type)
     {
+        ArgumentNullException.ThrowIfNull(type);
         _type = type;
     }
 

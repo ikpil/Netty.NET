@@ -16,119 +16,99 @@
 
 using System;
 using System.Threading;
-using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
+using System.Threading.Tasks;
 using Netty.NET.Common.Internal;
+using Netty.NET.Common.Tests.Porting;
 
 namespace Netty.NET.Common.Tests.Internal;
 
+[Collection("GC cleanup registrations")]
 public class ObjectCleanerTest
 {
     private Thread temporaryThread;
     private object temporaryObject;
 
     [Fact(Timeout = 5000)]
-    public void testCleanup()
+    public async Task testCleanup()
     {
-        AtomicBoolean freeCalled = new AtomicBoolean();
-        CountdownEvent latch = new CountdownEvent(1);
-        temporaryThread = new Thread(() =>
-            {
-                try
-                {
-                    latch.Wait();
-                }
-                catch (ThreadInterruptedException ignore)
-                {
-                    // just ignore
-                }
-            }
-        );
-        temporaryThread.Start();
-        ObjectCleaner.register(temporaryThread, Runnables.Create(() =>
-        {
-            freeCalled.set(true);
-        }));
-
-
-        latch.Signal();
-        temporaryThread.Join();
-        Assert.False(freeCalled.get());
-
-        // Null out the temporary object to ensure it is enqueued for GC.
-        temporaryThread = null;
-
-        while (!freeCalled.get())
-        {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(100);
-        }
-    }
-
-    [Fact(Timeout = 5000)]
-    public void testCleanupContinuesDespiteThrowing()
-    {
-        AtomicInteger freeCalledCount = new AtomicInteger();
-        CountdownEvent latch = new CountdownEvent(1);
+        int freeCalled = 0;
+        using var latch = new CountdownEvent(1);
         temporaryThread = new Thread(() =>
         {
-            try
-            {
-                latch.Wait();
-            }
-            catch (ThreadInterruptedException ignore)
+            try { latch.Wait(); }
+            catch (ThreadInterruptedException)
             {
                 // just ignore
             }
         });
         temporaryThread.Start();
-        temporaryObject = new object();
-        ObjectCleaner.register(temporaryThread, Runnables.Create(() =>
-        {
-            freeCalledCount.incrementAndGet();
-            throw new Exception("expected");
-        }));
-        ObjectCleaner.register(temporaryObject, Runnables.Create(() =>
-        {
-            freeCalledCount.incrementAndGet();
-            throw new Exception("expected");
-        }));
-
+        ObjectCleaner.Register(temporaryThread, () => Interlocked.Increment(ref freeCalled));
         latch.Signal();
         temporaryThread.Join();
-        Assert.Equal(0, freeCalledCount.get());
+        Assert.Equal(0, Volatile.Read(ref freeCalled));
+
+        // Null out the temporary object to ensure it is enqueued for GC.
+        temporaryThread = null;
+        await ObjectCleanerNativeContractTest.CollectUntil(() =>
+            Volatile.Read(ref freeCalled) == 1 && ObjectCleaner.PendingCount == 0);
+    }
+
+    [Fact(Timeout = 5000)]
+    public async Task testCleanupContinuesDespiteThrowing()
+    {
+        int freeCalledCount = 0;
+        using var latch = new CountdownEvent(1);
+        temporaryThread = new Thread(() =>
+        {
+            try { latch.Wait(); }
+            catch (ThreadInterruptedException)
+            {
+                // just ignore
+            }
+        });
+        temporaryThread.Start();
+        ObjectCleaner.Register(temporaryThread, () =>
+        {
+            Interlocked.Increment(ref freeCalledCount);
+            throw new Exception("expected");
+        });
+        temporaryObject = new object();
+        ObjectCleaner.Register(temporaryObject, () =>
+        {
+            Interlocked.Increment(ref freeCalledCount);
+            throw new Exception("expected");
+        });
+        latch.Signal();
+        temporaryThread.Join();
+        Assert.Equal(0, Volatile.Read(ref freeCalledCount));
 
         // Null out the temporary object to ensure it is enqueued for GC.
         temporaryThread = null;
         temporaryObject = null;
-
-        while (freeCalledCount.get() != 2)
-        {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(100);
-        }
+        await ObjectCleanerNativeContractTest.CollectUntil(() =>
+            Volatile.Read(ref freeCalledCount) == 2 && ObjectCleaner.PendingCount == 0);
     }
 
     [Fact(Timeout = 5000)]
-    public void testCleanerThreadIsDaemon()
+    public async Task testCleanerThreadIsDaemon()
     {
+        var callbackThread = new TaskCompletionSource<(bool Background, bool ThreadPool)>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
         temporaryObject = new object();
-        ObjectCleaner.register(temporaryObject, Runnables.Create(() =>
+        ObjectCleaner.Register(temporaryObject, () =>
         {
             // NOOP
-        }));
-
-        Thread cleanerThread = ObjectCleaner.CLEANUP_THREAD;
-        // foreach (Thread thread in Thread.getAllStackTraces().keySet()) {
-        //     if (thread.Name.Equals(ObjectCleaner.CLEANER_THREAD_NAME))
-        //     {
-        //         cleanerThread = thread;
-        //         break;
-        //     }
-        // }
-        Assert.NotNull(cleanerThread);
-        Assert.True(cleanerThread.IsBackground);
+            // CLR adaptation: inspect the actual cleanup worker after collection;
+            // the thread pool does not create a dedicated named polling thread.
+            Thread thread = Thread.CurrentThread;
+            callbackThread.SetResult((thread.IsBackground, thread.IsThreadPoolThread));
+        });
+        temporaryObject = null;
+        await ObjectCleanerNativeContractTest.CollectUntil(() =>
+            callbackThread.Task.IsCompleted && ObjectCleaner.PendingCount == 0);
+        var result = await callbackThread.Task;
+        Assert.True(result.Background);
+        Assert.True(result.ThreadPool);
     }
+
 }

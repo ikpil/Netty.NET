@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -7,7 +22,7 @@ using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
-public class HashedWheelWorker : IRunnable
+internal sealed class HashedWheelWorker : IRunnable
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
@@ -24,11 +39,11 @@ public class HashedWheelWorker : IRunnable
     public void run()
     {
         // Initialize the startTime.
-        _timer._startTime.set(SystemTimer.nanoTime());
-        if (_timer._startTime.get() == 0)
+        Volatile.Write(ref _timer._startTime, SystemTimer.nanoTime());
+        if (Volatile.Read(ref _timer._startTime) == 0)
         {
             // We use 0 as an indicator for the uninitialized value here, so make sure it's not 0 when initialized.
-            _timer._startTime.set(1);
+            Volatile.Write(ref _timer._startTime, 1);
         }
 
         // Notify the other threads waiting for the initialization at start().
@@ -47,7 +62,7 @@ public class HashedWheelWorker : IRunnable
                 bucket.expireTimeouts(deadline);
                 _tick++;
             }
-        } while (_timer._workerState.get() == HashedWheelTimer.WORKER_STATE_STARTED);
+        } while (Volatile.Read(ref _timer._workerState) == HashedWheelTimer.WORKER_STATE_STARTED);
 
         // Fill the unprocessedTimeouts so we can return them from stop() method.
         foreach (HashedWheelBucket bucket in _timer._wheel)
@@ -57,7 +72,7 @@ public class HashedWheelWorker : IRunnable
 
         for (;;)
         {
-            _timer._timeouts.tryDequeue(out var timeout);
+            _timer._timeouts.TryDequeue(out var timeout);
             if (timeout == null)
             {
                 break;
@@ -78,7 +93,7 @@ public class HashedWheelWorker : IRunnable
         // adds new timeouts in a loop.
         for (int i = 0; i < 100000; i++)
         {
-            _timer._timeouts.tryDequeue(out var timeout);
+            _timer._timeouts.TryDequeue(out var timeout);
             if (timeout == null)
             {
                 // all processed
@@ -106,7 +121,7 @@ public class HashedWheelWorker : IRunnable
     {
         for (;;)
         {
-            _timer._cancelledTimeouts.tryDequeue(out var timeout);
+            _timer._cancelledTimeouts.TryDequeue(out var timeout);
             if (timeout == null)
             {
                 // all processed
@@ -128,18 +143,18 @@ public class HashedWheelWorker : IRunnable
     }
 
     /**
-     * calculate goal nanoTime from startTime and current tick number,
-     * then wait until that goal has been reached.
-     * @return long.MinValue if received a shutdown request,
-     * current time otherwise (with long.MinValue changed by +1)
-     */
+         * calculate goal nanoTime from startTime and current tick number,
+         * then wait until that goal has been reached.
+         * @return Long.MIN_VALUE if received a shutdown request,
+         * current time otherwise (with Long.MIN_VALUE changed by +1)
+         */
     private long waitForNextTick()
     {
         long deadline = _timer._tickDuration * (_tick + 1);
 
         for (;;)
         {
-            long currentTime = SystemTimer.nanoTime() - _timer._startTime.get();
+            long currentTime = SystemTimer.nanoTime() - Volatile.Read(ref _timer._startTime);
             long sleepTimeMs = (deadline - currentTime + 999999) / 1000000;
 
             if (sleepTimeMs <= 0)
@@ -159,22 +174,18 @@ public class HashedWheelWorker : IRunnable
             // the JVM if it runs on windows.
             //
             // See https://github.com/netty/netty/issues/356
-            if (PlatformDependent.isWindows())
-            {
-                sleepTimeMs = sleepTimeMs / 10 * 10;
-                if (sleepTimeMs == 0)
-                {
-                    sleepTimeMs = 1;
-                }
-            }
+            // The JVM-specific Windows workaround above does not apply to
+            // CLR Thread.Sleep. Keep the native rounded-up millisecond wait.
 
             try
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(sleepTimeMs));
+                // Sleep(Int32) is bounded on CLR; recheck the monotonic deadline
+                // after every chunk and remain interruptible for stop().
+                Thread.Sleep((int)Math.Min(sleepTimeMs, int.MaxValue));
             }
             catch (ThreadInterruptedException ignored)
             {
-                if (_timer._workerState.get() == HashedWheelTimer.WORKER_STATE_SHUTDOWN)
+                if (Volatile.Read(ref _timer._workerState) == HashedWheelTimer.WORKER_STATE_SHUTDOWN)
                 {
                     return long.MinValue;
                 }
@@ -184,6 +195,6 @@ public class HashedWheelWorker : IRunnable
 
     public IReadOnlyCollection<ITimeout> unprocessedTimeouts()
     {
-        return _unprocessedTimeouts;
+        return Array.AsReadOnly<ITimeout>([.. _unprocessedTimeouts]);
     }
 }

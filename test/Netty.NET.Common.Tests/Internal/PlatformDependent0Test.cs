@@ -14,27 +14,14 @@
  * under the License.
  */
 
-using System.Runtime.InteropServices;
-using Netty.NET.Common.Internal;
+using System;
 
 namespace Netty.NET.Common.Tests.Internal;
 
 public class PlatformDependent0Test
 {
-    // ....?
-    private readonly bool _assumeUnsafe;
-
-    public PlatformDependent0Test()
-    {
-        _assumeUnsafe = assumeUnsafe();
-    }
-
-    public static bool assumeUnsafe()
-    {
-        return PlatformDependent0.hasUnsafe() &&
-               PlatformDependent0.hasDirectBufferNoCleanerConstructor();
-    }
-
+    // CLR adaptation: address metadata uses a borrowed native view. No JVM
+    // constructor/Unsafe assumption controls CLR memory support.
     [Fact]
     public void testNewDirectBufferNegativeMemoryAddress()
     {
@@ -50,35 +37,22 @@ public class PlatformDependent0Test
     [Fact]
     public void testNewDirectBufferZeroMemoryAddress()
     {
-        PlatformDependent0.newDirectBuffer(0, 10);
+        // The original ByteBuffer constructor permits metadata for a null
+        // nonempty address. CLR Memory must reject that unusable span boundary.
+        Assert.Throws<ArgumentException>(() => new NativeMemoryView(0, 10));
+        using var empty = new NativeMemoryView(0, 0);
+        Assert.Equal(0, empty.Memory.Length);
     }
 
     private static void testNewDirectBufferMemoryAddress(long address)
     {
-        if (!PlatformDependent0.hasDirectBufferNoCleanerConstructor())
-            return;
-
         int capacity = 10;
-        ByteBuffer buffer = PlatformDependent0.newDirectBuffer(address, capacity);
-        Assert.Equal(address, PlatformDependent0.directBufferAddress(buffer));
-        Assert.Equal(capacity, buffer.capacity());
+        using var buffer = new NativeMemoryView(checked((nint)address), capacity);
+        Assert.Equal(address, (long)buffer.Address);
+        Assert.Equal(capacity, buffer.Memory.Length);
     }
 
-    [Fact]
-    public void testMajorVersionFromDotNetSpecificationVersion()
-    {
-        Assert.Equal(PlatformDependent0.majorVersion(RuntimeInformation.FrameworkDescription), PlatformDependent0.majorVersionFromDotNetSpecificationVersion());
-    }
-
-    [Fact]
-    public void testMajorVersion()
-    {
-        // ..?
-        Assert.Equal(6, PlatformDependent0.majorVersion("1.6"));
-        Assert.Equal(7, PlatformDependent0.majorVersion("1.7"));
-        Assert.Equal(8, PlatformDependent0.majorVersion("1.8"));
-        Assert.Equal(8, PlatformDependent0.majorVersion("8"));
-        Assert.Equal(9, PlatformDependent0.majorVersion("1.9")); // early version of JDK 9 before Project Verona
-        Assert.Equal(9, PlatformDependent0.majorVersion("9"));
-    }
+    // The two JDK-version/SecurityManager scenarios and their original comments
+    // are mapped in docs/common-platform-runtime.md. CLR consumers use
+    // Environment.Version directly; runtime versions do not select JDK features.
 }

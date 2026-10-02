@@ -13,19 +13,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
-
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Tests.Internal.Logging;
 
+// The pinned JDK factory test is adapted to the existing CLR TraceSource factory.
 public class JdkLoggerFactoryTest
 {
     [Fact]
     public void testCreation()
     {
-        // IInternalLogger logger = JdkLoggerFactory.INSTANCE.newInstance("foo");
-        // Assert.True(logger is JdkLogger);
-        // Assert.Equal("foo", logger.name());
+        var factory = new InternalDefaultLoggerFactory();
+        try
+        {
+            IInternalLogger logger = factory.newInstance("foo");
+            Assert.IsType<InternalDefaultLogger>(logger);
+            Assert.Equal("foo", logger.name());
+        }
+        finally { factory.Dispose(); }
     }
 }

@@ -34,6 +34,7 @@ namespace Netty.NET.Common.Concurrent;
 public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
 {
     private readonly IEventExecutorGroup _group;
+    internal IEventExecutorGroup DelegatedGroup => _group;
     private readonly int _maxTaskExecutePerRun;
 
     /**
@@ -76,9 +77,9 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
         return _group.isShuttingDown();
     }
 
-    public IFuture<Void> shutdownGracefully()
+    public Task ShutdownGracefullyAsync()
     {
-        return _group.shutdownGracefully();
+        return _group.ShutdownGracefullyAsync();
     }
 
     public Ticker ticker()
@@ -86,19 +87,12 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
         return Ticker.systemTicker();
     }
 
-    public IFuture<Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
+    public Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return _group.shutdownGracefully(quietPeriod, timeout);
+        return _group.ShutdownGracefullyAsync(quietPeriod, timeout);
     }
 
-    public IFuture<Void> terminationFuture()
-    {
-        return _group.terminationFuture();
-    }
-
-    public Task shutdownGracefullyAsync() => shutdownGracefully().Task;
-    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => shutdownGracefully(quietPeriod, timeout).Task;
-    public Task terminationTask() => terminationFuture().Task;
+    public Task Termination => _group.Termination;
 
     //@SuppressWarnings("deprecation")
     public void shutdown()
@@ -126,41 +120,6 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
         }
     }
 
-    public IFuture<Void> submit(IRunnable task)
-    {
-        return _group.submit(task);
-    }
-
-    public IFuture<T> submit<T>(IRunnable task, T result)
-    {
-        return _group.submit(task, result);
-    }
-
-    public IFuture<T> submit<T>(ICallable<T> task)
-    {
-        return _group.submit(task);
-    }
-
-    public IScheduledTask schedule(IRunnable command, TimeSpan delay)
-    {
-        return _group.schedule(command, delay);
-    }
-
-    public IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay)
-    {
-        return _group.schedule(callable, delay);
-    }
-
-    public IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period)
-    {
-        return _group.scheduleAtFixedRate(command, initialDelay, period);
-    }
-
-    public IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay)
-    {
-        return _group.scheduleWithFixedDelay(command, initialDelay, delay);
-    }
-
     public bool isShutdown()
     {
         return _group.isShutdown();
@@ -174,26 +133,6 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
     public bool awaitTermination(TimeSpan timeout)
     {
         return _group.awaitTermination(timeout);
-    }
-
-    public List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks)
-    {
-        return _group.invokeAll(tasks);
-    }
-
-    public List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
-    {
-        return _group.invokeAll<T>(tasks, timeout);
-    }
-
-    public T invokeAny<T>(ICollection<ICallable<T>> tasks)
-    {
-        return _group.invokeAny(tasks);
-    }
-
-    public T invokeAny<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
-    {
-        return _group.invokeAny(tasks, timeout);
     }
 
     public void execute(IRunnable command)

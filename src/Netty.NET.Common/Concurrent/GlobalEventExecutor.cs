@@ -42,7 +42,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     private readonly LinkedBlockingQueue<IRunnable> _taskQueue = new(int.MaxValue);
 
-    private readonly IScheduledTask _quietPeriodTask;
+    private readonly IScheduledWork _quietPeriodTask;
 
     // because the GlobalEventExecutor is a singleton, tasks submitted to it can come from arbitrary threads and this
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
@@ -53,7 +53,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     private readonly AtomicBoolean _started = new AtomicBoolean();
     internal volatile Thread _thread;
 
-    private readonly IFuture<Void> _terminationSource;
+    private readonly Task _terminationTask;
 
     static GlobalEventExecutor()
     {
@@ -75,19 +75,19 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
         // could be overridden leading to unsafe initialization here!
         // NOOP
-        _quietPeriodTask = new ScheduledRunnableTask(this, Runnables.Empty,
+        _quietPeriodTask = new NativeScheduledWork<object>(_ => null, default,
             deadlineNanos(getCurrentTimeNanos(),
                 SCHEDULE_QUIET_PERIOD_INTERVAL),
-            -SCHEDULE_QUIET_PERIOD_INTERVAL
+            -SCHEDULE_QUIET_PERIOD_INTERVAL, getCurrentTimeNanos, () => true,
+            task => scheduleFromEventLoop(task), task => removeScheduled(task), captureContext: false
         );
         scheduledTaskQueue().tryEnqueue(_quietPeriodTask);
         _threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
             GetType(), false, ThreadPriority.Normal), this);
 
-
         NotSupportedException terminationFailure = ThrowableUtil.unknownStackTrace(new StacklessUnsupportedOperationException(),
             typeof(GlobalEventExecutor), "terminationFuture");
-        _terminationSource = FailedFuture.Create<Void>(this, terminationFailure);
+        _terminationTask = Task.FromException(terminationFailure);
         _taskRunner = new TaskRunner(this);
     }
 
@@ -185,9 +185,9 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         return thread == _thread;
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
+    public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return terminationFuture();
+        return Termination;
     }
 
     public override bool isShuttingDown()
@@ -195,10 +195,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         return false;
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
-    {
-        return _terminationSource;
-    }
+    public override Task Termination => _terminationTask;
 
     [Obsolete]
     public override void shutdown()
@@ -317,7 +314,6 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         t.Start();
     }
 
-
     private class TaskRunner : IRunnable
     {
         private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(TaskRunner));
@@ -351,7 +347,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
                     }
                 }
 
-                IQueue<IScheduledTask> scheduledTaskQueue = _this._scheduledTaskQueue;
+                IQueue<IScheduledWork> scheduledTaskQueue = _this._scheduledTaskQueue;
                 // Terminate if there is no task in the queue (except the noop task).
                 if (_this._taskQueue.isEmpty() && (scheduledTaskQueue == null || scheduledTaskQueue.Count == 1))
                 {

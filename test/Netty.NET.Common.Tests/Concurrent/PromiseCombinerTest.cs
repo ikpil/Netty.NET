@@ -14,145 +14,226 @@
  * under the License.
  */
 using System;
-using Moq;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
 using Xunit;
-using Void = Netty.NET.Common.Concurrent.Void;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 
-public class PromiseCombinerTest
+// CLR replacement: PromiseCombiner is List<Task> plus Task.WhenAll. The original
+// scenarios and the intentionally different native ownership/error policies are
+// mapped in docs/common-task-composition.md; there is no Java builder facade.
+public class TaskWhenAllPortTest
 {
-    private readonly Mock<IPromise<Void>> p1 = new Mock<IPromise<Void>>();
-    private readonly Mock<IPromise<Void>> p2 = new Mock<IPromise<Void>>();
-    private readonly Mock<IPromise<Void>> p3 = new Mock<IPromise<Void>>();
-    private IGenericFutureListener<IFuture> l1, l2;
-    private readonly PromiseCombiner combiner = new PromiseCombiner(ImmediateEventExecutor.INSTANCE);
     [Fact]
-    public void testNullArgument()
-    {
-        Assert.Throws<ArgumentNullException>(() => combiner.finish(null));
-        combiner.finish(p1.Object);
-        verifySuccess(p1);
-    }
+    public void NullTaskArrayIsRejected() =>
+        Assert.Throws<ArgumentNullException>(() => Task.WhenAll((Task[])null));
+
     [Fact]
-    public void testNullAggregatePromise()
-    {
-        combiner.finish(p1.Object);
-        verifySuccess(p1);
-    }
+    public void NullTaskEntryIsRejected() =>
+        Assert.Throws<ArgumentException>(() => Task.WhenAll(new Task[] { Task.CompletedTask, null }));
+
     [Fact]
-    public void testAddNullPromise() => Assert.Throws<ArgumentNullException>(() => combiner.add((IFuture)null));
+    public async Task AnEmptyBatchSucceedsWithoutAnAggregateProducer()
+    {
+        Task result = Task.WhenAll(Array.Empty<Task>());
+        Assert.True(result.IsCompletedSuccessfully);
+        await result;
+    }
+
     [Fact]
-    public void testAddAllNullPromise() => Assert.Throws<ArgumentNullException>(() => combiner.addAll((IFuture[])null));
+    public async Task AllSuccessWaitsForEveryOperation()
+    {
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task result = Task.WhenAll(first.Task, second.Task);
+        first.SetResult();
+        Assert.False(result.IsCompleted);
+        second.SetResult();
+        await result;
+        Assert.True(result.IsCompletedSuccessfully);
+    }
+
     [Fact]
-    public void testAddAfterFinish()
+    public async Task IncrementallyCollectedAlreadyCompletedTasksSucceed()
     {
-        combiner.finish(p1.Object);
-        Assert.Throws<InvalidOperationException>(() => combiner.add(p2.Object));
+        var tasks = new List<Task> { Task.FromResult(123) };
+        tasks.Add(Task.FromResult("text"));
+        await Task.WhenAll(tasks);
     }
+
     [Fact]
-    public void testAddAllAfterFinish()
+    public async Task AllFailuresWaitAndRetainEachOriginalException()
     {
-        combiner.finish(p1.Object);
-        Assert.Throws<InvalidOperationException>(() => combiner.addAll(p2.Object));
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstError = new InvalidOperationException("first");
+        var secondError = new ArgumentException("second");
+        Task result = Task.WhenAll(first.Task, second.Task);
+        first.SetException(firstError);
+        Assert.False(result.IsCompleted);
+        second.SetException(secondError);
+        Exception observed = await Assert.ThrowsAnyAsync<Exception>(async () => await result);
+        Assert.Contains(observed, new Exception[] { firstError, secondError });
+        Assert.Equal(2, result.Exception.InnerExceptions.Count);
+        Assert.Contains(firstError, result.Exception.InnerExceptions);
+        Assert.Contains(secondError, result.Exception.InnerExceptions);
     }
+
     [Fact]
-    public void testFinishCalledTwiceThrows()
+    public async Task AlreadyCompletedFailuresRetainTheirOriginalIdentity()
     {
-        combiner.finish(p1.Object);
-        Assert.Throws<InvalidOperationException>(() => combiner.finish(p1.Object));
+        var first = new InvalidOperationException("first");
+        var second = new ArgumentException("second");
+        Task result = Task.WhenAll(Task.FromException(first), Task.FromException(second));
+        await Assert.ThrowsAnyAsync<Exception>(async () => await result);
+        Assert.Contains(first, result.Exception.InnerExceptions);
+        Assert.Contains(second, result.Exception.InnerExceptions);
     }
+
     [Fact]
-    public void testAddAllSuccess()
+    public async Task AddingToTheCollectionAfterWhenAllDoesNotChangeThatBatch()
     {
-        mockSuccessPromise(p1, listener => l1 = listener);
-        mockSuccessPromise(p2, listener => l2 = listener);
-        combiner.addAll(p1.Object, p2.Object);
-        combiner.finish(p3.Object);
-        l1.operationComplete(p1.Object);
-        verifyNotCompleted(p3);
-        l2.operationComplete(p2.Object);
-        verifySuccess(p3);
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var later = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tasks = new List<Task> { first.Task };
+        Task result = Task.WhenAll(tasks);
+        tasks.Add(later.Task);
+        first.SetResult();
+        await result;
+        Assert.False(later.Task.IsCompleted);
+        later.SetResult();
     }
+
     [Fact]
-    public void testAddSuccess()
+    public async Task MultipleObserversCanAggregateTheSameTasks()
     {
-        mockSuccessPromise(p1, listener => l1 = listener);
-        mockSuccessPromise(p2, listener => l2 = listener);
-        combiner.add(p1.Object);
-        l1.operationComplete(p1.Object);
-        combiner.add(p2.Object);
-        l2.operationComplete(p2.Object);
-        verifyNotCompleted(p3);
-        combiner.finish(p3.Object);
-        verifySuccess(p3);
+        var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task first = Task.WhenAll(source.Task);
+        Task second = Task.WhenAll(source.Task);
+        source.SetResult();
+        await Task.WhenAll(first, second);
+        Assert.True(first.IsCompletedSuccessfully);
+        Assert.True(second.IsCompletedSuccessfully);
     }
+
     [Fact]
-    public void testAddAllFail()
+    public async Task DuplicateInputsDoNotDuplicateOrChangeTheOperation()
     {
-        var e1 = new Exception("fake exception 1");
-        var e2 = new Exception("fake exception 2");
-        mockFailedPromise(p1, e1, listener => l1 = listener);
-        mockFailedPromise(p2, e2, listener => l2 = listener);
-        combiner.addAll(p1.Object, p2.Object);
-        combiner.finish(p3.Object);
-        l1.operationComplete(p1.Object);
-        verifyNotCompleted(p3);
-        l2.operationComplete(p2.Object);
-        verifyFail(p3, e1);
+        var source = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task<int[]> result = Task.WhenAll(source.Task, source.Task);
+        source.SetResult(9);
+        Assert.Equal(new[] { 9, 9 }, await result);
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ARealFaultTakesPrecedenceOverCancellation(bool cancelFirst)
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var canceled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var failed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var error = new InvalidOperationException("write failed");
+        Task result = Task.WhenAll(canceled.Task, failed.Task);
+        if (cancelFirst) canceled.SetCanceled(cancellation.Token);
+        failed.SetException(error);
+        if (!cancelFirst) canceled.SetCanceled(cancellation.Token);
+        Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await result));
+        Assert.True(result.IsFaulted);
+    }
+
     [Fact]
-    public void testAddFail()
+    public async Task CancellationWithoutFailureWaitsForRemainingSuccessfulWork()
     {
-        var e1 = new Exception("fake exception 1");
-        var e2 = new Exception("fake exception 2");
-        mockFailedPromise(p1, e1, listener => l1 = listener);
-        mockFailedPromise(p2, e2, listener => l2 = listener);
-        combiner.add(p1.Object);
-        l1.operationComplete(p1.Object);
-        combiner.add(p2.Object);
-        l2.operationComplete(p2.Object);
-        verifyNotCompleted(p3);
-        combiner.finish(p3.Object);
-        verifyFail(p3, e1);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task result = Task.WhenAll(first.Task, second.Task);
+        first.SetCanceled(cancellation.Token);
+        Assert.False(result.IsCompleted);
+        second.SetResult();
+        OperationCanceledException error = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await result);
+        Assert.Equal(cancellation.Token, error.CancellationToken);
+        Assert.True(result.IsCanceled);
     }
+
     [Fact]
-    public void testEventExecutor()
+    public async Task ForeignCompletionsAreTransferredOnTheRealEventLoop()
     {
-        var executor = new Mock<IEventExecutor>();
-        executor.Setup(e => e.inEventLoop()).Returns(false);
-        var other = new PromiseCombiner(executor.Object);
-        var future = new Mock<IFuture>();
-        Assert.Throws<InvalidOperationException>(() => other.add(future.Object));
-        Assert.Throws<InvalidOperationException>(() => other.addAll(future.Object));
-        Assert.Throws<InvalidOperationException>(() => other.finish(p1.Object));
+        var executor = new DefaultEventExecutor();
+        var first = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var aggregate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task forwarding = executor.SubmitAsync(async () =>
+        {
+            Assert.True(executor.inEventLoop());
+            Task all = Task.WhenAll(new Task[] { first.Task, second.Task });
+            ready.SetResult();
+            try { await all.ConfigureAwait(false); }
+            catch (Exception) { /* Transfer the complete native status, not the await exception alone. */ }
+            await executor.SubmitAsync(() =>
+            {
+                Assert.True(executor.inEventLoop());
+                Assert.True(aggregate.TrySetFromTask(all));
+            });
+        });
+        try
+        {
+            await ready.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var firstError = new InvalidOperationException("foreign write one");
+            var secondError = new ArgumentException("foreign write two");
+            first.SetException(firstError);
+            Assert.False(aggregate.Task.IsCompleted);
+            second.SetException(secondError);
+            await forwarding.WaitAsync(TimeSpan.FromSeconds(5));
+            await Assert.ThrowsAnyAsync<Exception>(async () => await aggregate.Task);
+            Assert.Contains(firstError, aggregate.Task.Exception.InnerExceptions);
+            Assert.Contains(secondError, aggregate.Task.Exception.InnerExceptions);
+        }
+        finally
+        {
+            first.TrySetResult(null);
+            second.TrySetResult(0);
+            await forwarding.WaitAsync(TimeSpan.FromSeconds(5));
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
-    private static void verifyFail(Mock<IPromise<Void>> p, Exception cause) => p.Verify(x => x.tryFailure(cause), Times.Once);
-    private static void verifySuccess(Mock<IPromise<Void>> p) => p.Verify(x => x.trySuccess(null), Times.Once);
-    private static void verifyNotCompleted(Mock<IPromise<Void>> p)
+
+    [Fact]
+    public async Task ReentrantWriteCollectionIncludesNewWorkBeforeAggregation()
     {
-        p.Verify(x => x.trySuccess(It.IsAny<Void>()), Times.Never);
-        p.Verify(x => x.tryFailure(It.IsAny<Exception>()), Times.Never);
-        p.Verify(x => x.setSuccess(It.IsAny<Void>()), Times.Never);
-        p.Verify(x => x.setFailure(It.IsAny<Exception>()), Times.Never);
-    }
-    private static void mockSuccessPromise(Mock<IPromise<Void>> p, Action<IGenericFutureListener<IFuture>> consumer)
-    {
-        p.Setup(x => x.isDone()).Returns(true);
-        p.Setup(x => x.isSuccess()).Returns(true);
-        mockListener(p, consumer);
-    }
-    private static void mockFailedPromise(Mock<IPromise<Void>> p, Exception cause, Action<IGenericFutureListener<IFuture>> consumer)
-    {
-        p.Setup(x => x.isDone()).Returns(true);
-        p.Setup(x => x.isSuccess()).Returns(false);
-        p.Setup(x => x.cause()).Returns(cause);
-        mockListener(p, consumer);
-    }
-    private static void mockListener(Mock<IPromise<Void>> p, Action<IGenericFutureListener<IFuture>> consumer)
-    {
-        // CLR adaptation: the non-generic bridge models Java's erased Future<?> observer.
-        p.As<IFuture>().Setup(x => x.addListener(It.IsAny<IGenericFutureListener<IFuture>>())).Callback(consumer).Returns(p.Object);
+        // PendingWriteQueue.removeAndWriteAll can revive the queue synchronously
+        // while writing. Collect native Tasks until it drains, then call WhenAll.
+        var executor = new DefaultEventExecutor();
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var revived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            Task batch = await executor.SubmitAsync<Task>(() =>
+            {
+                var queue = new Queue<Func<Task>>();
+                var writes = new List<Task>();
+                queue.Enqueue(() => { queue.Enqueue(() => revived.Task); return first.Task; });
+                while (queue.TryDequeue(out Func<Task> write)) writes.Add(write());
+                Assert.Equal(2, writes.Count);
+                return Task.WhenAll(writes);
+            });
+            first.SetResult();
+            Assert.False(batch.IsCompleted);
+            revived.SetResult();
+            await batch.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            first.TrySetResult();
+            revived.TrySetResult();
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -6,7 +7,6 @@ using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
 using Xunit;
-using Void = Netty.NET.Common.Concurrent.Void;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -15,12 +15,73 @@ public class AutoScalingChooserContractTest
 {
     private const long Period = 3_600_000_000_000L;
 
+    private sealed class AccountingExecutor : SingleThreadEventExecutor
+    {
+        private readonly MockTicker clock = Ticker.newMockTicker();
+        private Thread reportingThread;
+        internal AccountingExecutor()
+            : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), true, true,
+                int.MaxValue, RejectedExecutionHandlers.reject()) { }
+        public override Ticker ticker() => clock ?? Ticker.systemTicker();
+        public override bool inEventLoop(Thread thread) => thread != null && thread == Volatile.Read(ref reportingThread);
+        protected override void run() => throw new Exception("must not run");
+        internal void Report(long nanos)
+        {
+            Volatile.Write(ref reportingThread, Thread.CurrentThread);
+            reportActiveIoTime(nanos);
+        }
+        internal void ReportTask(long nanos)
+        {
+            Volatile.Write(ref reportingThread, Thread.CurrentThread);
+            addTask(Runnables.Create(() => clock.advance(nanos)));
+            runAllTasks(1_000_000L);
+        }
+        internal long Sample() => getAndResetAccumulatedActiveTimeNanos();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ConcurrentUtilizationSamplingPreservesTheReportedActiveTimeBudget(bool taskTime)
+    {
+        // One event-loop writer reports work while a separate monitor consumes windows.
+        // The independently known total must be preserved across every reset boundary.
+        for (int epoch = 0; epoch < 3; ++epoch)
+        {
+            var executor = new AccountingExecutor();
+            using var start = new Barrier(2);
+            const int reports = 200_000;
+            int done = 0;
+            Exception reportingFailure = null;
+            var reporter = new Thread(() =>
+            {
+                try
+                {
+                    start.SignalAndWait();
+                    for (int i = 0; i < reports; ++i)
+                        if (taskTime) executor.ReportTask(1); else executor.Report(1);
+                }
+                catch (Exception error) { reportingFailure = error; }
+                finally { Volatile.Write(ref done, 1); }
+            }) { IsBackground = true };
+            reporter.Start();
+            start.SignalAndWait();
+            long sampled = 0;
+            long deadline = Environment.TickCount64 + 5_000;
+            while (Volatile.Read(ref done) == 0 && Environment.TickCount64 < deadline) sampled += executor.Sample();
+            Assert.True(reporter.Join(TimeSpan.FromSeconds(5)));
+            Assert.Null(reportingFailure);
+            sampled += executor.Sample();
+            Assert.Equal(reports, sampled);
+        }
+    }
+
     // Invoke the private monitor with an independent mock clock. Its normal scheduled
     // instance remains dormant for an hour and is canceled by the real lifecycle listener.
     private sealed class ManualExecutor : SingleThreadEventExecutor
     {
         private readonly MockTicker clock;
-        internal readonly IPromise<Void> termination = new DefaultPromise<Void>(ImmediateEventExecutor.INSTANCE);
+        internal readonly TaskCompletionSource termination = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal bool suspended;
         internal bool shuttingDown;
         internal bool suspendAllowed = true;
@@ -37,7 +98,7 @@ public class AutoScalingChooserContractTest
         public override Ticker ticker() => clock ?? Ticker.systemTicker();
         public override bool isSuspended() => suspended;
         public override bool isShuttingDown() => shuttingDown;
-        public override IFuture<Void> terminationFuture() => termination;
+        public override Task Termination => termination.Task;
         public override bool trySuspend()
         {
             ++suspensionAttempts;
@@ -77,7 +138,7 @@ public class AutoScalingChooserContractTest
                 new object[] { chooser }, null);
         }
         internal void tick(long delta = Period) { clock.advance(delta); monitor.run(); }
-        public void Dispose() => children[0].termination.trySuccess(null);
+        public void Dispose() => children[0].termination.TrySetResult();
     }
 
     [Fact]

@@ -10,6 +10,14 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Thread-local globals")]
 public class ThreadLocalContractTest : IDisposable
 {
+    public ThreadLocalContractTest()
+    {
+        // xUnit may reuse a worker that previously ran other Netty consumers.
+        // These tests assert absolute counts on an explicitly empty map.
+        FastThreadLocal.removeAll();
+        Assert.Equal(0, FastThreadLocal.size());
+    }
+
     public void Dispose() => FastThreadLocal.removeAll();
 
     [Fact]

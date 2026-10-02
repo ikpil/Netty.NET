@@ -14,6 +14,7 @@
  * under the License.
  */
 using System;
+using System.Threading.Tasks;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
@@ -24,13 +25,6 @@ namespace Netty.NET.Common.Tests.Concurrent;
 
 public class UnorderedThreadPoolEventExecutorTest
 {
-    private sealed class Listener : IGenericFutureListener<IFuture<Void>>
-    {
-        private readonly Action<IFuture<Void>> action;
-        internal Listener(Action<IFuture<Void>> action) => this.action = action;
-        public void operationComplete(IFuture<Void> future) => action(future);
-    }
-
     // See https://github.com/netty/netty/issues/6507
     [Fact]
     public void testNotEndlessExecute()
@@ -51,11 +45,13 @@ public class UnorderedThreadPoolEventExecutorTest
                 catch (ThreadInterruptedException e) { throw new InvalidOperationException("interrupted", e); }
                 latch.Signal();
             }));
-            var future = executor.submit(Runnables.Create(() => latch.Signal()));
-            future.addListener(new Listener(_ => latch.Signal()));
+            var future = executor.SubmitAsync(() => latch.Signal());
+            using var completion = new ExecutorCompletion(executor, future);
+            using var listener = completion.Register(_ => latch.Signal());
             Assert.True(exchanger.SignalAndWait(TimeSpan.FromSeconds(5)));
             Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
-            future.syncUninterruptibly();
+            future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+            listener.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
 
             // Now just check if the queue stays empty multiple times. This is needed as the submit to execute(...)
             // by DefaultPromise may happen in an async fashion
@@ -69,13 +65,14 @@ public class UnorderedThreadPoolEventExecutorTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var latch = new CountdownEvent(3);
-        var future = executor.scheduleAtFixedRate(Runnables.Create(() =>
+        using var cancellation = new CancellationTokenSource();
+        var future = executor.ScheduleAtFixedRateAsync(() =>
         {
             // CLR CountdownEvent throws if already zero; Java CountDownLatch ignores further decrements.
             if (!latch.IsSet) latch.Signal();
-        }), TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1));
+        }, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1), cancellation.Token);
         try { Assert.True(latch.Wait(TimeSpan.FromSeconds(5))); }
-        finally { future.cancel(true); stop(executor); }
+        finally { cancellation.Cancel(); stop(executor); }
     }
 
     [Fact]
@@ -85,8 +82,8 @@ public class UnorderedThreadPoolEventExecutorTest
         try
         {
             const string expected = "expected";
-            var future = executor.submit(new AnonymousCallable<string>(() => expected));
-            Assert.Equal(expected, future.get(TimeSpan.FromSeconds(5)));
+            var future = executor.SubmitAsync<string>(() => expected);
+            Assert.Equal(expected, future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
         finally { stop(executor); }
     }
@@ -98,9 +95,9 @@ public class UnorderedThreadPoolEventExecutorTest
         try
         {
             var cause = new InvalidOperationException();
-            var future = executor.submit(new AnonymousCallable<string>(() => throw cause));
-            Assert.True(future.await(TimeSpan.FromSeconds(5)));
-            Assert.Same(cause, future.cause());
+            var future = executor.SubmitAsync(string () => throw cause);
+            Assert.Same(cause, Assert.Throws<InvalidOperationException>(() =>
+                future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
         }
         finally { stop(executor); }
     }
@@ -111,15 +108,15 @@ public class UnorderedThreadPoolEventExecutorTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         try
         {
-            var future = executor.submit(new AnonymousCallable<bool>(() => executor.inEventLoop()));
-            Assert.True(future.get(TimeSpan.FromSeconds(5)));
+            var future = executor.SubmitAsync<bool>(() => executor.inEventLoop());
+            Assert.True(future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
         finally { stop(executor); }
     }
 
     private static void stop(UnorderedThreadPoolEventExecutor executor)
     {
-        executor.shutdownGracefully();
+        executor.ShutdownGracefullyAsync();
         if (!executor.awaitTermination(TimeSpan.FromSeconds(5))) executor.shutdownNow();
         Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
     }

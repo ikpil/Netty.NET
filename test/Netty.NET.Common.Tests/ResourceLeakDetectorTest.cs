@@ -13,287 +13,201 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Threading;
-using Netty.NET.Common.Tests;
-using Netty.NET.Common;
-using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
+using Xunit;
 
 namespace Netty.NET.Common.Tests;
 
-public class ResourceLeakDetectorTest {
-    //@SuppressWarnings("unused")
+[CollectionDefinition("Leak detector globals", DisableParallelization = true)]
+public class LeakDetectorGlobalsCollection { }
+
+[Collection("Leak detector globals")]
+public class ResourceLeakDetectorTest : IDisposable
+{
     private static volatile int sink;
-    
-    [Fact(Timeout = 60000)]
-    public void testConcurrentUsage() {
-        AtomicBoolean finished = new AtomicBoolean();
-        AtomicReference<Exception> error = new AtomicReference<Exception>();
+    private readonly ResourceLeakDetectorLevel previous = ResourceLeakDetector.getLevel();
+    public ResourceLeakDetectorTest() => ResourceLeakDetector.setLevel(ResourceLeakDetectorLevel.SIMPLE);
+    public void Dispose() => ResourceLeakDetector.setLevel(previous);
+
+    // The JVM's @Timeout is 60 seconds. CLR conditional weak values and captured
+    // managed stacks need a wider bound; retain all 50 threads and 5,000,000 pairs.
+    [Fact(Timeout = 120000)]
+    public void testConcurrentUsage()
+    {
+        int finished = 0;
+        Exception error = null;
         // With 50 threads issue #6087 is reproducible on every run.
-        Thread[] threads = new Thread[50];
-        final CyclicBarrier barrier = new CyclicBarrier(threads.length);
-        for (int i = 0; i < threads.length; i++) {
-        Thread t = new Thread(new IRunnable() {
-            final Queue<LeakAwareResource> resources = new ArrayDeque<LeakAwareResource>(100);
-
-            @Override
-            public void run() {
-            try {
-            barrier.await();
-
-            // Run 10000 times or until the test is marked as finished.
-            for (int b = 0; b < 1000 && !finished.get(); b++) {
-
-            // Allocate 100 LeakAwareResource per run and close them after it.
-            for (int a = 0; a < 100; a++) {
-            DefaultResource resource = new DefaultResource();
-            IResourceLeakTracker<Resource> leak = DefaultResource.detector.track(resource);
-            LeakAwareResource leakAwareResource = new LeakAwareResource(resource, leak);
-            resources.add(leakAwareResource);
-        }
-        if (closeResources(true)) {
-            finished.set(true);
-        }
-        }
-        } catch (ThreadInterruptedException e) {
-            Thread.CurrentThread.interrupt();
-        } catch (Exception e) {
-            error.compareAndSet(null, e);
-        } finally {
-            // Just close all resource now without assert it to eliminate more reports.
-            closeResources(false);
-        }
-        }
-
-        private bool closeResources(bool checkClosed) {
-            for (;;) {
-                LeakAwareResource r = resources.poll();
-                if (r == null) {
+        var threads = new Thread[50];
+        using var barrier = new Barrier(threads.Length);
+        for (int i = 0; i < threads.Length; i++)
+        {
+            threads[i] = new Thread(() =>
+            {
+                var resources = new Queue<LeakAwareResource>(100);
+                bool closeResources(bool checkClosed)
+                {
+                    while (resources.TryDequeue(out LeakAwareResource value))
+                        if (!value.close() && checkClosed)
+                        {
+                            Interlocked.CompareExchange(ref error, new InvalidOperationException("ResourceLeak.close() returned 'false' but expected 'true'"), null);
+                            return true;
+                        }
                     return false;
                 }
-                bool closed = r.close();
-                if (checkClosed && !closed) {
-                    error.compareAndSet(null,
-                        new AssertionError("IResourceLeak.close() returned 'false' but expected 'true'"));
-                    return true;
+                try
+                {
+                    Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(10)));
+                    // Run 10000 times or until the test is marked as finished.
+                    for (int b = 0; b < 1000 && Volatile.Read(ref finished) == 0; b++)
+                    {
+                        // Allocate 100 LeakAwareResource per run and close them after it.
+                        for (int a = 0; a < 100; a++)
+                        {
+                            Resource resource = new DefaultResource();
+                            resources.Enqueue(new LeakAwareResource(resource, DefaultResource.detector.track(resource)));
+                        }
+                        if (closeResources(true)) Volatile.Write(ref finished, 1);
+                    }
                 }
-            }
+                catch (ThreadInterruptedException) { Thread.CurrentThread.Interrupt(); }
+                catch (Exception failure) { Interlocked.CompareExchange(ref error, failure, null); }
+                finally
+                {
+                    // Just close all resource now without assert it to eliminate more reports.
+                    try { closeResources(false); }
+                    catch (Exception failure) { Interlocked.CompareExchange(ref error, failure, null); }
+                }
+            }) { IsBackground = true };
+            threads[i].Start();
         }
-        });
-        threads[i] = t;
-        t.start();
+        // Just wait until all threads are done.
+        var elapsed = Stopwatch.StartNew();
+        foreach (Thread thread in threads)
+            Assert.True(thread.Join(TimeSpan.FromSeconds(120) - elapsed.Elapsed));
+        // Check if we had any leak reports in the ResourceLeakDetector itself
+        DefaultResource.detector.assertNoErrors();
+        assertNoErrors(error);
     }
 
-// Just wait until all threads are done.
-for (Thread t: threads) {
-    t.join();
-}
-
-// Check if we had any leak reports in the ResourceLeakDetector itself
-DefaultResource.detector.assertNoErrors();
-
-assertNoErrors(error);
-
-}
-
-@Timeout(10)
-[Fact]
-public void testLeakSetupHints() {
-    DefaultResource.detectorWithSetupHint.initialise();
-    leakResource();
-
-    do {
-        // Trigger GC.
-        System.gc();
-        // Track another resource to trigger refqueue visiting.
-        Resource resource2 = new DefaultResource();
-        DefaultResource.detectorWithSetupHint.track(resource2).close(resource2);
-        // Give the GC something to work on.
-        for (int i = 0; i < 1000; i++) {
-            sink = RuntimeHelpers.GetHashCode(new byte[10000]);
-        }
-    } while (DefaultResource.detectorWithSetupHint.getLeaksFound() < 1 && !Thread.interrupted());
-
-    assertThat(DefaultResource.detectorWithSetupHint.getLeaksFound()).isOne();
-    DefaultResource.detectorWithSetupHint.assertNoErrors();
-}
-
-@Timeout(10)
-[Fact]
-public void testLeakBrokenHint() {
-    DefaultResource.detectorWithSetupHint.initialise();
-
-    DefaultResource.detectorWithSetupHint.failOnUntraced = false;
-    DefaultResource.detectorWithSetupHint.initialHint = new ResourceLeakHint() {
-        @Override
-        public string toHintString() {
-        throw new Exception("expected failure");
-    }
-    };
-    try {
+    [Fact(Timeout = 10000)]
+    public void testLeakSetupHints()
+    {
+        DefaultResource.detectorWithSetupHint.initialise();
         leakResource();
-        Assert.Fail("expected failure");
-    } catch (Exception e) {
-        assertThat(e.getMessage()).isEqualTo("expected failure");
+        var deadline = Stopwatch.StartNew();
+        do
+        {
+            // Trigger GC.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            // Track another resource to trigger refqueue visiting.
+            Resource resource2 = new DefaultResource();
+            DefaultResource.detectorWithSetupHint.track(resource2).close(resource2);
+            // Give the GC something to work on.
+            for (int i = 0; i < 1000; i++) sink = RuntimeHelpers.GetHashCode(new byte[10000]);
+        } while (DefaultResource.detectorWithSetupHint.getLeaksFound() < 1 && deadline.Elapsed < TimeSpan.FromSeconds(10));
+        Assert.Equal(1, DefaultResource.detectorWithSetupHint.getLeaksFound());
+        DefaultResource.detectorWithSetupHint.assertNoErrors();
     }
-    DefaultResource.detectorWithSetupHint.initialHint = DefaultResource.detectorWithSetupHint.canaryString;
 
-    do {
-        // Trigger GC.
-        System.gc();
-        // Track another resource to trigger refqueue visiting.
-        Resource resource2 = new DefaultResource();
-        DefaultResource.detectorWithSetupHint.track(resource2).close(resource2);
-        // Give the GC something to work on.
-        for (int i = 0; i < 1000; i++) {
-            sink = RuntimeHelpers.GetHashCode(new byte[10000]);
+    [Fact(Timeout = 10000)]
+    public void testLeakBrokenHint()
+    {
+        DefaultResource.detectorWithSetupHint.initialise();
+        DefaultResource.detectorWithSetupHint.failOnUntraced = false;
+        DefaultResource.detectorWithSetupHint.initialHint = new BrokenHint();
+        var failure = Assert.Throws<InvalidOperationException>(leakResource);
+        Assert.Equal("expected failure", failure.Message);
+        DefaultResource.detectorWithSetupHint.initialHint = DefaultResource.detectorWithSetupHint.canaryString;
+        var deadline = Stopwatch.StartNew();
+        do
+        {
+            // Trigger GC.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            // Track another resource to trigger refqueue visiting.
+            Resource resource2 = new DefaultResource();
+            DefaultResource.detectorWithSetupHint.track(resource2).close(resource2);
+            // Give the GC something to work on.
+            for (int i = 0; i < 1000; i++) sink = RuntimeHelpers.GetHashCode(new byte[10000]);
+        } while (DefaultResource.detectorWithSetupHint.getLeaksFound() < 1 && deadline.Elapsed < TimeSpan.FromSeconds(10));
+        Assert.Equal(1, DefaultResource.detectorWithSetupHint.getLeaksFound());
+        DefaultResource.detectorWithSetupHint.assertNoErrors();
+    }
+    private sealed class BrokenHint : IResourceLeakHint { public string toHintString() => throw new InvalidOperationException("expected failure"); }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void leakResource()
+    {
+        Resource resource = new DefaultResource();
+        // We'll never close this ResourceLeakTracker.
+        DefaultResource.detectorWithSetupHint.track(resource);
+    }
+    // Mimic the way how we implement our classes that should help with leak detection
+    private sealed class LeakAwareResource(Resource resource, IResourceLeakTracker<Resource> leak) : Resource
+    {
+        public bool close()
+        {
+            // Using ResourceLeakDetector.close(...) to prove this fixes the leak problem reported
+            // in https://github.com/netty/netty/issues/6034 .
+            //
+            // The following implementation would produce a leak:
+            //     return leak.close();
+            return leak.close(resource);
         }
-    } while (DefaultResource.detectorWithSetupHint.getLeaksFound() < 1 && !Thread.interrupted());
-
-    assertThat(DefaultResource.detectorWithSetupHint.getLeaksFound()).isOne();
-    DefaultResource.detectorWithSetupHint.assertNoErrors();
-}
-
-private static void leakResource() {
-    Resource resource = new DefaultResource();
-    // We'll never close this IResourceLeakTracker.
-    DefaultResource.detectorWithSetupHint.track(resource);
-}
-
-// Mimic the way how we implement our classes that should help with leak detection
-private static final  class LeakAwareResource implements Resource {
-private final Resource resource;
-private final IResourceLeakTracker<Resource> leak;
-
-LeakAwareResource(Resource resource, IResourceLeakTracker<Resource> leak) {
-    this.resource = resource;
-    this.leak = leak;
-}
-
-@Override
-public bool close() {
-    // Using ResourceLeakDetector.close(...) to prove this fixes the leak problem reported
-    // in https://github.com/netty/netty/issues/6034 .
-    //
-    // The following implementation would produce a leak:
-    //     return leak.close();
-    return leak.close(resource);
-}
-}
-
-private static final class DefaultResource implements Resource {
-    // Sample every allocation
-    static final TestResourceLeakDetector<Resource> detector = new TestResourceLeakDetector<Resource>(
-        Resource.class, 1, int.MaxValue);
-    static final CreationRecordLeakDetector<Resource> detectorWithSetupHint =
-        new CreationRecordLeakDetector<Resource>(Resource.class, 1);
-
-    @Override
-    public bool close() {
-        return true;
     }
-}
-
-private interface Resource {
-    bool close();
-}
-
-private static void assertNoErrors(AtomicReference<Exception> ref) {
-    Exception error = ref.get();
-    if (error != null) {
-        throw error;
+    private sealed class DefaultResource : Resource
+    {
+        // Sample every allocation
+        internal static readonly TestResourceLeakDetector<Resource> detector = new(typeof(Resource), 1, int.MaxValue);
+        internal static readonly CreationRecordLeakDetector<Resource> detectorWithSetupHint = new(typeof(Resource), 1);
+        public bool close() => true;
     }
-}
-
-private static final class TestResourceLeakDetector<T> extends ResourceLeakDetector<T> {
-
-    private final AtomicReference<Exception> error = new AtomicReference<Exception>();
-
-    TestResourceLeakDetector(Class<?> resourceType, int samplingInterval, long maxActive) {
-        super(resourceType, samplingInterval, maxActive);
+    private interface Resource { bool close(); }
+    private static void assertNoErrors(Exception error) { if (error != null) ExceptionDispatchInfo.Capture(error).Throw(); }
+    private sealed class TestResourceLeakDetector<T> : ResourceLeakDetector<T> where T : class
+    {
+        private Exception error;
+        internal TestResourceLeakDetector(Type type, int sampling, long maxActive) : base(type, sampling, maxActive) { }
+        protected override void reportTracedLeak(string type, string records) => reportError(new InvalidOperationException("Leak reported for '" + type + "':\n" + records));
+        protected override void reportUntracedLeak(string type) => reportError(new InvalidOperationException("Leak reported for '" + type + "'"));
+        protected override void reportInstancesLeak(string type) => reportError(new InvalidOperationException("Leak reported for '" + type + "'"));
+        private void reportError(Exception failure) => Interlocked.CompareExchange(ref error, failure, null);
+        internal void assertNoErrors() => ResourceLeakDetectorTest.assertNoErrors(error);
     }
-
-    @Override
-    protected void reportTracedLeak(string resourceType, string records) {
-        reportError(new AssertionError("Leak reported for '" + resourceType + "':\n" + records));
+    private sealed class CreationRecordLeakDetector<T>(Type type, int sampling) : ResourceLeakDetector<T>(type, sampling) where T : class
+    {
+        internal string canaryString;
+        internal object initialHint;
+        internal bool failOnUntraced = true;
+        private Exception error;
+        private int leaksFound;
+        internal void initialise()
+        {
+            canaryString = "creation-canary-" + Guid.NewGuid();
+            initialHint = canaryString;
+            failOnUntraced = true;
+            error = null;
+            leaksFound = 0;
+        }
+        protected override bool needReport() => true;
+        protected override void reportTracedLeak(string type, string records)
+        {
+            if (!records.Contains(canaryString, StringComparison.Ordinal)) reportError(new InvalidOperationException("Leak records did not contain canary string"));
+            Interlocked.Increment(ref leaksFound);
+        }
+        protected override void reportUntracedLeak(string type)
+        {
+            if (failOnUntraced) reportError(new InvalidOperationException("Got untraced leak w/o canary string"));
+            Interlocked.Increment(ref leaksFound);
+        }
+        private void reportError(Exception failure) => Interlocked.CompareExchange(ref error, failure, null);
+        protected override object getInitialHint(string type) => initialHint;
+        internal int getLeaksFound() => Volatile.Read(ref leaksFound);
+        internal void assertNoErrors() => ResourceLeakDetectorTest.assertNoErrors(error);
     }
-
-    @Override
-    protected void reportUntracedLeak(string resourceType) {
-        reportError(new AssertionError("Leak reported for '" + resourceType + '\''));
-    }
-
-    @Override
-    protected void reportInstancesLeak(string resourceType) {
-        reportError(new AssertionError("Leak reported for '" + resourceType + '\''));
-    }
-
-    private void reportError(AssertionError cause) {
-        error.compareAndSet(null, cause);
-    }
-
-    void assertNoErrors() {
-        ResourceLeakDetectorTest.assertNoErrors(error);
-    }
-}
-
-private static final class CreationRecordLeakDetector<T> extends ResourceLeakDetector<T> {
-    string canaryString;
-    object initialHint;
-    bool failOnUntraced = true;
-
-    private final AtomicReference<Exception> error = new AtomicReference<Exception>();
-private final AtomicInteger leaksFound = new AtomicInteger(0);
-
-CreationRecordLeakDetector(Class<?> resourceType, int samplingInterval) {
-    super(resourceType, samplingInterval);
-}
-
-public void initialise() {
-    canaryString = "creation-canary-" + UUID.randomUUID();
-    initialHint = canaryString;
-    leaksFound.set(0);
-}
-
-@Override
-protected bool needReport() {
-    return true;
-}
-
-@Override
-protected void reportTracedLeak(string resourceType, string records) {
-    if (!records.contains(canaryString)) {
-        reportError(new AssertionError("Leak records did not contain canary string"));
-    }
-    leaksFound.incrementAndGet();
-}
-
-@Override
-protected void reportUntracedLeak(string resourceType) {
-    if (failOnUntraced) {
-        reportError(new AssertionError("Got untraced leak w/o canary string"));
-    }
-    leaksFound.incrementAndGet();
-}
-
-private void reportError(AssertionError cause) {
-    error.compareAndSet(null, cause);
-}
-
-@Override
-protected object getInitialHint(string resourceType) {
-    return initialHint;
-}
-
-int getLeaksFound() {
-    return leaksFound.get();
-}
-
-void assertNoErrors() {
-    ResourceLeakDetectorTest.assertNoErrors(error);
-}
-}
 }

@@ -26,20 +26,20 @@ namespace Netty.NET.Common.Tests.Concurrent;
 
 public class AbstractScheduledEventExecutorTest
 {
-    private static readonly IRunnable TEST_RUNNABLE = Runnables.Create(() => { });
-    private static readonly ICallable<Void> TEST_CALLABLE = new AnonymousCallable<Void>(() =>
-    {
-        TEST_RUNNABLE.run();
-        return null;
-    });
+    private static readonly Action TEST_RUNNABLE = () => { };
+    private static readonly Func<object> TEST_CALLABLE = () => { TEST_RUNNABLE(); return null; };
 
     [Fact]
     public void testScheduleRunnableZero()
     {
         var executor = new TestScheduledEventExecutor();
-        var future = executor.schedule(TEST_RUNNABLE, TimeSpan.Zero);
-        Assert.Equal(0, future.getDelay());
-        Assert.NotNull(executor.pollScheduledTask());
+        var future = executor.ScheduleAsync(TEST_RUNNABLE, TimeSpan.Zero);
+        Assert.Equal(0, executor.Head.delayNanos());
+        var ready = executor.pollScheduledTask();
+        Assert.NotNull(ready);
+        Assert.False((object)ready is System.Threading.Tasks.Task);
+        ready.run();
+        Assert.True(future.IsCompletedSuccessfully);
         Assert.Null(executor.pollScheduledTask());
     }
 
@@ -48,9 +48,13 @@ public class AbstractScheduledEventExecutorTest
     {
         var executor = new TestScheduledEventExecutor();
         // CLR: the smallest negative TimeSpan is -100 ns; both inputs clamp to zero.
-        var future = executor.schedule(TEST_RUNNABLE, TimeSpan.FromTicks(-1));
-        Assert.Equal(0, future.getDelay());
-        Assert.NotNull(executor.pollScheduledTask());
+        var future = executor.ScheduleAsync(TEST_RUNNABLE, TimeSpan.FromTicks(-1));
+        Assert.Equal(0, executor.Head.delayNanos());
+        var ready = executor.pollScheduledTask();
+        Assert.NotNull(ready);
+        Assert.False((object)ready is System.Threading.Tasks.Task);
+        ready.run();
+        Assert.True(future.IsCompletedSuccessfully);
         Assert.Null(executor.pollScheduledTask());
     }
 
@@ -58,9 +62,13 @@ public class AbstractScheduledEventExecutorTest
     public void testScheduleCallableZero()
     {
         var executor = new TestScheduledEventExecutor();
-        var future = executor.schedule(TEST_CALLABLE, TimeSpan.Zero);
-        Assert.Equal(0, future.getDelay());
-        Assert.NotNull(executor.pollScheduledTask());
+        var future = executor.ScheduleAsync(TEST_CALLABLE, TimeSpan.Zero);
+        Assert.Equal(0, executor.Head.delayNanos());
+        var ready = executor.pollScheduledTask();
+        Assert.NotNull(ready);
+        Assert.False((object)ready is System.Threading.Tasks.Task);
+        ready.run();
+        Assert.True(future.IsCompletedSuccessfully);
         Assert.Null(executor.pollScheduledTask());
     }
 
@@ -68,9 +76,13 @@ public class AbstractScheduledEventExecutorTest
     public void testScheduleCallableNegative()
     {
         var executor = new TestScheduledEventExecutor();
-        var future = executor.schedule(TEST_CALLABLE, TimeSpan.FromTicks(-1));
-        Assert.Equal(0, future.getDelay());
-        Assert.NotNull(executor.pollScheduledTask());
+        var future = executor.ScheduleAsync(TEST_CALLABLE, TimeSpan.FromTicks(-1));
+        Assert.Equal(0, executor.Head.delayNanos());
+        var ready = executor.pollScheduledTask();
+        Assert.NotNull(ready);
+        Assert.False((object)ready is System.Threading.Tasks.Task);
+        ready.run();
+        Assert.True(future.IsCompletedSuccessfully);
         Assert.Null(executor.pollScheduledTask());
     }
 
@@ -78,14 +90,14 @@ public class AbstractScheduledEventExecutorTest
     public void testScheduleAtFixedRateRunnableZero()
     {
         var executor = new TestScheduledEventExecutor();
-        Assert.Throws<ArgumentException>(() => executor.scheduleAtFixedRate(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.Zero));
+        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.Zero));
     }
 
     [Fact]
     public void testScheduleAtFixedRateRunnableNegative()
     {
         var executor = new TestScheduledEventExecutor();
-        Assert.Throws<ArgumentException>(() => executor.scheduleAtFixedRate(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.FromDays(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.FromDays(-1)));
     }
 
     [Fact]
@@ -93,14 +105,14 @@ public class AbstractScheduledEventExecutorTest
     {
         var executor = new TestScheduledEventExecutor();
         // CLR: retain the pinned upstream's -1 operand despite the method name.
-        Assert.Throws<ArgumentException>(() => executor.scheduleWithFixedDelay(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.FromDays(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.FromDays(-1)));
     }
 
     [Fact]
     public void testScheduleWithFixedDelayNegative()
     {
         var executor = new TestScheduledEventExecutor();
-        Assert.Throws<ArgumentException>(() => executor.scheduleWithFixedDelay(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.FromDays(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.FromDays(-1)));
     }
 
     [Fact]
@@ -109,14 +121,15 @@ public class AbstractScheduledEventExecutorTest
 
     private sealed class TestScheduledEventExecutor : AbstractScheduledEventExecutor
     {
+        internal IScheduledWork Head => peekScheduledTask();
         public override bool isShuttingDown() => false;
         public override bool inEventLoop(Thread thread) => true;
         public override void shutdown()
         {
             // NOOP
         }
-        public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
-        public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture() => throw new NotSupportedException();
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
+        public override Task Termination => throw new NotSupportedException();
         public override bool isShutdown() => false;
         public override bool isTerminated() => false;
         public override bool awaitTermination(TimeSpan timeout) => false;

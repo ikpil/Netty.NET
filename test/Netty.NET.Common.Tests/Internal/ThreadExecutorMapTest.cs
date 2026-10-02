@@ -15,8 +15,8 @@
  */
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
@@ -42,15 +42,12 @@ public class ThreadExecutorMapTest
             return false;
         }
 
-        public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
             throw new NotSupportedException();
         }
 
-        public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
-        {
-            throw new NotSupportedException();
-        }
+        public override Task Termination => throw new NotSupportedException();
 
         public override bool isShutdown()
         {
@@ -113,12 +110,16 @@ public class ThreadExecutorMapTest
     [Fact]
     public void testDecorateThreadFactory()
     {
-        IThreadFactory threadFactory = ThreadExecutorMap.apply(Executors.defaultThreadFactory(), ImmediateEventExecutor.INSTANCE);
+        IThreadFactory threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory("thread-executor-map-test"),
+            ImmediateEventExecutor.INSTANCE);
+        Exception failure = null;
         Thread thread = threadFactory.newThread(Runnables.Create(() =>
         {
-            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+            try { Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor()); }
+            catch (Exception exception) { failure = exception; }
         }));
         thread.Start();
-        thread.Join();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        Assert.Null(failure);
     }
 }

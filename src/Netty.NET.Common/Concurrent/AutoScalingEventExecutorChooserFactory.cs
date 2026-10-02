@@ -14,6 +14,7 @@
  * under the License.
  */
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
 using Netty.NET.Common.Functional;
@@ -93,7 +94,6 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
         this.scalingPatienceCycles = ObjectUtil.checkPositiveOrZero(scalingPatienceCycles, "scalingPatienceCycles");
     }
 
-
     public IEventExecutorChooser newChooser(IEventExecutor[] executors)
     {
         return new AutoScalingEventExecutorChooser(this, executors);
@@ -119,13 +119,6 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
         }
     }
 
-    private sealed class MonitoringTerminationListener : IGenericFutureListener<IFuture<Void>>
-    {
-        private readonly IScheduledTask monitoringTask;
-        internal MonitoringTerminationListener(IScheduledTask monitoringTask) => this.monitoringTask = monitoringTask;
-        public void operationComplete(IFuture<Void> future) => monitoringTask.cancel(false);
-    }
-
     private sealed class AutoScalingEventExecutorChooser : IObservableEventExecutorChooser
     {
         private readonly AutoScalingEventExecutorChooserFactory factory;
@@ -149,13 +142,27 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             AutoScalingState initialState = new AutoScalingState(factory.maxChildren, 0L, executors);
             state = initialState;
 
-            IScheduledTask utilizationMonitoringTask = GlobalEventExecutor.INSTANCE.scheduleAtFixedRate(
-                    new UtilizationMonitor(this), TimeSpan.FromTicks(factory.utilizationCheckPeriodNanos / 100),
-                    TimeSpan.FromTicks(factory.utilizationCheckPeriodNanos / 100));
+            var monitoringCancellation = new CancellationTokenSource();
+            var monitor = new UtilizationMonitor(this);
+            Task utilizationMonitoringTask = GlobalEventExecutor.INSTANCE.ScheduleNative<object>(
+                    _ => { monitor.run(); return null; }, TimeSpan.FromTicks(factory.utilizationCheckPeriodNanos / 100),
+                    factory.utilizationCheckPeriodNanos, monitoringCancellation.Token, captureContext: false);
+            utilizationMonitoringTask.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
+            {
+                _ = utilizationMonitoringTask.Exception;
+            });
 
             if (executors.Length > 0)
             {
-                executors[0].terminationFuture().addListener(new MonitoringTerminationListener(utilizationMonitoringTask));
+                Task termination = executors[0].Termination;
+                // CLR adaptation: scheduled-task cancellation is thread-safe;
+                // no Future listener or caller context owns this lifecycle action.
+                termination.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
+                {
+                    _ = termination.Exception;
+                    monitoringCancellation.Cancel();
+                    monitoringCancellation.Dispose();
+                });
             }
         }
 
@@ -247,12 +254,10 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             }
         }
 
-
         public int activeExecutorCount()
         {
             return Volatile.Read(ref state).activeChildrenCount;
         }
-
 
         public IReadOnlyList<AutoScalingUtilizationMetric> executorUtilizations()
         {
@@ -272,7 +277,6 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 consistentlyIdleChildren = new List<SingleThreadEventExecutor>(chooser.factory.maxChildren);
                 consistentlyBusyChildren = new List<SingleThreadEventExecutor>(chooser.factory.maxChildren);
             }
-
 
             public void run()
             {

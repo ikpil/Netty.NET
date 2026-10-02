@@ -37,7 +37,6 @@ using static Netty.NET.Common.Internal.PlatformDependent0;
 
 namespace Netty.NET.Common.Internal;
 
-
 /**
  * Utility that detects various properties specific to the current runtime
  * environment, such as Java version and the availability of the
@@ -46,163 +45,36 @@ namespace Netty.NET.Common.Internal;
  * You can disable the use of {@code sun.misc.Unsafe} if you specify
  * the system property <strong>io.netty.noUnsafe</strong>.
  */
-public static class PlatformDependent 
+public static class PlatformDependent
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent));
 
-    private static Regex MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
     private static readonly bool MAYBE_SUPER_USER;
 
     private static readonly bool CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !isAndroid();
 
     private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE = unsafeUnavailabilityCause0();
-    private static readonly bool DIRECT_BUFFER_PREFERRED;
-    private static readonly bool EXPLICIT_NO_PREFER_DIRECT;
-    private static readonly long MAX_DIRECT_MEMORY = estimateMaxDirectMemory();
 
-    public static readonly int MPSC_CHUNK_SIZE =  1024;
-    public static readonly int MIN_MAX_MPSC_CAPACITY =  MPSC_CHUNK_SIZE * 2;
+    public static readonly int MPSC_CHUNK_SIZE = 1024;
+    public static readonly int MIN_MAX_MPSC_CAPACITY = MPSC_CHUNK_SIZE * 2;
     public static readonly int MAX_ALLOWED_MPSC_CAPACITY = Pow2.MAX_POW2;
-
     private static readonly long BYTE_ARRAY_BASE_OFFSET = byteArrayBaseOffset0();
-
     private static readonly DirectoryInfo TMPDIR = tmpdir0();
-
     private static readonly int BIT_MODE = bitMode0();
     private static readonly string NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", RuntimeInformation.ProcessArchitecture.ToString()));
     private static readonly string NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name",
         OperatingSystem.IsWindows() ? "Windows" : OperatingSystem.IsMacOS() ? "Mac OS X" :
         OperatingSystem.IsLinux() ? "Linux" : RuntimeInformation.OSDescription));
-
     private static readonly ISet<string> LINUX_OS_CLASSIFIERS;
-
     private static readonly bool IS_WINDOWS = isWindows0();
     private static readonly bool IS_OSX = isOsx0();
     private static readonly bool IS_J9_JVM = isJ9Jvm0();
     private static readonly bool IS_IVKVM_DOT_NET = isIkvmDotNet0();
-
     private static readonly int ADDRESS_SIZE = addressSize0();
-    private static readonly bool USE_DIRECT_BUFFER_NO_CLEANER;
-    private static readonly AtomicLong DIRECT_MEMORY_COUNTER;
-    private static readonly long DIRECT_MEMORY_LIMIT;
-    private static readonly ICleaner CLEANER;
-    private static readonly ICleaner DIRECT_CLEANER;
-    private static readonly ICleaner LEGACY_CLEANER;
-    private static readonly bool HAS_ALLOCATE_UNINIT_ARRAY;
     private static readonly string LINUX_ID_PREFIX = "ID=";
     private static readonly string LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
     public static readonly bool BIG_ENDIAN_NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
-
     private static readonly bool JFR;
-
-    private static readonly ICleaner NOOP = new NoopCleaner();
-
-    static PlatformDependent()
-    {
-        // // Here is how the system property is used:
-        // //
-        // // * <  0  - Don't use cleaner, and inherit max direct memory from java. In this case the
-        // //           "practical max direct memory" would be 2 * max memory as defined by the JDK.
-        // // * == 0  - Use cleaner, Netty will not enforce max memory, and instead will defer to JDK.
-        // // * >  0  - Don't use cleaner. This will limit Netty's total direct memory
-        // //           (note: that JDK's direct memory limit is independent of this).
-        // long maxDirectMemory = SystemPropertyUtil.getLong("io.netty.maxDirectMemory", -1);
-        //
-        // if (maxDirectMemory == 0 || !hasUnsafe() || !PlatformDependent0.hasDirectBufferNoCleanerConstructor()) {
-        //     USE_DIRECT_BUFFER_NO_CLEANER = false;
-        //     DIRECT_CLEANER = NOOP;
-        //     DIRECT_MEMORY_COUNTER = null;
-        // } else {
-        //     USE_DIRECT_BUFFER_NO_CLEANER = true;
-        //     DIRECT_CLEANER = new DirectCleaner();
-        //     if (maxDirectMemory < 0) {
-        //         maxDirectMemory = MAX_DIRECT_MEMORY;
-        //         if (maxDirectMemory <= 0) {
-        //             DIRECT_MEMORY_COUNTER = null;
-        //         } else {
-        //             DIRECT_MEMORY_COUNTER = new AtomicLong();
-        //         }
-        //     } else {
-        //         DIRECT_MEMORY_COUNTER = new AtomicLong();
-        //     }
-        // }
-        // logger.debug("-Dio.netty.maxDirectMemory: {} bytes", maxDirectMemory);
-        // DIRECT_MEMORY_LIMIT = maxDirectMemory >= 1 ? maxDirectMemory : MAX_DIRECT_MEMORY;
-        // HAS_ALLOCATE_UNINIT_ARRAY = javaVersion() >= 9 && PlatformDependent0.hasAllocateArrayMethod();
-        //
-        // MAYBE_SUPER_USER = maybeSuperUser0();
-        //
-        // if (!isAndroid()) {
-        //     // only direct to method if we are not running on android.
-        //     // See https://github.com/netty/netty/issues/2604
-        //     if (javaVersion() >= 9) {
-        //         // Try Java 9 cleaner first, because it's based on Unsafe and can skip a few steps.
-        //         if (CleanerJava9.isSupported()) {
-        //             LEGACY_CLEANER = new CleanerJava9();
-        //         } else if (CleanerJava24Linker.isSupported()) {
-        //             // On Java 24+ we'd like to not use Unsafe because it produces warnings. We have MemorySegment,
-        //             // but we cannot use "shared" arenas due to JDK bugs.
-        //             // If the "linker" implementation is supported, then we have native access permissions
-        //             // in the "io.netty.common" module, and we can link directly to malloc() and free() from libc.
-        //             LEGACY_CLEANER = new CleanerJava24Linker();
-        //         } else if (CleanerJava25.isSupported()) {
-        //             // On Java 25+ we can't use Unsafe, but we have functioning MemorySegment support.
-        //             // We don't have native access permissions to link malloc() and free() directly, but we can
-        //             // use shared memory segment instances.
-        //             LEGACY_CLEANER = new CleanerJava25();
-        //         } else {
-        //             LEGACY_CLEANER = NOOP;
-        //         }
-        //     } else {
-        //         LEGACY_CLEANER = CleanerJava6.isSupported() ? new CleanerJava6() : NOOP;
-        //     }
-        // } else {
-        //     LEGACY_CLEANER = NOOP;
-        // }
-        // CLEANER = USE_DIRECT_BUFFER_NO_CLEANER ? DIRECT_CLEANER : LEGACY_CLEANER;
-        //
-        // EXPLICIT_NO_PREFER_DIRECT = SystemPropertyUtil.getBoolean("io.netty.noPreferDirect", false);
-        // // We should always prefer direct buffers by default if we can use a Cleaner to release direct buffers.
-        // DIRECT_BUFFER_PREFERRED = CLEANER != NOOP
-        //                           && !EXPLICIT_NO_PREFER_DIRECT;
-        // if (logger.isDebugEnabled()) {
-        //     logger.debug("-Dio.netty.noPreferDirect: {}", EXPLICIT_NO_PREFER_DIRECT);
-        // }
-        //
-        // /*
-        //  * We do not want to log this message if unsafe is explicitly disabled. Do not remove the explicit no unsafe
-        //  * guard.
-        //  */
-        // if (CLEANER == NOOP && !PlatformDependent0.isExplicitNoUnsafe()) {
-        //     logger.info(
-        //             "Your platform does not provide complete low-level API for accessing direct buffers reliably. " +
-        //             "Unless explicitly requested, heap buffer will always be preferred to avoid potential system " +
-        //             "instability.");
-        // }
-        //
-        // ISet<string> availableClassifiers = new LinkedHashSet<string>();
-        //
-        // if (!addPropertyOsClassifiers(availableClassifiers)) {
-        //     addFilesystemOsClassifiers(availableClassifiers);
-        // }
-        // LINUX_OS_CLASSIFIERS = Collections.unmodifiableSet(availableClassifiers);
-        //
-        // bool jfrAvailable;
-        // Exception jfrFailure = null;
-        // try {
-        //     //noinspection Since15
-        //     jfrAvailable = FlightRecorder.isAvailable();
-        // } catch (Exception t) {
-        //     jfrFailure = t;
-        //     jfrAvailable = false;
-        // }
-        // JFR = SystemPropertyUtil.getBoolean("io.netty.jfr.enabled", jfrAvailable);
-        // if (logger.isTraceEnabled() && jfrFailure != null) {
-        //     logger.debug("-Dio.netty.jfr.enabled: {}", JFR, jfrFailure);
-        // } else if (logger.isDebugEnabled()) {
-        //     logger.debug("-Dio.netty.jfr.enabled: {}", JFR);
-        // }
-    }
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
     public static void addFilesystemOsClassifiers(ISet<string> availableClassifiers) {
@@ -212,29 +84,29 @@ public static class PlatformDependent
         processOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
-    private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers) 
+    private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers)
     {
         if (string.IsNullOrEmpty(osReleaseFileName) || availableClassifiers == null)
             return false;
 
         string file = osReleaseFileName;
         try {
-            if (File.Exists(file)) 
+            if (File.Exists(file))
             {
                 try
                 {
                     using var stream = File.OpenRead(osReleaseFileName);
                     using var reader = new StreamReader(stream, Encoding.UTF8);
-                    
+
                     string line;
-                    while ((line = reader.ReadLine()) != null) 
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        if (line.StartsWith(LINUX_ID_PREFIX)) 
+                        if (line.StartsWith(LINUX_ID_PREFIX))
                         {
                             string id = normalizeOsReleaseVariableValue(line.substring(LINUX_ID_PREFIX.length()));
                             addClassifier(availableClassifiers, id);
-                        } 
-                        else if (line.StartsWith(LINUX_ID_LIKE_PREFIX)) 
+                        }
+                        else if (line.StartsWith(LINUX_ID_LIKE_PREFIX))
                         {
                             line = normalizeOsReleaseVariableValue(line.substring(LINUX_ID_LIKE_PREFIX.length()));
                             addClassifier(availableClassifiers, line.Split(" "));
@@ -294,14 +166,6 @@ public static class PlatformDependent
         return BYTE_ARRAY_BASE_OFFSET;
     }
 
-    public static bool hasDirectBufferNoCleanerConstructor() {
-        return PlatformDependent0.hasDirectBufferNoCleanerConstructor();
-    }
-
-    public static byte[] allocateUninitializedArray(int size) {
-        return HAS_ALLOCATE_UNINIT_ARRAY ?  PlatformDependent0.allocateUninitializedArray(size) : new byte[size];
-    }
-
     /**
      * Returns {@code true} if and only if the current platform is Android
      */
@@ -329,13 +193,6 @@ public static class PlatformDependent
      */
     public static bool maybeSuperUser() {
         return MAYBE_SUPER_USER;
-    }
-
-    /**
-     * Return the version of Java under which this library is used.
-     */
-    public static int javaVersion() {
-        return PlatformDependent0.dotnetVersion();
     }
 
     /**
@@ -377,47 +234,15 @@ public static class PlatformDependent
         return PlatformDependent0.isUnaligned();
     }
 
-    /**
-     * Returns {@code true} if the platform has reliable low-level direct buffer access API and a user has not specified
-     * {@code -Dio.netty.noPreferDirect} option.
-     */
-    public static bool directBufferPreferred() {
-        return DIRECT_BUFFER_PREFERRED;
-    }
 
-    /**
-     * Returns {@code true} if user has specified
-     * {@code -Dio.netty.noPreferDirect=true} option.
-     */
-    public static bool isExplicitNoPreferDirect() {
-        return EXPLICIT_NO_PREFER_DIRECT;
-    }
 
-    /**
-     * Return {@code true} if the selected cleaner can free direct buffers in a controlled way. This guarantee only
-     * applies for buffers allocated via {@link #allocateDirect(int)} and when using the {@code clean} method of the
-     * returned {@link CleanableDirectBuffer}.
-     */
-    public static bool canReliabilyFreeDirectBuffers() {
-        return CLEANER != NOOP;
-    }
 
-    /**
-     * Returns the maximum memory reserved for direct buffer allocation.
-     */
-    public static long maxDirectMemory() {
-        return DIRECT_MEMORY_LIMIT;
-    }
 
-    /**
-     * Returns the current memory reserved for direct buffer allocation.
-     * This method returns -1 in case that a value is not available.
-     *
-     * @see #maxDirectMemory()
-     */
-    public static long usedDirectMemory() {
-        return DIRECT_MEMORY_COUNTER != null ? DIRECT_MEMORY_COUNTER.get() : -1;
-    }
+
+
+
+
+
 
     /**
      * Returns the temporary directory.
@@ -507,39 +332,7 @@ public static class PlatformDependent
         return new ConcurrentDictionary<K, V>(map);
     }
 
-    /**
-     * Allocate a direct {@link ByteBuffer} of the given capacity, and return it alongside its deallocation mechanism.
-     * @param capacity The desired capacity of the direct byte buffer.
-     * @return The {@link CleanableDirectBuffer} instance that contain the buffer and its deallocation mechanism.
-     */
-    public static ICleanableDirectBuffer allocateDirect(int capacity) {
-        return CLEANER.allocate(capacity);
-    }
 
-    /**
-     * Try to deallocate the specified direct {@link ByteBuffer}. Please note this method does nothing if
-     * the current platform does not support this operation or the specified buffer is not a direct buffer.
-     *
-     * @deprecated Use the {@link CleanableDirectBuffer#clean()} from {@link #allocateDirect(int)} instead.
-     */
-    [Obsolete]
-    public static void freeDirectBuffer(ByteBuffer buffer) {
-        // Use the LEGACY_CLEANER reference to avoid using the DIRECT_CLEANER implementation
-        // that just calls #freeDirectNoCleaner(ByteBuffer).
-        LEGACY_CLEANER.freeDirectBuffer(buffer);
-    }
-
-    public static long directBufferAddress(ByteBuffer buffer) {
-        return PlatformDependent0.directBufferAddress(buffer);
-    }
-
-    public static ByteBuffer directBuffer(long memoryAddress, int size) {
-        if (PlatformDependent0.hasDirectBufferNoCleanerConstructor()) {
-            return PlatformDependent0.newDirectBuffer(memoryAddress, size);
-        }
-        throw new NotSupportedException(
-                "sun.misc.Unsafe or java.nio.DirectByteBuffer.<init>(long, int) not available");
-    }
 
     public static object getObject(object obj, long fieldOffset) {
         return PlatformDependent0.getObject(obj, fieldOffset);
@@ -582,34 +375,34 @@ public static class PlatformDependent
     }
 
     public static byte getByte(byte[] data, int index) {
-        return hasUnsafe() ? PlatformDependent0.getByte(data, index) : data[index];
+        return data[index];
     }
 
     public static byte getByte(byte[] data, long index) {
-        return hasUnsafe() ? PlatformDependent0.getByte(data, index) : data[toIntExact(index)];
+        return data[toIntExact(index)];
     }
 
     public static short getShort(byte[] data, int index) {
-        return hasUnsafe() ? PlatformDependent0.getShort(data, index) : getShortSafe(data, index);
+        return MemoryMarshal.Read<short>(data.AsSpan(index, sizeof(short)));
     }
 
     public static int getInt(byte[] data, int index) {
-        return hasUnsafe() ? PlatformDependent0.getInt(data, index) : getIntSafe(data, index);
+        return MemoryMarshal.Read<int>(data.AsSpan(index, sizeof(int)));
     }
 
     public static int getInt(int[] data, long index) {
-        return hasUnsafe() ? PlatformDependent0.getInt(data, index) : data[toIntExact(index)];
+        return data[toIntExact(index)];
     }
 
     public static long getLong(byte[] data, int index) {
-        return hasUnsafe() ? PlatformDependent0.getLong(data, index) : getLongSafe(data, index);
+        return MemoryMarshal.Read<long>(data.AsSpan(index, sizeof(long)));
     }
 
     public static long getLong(long[] data, long index) {
-        return hasUnsafe() ? PlatformDependent0.getLong(data, index) : data[toIntExact(index)];
+        return data[toIntExact(index)];
     }
 
-    private static int toIntExact(long value) 
+    private static int toIntExact(long value)
     {
         if (value > int.MaxValue || value < int.MinValue)
         {
@@ -731,7 +524,7 @@ public static class PlatformDependent
     }
 
     public static void putByte(byte[] data, int index, byte value) {
-        PlatformDependent0.putByte(data, index, value);
+        data[index] = value;
     }
 
     public static void putByte(object data, long offset, byte value) {
@@ -739,15 +532,15 @@ public static class PlatformDependent
     }
 
     public static void putShort(byte[] data, int index, short value) {
-        PlatformDependent0.putShort(data, index, value);
+        MemoryMarshal.Write(data.AsSpan(index, sizeof(short)), in value);
     }
 
     public static void putInt(byte[] data, int index, int value) {
-        PlatformDependent0.putInt(data, index, value);
+        MemoryMarshal.Write(data.AsSpan(index, sizeof(int)), in value);
     }
 
     public static void putLong(byte[] data, int index, long value) {
-        PlatformDependent0.putLong(data, index, value);
+        MemoryMarshal.Write(data.AsSpan(index, sizeof(long)), in value);
     }
 
     public static void putObject(object o, long offset, object x) {
@@ -767,8 +560,12 @@ public static class PlatformDependent
     }
 
     public static void copyMemory(byte[] src, int srcIndex, byte[] dst, int dstIndex, long length) {
-        PlatformDependent0.copyMemory(src, BYTE_ARRAY_BASE_OFFSET + srcIndex,
-                                      dst, BYTE_ARRAY_BASE_OFFSET + dstIndex, length);
+        ArgumentNullException.ThrowIfNull(src);
+        ArgumentNullException.ThrowIfNull(dst);
+        int count = checked((int)length);
+        // CLR adaptation: bounded CopyTo also supports overlapping ranges. No
+        // JVM object-header offset, native pin or manual safe-point loop is needed.
+        src.AsSpan(srcIndex, count).CopyTo(dst.AsSpan(dstIndex, count));
     }
 
     public static void copyMemory(long srcAddr, byte[] dst, int dstIndex, long length) {
@@ -776,130 +573,26 @@ public static class PlatformDependent
     }
 
     public static void setMemory(byte[] dst, int dstIndex, long bytes, byte value) {
-        PlatformDependent0.setMemory(dst, BYTE_ARRAY_BASE_OFFSET + dstIndex, bytes, value);
+        ArgumentNullException.ThrowIfNull(dst);
+        dst.AsSpan(dstIndex, checked((int)bytes)).Fill(value);
     }
 
     public static void setMemory(long address, long bytes, byte value) {
         PlatformDependent0.setMemory(address, bytes, value);
     }
 
-    /**
-     * Allocate a new {@link ByteBuffer} with the given {@code capacity}. {@link ByteBuffer}s allocated with
-     * this method <strong>MUST</strong> be deallocated via {@link #freeDirectNoCleaner(ByteBuffer)}.
-     */
-    public static ByteBuffer allocateDirectNoCleaner(int capacity) {
-        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
 
-        incrementMemoryCounter(capacity);
-        try {
-            return PlatformDependent0.allocateDirectNoCleaner(capacity);
-        } catch (Exception e) {
-            decrementMemoryCounter(capacity);
-            throwException(e);
-            return null;
-        }
-    }
 
-    /**
-     * Allocate a new {@link ByteBuffer} with the given {@code capacity}, inside a {@link ICleanableDirectBuffer}.
-     * The {@link ByteBuffer} <strong>MUST</strong> be deallocated via the {@link ICleanableDirectBuffer#clean()}
-     * of the returned {@link ICleanableDirectBuffer} object.
-     */
-    public static ICleanableDirectBuffer allocateDirectBufferNoCleaner(int capacity)
-    {
-        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
-        return DIRECT_CLEANER.allocate(capacity);
-    }
 
-    /**
-     * Reallocate a new {@link ByteBuffer} with the given {@code capacity}. {@link ByteBuffer}s reallocated with
-     * this method <strong>MUST</strong> be deallocated via {@link #freeDirectNoCleaner(ByteBuffer)}.
-     */
-    public static ByteBuffer reallocateDirectNoCleaner(ByteBuffer buffer, int capacity) {
-        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
 
-        int len = capacity - buffer.capacity();
-        incrementMemoryCounter(len);
-        try {
-            return PlatformDependent0.reallocateDirectNoCleaner(buffer, capacity);
-        } catch (Exception e) {
-            decrementMemoryCounter(len);
-            throwException(e);
-            return null;
-        }
-    }
 
-    /**
-     * Reallocate a new {@link ByteBuffer} with the given {@code capacity}.
-     * The {@link ByteBuffer} is given as wrapped in its associated {@link ICleanableDirectBuffer},
-     * and a new {@link ICleanableDirectBuffer} instance will be returned.
-     * The {@link ByteBuffer}s reallocated with this method <strong>MUST</strong> be deallocated
-     * via the {@link ICleanableDirectBuffer#clean()} method on the returned object.
-     */
-    public static ICleanableDirectBuffer reallocateDirectBufferNoCleaner(ICleanableDirectBuffer buffer, int capacity) {
-        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
-        return ((DirectCleaner) DIRECT_CLEANER).reallocate(buffer, capacity);
-    }
 
-    /**
-     * This method <strong>MUST</strong> only be called for {@link ByteBuffer}s that were allocated via
-     * {@link #allocateDirectNoCleaner(int)}.
-     */
-    public static void freeDirectNoCleaner(ByteBuffer buffer) {
-        Debug.Assert(USE_DIRECT_BUFFER_NO_CLEANER);
 
-        int capacity = buffer.capacity();
-        PlatformDependent0.freeMemory(PlatformDependent0.directBufferAddress(buffer));
-        decrementMemoryCounter(capacity);
-    }
 
-    public static bool hasAlignDirectByteBuffer() {
-        return hasUnsafe() || PlatformDependent0.hasAlignSliceMethod();
-    }
 
-    public static ByteBuffer alignDirectBuffer(ByteBuffer buffer, int alignment) {
-        if (!buffer.isDirect()) {
-            throw new ArgumentException("Cannot get aligned slice of non-direct byte buffer.");
-        }
-        if (PlatformDependent0.hasAlignSliceMethod()) {
-            return PlatformDependent0.alignSlice(buffer, alignment);
-        }
-        if (hasUnsafe()) {
-            long address = directBufferAddress(buffer);
-            long aligned = align(address, alignment);
-            buffer.position((int) (aligned - address));
-            return buffer.slice();
-        }
-        // We don't have enough information to be able to align any buffers.
-        throw new NotSupportedException("Cannot align direct buffer. " +
-                "Needs either Unsafe or ByteBuffer.alignSlice method available.");
-    }
 
     public static long align(long value, int alignment) {
         return Pow2.align(value, alignment);
-    }
-
-    private static void incrementMemoryCounter(int capacity) {
-        if (DIRECT_MEMORY_COUNTER != null) {
-            long newUsedMemory = DIRECT_MEMORY_COUNTER.addAndGet(capacity);
-            if (newUsedMemory > DIRECT_MEMORY_LIMIT) {
-                DIRECT_MEMORY_COUNTER.addAndGet(-capacity);
-                throw new OutOfDirectMemoryErrorException("failed to allocate " + capacity
-                        + " byte(s) of direct memory (used: " + (newUsedMemory - capacity)
-                        + ", max: " + DIRECT_MEMORY_LIMIT + ')');
-            }
-        }
-    }
-
-    private static void decrementMemoryCounter(int capacity) {
-        if (DIRECT_MEMORY_COUNTER != null) {
-            long usedMemory = DIRECT_MEMORY_COUNTER.addAndGet(-capacity);
-            Debug.Assert(usedMemory >= 0);
-        }
-    }
-
-    public static bool useDirectBufferNoCleaner() {
-        return USE_DIRECT_BUFFER_NO_CLEANER;
     }
 
     /**
@@ -914,7 +607,9 @@ public static class PlatformDependent
      * by the caller.
      */
     public static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
-        if (javaVersion() > 8 && (startPos2 | startPos1 | (bytes1.Length - length) | bytes2.Length - length) == 0) {
+        // CLR adaptation: Span equality is available on the declared target.
+        // A JDK-version threshold cannot be applied to Environment.Version.
+        if ((startPos2 | startPos1 | (bytes1.Length - length) | bytes2.Length - length) == 0) {
             return bytes1.AsSpan().SequenceEqual(bytes2);
         }
         return !hasUnsafe() || !unalignedAccess() ?
@@ -993,7 +688,7 @@ public static class PlatformDependent
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      */
-    public static int hashCodeAscii(ICharSequence bytes) 
+    public static int hashCodeAscii(ICharSequence bytes)
     {
         int length = bytes.length();
         int remainingBytes = length & 7;
@@ -1033,7 +728,6 @@ public static class PlatformDependent
         }
         return hash;
     }
-
 
     /**
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
@@ -1216,16 +910,6 @@ public static class PlatformDependent
         return vmName.Equals("IKVM.NET");
     }
 
-    private static Regex getMaxDirectMemorySizeArgPattern() {
-        // Pattern's is immutable so it's always safe published
-        Regex pattern = MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN;
-        if (pattern == null){
-            pattern = new Regex("\\s*-XX:MaxDirectMemorySize\\s*=\\s*([0-9]+)\\s*([kKmMgG]?)\\s*$");
-            MAX_DIRECT_MEMORY_SIZE_ARG_PATTERN =  pattern;
-        }
-        return pattern;
-    }
-
     /**
      * Compute an estimate of the maximum amount of direct memory available to this JVM.
      * <p>
@@ -1236,44 +920,6 @@ public static class PlatformDependent
      * @return The estimated max direct memory, in bytes.
      */
     //@SuppressWarnings("unchecked")
-    public static long estimateMaxDirectMemory() {
-        long maxDirectMemory = PlatformDependent0.bitsMaxDirectMemory();
-        if (maxDirectMemory > 0)
-            return maxDirectMemory;
-
-        string gcHeapHardLimit = Environment.GetEnvironmentVariable("DOTNET_GCHeapHardLimit");
-        if (long.TryParse(gcHeapHardLimit, out maxDirectMemory) && maxDirectMemory > 0)
-            return maxDirectMemory;
-
-        var info = GC.GetGCMemoryInfo();
-        long totalAvailableMemoryBytes = info.TotalAvailableMemoryBytes;
-        if (totalAvailableMemoryBytes <= 0)
-            return 0;
-
-        string gcHeapHardLimitPercent = Environment.GetEnvironmentVariable("DOTNET_GCHeapHardLimitPercent");
-        if (int.TryParse(gcHeapHardLimitPercent, out var percent) && percent > 0)
-        {
-            var ratio = Math.Min(100, percent) * 0.01d;
-            maxDirectMemory = (long)(totalAvailableMemoryBytes * ratio);
-        }
-
-        if (maxDirectMemory <= 0)
-        {
-            maxDirectMemory = info.TotalAvailableMemoryBytes;
-        }
-
-        if (maxDirectMemory <= 0)
-        {
-            maxDirectMemory = Process.GetCurrentProcess().PrivateMemorySize64;
-            logger.debug($"maxDirectMemory: {maxDirectMemory} bytes (maybe)");
-        }
-        else
-        {
-            logger.debug($"maxDirectMemory: {maxDirectMemory} bytes");
-        }
-
-        return maxDirectMemory;
-    }
 
     private static DirectoryInfo tmpdir0() {
         DirectoryInfo f;
@@ -1297,7 +943,7 @@ public static class PlatformDependent
                     logger.debug("-Dio.netty.tmpdir: {} (%TEMP%)", f);
                     return f;
                 }
-                
+
                 string userprofile = Environment.GetEnvironmentVariable("USERPROFILE");
                 if (userprofile != null) {
                     f = toDirectory(userprofile + "\\AppData\\Local\\Temp");
@@ -1490,7 +1136,7 @@ public static class PlatformDependent
         {
             using var fs = File.Create(filePath);
         }
-        
+
         return new FileInfo(filePath);
     }
 
@@ -1610,7 +1256,7 @@ public static class PlatformDependent
                 return "unknown";
         }
     }
-    
+
     public static string normalizeRuntime()
     {
         // dotnet version

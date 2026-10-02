@@ -15,8 +15,8 @@
  */
 
 using System;
-using Netty.NET.Common.Concurrent;
-using Void = Netty.NET.Common.Concurrent.Void;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Netty.NET.Common.Internal;
 
@@ -32,17 +32,23 @@ public sealed class PendingWrite
     /**
      * Create a new empty {@link RecyclableArrayList} instance
      */
-    public static PendingWrite newInstance(object msg, IPromise<Void> promise)
+    // CLR: this is a queue-owned pooled node, not an asynchronous result object.
+    // The caller supplies its producer-owned TCS and exposes only its Task to observers.
+    // Do not retain this node after recycling or across an asynchronous handoff;
+    // capture Message and transfer the completion source before returning it to the pool.
+    public static PendingWrite Rent(object message, TaskCompletionSource completion = null)
     {
         PendingWrite pending = RECYCLER.get();
-        pending._msg = msg;
-        pending._promise = promise;
+        pending._msg = message;
+        pending._completion = completion;
+        Volatile.Write(ref pending._active, 1);
         return pending;
     }
 
     private readonly IObjectPoolHandle<PendingWrite> _handle;
     private object _msg;
-    private IPromise<Void> _promise;
+    private TaskCompletionSource _completion;
+    private int _active;
 
     private PendingWrite(IObjectPoolHandle<PendingWrite> handle)
     {
@@ -52,58 +58,71 @@ public sealed class PendingWrite
     /**
      * Clear and recycle this instance.
      */
-    public bool recycle()
+    // Returning a node alone does not release its message or settle its Task.
+    // Both responsibilities must already have been transferred to the next owner.
+    public bool Recycle()
+    {
+        Claim();
+        ClearAndRecycle();
+        return true;
+    }
+
+    private void Claim()
+    {
+        if (Interlocked.Exchange(ref _active, 0) == 0)
+            throw new InvalidOperationException("The pending write has already been recycled.");
+    }
+
+    private void ClearAndRecycle()
     {
         _msg = null;
-        _promise = null;
+        _completion = null;
         _handle.recycle(this);
+    }
+
+    /**
+     * Fails the underlying {@link Promise} with the given cause and recycle this instance.
+     */
+    // CLR: a canceled/already-completed producer cannot prevent message cleanup.
+    // An OperationCanceledException passed as a failure remains a fault; cancellation
+    // must be published explicitly by the operation owner with TrySetCanceled(token).
+    public bool FailAndRecycle(Exception cause)
+    {
+        ArgumentNullException.ThrowIfNull(cause);
+        Claim();
+        try
+        {
+            ReferenceCountUtil.release(_msg);
+            _completion?.TrySetException(cause);
+        }
+        finally { ClearAndRecycle(); }
         return true;
     }
 
     /**
-     * Fails the underlying {@link IPromise} with the given cause and recycle this instance.
+     * Mark the underlying {@link Promise} successfully and recycle this instance.
      */
-    public bool failAndRecycle(Exception cause)
+    // Success does not release the message: the write consumer now owns it.
+    public bool SucceedAndRecycle()
     {
-        ReferenceCountUtil.release(_msg);
-        if (_promise != null)
-        {
-            _promise.setFailure(cause);
-        }
-
-        return recycle();
+        Claim();
+        try { _completion?.TrySetResult(); }
+        finally { ClearAndRecycle(); }
+        return true;
     }
+
+    public object Message => _msg;
+    public Task Completion => _completion?.Task;
 
     /**
-     * Mark the underlying {@link IPromise} successfully and recycle this instance.
+     * Recycle this instance and return the {@link Promise}.
      */
-    public bool successAndRecycle()
+    // Only the next producer receives mutation authority; observers retain Completion.
+    public TaskCompletionSource RecycleAndGetCompletionSource()
     {
-        if (_promise != null)
-        {
-            _promise.setSuccess(null);
-        }
-
-        return recycle();
-    }
-
-    public object msg()
-    {
-        return _msg;
-    }
-
-    public IPromise<Void> promise()
-    {
-        return _promise;
-    }
-
-    /**
-     * Recycle this instance and return the {@link IPromise}.
-     */
-    public IPromise<Void> recycleAndGet()
-    {
-        IPromise<Void> promise = _promise;
-        recycle();
-        return promise;
+        Claim();
+        TaskCompletionSource completion = _completion;
+        ClearAndRecycle();
+        return completion;
     }
 }

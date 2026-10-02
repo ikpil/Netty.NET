@@ -8,7 +8,7 @@ $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $manifestPath = Join-Path $repositoryRoot 'docs/common-porting-manifest.json'
 $previous = @{}
 if (Test-Path -LiteralPath $manifestPath) {
-    $existing = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+    $existing = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
     foreach ($entry in $existing.entries) { $previous[$entry.upstream] = $entry }
 }
 
@@ -24,7 +24,8 @@ $entries = foreach ($path in $upstreamFiles) {
     $candidates = @($localFiles | Where-Object {
         $_.StartsWith($root) -and
         ([IO.Path]::GetFileName($_) -eq "$name.cs" -or
-         [IO.Path]::GetFileName($_) -eq "I$name.cs")
+         [IO.Path]::GetFileName($_) -eq "I$name.cs") -and
+        (Test-Path -LiteralPath (Join-Path $repositoryRoot $_))
     })
     if ($previous.ContainsKey($path)) {
         $entry = $previous[$path]
@@ -46,7 +47,7 @@ $entries = foreach ($path in $upstreamFiles) {
 $manifest = [ordered]@{
     baseline = $baseline
     scope = @('common/src/main/java', 'common/src/test/java')
-    statusMeaning = 'verified means reviewed against the pinned source and tested; candidates alone imply nothing'
+    statusMeaning = 'verified records the stated behavioral review and tests, not completion of the native API/backend redesign; clr-replacement records a CLR framework substitution; not-applicable records an upstream implementation/test with no CLR purpose; candidates alone imply nothing'
     entries = @($entries)
 }
 $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifestPath -Encoding utf8

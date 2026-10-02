@@ -13,181 +13,148 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
-using Netty.NET.Common;
+using System;
+using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
+using Xunit;
 
 namespace Netty.NET.Common.Tests;
 
-public class NettyRuntimeTests {
-
+[Collection("System properties")]
+public class NettyRuntimeTests
+{
     [Fact]
-    public void testIllegalSet() {
-        final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
-        for (final int i : new int[] { -1, 0 }) {
-            try {
-                holder.setAvailableProcessors(i);
-                Assert.Fail();
-            } catch (final ArgumentException e) {
-                assertThat(e.getMessage()).contains("(expected: > 0)");
-            }
+    public void testIllegalSet()
+    {
+        var holder = new AvailableProcessorsHolder();
+        foreach (int i in new[] { -1, 0 })
+        {
+            ArgumentException e = Assert.Throws<ArgumentException>(() => holder.setAvailableProcessors(i));
+            Assert.Contains("(expected: > 0)", e.Message);
         }
     }
 
     [Fact]
-    public void testMultipleSets() {
-        final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
+    public void testMultipleSets()
+    {
+        var holder = new AvailableProcessorsHolder();
         holder.setAvailableProcessors(1);
-        try {
-            holder.setAvailableProcessors(2);
-            Assert.Fail();
-        } catch (final InvalidOperationException e) {
-            assertThat(e.getMessage()).contains("availableProcessors is already set to [1], rejecting [2]");
-        }
+        InvalidOperationException e = Assert.Throws<InvalidOperationException>(() => holder.setAvailableProcessors(2));
+        Assert.Contains("availableProcessors is already set to [1], rejecting [2]", e.Message);
     }
 
     [Fact]
-    public void testSetAfterGet() {
-        final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
+    public void testSetAfterGet()
+    {
+        var holder = new AvailableProcessorsHolder();
         holder.availableProcessors();
-        try {
-            holder.setAvailableProcessors(1);
-            Assert.Fail();
-        } catch (final InvalidOperationException e) {
-            assertThat(e.getMessage()).contains("availableProcessors is already set");
-        }
+        InvalidOperationException e = Assert.Throws<InvalidOperationException>(() => holder.setAvailableProcessors(1));
+        Assert.Contains("availableProcessors is already set", e.Message);
     }
 
     [Fact]
-    public void testRacingGetAndGet() {
-        final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
-        final CyclicBarrier barrier = new CyclicBarrier(3);
-
-        final AtomicReference<InvalidOperationException> firstReference = new AtomicReference<InvalidOperationException>();
-        final IRunnable firstTarget = getRunnable(holder, barrier, firstReference);
-        final Thread firstGet = new Thread(firstTarget);
-        firstGet.start();
-
-        final AtomicReference<InvalidOperationException> secondRefernce = new AtomicReference<InvalidOperationException>();
-        final IRunnable secondTarget = getRunnable(holder, barrier, secondRefernce);
-        final Thread secondGet = new Thread(secondTarget);
-        secondGet.start();
-
+    public void testRacingGetAndGet()
+    {
+        var holder = new AvailableProcessorsHolder();
+        using var barrier = new Barrier(3);
+        var firstReference = new AtomicReference<Exception>();
+        Thread firstGet = new Thread(getRunnable(holder, barrier, firstReference)) { IsBackground = true };
+        firstGet.Start();
+        var secondReference = new AtomicReference<Exception>();
+        Thread secondGet = new Thread(getRunnable(holder, barrier, secondReference)) { IsBackground = true };
+        secondGet.Start();
         // release the hounds
-        await(barrier);
-
+        awaitBarrier(barrier);
         // wait for the hounds
-        await(barrier);
-
-        firstGet.join();
-        secondGet.join();
-
+        awaitBarrier(barrier);
+        Assert.True(firstGet.Join(TimeSpan.FromSeconds(5)));
+        Assert.True(secondGet.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(firstReference.get());
-        Assert.Null(secondRefernce.get());
+        Assert.Null(secondReference.get());
     }
 
-    private static IRunnable getRunnable(
-            final NettyRuntime.AvailableProcessorsHolder holder,
-            final CyclicBarrier barrier,
-            final AtomicReference<InvalidOperationException> reference) {
-        return new IRunnable() {
-            @Override
-            public void run() {
-                await(barrier);
-                try {
-                    holder.availableProcessors();
-                } catch (final InvalidOperationException e) {
-                    reference.set(e);
-                }
-                await(barrier);
-            }
-        };
-    }
+    private static ThreadStart getRunnable(AvailableProcessorsHolder holder, Barrier barrier,
+        AtomicReference<Exception> reference) => () =>
+    {
+        try
+        {
+            awaitBarrier(barrier);
+            try { holder.availableProcessors(); }
+            catch (InvalidOperationException e) { reference.set(e); }
+            awaitBarrier(barrier);
+        }
+        catch (Exception e) { reference.set(e); }
+    };
 
     [Fact]
-    public void testRacingGetAndSet() {
-        final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
-        final CyclicBarrier barrier = new CyclicBarrier(3);
-        final Thread get = new Thread(new IRunnable() {
-            @Override
-            public void run() {
-                await(barrier);
+    public void testRacingGetAndSet()
+    {
+        var holder = new AvailableProcessorsHolder();
+        using var barrier = new Barrier(3);
+        Exception getFailure = null, setFailure = null;
+        Thread get = new Thread(() =>
+        {
+            try
+            {
+                awaitBarrier(barrier);
                 holder.availableProcessors();
-                await(barrier);
+                awaitBarrier(barrier);
             }
-        });
-        get.start();
-
-        final AtomicReference<InvalidOperationException> setException = new AtomicReference<InvalidOperationException>();
-        final Thread set = new Thread(new IRunnable() {
-            @Override
-            public void run() {
-                await(barrier);
-                try {
-                    holder.setAvailableProcessors(2048);
-                } catch (final InvalidOperationException e) {
-                    setException.set(e);
-                }
-                await(barrier);
+            catch (Exception e) { getFailure = e; }
+        }) { IsBackground = true };
+        get.Start();
+        var setException = new AtomicReference<InvalidOperationException>();
+        Thread set = new Thread(() =>
+        {
+            try
+            {
+                awaitBarrier(barrier);
+                try { holder.setAvailableProcessors(2048); }
+                catch (InvalidOperationException e) { setException.set(e); }
+                awaitBarrier(barrier);
             }
-        });
-        set.start();
-
+            catch (Exception e) { setFailure = e; }
+        }) { IsBackground = true };
+        set.Start();
         // release the hounds
-        await(barrier);
-
+        awaitBarrier(barrier);
         // wait for the hounds
-        await(barrier);
-
-        get.join();
-        set.join();
-
-        if (setException.get() == null) {
-            Assert.Equal(2048, holder.availableProcessors());
-        } else {
-            Assert.NotNull(setException.get());
-        }
+        awaitBarrier(barrier);
+        Assert.True(get.Join(TimeSpan.FromSeconds(5)));
+        Assert.True(set.Join(TimeSpan.FromSeconds(5)));
+        Assert.Null(getFailure);
+        Assert.Null(setFailure);
+        if (setException.get() == null) Assert.Equal(2048, holder.availableProcessors());
+        else Assert.NotNull(setException.get());
     }
 
     [Fact]
-    public void testGetWithSystemProperty() {
-        final string availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
-        try {
+    public void testGetWithSystemProperty()
+    {
+        string previous = SystemPropertyUtil.get("io.netty.availableProcessors");
+        try
+        {
             Environment.SetEnvironmentVariable("io.netty.availableProcessors", "2048");
-            final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
+            var holder = new AvailableProcessorsHolder();
             Assert.Equal(2048, holder.availableProcessors());
-        } finally {
-            if (availableProcessorsSystemProperty != null) {
-                Environment.SetEnvironmentVariable("io.netty.availableProcessors", availableProcessorsSystemProperty);
-            } else {
-                System.clearProperty("io.netty.availableProcessors");
-            }
         }
+        finally { Environment.SetEnvironmentVariable("io.netty.availableProcessors", previous); }
     }
 
     [Fact]
     [SuppressForbidden("testing fallback to Runtime#availableProcessors")]
-    public void testGet() {
-        final string availableProcessorsSystemProperty = SystemPropertyUtil.get("io.netty.availableProcessors");
-        try {
-            System.clearProperty("io.netty.availableProcessors");
-            final NettyRuntime.AvailableProcessorsHolder holder = new NettyRuntime.AvailableProcessorsHolder();
-            Assert.Equal(Runtime.getRuntime().availableProcessors(), holder.availableProcessors());
-        } finally {
-            if (availableProcessorsSystemProperty != null) {
-                Environment.SetEnvironmentVariable("io.netty.availableProcessors", availableProcessorsSystemProperty);
-            } else {
-                System.clearProperty("io.netty.availableProcessors");
-            }
+    public void testGet()
+    {
+        string previous = SystemPropertyUtil.get("io.netty.availableProcessors");
+        try
+        {
+            Environment.SetEnvironmentVariable("io.netty.availableProcessors", null);
+            var holder = new AvailableProcessorsHolder();
+            Assert.Equal(Environment.ProcessorCount, holder.availableProcessors());
         }
+        finally { Environment.SetEnvironmentVariable("io.netty.availableProcessors", previous); }
     }
 
-    private static void await(final CyclicBarrier barrier) {
-        try {
-            barrier.await();
-        } catch (ThreadInterruptedException | BrokenBarrierException e) {
-            fail(e.toString());
-        }
-    }
+    private static void awaitBarrier(Barrier barrier) => Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(5)));
 }

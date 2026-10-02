@@ -13,6 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+using System;
+using System.Runtime.ExceptionServices;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+
 namespace Netty.NET.Common.Tests;
 
 /**
@@ -23,28 +28,30 @@ namespace Netty.NET.Common.Tests;
  * <a href="https://junit.org/junit5/docs/current/user-guide/#extensions-intercepting-invocations">
  * intercepting invocations</a> example.
  */
-public class RunInFastThreadLocalThreadExtension : InvocationInterceptor {
-    @Override
-    public void interceptTestMethod(
-            final Invocation<Void> invocation,
-            final ReflectiveInvocationContext<Method> invocationContext,
-            final ExtensionContext extensionContext) {
-        final AtomicReference<Exception> throwable = new AtomicReference<Exception>();
-        Thread thread = new FastThreadLocalThread(new IRunnable() {
-            @Override
-            public void run() {
-                try {
-                    invocation.proceed();
-                } catch (Exception t) {
-                    throwable.set(t);
-                }
-            }
-        });
+public static class RunInFastThreadLocalThreadExtension
+{
+    private sealed class Worker(IRunnable invocation, Action<Exception> cleanupFailure) : FastThreadLocalThread(invocation)
+    {
+        public override void run()
+        {
+            try { base.run(); }
+            catch (Exception error) { cleanupFailure(error); }
+        }
+    }
+
+    // CLR adaptation: xUnit cases call this helper explicitly rather than using
+    // JUnit interception. ExceptionDispatchInfo preserves the worker's stack.
+    public static void run(Action invocation)
+    {
+        ArgumentNullException.ThrowIfNull(invocation);
+        ExceptionDispatchInfo failure = null;
+        var thread = new Worker(Runnables.Create(() =>
+        {
+            try { invocation(); }
+            catch (Exception error) { failure = ExceptionDispatchInfo.Capture(error); }
+        }), error => failure ??= ExceptionDispatchInfo.Capture(error));
         thread.start();
         thread.join();
-        Exception t = throwable.get();
-        if (t != null) {
-            throw t;
-        }
+        failure?.Throw();
     }
 }

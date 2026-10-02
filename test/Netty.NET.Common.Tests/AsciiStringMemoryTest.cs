@@ -15,7 +15,6 @@
  */
 
 using System;
-using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests;
@@ -38,8 +37,8 @@ public class AsciiStringMemoryTest
     {
         a = new byte[128];
         b = new byte[256];
-        r.nextBytes(a);
-        r.nextBytes(b);
+        r.NextBytes(a);
+        r.NextBytes(b);
         aOffset = 22;
         bOffset = 53;
         length = 100;
@@ -98,12 +97,12 @@ public class AsciiStringMemoryTest
     [Fact]
     public void forEachTest()
     {
-        AtomicInteger aCount = new AtomicInteger(0);
-        AtomicInteger bCount = new AtomicInteger(0);
+        int aCount = 0;
+        int bCount = 0;
         aAsciiString.forEachByte(new TestByteProcessor(0, (value, p) =>
         {
             Assert.Equal(value, bAsciiString.byteAt(p.i++), "failed at index: " + p.i);
-            aCount.set(aCount.get() + 1);
+            ++aCount;
             return true;
         }));
 
@@ -111,11 +110,11 @@ public class AsciiStringMemoryTest
         bAsciiString.forEachByte(new TestByteProcessor(0, (value, p) =>
         {
             Assert.Equal(value, aAsciiString.byteAt(p.i++), "failed at index: " + p.i);
-            bCount.set(bCount.get() + 1);
+            ++bCount;
             return true;
         }));
-        Assert.Equal(aAsciiString.length(), aCount.get());
-        Assert.Equal(bAsciiString.length(), bCount.get());
+        Assert.Equal(aAsciiString.length(), aCount);
+        Assert.Equal(bAsciiString.length(), bCount);
     }
 
     [Fact]
@@ -135,23 +134,23 @@ public class AsciiStringMemoryTest
     [Fact]
     public void forEachDescTest()
     {
-        AtomicInteger aCount = new AtomicInteger(0);
-        AtomicInteger bCount = new AtomicInteger(0);
+        int aCount = 0;
+        int bCount = 0;
         aAsciiString.forEachByteDesc(new TestByteProcessor(1, (value, p) =>
         {
             Assert.Equal(value, bAsciiString.byteAt(bAsciiString.length() - (p.i++)), "failed at index: " + p.i);
-            aCount.set(aCount.get() + 1);
+            ++aCount;
             return true;
         }));
 
         bAsciiString.forEachByteDesc(new TestByteProcessor(1, (value, p) =>
         {
             Assert.Equal(value, aAsciiString.byteAt(aAsciiString.length() - (p.i++)), "failed at index: " + p.i);
-            bCount.set(bCount.get() + 1);
+            ++bCount;
             return true;
         }));
-        Assert.Equal(aAsciiString.length(), aCount.get());
-        Assert.Equal(bAsciiString.length(), bCount.get());
+        Assert.Equal(aAsciiString.length(), aCount);
+        Assert.Equal(bAsciiString.length(), bCount);
     }
 
     [Fact]

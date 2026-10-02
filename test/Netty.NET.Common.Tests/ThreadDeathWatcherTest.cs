@@ -13,123 +13,90 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
+using Xunit;
 
 namespace Netty.NET.Common.Tests;
 
+[CollectionDefinition("Thread death watcher globals", DisableParallelization = true)]
+public class ThreadDeathWatcherGlobalsCollection { }
+
+[Collection("Thread death watcher globals")]
 public class ThreadDeathWatcherTest
 {
+    private static Thread createThread() => new(() =>
+    {
+        try { for (;;) Thread.Sleep(1000); }
+        catch (ThreadInterruptedException) { }
+    }) { IsBackground = true };
+
     [Fact(Timeout = 10000)]
     public void testWatch()
     {
-        CountdownEvent latch = new CountdownEvent(1);
-        Thread t = new Thread(() =>
-        {
-            for (;;)
-            {
-                try
-                {
-                    Thread.Sleep(1000);
-                }
-                catch (ThreadInterruptedException ignore)
-                {
-                    break;
-                }
-            }
-        });
-
-        IRunnable task = Runnables.Create(() =>
-        {
-            if (!t.IsAlive)
-            {
-                latch.Signal();
-            }
-        });
-
+        using var latch = new CountdownEvent(1);
+        Thread thread = createThread();
+        IRunnable task = Runnables.Create(() => { if (!thread.IsAlive) latch.Signal(); });
+        Assert.Throws<ArgumentException>(() => ThreadDeathWatcher.watch(thread, task));
+        thread.Start();
         try
         {
-            ThreadDeathWatcher.watch(t, task);
-            Assert.Fail("must reject to watch a non-alive thread.");
+            ThreadDeathWatcher.watch(thread, task);
+            // As long as the thread is alive, the task should not run.
+            Assert.False(latch.Wait(750));
+            // Interrupt the thread to terminate it.
+            thread.Interrupt();
+            // The task must be run on termination.
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
         }
-        catch (ArgumentException e)
+        finally
         {
-            // expected
+            if (thread.IsAlive) thread.Interrupt();
+            Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+            Assert.True(ThreadDeathWatcher.awaitInactivity(TimeSpan.FromSeconds(5)));
         }
-
-        t.Start();
-        ThreadDeathWatcher.watch(t, task);
-
-        // As long as the thread is alive, the task should not run.
-        Assert.False(latch.Wait(750));
-
-        // Interrupt the thread to terminate it.
-        t.Interrupt();
-
-        // The task must be run on termination.
-        latch.Wait();
     }
-
     [Fact(Timeout = 10000)]
     public void testUnwatch()
     {
-        AtomicBoolean run = new AtomicBoolean();
-        Thread t = new Thread(() =>
+        int run = 0;
+        Thread thread = createThread();
+        IRunnable task = Runnables.Create(() => Interlocked.Exchange(ref run, 1));
+        thread.Start();
+        try
         {
-            for (;;)
-            {
-                try
-                {
-                    Thread.Sleep(1000);
-                }
-                catch (ThreadInterruptedException ignore)
-                {
-                    break;
-                }
-            }
-        });
-
-        IRunnable task = Runnables.Create(() =>
+            // Watch and then unwatch.
+            ThreadDeathWatcher.watch(thread, task);
+            ThreadDeathWatcher.unwatch(thread, task);
+            // Interrupt the thread to terminate it.
+            thread.Interrupt();
+            // Wait until the thread dies.
+            Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+            // Wait until the watcher thread terminates itself.
+            Assert.True(ThreadDeathWatcher.awaitInactivity(TimeSpan.MaxValue));
+            // And the task should not run.
+            Assert.Equal(0, Volatile.Read(ref run));
+        }
+        finally
         {
-            run.set(true);
-        });
-
-        t.Start();
-
-        // Watch and then unwatch.
-        ThreadDeathWatcher.watch(t, task);
-        ThreadDeathWatcher.unwatch(t, task);
-
-        // Interrupt the thread to terminate it.
-        t.Interrupt();
-
-        // Wait until the thread dies.
-        t.Join();
-
-        // Wait until the watcher thread terminates itself.
-        Assert.True(ThreadDeathWatcher.awaitInactivity(long.MaxValue, TimeUnit.SECONDS));
-
-        // And the task should not run.
-        Assert.False(run.get());
+            if (thread.IsAlive) thread.Interrupt();
+            Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        }
     }
-
     [Fact(Timeout = 2000)]
     public void testThreadGroup()
     {
-        List<Thread> group = new List<Thread>();
-        AtomicReference<List<Thread>> capturedGroup = new AtomicReference<List<Thread>>();
-        Thread thread = new Thread(() =>
+        var group = new ThreadGroup("group");
+        ThreadGroup capturedGroup = null;
+        Thread thread = group.newThread(Runnables.Create(() =>
         {
-            Thread t = ThreadDeathWatcher.threadFactory.newThread(() => { });
-            capturedGroup.set(t.getThreadGroup());
-        });
+            Thread child = ThreadDeathWatcher.threadFactory.newThread(Runnables.Empty);
+            capturedGroup = ThreadGroup.getThreadGroup(child);
+        }));
         thread.Start();
-        thread.Join();
-
-        Assert.Equal(group, capturedGroup.get());
+        Assert.True(thread.Join(TimeSpan.FromSeconds(1)));
+        Assert.Same(group, capturedGroup);
     }
 }

@@ -27,7 +27,7 @@ namespace Netty.NET.Common.Concurrent;
 /**
  * Abstract base class for {@link EventExecutor} implementations.
  */
-public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExecutor
+public abstract class AbstractEventExecutor : IEventExecutor
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(AbstractEventExecutor));
 
@@ -69,35 +69,11 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
 
     public abstract bool inEventLoop(Thread thread);
 
-    protected sealed override IRunnableFuture<T> newTaskFor<T>(IRunnable runnable, T value) =>
-        new PromiseTask<T>(this, runnable, value);
-
-    protected sealed override IRunnableFuture<T> newTaskFor<T>(ICallable<T> callable) =>
-        new PromiseTask<T>(this, callable);
-
-    public virtual IPromise<V> newPromise<V>()
-    {
-        return new DefaultPromise<V>(this);
-    }
-
-    public virtual IProgressivePromise<V> newProgressivePromise<V>()
-    {
-        return new DefaultProgressivePromise<V>(this);
-    }
-
-    public virtual IFuture<V> newSucceededFuture<V>(V result)
-    {
-        return new SucceededFuture<V>(this, result);
-    }
-
-    public virtual IFuture<V> newFailedFuture<V>(Exception cause)
-    {
-        return new FailedFuture<V>(this, cause);
-    }
-
-    public abstract IFuture<Void> terminationFuture();
-
-    public Task terminationTask() => terminationFuture().Task;
+    public abstract void execute(IRunnable task);
+    public abstract bool isShutdown();
+    public abstract bool isTerminated();
+    public abstract bool awaitTermination(TimeSpan timeout);
+    public abstract Task Termination { get; }
 
     public virtual IEventExecutor next()
     {
@@ -109,22 +85,18 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         return _selfCollection;
     }
 
-    public virtual IFuture<Void> shutdownGracefully()
+    public virtual Task ShutdownGracefullyAsync()
     {
-        return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT);
+        return ShutdownGracefullyAsync(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
-    public abstract IFuture<Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout);
-
-    public Task shutdownGracefullyAsync() => shutdownGracefully().Task;
-    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => shutdownGracefully(quietPeriod, timeout).Task;
-
+    public abstract Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
 
     /**
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    public override List<IRunnable> shutdownNow()
+    public virtual List<IRunnable> shutdownNow()
     {
         shutdown();
         return new List<IRunnable>();
@@ -134,7 +106,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    public abstract override void shutdown();
+    public abstract void shutdown();
 
     public abstract bool isShuttingDown();
 
@@ -146,26 +118,6 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     public virtual bool trySuspend()
     {
         return false;
-    }
-
-    public virtual IScheduledTask schedule(IRunnable command, TimeSpan delay)
-    {
-        throw new NotSupportedException();
-    }
-
-    public virtual IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay)
-    {
-        throw new NotSupportedException();
-    }
-
-    public virtual IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period)
-    {
-        throw new NotSupportedException();
-    }
-
-    public virtual IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay)
-    {
-        throw new NotSupportedException();
     }
 
     /**

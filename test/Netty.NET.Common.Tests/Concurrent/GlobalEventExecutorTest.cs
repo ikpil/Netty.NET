@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
@@ -73,7 +74,7 @@ public class GlobalEventExecutorTest
     public void testScheduledTasks()
     {
         var task = new TestRunnable(0);
-        var f = (IFuture<Void>)e.schedule(task, TimeSpan.FromMilliseconds(1500));
+        var f = e.ScheduleAsync(task.run, TimeSpan.FromMilliseconds(1500));
         sync(f);
         Assert.True(task.ran);
 
@@ -111,7 +112,7 @@ public class GlobalEventExecutorTest
 
         //add scheduled task
         var scheduledTask = new TestRunnable(0);
-        var f = (IFuture<Void>)e.schedule(scheduledTask, TimeSpan.FromMilliseconds(1500));
+        var f = e.ScheduleAsync(scheduledTask.run, TimeSpan.FromMilliseconds(1500));
 
         //add task
         var afterTask = new TestRunnable(0);
@@ -129,14 +130,14 @@ public class GlobalEventExecutorTest
         //for https://github.com/netty/netty/issues/1614
         //add scheduled task
         var t = new TestRunnable(0);
-        var f = (IFuture<Void>)e.schedule(t, TimeSpan.FromMilliseconds(1500));
+        var f = e.ScheduleAsync(t.run, TimeSpan.FromMilliseconds(1500));
 
         //ensure always has at least one task in taskQueue
         //check if scheduled tasks are triggered
         IRunnable repeat = null;
         repeat = Runnables.Create(() =>
         {
-            if (!f.isDone()) e.execute(repeat);
+            if (!f.IsCompleted) e.execute(repeat);
         });
         e.execute(repeat);
         sync(f);
@@ -150,7 +151,7 @@ public class GlobalEventExecutorTest
         // loaded it. It holds on to the failure of its terminationFuture forever, so that failure must not
         // populate a (native) backtrace: doing so would pin the Classloader of whatever thread happened to
         // trigger the lazy initialization of INSTANCE (see https://github.com/netty/netty/issues/17128).
-        Exception cause = e.terminationFuture().cause();
+        Exception cause = e.Termination.Exception.InnerException;
         Assert.NotNull(cause);
         Assert.IsAssignableFrom<NotSupportedException>(cause);
 
@@ -165,11 +166,10 @@ public class GlobalEventExecutorTest
         Assert.Equal(before, cause.StackTrace);
     }
 
-    private static void sync(IFuture<Void> future)
+    private static void sync(Task future)
     {
         // CLR: bound original unbounded waits to expose a stalled executor.
-        Assert.True(future.await(TimeSpan.FromSeconds(5)));
-        future.sync();
+        future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     }
 
     private sealed class TestRunnable : IRunnable

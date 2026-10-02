@@ -18,12 +18,12 @@ namespace Netty.NET.Common;
 
 /**
  * A handle associated with a {@link TimerTask} that is returned by a
- * {@link ITimer}.
+ * {@link Timer}.
  */
 public interface ITimeout
 {
     /**
-     * Returns the {@link ITimer} that created this handle.
+     * Returns the {@link Timer} that created this handle.
      */
     ITimer timer();
 

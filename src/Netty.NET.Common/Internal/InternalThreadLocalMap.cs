@@ -63,7 +63,7 @@ public sealed class InternalThreadLocalMap
     private int _localChannelReaderStackDepth;
     private Dictionary<Type, bool> _handlerSharableCache;
     private Dictionary<Type, TypeParameterMatcher> _typeParameterMatcherGetCache;
-    private Dictionary<Type, IDictionary<string, TypeParameterMatcher>> _typeParameterMatcherFindCache;
+    private Dictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> _typeParameterMatcherFindCache;
 
     // String-related thread-locals
     private StringBuilder _stringBuilder;
@@ -317,12 +317,12 @@ public sealed class InternalThreadLocalMap
         return cache;
     }
 
-    public IDictionary<Type, IDictionary<string, TypeParameterMatcher>> typeParameterMatcherFindCache()
+    public IDictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> typeParameterMatcherFindCache()
     {
         var cache = _typeParameterMatcherFindCache;
         if (cache == null)
         {
-            _typeParameterMatcherFindCache = cache = new Dictionary<Type, IDictionary<string, TypeParameterMatcher>>();
+            _typeParameterMatcherFindCache = cache = new Dictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>>();
         }
 
         return cache;

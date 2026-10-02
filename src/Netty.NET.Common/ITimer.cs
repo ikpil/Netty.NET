@@ -20,25 +20,25 @@ using System.Collections.Generic;
 namespace Netty.NET.Common;
 
 /**
- * Schedules {@link ITimerTask}s for one-time future execution in a background
+ * Schedules {@link TimerTask}s for one-time future execution in a background
  * thread.
  */
 public interface ITimer
 {
     /**
-     * Schedules the specified {@link ITimerTask} for one-time execution after
+     * Schedules the specified {@link TimerTask} for one-time execution after
      * the specified delay.
      *
      * @return a handle which is associated with the specified task
      *
-     * @throws InvalidOperationException       if this timer has been {@linkplain #stop() stopped} already
+     * @throws IllegalStateException       if this timer has been {@linkplain #stop() stopped} already
      * @throws RejectedExecutionException if the pending timeouts are too many and creating new timeout
      *                                    can cause instability in the system.
      */
     ITimeout newTimeout(ITimerTask task, TimeSpan delay);
 
     /**
-     * Releases all resources acquired by this {@link ITimer} and cancels all
+     * Releases all resources acquired by this {@link Timer} and cancels all
      * tasks which were scheduled but not executed yet.
      *
      * @return the handles associated with the tasks which were canceled by

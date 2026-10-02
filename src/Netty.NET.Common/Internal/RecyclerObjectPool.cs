@@ -1,6 +1,6 @@
 namespace Netty.NET.Common.Internal;
 
-public class RecyclerObjectPool<T> : ObjectPool<T>
+public class RecyclerObjectPool<T> : ObjectPool<T> where T : class
 {
     private readonly Recycler<T> _recycler;
 

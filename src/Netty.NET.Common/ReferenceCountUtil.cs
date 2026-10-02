@@ -13,142 +13,78 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 using System;
 using System.Threading;
+using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
 /**
- * ICollection of method to handle objects that may implement {@link IReferenceCounted}.
+ * Collection of method to handle objects that may implement {@link ReferenceCounted}.
  */
 public static class ReferenceCountUtil
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ReferenceCountUtil));
-
-    static ReferenceCountUtil()
-    {
-        ResourceLeakDetector.addExclusions(typeof(ReferenceCountUtil), "touch");
-    }
-
+    static ReferenceCountUtil() => ResourceLeakDetector.addExclusions(typeof(ReferenceCountUtil), "touch");
     /**
-     * Try to call {@link IReferenceCounted#retain()} if the specified message implements {@link IReferenceCounted}.
-     * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
+     * Try to call {@link ReferenceCounted#retain()} if the specified message implements {@link ReferenceCounted}.
+     * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
-    //@SuppressWarnings("unchecked")
-    public static T retain<T>(T msg)
-    {
-        if (msg is IReferenceCounted)
-        {
-            return (T)((IReferenceCounted)msg).retain();
-        }
-
-        return msg;
-    }
-
+    public static T retain<T>(T msg) => msg is IReferenceCounted reference ? (T)reference.retain() : msg;
     /**
-     * Try to call {@link IReferenceCounted#retain(int)} if the specified message implements {@link IReferenceCounted}.
-     * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
+     * Try to call {@link ReferenceCounted#retain(int)} if the specified message implements {@link ReferenceCounted}.
+     * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
-    //@SuppressWarnings("unchecked")
     public static T retain<T>(T msg, int increment)
     {
         ObjectUtil.checkPositive(increment, "increment");
-        if (msg is IReferenceCounted)
-        {
-            return (T)((IReferenceCounted)msg).retain(increment);
-        }
-
-        return msg;
+        return msg is IReferenceCounted reference ? (T)reference.retain(increment) : msg;
     }
-
     /**
-     * Tries to call {@link IReferenceCounted#touch()} if the specified message implements {@link IReferenceCounted}.
-     * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
+     * Tries to call {@link ReferenceCounted#touch()} if the specified message implements {@link ReferenceCounted}.
+     * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
-    //@SuppressWarnings("unchecked")
-    public static T touch<T>(T msg)
-    {
-        if (msg is IReferenceCounted)
-        {
-            return (T)((IReferenceCounted)msg).touch();
-        }
-
-        return msg;
-    }
-
+    public static T touch<T>(T msg) => msg is IReferenceCounted reference ? (T)reference.touch() : msg;
     /**
-     * Tries to call {@link IReferenceCounted#touch(object)} if the specified message implements
-     * {@link IReferenceCounted}.  If the specified message doesn't implement {@link IReferenceCounted},
+     * Tries to call {@link ReferenceCounted#touch(Object)} if the specified message implements
+     * {@link ReferenceCounted}.  If the specified message doesn't implement {@link ReferenceCounted},
      * this method does nothing.
      */
-    //@SuppressWarnings("unchecked")
-    public static T touch<T>(T msg, object hint)
-    {
-        if (msg is IReferenceCounted)
-        {
-            return (T)((IReferenceCounted)msg).touch(hint);
-        }
-
-        return msg;
-    }
-
+    public static T touch<T>(T msg, object hint) => msg is IReferenceCounted reference ? (T)reference.touch(hint) : msg;
     /**
-     * Try to call {@link IReferenceCounted#release()} if the specified message implements {@link IReferenceCounted}.
-     * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
+     * Try to call {@link ReferenceCounted#release()} if the specified message implements {@link ReferenceCounted}.
+     * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
-    public static bool release(object msg)
-    {
-        if (msg is IReferenceCounted)
-        {
-            return ((IReferenceCounted)msg).release();
-        }
-
-        return false;
-    }
-
+    public static bool release(object msg) => msg is IReferenceCounted reference && reference.release();
     /**
-     * Try to call {@link IReferenceCounted#release(int)} if the specified message implements {@link IReferenceCounted}.
-     * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
+     * Try to call {@link ReferenceCounted#release(int)} if the specified message implements {@link ReferenceCounted}.
+     * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
     public static bool release(object msg, int decrement)
     {
         ObjectUtil.checkPositive(decrement, "decrement");
-        if (msg is IReferenceCounted)
-        {
-            return ((IReferenceCounted)msg).release(decrement);
-        }
-
-        return false;
+        return msg is IReferenceCounted reference && reference.release(decrement);
     }
-
     /**
-     * Try to call {@link IReferenceCounted#release()} if the specified message implements {@link IReferenceCounted}.
-     * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
-     * Unlike {@link #release(object)} this method catches an exception raised by {@link IReferenceCounted#release()}
-     * and logs it, rather than rethrowing it to the caller.  It is usually recommended to use {@link #release(object)}
+     * Try to call {@link ReferenceCounted#release()} if the specified message implements {@link ReferenceCounted}.
+     * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
+     * Unlike {@link #release(Object)} this method catches an exception raised by {@link ReferenceCounted#release()}
+     * and logs it, rather than rethrowing it to the caller.  It is usually recommended to use {@link #release(Object)}
      * instead, unless you absolutely need to swallow an exception.
      */
     public static void safeRelease(object msg)
     {
-        try
-        {
-            release(msg);
-        }
-        catch (Exception t)
-        {
-            logger.warn("Failed to release a message: {}", msg, t);
-        }
+        try { release(msg); }
+        catch (Exception failure) { logger.warn("Failed to release a message: {}", msg, failure); }
     }
-
     /**
-     * Try to call {@link IReferenceCounted#release(int)} if the specified message implements {@link IReferenceCounted}.
-     * If the specified message doesn't implement {@link IReferenceCounted}, this method does nothing.
-     * Unlike {@link #release(object)} this method catches an exception raised by {@link IReferenceCounted#release(int)}
+     * Try to call {@link ReferenceCounted#release(int)} if the specified message implements {@link ReferenceCounted}.
+     * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
+     * Unlike {@link #release(Object)} this method catches an exception raised by {@link ReferenceCounted#release(int)}
      * and logs it, rather than rethrowing it to the caller.  It is usually recommended to use
-     * {@link #release(object, int)} instead, unless you absolutely need to swallow an exception.
+     * {@link #release(Object, int)} instead, unless you absolutely need to swallow an exception.
      */
     public static void safeRelease(object msg, int decrement)
     {
@@ -157,21 +93,53 @@ public static class ReferenceCountUtil
             ObjectUtil.checkPositive(decrement, "decrement");
             release(msg, decrement);
         }
-        catch (Exception t)
+        catch (Exception failure)
         {
-            if (logger.isWarnEnabled())
-            {
-                logger.warn("Failed to release a message: {} (decrement: {})", msg, decrement, t);
-            }
+            if (logger.isWarnEnabled()) logger.warn("Failed to release a message: {} (decrement: {})", msg, decrement, failure);
         }
     }
-
     /**
-     * Returns reference count of a {@link IReferenceCounted} object. If object is not type of
-     * {@link IReferenceCounted}, {@code -1} is returned.
+     * Schedules the specified object to be released when the caller thread terminates. Note that this operation is
+     * intended to simplify reference counting of ephemeral objects during unit tests. Do not use it beyond the
+     * intended use case.
+     *
+     * @deprecated this may introduce a lot of memory usage so it is generally preferable to manually release objects.
      */
-    public static int refCnt(object msg)
+    [Obsolete]
+    public static T releaseLater<T>(T msg) => releaseLater(msg, 1);
+    /**
+     * Schedules the specified object to be released when the caller thread terminates. Note that this operation is
+     * intended to simplify reference counting of ephemeral objects during unit tests. Do not use it beyond the
+     * intended use case.
+     *
+     * @deprecated this may introduce a lot of memory usage so it is generally preferable to manually release objects.
+     */
+    [Obsolete]
+    public static T releaseLater<T>(T msg, int decrement)
     {
-        return msg is IReferenceCounted ? ((IReferenceCounted)msg).refCnt() : -1;
+        ObjectUtil.checkPositive(decrement, "decrement");
+        if (msg is IReferenceCounted reference) ThreadDeathWatcher.watch(Thread.CurrentThread, new ReleasingTask(reference, decrement));
+        return msg;
+    }
+    /**
+     * Returns reference count of a {@link ReferenceCounted} object. If object is not type of
+     * {@link ReferenceCounted}, {@code -1} is returned.
+     */
+    public static int refCnt(object msg) => msg is IReferenceCounted reference ? reference.refCnt() : -1;
+    /**
+     * Releases the objects when the thread that called {@link #releaseLater(Object)} has been terminated.
+     */
+    private sealed class ReleasingTask(IReferenceCounted obj, int decrement) : IRunnable
+    {
+        public void run()
+        {
+            try
+            {
+                if (!obj.release(decrement)) logger.warn("Non-zero refCnt: {}", this);
+                else logger.debug("Released: {}", this);
+            }
+            catch (Exception failure) { logger.warn("Failed to release an object: {}", obj, failure); }
+        }
+        public override string ToString() => StringUtil.simpleClassName(obj) + ".release(" + decrement + ") refCnt: " + obj.refCnt();
     }
 }

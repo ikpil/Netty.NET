@@ -20,14 +20,14 @@ using Netty.NET.Common.Functional;
 namespace Netty.NET.Common.Internal;
 
 /**
- * Allow to retrieve the {@link IEventExecutor} for the calling {@link Thread}.
+ * Allow to retrieve the {@link EventExecutor} for the calling {@link Thread}.
  */
 public static class ThreadExecutorMap
 {
     private static readonly FastThreadLocal<IEventExecutor> _mappings = new FastThreadLocal<IEventExecutor>();
 
     /**
-     * Returns the current {@link IEventExecutor} that uses the {@link Thread}, or {@code null} if none / unknown.
+     * Returns the current {@link EventExecutor} that uses the {@link Thread}, or {@code null} if none / unknown.
      */
     public static IEventExecutor currentExecutor()
     {
@@ -35,7 +35,7 @@ public static class ThreadExecutorMap
     }
 
     /**
-     * Set the current {@link IEventExecutor} that is used by the {@link Thread}.
+     * Set the current {@link EventExecutor} that is used by the {@link Thread}.
      */
     public static IEventExecutor setCurrentExecutor(IEventExecutor executor)
     {
@@ -43,8 +43,8 @@ public static class ThreadExecutorMap
     }
 
     /**
-     * Decorate the given {@link IExecutor} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
-     * when called from within the {@link IRunnable} during execution.
+     * Decorate the given {@link Executor} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
+     * when called from within the {@link Runnable} during execution.
      */
     public static IExecutor apply(IExecutor executor, IEventExecutor eventExecutor)
     {
@@ -56,8 +56,8 @@ public static class ThreadExecutorMap
     }
 
     /**
-     * Decorate the given {@link IRunnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
-     * when called from within the {@link IRunnable} during execution.
+     * Decorate the given {@link Runnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
+     * when called from within the {@link Runnable} during execution.
      */
     public static IRunnable apply(IRunnable command, IEventExecutor eventExecutor)
     {
@@ -78,8 +78,8 @@ public static class ThreadExecutorMap
     }
 
     /**
-     * Decorate the given {@link IThreadFactory} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
-     * when called from within the {@link IRunnable} during execution.
+     * Decorate the given {@link ThreadFactory} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
+     * when called from within the {@link Runnable} during execution.
      */
     public static IThreadFactory apply(IThreadFactory threadFactory, IEventExecutor eventExecutor)
     {

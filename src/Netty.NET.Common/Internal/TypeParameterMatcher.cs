@@ -23,8 +23,11 @@ public abstract class TypeParameterMatcher
 {
     private static readonly TypeParameterMatcher NOOP = new NoopTypeParameterMatcher();
 
+    internal TypeParameterMatcher() { }
+
     public static TypeParameterMatcher get(Type parameterType)
     {
+        ArgumentNullException.ThrowIfNull(parameterType);
         IDictionary<Type, TypeParameterMatcher> getCache =
             InternalThreadLocalMap.get().typeParameterMatcherGetCache();
 
@@ -48,22 +51,26 @@ public abstract class TypeParameterMatcher
 
     public static TypeParameterMatcher find(object obj, Type parametrizedSuperclass, string typeParamName)
     {
-        IDictionary<Type, IDictionary<string, TypeParameterMatcher>> findCache =
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentNullException.ThrowIfNull(parametrizedSuperclass);
+        ArgumentNullException.ThrowIfNull(typeParamName);
+        IDictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> findCache =
             InternalThreadLocalMap.get().typeParameterMatcherFindCache();
         Type thisClass = obj.GetType();
 
-        findCache.TryGetValue(thisClass, out IDictionary<string, TypeParameterMatcher> map);
+        findCache.TryGetValue(thisClass, out IDictionary<(Type Superclass, string Name), TypeParameterMatcher> map);
         if (map == null)
         {
-            map = new Dictionary<string, TypeParameterMatcher>();
+            map = new Dictionary<(Type Superclass, string Name), TypeParameterMatcher>();
             findCache.Add(thisClass, map);
         }
 
-        map.TryGetValue(typeParamName, out TypeParameterMatcher matcher);
+        var key = (parametrizedSuperclass, typeParamName);
+        map.TryGetValue(key, out TypeParameterMatcher matcher);
         if (matcher == null)
         {
             matcher = get(ReflectionUtil.resolveTypeParameter(obj, parametrizedSuperclass, typeParamName));
-            map.Add(typeParamName, matcher);
+            map.Add(key, matcher);
         }
 
         return matcher;

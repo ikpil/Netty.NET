@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common;
@@ -23,6 +24,10 @@ namespace Netty.NET.Common;
 /**
  * A collection of utility methods that is related with handling {@link AsciiString}.
  */
+// Utility
+// CLR adaptation: MemoryMarshal reads/writes bounded native-order words,
+// including unaligned slices. JVM Unsafe capability does not select this path.
+// CLR adaptation: a static class supplies the original non-instantiable utility.
 public static class AsciiStringUtil
 {
     /**
@@ -41,22 +46,17 @@ public static class AsciiStringUtil
             return str;
         }
 
-        byte[] newByteArray = PlatformDependent.allocateUninitializedArray(length);
+        byte[] newByteArray = GC.AllocateUninitializedArray<byte>(length);
         toLowerCase(byteArray, offset, newByteArray);
         return new AsciiString(newByteArray, false);
     }
 
     private static bool containsUpperCase(byte[] byteArray, int offset, int length)
     {
-        if (!PlatformDependent.isUnaligned())
-        {
-            return linearContainsUpperCase(byteArray, offset, length);
-        }
-
         int longCount = length >>> 3;
         for (int i = 0; i < longCount; ++i)
         {
-            long word = PlatformDependent.getLong(byteArray, offset);
+            long word = MemoryMarshal.Read<long>(byteArray.AsSpan(offset, sizeof(long)));
             if (SWARUtil.containsUpperCase(word))
             {
                 return true;
@@ -68,26 +68,12 @@ public static class AsciiStringUtil
         return unrolledContainsUpperCase(byteArray, offset, length & 7);
     }
 
-    private static bool linearContainsUpperCase(byte[] byteArray, int offset, int length)
-    {
-        int end = offset + length;
-        for (int idx = offset; idx < end; ++idx)
-        {
-            if (isUpperCase(byteArray[idx]))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private static bool unrolledContainsUpperCase(byte[] byteArray, int offset, int byteCount)
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
         if ((byteCount & sizeof(int)) != 0)
         {
-            int word = PlatformDependent.getInt(byteArray, offset);
+            int word = MemoryMarshal.Read<int>(byteArray.AsSpan(offset, sizeof(int)));
             if (SWARUtil.containsUpperCase(word))
             {
                 return true;
@@ -98,12 +84,12 @@ public static class AsciiStringUtil
 
         if ((byteCount & sizeof(short)) != 0)
         {
-            if (isUpperCase(PlatformDependent.getByte(byteArray, offset)))
+            if (isUpperCase(byteArray[offset]))
             {
                 return true;
             }
 
-            if (isUpperCase(PlatformDependent.getByte(byteArray, offset + 1)))
+            if (isUpperCase(byteArray[offset + 1]))
             {
                 return true;
             }
@@ -113,7 +99,7 @@ public static class AsciiStringUtil
 
         if ((byteCount & sizeof(byte)) != 0)
         {
-            return isUpperCase(PlatformDependent.getByte(byteArray, offset));
+            return isUpperCase(byteArray[offset]);
         }
 
         return false;
@@ -121,31 +107,17 @@ public static class AsciiStringUtil
 
     private static void toLowerCase(byte[] src, int srcOffset, byte[] dst)
     {
-        if (!PlatformDependent.isUnaligned())
-        {
-            linearToLowerCase(src, srcOffset, dst);
-            return;
-        }
-
         int length = dst.Length;
         int longCount = length >>> 3;
         int offset = 0;
         for (int i = 0; i < longCount; ++i)
         {
-            long word = PlatformDependent.getLong(src, srcOffset + offset);
-            PlatformDependent.putLong(dst, offset, SWARUtil.toLowerCase(word));
+            long word = MemoryMarshal.Read<long>(src.AsSpan(srcOffset + offset, sizeof(long)));
+            MemoryMarshal.Write(dst.AsSpan(offset, sizeof(long)), SWARUtil.toLowerCase(word));
             offset += sizeof(long);
         }
 
         unrolledToLowerCase(src, srcOffset + offset, dst, offset, length & 7);
-    }
-
-    private static void linearToLowerCase(byte[] src, int srcOffset, byte[] dst)
-    {
-        for (int i = 0; i < dst.Length; ++i)
-        {
-            dst[i] = toLowerCase(src[srcOffset + i]);
-        }
     }
 
     private static void unrolledToLowerCase(byte[] src, int srcPos,
@@ -155,24 +127,24 @@ public static class AsciiStringUtil
         int offset = 0;
         if ((byteCount & sizeof(int)) != 0)
         {
-            int word = PlatformDependent.getInt(src, srcPos + offset);
-            PlatformDependent.putInt(dst, dstOffset + offset, SWARUtil.toLowerCase(word));
+            int word = MemoryMarshal.Read<int>(src.AsSpan(srcPos + offset, sizeof(int)));
+            MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(int)), SWARUtil.toLowerCase(word));
             offset += sizeof(int);
         }
 
         if ((byteCount & sizeof(short)) != 0)
         {
-            short word = PlatformDependent.getShort(src, srcPos + offset);
-            short result = (short)((toLowerCase((byte)(word >>> 8)) << 8) | toLowerCase((byte)word));
-            PlatformDependent.putShort(dst, dstOffset + offset, result);
+            short word = MemoryMarshal.Read<short>(src.AsSpan(srcPos + offset, sizeof(short)));
+            short result = unchecked((short)((toLowerCase((byte)(word >>> 8)) << 8) | toLowerCase((byte)word)));
+            MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(short)), result);
             offset += sizeof(short);
         }
 
-        // this is equivalent to byteCount >= sizeof(byte) (i.e. whether byteCount is odd)
+        // this is equivalent to byteCount >= Byte.BYTES (i.e. whether byteCount is odd)
+        // CLR note: the mask tests the low bit (oddness), not byteCount's magnitude.
         if ((byteCount & sizeof(byte)) != 0)
         {
-            PlatformDependent.putByte(dst, dstOffset + offset,
-                toLowerCase(PlatformDependent.getByte(src, srcPos + offset)));
+            dst[dstOffset + offset] = toLowerCase(src[srcPos + offset]);
         }
     }
 
@@ -192,22 +164,17 @@ public static class AsciiStringUtil
             return str;
         }
 
-        byte[] newByteArray = PlatformDependent.allocateUninitializedArray(length);
+        byte[] newByteArray = GC.AllocateUninitializedArray<byte>(length);
         toUpperCase(byteArray, offset, newByteArray);
         return new AsciiString(newByteArray, false);
     }
 
     private static bool containsLowerCase(byte[] byteArray, int offset, int length)
     {
-        if (!PlatformDependent.isUnaligned())
-        {
-            return linearContainsLowerCase(byteArray, offset, length);
-        }
-
         int longCount = length >>> 3;
         for (int i = 0; i < longCount; ++i)
         {
-            long word = PlatformDependent.getLong(byteArray, offset);
+            long word = MemoryMarshal.Read<long>(byteArray.AsSpan(offset, sizeof(long)));
             if (SWARUtil.containsLowerCase(word))
             {
                 return true;
@@ -219,26 +186,12 @@ public static class AsciiStringUtil
         return unrolledContainsLowerCase(byteArray, offset, length & 7);
     }
 
-    private static bool linearContainsLowerCase(byte[] byteArray, int offset, int length)
-    {
-        int end = offset + length;
-        for (int idx = offset; idx < end; ++idx)
-        {
-            if (isLowerCase(byteArray[idx]))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private static bool unrolledContainsLowerCase(byte[] byteArray, int offset, int byteCount)
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
         if ((byteCount & sizeof(int)) != 0)
         {
-            int word = PlatformDependent.getInt(byteArray, offset);
+            int word = MemoryMarshal.Read<int>(byteArray.AsSpan(offset, sizeof(int)));
             if (SWARUtil.containsLowerCase(word))
             {
                 return true;
@@ -249,12 +202,12 @@ public static class AsciiStringUtil
 
         if ((byteCount & sizeof(short)) != 0)
         {
-            if (isLowerCase(PlatformDependent.getByte(byteArray, offset)))
+            if (isLowerCase(byteArray[offset]))
             {
                 return true;
             }
 
-            if (isLowerCase(PlatformDependent.getByte(byteArray, offset + 1)))
+            if (isLowerCase(byteArray[offset + 1]))
             {
                 return true;
             }
@@ -264,7 +217,7 @@ public static class AsciiStringUtil
 
         if ((byteCount & sizeof(byte)) != 0)
         {
-            return isLowerCase(PlatformDependent.getByte(byteArray, offset));
+            return isLowerCase(byteArray[offset]);
         }
 
         return false;
@@ -272,31 +225,17 @@ public static class AsciiStringUtil
 
     private static void toUpperCase(byte[] src, int srcOffset, byte[] dst)
     {
-        if (!PlatformDependent.isUnaligned())
-        {
-            linearToUpperCase(src, srcOffset, dst);
-            return;
-        }
-
         int length = dst.Length;
         int longCount = length >>> 3;
         int offset = 0;
         for (int i = 0; i < longCount; ++i)
         {
-            long word = PlatformDependent.getLong(src, srcOffset + offset);
-            PlatformDependent.putLong(dst, offset, SWARUtil.toUpperCase(word));
+            long word = MemoryMarshal.Read<long>(src.AsSpan(srcOffset + offset, sizeof(long)));
+            MemoryMarshal.Write(dst.AsSpan(offset, sizeof(long)), SWARUtil.toUpperCase(word));
             offset += sizeof(long);
         }
 
         unrolledToUpperCase(src, srcOffset + offset, dst, offset, length & 7);
-    }
-
-    private static void linearToUpperCase(byte[] src, int srcOffset, byte[] dst)
-    {
-        for (int i = 0; i < dst.Length; ++i)
-        {
-            dst[i] = toUpperCase(src[srcOffset + i]);
-        }
     }
 
     private static void unrolledToUpperCase(byte[] src, int srcOffset,
@@ -306,23 +245,22 @@ public static class AsciiStringUtil
         int offset = 0;
         if ((byteCount & sizeof(int)) != 0)
         {
-            int word = PlatformDependent.getInt(src, srcOffset + offset);
-            PlatformDependent.putInt(dst, dstOffset + offset, SWARUtil.toUpperCase(word));
+            int word = MemoryMarshal.Read<int>(src.AsSpan(srcOffset + offset, sizeof(int)));
+            MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(int)), SWARUtil.toUpperCase(word));
             offset += sizeof(int);
         }
 
         if ((byteCount & sizeof(short)) != 0)
         {
-            short word = PlatformDependent.getShort(src, srcOffset + offset);
-            short result = (short)((toUpperCase((byte)(word >>> 8)) << 8) | toUpperCase((byte)word));
-            PlatformDependent.putShort(dst, dstOffset + offset, result);
+            short word = MemoryMarshal.Read<short>(src.AsSpan(srcOffset + offset, sizeof(short)));
+            short result = unchecked((short)((toUpperCase((byte)(word >>> 8)) << 8) | toUpperCase((byte)word)));
+            MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(short)), result);
             offset += sizeof(short);
         }
 
         if ((byteCount & sizeof(byte)) != 0)
         {
-            PlatformDependent.putByte(dst, dstOffset + offset,
-                toUpperCase(PlatformDependent.getByte(src, srcOffset + offset)));
+            dst[dstOffset + offset] = toUpperCase(src[srcOffset + offset]);
         }
     }
 

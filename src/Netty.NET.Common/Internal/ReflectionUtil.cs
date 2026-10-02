@@ -22,7 +22,7 @@ namespace Netty.NET.Common.Internal;
 public static class ReflectionUtil
 {
     /**
-     * Try to call {@link AccessibleObject#setAccessible(bool)} but will catch any {@link SecurityException} and
+     * Try to call {@link AccessibleObject#setAccessible(boolean)} but will catch any {@link SecurityException} and
      * {@link java.lang.reflect.InaccessibleObjectException} and return it.
      * The caller must check if it returns {@code null} and if not handle the returned exception.
      */
@@ -50,6 +50,9 @@ public static class ReflectionUtil
 
     private static MemberAccessException handleInaccessibleObjectException(Exception e)
     {
+        // JDK 9 can throw an inaccessible object exception here; since Netty compiles
+        // against JDK 7 and this exception was only added in JDK 9, we have to weakly
+        // check the type
         if (e is MemberAccessException || e.GetType().FullName == "System.MemberAccessException")
         {
             return e as MemberAccessException;
@@ -70,77 +73,38 @@ public static class ReflectionUtil
      * @param parametrizedSuperclass The parametrized superclass
      * @param typeParamName The name of the type parameter to resolve
      * @return The resolved type parameter
-     * @throws InvalidOperationException if the type parameter could not be resolved
+     * @throws IllegalStateException if the type parameter could not be resolved
      * */
+    // CLR adaptation: runtime generic arguments survive construction. Follow the
+    // constructed superclass chain instead of reproducing JVM erasure failures.
     public static Type resolveTypeParameter(object obj, Type parametrizedSuperclass, string typeParamName)
     {
-        Type currentClass = obj.GetType();
-        while (currentClass != null)
+        ArgumentNullException.ThrowIfNull(obj);
+        ArgumentNullException.ThrowIfNull(parametrizedSuperclass);
+        ArgumentNullException.ThrowIfNull(typeParamName);
+        Type thisClass = obj.GetType();
+        Type superclassDefinition = parametrizedSuperclass.IsGenericType ?
+            parametrizedSuperclass.GetGenericTypeDefinition() : parametrizedSuperclass;
+        for (Type currentClass = thisClass; currentClass != null; currentClass = currentClass.BaseType)
         {
-            if (currentClass.BaseType != parametrizedSuperclass)
-            {
-                currentClass = currentClass.BaseType;
-                continue;
-            }
-
-            int typeParamIndex = -1;
-            var typeParams = currentClass.GenericTypeArguments;
-            for (int i = 0; i < typeParams.Length; i++)
-            {
-                if (typeParamName == typeParams[i].Name)
-                {
-                    typeParamIndex = i;
-                    break;
-                }
-            }
-
-            if (typeParamIndex < 0)
-            {
-                throw new InvalidOperationException("unknown type parameter '" + typeParamName + "': " + parametrizedSuperclass);
-            }
-
             Type genericSuperType = currentClass.BaseType;
-            if (!genericSuperType!.IsGenericType)
+            if (genericSuperType == null) continue;
+            Type definition = genericSuperType.IsGenericType ? genericSuperType.GetGenericTypeDefinition() : genericSuperType;
+            if (definition != superclassDefinition) continue;
+            if (parametrizedSuperclass.IsConstructedGenericType && genericSuperType != parametrizedSuperclass) continue;
+            Type[] parameters = definition.GetGenericArguments();
+            int index = Array.FindIndex(parameters, parameter => parameter.Name == typeParamName);
+            if (index < 0)
+                throw new InvalidOperationException("unknown type parameter '" + typeParamName + "': " + parametrizedSuperclass);
+            Type actualType = genericSuperType.GetGenericArguments()[index];
+            if (actualType.IsGenericParameter)
             {
-                return typeof(object);
+                // Resolved type parameter points to another type parameter.
+                return fail(thisClass, typeParamName);
             }
-
-            Type[] actualTypeParams = genericSuperType.GetGenericArguments();
-            Type actualTypeParam = actualTypeParams[typeParamIndex];
-            if (actualTypeParam.IsGenericType)
-            {
-                actualTypeParam = actualTypeParam.GetGenericTypeDefinition();
-            }
-
-            if (actualTypeParam.IsClass || actualTypeParam.IsInterface)
-            {
-                return actualTypeParam;
-            }
-
-            if (actualTypeParam.IsArray)
-            {
-                var componentType = actualTypeParam.GetElementType();
-                if (componentType!.IsGenericType)
-                    componentType = componentType.GetGenericTypeDefinition();
-                if (componentType.IsClass || componentType.IsInterface)
-                    return componentType.MakeArrayType();
-            }
-
-            if (actualTypeParam.IsGenericParameter)
-            {
-                if (!(actualTypeParam.DeclaringType is Type declaringType))
-                    return typeof(object);
-
-                currentClass = obj.GetType();
-                parametrizedSuperclass = declaringType;
-                typeParamName = actualTypeParam.Name;
-                if (parametrizedSuperclass.IsAssignableFrom(currentClass))
-                    continue;
-
-                return typeof(object);
-            }
+            if (actualType.ContainsGenericParameters) return fail(thisClass, typeParamName);
+            return actualType;
         }
-
-        return fail(currentClass, typeParamName);
+        return fail(thisClass, typeParamName);
     }
 }

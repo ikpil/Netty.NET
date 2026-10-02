@@ -14,6 +14,7 @@
  * under the License.
  */
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -120,7 +121,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
     }
 
     [Fact(Timeout = 30000)]
-    public void testScaleDown()
+    public async Task testScaleDown()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 3, TimeSpan.FromMilliseconds(50));
         try
@@ -134,12 +135,12 @@ public class AutoScalingEventExecutorChooserFactoryTest
         }
         finally
         {
-            group.shutdownGracefully().syncUninterruptibly();
+            await group.ShutdownGracefullyAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
 
     [Fact(Timeout = 30000)]
-    public void testScaleUp()
+    public async Task testScaleUp()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 3, TimeSpan.FromMilliseconds(50));
         try
@@ -191,12 +192,12 @@ public class AutoScalingEventExecutorChooserFactoryTest
         }
         finally
         {
-            group.shutdownGracefully().syncUninterruptibly();
+            await group.ShutdownGracefullyAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
 
     [Fact(Timeout = 30000)]
-    public void testScaleDownWhenExecutorIsNotStarted()
+    public async Task testScaleDownWhenExecutorIsNotStarted()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(2, 4, TimeSpan.FromMilliseconds(50));
         try
@@ -207,12 +208,12 @@ public class AutoScalingEventExecutorChooserFactoryTest
         }
         finally
         {
-            group.shutdownGracefully().syncUninterruptibly();
+            await group.ShutdownGracefullyAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
 
     [Fact(Timeout = 30000)]
-    public void testScaleDownDoesNotGoBelowMinThreads()
+    public async Task testScaleDownDoesNotGoBelowMinThreads()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(2, 4, TimeSpan.FromMilliseconds(50));
         try
@@ -223,12 +224,12 @@ public class AutoScalingEventExecutorChooserFactoryTest
         }
         finally
         {
-            group.shutdownGracefully().syncUninterruptibly();
+            await group.ShutdownGracefullyAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
 
     [Fact(Timeout = 30000)]
-    public void testScaleUpDoesNotExceedMaxThreads()
+    public async Task testScaleUpDoesNotExceedMaxThreads()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 2, TimeSpan.FromMilliseconds(50));
         try
@@ -280,12 +281,12 @@ public class AutoScalingEventExecutorChooserFactoryTest
         }
         finally
         {
-            group.shutdownGracefully().syncUninterruptibly();
+            await group.ShutdownGracefullyAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
 
     [Fact(Timeout = 30000)]
-    public void testSmarterPickingConsolidatesWorkOnActiveExecutor()
+    public async Task testSmarterPickingConsolidatesWorkOnActiveExecutor()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 3, TimeSpan.FromMilliseconds(50));
         try
@@ -313,12 +314,12 @@ public class AutoScalingEventExecutorChooserFactoryTest
         }
         finally
         {
-            group.shutdownGracefully().syncUninterruptibly();
+            await group.ShutdownGracefullyAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
 
     [Fact(Timeout = 30000)]
-    public void testMetricsProvideCorrectUtilizationAndActiveExecutorCount()
+    public async Task testMetricsProvideCorrectUtilizationAndActiveExecutorCount()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 3, TimeSpan.FromMilliseconds(50));
         try
@@ -380,7 +381,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
         }
         finally
         {
-            group.shutdownGracefully().syncUninterruptibly();
+            await group.ShutdownGracefullyAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
 

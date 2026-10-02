@@ -20,21 +20,21 @@ namespace Netty.NET.Common;
 /**
  * A utility class for wrapping calls to {@link Runtime}.
  */
+    /**
+     * No public constructor to prevent instances from being created.
+     */
 public static class NettyRuntime
 {
-    /**
-     * Holder class for available processors to enable testing.
-     */
     private static readonly AvailableProcessorsHolder holder = new AvailableProcessorsHolder();
 
     /**
      * Set the number of available processors.
      *
      * @param availableProcessors the number of available processors
-     * @throws ArgumentException if the specified number of available processors is non-positive
-     * @throws InvalidOperationException    if the number of available processors is already configured
+     * @throws IllegalArgumentException if the specified number of available processors is non-positive
+     * @throws IllegalStateException    if the number of available processors is already configured
      */
-    //@SuppressWarnings("unused,WeakerAccess") // this method is part of the public API
+    // this method is part of the public API
     public static void setAvailableProcessors(int availableProcessors)
     {
         holder.setAvailableProcessors(availableProcessors);

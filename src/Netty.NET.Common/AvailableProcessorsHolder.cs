@@ -3,6 +3,9 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common;
 
+/**
+ * Holder class for available processors to enable testing.
+ */
 internal class AvailableProcessorsHolder
 {
     private readonly object _lock = new object();
@@ -12,17 +15,17 @@ internal class AvailableProcessorsHolder
      * Set the number of available processors.
      *
      * @param availableProcessors the number of available processors
-     * @throws ArgumentException if the specified number of available processors is non-positive
-     * @throws InvalidOperationException    if the number of available processors is already configured
+     * @throws IllegalArgumentException if the specified number of available processors is non-positive
+     * @throws IllegalStateException    if the number of available processors is already configured
      */
     public void setAvailableProcessors(int availableProcessors)
     {
-        lock (_lock)
+        using (UninterruptibleMonitor.enter(_lock))
         {
             ObjectUtil.checkPositive(availableProcessors, "availableProcessors");
             if (_availableProcessors != 0)
             {
-                string message = $"availableProcessors is already set to [{_availableProcessors}], rejecting [{availableProcessors}]";
+                string message = FormattableString.Invariant($"availableProcessors is already set to [{_availableProcessors}], rejecting [{availableProcessors}]");
                 throw new InvalidOperationException(message);
             }
 
@@ -40,7 +43,7 @@ internal class AvailableProcessorsHolder
     [SuppressForbidden("to obtain default number of available processors")]
     public int availableProcessors()
     {
-        lock (_lock)
+        using (UninterruptibleMonitor.enter(_lock))
         {
             if (_availableProcessors == 0)
             {

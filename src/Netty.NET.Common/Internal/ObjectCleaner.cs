@@ -16,119 +16,74 @@
 
 using System;
 using System.Threading;
-using Netty.NET.Common.Collections;
-using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Internal;
 
 /**
- * Allows a way to register some {@link IRunnable} that will executed once there are no references to an {@link object}
+ * Allows a way to register some {@link Runnable} that will executed once there are no references to an {@link Object}
  * anymore.
+ *
+ * @deprecated The object cleaner is deprecated for removal.
  */
+[Obsolete("Prefer IDisposable/SafeHandle ownership. Use registration only as a GC fallback.")]
 public static class ObjectCleaner
 {
-    private static readonly int REFERENCE_QUEUE_POLL_TIMEOUT_MS =
-        Math.Max(500, SystemPropertyUtil.getInt("io.netty.util.internal.ObjectCleaner.refQueuePollTimeout", 10000));
+    // CLR runtime mechanisms replace the Java LIVE_SET/ReferenceQueue/polling
+    // worker. Conditional values do not globally root callbacks or their keys.
+    // CollectedObjectWatch finalizers only enqueue work; user code runs on a
+    // background thread-pool worker, with no registrar ExecutionContext flow.
+    private static int _pending;
 
-    // Package-private for testing
-    public static readonly string CLEANER_THREAD_NAME = nameof(ObjectCleaner) + "Thread";
-
-    // This will hold a reference to the AutomaticCleanerReference which will be removed once we called cleanup()
-    private static readonly ConcurrentHashSet<AutomaticCleanerReference> LIVE_SET = new ConcurrentHashSet<AutomaticCleanerReference>();
-    private static readonly WeakReferenceQueue<object> REFERENCE_QUEUE = new WeakReferenceQueue<object>();
-    private static readonly AtomicBoolean CLEANER_RUNNING = new AtomicBoolean(false);
-    public static Thread CLEANUP_THREAD { get; private set; }
-
-    private static void CLEANER_TASK()
-    {
-        bool interrupted = false;
-        for (;;)
-        {
-            // Keep on processing as long as the LIVE_SET is not empty and once it becomes empty
-            // See if we can let this thread complete.
-            while (!LIVE_SET.IsEmpty())
-            {
-                AutomaticCleanerReference reference = null;
-                try
-                {
-                    reference = (AutomaticCleanerReference)REFERENCE_QUEUE.remove(REFERENCE_QUEUE_POLL_TIMEOUT_MS);
-                }
-                catch (ThreadInterruptedException ex)
-                {
-                    // Just consume and move on
-                    interrupted = true;
-                    continue;
-                }
-
-                if (reference != null)
-                {
-                    try
-                    {
-                        reference.cleanup();
-                    }
-                    catch (Exception ignored)
-                    {
-                        // ignore exceptions, and don't log in case the logger throws an exception, blocks, or has
-                        // other unexpected side effects.
-                    }
-
-                    LIVE_SET.Remove(reference);
-                }
-            }
-
-            CLEANER_RUNNING.set(false);
-            CLEANUP_THREAD = null;
-
-            // Its important to first access the LIVE_SET and then CLEANER_RUNNING to ensure correct
-            // behavior in multi-threaded environments.
-            if (LIVE_SET.IsEmpty() || !CLEANER_RUNNING.compareAndSet(false, true))
-            {
-                // There was nothing added after we set STARTED to false or some other cleanup Thread
-                // was started already so its safe to let this Thread complete now.
-                break;
-            }
-        }
-
-        if (interrupted)
-        {
-            // As we caught the ThreadInterruptedException above we should mark the Thread as interrupted.
-            Thread.CurrentThread.Interrupt();
-            CLEANUP_THREAD = null;
-        }
-    }
+    /// <summary>Number of registrations waiting for collection or callback completion.</summary>
+    public static int PendingCount => Volatile.Read(ref _pending);
 
     /**
-     * Register the given {@link object} for which the {@link IRunnable} will be executed once there are no references
+     * Register the given {@link Object} for which the {@link Runnable} will be executed once there are no references
      * to the object anymore.
      *
-     * This should only be used if there are no other ways to execute some cleanup once the object is not reachable
+     * This should only be used if there are no other ways to execute some cleanup once the Object is not reachable
      * anymore because it is not a cheap way to handle the cleanup.
      */
-    public static void register(object obj, IRunnable cleanupTask)
+    /// <summary>Registers an at-most-once Action after the target becomes unreachable.
+    /// Callbacks have no ordering or executor affinity and may run concurrently.
+    /// GC timing and process shutdown do not provide a deterministic cleanup deadline.</summary>
+    public static void Register(object target, Action cleanup)
     {
-        AutomaticCleanerReference reference = new AutomaticCleanerReference(LIVE_SET, obj, REFERENCE_QUEUE, ObjectUtil.checkNotNull(cleanupTask, "cleanupTask"));
-        // Its important to add the reference to the LIVE_SET before we access CLEANER_RUNNING to ensure correct
-        // behavior in multi-threaded environments.
-        LIVE_SET.Add(reference);
-
-        // Check if there is already a cleaner running.
-        if (CLEANER_RUNNING.compareAndSet(false, true))
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(cleanup);
+        Interlocked.Increment(ref _pending);
+        try
         {
-            Thread cleanupThread = new Thread(CLEANER_TASK);
-            cleanupThread.Priority = ThreadPriority.Lowest;
-            cleanupThread.Name = CLEANER_THREAD_NAME;
-
-            // Mark this as a daemon thread to ensure that we the JVM can exit if this is the only thread that is
-            // running.
-            cleanupThread.IsBackground = true;
-            cleanupThread.Start();
-            CLEANUP_THREAD = cleanupThread;
+            CollectedObjectWatch.register(target, () => QueueCleanup(cleanup));
         }
+        catch
+        {
+            Interlocked.Decrement(ref _pending);
+            throw;
+        }
+        GC.KeepAlive(target);
     }
 
-    public static int getLiveSetCount()
+    private static void QueueCleanup(Action cleanup)
     {
-        return LIVE_SET.Count;
+        try
+        {
+            bool queued = ThreadPool.UnsafeQueueUserWorkItem(static action =>
+            {
+                try { action(); }
+                catch (Exception)
+                {
+                    // ignore exceptions, and don't log in case the logger throws an exception, blocks, or has
+                    // other unexpected side effects.
+                }
+                finally { Interlocked.Decrement(ref _pending); }
+            }, cleanup, preferLocal: false);
+            if (!queued) throw new InvalidOperationException("The CLR thread pool rejected GC cleanup work.");
+        }
+        catch
+        {
+            Interlocked.Decrement(ref _pending);
+            throw;
+        }
     }
 }

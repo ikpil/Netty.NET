@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Xunit;
 
@@ -12,145 +11,147 @@ namespace Netty.NET.Common.Tests.Porting;
 
 public class PromiseContractTest
 {
-    private sealed class Listener<T> : IFutureListener<T>
+    [Fact]
+    public async Task ProgressRegistrationsRetainSourceIdentityAndIndependentRemoval()
     {
-        private readonly Action<IFuture<T>> action;
-        internal Listener(Action<IFuture<T>> action) { this.action = action; }
-        public void operationComplete(IFuture<T> future) => action(future);
-        // Promise removal must use reference identity even when listeners override equality.
-        public override bool Equals(object obj) => obj is Listener<T>;
-        public override int GetHashCode() => 0;
-    }
-    private sealed class ProgressiveListener<T> : IGenericProgressiveFutureListener<IFuture<T>>
-    {
-        internal readonly List<(long progress, long total)> updates = new List<(long, long)>();
-        internal int completions;
-        public void operationProgressed(IFuture<T> future, long progress, long total) => updates.Add((progress, total));
-        public void operationComplete(IFuture<T> future) => ++completions;
-    }
-    private sealed class TypedProgressiveListener<T> : IGenericProgressiveFutureListener<IProgressiveFuture<T>>
-    {
-        internal readonly List<(long progress, long total)> updates = new();
-        internal int completions;
-        public void operationProgressed(IProgressiveFuture<T> future, long progress, long total) => updates.Add((progress, total));
-        public void operationComplete(IProgressiveFuture<T> future) => ++completions;
-    }
-    private sealed class TypedPromiseListener<T> : IGenericFutureListener<IPromise<T>>
-    {
-        internal IPromise<T> completed;
-        public void operationComplete(IPromise<T> future) => completed = future;
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var reporter = new ExecutorProgress(ImmediateEventExecutor.INSTANCE, source.Task);
+        var updates = new List<TransferProgress>();
+        var removedUpdates = new List<TransferProgress>();
+        int completions = 0, removedCompletions = 0;
+        Task observed = null;
+        Action<TransferProgress> progress = updates.Add;
+        Action<Task> completed = task => { observed = task; ++completions; };
+        using var first = reporter.Register(progress, completed);
+        using var removed = reporter.Register(removedUpdates.Add, _ => ++removedCompletions);
+        using var duplicate = reporter.Register(progress, completed);
+        first.Dispose();
+        removed.Dispose();
+        reporter.Report(new TransferProgress(1, 2));
+        Assert.Equal(new[] { new TransferProgress(1, 2) }, updates);
+        Assert.Empty(removedUpdates);
+        source.SetResult(null);
+        await reporter.NotificationsCompleted.WaitAsync(TimeSpan.FromSeconds(5));
+        await duplicate.NotificationsCompleted;
+        Assert.True(first.NotificationsCompleted.IsCanceled);
+        Assert.True(removed.NotificationsCompleted.IsCanceled);
+        Assert.Same(source.Task, observed);
+        Assert.Equal(1, completions);
+        Assert.Equal(0, removedCompletions);
+        using var late = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
+        using var registration = late.Register(completed);
+        await registration.NotificationCompleted;
+        Assert.Equal(2, completions);
     }
     [Fact]
-    public void ListenersBoundToProgressiveFutureRetainProgressIdentityAndFluentReturns()
+    public async Task CompletionRegistrationsReceiveTheOriginalSourceTask()
     {
-        IProgressivePromise<object> promise = ImmediateEventExecutor.INSTANCE.newProgressivePromise<object>();
-        var listener = new TypedProgressiveListener<object>();
-        var removed = new TypedProgressiveListener<object>();
-        Assert.Same(promise, promise.addListeners(listener, removed, listener, null, removed));
-        Assert.Same(promise, promise.removeListeners(listener, removed));
-        promise.setProgress(1, 2);
-        Assert.Equal(new[] { (1L, 2L) }, listener.updates);
-        Assert.Empty(removed.updates);
-        promise.setSuccess(null);
-        Assert.Equal(1, listener.completions);
-        Assert.Equal(0, removed.completions);
-        Assert.Same(promise, promise.addListener(listener));
-        Assert.Equal(2, listener.completions);
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var observation = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
+        Task observed = null, removedTask = null;
+        using var listener = observation.Register(task => observed = task);
+        using var removed = observation.Register(task => removedTask = task);
+        removed.Dispose();
+        source.SetResult(null);
+        await listener.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Same(source.Task, observed);
+        Assert.Null(removedTask);
+        Assert.True(removed.NotificationCompleted.IsCanceled);
     }
     [Fact]
-    public void ListenersBoundToPromiseReceiveTheOriginalObject()
+    public async Task CommittedNativeSubmissionCanStillSucceedOrFailAfterCancellationRequest()
     {
-        IPromise<object> promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
-        var listener = new TypedPromiseListener<object>();
-        var removed = new TypedPromiseListener<object>();
-        Assert.Same(promise, promise.addListener(listener));
-        promise.addListener(removed);
-        promise.removeListener(removed);
-        promise.setSuccess(null);
-        Assert.Same(promise, listener.completed);
-        Assert.Null(removed.completed);
-        Assert.Same(promise, promise.removeListener(listener));
-    }
-    [Fact]
-    public void UncancellableCanStillSucceedOrFail()
-    {
-        foreach (bool fail in new[] { false, true })
+        var executor = new DefaultEventExecutor();
+        try
         {
-            var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
-            Assert.True(promise.isCancellable());
-            Assert.True(promise.setUncancellable());
-            Assert.True(promise.setUncancellable());
-            Assert.False(promise.cancel(true));
-            Assert.False(promise.isCancellable());
-            Assert.False(promise.isDone());
-            var value = new object();
-            var error = new InvalidOperationException("failure");
-            if (fail) Assert.True(promise.tryFailure(error));
-            else Assert.True(promise.trySuccess(value));
-            Assert.True(promise.isDone());
-            Assert.True(promise.setUncancellable());
-            Assert.False(promise.trySuccess(value));
-            Assert.False(promise.tryFailure(error));
-            Assert.Throws<InvalidOperationException>(() => promise.setSuccess(value));
-            Assert.Throws<InvalidOperationException>(() => promise.setFailure(error));
-            Assert.Equal(!fail, promise.isSuccess());
-            Assert.Same(fail ? null : value, promise.getNow());
-            Assert.Same(fail ? error : null, promise.cause());
+            foreach (bool fail in new[] { false, true })
+            {
+                using var entered = new ManualResetEventSlim();
+                using var release = new ManualResetEventSlim();
+                using var cancellation = new CancellationTokenSource();
+                var value = new object();
+                var error = new InvalidOperationException("failure");
+                Task<object> operation = executor.SubmitAsync(_ =>
+                {
+                    entered.Set();
+                    if (!release.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException("producer was not released");
+                    if (fail) throw error;
+                    return value;
+                }, cancellation.Token);
+                try
+                {
+                    Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+                    cancellation.Cancel();
+                    Assert.False(operation.IsCompleted);
+                }
+                finally { release.Set(); }
+                if (fail)
+                    Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                        await operation.WaitAsync(TimeSpan.FromSeconds(5))));
+                else Assert.Same(value, await operation.WaitAsync(TimeSpan.FromSeconds(5)));
+                Assert.False(operation.IsCanceled);
+            }
         }
+        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
     }
     [Fact]
-    public void CancellationHasStablePerPromiseCause()
+    public async Task CancellationRetainsProducerTokenWithoutInventingStableExceptionIdentity()
     {
-        var a = ImmediateEventExecutor.INSTANCE.newPromise<object>();
-        var b = ImmediateEventExecutor.INSTANCE.newPromise<object>();
-        Assert.True(a.cancel(false));
-        Assert.False(a.cancel(false));
-        Assert.True(b.cancel(true));
-        Assert.Same(a.cause(), a.cause());
-        Assert.NotSame(a.cause(), b.cause());
-        Assert.Same(a.cause(), Assert.ThrowsAny<OperationCanceledException>(() => a.get()));
-        Assert.Same(a.cause(), Assert.ThrowsAny<OperationCanceledException>(() => a.sync()));
-        Assert.False(a.setUncancellable());
-        Assert.False(a.trySuccess(null));
-        Assert.True(a.Task.IsCanceled);
-        Assert.Empty(ThrowableUtil.getSuppressed(a.cause()));
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var first = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.True(first.TrySetCanceled(cancellation.Token));
+        Assert.False(first.TrySetCanceled(cancellation.Token));
+        Assert.True(second.TrySetCanceled(cancellation.Token));
+        foreach (var task in new[] { first.Task, second.Task })
+        {
+            var awaited = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
+            var blocking = Assert.ThrowsAny<OperationCanceledException>(() => task.GetAwaiter().GetResult());
+            Assert.Equal(cancellation.Token, awaited.CancellationToken);
+            Assert.Equal(cancellation.Token, blocking.CancellationToken);
+            Assert.True(task.IsCanceled);
+        }
+        Assert.False(first.TrySetResult(null));
+        Assert.False(first.TrySetException(new Exception("late failure")));
     }
     [Fact]
-    public void FailureIdentityIsSharedAcrossListenersGetSyncAndTask()
+    public async Task FailureIdentityIsSharedAcrossObservationAwaitAndSynchronousTaskViews()
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         var error = new InvalidOperationException("original");
+        using var observation = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
         Exception listenerCause = null;
-        promise.addListener(new Listener<object>(f => listenerCause = f.cause()));
-        promise.setFailure(error);
+        using var listener = observation.Register(task => listenerCause = task.Exception.InnerException);
+        source.SetException(error);
+        await listener.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Same(error, listenerCause);
-        Assert.Same(error, Assert.Throws<AggregateException>(() => promise.get()).InnerException);
-        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => promise.sync()));
-        Assert.Single(ThrowableUtil.getSuppressed(error));
-        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => promise.syncUninterruptibly()));
-        Assert.Single(ThrowableUtil.getSuppressed(error));
-        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => promise.Task.GetAwaiter().GetResult()));
+        Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await source.Task));
+        Assert.Same(error, Assert.Throws<AggregateException>(() => source.Task.Result).InnerException);
+        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => source.Task.GetAwaiter().GetResult()));
+        Assert.Empty(ThrowableUtil.getSuppressed(error));
     }
     [Fact]
-    public void NullFailureDoesNotConsumeThePromise()
+    public void NullFailureDoesNotConsumeTheProducer()
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
-        Assert.Throws<ArgumentNullException>(() => promise.tryFailure(null));
-        Assert.Throws<ArgumentNullException>(() => promise.setFailure(null));
-        Assert.False(promise.isDone());
-        Assert.True(promise.trySuccess(null));
-        Assert.Null(promise.Task.GetAwaiter().GetResult());
-        Assert.Contains("(success)", promise.ToString());
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.Throws<ArgumentNullException>(() => source.TrySetException((Exception)null));
+        Assert.Throws<ArgumentNullException>(() => source.SetException((Exception)null));
+        Assert.False(source.Task.IsCompleted);
+        Assert.True(source.TrySetResult(null));
+        Assert.Null(source.Task.GetAwaiter().GetResult());
+        Assert.False(source.TrySetResult(new object()));
+        Assert.Throws<InvalidOperationException>(() => source.SetResult(null));
     }
     [Fact]
-    public void SyncPreservesPreviouslySuppressedExceptions()
+    public void TaskFailurePreservesPreviouslyAttachedDiagnosticsWithoutAddingJavaSuppression()
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         var error = new InvalidOperationException("original");
         var diagnostic = new Exception("existing");
         ThrowableUtil.addSuppressed(error, diagnostic);
-        promise.setFailure(error);
-        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => promise.sync()));
+        source.SetException(error);
+        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => source.Task.GetAwaiter().GetResult()));
         Assert.Equal(new[] { diagnostic }, ThrowableUtil.getSuppressed(error));
         var snapshot = ThrowableUtil.getSuppressed(error);
         snapshot[0] = null;
@@ -163,104 +164,131 @@ public class PromiseContractTest
         Assert.Equal(3, ThrowableUtil.getSuppressed(error).Length);
     }
     [Fact]
-    public void ListenerRemovalUsesIdentityAndRemovesOnlyFirstOccurrence()
+    public async Task RegistrationRemovalUsesItsHandleAndRetainsOtherDuplicateCallbacks()
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var observation = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
         var calls = new List<int>();
-        var a = new Listener<object>(_ => calls.Add(1));
-        var b = new Listener<object>(_ => calls.Add(2));
-        promise.addListeners(a, b, a, null, new Listener<object>(_ => calls.Add(99)));
-        promise.removeListener(new Listener<object>(_ => calls.Add(99)));
-        promise.removeListeners(a, null, b);
-        promise.setSuccess(null);
+        Action<Task> callback = _ => calls.Add(1);
+        using var first = observation.Register(callback);
+        using var other = observation.Register(_ => calls.Add(2));
+        using var duplicate = observation.Register(callback);
+        first.Dispose();
+        source.SetResult(null);
+        await Task.WhenAll(other.NotificationCompleted, duplicate.NotificationCompleted).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(new[] { 2, 1 }, calls);
+        Assert.True(first.NotificationCompleted.IsCanceled);
     }
     [Fact]
-    public void ExceptionInAListenerDoesNotSuppressLaterOrReentrantListeners()
+    public async Task CallbackFailureDoesNotSuppressLaterOrReentrantRegistrations()
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var observation = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
         var calls = new List<int>();
-        promise.addListener(new Listener<object>(f =>
+        CompletionRegistration added = null;
+        using var first = observation.Register(_ =>
         {
             calls.Add(1);
-            f.addListener(new Listener<object>(_ => calls.Add(3)));
+            added = observation.Register(_ => calls.Add(3));
             throw new InvalidOperationException("listener failure");
-        }));
-        promise.addListener(new Listener<object>(_ => calls.Add(2)));
-        promise.setSuccess(null);
+        });
+        using var second = observation.Register(_ => calls.Add(2));
+        source.SetResult(null);
+        await Task.WhenAll(first.NotificationCompleted, second.NotificationCompleted).WaitAsync(TimeSpan.FromSeconds(5));
+        await added.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
+        added.Dispose();
         Assert.Equal(new[] { 1, 2, 3 }, calls);
+        Assert.True(source.Task.IsCompletedSuccessfully);
     }
     [Fact]
-    public void ConcurrentCompletionHasOneWinnerAndOneNotification()
+    public async Task ConcurrentProducerCompletionHasOneWinnerAndOneNotification()
     {
         for (int iteration = 0; iteration < 1000; iteration++)
         {
-            var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+            var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var observation = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
             int notifications = 0;
-            promise.addListener(new Listener<object>(_ => Interlocked.Increment(ref notifications)));
+            using var listener = observation.Register(_ => Interlocked.Increment(ref notifications));
             var value = new object();
             var error = new InvalidOperationException("race");
             int wins = 0;
             Parallel.Invoke(
-                () => { if (promise.trySuccess(value)) Interlocked.Increment(ref wins); },
-                () => { if (promise.tryFailure(error)) Interlocked.Increment(ref wins); },
-                () => { if (promise.cancel(false)) Interlocked.Increment(ref wins); });
+                () => { if (source.TrySetResult(value)) Interlocked.Increment(ref wins); },
+                () => { if (source.TrySetException(error)) Interlocked.Increment(ref wins); },
+                () => { if (source.TrySetCanceled()) Interlocked.Increment(ref wins); });
+            await listener.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(1, wins);
             Assert.Equal(1, notifications);
-            Assert.True(promise.Task.IsCompleted);
-            if (promise.isSuccess()) Assert.Same(value, promise.Task.GetAwaiter().GetResult());
-            else if (promise.isCancelled()) Assert.True(promise.Task.IsCanceled);
-            else Assert.Same(error, promise.cause());
+            Assert.True(source.Task.IsCompleted);
+            if (source.Task.IsCompletedSuccessfully) Assert.Same(value, await source.Task);
+            else if (source.Task.IsCanceled)
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await source.Task);
+            else Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await source.Task));
         }
     }
     [Fact]
-    public void AddingListenersWhileCompletingNotifiesEachExactlyOnce()
+    public async Task RegisteringWhileCompletingNotifiesEachExactlyOnce()
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var observation = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
         var counts = new int[1000];
+        var registrations = new CompletionRegistration[counts.Length];
         Parallel.Invoke(
-            () => Parallel.For(0, counts.Length, i => promise.addListener(new Listener<object>(_ => Interlocked.Increment(ref counts[i])))),
-            () => promise.setSuccess(null));
+            () => Parallel.For(0, counts.Length, i =>
+                registrations[i] = observation.Register(_ => Interlocked.Increment(ref counts[i]))),
+            () => source.SetResult(null));
+        await Task.WhenAll(registrations.Select(registration => registration.NotificationCompleted)).WaitAsync(TimeSpan.FromSeconds(5));
         Assert.All(counts, count => Assert.Equal(1, count));
+        foreach (var registration in registrations) registration.Dispose();
     }
     [Fact]
-    public void MultipleBlockingWaitersAreReleased()
+    public async Task MultipleNativeAwaitersAreReleased()
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var ready = new CountdownEvent(8);
-        var threads = Enumerable.Range(0, 8).Select(_ => new Thread(() => { ready.Signal(); promise.awaitUninterruptibly(); }) { IsBackground = true }).ToArray();
-        foreach (var thread in threads) thread.Start();
+        async Task<object> Wait()
+        {
+            ready.Signal();
+            return await source.Task;
+        }
+        var waiters = Enumerable.Range(0, 8).Select(_ => Wait()).ToArray();
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
-        promise.setSuccess(null);
-        foreach (var thread in threads) Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        var value = new object();
+        source.SetResult(value);
+        var results = await Task.WhenAll(waiters).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.All(results, result => Assert.Same(value, result));
     }
     [Fact]
-    public void TimeoutsDoNotCompletePromiseAndHugeTimeoutDoesNotOverflow()
+    public async Task ObserverTimeoutDoesNotCompleteTheSourceAndNativeTimeoutBoundsAreExplicit()
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
-        Assert.False(promise.await(0));
-        Assert.False(promise.await(-1));
-        Assert.False(promise.await(TimeSpan.FromMilliseconds(1)));
-        Assert.Throws<TimeoutException>(() => promise.get(TimeSpan.Zero));
-        var thread = new Thread(() => { Thread.Sleep(10); promise.setSuccess(null); }) { IsBackground = true };
-        thread.Start();
-        Assert.True(promise.await(long.MaxValue));
-        Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
-        Assert.True(promise.await(TimeSpan.MinValue));
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await Assert.ThrowsAsync<TimeoutException>(async () => await source.Task.WaitAsync(TimeSpan.Zero));
+        await Assert.ThrowsAsync<TimeoutException>(async () => await source.Task.WaitAsync(TimeSpan.FromMilliseconds(1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => source.Task.WaitAsync(TimeSpan.MaxValue));
+        Assert.Throws<ArgumentOutOfRangeException>(() => source.Task.WaitAsync(TimeSpan.MinValue));
+        Assert.False(source.Task.IsCompleted);
+        Task<object> infinite = source.Task.WaitAsync(Timeout.InfiniteTimeSpan);
+        var value = new object();
+        source.SetResult(value);
+        Assert.Same(value, await infinite.WaitAsync(TimeSpan.FromSeconds(5)));
     }
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void InterruptibleWaitConsumesPendingInterrupt(bool timed)
+    public void NativeBlockingWaitObservesThreadInterruptWithoutCompletingTheSource(bool timed)
     {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         Exception failure = null;
         var thread = new Thread(() =>
         {
             try
             {
                 Thread.CurrentThread.Interrupt();
-                Assert.Throws<ThreadInterruptedException>(() => { if (timed) promise.await(TimeSpan.FromSeconds(5)); else promise.await(); });
+                Assert.Throws<ThreadInterruptedException>(() =>
+                {
+                    if (timed) source.Task.Wait(TimeSpan.FromSeconds(5));
+                    else source.Task.GetAwaiter().GetResult();
+                });
                 Thread.Sleep(0);
             }
             catch (Exception error) { failure = error; }
@@ -268,269 +296,173 @@ public class PromiseContractTest
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(failure);
-        Assert.False(promise.isDone());
+        Assert.False(source.Task.IsCompleted);
+        source.SetResult(null);
     }
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void CompletedPromisePreservesInterruptButCompleteFutureAwaitConsumesIt(bool immutableFuture)
+    public void CompletedTasksPreservePendingThreadInterrupts(bool completedProducer)
     {
         Exception failure = null;
         var thread = new Thread(() =>
         {
             try
             {
-                var executor = ImmediateEventExecutor.INSTANCE;
-                IFuture<object> future;
-                if (immutableFuture) future = executor.newSucceededFuture<object>(null);
-                else { var promise = executor.newPromise<object>(); promise.setSuccess(null); future = promise; }
-                Thread.CurrentThread.Interrupt();
-                if (immutableFuture)
+                Task<object> result;
+                if (completedProducer)
                 {
-                    Assert.Throws<ThreadInterruptedException>(() => future.await());
-                    Thread.Sleep(0);
+                    var producer = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    producer.SetResult(null);
+                    result = producer.Task;
                 }
-                else
-                {
-                    Assert.Same(future, future.await());
-                    Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(0));
-                }
-            }
-            catch (Exception error) { failure = error; }
-        }) { IsBackground = true };
-        thread.Start();
-        Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
-        Assert.Null(failure);
-    }
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void UninterruptibleWaitRestoresInterrupt(bool timed)
-    {
-        var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
-        using var ready = new CountdownEvent(1);
-        Exception failure = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
+                else result = Task.FromResult<object>(null);
                 Thread.CurrentThread.Interrupt();
-                ready.Signal();
-                if (timed) Assert.False(promise.awaitUninterruptibly(TimeSpan.FromMilliseconds(30)));
-                else promise.awaitUninterruptibly();
+                Assert.Null(result.GetAwaiter().GetResult());
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(0));
-                Thread.Sleep(0);
             }
             catch (Exception error) { failure = error; }
         }) { IsBackground = true };
         thread.Start();
-        Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
-        if (!timed)
-        {
-            // Wait until Monitor.Wait has consumed the pending interrupt before completing.
-            Assert.True(SpinWait.SpinUntil(() => (thread.ThreadState & ThreadState.WaitSleepJoin) != 0, TimeSpan.FromSeconds(5)));
-            promise.setSuccess(null);
-        }
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(failure);
     }
-    [Fact]
-    public void BlockingInsideEventLoopFailsWithoutBlockingOtherTasks()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ObserverCancellationLeavesTheProducerPending(bool timed)
     {
-        var executor = new DefaultEventExecutor();
-        try
-        {
-            Exception failure = null;
-            using var complete = new CountdownEvent(1);
-            executor.execute(Runnables.Create(() =>
-            {
-                try
-                {
-                    var promise = executor.newPromise<object>();
-                    Assert.Throws<BlockingOperationException>(() => promise.await());
-                    Assert.Throws<BlockingOperationException>(() => promise.await(TimeSpan.FromSeconds(1)));
-                    Assert.Throws<BlockingOperationException>(() => promise.awaitUninterruptibly());
-                    Assert.False(promise.await(0));
-                    promise.setSuccess(null);
-                    Assert.Same(promise, promise.await());
-                }
-                catch (Exception error) { failure = error; }
-                finally { complete.Signal(); }
-            }));
-            Assert.True(complete.Wait(TimeSpan.FromSeconds(5)));
-            Assert.Null(failure);
-        }
-        finally { Assert.True(executor.shutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5))); }
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var cancellation = new CancellationTokenSource();
+        Task<object> waiting = timed
+            ? source.Task.WaitAsync(TimeSpan.FromSeconds(5), cancellation.Token)
+            : source.Task.WaitAsync(cancellation.Token);
+        cancellation.Cancel();
+        var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await waiting);
+        Assert.Equal(cancellation.Token, error.CancellationToken);
+        Assert.False(source.Task.IsCompleted);
+        var value = new object();
+        source.SetResult(value);
+        Assert.Same(value, await source.Task);
     }
     [Fact]
-    public void CompletionAndLateListenersUseAssignedExecutor()
+    public async Task AwaitingInsideNativeSubmissionAllowsTheLoopToCompleteTheProducer()
+    {
+        var executor = new DefaultEventExecutor();
+        using var entered = new ManualResetEventSlim();
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        try
+        {
+            bool invokedOnLoop = false;
+            Task<bool> consumer = executor.SubmitAsync(async () =>
+            {
+                invokedOnLoop = executor.inEventLoop();
+                entered.Set();
+                await source.Task.ConfigureAwait(false);
+                return await executor.SubmitAsync(() => executor.inEventLoop());
+            });
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+            Assert.False(consumer.IsCompleted);
+            await executor.SubmitAsync(() => source.SetResult(new object())).WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(await consumer.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.True(invokedOnLoop);
+        }
+        finally
+        {
+            source.TrySetResult(null);
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
+    }
+    [Fact]
+    public async Task EarlyAndLateCompletionRegistrationsUseTheAssignedExecutor()
     {
         var executor = new DefaultEventExecutor();
         try
         {
-            var promise = executor.newPromise<object>();
-            using var completion = new CountdownEvent(2);
+            var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var observation = new ExecutorCompletion(executor, source.Task);
             int correctThread = 0;
-            var listener = new Listener<object>(_ => { if (executor.inEventLoop()) Interlocked.Increment(ref correctThread); completion.Signal(); });
-            promise.addListener(listener);
-            promise.setSuccess(null);
-            promise.addListener(listener);
-            Assert.True(completion.Wait(TimeSpan.FromSeconds(5)));
+            Action<Task> callback = _ => { if (executor.inEventLoop()) Interlocked.Increment(ref correctThread); };
+            using var early = observation.Register(callback);
+            source.SetResult(null);
+            using var late = observation.Register(callback);
+            await Task.WhenAll(early.NotificationCompleted, late.NotificationCompleted).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(2, correctThread);
         }
-        finally { Assert.True(executor.shutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5))); }
+        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
     }
     [Fact]
-    public void ProgressiveNotificationFiltersListenersAndNormalizesUnknownTotal()
+    public async Task ProgressSubscriptionsFilterReportsAndNormalizeUnknownTotal()
     {
-        IProgressivePromise<object> promise = ImmediateEventExecutor.INSTANCE.newProgressivePromise<object>();
-        var first = new ProgressiveListener<object>();
-        var second = new ProgressiveListener<object>();
-        int normalCompletions = 0;
-        promise.addListeners(first, new Listener<object>(_ => ++normalCompletions), second);
-        Assert.Same(promise, promise.setProgress(0, 10));
-        Assert.True(promise.tryProgress(10, 10));
-        promise.removeListener(first);
-        promise.setProgress(12, -2);
-        Assert.Equal(new[] { (0L, 10L), (10L, 10L) }, first.updates);
-        Assert.Equal(new[] { (0L, 10L), (10L, 10L), (12L, -1L) }, second.updates);
-        Assert.False(promise.tryProgress(-1, -1));
-        Assert.False(promise.tryProgress(11, 10));
-        Assert.Throws<ArgumentException>(() => promise.setProgress(-1, 10));
-        Assert.Throws<ArgumentException>(() => promise.setProgress(11, 10));
-        promise.setSuccess(null);
-        Assert.False(promise.tryProgress(0, 0));
-        Assert.Throws<InvalidOperationException>(() => promise.setProgress(0, 0));
-        Assert.Equal(0, first.completions);
-        Assert.Equal(1, second.completions);
+        var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var reporter = new ExecutorProgress(ImmediateEventExecutor.INSTANCE, source.Task);
+        var firstUpdates = new List<TransferProgress>();
+        var secondUpdates = new List<TransferProgress>();
+        int firstCompletions = 0, secondCompletions = 0, normalCompletions = 0;
+        using var first = reporter.Register(firstUpdates.Add, _ => ++firstCompletions);
+        using var normal = reporter.Register(null, _ => ++normalCompletions);
+        using var second = reporter.Register(secondUpdates.Add, _ => ++secondCompletions);
+        reporter.Report(new TransferProgress(0, 10));
+        Assert.True(reporter.TryReport(10, 10));
+        first.Dispose();
+        reporter.Report(new TransferProgress(12, -2));
+        Assert.Equal(new[] { new TransferProgress(0, 10), new TransferProgress(10, 10) }, firstUpdates);
+        Assert.Equal(new[] { new TransferProgress(0, 10), new TransferProgress(10, 10), new TransferProgress(12) }, secondUpdates);
+        Assert.False(reporter.TryReport(-1, -1));
+        Assert.False(reporter.TryReport(11, 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TransferProgress(-1, 10));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TransferProgress(11, 10));
+        source.SetResult(null);
+        Assert.False(reporter.TryReport(0, 0));
+        Assert.Throws<InvalidOperationException>(() => reporter.Report(new TransferProgress(0, 0)));
+        await reporter.NotificationsCompleted.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(first.NotificationsCompleted.IsCanceled);
+        Assert.True(second.NotificationsCompleted.IsCompletedSuccessfully);
+        Assert.True(normal.NotificationsCompleted.IsCompletedSuccessfully);
+        Assert.Equal(0, firstCompletions);
+        Assert.Equal(1, secondCompletions);
         Assert.Equal(1, normalCompletions);
-        IProgressiveFuture<object> future = promise;
-        Assert.Same(promise, future.sync());
-        Assert.Same(promise, future.addListener(new Listener<object>(_ => ++normalCompletions)));
+        Assert.Null(await source.Task);
+        using var completion = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
+        using var late = completion.Register(_ => ++normalCompletions);
+        await late.NotificationCompleted;
         Assert.Equal(2, normalCompletions);
     }
     [Fact]
-    public void CompleteFuturesRetainFailureIdentityAndCannotCancel()
+    public void CompletedTasksRetainResultAndFailureIdentityAndCannotBeChangedByObserverCancellation()
     {
-        var executor = ImmediateEventExecutor.INSTANCE;
         object value = new object();
-        var success = executor.newSucceededFuture(value);
-        Assert.Same(value, success.getNow());
-        Assert.Same(value, success.Task.GetAwaiter().GetResult());
-        Assert.True(success.isSuccess());
-        Assert.True(success.isDone());
-        Assert.False(success.isCancellable());
-        Assert.False(success.cancel(true));
+        var success = Task.FromResult(value);
+        Assert.Same(value, success.GetAwaiter().GetResult());
+        Assert.True(success.IsCompletedSuccessfully);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        Assert.Same(success, success.WaitAsync(cancellation.Token));
+        Assert.Same(value, success.WaitAsync(cancellation.Token).GetAwaiter().GetResult());
         var error = new InvalidOperationException("failure");
-        var failure = executor.newFailedFuture<object>(error);
-        Assert.Same(error, failure.cause());
-        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => failure.sync()));
-        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => failure.syncUninterruptibly()));
-        Assert.Same(error, Assert.Throws<AggregateException>(() => failure.get()).InnerException);
-        Assert.False(failure.isSuccess());
-        Assert.True(failure.isDone());
-        Assert.False(failure.isCancelled());
-        Assert.False(failure.cancel(false));
-        Assert.Null(failure.getNow());
+        var failure = Task.FromException<object>(error);
+        Assert.Same(error, Assert.Throws<InvalidOperationException>(() => failure.GetAwaiter().GetResult()));
+        Assert.Same(error, Assert.Throws<AggregateException>(() => failure.Result).InnerException);
+        Assert.Same(error, failure.Exception.InnerException);
+        Assert.True(failure.IsFaulted);
+        Assert.False(failure.IsCanceled);
+        Assert.Same(failure, failure.WaitAsync(cancellation.Token));
+        Assert.Throws<ArgumentNullException>(() => Task.FromException<object>(null));
     }
     [Fact]
-    public void CompleteFutureNotifiesOnlyListenersBeforeNullTerminator()
+    public void CompletedTaskUsesExplicitRegistrationsAndRejectsNullCallbacks()
     {
-        var future = ImmediateEventExecutor.INSTANCE.newSucceededFuture<object>(null);
+        var result = Task.FromResult<object>(null);
+        using var observation = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, result);
         int calls = 0;
-        var listener = new Listener<object>(_ => ++calls);
-        future.addListeners(listener, null, listener);
-        Assert.Equal(1, calls);
-        Assert.Same(future, future.removeListener(null));
-        Assert.Same(future, future.removeListeners(null));
-        Assert.Throws<ArgumentNullException>(() => future.addListener(null));
-        Assert.Throws<ArgumentNullException>(() => future.addListeners(null));
-    }
-    [Fact]
-    public void NotifierClonesItsPromiseArrayAndPropagatesTheSameValue()
-    {
-        var executor = ImmediateEventExecutor.INSTANCE;
-        var first = executor.newPromise<object>();
-        var second = executor.newPromise<object>();
-        var replaced = executor.newPromise<object>();
-        IPromise<object>[] targets = { first, second };
-        var notifier = new PromiseNotifier<object, IFuture<object>>(targets);
-        targets[0] = replaced;
-        var value = new object();
-        notifier.operationComplete(executor.newSucceededFuture(value));
-        Assert.Same(value, first.getNow());
-        Assert.Same(value, second.getNow());
-        Assert.False(replaced.isDone());
-    }
-    [Fact]
-    public void CascadePropagatesTargetCancellationBackToSource()
-    {
-        var executor = ImmediateEventExecutor.INSTANCE;
-        var source = executor.newPromise<object>();
-        var target = executor.newPromise<object>();
-        PromiseNotifier<object, IPromise<object>>.cascade(source, target);
-        Assert.True(target.cancel(true));
-        Assert.True(source.isCancelled());
-        Assert.False(source.trySuccess(new object()));
-    }
-    [Fact]
-    public void CascadePreservesFailureIdentityAndDoesNotOverwriteCompletedTargets()
-    {
-        var executor = ImmediateEventExecutor.INSTANCE;
-        var source = executor.newPromise<object>();
-        var target = executor.newPromise<object>();
-        PromiseNotifier<object, IPromise<object>>.cascade(source, target);
-        var cause = new InvalidOperationException("original");
-        source.setFailure(cause);
-        Assert.Same(cause, target.cause());
-        var alreadyCompleted = executor.newPromise<object>();
-        var value = new object();
-        alreadyCompleted.setSuccess(value);
-        PromiseNotifier<object, IFuture<object>>.cascade(false, executor.newFailedFuture<object>(cause), alreadyCompleted);
-        Assert.Same(value, alreadyCompleted.getNow());
-        Assert.True(alreadyCompleted.isSuccess());
-    }
-    [Fact]
-    public void CombinerAcceptsDifferentGenericValuesAndAlreadyCompletedFutures()
-    {
-        var executor = ImmediateEventExecutor.INSTANCE;
-        var combiner = new PromiseCombiner(executor);
-        combiner.addAll(executor.newSucceededFuture(123), executor.newSucceededFuture("text"));
-        var aggregate = executor.newPromise<Netty.NET.Common.Concurrent.Void>();
-        combiner.finish(aggregate);
-        Assert.True(aggregate.isSuccess());
-        Assert.Null(aggregate.getNow());
-    }
-    [Fact]
-    public void CombinerMarshalsForeignCompletionsAndRetainsFirstFailureIdentity()
-    {
-        var executor = new DefaultEventExecutor();
-        try
-        {
-            var first = ImmediateEventExecutor.INSTANCE.newPromise<object>();
-            var second = ImmediateEventExecutor.INSTANCE.newPromise<int>();
-            var aggregate = executor.newPromise<Netty.NET.Common.Concurrent.Void>();
-            using var ready = new CountdownEvent(1);
-            using var notified = new CountdownEvent(1);
-            bool correctThread = false;
-            aggregate.addListener(new Listener<Netty.NET.Common.Concurrent.Void>(_ => { correctThread = executor.inEventLoop(); notified.Signal(); }));
-            executor.execute(Runnables.Create(() =>
-            {
-                var combiner = new PromiseCombiner(executor);
-                combiner.addAll(first, second);
-                combiner.finish(aggregate);
-                ready.Signal();
-            }));
-            Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
-            var cause = new InvalidOperationException("first failure");
-            first.setFailure(cause);
-            Assert.False(aggregate.isDone());
-            second.setFailure(new Exception("later failure"));
-            Assert.True(notified.Wait(TimeSpan.FromSeconds(5)));
-            Assert.True(correctThread);
-            Assert.Same(cause, aggregate.cause());
-            Assert.Same(cause, Assert.Throws<InvalidOperationException>(() => aggregate.Task.GetAwaiter().GetResult()));
-        }
-        finally { Assert.True(executor.shutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5))); }
+        Action<Task> callback = task => { Assert.Same(result, task); ++calls; };
+        using var first = observation.Register(callback);
+        Assert.True(first.NotificationCompleted.IsCompletedSuccessfully);
+        Assert.Throws<ArgumentNullException>(() => observation.Register(null));
+        using var second = observation.Register(callback);
+        Assert.Equal(2, calls);
+        first.Dispose();
+        second.Dispose();
+        Assert.Equal(2, calls);
     }
 }

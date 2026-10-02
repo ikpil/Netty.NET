@@ -46,8 +46,7 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     public abstract bool isShuttingDown();
     public abstract bool isTerminated();
     public abstract bool awaitTermination(TimeSpan timeout);
-    public abstract IFuture<Void> terminationFuture();
-    public Task terminationTask() => terminationFuture().Task;
+    public abstract Task Termination { get; }
     public abstract IEnumerable<IEventExecutor> iterator();
 
     public virtual Ticker ticker()
@@ -55,70 +54,12 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
         return Ticker.systemTicker();
     }
 
-    public abstract IFuture<Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout);
-    public Task shutdownGracefullyAsync() => shutdownGracefully().Task;
-    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => shutdownGracefully(quietPeriod, timeout).Task;
+    public abstract Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
     public abstract IEventExecutor next();
 
-
-    public virtual IFuture<T> submit<T>(ICallable<T> task)
+    public virtual Task ShutdownGracefullyAsync()
     {
-        return next().submit(task);
-    }
-
-    public virtual IFuture<T> submit<T>(IRunnable task, T result)
-    {
-        return next().submit(task, result);
-    }
-
-    public virtual IFuture<Void> submit(IRunnable task)
-    {
-        return next().submit(task);
-    }
-
-    public virtual IScheduledTask schedule(IRunnable command, TimeSpan delay)
-    {
-        return next().schedule(command, delay);
-    }
-
-    public virtual IScheduledTask<V> schedule<V>(ICallable<V> callable, TimeSpan delay)
-    {
-        return next().schedule(callable, delay);
-    }
-
-    public virtual IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period)
-    {
-        return next().scheduleAtFixedRate(command, initialDelay, period);
-    }
-
-    public virtual IScheduledTask scheduleWithFixedDelay(IRunnable command, TimeSpan initialDelay, TimeSpan delay)
-    {
-        return next().scheduleWithFixedDelay(command, initialDelay, delay);
-    }
-
-    public virtual IFuture<Void> shutdownGracefully()
-    {
-        return shutdownGracefully(AbstractEventExecutor.DEFAULT_SHUTDOWN_QUIET_PERIOD, AbstractEventExecutor.DEFAULT_SHUTDOWN_TIMEOUT);
-    }
-
-    public virtual List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks)
-    {
-        return next().invokeAll(tasks);
-    }
-
-    public virtual List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
-    {
-        return next().invokeAll(tasks, timeout);
-    }
-
-    public virtual T invokeAny<T>(ICollection<ICallable<T>> tasks)
-    {
-        return next().invokeAny(tasks);
-    }
-
-    public virtual T invokeAny<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
-    {
-        return next().invokeAny(tasks, timeout);
+        return ShutdownGracefullyAsync(AbstractEventExecutor.DEFAULT_SHUTDOWN_QUIET_PERIOD, AbstractEventExecutor.DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
     public virtual void execute(IRunnable command)

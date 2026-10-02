@@ -16,9 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
-using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -27,13 +27,13 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 namespace Netty.NET.Common;
 
 /**
- * A {@link ITimer} optimized for approximated I/O timeout scheduling.
+ * A {@link Timer} optimized for approximated I/O timeout scheduling.
  *
  * <h3>Tick Duration</h3>
  *
  * As described with 'approximated', this timer does not execute the scheduled
- * {@link ITimerTask} on time.  {@link HashedWheelTimer}, on every tick, will
- * check if there are any {@link ITimerTask}s behind the schedule and execute
+ * {@link TimerTask} on time.  {@link HashedWheelTimer}, on every tick, will
+ * check if there are any {@link TimerTask}s behind the schedule and execute
  * them.
  * <p>
  * You can increase or decrease the accuracy of the execution timing by
@@ -45,7 +45,7 @@ namespace Netty.NET.Common;
  * <h3>Ticks per Wheel (Wheel Size)</h3>
  *
  * {@link HashedWheelTimer} maintains a data structure called 'wheel'.
- * To put simply, a wheel is a hash table of {@link ITimerTask}s whose hash
+ * To put simply, a wheel is a hash table of {@link TimerTask}s whose hash
  * function is 'dead line of the task'.  The default number of ticks per wheel
  * (i.e. the size of the wheel) is 512.  You could specify a larger value
  * if you are going to schedule a lot of timeouts.
@@ -67,12 +67,12 @@ namespace Netty.NET.Common;
  * timer facility'</a>.  More comprehensive slides are located
  * <a href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt">here</a>.
  */
-public class HashedWheelTimer : ITimer
+public class HashedWheelTimer : ITimer, IDisposable
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
 
-    private static readonly AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
-    private static readonly AtomicBoolean WARNED_TOO_MANY_INSTANCES = new AtomicBoolean();
+    private static int INSTANCE_COUNTER;
+    private static int WARNED_TOO_MANY_INSTANCES;
     private static readonly int INSTANCE_COUNT_LIMIT = 64;
     private static readonly long MILLISECOND_NANOS = TimeSpan.FromMilliseconds(1).Ticks * TimeSpan.NanosecondsPerTick;
 
@@ -87,19 +87,20 @@ public class HashedWheelTimer : ITimer
     public const int WORKER_STATE_STARTED = 1;
     public const int WORKER_STATE_SHUTDOWN = 2;
 
-    internal readonly AtomicInteger _workerState; // 0 - init, 1 - started, 2 - shut down
+    internal int _workerState; // 0 - init, 1 - started, 2 - shut down
 
     internal readonly long _tickDuration;
     internal readonly HashedWheelBucket[] _wheel;
     internal readonly int _mask;
     internal readonly CountdownEvent _startTimeInitialized = new CountdownEvent(1);
-    internal readonly IQueue<HashedWheelTimeout> _timeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
-    internal readonly IQueue<HashedWheelTimeout> _cancelledTimeouts = PlatformDependent.newMpscQueue<HashedWheelTimeout>();
-    internal readonly AtomicLong _pendingTimeouts = new AtomicLong(0);
+    internal readonly ConcurrentQueue<HashedWheelTimeout> _timeouts = new();
+    internal readonly ConcurrentQueue<HashedWheelTimeout> _cancelledTimeouts = new();
+    internal long _pendingTimeouts;
     private readonly long _maxPendingTimeouts;
     internal readonly IExecutor _taskExecutor;
 
-    internal readonly AtomicLong _startTime;
+    internal long _startTime;
+    private int _instanceCounted;
 
     /**
      * Creates a new timer with the default thread factory
@@ -118,8 +119,8 @@ public class HashedWheelTimer : ITimer
      *
      * @param tickDuration the duration between tick
      * @param unit         the time unit of the {@code tickDuration}
-     * @throws NullReferenceException     if {@code unit} is {@code null}
-     * @throws ArgumentException if {@code tickDuration} is &lt;= 0
+     * @throws NullPointerException     if {@code unit} is {@code null}
+     * @throws IllegalArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(TimeSpan tickDuration)
         : this(Executors.defaultThreadFactory(), tickDuration)
@@ -133,8 +134,8 @@ public class HashedWheelTimer : ITimer
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
-     * @throws NullReferenceException     if {@code unit} is {@code null}
-     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws NullPointerException     if {@code unit} is {@code null}
+     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(TimeSpan tickDuration, int ticksPerWheel)
         : this(Executors.defaultThreadFactory(), tickDuration, ticksPerWheel)
@@ -145,10 +146,10 @@ public class HashedWheelTimer : ITimer
      * Creates a new timer with the default tick duration and default number of
      * ticks per wheel.
      *
-     * @param threadFactory a {@link IThreadFactory} that creates a
+     * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
-     *                      {@link ITimerTask} execution.
-     * @throws NullReferenceException if {@code threadFactory} is {@code null}
+     *                      {@link TimerTask} execution.
+     * @throws NullPointerException if {@code threadFactory} is {@code null}
      */
     public HashedWheelTimer(IThreadFactory threadFactory)
         : this(threadFactory, TimeSpan.FromMilliseconds(100))
@@ -158,13 +159,13 @@ public class HashedWheelTimer : ITimer
     /**
      * Creates a new timer with the default number of ticks per wheel.
      *
-     * @param threadFactory a {@link IThreadFactory} that creates a
+     * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
-     *                      {@link ITimerTask} execution.
+     *                      {@link TimerTask} execution.
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
-     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws ArgumentException if {@code tickDuration} is &lt;= 0
+     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws IllegalArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(
         IThreadFactory threadFactory, TimeSpan tickDuration)
@@ -175,14 +176,14 @@ public class HashedWheelTimer : ITimer
     /**
      * Creates a new timer.
      *
-     * @param threadFactory a {@link IThreadFactory} that creates a
+     * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
-     *                      {@link ITimerTask} execution.
+     *                      {@link TimerTask} execution.
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
-     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
         IThreadFactory threadFactory,
@@ -194,17 +195,17 @@ public class HashedWheelTimer : ITimer
     /**
      * Creates a new timer.
      *
-     * @param threadFactory a {@link IThreadFactory} that creates a
+     * @param threadFactory a {@link ThreadFactory} that creates a
      *                      background {@link Thread} which is dedicated to
-     *                      {@link ITimerTask} execution.
+     *                      {@link TimerTask} execution.
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
      * @param leakDetection {@code true} if leak detection should be enabled always,
      *                      if false it will only be enabled if the worker thread is not
      *                      a daemon thread.
-     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
         IThreadFactory threadFactory,
@@ -216,9 +217,9 @@ public class HashedWheelTimer : ITimer
     /**
      * Creates a new timer.
      *
-     * @param threadFactory        a {@link IThreadFactory} that creates a
+     * @param threadFactory        a {@link ThreadFactory} that creates a
      *                             background {@link Thread} which is dedicated to
-     *                             {@link ITimerTask} execution.
+     *                             {@link TimerTask} execution.
      * @param tickDuration         the duration between tick
      * @param unit                 the time unit of the {@code tickDuration}
      * @param ticksPerWheel        the size of the wheel
@@ -230,8 +231,8 @@ public class HashedWheelTimer : ITimer
      *                             {@link java.util.concurrent.RejectedExecutionException}
      *                             being thrown. No maximum pending timeouts limit is assumed if
      *                             this value is 0 or negative.
-     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
         IThreadFactory threadFactory,
@@ -244,9 +245,9 @@ public class HashedWheelTimer : ITimer
     /**
      * Creates a new timer.
      *
-     * @param threadFactory        a {@link IThreadFactory} that creates a
+     * @param threadFactory        a {@link ThreadFactory} that creates a
      *                             background {@link Thread} which is dedicated to
-     *                             {@link ITimerTask} execution.
+     *                             {@link TimerTask} execution.
      * @param tickDuration         the duration between tick
      * @param unit                 the time unit of the {@code tickDuration}
      * @param ticksPerWheel        the size of the wheel
@@ -258,11 +259,11 @@ public class HashedWheelTimer : ITimer
      *                             {@link java.util.concurrent.RejectedExecutionException}
      *                             being thrown. No maximum pending timeouts limit is assumed if
      *                             this value is 0 or negative.
-     * @param taskExecutor         The {@link IExecutor} that is used to execute the submitted {@link ITimerTask}s.
-     *                             The caller is responsible to shutdown the {@link IExecutor} once it is not needed
+     * @param taskExecutor         The {@link Executor} that is used to execute the submitted {@link TimerTask}s.
+     *                             The caller is responsible to shutdown the {@link Executor} once it is not needed
      *                             anymore.
-     * @throws NullReferenceException     if either of {@code threadFactory} and {@code unit} is {@code null}
-     * @throws ArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
+     * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
+     * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(
         IThreadFactory threadFactory,
@@ -273,16 +274,13 @@ public class HashedWheelTimer : ITimer
         checkPositive(tickDuration, "tickDuration");
         checkPositive(ticksPerWheel, "ticksPerWheel");
         _taskExecutor = checkNotNull(taskExecutor, "taskExecutor");
-        _startTime = new AtomicLong(0);
-
-        _workerState = new AtomicInteger(WORKER_STATE_INIT);
 
         // Normalize ticksPerWheel to power of two and initialize the wheel.
         _wheel = createWheel(ticksPerWheel);
         _mask = _wheel.Length - 1;
 
         // Convert tickDuration to nanos.
-        long duration = tickDuration.Ticks * TimeSpan.NanosecondsPerTick;
+        long duration = AbstractScheduledEventExecutor.toNanos(tickDuration);
 
         // Prevent overflow.
         if (duration >= long.MaxValue / _wheel.Length)
@@ -308,8 +306,10 @@ public class HashedWheelTimer : ITimer
 
         _maxPendingTimeouts = maxPendingTimeouts;
 
-        if (INSTANCE_COUNTER.incrementAndGet() > INSTANCE_COUNT_LIMIT &&
-            WARNED_TOO_MANY_INSTANCES.compareAndSet(false, true))
+        int instances = Interlocked.Increment(ref INSTANCE_COUNTER);
+        _instanceCounted = 1;
+        if (instances > INSTANCE_COUNT_LIMIT &&
+            Interlocked.CompareExchange(ref WARNED_TOO_MANY_INSTANCES, 1, 0) == 0)
         {
             reportTooManyInstances();
         }
@@ -319,10 +319,24 @@ public class HashedWheelTimer : ITimer
     {
         // This object is going to be GCed and it is assumed the ship has sailed to do a proper shutdown. If
         // we have not yet shutdown then we want to make sure we decrement the active instance count.
-        if (_workerState.set(WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
+        // CLR finalizers also run after a failed constructor. Only decrement
+        // the instance count if construction actually registered this timer.
+        if (Interlocked.Exchange(ref _workerState, WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
         {
-            INSTANCE_COUNTER.decrementAndGet();
+            decrementInstanceCount();
         }
+    }
+
+    private void decrementInstanceCount()
+    {
+        if (Interlocked.Exchange(ref _instanceCounted, 0) != 0) Interlocked.Decrement(ref INSTANCE_COUNTER);
+    }
+
+    // CLR callers can give the timer an explicit using/IDisposable lifetime.
+    public void Dispose()
+    {
+        stop();
+        GC.SuppressFinalize(this);
     }
 
     private static HashedWheelBucket[] createWheel(int ticksPerWheel)
@@ -342,15 +356,15 @@ public class HashedWheelTimer : ITimer
      * Starts the background thread explicitly.  The background thread will
      * start automatically on demand even if you did not call this method.
      *
-     * @throws InvalidOperationException if this timer has been
+     * @throws IllegalStateException if this timer has been
      *                               {@linkplain #stop() stopped} already
      */
-    public void start()
+    public virtual void start()
     {
-        switch (_workerState.get())
+        switch (Volatile.Read(ref _workerState))
         {
             case WORKER_STATE_INIT:
-                if (_workerState.compareAndSet(WORKER_STATE_INIT, WORKER_STATE_STARTED))
+                if (Interlocked.CompareExchange(ref _workerState, WORKER_STATE_STARTED, WORKER_STATE_INIT) == WORKER_STATE_INIT)
                 {
                     _workerThread.Start();
                 }
@@ -365,7 +379,7 @@ public class HashedWheelTimer : ITimer
         }
 
         // Wait until the startTime is initialized by the worker.
-        while (_startTime.get() == 0)
+        while (Volatile.Read(ref _startTime) == 0)
         {
             try
             {
@@ -378,7 +392,7 @@ public class HashedWheelTimer : ITimer
         }
     }
 
-    public ISet<ITimeout> stop()
+    public virtual ISet<ITimeout> stop()
     {
         if (Thread.CurrentThread == _workerThread)
         {
@@ -388,12 +402,12 @@ public class HashedWheelTimer : ITimer
                 nameof(ITimerTask));
         }
 
-        if (!_workerState.compareAndSet(WORKER_STATE_STARTED, WORKER_STATE_SHUTDOWN))
+        if (Interlocked.CompareExchange(ref _workerState, WORKER_STATE_SHUTDOWN, WORKER_STATE_STARTED) != WORKER_STATE_STARTED)
         {
             // workerState can be 0 or 2 at this moment - let it always be 2.
-            if (_workerState.set(WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
+            if (Interlocked.Exchange(ref _workerState, WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
             {
-                INSTANCE_COUNTER.decrementAndGet();
+                decrementInstanceCount();
                 if (_leak != null)
                 {
                     bool closed = _leak.close(this);
@@ -409,7 +423,10 @@ public class HashedWheelTimer : ITimer
             bool interrupted = false;
             while (_workerThread.IsAlive)
             {
-                _workerThread.Interrupt();
+                // Java interrupt on a terminated thread is harmless. CLR can
+                // throw when termination races with this call.
+                try { _workerThread.Interrupt(); }
+                catch (ThreadStateException) { }
                 try
                 {
                     _workerThread.Join(100);
@@ -427,7 +444,7 @@ public class HashedWheelTimer : ITimer
         }
         finally
         {
-            INSTANCE_COUNTER.decrementAndGet();
+            decrementInstanceCount();
             if (_leak != null)
             {
                 bool closed = _leak.close(this);
@@ -448,26 +465,31 @@ public class HashedWheelTimer : ITimer
         return cancelled;
     }
 
-    public ITimeout newTimeout(ITimerTask task, TimeSpan delay)
+    public virtual ITimeout newTimeout(ITimerTask task, TimeSpan delay)
     {
         checkNotNull(task, "task");
 
-        long pendingTimeoutsCount = _pendingTimeouts.incrementAndGet();
+        long pendingTimeoutsCount = Interlocked.Increment(ref _pendingTimeouts);
 
         if (_maxPendingTimeouts > 0 && pendingTimeoutsCount > _maxPendingTimeouts)
         {
-            _pendingTimeouts.decrementAndGet();
+            Interlocked.Decrement(ref _pendingTimeouts);
             throw new RejectedExecutionException("Number of pending timeouts ("
                                                  + pendingTimeoutsCount + ") is greater than or equal to maximum allowed pending "
                                                  + "timeouts (" + _maxPendingTimeouts + ")");
         }
 
-        start();
+        try { start(); }
+        catch
+        {
+            Interlocked.Decrement(ref _pendingTimeouts);
+            throw;
+        }
 
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
-        long delayNano = delay.Ticks * TimeSpan.NanosecondsPerTick;
-        long deadline = SystemTimer.nanoTime() + delayNano - _startTime.get();
+        long delayNano = AbstractScheduledEventExecutor.toNanos(delay);
+        long deadline = SystemTimer.nanoTime() + delayNano - Volatile.Read(ref _startTime);
 
         // Guard against overflow.
         if (delay.Ticks > 0 && deadline < 0)
@@ -476,16 +498,26 @@ public class HashedWheelTimer : ITimer
         }
 
         HashedWheelTimeout timeout = new HashedWheelTimeout(this, task, deadline);
-        _timeouts.tryEnqueue(timeout);
+        _timeouts.Enqueue(timeout);
+
+        // stop() might have been called after start() returned, in which case the worker might have already drained
+        // the timeouts queue for the last time. If we can still cancel the timeout it was neither expired nor returned
+        // by stop(), so reject it as if start() had failed.
+        if (Volatile.Read(ref _workerState) == WORKER_STATE_SHUTDOWN &&
+            timeout.compareAndSetState(HashedWheelTimeout.ST_INIT, HashedWheelTimeout.ST_CANCELLED))
+        {
+            Interlocked.Decrement(ref _pendingTimeouts);
+            throw new InvalidOperationException("cannot be started once stopped");
+        }
         return timeout;
     }
 
     /**
-     * Returns the number of pending timeouts of this {@link ITimer}.
+     * Returns the number of pending timeouts of this {@link Timer}.
      */
-    public long pendingTimeouts()
+    public virtual long pendingTimeouts()
     {
-        return _pendingTimeouts.get();
+        return Volatile.Read(ref _pendingTimeouts);
     }
 
     private static void reportTooManyInstances()

@@ -31,8 +31,8 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 {
     private readonly IEventExecutor[] children;
     private readonly ISet<IEventExecutor> readonlyChildren;
-    private readonly AtomicInteger terminatedChildren = new AtomicInteger();
-    private readonly IPromise<Void> _terminationSource = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    private int terminatedChildren;
+    private readonly TaskCompletionSource _terminationSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly IEventExecutorChooser chooser;
 
     /**
@@ -98,7 +98,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
                 {
                     for (int j = 0; j < i; j++)
                     {
-                        children[j].shutdownGracefully();
+                        children[j].ShutdownGracefullyAsync();
                     }
 
                     for (int j = 0; j < i; j++)
@@ -124,11 +124,19 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
         chooser = chooserFactory.newChooser(children);
 
-        var terminationListener = new TerminationListener(this);
-
         foreach (IEventExecutor e in children)
         {
-            e.terminationFuture().addListener(terminationListener);
+            Task termination = e.Termination;
+            // CLR adaptation: completion counting owns no executor-local state.
+            // Do not capture the constructor's SynchronizationContext or
+            // ExecutionContext. A failed child still counts as terminated, as
+            // in the original listener; the group signal succeeds after all.
+            termination.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
+            {
+                _ = termination.Exception;
+                if (Interlocked.Increment(ref terminatedChildren) == children.Length)
+                    _terminationSource.SetResult();
+            });
         }
 
         var childrenSet = new LinkedHashSet<IEventExecutor>(children);
@@ -190,20 +198,17 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      */
     protected abstract IEventExecutor newChild(IExecutor executor, params object[] args);
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
+    public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
         foreach (IEventExecutor l in children)
         {
-            l.shutdownGracefully(quietPeriod, timeout);
+            l.ShutdownGracefullyAsync(quietPeriod, timeout);
         }
 
-        return terminationFuture();
+        return Termination;
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
-    {
-        return _terminationSource;
-    }
+    public override Task Termination => _terminationSource.Task;
 
     [Obsolete]
     public override void shutdown()
@@ -281,16 +286,4 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         return isTerminated();
     }
 
-    private sealed class TerminationListener : IGenericFutureListener<IFuture<Void>>
-    {
-        private readonly MultithreadEventExecutorGroup group;
-        internal TerminationListener(MultithreadEventExecutorGroup group) => this.group = group;
-        public void operationComplete(IFuture<Void> future)
-        {
-            if (group.terminatedChildren.incrementAndGet() == group.children.Length)
-            {
-                group._terminationSource.setSuccess(null);
-            }
-        }
-    }
 }

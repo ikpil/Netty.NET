@@ -33,15 +33,14 @@ public class SchedulingContractTest
         try
         {
             bool ranOnExecutor = false;
-            IScheduledTask<object> task = executor.schedule(new AnonymousCallable<object>(() =>
+            Task<object> task = executor.ScheduleAsync<object>(() =>
             {
                 ranOnExecutor = executor.inEventLoop();
                 return "result";
-            }), TimeSpan.FromMilliseconds(15));
-            Assert.Equal("result", task.Completion.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            }, TimeSpan.FromMilliseconds(15));
+            Assert.Equal("result", task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.True(ranOnExecutor);
-            Assert.False(task.cancel());
-            Assert.Equal(0, task.delayNanos());
+            Assert.True(task.IsCompletedSuccessfully);
         }
         finally { shutdown(executor); }
     }
@@ -52,8 +51,8 @@ public class SchedulingContractTest
         try
         {
             var cause = new InvalidOperationException("scheduled failure");
-            var task = executor.schedule(new AnonymousCallable<object>(() => throw cause), TimeSpan.Zero);
-            var error = Assert.Throws<InvalidOperationException>(() => task.Completion.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            var task = executor.ScheduleAsync(object () => throw cause, TimeSpan.Zero);
+            var error = Assert.Throws<InvalidOperationException>(() => task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Same(cause, error);
         }
         finally { shutdown(executor); }
@@ -65,9 +64,10 @@ public class SchedulingContractTest
         try
         {
             int calls = 0;
-            var task = executor.schedule(Runnables.Create(() => ++calls), TimeSpan.FromSeconds(10));
-            Assert.True(task.cancel());
-            Assert.True(task.isCancelled());
+            using var cancellation = new CancellationTokenSource();
+            var task = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.FromSeconds(10), cancellation.Token);
+            cancellation.Cancel();
+            Assert.True(task.IsCanceled);
             using var drained = new CountdownEvent(1);
             executor.execute(Runnables.Create(() => drained.Signal()));
             Assert.True(drained.Wait(TimeSpan.FromSeconds(5)));
@@ -85,18 +85,19 @@ public class SchedulingContractTest
         {
             int calls = 0;
             using var repeated = new CountdownEvent(1);
-            var action = Runnables.Create(() => { if (Interlocked.Increment(ref calls) == 3) repeated.Signal(); });
-            var task = fixedRate ? executor.scheduleAtFixedRate(action, TimeSpan.Zero, TimeSpan.FromMilliseconds(2)) :
-                executor.scheduleWithFixedDelay(action, TimeSpan.Zero, TimeSpan.FromMilliseconds(2));
+            using var cancellation = new CancellationTokenSource();
+            Action action = () => { if (Interlocked.Increment(ref calls) == 3) repeated.Signal(); };
+            var task = fixedRate ? executor.ScheduleAtFixedRateAsync(action, TimeSpan.Zero, TimeSpan.FromMilliseconds(2), cancellation.Token) :
+                executor.ScheduleWithFixedDelayAsync(action, TimeSpan.Zero, TimeSpan.FromMilliseconds(2), cancellation.Token);
             Assert.True(repeated.Wait(TimeSpan.FromSeconds(5)));
-            Assert.True(task.cancel());
+            cancellation.Cancel();
             using var drained = new CountdownEvent(1);
             executor.execute(Runnables.Create(() => drained.Signal()));
             Assert.True(drained.Wait(TimeSpan.FromSeconds(5)));
             int completedCalls = Volatile.Read(ref calls);
             Thread.Sleep(20);
             Assert.Equal(completedCalls, Volatile.Read(ref calls));
-            Assert.True(task.isCancelled());
+            Assert.True(task.IsCanceled);
         }
         finally { shutdown(executor); }
     }
@@ -106,10 +107,10 @@ public class SchedulingContractTest
         var executor = new DefaultEventExecutor();
         try
         {
-            var first = executor.schedule(new AnonymousCallable<string>(() => "text"), TimeSpan.FromMilliseconds(10));
-            var second = executor.schedule(new AnonymousCallable<int>(() => 42), TimeSpan.FromMilliseconds(10));
-            Assert.Equal("text", first.Completion.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.Equal(42, second.Completion.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            var first = executor.ScheduleAsync(() => "text", TimeSpan.FromMilliseconds(10));
+            var second = executor.ScheduleAsync(() => 42, TimeSpan.FromMilliseconds(10));
+            Assert.Equal("text", first.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            Assert.Equal(42, second.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
         finally { shutdown(executor); }
     }
@@ -119,12 +120,20 @@ public class SchedulingContractTest
         public ManualExecutor() : base(null) { }
         public override Ticker ticker() => clock;
         public void advance(long nanos) => clock.advance(nanos);
+        internal IScheduledWork Head => peekScheduledTask();
+        internal bool holdRemoval;
+        internal readonly List<IRunnable> removals = new();
+        protected override void scheduleRemoveScheduled(IScheduledWork task)
+        {
+            if (holdRemoval) removals.Add(task);
+            else base.scheduleRemoveScheduled(task);
+        }
         public IRunnable pollDue() => pollScheduledTask(getCurrentTimeNanos());
         public bool transferDue(IQueue<IRunnable> queue) => fetchFromScheduledTaskQueue(queue);
-        public override bool inEventLoop(Thread thread) => true;
+        public override bool inEventLoop(Thread thread) => !holdRemoval;
         public override void execute(IRunnable task) => task.run();
-        public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout) => ImmediateEventExecutor.INSTANCE.newSucceededFuture<Netty.NET.Common.Concurrent.Void>(null);
-        public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture() => ImmediateEventExecutor.INSTANCE.newSucceededFuture<Netty.NET.Common.Concurrent.Void>(null);
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override Task Termination => Task.CompletedTask;
         public override bool isShuttingDown() => false;
         public override bool isShutdown() => false;
         public override bool isTerminated() => false;
@@ -139,50 +148,57 @@ public class SchedulingContractTest
         var executor = new ManualExecutor();
         using var token = new CancellationTokenSource();
         int calls = 0;
-        var task = new ScheduledActionAsyncTask(executor, () => ++calls, 100, token.Token);
-        task.run();
-        Assert.False(task.isDone());
+        Task task = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.FromTicks(1), token.Token);
+        Assert.False(task.IsCompleted);
         if (cancel)
         {
             token.Cancel();
-            Assert.True(task.isCancelled());
+            Assert.True(task.IsCanceled);
         }
         executor.advance(100);
         executor.pollDue()?.run();
         Assert.Equal(cancel ? 0 : 1, calls);
-        Assert.True(task.isDone());
-        if (!cancel) Assert.True(task.Completion.IsCompletedSuccessfully);
+        Assert.True(task.IsCompleted);
+        if (!cancel) Assert.True(task.IsCompletedSuccessfully);
     }
     private static void shutdown(IEventExecutor executor) =>
-        Assert.True(executor.shutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
+        Assert.True(executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
 
     [Fact]
     public void SaturatingNanosecondConversionPreservesLargeDeadlines()
     {
         var executor = new ManualExecutor();
-        var task = executor.schedule(Runnables.Empty, TimeSpan.MaxValue);
-        Assert.Equal(long.MaxValue, task.deadlineNanos());
+        var task = executor.ScheduleAsync(() => { }, TimeSpan.MaxValue);
+        Assert.Equal(long.MaxValue, executor.Head.deadlineNanos());
         Assert.Null(executor.pollDue());
         Assert.Equal(long.MaxValue, AbstractScheduledEventExecutor.toNanos(TimeSpan.MaxValue));
         Assert.Equal(long.MinValue, AbstractScheduledEventExecutor.toNanos(TimeSpan.MinValue));
         Assert.Equal(9007199254740900L, AbstractScheduledEventExecutor.toNanos(TimeSpan.FromTicks(90071992547409L)));
-        var periodic = executor.scheduleAtFixedRate(Runnables.Empty, TimeSpan.Zero, TimeSpan.MaxValue);
-        Assert.False(periodic.isDone());
+        var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.MaxValue);
+        Assert.False(periodic.IsCompleted);
     }
 
     [Fact]
     public void CancelledScheduledTasksDoNotConsumeTransferQueueCapacity()
     {
         var executor = new ManualExecutor();
-        var cancelled = executor.schedule(Runnables.Empty, TimeSpan.FromTicks(1));
-        var ready = executor.schedule(Runnables.Empty, TimeSpan.FromTicks(1));
-        Assert.True(cancelled.cancelWithoutRemove(false));
+        using var cancellation = new CancellationTokenSource();
+        var cancelled = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1), cancellation.Token);
+        var canceledWork = executor.Head;
+        var ready = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
+        executor.holdRemoval = true;
+        cancellation.Cancel();
+        Assert.True(cancelled.IsCanceled);
+        Assert.Single(executor.removals);
+        executor.holdRemoval = false;
         executor.advance(100);
         var queue = new LinkedBlockingQueue<IRunnable>(1);
         Assert.True(executor.transferDue(queue));
         Assert.Equal(1, queue.Count);
         Assert.True(queue.tryDequeue(out var task));
-        Assert.Same(ready, task);
+        Assert.NotSame(canceledWork, task);
+        task.run();
+        Assert.True(ready.IsCompletedSuccessfully);
         Assert.Null(executor.pollDue());
     }
 
@@ -190,27 +206,34 @@ public class SchedulingContractTest
     public void FullTransferQueueReturnsTheTaskToTheDeadlineQueue()
     {
         var executor = new ManualExecutor();
-        var ready = executor.schedule(Runnables.Empty, TimeSpan.FromTicks(1));
+        var ready = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
+        var readyWork = executor.Head;
         executor.advance(100);
         var queue = new LinkedBlockingQueue<IRunnable>(1);
         Assert.True(queue.tryEnqueue(Runnables.Empty));
         Assert.False(executor.transferDue(queue));
-        Assert.Same(ready, executor.pollDue());
+        Assert.Same(readyWork, executor.pollDue());
     }
 
     [Fact]
     public void PeriodicReinsertionDoesNotConsumeANewTaskId()
     {
         var executor = new ManualExecutor();
-        var periodic = executor.scheduleAtFixedRate(Runnables.Empty, TimeSpan.Zero, TimeSpan.FromTicks(1));
-        long id = periodic.getId();
+        using var cancellation = new CancellationTokenSource();
+        var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
+        var periodicWork = executor.Head;
+        long id = periodicWork.getId();
         executor.pollDue().run();
-        Assert.Equal(id, periodic.getId());
-        var next = executor.schedule(Runnables.Empty, TimeSpan.FromTicks(1));
-        Assert.Equal(id + 1, next.getId());
+        Assert.Equal(id, periodicWork.getId());
+        var next = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
         executor.advance(100);
-        Assert.Same(periodic, executor.pollDue());
-        Assert.Same(next, executor.pollDue());
+        Assert.Same(periodicWork, executor.pollDue());
+        var nextWork = Assert.IsAssignableFrom<IScheduledWork>(executor.pollDue());
+        Assert.Equal(id + 1, nextWork.getId());
+        nextWork.run();
+        Assert.True(next.IsCompletedSuccessfully);
+        cancellation.Cancel();
+        Assert.True(periodic.IsCanceled);
     }
 
     private sealed class HookExecutor : ManualExecutor
@@ -238,22 +261,24 @@ public class SchedulingContractTest
     public void SchedulingHooksSelectImmediateOrLazySubmissionAndOptionalWakeup(bool before, bool after)
     {
         var executor = new HookExecutor { before = before, after = after };
-        var task = executor.schedule(Runnables.Empty, TimeSpan.FromTicks(1));
-        Assert.Same(task, executor.submissions[0]);
+        var task = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
+        var work = Assert.IsAssignableFrom<IScheduledWork>(executor.submissions[0]);
+        Assert.False((object)work is System.Threading.Tasks.Task);
+        Assert.False(task.IsCompleted);
         Assert.Equal(before ? 0 : 1, executor.lazyCalls);
         Assert.Equal(before ? 0 : 1, executor.afterCalls);
         Assert.Equal(!before && after ? 2 : 1, executor.submissions.Count);
-        if (!before && after) Assert.NotSame(task, executor.submissions[1]);
+        if (!before && after) Assert.NotSame(work, executor.submissions[1]);
     }
 
     [Fact]
     public void SubclassSchedulingValidationRunsBeforeAnyTaskIsSubmitted()
     {
         var executor = new HookExecutor();
-        Assert.Throws<ArgumentException>(() => executor.schedule(Runnables.Empty, TimeSpan.FromTicks(2)));
-        Assert.Throws<ArgumentException>(() => executor.schedule(new AnonymousCallable<int>(() => 1), TimeSpan.FromTicks(2)));
-        Assert.Throws<ArgumentException>(() => executor.scheduleAtFixedRate(Runnables.Empty, TimeSpan.Zero, TimeSpan.FromTicks(2)));
-        Assert.Throws<ArgumentException>(() => executor.scheduleWithFixedDelay(Runnables.Empty, TimeSpan.Zero, TimeSpan.FromTicks(2)));
+        Assert.Throws<ArgumentException>(() => executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(2)));
+        Assert.Throws<ArgumentException>(() => executor.ScheduleAsync(() => 1, TimeSpan.FromTicks(2)));
+        Assert.Throws<ArgumentException>(() => executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(2)));
+        Assert.Throws<ArgumentException>(() => executor.ScheduleWithFixedDelayAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(2)));
         Assert.Empty(executor.submissions);
     }
 }

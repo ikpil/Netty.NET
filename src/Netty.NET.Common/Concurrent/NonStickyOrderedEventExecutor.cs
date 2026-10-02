@@ -14,27 +14,25 @@
  * under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Collections;
 using Netty.NET.Common.Functional;
-using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
-internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRunnable, IOrderedEventExecutor
+internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOrderedEventExecutor
 {
     private readonly IEventExecutor _executor;
-    private readonly IQueue<IRunnable> tasks = PlatformDependent.newMpscQueue<IRunnable>();
-
-    private const int NONE = 0;
-    private const int SUBMITTED = 1;
-    private const int RUNNING = 2;
-
-    private readonly AtomicInteger _state = new AtomicInteger();
+    private readonly object _gate = new();
+    private readonly Queue<IRunnable> tasks = new();
+    private RunnerReservation _reservation;
+    private RunnerReservation _executingReservation;
+    private bool _stopped;
     private readonly int _maxTaskExecutePerRun;
 
-    private readonly AtomicReference<Thread> _executingThread = new AtomicReference<Thread>();
+    private Thread _executingThread;
+    [ThreadStatic] private static NonStickyOrderedEventExecutor _inlineDispatchOwner;
 
     public NonStickyOrderedEventExecutor(IEventExecutor executor, int maxTaskExecutePerRun)
         : base(executor)
@@ -43,59 +41,43 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
         _maxTaskExecutePerRun = maxTaskExecutePerRun;
     }
 
-    public void run()
+    private void Run(RunnerReservation reservation)
     {
-        if (!_state.compareAndSet(SUBMITTED, RUNNING))
-        {
-            return;
-        }
-
         Thread current = Thread.CurrentThread;
-        _executingThread.set(current);
-        for (;;)
+        try
         {
-            int i = 0;
-            // CLR cannot return from a finally block. Defer the original returns until it exits.
-            bool done = false;
-            try
+            for (;;)
             {
-                for (; i < _maxTaskExecutePerRun; i++)
+                lock (_gate)
                 {
-                    tasks.tryDequeue(out var task);
-                    if (task == null)
+                    if (_stopped || !ReferenceEquals(_reservation, reservation)) return;
+                    _executingReservation = reservation;
+                    Volatile.Write(ref _executingThread, current);
+                }
+                int i = 0;
+                for (; i < _maxTaskExecutePerRun; ++i)
+                {
+                    if (IsImmediateShutdownRequested(reservation))
                     {
-                        break;
+                        FinishPending(reservation, null, true);
+                        return;
                     }
-
+                    IRunnable task;
+                    lock (_gate)
+                    {
+                        if (_stopped || !ReferenceEquals(_reservation, reservation)) return;
+                        if (!tasks.TryDequeue(out task)) break;
+                    }
                     safeExecute(task);
                 }
-            }
-            finally
-            {
-                if (i == _maxTaskExecutePerRun)
+
+                RunnerReservation next;
+                lock (_gate)
                 {
-                    try
-                    {
-                        _state.set(SUBMITTED);
-                        // Only set executingThread to null if no other thread did update it yet.
-                        _executingThread.compareAndSet(current, null);
-                        _executor.execute(this);
-                        done = true; // done
-                    }
-                    catch (Exception ignore)
-                    {
-                        // Restore executingThread since we're continuing to execute tasks.
-                        _executingThread.set(current);
-                        // Reset the state back to running as we will keep on executing tasks.
-                        _state.set(RUNNING);
-                        // if an error happened we should just ignore it and let the loop run again as there is not
-                        // much else we can do. Most likely this was triggered by a full task queue. In this case
-                        // we just will run more tasks and try again later.
-                    }
-                }
-                else
-                {
-                    _state.set(NONE);
+                    if (_stopped || !ReferenceEquals(_reservation, reservation)) return;
+                    // CLR adaptation: queue emptiness and runner ownership change
+                    // under one gate. The original CAS scenarios below explain the
+                    // producer-versus-empty-drain race this atomic change resolves.
                     // After setting the state to NONE, look at the tasks queue one more time.
                     // If it is empty, then we can return from this method.
                     // Otherwise, it means the producer thread has called execute(Runnable)
@@ -111,24 +93,64 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
                     //
                     // The above cases can be distinguished by performing a
                     // compareAndSet(NONE, RUNNING). If it returns "false", it is case 1; otherwise it is case 2.
-                    if (tasks.isEmpty() || !_state.compareAndSet(NONE, RUNNING))
+                    if (tasks.Count == 0 && i < _maxTaskExecutePerRun)
                     {
+                        _reservation = null;
                         // Only set executingThread to null if no other thread did update it yet.
-                        _executingThread.compareAndSet(current, null);
-                        done = true; // done
+                        ClearExecuting(reservation);
+                        return; // done
                     }
+                    if (i < _maxTaskExecutePerRun) continue;
+                    next = new RunnerReservation(this);
+                    _reservation = next;
+                    // Only set executingThread to null if no other thread did update it yet.
+                    ClearExecuting(reservation);
+                }
+                try
+                {
+                    if (Dispatch(next))
+                    {
+                        // An inline executor must not recursively grow the stack at
+                        // each batch boundary. Its reserved runner is claimed here.
+                        reservation = next;
+                        continue;
+                    }
+                    return; // done
+                }
+                catch (Exception ignore)
+                {
+                    if (IsImmediateShutdownRequested(next))
+                    {
+                        next.CancelForShutdown();
+                        return;
+                    }
+                    if (!next.Invalidate()) return;
+                    lock (_gate)
+                    {
+                        if (_stopped || !ReferenceEquals(_reservation, next)) return;
+                        // Restore executingThread since we're continuing to execute tasks.
+                        Volatile.Write(ref _executingThread, current);
+                        _executingReservation = reservation;
+                        // Reset the state back to running as we will keep on executing tasks.
+                        _reservation = reservation;
+                    }
+                    // if an error happened we should just ignore it and let the loop run again as there is not
+                    // much else we can do. Most likely this was triggered by a full task queue. In this case
+                    // we just will run more tasks and try again later.
                 }
             }
-            if (done)
-            {
-                return;
-            }
         }
+        catch (Exception error)
+        {
+            FinishPending(reservation, error, false);
+            throw;
+        }
+        finally { lock (_gate) ClearExecuting(reservation); }
     }
 
     public override bool inEventLoop(Thread thread)
     {
-        return _executingThread.get() == thread;
+        return thread != null && ReferenceEquals(Volatile.Read(ref _executingThread), thread);
     }
 
     public override bool isShuttingDown()
@@ -136,15 +158,12 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
         return _executor.isShutdown();
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
+    public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return _executor.shutdownGracefully(quietPeriod, timeout);
+        return _executor.ShutdownGracefullyAsync(quietPeriod, timeout);
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
-    {
-        return _executor.terminationFuture();
-    }
+    public override Task Termination => _executor.Termination;
 
     public override void shutdown()
     {
@@ -168,16 +187,97 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
 
     public override void execute(IRunnable command)
     {
-        if (!tasks.tryEnqueue(command))
+        ArgumentNullException.ThrowIfNull(command);
+        RunnerReservation reservation;
+        lock (_gate)
         {
-            throw new RejectedExecutionException();
+            if (_stopped) throw new RejectedExecutionException("Ordered executor has been stopped.");
+            tasks.Enqueue(command);
+            if (_reservation != null) return;
+            reservation = new RunnerReservation(this);
+            _reservation = reservation;
         }
 
-        if (_state.compareAndSet(NONE, SUBMITTED))
+        try
         {
             // Actually it could happen that the runnable was picked up in between but we not care to much and just
             // execute ourself. At worst this will be a NOOP when run() is called.
-            _executor.execute(this);
+            // CLR adaptation: a separate reservation identifies this admission
+            // attempt, so a stale rejection/removal cannot claim a later runner.
+            if (Dispatch(reservation)) Run(reservation);
+        }
+        catch (Exception error) { reservation.Reject(error); throw; }
+    }
+
+    private static bool IsImmediateShutdownRequested(RunnerReservation reservation) =>
+        reservation.QueueOwner?.IsImmediateShutdownRequested ?? false;
+
+    private bool Dispatch(RunnerReservation reservation)
+    {
+        NonStickyOrderedEventExecutor previous = _inlineDispatchOwner;
+        _inlineDispatchOwner = this;
+        try
+        {
+            // A native reservation owns only admission, never a result Task.
+            _executor.execute(reservation);
+        }
+        finally { _inlineDispatchOwner = previous; }
+        return reservation.Inline;
+    }
+
+    private void ClearExecuting(RunnerReservation reservation)
+    {
+        if (!ReferenceEquals(_executingReservation, reservation)) return;
+        _executingReservation = null;
+        Volatile.Write(ref _executingThread, null);
+    }
+
+    private void FinishPending(RunnerReservation reservation, Exception error, bool stopped)
+    {
+        IRunnable[] pending;
+        lock (_gate)
+        {
+            if (!ReferenceEquals(_reservation, reservation)) return;
+            _stopped |= stopped;
+            pending = tasks.ToArray();
+            tasks.Clear();
+            _reservation = null;
+        }
+        // Native outcomes settle outside the child gate. No caller callback is
+        // invoked by these cancellation/rejection hooks.
+        foreach (IRunnable command in pending)
+        {
+            if (command is INativeSubmission native)
+            {
+                if (error == null) native.CancelForShutdown();
+                else native.Reject(error);
+            }
+        }
+    }
+
+    private sealed class RunnerReservation(NonStickyOrderedEventExecutor owner) : IQueueBoundNativeSubmission
+    {
+        // One claim selects runner start or pre-start invalidation/removal. It is
+        // membership metadata; user operations retain their own TCS results.
+        private int _claim;
+        internal bool Inline { get; private set; }
+        internal UnorderedThreadPoolEventExecutor QueueOwner { get; private set; }
+        public void BindQueueOwner(UnorderedThreadPoolEventExecutor queueOwner) => QueueOwner = queueOwner;
+        public bool IsCanceled => Volatile.Read(ref _claim) == 2;
+        internal bool Invalidate() => Interlocked.CompareExchange(ref _claim, 2, 0) == 0;
+        public void CancelForShutdown()
+        {
+            if (Invalidate()) owner.FinishPending(this, null, true);
+        }
+        public void Reject(Exception error)
+        {
+            if (Invalidate()) owner.FinishPending(this, error, false);
+        }
+        public void run()
+        {
+            if (Interlocked.CompareExchange(ref _claim, 1, 0) != 0) return;
+            if (ReferenceEquals(_inlineDispatchOwner, owner)) Inline = true;
+            else owner.Run(this);
         }
     }
 }

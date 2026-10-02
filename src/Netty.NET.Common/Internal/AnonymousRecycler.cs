@@ -1,6 +1,6 @@
 namespace Netty.NET.Common.Internal;
 
-public class AnonymousRecycler<T> : Recycler<T>
+public class AnonymousRecycler<T> : Recycler<T> where T : class
 {
     private readonly IObjectCreator<T> _creator;
 

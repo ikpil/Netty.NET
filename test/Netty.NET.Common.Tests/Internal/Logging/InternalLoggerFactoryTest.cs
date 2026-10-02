@@ -21,6 +21,7 @@ using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Tests.Internal.Logging;
 
+[Collection("System properties")]
 public class InternalLoggerFactoryTest : IDisposable
 {
     private static readonly Exception e = new Exception();
@@ -34,7 +35,11 @@ public class InternalLoggerFactoryTest : IDisposable
         InternalLoggerFactory mockFactory = Mock.Of<InternalLoggerFactory>();
         mockLogger = Mock.Of<IInternalLogger>();
         
-        Mock.Get(mockFactory).Setup(x => x.newInstance("mock")).Returns(mockLogger);
+        // CLR tests share process-wide factories with background executors.
+        // Only the observed category is mocked; unrelated logger creation
+        // must still return a real logger even during this exclusive test.
+        Mock.Get(mockFactory).Setup(x => x.newInstance(It.IsAny<string>()))
+            .Returns((string name) => name == "mock" ? mockLogger : oldLoggerFactory.newInstance(name));
         InternalLoggerFactory.setDefaultFactory(mockFactory);
     }
 

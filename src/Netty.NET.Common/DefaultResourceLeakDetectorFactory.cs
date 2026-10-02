@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Netty.NET.Common.Internal;
-using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
@@ -10,129 +10,113 @@ namespace Netty.NET.Common;
  */
 public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultResourceLeakDetectorFactory));
-
-    private readonly ConstructorInfo _obsoleteCustomClassConstructor;
-    private readonly ConstructorInfo _customClassConstructor;
+    private readonly ConstructorInfo obsoleteCustomClassConstructor;
+    private readonly ConstructorInfo customClassConstructor;
 
     public DefaultResourceLeakDetectorFactory()
     {
         string customLeakDetector;
-        try
-        {
-            customLeakDetector = SystemPropertyUtil.get("io.netty.customResourceLeakDetector");
-        }
+        try { customLeakDetector = SystemPropertyUtil.get("io.netty.customResourceLeakDetector"); }
         catch (Exception cause)
         {
             logger.error("Could not access System property: io.netty.customResourceLeakDetector", cause);
             customLeakDetector = null;
         }
-
-        if (customLeakDetector == null)
-        {
-            _obsoleteCustomClassConstructor = _customClassConstructor = null;
-        }
-        else
-        {
-            _obsoleteCustomClassConstructor = obsoleteCustomClassConstructor(customLeakDetector);
-            _customClassConstructor = customClassConstructor(customLeakDetector);
-        }
+        if (customLeakDetector == null) return;
+        obsoleteCustomClassConstructor = loadConstructor(customLeakDetector, [typeof(Type), typeof(int), typeof(long)]);
+        customClassConstructor = loadConstructor(customLeakDetector, [typeof(Type), typeof(int)]);
     }
 
-    private static ConstructorInfo obsoleteCustomClassConstructor(string customLeakDetector)
+    private static ConstructorInfo loadConstructor(string name, Type[] parameters)
     {
         try
         {
-            Type detectorClass = Type.GetType(customLeakDetector, true, true);
-
-            if (typeof(ResourceLeakDetector<>).IsAssignableFrom(detectorClass))
+            Type type = Type.GetType(name, throwOnError: true);
+            bool inheritsDetector = false;
+            for (Type current = type; current != null; current = current.BaseType)
+                if (current.IsGenericType && current.GetGenericTypeDefinition() == typeof(ResourceLeakDetector<>))
+                {
+                    inheritsDetector = true;
+                    break;
+                }
+            if (!inheritsDetector)
             {
-                return detectorClass.GetConstructor([typeof(Type), typeof(int), typeof(long)]);
+                logger.error("Class {} does not inherit from ResourceLeakDetector.", name);
+                return null;
             }
-            else
-            {
-                logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);
-            }
+            // Java erases T. A CLR provider can be a one-parameter generic definition,
+            // closed for each requested T, or an already closed compatible subclass.
+            if (type.ContainsGenericParameters && (!type.IsGenericTypeDefinition || type.GetGenericArguments().Length != 1))
+                throw new ArgumentException("A custom detector must be closed or have exactly one generic parameter.", nameof(name));
+            // Generic definitions have no single initializer; initialize their closed
+            // construction when a resource type is requested instead.
+            if (!type.ContainsGenericParameters) RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+            return type.GetConstructor(parameters) ?? throw new MissingMethodException(type.FullName, ".ctor");
         }
-        catch (Exception t)
+        catch (Exception cause)
         {
-            logger.error("Could not load custom resource leak detector class provided: {}",
-                customLeakDetector, t);
+            logger.error("Could not load custom resource leak detector class provided: {}", name, cause);
+            return null;
         }
-
-        return null;
     }
 
-    private static ConstructorInfo customClassConstructor(string customLeakDetector)
+    private static ResourceLeakDetector<T> instantiate<T>(ConstructorInfo constructor, object[] arguments) where T : class
     {
-        try
+        Type type = constructor.DeclaringType;
+        if (type.IsGenericTypeDefinition)
         {
-            Type detectorClass = Type.GetType(customLeakDetector, true, true);
-
-            if (typeof(ResourceLeakDetector<>).IsAssignableFrom(detectorClass))
-            {
-                return detectorClass.GetConstructor([typeof(Type), typeof(int)]);
-            }
-            else
-            {
-                logger.error("Class {} does not inherit from ResourceLeakDetector.", customLeakDetector);
-            }
+            type = type.MakeGenericType(typeof(T));
+            Type[] parameters = Array.ConvertAll(constructor.GetParameters(), parameter => parameter.ParameterType);
+            constructor = type.GetConstructor(parameters);
         }
-        catch (Exception t)
-        {
-            logger.error("Could not load custom resource leak detector class provided: {}",
-                customLeakDetector, t);
-        }
-
-        return null;
+        // An erased Java cast may succeed across T. CLR generic classes are invariant;
+        // an incompatible closed provider follows the original failure/fallback path.
+        if (!typeof(ResourceLeakDetector<T>).IsAssignableFrom(type))
+            throw new InvalidCastException("The custom detector is incompatible with resource type " + typeof(T).FullName);
+        RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+        return (ResourceLeakDetector<T>)constructor.Invoke(arguments);
     }
 
-    //@SuppressWarnings("deprecation")
+    [Obsolete]
     public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive)
     {
-        if (_obsoleteCustomClassConstructor != null)
+        if (obsoleteCustomClassConstructor != null)
         {
             try
             {
-                //@SuppressWarnings("unchecked")
-                ResourceLeakDetector<T> leakDetector =
-                    (ResourceLeakDetector<T>)_obsoleteCustomClassConstructor.Invoke(
-                        [resource, samplingInterval, maxActive]);
-                logger.debug($"Loaded custom ResourceLeakDetector: {_obsoleteCustomClassConstructor?.DeclaringType?.Name ?? string.Empty}");
-                return leakDetector;
+                var detector = instantiate<T>(obsoleteCustomClassConstructor, [resource, samplingInterval, maxActive]);
+                logger.debug("Loaded custom ResourceLeakDetector: {}", obsoleteCustomClassConstructor.DeclaringType.FullName);
+                return detector;
             }
-            catch (Exception t)
+            catch (Exception cause)
             {
-                logger.error($"Could not load custom resource leak detector provided: {_obsoleteCustomClassConstructor?.DeclaringType?.Name ?? string.Empty} with the given resource: {resource}", t);
+                logger.error("Could not load custom resource leak detector provided: {} with the given resource: {}",
+                    obsoleteCustomClassConstructor.DeclaringType.FullName, resource, cause);
             }
         }
-
-        ResourceLeakDetector<T> resourceLeakDetector = new ResourceLeakDetector<T>(resource, samplingInterval,
-            maxActive);
-        logger.debug("Loaded default ResourceLeakDetector: {}", resourceLeakDetector);
-        return resourceLeakDetector;
+        var fallback = new ResourceLeakDetector<T>(resource, samplingInterval, maxActive);
+        logger.debug("Loaded default ResourceLeakDetector: {}", fallback);
+        return fallback;
     }
 
     public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval)
     {
-        if (_customClassConstructor != null)
+        if (customClassConstructor != null)
         {
             try
             {
-                //@SuppressWarnings("unchecked")
-                ResourceLeakDetector<T> leakDetector =
-                    (ResourceLeakDetector<T>)_customClassConstructor.Invoke([resource, samplingInterval]);
-                logger.debug($"Loaded custom ResourceLeakDetector: {_customClassConstructor?.DeclaringType?.Name ?? string.Empty}");
-                return leakDetector;
+                var detector = instantiate<T>(customClassConstructor, [resource, samplingInterval]);
+                logger.debug("Loaded custom ResourceLeakDetector: {}", customClassConstructor.DeclaringType.FullName);
+                return detector;
             }
-            catch (Exception t)
+            catch (Exception cause)
             {
-                logger.error($"Could not load custom resource leak detector provided: {_customClassConstructor?.DeclaringType?.Name ?? string.Empty} with the given resource: {resource}", t);
+                logger.error("Could not load custom resource leak detector provided: {} with the given resource: {}",
+                    customClassConstructor.DeclaringType.FullName, resource, cause);
             }
         }
-
-        ResourceLeakDetector<T> resourceLeakDetector = new ResourceLeakDetector<T>(resource, samplingInterval);
-        logger.debug("Loaded default ResourceLeakDetector: {}", resourceLeakDetector);
-        return resourceLeakDetector;
+        var fallback = new ResourceLeakDetector<T>(resource, samplingInterval);
+        logger.debug("Loaded default ResourceLeakDetector: {}", fallback);
+        return fallback;
     }
 }

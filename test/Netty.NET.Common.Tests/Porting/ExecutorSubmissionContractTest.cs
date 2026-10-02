@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
 using Xunit;
-using Void = Netty.NET.Common.Concurrent.Void;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -34,46 +34,42 @@ public class ExecutorSubmissionContractTest
         public override bool isTerminated() => false;
         public override bool isShuttingDown() => false;
         public override bool awaitTermination(TimeSpan timeout) => false;
-        public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture() => ImmediateEventExecutor.INSTANCE.newSucceededFuture<Netty.NET.Common.Concurrent.Void>(null);
-        public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout) => ImmediateEventExecutor.INSTANCE.newSucceededFuture<Netty.NET.Common.Concurrent.Void>(null);
+        public override Task Termination => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
     }
-    private sealed class Listener<T> : IGenericFutureListener<IFuture<T>>
-    {
-        private readonly Action<IFuture<T>> callback;
-        internal Listener(Action<IFuture<T>> callback) => this.callback = callback;
-        public void operationComplete(IFuture<T> future) => callback(future);
-    }
-
     [Fact]
-    public void SubmissionReturnsTheNettyPromiseTaskAndNotifiesOnItsExecutor()
+    public void NativeSubmissionReturnsItsResultAndNotifiesOnTheSelectedExecutor()
     {
         var executor = new ManualExecutor();
-        object result = new object();
-        IFuture<object> future = executor.submit(new AnonymousCallable<object>(() => result));
-        Assert.IsType<PromiseTask<object>>(future);
-        bool notified = false;
-        future.addListener(new Listener<object>(f => { notified = executor.inEventLoop() && ReferenceEquals(f, future); }));
-        Assert.False(future.isDone());
-        Assert.False(((IPromise<object>)future).trySuccess(null));
+        var result = new object();
+        Task<object> operation = executor.SubmitAsync(() => result);
+        using var observation = new ExecutorCompletion(executor, operation);
+        bool onLoop = false;
+        Task observed = null;
+        using var registration = observation.Register(task => { onLoop = executor.inEventLoop(); observed = task; });
+        Assert.False(operation.IsCompleted);
+        Assert.IsAssignableFrom<INativeSubmission>(executor.tasks.First());
         executor.run(executor.take());
-        Assert.Same(result, future.get());
-        Assert.Same(result, future.Task.GetAwaiter().GetResult());
-        Assert.True(notified);
-        Assert.False(future.cancel(true));
+        Assert.Same(result, operation.GetAwaiter().GetResult());
+        while (!registration.NotificationCompleted.IsCompleted) executor.run(executor.take());
+        registration.NotificationCompleted.GetAwaiter().GetResult();
+        Assert.True(onLoop);
+        Assert.Same(operation, observed);
     }
 
     [Fact]
-    public void RunnableSubmissionsRetainExplicitResultAndNullVoidResult()
+    public void NativeFunctionsRetainExplicitResultAndActionsHaveNoInventedVoidValue()
     {
         var executor = new ManualExecutor();
         int calls = 0;
         var result = new object();
-        var supplied = executor.submit(Runnables.Create(() => ++calls), result);
-        var empty = executor.submit(Runnables.Create(() => ++calls));
+        var supplied = executor.SubmitAsync(() => { ++calls; return result; });
+        Task empty = executor.SubmitAsync(() => { ++calls; });
         executor.run(executor.take());
         executor.run(executor.take());
-        Assert.Same(result, supplied.get());
-        Assert.Null(empty.get());
+        Assert.Same(result, supplied.GetAwaiter().GetResult());
+        empty.GetAwaiter().GetResult();
+        Assert.True(empty.IsCompletedSuccessfully);
         Assert.Equal(2, calls);
     }
 
@@ -81,209 +77,227 @@ public class ExecutorSubmissionContractTest
     public void CancellationBeforeExecutionPreventsUserCodeAndCompletesImmediately()
     {
         var executor = new ManualExecutor();
+        using var cancellation = new CancellationTokenSource();
         int calls = 0;
-        var future = executor.submit(new AnonymousCallable<int>(() => ++calls));
-        Assert.True(future.cancel(false));
-        Assert.True(future.isDone());
-        Assert.True(future.Task.IsCanceled);
+        var operation = executor.SubmitAsync(() => ++calls, cancellation.Token);
+        cancellation.Cancel();
+        Assert.True(operation.IsCanceled);
         executor.run(executor.take());
         Assert.Equal(0, calls);
-        Assert.ThrowsAny<OperationCanceledException>(() => future.get());
+        var error = Assert.ThrowsAny<OperationCanceledException>(() => operation.GetAwaiter().GetResult());
+        Assert.Equal(cancellation.Token, error.CancellationToken);
     }
 
     [Fact]
-    public void RunningPromiseTaskIsUncancellableAndRetainsOriginalFailure()
+    public void ClaimedNativeSubmissionRetainsFailureAfterItsTokenIsCanceled()
     {
         var executor = new ManualExecutor();
-        IFuture<int> future = null;
+        using var cancellation = new CancellationTokenSource();
         var cause = new InvalidOperationException("original");
-        future = executor.submit(new AnonymousCallable<int>(() =>
+        Task<int> operation = executor.SubmitAsync(int () =>
         {
-            Assert.False(future.cancel(true));
+            cancellation.Cancel();
             throw cause;
-        }));
+        }, cancellation.Token);
         executor.run(executor.take());
-        Assert.Same(cause, future.cause());
-        Assert.Same(cause, Assert.Throws<InvalidOperationException>(() => future.sync()));
-        Assert.Same(cause, Assert.Throws<AggregateException>(() => future.get()).InnerException);
+        Assert.True(operation.IsFaulted);
+        Assert.False(operation.IsCanceled);
+        Assert.Same(cause, Assert.Throws<InvalidOperationException>(() => operation.GetAwaiter().GetResult()));
+        Assert.Same(cause, Assert.Throws<AggregateException>(() => operation.Result).InnerException);
     }
 
     [Fact]
     public void SubmissionRejectsNullBeforeQueuing()
     {
         var executor = new ManualExecutor();
-        Assert.Throws<ArgumentNullException>(() => executor.submit((IRunnable)null));
-        Assert.Throws<ArgumentNullException>(() => executor.submit((IRunnable)null, 1));
-        Assert.Throws<ArgumentNullException>(() => executor.submit((ICallable<int>)null));
+        Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Action)null));
+        Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<int>)null));
+        Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<CancellationToken, int>)null));
         Assert.Equal(0, executor.tasks.Count);
     }
 
     [Fact]
-    public void InvokeAllReturnsInputOrderAndRetainsIndividualFailures()
+    public async Task WhenAllRetainsInputOrderAndEachNativeFailure()
     {
         var executor = ImmediateEventExecutor.INSTANCE;
         var cause = new InvalidOperationException("second");
-        ICallable<int>[] tasks = { new AnonymousCallable<int>(() => 1), new AnonymousCallable<int>(() => throw cause),
-            new AnonymousCallable<int>(() => 3) };
-        var futures = executor.invokeAll(tasks);
-        Assert.Equal(3, futures.Count);
-        Assert.All(futures, f => Assert.True(f.isDone()));
-        Assert.Equal(1, futures[0].get());
-        Assert.Same(cause, futures[1].cause());
-        Assert.Equal(3, futures[2].get());
+        Task<int>[] operations = { executor.SubmitAsync(() => 1),
+            executor.SubmitAsync(int () => throw cause), executor.SubmitAsync(() => 3) };
+        Task<int[]> all = Task.WhenAll(operations);
+        Assert.Same(cause, await Assert.ThrowsAsync<InvalidOperationException>(() => all));
+        Assert.All(operations, task => Assert.True(task.IsCompleted));
+        Assert.Equal(1, await operations[0]);
+        Assert.Same(cause, operations[1].Exception.InnerException);
+        Assert.Equal(3, await operations[2]);
+        Assert.Equal(new[] { 1, 3 }, await Task.WhenAll(operations[0], operations[2]));
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public void NonpositiveInvokeAllTimeoutCancelsEveryFutureWithoutSubmission(int ticks)
+    [Fact]
+    public void PreCanceledBatchDoesNotQueueAnyFunction()
     {
         var executor = new ManualExecutor();
-        ICallable<int>[] tasks = { new AnonymousCallable<int>(() => 1), new AnonymousCallable<int>(() => 2) };
-        var futures = executor.invokeAll(tasks, TimeSpan.FromTicks(ticks));
-        Assert.Equal(2, futures.Count);
-        Assert.All(futures, f => Assert.True(f.isCancelled()));
+        using var owner = new CancellationTokenSource();
+        owner.Cancel();
+        Task<int>[] operations = { executor.SubmitAsync(() => 1, owner.Token),
+            executor.SubmitAsync(() => 2, owner.Token) };
+        Assert.All(operations, task => Assert.True(task.IsCanceled));
         Assert.Equal(0, executor.tasks.Count);
     }
 
     [Fact]
-    public void InvokeAllTimeoutCancelsQueuedTasksAndTheyNeverExecute()
+    public void InvalidNegativeWaitTimeoutDoesNotCancelAcceptedSubmissions()
     {
         var executor = new ManualExecutor();
+        Task<int> operation = executor.SubmitAsync(() => 42);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            _ = Task.WhenAll(operation).WaitAsync(TimeSpan.FromMilliseconds(-2));
+        });
+        Assert.False(operation.IsCompleted);
+        executor.run(executor.take());
+        Assert.Equal(42, operation.GetAwaiter().GetResult());
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    public async Task SubmillisecondWaitTimeoutDoesNotCancelAcceptedWork(int ticks)
+    {
+        var executor = new ManualExecutor();
+        Task<int> operation = executor.SubmitAsync(() => 42);
+        await Assert.ThrowsAsync<TimeoutException>(() => Task.WhenAll(operation).WaitAsync(TimeSpan.FromTicks(ticks)));
+        Assert.False(operation.IsCompleted);
+        executor.run(executor.take());
+        Assert.Equal(42, await operation);
+    }
+
+    [Fact]
+    public async Task BatchTimeoutOwnerCancelsQueuedTasksBeforeTheyExecute()
+    {
+        var executor = new ManualExecutor();
+        using var owner = new CancellationTokenSource();
         int calls = 0;
-        ICallable<int>[] tasks = { new AnonymousCallable<int>(() => ++calls), new AnonymousCallable<int>(() => ++calls) };
-        var futures = executor.invokeAll(tasks, TimeSpan.FromMilliseconds(10));
-        Assert.All(futures, f => Assert.True(f.isCancelled()));
+        Task<int>[] operations = { executor.SubmitAsync(() => ++calls, owner.Token),
+            executor.SubmitAsync(() => ++calls, owner.Token) };
+        try
+        {
+            await Assert.ThrowsAsync<TimeoutException>(() => Task.WhenAll(operations).WaitAsync(TimeSpan.FromMilliseconds(10)));
+            Assert.All(operations, task => Assert.False(task.IsCompleted));
+        }
+        finally { owner.Cancel(); }
+        Assert.All(operations, task => Assert.True(task.IsCanceled));
         while (executor.tasks.TryTake(out var task)) executor.run(task);
         Assert.Equal(0, calls);
     }
 
     [Fact]
-    public void NullElementDuringInvokeAllCancelsTasksAlreadySubmitted()
+    public void CallerCancelsPartialAdmissionAfterAnInvalidNativeFunction()
     {
         var executor = new ManualExecutor();
-        ICallable<int>[] tasks = { new AnonymousCallable<int>(() => 1), null };
-        Assert.Throws<ArgumentNullException>(() => executor.invokeAll(tasks));
-        var first = Assert.IsAssignableFrom<IFuture<int>>(executor.take());
-        Assert.True(first.isCancelled());
+        using var owner = new CancellationTokenSource();
+        Task<int> first = executor.SubmitAsync(int () => throw new InvalidOperationException("Canceled invocation ran"), owner.Token);
+        try { Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<int>)null, owner.Token)); }
+        finally { owner.Cancel(); }
+        Assert.True(first.IsCanceled);
+        executor.run(executor.take());
     }
 
     [Fact]
-    public void InvokeAnyReturnsFirstSuccessAndCancelsOtherQueuedTasks()
+    public async Task FirstSuccessConsumerObservesFailuresAndCancelsQueuedLosers()
     {
         var executor = new ManualExecutor();
+        using var owner = new CancellationTokenSource();
         var cause = new InvalidOperationException("first failure");
         int lateCalls = 0;
-        ICallable<int>[] tasks = { new AnonymousCallable<int>(() => throw cause), new AnonymousCallable<int>(() => 42),
-            new AnonymousCallable<int>(() => ++lateCalls) };
-        int result = 0;
-        Exception failure = null;
-        using var done = new CountdownEvent(1);
-        var caller = new Thread(() =>
+        Task<int>[] operations = { executor.SubmitAsync(int () => throw cause, owner.Token),
+            executor.SubmitAsync(() => 42, owner.Token), executor.SubmitAsync(() => ++lateCalls, owner.Token) };
+        async Task<int> FindSuccessAsync()
         {
-            try { result = executor.invokeAny(tasks); }
-            catch (Exception error) { failure = error; }
-            finally { done.Signal(); }
-        }) { IsBackground = true };
-        caller.Start();
-        Assert.True(SpinWait.SpinUntil(() => executor.tasks.Count == 3, TimeSpan.FromSeconds(5)));
+            var remaining = operations.ToList();
+            var failures = new List<Exception>();
+            try
+            {
+                while (remaining.Count != 0)
+                {
+                    Task<int> candidate = await Task.WhenAny(remaining).ConfigureAwait(false);
+                    remaining.Remove(candidate);
+                    try { return await candidate.ConfigureAwait(false); }
+                    catch (Exception failure) { failures.Add(failure); }
+                }
+                throw new AggregateException(failures);
+            }
+            finally { owner.Cancel(); }
+        }
+        Task<int> result = FindSuccessAsync();
         executor.run(executor.take());
         executor.run(executor.take());
-        Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
-        Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
-        Assert.Null(failure);
-        Assert.Equal(42, result);
+        Assert.Equal(42, await result.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Same(cause, operations[0].Exception.InnerException);
+        Assert.True(operations[2].IsCanceled);
         executor.run(executor.take());
         Assert.Equal(0, lateCalls);
     }
 
     [Fact]
-    public void InvokeAnyReportsLastFailureAndChecksOnlyTasksSubjectToExecution()
+    public async Task WhenAnyReturnsFirstCompletionIncludingItsNativeFailure()
     {
-        var executor = ImmediateEventExecutor.INSTANCE;
-        var first = new Exception("first");
-        var last = new InvalidOperationException("last");
-        ICallable<int>[] failed = { new AnonymousCallable<int>(() => throw first), new AnonymousCallable<int>(() => throw last) };
-        Assert.Same(last, Assert.Throws<AggregateException>(() => executor.invokeAny(failed)).InnerException);
-        ICallable<int>[] withUnusedNull = { new AnonymousCallable<int>(() => 42), null };
-        Assert.Equal(42, executor.invokeAny(withUnusedNull));
+        var executor = new ManualExecutor();
+        var cause = new InvalidOperationException("first");
+        Task<int>[] operations = { executor.SubmitAsync(int () => throw cause), executor.SubmitAsync(() => 42) };
+        Task<Task<int>> winner = Task.WhenAny(operations);
+        executor.run(executor.take());
+        Assert.Same(operations[0], await winner);
+        Assert.Same(cause, await Assert.ThrowsAsync<InvalidOperationException>(() => operations[0]));
+        Assert.False(operations[1].IsCompleted);
+        executor.run(executor.take());
+        Assert.Equal(42, await operations[1]);
     }
 
     [Fact]
-    public void InvokeAnyTimeoutCancelsUnstartedWork()
+    public async Task WhenAnyTimeoutOwnerExplicitlyCancelsUnstartedWork()
     {
         var executor = new ManualExecutor();
+        using var owner = new CancellationTokenSource();
         int calls = 0;
-        ICallable<int>[] tasks = { new AnonymousCallable<int>(() => ++calls) };
-        Assert.Throws<TimeoutException>(() => executor.invokeAny(tasks, TimeSpan.FromMilliseconds(10)));
+        Task<int> operation = executor.SubmitAsync(() => ++calls, owner.Token);
+        try
+        {
+            await Assert.ThrowsAsync<TimeoutException>(() => Task.WhenAny(operation).WaitAsync(TimeSpan.FromMilliseconds(10)));
+            Assert.False(operation.IsCompleted);
+        }
+        finally { owner.Cancel(); }
         executor.run(executor.take());
+        Assert.True(operation.IsCanceled);
         Assert.Equal(0, calls);
     }
 
     [Fact]
-    public void EmptyAndNullCollectionsRetainInvocationContracts()
-    {
-        var executor = ImmediateEventExecutor.INSTANCE;
-        Assert.Empty(executor.invokeAll(Array.Empty<ICallable<int>>()));
-        Assert.Throws<ArgumentException>(() => executor.invokeAny(Array.Empty<ICallable<int>>()));
-        Assert.Throws<ArgumentNullException>(() => executor.invokeAll((ICollection<ICallable<int>>)null));
-        Assert.Throws<ArgumentNullException>(() => executor.invokeAny((ICollection<ICallable<int>>)null));
-    }
-
-    [Fact]
-    public void InterruptingInvokeAllCancelsItsPendingFutures()
+    public async Task EmptyNativeBatchQueuesNothingAndCannotSelectAFirstCompletion()
     {
         var executor = new ManualExecutor();
-        Exception failure = null;
-        var caller = new Thread(() =>
-        {
-            try { executor.invokeAll(new ICallable<int>[] { new AnonymousCallable<int>(() => 1) }); }
-            catch (Exception error) { failure = error; }
-        }) { IsBackground = true };
-        caller.Start();
-        var queued = Assert.IsAssignableFrom<IFuture<int>>(executor.take());
-        Assert.True(SpinWait.SpinUntil(() => (caller.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
-            TimeSpan.FromSeconds(5)));
-        caller.Interrupt();
-        Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
-        Assert.IsType<ThreadInterruptedException>(failure);
-        Assert.True(queued.isCancelled());
+        Task<int>[] operations = Array.Empty<Func<int>>().Select(function => executor.SubmitAsync(function)).ToArray();
+        Assert.Empty(await Task.WhenAll(operations));
+        Assert.Throws<ArgumentException>(() => Task.WhenAny(operations));
+        Assert.Equal(0, executor.tasks.Count);
     }
 
-    [Fact]
-    public void InterruptingInvokeAnyCancelsUnexecutedUserCode()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CancelingOnlyTheBatchWaitLeavesAcceptedWorkRunnable(bool any)
     {
         var executor = new ManualExecutor();
-        Exception failure = null;
+        using var observer = new CancellationTokenSource();
         int calls = 0;
-        var caller = new Thread(() =>
-        {
-            try { executor.invokeAny(new ICallable<int>[] { new AnonymousCallable<int>(() => ++calls) }); }
-            catch (Exception error) { failure = error; }
-        }) { IsBackground = true };
-        caller.Start();
-        var queued = executor.take();
-        Assert.True(SpinWait.SpinUntil(() => (caller.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
-            TimeSpan.FromSeconds(5)));
-        caller.Interrupt();
-        Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
-        Assert.IsType<ThreadInterruptedException>(failure);
-        executor.run(queued);
-        Assert.Equal(0, calls);
-    }
-
-    [Fact]
-    public void PromiseTaskDescriptionsPreserveRunnableResultsAndCompletionSentinels()
-    {
-        var executor = new ManualExecutor();
-        var runnable = Runnables.Empty;
-        var plain = executor.submit(runnable);
-        var withResult = executor.submit(runnable, true);
-        Assert.Contains("task: " + runnable, plain.ToString());
-        Assert.Contains("Callable(task: " + runnable + ", result: true)", withResult.ToString());
+        Task<int>[] operations = { executor.SubmitAsync(() => ++calls), executor.SubmitAsync(() => ++calls) };
+        Task aggregate = any ? Task.WhenAny(operations) : Task.WhenAll(operations);
+        Task wait = aggregate.WaitAsync(observer.Token);
+        observer.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait);
+        Assert.All(operations, task => Assert.False(task.IsCompleted));
         executor.run(executor.take());
-        Assert.Contains("task: COMPLETED", plain.ToString());
-        Assert.True(withResult.cancel(false));
-        Assert.Contains("task: CANCELLED", withResult.ToString());
+        executor.run(executor.take());
+        Assert.Equal(new[] { 1, 2 }, await Task.WhenAll(operations));
+        Assert.Equal(2, calls);
     }
 }

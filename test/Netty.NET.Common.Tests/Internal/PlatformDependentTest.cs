@@ -177,23 +177,31 @@ public class PlatformDependentTest
     }
 
     [Fact]
-    public void testAllocateWithCapacity0()
+    public unsafe void testAllocateWithCapacity0()
     {
-        if (!PlatformDependent.hasDirectBufferNoCleanerConstructor())
-            return;
-
-        ByteBuffer buffer = PlatformDependent.allocateDirectNoCleaner(0);
-        Assert.NotEqual(0, PlatformDependent.directBufferAddress(buffer));
-        Assert.Equal(0, buffer.capacity());
-        PlatformDependent.freeDirectNoCleaner(buffer);
+        var allocator = new NativeMemoryAllocator();
+        using (var buffer = allocator.Allocate(0))
+        {
+            using var pin = buffer.Memory.Pin();
+            Assert.NotEqual(0, (nint)pin.Pointer);
+            Assert.Equal(0, buffer.Memory.Length);
+        }
+        Assert.Equal(0, allocator.ReservedBytes);
     }
 
-    //@EnabledForJreRange(min = JRE.JAVA_25)
     [Fact]
-    void java25MustHaveCleanerImplAvailable()
+    void ClrNativeAllocationSupportsDeterministicCleanup()
     {
-        Assert.True(false, //CleanerJava25.isSupported(),
-            "The CleanerJava25 implementation must be supported on Java 25+");
+        // CLR adaptation: validate the actual native owner instead of a JDK
+        // cleaner provider. Exact original scenario/comment mapping is recorded
+        // in docs/common-native-memory.md.
+        var allocator = new NativeMemoryAllocator();
+        using (var owner = allocator.Allocate(16, clear: true))
+        {
+            Assert.Equal(16, allocator.ReservedBytes);
+            Assert.True(owner.Memory.Span.IndexOfAnyExcept((byte)0) < 0);
+        }
+        Assert.Equal(0, allocator.ReservedBytes);
         // Note: we're not testing on `PlatformDependent.directBufferPreferred()` because some builds
         // might intentionally disable it, in order to exercise those code paths.
     }

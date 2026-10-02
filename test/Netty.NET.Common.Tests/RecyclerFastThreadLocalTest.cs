@@ -13,52 +13,32 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+using System;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+
 namespace Netty.NET.Common.Tests;
 
-@ExtendWith(RunInFastThreadLocalThreadExtension.class)
-public class RecyclerFastThreadLocalTest extends RecyclerTest {
-    @NotNull
-    @Override
-    protected Thread newThread(IRunnable runnable) {
-        return new FastThreadLocalThread(runnable);
+public class RecyclerFastThreadLocalTest : RecyclerTest
+{
+    protected override void runTest(Action invocation) => RunInFastThreadLocalThreadExtension.run(invocation);
+    protected override Thread newThread(Action invocation)
+    {
+        var owner = new FastThreadLocalThread(Runnables.Create(invocation));
+        owner.Thread.IsBackground = true;
+        return owner.Thread;
     }
 
-    @Override
-    [Fact]
-    @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced() {
-        final Recycler<HandledObject> recycler = newRecycler(1024);
-        final AtomicBoolean collected = new AtomicBoolean();
-        final AtomicReference<HandledObject> reference = new AtomicReference<HandledObject>();
-        Thread thread = new FastThreadLocalThread(new IRunnable() {
-            @Override
-            public void run() {
-                HandledObject object = recycler.get();
-                // Store a reference to the HandledObject to ensure it is not collected when the run method finish.
-                reference.set(object);
-            }
-        }) {
-            @Override
-            protected void finalize() {
-                super.finalize();
-                collected.set(true);
-            }
-        };
-        Assert.False(collected.get());
-        thread.start();
-        thread.join();
-
-        // Null out so it can be collected.
-        thread = null;
-
-        // Loop until the Thread was collected. If we can not collect it the Test will fail due of a timeout.
-        while (!collected.get()) {
-            System.gc();
-            System.runFinalization();
-            Thread.sleep(50);
-        }
-
-        // Now call recycle after the Thread was collected to ensure this still works...
-        reference.getAndSet(null).recycle();
-    }
+    // CLR Thread is sealed; the inherited GC fixture uses WeakReference<Thread>
+    // instead of a subclass finalizer. This override runs all six original rows
+    // with FastThreadLocalThread owners and the same retained-object assertions.
+    // Store a reference to the HandledObject to ensure it is not collected when the run method finish.
+    // Null out so it can be collected.
+    // Loop until the Thread was collected. If we can not collect it the Test will fail due of a timeout.
+    // Now call recycle after the Thread was collected to ensure this still works...
+    [Theory]
+    [MemberData(nameof(ownerTypeAndUnguarded))]
+    public override void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced(OwnerType ownerType, bool unguarded)
+        => base.testThreadCanBeCollectedEvenIfHandledObjectIsReferenced(ownerType, unguarded);
 }

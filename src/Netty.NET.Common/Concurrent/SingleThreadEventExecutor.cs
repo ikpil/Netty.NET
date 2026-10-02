@@ -86,7 +86,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private readonly AtomicLong _gracefulShutdownTimeout = new AtomicLong();
     private long gracefulShutdownStartTime;
 
-    private readonly IPromise<Void> _terminationSource = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
+    private readonly TaskCompletionSource _terminationSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /**
      * Create a new instance
@@ -291,7 +291,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         IBlockingQueue<IRunnable> taskQueue = (IBlockingQueue<IRunnable>)_taskQueue;
         for (;;)
         {
-            IScheduledTask scheduledTask = peekScheduledTask();
+            IScheduledWork scheduledTask = peekScheduledTask();
             if (scheduledTask == null)
             {
                 IRunnable task = null;
@@ -592,8 +592,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
 
         long workEndTime = ticker().nanoTime();
-        Volatile.Write(ref accumulatedActiveTimeNanos,
-            Volatile.Read(ref accumulatedActiveTimeNanos) + workEndTime - workStartTime);
+        // CLR: the monitor atomically consumes this counter on another thread.
+        // A read/add/write can restore an already-consumed window or lose new work.
+        Interlocked.Add(ref accumulatedActiveTimeNanos, workEndTime - workStartTime);
         Volatile.Write(ref lastActivityTimeNanos, workEndTime);
         afterRunningAllTasks();
         this.lastExecutionTime = lastExecutionTime;
@@ -627,7 +628,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      */
     protected virtual long deadlineNanos()
     {
-        IScheduledTask scheduledTask = peekScheduledTask();
+        IScheduledWork scheduledTask = peekScheduledTask();
         if (scheduledTask == null)
         {
             return getCurrentTimeNanos() + SCHEDULE_PURGE_INTERVAL;
@@ -671,7 +672,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         Debug.Assert(inEventLoop());
         if (nanos > 0)
         {
-            Volatile.Write(ref accumulatedActiveTimeNanos, Volatile.Read(ref accumulatedActiveTimeNanos) + nanos);
+            // The event loop remains the reporting owner; atomic addition coordinates
+            // that writer with the monitor's concurrent exchange-to-zero.
+            Interlocked.Add(ref accumulatedActiveTimeNanos, nanos);
             Volatile.Write(ref lastActivityTimeNanos, ticker().nanoTime());
         }
     }
@@ -896,7 +899,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
+    public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
         ObjectUtil.checkPositiveOrZero(quietPeriod, "quietPeriod");
         if (timeout < quietPeriod)
@@ -907,13 +910,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         //ObjectUtil.checkNotNull(timeout, "timeout");
 
         shutdown0(toNanos(quietPeriod), toNanos(timeout), ST_SHUTTING_DOWN);
-        return terminationFuture();
+        return Termination;
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
-    {
-        return _terminationSource;
-    }
+    public override Task Termination => _terminationSource.Task;
 
     [Obsolete]
     public override void shutdown()
@@ -1106,7 +1106,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         execute(ObjectUtil.checkNotNull(task, "task"), false);
     }
 
-    protected override void scheduleRemoveScheduled(IScheduledTask task)
+    protected override void scheduleRemoveScheduled(IScheduledWork task)
     {
         ObjectUtil.checkNotNull(task, "task");
         int currentState = _state.get();
@@ -1173,38 +1173,6 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
     }
 
-    public override T invokeAny<T>(ICollection<ICallable<T>> tasks)
-    {
-        throwIfInEventLoop("invokeAny");
-        return base.invokeAny(tasks);
-    }
-
-    public override T invokeAny<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
-    {
-        throwIfInEventLoop("invokeAny");
-        return base.invokeAny(tasks, timeout);
-    }
-
-    public override List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks)
-    {
-        throwIfInEventLoop("invokeAll");
-        return base.invokeAll(tasks);
-    }
-
-    public override List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
-    {
-        throwIfInEventLoop("invokeAll");
-        return base.invokeAll(tasks, timeout);
-    }
-
-    private void throwIfInEventLoop(string method)
-    {
-        if (inEventLoop())
-        {
-            throw new RejectedExecutionException("Calling " + method + " from within the EventLoop is not allowed");
-        }
-    }
-
     /**
      * Returns the {@link ThreadProperties} of the {@link Thread} that powers the {@link SingleThreadEventExecutor}.
      * If the {@link SingleThreadEventExecutor} is not started yet, this operation will start it and block until
@@ -1219,7 +1187,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             if (thread == null)
             {
                 Debug.Assert(!inEventLoop());
-                submit(NOOP_TASK).syncUninterruptibly();
+                WaitForBootstrap(this.SubmitAsync(NOOP_TASK.run));
                 thread = _thread;
                 Debug.Assert(thread != null);
             }
@@ -1234,6 +1202,24 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return threadProperties;
     }
 
+    // The synchronous properties getter must finish starting its owner before
+    // returning. Preserve an interrupt consumed by a blocking CLR wait without
+    // introducing a Java Future into native submission or a public Task facade.
+    private static void WaitForBootstrap(Task started)
+    {
+        bool interrupted = false;
+        try
+        {
+            for (;;)
+            {
+                try { started.GetAwaiter().GetResult(); return; }
+                catch (ThreadInterruptedException error)
+                    when (!started.IsFaulted || !ReferenceEquals(started.Exception.InnerException, error))
+                { interrupted = true; }
+            }
+        }
+        finally { if (interrupted) Thread.CurrentThread.Interrupt(); }
+    }
 
     /**
      * @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
@@ -1312,7 +1298,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             catch (Exception cause)
             {
                 _state.set(ST_TERMINATED);
-                _terminationSource.tryFailure(cause);
+                _terminationSource.TrySetException(cause);
 
                 if (cause is OutOfMemoryException || cause is StackOverflowException || cause is ThreadAbortException)
                 {
@@ -1482,11 +1468,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
                                 if (unexpectedException == null)
                                 {
-                                    _terminationSource.setSuccess(null);
+                                    _terminationSource.SetResult();
                                 }
                                 else
                                 {
-                                    _terminationSource.setFailure(unexpectedException);
+                                    _terminationSource.SetException(unexpectedException);
                                 }
                             }
                         }

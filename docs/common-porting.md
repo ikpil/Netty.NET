@@ -5,36 +5,54 @@ Scope: `common/src/main/java` and `common/src/test/java` at that commit.
 
 ## Verification
 
-Default builds include every existing test. Several tests still contain Java
-syntax, so the full test project currently fails to compile. Do not interpret
+Default builds include all C# test sources. Eight JVM-only test placeholders were
+removed, with file-by-file reasons in the manifest and original comments in
+[JVM test exclusion provenance](common-jvm-test-exclusions.md):
+JFR recording, virtual-thread checks, JNI ClassLoader loading, and SLF4J/Log4j provider
+tests. The default solution now builds in Debug and Release and executes the full
+test project. The native scheduling and memory checkpoints now pass both full
+configurations, with the remaining reviewed/unreviewed work listed below. Do not interpret
 the existence of a C# file, a successful library build, or a batch test result
 as completion of the module.
 
-During the port, `dotnet test Netty.NET.sln -p:PortingBatch=true` explicitly
-selects the tests in `test/Netty.NET.Common.Tests/PortingBatch.props`, including
-additional CLR regression tests. It does not disable any tests in a default
-build. Extend that list only as each test is translated and verified. The final
-acceptance command is `dotnet test Netty.NET.sln` without this switch.
+Run `dotnet test Netty.NET.sln` for the full suite in Debug, and add
+`-c Release` for Release. Use `--filter` for focused test execution; it does not
+exclude source files from compilation. The temporary PortingBatch.props and its
+project import were removed after all portable tests built by default. Older
+PortingBatch commands below and in the manifest are historical verification
+records. Full-suite success does not establish completion of the native API port.
 
 `common-porting-manifest.json` inventories all upstream Java source/test files.
 Candidate paths are filename matches, not a claim of equivalent behavior.
 Pending entries must be reviewed; justified replacements must state the CLR
 behavior and the original contract being preserved.
+`clr-replacement` records a standard CLR substitute; `not-applicable` records an
+implementation or test that depends on a JVM-only facility. These are explicit
+decisions, separate from reviewed C# source/test counts.
 Regenerate the inventory with `pwsh tools/Update-CommonPortingManifest.ps1`;
 recorded reviews are preserved.
 
 Check original comment coverage with
 `pwsh tools/Test-CommonCommentCoverage.ps1 -UpdateManifest`. The audit reads the
 pinned Git objects, tokenizes comments separately from string literals, and
-compares comment text and multiplicity while ignoring whitespace. Passing this
+compares comment text and multiplicity while ignoring whitespace. Markdown
+provenance is tokenized within each Java/C# code fence; prose quotes cannot
+swallow archived comments as source strings. Passing this
 check does not establish behavioral compatibility or correct comment placement;
 both still require review.
 
+Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
+
 ## Translation rules
 
+- Port Netty's useful behavior to CLR, using native generic types, collections,
+  reflection, memory and threading facilities. Do not reproduce JVM-only machinery
+  or a private Java data structure when a CLR facility fulfills its purpose.
 - Preserve every upstream license header, documentation comment, and implementation
-  comment in both source and tests. Keep original comments alongside explicit CLR
-  adaptation notes; comment preservation is part of each file's completion review.
+  comment in code that is actually ported. Keep original comments alongside explicit
+  CLR adaptation notes. A documented framework replacement or JVM-only exclusion has
+  no mechanical C# counterpart. Preserve its original comments with source
+locations in replacement provenance, without inventing classes to host them.
 - Preserve state transitions, identity, ordering, exception conditions, resource
   ownership, and thread affinity. Translate Java test assertions by meaning.
 - Translate Java NullPointerException argument checks to ArgumentNullException,
@@ -84,6 +102,12 @@ both still require review.
 
 ## Work order
 
+The current objective requires a CLR design review of previously translated
+components before continuing mechanical API translation. See
+[common-clr-design.md](common-clr-design.md) for original consumers, retained
+contracts, native decisions and the remaining migration gates. File-level
+verification below does not establish completion of that public API review.
+
 1. ConstantPool, attributes, and reference-count contracts.
 2. Character sequences, utilities, and priority queues.
 3. Thread-local lifecycle, queues, and thread factories.
@@ -97,40 +121,709 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The opt-in batch passes 642 tests; four tests retain upstream disabling or runtime
+The current default, non-batch suite executes **1365 cases** on Windows/net10.0:
+**1351 passed / 0 failed / 14 skipped** in Debug and Release.
+The common library and full test project build with zero errors; existing compiler
+and analyzer warnings are not claimed resolved. Evidence:
+`native-completion-final-contracts.trx`,
+`native-completion-accounting-final-contracts.trx`,
+`native-completion-termination-contracts.trx`,
+`progress-subscriptions-final-contracts-debug.trx`,
+`native-producer-final-contracts-debug.trx`,
+`native-producer-full-debug.trx`,
+`native-producer-full-release.trx`,
+`native-submit-final-contracts-debug-after.trx`,
+`native-submit-full-debug.trx`,
+`native-submit-full-release.trx`,
+`unordered-termination-final-contracts-v2.trx`,
+`unordered-termination-full-debug.trx`,
+`unordered-termination-full-release.trx`,
+`native-bulk-final-contracts-debug.trx`,
+`native-bulk-full-debug.trx`,
+`native-bulk-full-release.trx`,
+`native-ordered-schedule-final-contracts-debug.trx`,
+`native-ordered-schedule-full-debug.trx`,
+`native-ordered-schedule-full-release.trx`,
+`unordered-worker-identity-before.trx`,
+`unordered-worker-identity-final-contracts-debug.trx`,
+`unordered-worker-identity-full-debug.trx`,
+`unordered-worker-identity-full-release.trx`,
+`native-unordered-schedule-contracts-debug.trx`,
+`native-unordered-schedule-final-contracts-debug.trx`,
+`native-unordered-schedule-full-debug.trx`,
+`native-unordered-schedule-full-release.trx`,
+`native-submission-wrapper-cleanup-contracts-debug.trx`,
+`native-submission-wrapper-cleanup-full-debug.trx`,
+`native-submission-wrapper-cleanup-full-release.trx`,
+`native-future-retirement-final-contracts-debug.trx`,
+`native-future-retirement-chain-contracts-debug.trx`,
+`native-future-retirement-final-full-debug.trx` and
+`native-future-retirement-final-full-release.trx` in the ignored TestResults directory.
+Whole-suite files use the full default common test project, without PortingBatch.
+Files named contracts record focused execution; the worker-identity before file
+retains the expected failing regression run. The two newest native-future-retirement final full
+files establish the current Debug/Release counts above.
+
+The plain Future/Promise hierarchy and its Java blocking/listener facades are
+removed after all runtime consumers and the 20 original fixture scenarios use
+native Task/TCS, operation claims and ExecutorCompletion. PendingWrite now owns
+an explicit borrowed message node and caller-supplied non-generic TCS; eight new
+cases verify message release/transfer and cleanup when results are already settled
+or release fails. All 759 non-Porting fixtures and 14 skip identities remain unchanged;
+the only probe rename distinguishes native cancellation from a fault exception.
+An initial full Debug chain timeout is retained in native-future-retirement-full-debug.trx:
+the translation forced ThreadPool hops instead of testing synchronous reentrancy.
+Inline-capable chain producers retain 20000 operations and the original two-second
+bound, and the final matrix passes. All 70 removed-source comments, seven PendingWrite
+and 12 fixture comments are preserved. See
+[native completion ownership](common-native-future-retirement.md). Final unordered
+queue/configuration/shutdown policies and 100 pending source decisions remain open.
+
+After native submission and scheduling migration, unused PromiseTask/IRunnableFuture
+and six Callable/Queueing glue files are removed. Their actual consumers already
+use private native claim runners and TaskCompletionSource; all test identities
+remain unchanged. All seven PromiseTask comments are archived with pinned provenance.
+See [submission wrapper cleanup](common-native-submission-wrapper-cleanup.md).
+The subsequent native fixture migration removes DefaultPromise and the remaining
+Future/Promise hierarchy too; final backend decisions remain open. See
+[native completion ownership](common-native-future-retirement.md).
+
+At the preceding 1301-case checkpoint, removal of the temporary batch configuration and eight JVM-only test
+placeholders, `test-selection-cleanup-full-debug.trx` and
+`test-selection-cleanup-full-release.trx` record that earlier suite and exactly the
+same discovered test identities (1287 passed / zero failed / 14 skipped).
+All remaining C# tests compile by default;
+focused execution uses `--filter`. See
+[cleanup and original comment provenance](common-jvm-test-exclusions.md).
+
+AsyncMapping now returns a provider-owned Task<T> through MapAsync and accepts
+optional cooperative CancellationToken, with native input contravariance. No
+caller-supplied IPromise or Java result adapter remains in that interface. Ten
+native SNI-shaped consumer cases verify loop invocation/completion, retained
+message ownership, read resume, immediate/deferred outcomes and independent
+producer/observer cancellation. The handler/TLS modules remain unported. See
+[native asynchronous mapping](common-native-async-mapping.md).
+The first full Debug run had one existing unordered delayed-shutdown test failure
+at its pending-work assertion. A worker barrier now establishes that precondition;
+no executor behavior or deadline was changed. The failed run is preserved as
+async-mapping-full-debug.trx. Final full Debug/Release pass all applicable cases.
+
+CompleteFuture/SucceededFuture/FailedFuture and executor completed-result
+factories are removed. Standard Tasks provide terminal results and
+ExecutorCompletion provides the separate callback policy. Six native consumers
+verify resolver fast-path callback affinity, distinct DNS reservation tokens
+when Tasks share identity, and consumer-owned channel/loop metadata. Four existing
+rows now test native completed-wait/callback policies; no original common fixture
+is disabled. Affected Debug/Release each 59 passed; final whole matrix each 1303
+passed / zero failed / 14 skipped. See
+[completed results and original provenance](common-completed-results.md).
+Subsequent checkpoints also remove progressive/plain producer factories;
+unordered concrete scheduling/result wrappers have also been removed (bulk removal:
+common-native-bulk-composition.md; scheduling removal:
+common-native-unordered-scheduling-migration.md).
+
+Dynamic progress subscription/removal now uses unique disposable registrations
+over producer-owned Tasks. Report membership is snapshotted at admission; late
+completion uses ExecutorCompletion with the source Task. The progressive Promise
+hierarchy, factories and listener-only plumbing are removed; two existing CLR
+progress scenarios and affected immediate/pool probes now use native APIs.
+Sixteen dynamic cases include subscription-task lifetimes, callback context and
+real direct/NonSticky queue removal; the affected selection passes 159 cases.
+Both full configurations pass 1319 cases with the same 14 skips; the 759 test
+identities outside the added Porting contract folder match the preceding
+completed-result checkpoint, with no upstream fixture disabled by this change.
+The initial dynamic implementation's detached-terminal-handle timeout is retained
+as dynamic-progress-before.trx and repaired by settling claimed handles on whole
+disposal. Original removed comments are archived with locations in
+[native progress subscriptions](common-progress-subscriptions.md).
+
+External producers now own TaskCompletionSource with RunContinuationsAsynchronously
+and expose only Tasks. All newPromise factories and ImmediatePromise are removed;
+no replacement producer wrapper/factory is introduced. Sixteen existing CLR
+methods/eighteen cases now exercise native completion, observer cancellation,
+timeout validation, executor callbacks and nonblocking async loop submission.
+The four original invokeAll/invokeAny-in-loop cases keep their rejection and
+non-execution assertions with a TCS harness. Five native provider/pool consumer
+cases verify immediate/deferred/throwing outcomes and owned-state updates before
+caller completion. Focused Debug: 126 passed / zero failed / zero skipped.
+Full default Debug/Release each discover 1338 cases: 1324 passed / zero failed /
+14 existing skips. All 759 non-Porting fixture identities and skipped identities
+match the preceding progress-subscription checkpoint in each configuration.
+All 105 verified source/test comment entries have zero missing; the two newly
+removed factory/special-adapter comments are preserved with pinned locations.
+At that producer checkpoint DefaultPromise/PromiseTask and inherited legacy
+backends still remained. Subsequent submission/scheduling and wrapper cleanup
+remove PromiseTask and those backends. Plain DefaultPromise fixtures subsequently
+use native APIs and their result hierarchy is removed.
+See [producer ownership and original provenance](common-native-producers.md).
+
+Java submit overloads and all C# callers are removed. Native SubmitAsync now
+owns startup barriers, values/failures, cancellation and group submissions;
+ExecutorCompletion provides explicit notification affinity. Four native consumer
+cases verify flush coalescing/cancellation and startup interrupt/failure handling.
+One CLR-only PromiseTask description test was removed with its obsolete API.
+Focused Debug: 152 passed. Full Debug/Release at this checkpoint each discover
+1341 cases: 1327 passed / zero failed / 14 unchanged skips. All 759 original
+fixture identities and skipped identities match the preceding producer checkpoint.
+All 105 verified comment entries have zero missing; inherited JDK submission
+documentation is archived with its mapped-source provenance. See
+[native submission migration](common-native-submission-migration.md).
+
+The unordered lifecycle now waits for a drained queue and released worker/start
+reservations, replacing the pinned early shutdown-request success. Seven new
+regressions reproduce active-worker, factory-reservation, queue-clear and lifecycle
+reinsertion problems before repair. Clearing the queue cancels removed native
+reservations before completing termination. The affected selection passes 156
+cases; full matrix evidence is recorded above. Source comments remain preserved.
+Custom thread-factory suffixes and yielded async delegate bodies are outside this
+worker-loop lifetime signal. Quiet-period/timeout and final backend policy decisions
+remain open. See [unordered termination ownership](common-unordered-termination.md).
+
+Inherited JDK invokeAll/invokeAny and their newTaskFor hooks are removed after
+checking every pinned module's production uses. The CLR AbstractExecutorService
+base is deleted; native executor ownership supplies submission/lifecycle directly.
+Useful batch scenarios now compose native Tasks with standard BCL APIs and owned
+cancellation. Task.WhenAny's first completion, caller-owned timeout cancellation
+and cooperative running cancellation are explicit differences. The four original
+SingleThread JDK blocking-method guard cases have named native async/yield/affinity
+counterparts; their removed Java rejection expectations are recorded separately,
+not claimed as unchanged assertions. Two added CLR rows verify -1 tick/zero
+observer timeout conversion without canceling accepted work. The affected Debug
+selection passes 186 cases with zero failures/skips. All 247 comments across the
+five changed Netty sources and SingleThread fixture remain preserved; inherited
+JDK facade comments are archived. Full-suite and identity evidence are recorded
+above. Subsequent unordered scheduler migration removes the concrete result wrappers;
+plain Future fixtures now use native APIs; final backend decisions remain open. See
+[native bulk composition](common-native-bulk-composition.md).
+
+Native `ScheduleAsync`, `ScheduleAtFixedRateAsync` and `ScheduleWithFixedDelayAsync`
+use the existing deadline queues and native Task/TCS results without Future/Promise
+result adapters. Global quiet-period and auto-scaling monitoring work are migrated.
+Thirty-four new cases verify native cancellation, failure, deadline, context and
+lifetime contracts. ShutdownNow cancellation initially failed and was repaired.
+Seven unused CLR action/token wrappers are removed. Concrete unordered Java scheduler
+APIs have since been removed; final pool/configuration/shutdown decisions remain open.
+See [common-native-scheduling.md](common-native-scheduling.md).
+
+All ordered/global/single-thread scheduling callers and fixtures now use native
+Tasks and owned cancellation tokens. The shared JDK scheduled-service interface,
+group/default Java scheduling overloads and ordered ScheduledTask/Callable/Runnable
+result adapters are removed. Deadline metadata stays separate from Task identity.
+The original 1500ms Global busy-queue workload and 2000-iteration SingleThread
+cancel/suspend race remain intact. The affected Debug selection passes 179 cases;
+full default Debug/Release each pass 1336 / fail 0 / skip 14 (1350 total).
+All 759 non-Porting fixture identities and all skipped identities match the
+preceding bulk checkpoint in both configurations. All 105 verified source/test
+comment entries have zero missing, including all eight ScheduledFutureTask
+comments archived from the pinned source. Unordered concrete scheduling has since
+migrated; final backend review remains unfinished. See
+[ordered scheduling migration](common-native-ordered-scheduling-migration.md).
+
+Unordered native scheduled callbacks now retain worker identity after thread-factory
+replacement. Accounting belongs to workerLoop, and constructor/setter retain the
+configured factory itself. The pinned constructor-only wrapper allowed replacement
+workers to lose inEventLoop identity; the CLR-only probe intentionally changes
+that expectation. Four native regression cases initially fail three / pass one;
+the repaired affected Debug selection passes 139. Whole Debug/Release each pass
+1340 / fail 0 / skip 14 (1354 total), with unchanged 759 non-Porting fixture and
+skipped identities. The unordered source/test retain all 21/8 original comments;
+all 105 verified comment entries have zero missing. The unused duplicate factory
+adapter is removed. Concrete scheduling/result adapters have since been removed;
+final backend decisions remain open. See [worker identity correction](common-unordered-worker-identity.md).
+
+All unordered scheduling callers and the original repeated-rate fixture now use
+native Tasks and owned tokens. Concrete Java scheduling overloads, IScheduledTask,
+inner JDK/Promise decorators and JdkFutureTask are removed. Raw execute has a
+single-claim callback queue entry with no result facade. Throwing raw factory
+admission rolls back; foreign-pool queue insertion is rejected; clear releases raw
+callbacks. Three new ownership cases cover those boundaries. Twelve CLR-only
+source-quirk probes have explicitly documented native counterparts; all original
+fixture identities and workloads remain. Initial/final affected Debug selections
+pass 199/202 cases. Full Debug/Release each pass 1343 / fail 0 / skip 14, 1357 total.
+All 759 non-Porting and skip identities match the preceding worker checkpoint;
+all other changes are exactly the 12 mapped probe renames and three new cases.
+ScheduledFuture is a CLR replacement by Task/owned cancellation plus independent
+deadline metadata, so verified source/test entries now number 104. All have zero
+missing comments; all 21 unordered, two ScheduledFuture and eight original test
+comments remain preserved. Final pool configuration/public queue/shutdown and plain
+Future fixtures subsequently migrate to native APIs; final backend decisions remain unfinished. See
+[native unordered scheduling migration](common-native-unordered-scheduling-migration.md).
+
+Native progress reporting now accepts a producer-owned Task and implements
+IProgress<TransferProgress>. ExecutorProgress orders progress and terminal
+callbacks, isolates observer failure/context changes, bounds recursive reporting
+and supports explicit pending capacity and independent observation disposal.
+Twenty-two cases verify these contracts and reference lifetimes. The original
+channel/chunked-write consumers establish final-progress-before-completion and
+executor affinity. Fixed callback snapshots do not complete legacy dynamic
+listener registration/removal migration. See
+[common-native-progress.md](common-native-progress.md).
+
+Native submission now rejects a null Task returned by any asynchronous delegate
+family with InvalidOperationException instead of Task.Unwrap's canceled result.
+All four regression cases failed with TaskCanceledException before the repair;
+the combined native submission/progress/scheduling selection now passes 82 cases.
+Ordinary synchronous functions may still legitimately return a null value.
+
+SubmitAsync now accepts IEventExecutorGroup as well as individual executors.
+Per-submission child selection and NonSticky's underlying-group delegation are
+preserved without Java result adapters. Submitting to an explicit NonSticky child
+retains its ordered runner. Six group cases verify all delegate forms, original
+selection/admission failure, cancellation before selection, routing and two real
+event-loop workers. The broader native/original NonSticky selection passes 98
+cases. Remaining Java-shaped submit/invokeAll/invokeAny and listener APIs are
+separate caller migration work; this checkpoint does not claim their removal.
+The original NonSticky ordering workload now uses native submission and
+Task.WhenAll, retaining all producer counts, batch sizes, affinity/concurrency
+assertions and original comments. Native listener removal is a required dependency:
+AddressResolverGroup and DefaultChannelGroup detach callbacks on owner removal,
+while SslHandler cancels scheduled handshake timeout from completion.
+
+Direct unordered native submission now bypasses JdkFutureTask/PromiseTask queue
+wrappers. Three initially failing regressions verify shutdown rejection even with
+a discard handler, cancellation of shutdownNow-removed native work, and removal
+of a reservation when worker creation fails. A narrow internal shutdown hook
+finishes the existing submitted TCS rather than creating a second result owner.
+The affected submission/scheduling/unordered/NonSticky selection passes 118 cases.
+Raw execution and concrete scheduling subsequently migrate to native queue work;
+final pool/queue/shutdown policies still need review. This
+is not full backend completion.
+
+NonSticky ordered-runner admission/removal now uses BCL queues, atomic membership
+claims and native pool reservations. Four initially failing regressions verify
+retry after rejection, shared admission failure, silent discard and queued removal.
+Eleven added cases also cover direct/forwarded graceful versus immediate shutdown,
+bounded inline callbacks and two-thread FIFO handoff. The affected selection
+passes 129 cases. All 30 original source comment blocks and 12 test comment blocks
+remain; original workloads are retained. See
+[common-nonsticky-runner.md](common-nonsticky-runner.md). Detachable completion
+observers are now implemented separately and the remaining Future/Promise callers
+have native equivalents; see common-native-future-retirement.md. The unordered
+backend's native worker/interruption and public policy decisions remain open.
+
+ExecutorCompletion now observes a producer-owned Task with ordered, detachable
+Action<Task> registrations. A BCL LinkedList and gate claim notification snapshots;
+unique IDisposable handles release pending captured owners without canceling the
+source. Reentrant additions follow the claimed batch, callback failures/context
+mutations are isolated, and per-registration Tasks describe notification delivery.
+Twenty-nine cases verify these contracts, including resolver-style removal and an
+actual native timeout cancellation consumer. Native drain reservations settle
+rejection and immediate queue removal without Future/Promise result wrappers.
+Four progress queue-removal regressions initially timed out, then pass after the
+same native removal policy was applied to progress drains. The broader native and
+original Promise/scheduler/lifecycle/unordered/NonSticky selection passes 222
+cases. See [common-native-completion.md](common-native-completion.md).
+Two further lifecycle cases verify real early/late termination callbacks on
+GlobalEventExecutor after single-thread and unordered workers stop, matching the
+pinned termination Promise affinity rather than inferring it from Task.
+Plain Future/Promise callers subsequently migrate to native APIs; final worker policy remains open. Dynamic progress
+registration and removal of the progressive public hierarchy are now implemented.
+
+Utilization accounting now coordinates the event-loop writer with the scheduled
+monitor's exchange-to-zero through Interlocked.Add. An independent-budget regression
+sampled 200242ns from only 200000ns reported before the repair; the fixed I/O and
+actual task-batch paths each pass three sampling epochs. Original comments and
+auto-scaling workloads/assertions remain. The initial completion-observer Release
+suite had the earlier high-load auto-scaling assertion failure (1282 / 1 / 14);
+the unchanged isolated Release case passed. The accounting defect is independently
+proven; its role in that whole-suite failure is not established. See
+[common-utilization-accounting.md](common-utilization-accounting.md).
+
+The initial NonSticky full Debug run reported 1248 passed / 2 failed / 14 skipped
+in nonsticky-native-runner-full-debug.trx. Both failures exercised the original
+extra runner admission at exact batch exhaustion, including an empty queue.
+Restoring that source behavior retained the original assertions; the coupled
+selection passed 179 cases and the full Debug/Release final runs both passed
+1250 / 0 / 14 in nonsticky-native-runner-full-debug-final.trx and
+nonsticky-native-runner-full-release-final.trx. These are historical results,
+superseded by the current completion-observer checkpoint.
+
+The first native-unordered-submission full Debug run had one failure in
+AutoScalingEventExecutorChooserFactoryTest.testScaleUpDoesNotExceedMaxThreads
+(1238 passed / 1 failed / 14 skipped); the simultaneous Release run passed
+1239 / 0 / 14. The unchanged autoscaling case passed in an isolated run,
+autoscaling-scale-up-investigation.trx. The original workload spins for 35ms,
+sleeps for 10ms and is sampled by a 50ms real-time monitor. This evidence does
+not identify a production defect or prove that parallel configuration runs caused
+the failure. Keep this failed run as evidence; do not disable the assertion or
+count it as passing. The full Debug recheck passed 1239 / 0 / 14 in
+native-unordered-submission-full-debug-recheck.trx. The timing-sensitive failure's
+cause remains unproven and merits review; a successful recheck is not a code fix.
+
+The solution contains only the common library and this test project. Incremental
+solution builds also pass in Debug/Release; their zero-warning result reflects
+up-to-date compilation, not resolution of existing warnings.
+
+The native lifecycle boundary now exposes one persistent Task per owner through
+`Termination` and `ShutdownGracefullyAsync`. All actual common implementations
+and C# callers are migrated. Twenty-eight lifecycle/group cases, including nine
+new CLR cases, verify wait cancellation, failure classification, context and
+completion ownership. All 309 original comments across the ten affected Java
+source entries remain preserved. The original unordered shutdown-request timing was
+recorded at that checkpoint; the subsequent native termination correction replaces
+its early success (common-unordered-termination.md). Final backend and legacy
+scheduling API decisions remain pending.
+See [common-executor-lifecycle.md](common-executor-lifecycle.md).
+
+The preceding native progress checkpoint passed 1226 cases with 14 skips in both
+configurations; native scheduling passed 1204 cases with 14 skips.
+The preceding native lifecycle checkpoint passed 1170 cases with 14 skips in both
+configurations; its logs remain historical evidence in common-executor-lifecycle.md.
+The preceding ordered-multimap checkpoint passed 1161 cases with 14 skips.
+Before the ordered-multimap review, the managed-byte checkpoint passed 1132 cases
+with 14 skips. Before that review, the native-memory checkpoint passed 1100 cases
+with 14 skipped in both configurations. That implementation is now inventoried,
+with provider and removed-method comments preserved in common-native-memory.md.
+The earlier runtime checkpoint had 1068 passed / 5 failed / 14 skipped; the five
+native-memory/platform failures are resolved by real CLR owner/view contracts.
+Earlier ObjectCleaner and Task-composition results remain historical evidence.
+
+See [common-test-skips.md](common-test-skips.md) for each category, original
+conditions and replacement coverage. The eight ordinary-thread Recycler rows
+also execute and pass in RecyclerFastThreadLocalTest with automatic cleanup owners.
+
+Fourteen tests retain upstream disabling or runtime
 capability rules (two ordinary-thread removal cases, the CI-only oversized
-allocation case, and SecurityManager group inheritance on an unsupported runtime).
-DefaultPromiseTest (20), PromiseCombinerTest (12), and PromiseNotifierTest (5)
-now execute alongside PromiseAggregatorTest (6), AbstractScheduledEventExecutorTest
+allocation case, SecurityManager group inheritance on an unsupported runtime,
+two JVM type-erasure cases that do not apply to CLR reified generics, and eight
+Recycler pooling assumptions on ordinary threads without automatic cleanup).
+DefaultPromiseTest (20), native TaskWhenAllPortTest (15), TaskCompletionTransferPortTest (10),
+TaskAggregationOwnershipPortTest (6), and ConstantIdentityContractTest (6)
+now execute alongside AbstractScheduledEventExecutorTest
 (9), ImmediateExecutorTest (2), GlobalEventExecutorTest (6), DefaultThreadFactoryTest
 (4 passed/1 skipped), SingleThreadEventExecutorTest (17),
 UnorderedThreadPoolEventExecutorTest (5), NonStickyEventExecutorGroupTest (10),
-AutoScalingEventExecutorChooserFactoryTest (7), and the utility,
+AutoScalingEventExecutorChooserFactoryTest (7), ThreadExecutorMapTest (4),
+TypeParameterMatcherTest (7 passed/2 skipped), NettyRuntimeTests (7), MpscIntQueueTest (6),
+the CLR-adapted JdkLoggerFactoryTest (1), RecyclerTest (59 passed/8 skipped),
+RecyclerFastThreadLocalTest (67), RunInFastThreadLocalThreadExtensionTest (3),
+ResourceLeakDetectorTest (3), LeakPresenceDetectorTest (3), ThreadDeathWatcherTest (3),
+HashedWheelTimerTest (16), and the utility,
 thread-local, address, and logger tests.
-The full default test project still fails to compile because unported Java
-syntax remains; the latest full build reports 1,096 compiler diagnostics.
+The 286 AsciiStringCharacterTest compilation diagnostics are resolved. All 42
+pinned character tests and 10 memory tests now execute, including six cached-string
+scenarios previously missing from the port. Together with 18 CLR cases, all 70
+affected tests pass within both default full runs. Original comments are preserved:
+99 source comments across AsciiString/the split comparator, 24 character-test
+comments and two memory-test comments, with zero missing.
+See [common-ascii-memory.md](common-ascii-memory.md) for native string/span/memory
+APIs, lossless byte widening, cache sanitization and executed-Java hash references.
 
-The manifest records 41 reviewed source files and 37 reviewed upstream test
-files. Other touched source files remain in progress, including native memory,
-address and queue APIs, thread factories, executor submission/suspension/scaling,
-scheduling, and logging adaptations. Comment coverage alone is not a completion
+The three address-view scenarios use NativeMemoryView, zero-capacity allocation
+uses NativeMemoryOwner and the Java-25 provider test validates deterministic CLR
+cleanup. All nine original platform cases execute and pass. The two JVM version
+parser cases remain explicitly excluded with scenario/comment provenance in
+[common-platform-runtime.md](common-platform-runtime.md).
+NativeMemoryContractTest covers 26 ownership, pin, reallocation, borrowing,
+quota, alignment, concurrency and GC-fallback cases. Runtime selection has five
+cases, including the shared allocator limit. See [common-native-memory.md](common-native-memory.md).
+
+Managed primitive write/copy/fill regressions reproduced 11 stub failures before
+repair. Existing array entry points now use bounded CLR memory operations;
+AsciiStringUtil directly uses MemoryMarshal for native-order SWAR words/tails.
+The eleven dead PlatformDependent0 array stubs and four scalar fallback helpers
+are removed. Twelve managed-byte and 20 independent scalar-oracle case tests pass;
+the affected Debug selection passes 146 cases. All nine AsciiStringUtil comments
+remain beside the corresponding implementation. See [common-heap-memory.md](common-heap-memory.md).
+
+ConcurrentOrderedMultiMap uses standard sorted buckets with atomic compound
+operations, native Try/KeyValuePair APIs and snapshot iteration. All 20 original
+test-method scenarios are covered by 19 translated cases; five randomized
+methods preserve 100 repetitions. Ten native contracts verify concurrency,
+ownership claims, reentrant equality, key/default-value boundaries and the
+AdaptivePoolingAllocator dirty-chunk fallback. All 29 pass in both full runs.
+The source remains in progress: extra public-method purposes, real allocator
+integration and performance review remain. Its 138 original comments are preserved
+as provenance; no JVM skip-list/updater hierarchy is reproduced.
+See [common-ordered-multimap.md](common-ordered-multimap.md).
+
+The first runtime Release run also reproduced a thread-local count failure and
+a Promise listener NullReferenceException. ThreadLocalContractTest now resets its
+physical-worker map before absolute-count assertions, like the original fixture.
+InternalLoggerFactoryTest is exclusive and mocks only its observed category;
+unrelated background logger creation falls back to the saved factory, avoiding
+null loggers permanently captured during static initialization. The 50-case
+Release isolation selection and latest full runs pass these cases. The earlier
+auto-scaling timing failure remains open investigation evidence.
+
+ObjectCleaner now uses conditional GC notification and native background pool
+dispatch, with an Action API and diagnostic pending count. All three original
+tests and eight CLR lifetime/identity/context/concurrency regressions pass in
+both default runs. The former weak-queue/helper types have been removed. All 26
+source comments are preserved in code or replacement provenance, and all six
+test comments remain. See [common-object-cleanup.md](common-object-cleanup.md).
+
+The manifest records 42 verified source files, 22 in progress, 100 pending,
+28 CLR replacements and 13 JVM-only decisions (205 source entries). Tests have
+56 verified, zero pending and ten not-applicable entries (66 original files).
+All 98 verified source/test entries have zero missing required comments.
+CompleteFuture, SucceededFuture and FailedFuture now record CLR replacement by
+standard Tasks; their 13 original comments and the two removed EventExecutor
+factory comments are preserved in common-completed-results.md with zero missing.
+The four progressive source entries now record native Task/IProgress replacement;
+their 13 original comments and eight removed progressive-plumbing/factory comments
+are archived in common-progress-subscriptions.md with zero missing.
+The seven removed native provider files also have zero missing provenance comments.
+Other touched files remain in progress, including raw address/object-offset APIs,
+queue/executor/lifecycle APIs, string/encoding and public API migration. Comment coverage alone is not a completion
 count.
 
-Future/Promise completion now owns a separate Netty state machine and exposes a
-read-only CLR Task. State transitions, cancellation/uncancellability, cause
+The user explicitly authorized CLR-native replacements and omission of Java-only
+facilities. LongLongHashMap does not require a standalone CLR port: its current
+FastThreadLocalThread consumer uses per-thread scope membership without a shared ID
+map. Any necessary long-key mapping can use Dictionary<long,long> with consumer
+contracts checked at the use site; Java rehash tests do not apply. RuntimeJvmArgs
+and its -XX flag parser have no purpose in a CLR process and are excluded. Their
+temporary direct ports were removed. Consumer-specific missing-value, previous-value
+and copy-ownership behavior must still be checked where it is needed.
+
+JDK logging is replaced by the existing CLR TraceSource backend. The original
+factory creation/name test now asserts InternalDefaultLoggerFactory's native
+provider; the upstream abstract interface fixture and CLR formatting/filtering
+tests continue to verify shared logging behavior. The seven SLF4J/Log4j adapter
+source files and five provider-specific test files have no CLR Java dependency to
+wrap and are marked not-applicable. Caller metadata and configuration follow the
+native backend; TRACE/DEBUG both map to Verbose. JfrEventSafeTest exercises JDK
+Event/RecordingStream and @Enabled defaults, and VirtualThreadCheckTest exercises
+Thread.isVirtual/MethodHandle and Java Thread subclassing. Those two tests are
+not applicable to CLR Task/ThreadPool and EventSource. The eight JVM-specific
+test placeholders, including JNI ClassLoader loading, have been removed; their
+original comments and exclusion reasons remain in common-jvm-test-exclusions.md
+and the manifest. Native loading and shared logging contracts remain tested.
+
+MpscIntQueue retains its useful bounded primitive ring and atomic batch reservations.
+The incomplete generic AtomicArray base and Java field-updater emulation are replaced
+by int[], Volatile and Interlocked. Initialize every rounded-capacity slot, including
+nonzero empty sentinels, and restore the missing weakPeekReduce operation. Delegates
+represent primitive suppliers, consumers and reducers; callback null checks use
+ArgumentNullException. Poll waits for an unpublished reserved head using nonblocking
+Thread.SpinWait, preserving a pending managed-thread interrupt. Six original cases
+and thirteen CLR cases verify FIFO/reuse, validation, weak reduction, publication,
+interrupt behavior, and four concurrent producers using offer and fill. All 34 source
+comments and the original test comment are preserved. The pinned reduction returns
+0 for a zero limit and revisits slots when a full ring's limit exceeds capacity;
+both behaviors are recorded and tested. As upstream, fill suppliers must not throw
+or return the empty sentinel: invalid supplier output can strand a reservation.
+
+Recycler now follows the pinned shared MPMC, pinned-owner and thread-local guarded
+and unguarded modes. Restore owner-local LIFO batches, external FIFO returns, ratio
+sampling, capacity normalization, atomic duplicate-recycle guards, detach and unpin.
+Guarded handles use ReferenceEquals rather than value equality. Thread-local pooling
+requires currentThreadWillCleanupFastThreadLocals, not merely an indexed map. CLR
+ThreadState.Stopped distinguishes termination from an unstarted owner. Recyclable
+values require reference types, and the ObjectPool factory adapters now enforce that
+generic constraint. Stale standalone handle/local-pool/thread-local helpers were
+removed; the reviewed state machine is private to Recycler<T>.
+
+ConcurrentQueue with CAS capacity reservations replaces JCTools return queues;
+retention is bounded by rounded capacity, with CLR segment allocation instead of
+JCTools chunk growth. Owner batches remain separate, as upstream. The debugging
+blocking mode uses a lazily grown Queue and uninterruptible monitor with exact
+capacity. Private Java MessagePassingQueue operations unused by Recycler are not
+recreated. All 134 original Recycler/fast-thread theory rows run: 126 pass and eight
+ordinary-thread pooling assumptions skip. Eight additional CLR cases verify identity,
+unguarded behavior, batch/external ordering, eight concurrent borrowers, termination,
+unpin and cleanup capability. The 149-case recycler/runner selection also passes
+with io.netty.recycler.blocking=true. All 47 source, 26 base-test and five fast-test
+comments are preserved.
+
+The JUnit invocation extension is an explicit Action helper for xUnit. The three
+original normal/repeated/parameterized cases run on a real FastThreadLocalThread;
+the original repetition count is one. Inherited fast-thread Recycler cases route
+their bodies through that helper. ExceptionDispatchInfo rethrows worker failures
+after thread-local cleanup while retaining the original exception and stack. Four
+CLR cases verify cleanup before return/rethrow and cleanup-callback failure propagation.
+CLR unhandled worker exceptions can terminate the test process, so cleanup exceptions
+also reach the caller; an earlier invocation failure retains priority. GC tests use
+WeakReference<Thread> and bounded collection polling because CLR Thread is sealed;
+all retained-object/unpin/late-recycle assertions remain. ObjectCleaner is now a
+CLR runtime replacement described above. The deprecated ResourceLeakException
+helper remains pending work.
+
+ResourceLeakDetector uses ConditionalWeakTable conditional values to observe the
+tracked resource's lifetime. Retaining a tracker cannot keep its resource alive.
+Weak owner registrations unlink on close, suppress finalization when empty, and
+rearm when the same resource is tracked again. CLR finalizers only enqueue internal
+notifications; reporting and listeners execute on the next tracking caller. This
+uses CLR GC/finalization scheduling rather than Java ReferenceQueue timing.
+GC.KeepAlive replaces the synchronized reachability fence and never acquires the
+resource's monitor. Interlocked/Volatile preserve close, access-record and report
+races. Capture managed stacks at creation/access/close time, snapshot hint text
+immediately, and use CLR full stack formatting. JIT inlining can remove framework
+frames, so remove those frames by identity instead of dropping three caller frames.
+Exclusions use declaring-type FullName, including nested CLR types, and normalize
+generic definitions so a closed registration matches CLR stack metadata across T.
+
+All three original leak tests pass, including 50 threads and 5,000,000 track/close
+pairs. The JVM's 60-second timeout was exceeded in a complete CLR batch; the native
+test uses a documented 120-second bound while retaining every iteration, stack and
+assertion. Full-batch stress runs took approximately one minute. Hint tests keep their
+10-second bounds. Twenty CLR contracts cover retained trackers, live referents,
+multiple/rearmed registrations, concurrent close and record/close races, hint
+snapshots, report deduplication, reporting-disabled drain, close-stack capture,
+sampling and declared-method exclusions. Thirty leak/factory/hint cases pass in
+Release and with trackClose=false; 27 applicable cases pass with targetRecords=0.
+All 64 detector, five legacy leak, five tracker, three hint and 21 test comments
+are preserved. The pinned tracker ToString after a successful close with close
+tracking enabled retains the negative-capacity failure; getCloseStackTraceIfAny
+is the supported way to inspect the close marker.
+
+ResourceLeakDetectorFactory replaces erased Java reflection with CLR Type and
+ConstructorInfo. The old open-generic IsAssignableFrom check rejected all custom
+providers; four CLR cases reproduced it. One-parameter generic providers now close
+for each requested T, and closed providers work with compatible T. Invariant type
+mismatches, constraints, static initialization and constructor failures retain the
+default fallback. Modern and deprecated constructors are independent, and the
+environment property is captured when the factory is constructed. Eight contracts
+pass and all eight original comments are preserved. Generic providers initialize
+per closed CLR type when that type is first requested.
+
+LeakPresenceDetector counts resources immediately without waiting for collection.
+The nongeneric CLR facade shares the global scope, initializer count and diagnostic
+setting across every constructed T. Func and Interlocked replace Supplier and
+LongAdder; producer threads must still quiesce before checking a scope. Keep the
+counter reset, negative late-release report, no-op access records, forced tracking,
+dedicated allocation-prohibition exception and scope selection through the factory.
+CLR .cctor detection replaces <clinit>; MethodBase.IsConstructor does not identify
+static constructors. The static wrapper checks real stack frames, supports nesting,
+restores its count on failure and does not exclude allocations on unrelated threads.
+An explicit initializer and field-touching init method preserve the original test
+despite CLR BeforeFieldInit timing.
+
+ResourceScope implements IDisposable. Repeated Dispose/close is deliberately
+idempotent and cannot reopen the scope; the pinned Java decrement could go negative
+and allow allocations after a second close. Closing a leaking scope still changes
+its state before throwing, and a late tracker close decrements then throws as in the
+source. Creation diagnostics use captured managed stacks and the existing weak
+suppressed-exception store, preserving the pinned maximum of seven stacks. All three
+original tests and twelve CLR contracts pass in Release, both with default settings
+and trackCreationStack=true. The concurrent case retains eight producers and 80,000
+track/close pairs. All 16 source comments and the original test comment are preserved.
+
+NativeLibraryLoader is a JVM-only JNI resource loader: Java package shading, helper
+.class injection into a target ClassLoader, META-INF/native JAR extraction/duplicate
+selection, JNI library identity patching and JVM-exit cleanup. Repository-wide callers
+are JNI epoll/kqueue/io_uring, macOS resolver, Quiche and OpenSsl bindings; there is no
+CLR consumer of these ClassLoader operations. The loader and its five original tests
+are explicitly not-applicable, with the placeholder fixture retained and excluded.
+Ordinary native loading uses NativeLibrary.Load through NativeLibraryUtil, replacing
+handwritten platform P/Invoke/dlopen branches. Returned handles are caller-owned and
+freed through NativeLibrary.Free; absolute mode rejects relative paths. Four CLR
+contracts pass in Debug/Release, invoking the real native process-ID export and
+checking missing libraries, invalid paths and independent handle release. Native
+fixtures ran on Windows net10.0; Unix OS-specific fixtures were not executed here.
+All four original helper comments are preserved beside the CLR ownership note.
+
+ThreadDeathWatcher uses native background Thread, ConcurrentQueue, Interlocked
+and Volatile while preserving the singleton worker's polling and CAS handoff.
+Cancelling a watch matches both thread and task by reference identity, and removes
+one duplicate registration. Callback failures do not prevent subsequent notifications;
+reentrant watch/unwatch operations retain the original second drain. Suppress CLR
+ExecutionContext flow during worker startup so the service does not retain caller
+AsyncLocal values, while restoring an already-suppressed caller's state. TimeSpan
+waits preserve Java millisecond truncation and zero/unbounded joins; large waits
+are chunked into interruptible native Join calls. The factory retains minimum
+priority, background status, configurable name prefix and nonsticky group metadata.
+
+ReferenceCountUtil restores deprecated releaseLater overloads, schedules the exact
+decrement after caller-thread termination, and restores touch stack exclusions.
+Pattern matching preserves non-reference-counted passthrough, forwarded retain/touch
+return values, validation order and safe-release exception handling. All three original
+watcher tests, ten CLR watcher cases and seven CLR reference-count cases pass in
+Release. A fresh process with io.netty.serviceThreadPrefix=porting- passes three
+applicable cases. Concurrent registration retains eight producers and 8,000 watches,
+half cancelled before owner death. All 32 watcher source, nine watcher test and
+14 reference-count utility comments are preserved.
+
+HashedWheelTimer now restores pending-count rollback when start fails and the
+post-enqueue shutdown rejection. The original start override and a separate native
+thread gate verify termination between startup and enqueue. Public Java dispatch
+hooks remain virtual in C#. ConcurrentQueue, Interlocked and Volatile replace the
+Java queues, atomic wrappers and field updaters. The native default factory creates
+ordinary foreground threads at normal priority and captures the creator's logical
+group, without fast-local ownership. Worker/timeout/bucket helpers are internal,
+matching the original private classes; worker results are a read-only snapshot.
+The unused JDK fixed-pool/callable helper stubs that returned null are removed;
+there are no CLR repository consumers. Executors only supplies the native factory
+required by this timer; it does not emulate the JDK Executors utility surface.
+
+TimeSpan uses 100 ns ticks and saturates nanosecond conversion instead of wrapping.
+Positive submillisecond ticks still clamp to 1 ms. Long native sleeps are chunked
+and remain interruptible for stop. Preserve the JVM-specific Windows sleep workaround
+comments, while omitting that workaround for CLR Thread.Sleep. IDisposable provides
+a using lifetime; finalization after failed construction cannot corrupt instance
+counts. Interruption racing with worker termination does not surface a CLR
+ThreadStateException. Native stop results are caller-owned HashSets.
+
+All 16 original source cases and 12 CLR contracts pass in Debug/Release. This includes
+the cancellation callback method that has only a JUnit Timeout annotation and would
+otherwise be omitted from discovery. Preserve 100,000 scheduling operations and the
+125-650 ms timing bounds. The original shutdown race and post-stop pending-count
+assertion were absent from the previous translation and now run. Additional native
+cases cover task/executor failure isolation, callback affinity and identity, default
+interface cancellation, partial-constructor finalization, duration saturation,
+large waits and interrupted shutdown. The pinned stop behavior retains the pending
+count for returned unprocessed tasks and does not invoke their cancellation callbacks
+after worker termination; both are tested explicitly. All 63 timer, four Timer,
+five TimerTask, seven Timeout and nine original test comments are preserved.
+
+TypeParameterMatcher resolves the constructed CLR BaseType chain without erasing
+generic arguments. Native Type.IsInstanceOfType handles actual generic and array
+types. Find-cache keys include the requested superclass and parameter name, within
+the constructed runtime class, preventing incorrect reuse across different parents.
+Seven portable upstream cases and seven CLR contracts pass; JVM-only erased-variable
+failures explicitly skip. Enclosing CLR generic arguments and array bindings remain
+available. The ReflectionUtil accessibility/platform review remains in progress.
+ThreadExecutorMap's four original wrapping/restoration cases now run, including
+the real CLR thread factory. NettyRuntime's seven original configuration/race cases
+use a serialized environment-property harness and non-interruptible holder locks.
+
+At the historical Future/Promise adapter checkpoint, completion used TaskCompletionSource as its sole result and
+terminal-state owner. Remaining metadata controls cancellation eligibility and
+preserves cancellation diagnostics for the Netty observer adapter. State transitions, cancellation/uncancellability, cause
 identity, FIFO and reentrant listeners, executor affinity, recursion limits,
 blocking detection, timeouts, interruption, progressive notification, typed
-listener removal, and combiner/cascade propagation are covered by upstream and
+listener removal are covered by upstream and
 CLR contract tests. Java listener wildcards use identity-preserving CLR adapters;
 value-type nulls use default(T), and Java wildcard value widening requires
-explicit object/boxing with invariant CLR future types.
+explicit object/boxing with invariant CLR future types. Those adapters are now removed;
+the native replacement and intentional differences are in common-native-future-retirement.md.
 
-Java ExecutionException maps to AggregateException; sync rethrows the original
+Native SubmitAsync accepts Action/Func and CancellationToken and returns Task
+without a Java Future/Promise result adapter. Task-returning delegates are unwrapped;
+execution-context changes are scoped, and event-loop access after I/O requires
+explicit resubmission. Thirty additional CLR cases cover terminal-state observation,
+cancellation tokens, native delegate families, cancellation/invocation races,
+context flow, early release of captured references and concurrent constant factories.
+Before the completion refactor, four of five new state regressions failed.
+See common-clr-design.md for the preserved policies and outstanding public API work.
+
+PromiseCombiner, PromiseNotifier, deprecated PromiseAggregator and
+PromiseNotificationUtil are now CLR framework replacements and their C# helper
+classes have been removed. Native Task.WhenAll and TCS TrySetFromTask preserve
+composition/transfer without another Java builder/listener facade. Fault
+precedence, exception retention, producer ownership and explicit executor
+dispatch differ deliberately from some Java behaviors. All original test-method
+decisions and real consumer evidence are recorded in
+[common-task-composition.md](common-task-composition.md). The three original test
+paths now contain 31 native cases, retaining their original license comments.
+Five old CLR combiner/cascade cases are superseded by that native coverage.
+
+AbstractConstant now has sealed identity/description overrides, native identity
+hashing and one non-generic Interlocked uniquifier sequence. ConstantPool requires
+reference constants. Four of six identity regressions failed before repair; all
+six now pass, along with the original registry tests. Native integer comparison
+avoids overflow-induced ordering violations. All three AbstractConstant and eight
+ConstantPool original comment blocks are preserved.
+
+In the historical legacy Future APIs, Java ExecutionException mapped to AggregateException; sync rethrew the original
 exception. Suppressed exceptions use weak exception keys. CLR cannot inspect a
 pending interrupt flag, so incomplete interruptible waits observe it with
 Sleep(0); uninterruptible waits restore it. Monitor waits round up to millisecond
-resolution. CompleteFuture's interrupt consumption differs from an already
-completed DefaultPromise just as in the source, and is tested explicitly.
+resolution. The historical CompleteFuture translation consumed an interrupt even
+after completion, as its Java await does. That class is now replaced by standard
+Tasks: completed native waits do not consume a pending CLR interrupt. The native
+tests cover this explicit adaptation; see common-completed-results.md.
 
 The upstream JVM stack-overflow depth probe cannot run on CLR because stack
 overflow is fatal. Both chain shapes instead run at 20,000 promises in and out of
@@ -149,7 +842,9 @@ AbstractScheduledEventExecutor is now reviewed against the pinned implementation
 skip cancelled tasks during transfer, restore tasks when the destination queue is
 full, retain IDs across periodic reinsertion, preserve virtual submission/validation
 hooks, and saturate TimeSpan-to-nanoseconds conversion using integer arithmetic.
-The scheduling interfaces inherit Netty Future status/result contracts. CLR tests
+The historical unordered compatibility scheduling interface inherited Netty Future status/result
+contracts. All concrete unordered/shared/ordered scheduling facades and adapters are removed; native
+scheduling carries only deadline metadata through IScheduledWork. CLR tests
 exercise the overflow boundary, queue capacity, periodic ordering and hooks.
 
 DefaultThreadFactory retains explicit groups and inherits the current creator's
@@ -168,13 +863,15 @@ re-request suspension when cancellation races with confirmation. A failing start
 race reproduced zero thread-start requests where the original requires one.
 All 128 implementation comments and 57 test comments are preserved.
 
-Submission now uses PromiseTask and returns Netty IFuture through executor/group
-interfaces. The old recursive callable generic constraint and QueueingTaskNode
+At the historical Java-compatible submission checkpoint, PromiseTask returned Netty IFuture through executor/group
+interfaces; native SubmitAsync had its own Task-based work item and shared only
+the executor invocation boundary. The old recursive callable generic constraint and QueueingTaskNode
 submission path are gone. CLR support implements the inherited JDK invokeAll and
 invokeAny contracts, including ordered futures, individual failure retention,
 first successful result, timeout/interruption cleanup and cancellation. A completion
 queue runs independently of listener dispatch. PromiseTask retains the original
-Runnable/Callable distinction, adapter descriptions and completion sentinels.
+Runnable/Callable distinction, adapter descriptions and completion sentinels. Those Java
+submission/bulk interfaces, wrappers and remaining Future/Promise hierarchy are now removed.
 
 Single-thread activity accounting and atomic idle/busy cycle counters now follow
 the original. CLR contract tests use a mock ticker to check work budgets, accumulated
@@ -193,15 +890,15 @@ and executor processing locks now preserve that flag; timed queue waits still
 observe interrupts. The compatibility collection constructor imports an initial
 snapshot, and the adapter owns subsequent queue mutations.
 
-Termination and graceful shutdown now expose the persistent Netty Future through
-executor/group interfaces. Existing Task convenience methods view that same
-completion. Multithread groups aggregate child Future listeners on GlobalEventExecutor,
-including failed children, and their iteration cannot expose the mutable backing set.
-Restore inherited shutdownNow, Java method overriding, default shutdown periods and
-observable chooser metric forwarding. CLR readonly interfaces represent immutable
-collection views; nested chooser/metric support types are standalone files. Preserve
-the metric's atomic raw-double bits, including NaN payloads. Nineteen lifecycle/group
-contracts cover failure identity, listener affinity, construction cleanup and forwarding.
+Termination and graceful shutdown use the primary native Task API:
+`Termination` and `ShutdownGracefullyAsync`. Private non-generic TCS owns completion;
+Future lifecycle aliases and supplementary Task views are removed. Multithread groups
+use context-independent Interlocked completion counting and succeed after every child
+signal, including failed children. Native continuations require explicit executor
+dispatch for owned state. Twenty-eight lifecycle/group cases cover identity, failure,
+wait cancellation/timeout, asynchronous self-shutdown, non-inline continuations,
+constructor contexts, construction cleanup and forwarding. Default periods, immutable
+views and atomic metric bits remain. See [common-executor-lifecycle.md](common-executor-lifecycle.md).
 
 NonSticky runners now return after rescheduling or emptying their queue and restore
 executingThread when rescheduling fails. C# forbids a return inside finally, so a
@@ -211,20 +908,24 @@ from JCTools chunks, and bounded/chunked queue factories remain pending. All ten
 original test cases retain their four batch sizes, 10,000 tasks per producer and
 5,000 two-submission races. All 30 source and 12 test comments are preserved.
 
-UnorderedThreadPoolEventExecutor has a CLR adapter for the inherited JDK scheduled
+At the earlier Java-compatibility checkpoint UnorderedThreadPoolEventExecutor had a CLR adapter for the inherited JDK scheduled
 pool defaults, using dedicated workers and a shared deadline queue. Reviewed Netty
 decoration and JDK scheduling/shutdown against local Corretto 21.0.11 src.zip.
 All five original tests and 34 CLR contracts pass. Preserve its unusual
-termination Future: it succeeds when shutdown is requested, before workers stop.
+termination Task was recorded at this compatibility checkpoint as succeeding
+on request. The subsequent native correction waits for drained queue/worker
+reservations; see common-unordered-termination.md.
 Default shutdown retains delayed one-shot work, drops periodic work, and shutdownNow
 returns queued futures without completing them. The pinned Runnable decoration does
 not query the backend failure: one-shot outer promises can succeed after backend
 failure, and periodic backend failure stops repetition while the outer promise stays
 pending. Callable decoration does query the result and unwraps the original failure.
-These source-derived behaviors are tested explicitly. All 21 source and 8 test
+Those source-derived quirks were tested at that checkpoint. Native scheduling now
+publishes actual callback failure/cancellation and removes the Java decorators;
+see common-native-unordered-scheduling-migration.md. All 21 source and 8 test
 comments are preserved; complete inherited JDK API review remains in progress.
 
-Inherited bulk invocation uses a separate JdkFutureTask: running callables remain
+At that compatibility checkpoint inherited bulk invocation used a separate JdkFutureTask: running callables remained
 cancellable, unlike the decorated Netty PromiseTask. Cancellation waits for interrupt
 delivery before a worker can run its next task. Pool configuration now covers core
 resize/timeout, keep-alive, native queue removal/reinsertion, shutdown policy changes,
@@ -232,14 +933,17 @@ statistics and thread-factory failure/null/reentrant reservations. The inherited
 factory setter deliberately keeps the supplied factory unwrapped, as in the pinned
 source. A periodic task claimed before a policy change can cancel only its backend,
 leaving the outer Netty promise pending; a separate deterministic regression verifies
-that behavior rather than asserting cancellation for every race outcome.
+that behavior rather than asserting cancellation for every race outcome. These
+adapters are now removed, running cancellation uses native cooperative claims,
+and worker identity is maintained by workerLoop after factory replacement.
 
 The auto-scaling factory now preserves CAS snapshots, pre-increment patience counters,
 ramp limits, rotating wake-up selection, minimum/maximum bounds, registered-channel
 guards, live immutable metric views and the termination listener. Seven original
 tests and eight mock-clock contracts pass. All 43 source and 17 test comments are
 preserved. TimeSpan replaces Java duration/TimeUnit; its 100ns granularity means a
-saturated monitoring period is rounded down by at most 99ns when scheduled.
+saturated initial monitoring delay is rounded down by at most 99ns when scheduled;
+the native repeat period retains its exact integer nanoseconds.
 Protected-internal metric hooks preserve Java protected package access. The allocated
 queue constructor initializes the activity timestamp; updateLastExecutionTime also
 refreshes it. The explicit-queue constructor keeps the pinned zero-initialized field.
@@ -252,8 +956,12 @@ Java's millisecond truncation and zero/unbounded join while chunking waits beyon
 CLR Int32-millisecond limit; zero/submillisecond and interrupted TimeSpan.MaxValue
 regressions pass.
 
-Next, finish the remaining executor/platform API reviews and continue the pending
-common source and upstream tests recorded in the manifest. The complete module and
-default test build remain unfinished; this is a verified porting checkpoint.
+Next, migrate remaining plain Future/Promise fixtures and waiting/listener
+facades to the native Task and notification policies, checking pinned consumers
+and preserving original comments. Remaining plain Future/Promise adapters and
+final executor backend/worker policies remain; continue collections, strings/encoding and platform
+items in dependency order. Default whole tests pass, while module completion remains
+open: required source reviews, API migrations and remaining ordered-multimap
+public-purpose decisions remain.
 ThrowableUtil still cannot replace an already-thrown CLR stack or
 capture another managed thread's stack; those limitations remain explicit.

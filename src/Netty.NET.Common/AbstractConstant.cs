@@ -15,7 +15,8 @@
  */
 
 using System;
-using Netty.NET.Common.Concurrent;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Netty.NET.Common;
 
@@ -25,7 +26,6 @@ namespace Netty.NET.Common;
 public abstract class AbstractConstant<T> : IConstant<T> 
     where T : AbstractConstant<T>
 {
-    private static readonly AtomicLong _uniqueIdGenerator = new AtomicLong();
     private readonly int _id;
     private readonly string _name;
     private readonly long _uniquifier;
@@ -37,7 +37,7 @@ public abstract class AbstractConstant<T> : IConstant<T>
     {
         _id = id;
         _name = name;
-        _uniquifier = _uniqueIdGenerator.getAndIncrement();
+        _uniquifier = ConstantIdentitySequence.Next();
     }
 
     public string name()
@@ -50,20 +50,30 @@ public abstract class AbstractConstant<T> : IConstant<T>
         return _id;
     }
 
-    public override string ToString()
+    public sealed override string ToString()
     {
         return name();
     }
 
+    // Java final Object identity methods cannot be replaced with value equality
+    // by a subclass. CLR sealed overrides keep that contract for constant keys.
+    public sealed override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
+
+    public sealed override bool Equals(object obj) => ReferenceEquals(this, obj);
+
     public int CompareTo(T o)
     {
-        if (this == o)
+        ArgumentNullException.ThrowIfNull(o);
+        if (ReferenceEquals(this, o))
         {
             return 0;
         }
 
         AbstractConstant<T> other = o;
-        int returnCode = GetHashCode() - other.GetHashCode();
+        // Native comparison avoids subtraction overflow violating antisymmetry.
+        // CLR identity hashes differ from JVM hashes, so numeric hash order is
+        // runtime-local; identity and a nonzero order between different keys remain.
+        int returnCode = GetHashCode().CompareTo(other.GetHashCode());
         if (returnCode != 0)
         {
             return returnCode;
@@ -79,6 +89,15 @@ public abstract class AbstractConstant<T> : IConstant<T>
             return 1;
         }
 
-        throw new Exception("failed to compare two different constants");
+        throw new InvalidOperationException("failed to compare two different constants");
     }
+}
+
+// Java erased generics have one static generator for all AbstractConstant<T>.
+// CLR closed generic statics would duplicate it; use one native atomic counter.
+internal static class ConstantIdentitySequence
+{
+    private static long _next;
+
+    internal static long Next() => unchecked(Interlocked.Increment(ref _next) - 1);
 }

@@ -23,7 +23,6 @@ using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
-
 namespace Netty.NET.Common.Concurrent;
 
 /**
@@ -52,7 +51,7 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
     private static readonly StrongBox<bool> StrongTrue = new StrongBox<bool>(true);
     private static readonly FastThreadLocal<StrongBox<bool>> RUNNING = new FastThreadLocalFunc<StrongBox<bool>>(() => StrongFalse);
 
-    private readonly IFuture<Void> _terminationSource = FailedFuture.Create<Void>(GlobalEventExecutor.INSTANCE, new NotSupportedException());
+    private readonly Task _terminationTask = Task.FromException(new NotSupportedException());
 
     private ImmediateEventExecutor() { }
 
@@ -66,15 +65,12 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
         return true;
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
+    public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return terminationFuture();
+        return Termination;
     }
 
-    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
-    {
-        return _terminationSource;
-    }
+    public override Task Termination => _terminationTask;
 
     [Obsolete]
     public override void shutdown()
@@ -140,13 +136,4 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
         }
     }
 
-    public override IPromise<V> newPromise<V>()
-    {
-        return new ImmediatePromise<V>(this);
-    }
-
-    public override IProgressivePromise<V> newProgressivePromise<V>()
-    {
-        return new ImmediateProgressivePromise<V>(this);
-    }
 }

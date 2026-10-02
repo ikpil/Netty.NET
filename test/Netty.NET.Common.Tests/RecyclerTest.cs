@@ -13,444 +13,370 @@
 * License for the specific language governing permissions and limitations
 * under the License.
 */
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests;
 
-public class RecyclerTest {
-
-    protected static Recycler<HandledObject> newRecycler(int maxCapacityPerThread) {
-        return newRecycler(maxCapacityPerThread, 8, maxCapacityPerThread >> 1);
+public class RecyclerTest
+{
+    public enum OwnerType { NONE, PINNED, FAST_THREAD_LOCAL }
+    protected static bool isPooling(OwnerType type) => type != OwnerType.FAST_THREAD_LOCAL ||
+        FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals();
+    protected static void assumeIsPooling(OwnerType type) => Xunit.Assert.SkipUnless(isPooling(type), "Owner has no automatic thread-local cleanup.");
+    public static IEnumerable<object[]> ownerTypeAndUnguarded()
+        => Enum.GetValues<OwnerType>().SelectMany(owner => new[] { true, false }.Select(unguarded => new object[] { owner, unguarded }));
+    public static IEnumerable<object[]> notNoneOwnerAndUnguarded()
+        => ownerTypeAndUnguarded().Where(row => (OwnerType)row[0] != OwnerType.NONE);
+    public static IEnumerable<object[]> owners() => Enum.GetValues<OwnerType>().Select(owner => new object[] { owner });
+    private readonly ConcurrentQueue<Exception> workerFailures = new();
+    protected virtual void runTest(Action invocation) => invocation();
+    protected virtual Thread newThread(Action invocation) => new(invocation.Invoke) { IsBackground = true };
+    protected Thread worker(Action invocation) => newThread(() =>
+    {
+        try { invocation(); }
+        catch (Exception error) { workerFailures.Enqueue(error); }
+    });
+    protected void join(Thread thread)
+    {
+        Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        Assert.Empty(workerFailures);
     }
-
-    protected static Recycler<HandledObject> newRecycler(int maxCapacityPerThread, int ratio, int chunkSize) {
-        return new Recycler<HandledObject>(maxCapacityPerThread, ratio, chunkSize) {
-            @Override
-            protected HandledObject newObject(
-            Recycler.Handle<HandledObject> handle) {
-            return new HandledObject(handle);
+    protected sealed class HandledObject
+    {
+        internal readonly IRecyclerHandle<HandledObject> handle;
+        internal HandledObject(IRecyclerHandle<HandledObject> handle) => this.handle = handle;
+        internal void recycle() => handle.recycle(this);
+    }
+    private sealed class Pool : Recycler<HandledObject>
+    {
+        private readonly Action<HandledObject> onNewObject;
+        internal Pool(int capacity, bool unguarded, Action<HandledObject> onNewObject) : base(capacity, unguarded) => this.onNewObject = onNewObject;
+        internal Pool(Thread owner, int capacity, int ratio, int chunk, bool unguarded, Action<HandledObject> onNewObject)
+            : base(capacity, ratio, chunk, owner, unguarded) => this.onNewObject = onNewObject;
+        internal Pool(int capacity, int ratio, int chunk, bool unguarded, Action<HandledObject> onNewObject)
+            : base(capacity, ratio, chunk, unguarded) => this.onNewObject = onNewObject;
+        protected override HandledObject newObject(IRecyclerHandle<HandledObject> handle)
+        {
+            var value = new HandledObject(handle);
+            onNewObject?.Invoke(value);
+            return value;
         }
+    }
+    protected static Recycler<HandledObject> newRecycler(OwnerType owner, bool unguarded, int capacity, Action<HandledObject> onNewObject = null)
+        => newRecycler(owner, unguarded, capacity, Recycler.RATIO, capacity >> 1, onNewObject);
+    protected static Recycler<HandledObject> newRecycler(bool unguarded, int capacity)
+        => newRecycler(OwnerType.FAST_THREAD_LOCAL, unguarded, capacity);
+    protected static Recycler<HandledObject> newRecycler(int capacity)
+        => newRecycler(OwnerType.FAST_THREAD_LOCAL, false, capacity, 8, capacity >> 1);
+    protected static Recycler<HandledObject> newRecycler(OwnerType owner, bool unguarded, int capacity, int ratio, int chunk, Action<HandledObject> onNewObject = null)
+    {
+        // NOTE: ratio and chunk size will be ignored for NONE owner type!
+        return owner switch
+        {
+            OwnerType.NONE => new Pool(capacity, unguarded, onNewObject),
+            OwnerType.PINNED => new Pool(Thread.CurrentThread, capacity, ratio, chunk, unguarded, onNewObject),
+            OwnerType.FAST_THREAD_LOCAL => new Pool(capacity, ratio, chunk, unguarded, onNewObject),
+            _ => throw new ArgumentOutOfRangeException(nameof(owner))
         };
     }
 
-    @NotNull
-    protected Thread newThread(IRunnable runnable) {
-        return new Thread(runnable);
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private WeakReference<Thread> startCollectibleThread(OwnerType owner, bool unguarded, Action<HandledObject> retain)
+    {
+        Thread thread = worker(() =>
+        {
+            Recycler<HandledObject> recycler = newRecycler(owner, unguarded, 1024);
+            HandledObject value = recycler.get();
+            // Store a reference to the HandledObject to ensure it is not collected when the run method finish.
+            retain(value);
+            Recycler.unpinOwner(recycler);
+        });
+        var weak = new WeakReference<Thread>(thread);
+        thread.Start();
+        join(thread);
+        // Null out so it can be collected.
+        return weak;
     }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static bool collected(WeakReference<Thread> thread) => !thread.TryGetTarget(out _);
+
+    [Theory]
+    [MemberData(nameof(ownerTypeAndUnguarded))]
+    public virtual void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        HandledObject retained = null;
+        WeakReference<Thread> thread = startCollectibleThread(ownerType, unguarded, value => retained = value);
+        // Loop until the Thread was collected. If we can not collect it the Test will fail due of a timeout.
+        var deadline = Stopwatch.StartNew();
+        while (!collected(thread) && deadline.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(50);
+        }
+        Assert.True(collected(thread));
+        // Now call recycle after the Thread was collected to ensure this still works...
+        retained?.recycle();
+        GC.KeepAlive(retained);
+    });
+
+    [Theory]
+    [MemberData(nameof(ownerTypeAndUnguarded))]
+    public void verySmallRecycer(OwnerType ownerType, bool unguarded) => runTest(() => newRecycler(ownerType, unguarded, 2, 0, 1).get());
+
+    [Theory]
+    [MemberData(nameof(owners))]
+    public void testMultipleRecycle(OwnerType ownerType) => runTest(() =>
+    {
+        // This test makes only sense for guarded recyclers
+        HandledObject value = newRecycler(ownerType, false, 1024).get();
+        value.recycle();
+        if (isPooling(ownerType)) Assert.Throws<InvalidOperationException>(value.recycle);
+        else value.recycle(); // No-op because not pooling.
+    });
 
     [Fact]
-        @Timeout(value = 5000, unit = TimeUnit.MILLISECONDS)
-    public void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced() {
-        final Recycler<HandledObject> recycler = newRecycler(1024);
-        final AtomicBoolean collected = new AtomicBoolean();
-        final AtomicReference<HandledObject> reference = new AtomicReference<HandledObject>();
-        Thread thread = new Thread(new IRunnable() {
-        @Override
-        public void run() {
-        HandledObject object = recycler.get();
-        // Store a reference to the HandledObject to ensure it is not collected when the run method finish.
-        reference.set(object);
-    }
-}) {
-@Override
-protected void finalize() {
-    super.finalize();
-    collected.set(true);
-}
-};
-Assert.False(collected.get());
-thread.start();
-thread.join();
-
-// Null out so it can be collected.
-thread = null;
-
-// Loop until the Thread was collected. If we can not collect it the Test will fail due of a timeout.
-while (!collected.get()) {
-System.gc();
-System.runFinalization();
-Thread.sleep(50);
-}
-
-// Now call recycle after the Thread was collected to ensure this still works...
-reference.getAndSet(null).recycle();
-
-}
-
-[Fact]
-public void verySmallRecycer() {
-    newRecycler(2, 0, 1).get();
-}
-
-[Fact]
-public void testMultipleRecycle() {
-    Recycler<HandledObject> recycler = newRecycler(1024);
-    final HandledObject object = recycler.get();
-    object.recycle();
-    Assert.Throws<InvalidOperationException>(new Executable() {
-        @Override
-        public void execute() {
-        object.recycle();
-    }
+    public void testUnguardedMultipleRecycle() => runTest(() =>
+    {
+        HandledObject value = newRecycler(true, 1024).get();
+        value.recycle();
+        value.recycle();
     });
-}
 
-[Fact]
-public void testMultipleRecycleAtDifferentThread() {
-    Recycler<HandledObject> recycler = newRecycler(1024);
-    final HandledObject object = recycler.get();
-    final AtomicReference<InvalidOperationException> exceptionStore = new AtomicReference<InvalidOperationException>();
-    final Thread thread1 = newThread(new IRunnable() {
-        @Override
-        public void run() {
-        object.recycle();
-    }
+    [Theory]
+    [MemberData(nameof(owners))]
+    public void testMultipleRecycleAtDifferentThread(OwnerType ownerType) => runTest(() =>
+    {
+        // This test makes only sense for guarded recyclers
+        Recycler<HandledObject> recycler = newRecycler(ownerType, false, 1024);
+        HandledObject value = recycler.get();
+        Exception failure = null;
+        Thread first = worker(value.recycle);
+        first.Start(); join(first);
+        Thread second = worker(() => { try { value.recycle(); } catch (InvalidOperationException e) { failure = e; } });
+        second.Start(); join(second);
+        Assert.NotSame(recycler.get(), recycler.get());
+        if (isPooling(ownerType)) Assert.NotNull(failure);
+        else Assert.Null(failure);
     });
-    thread1.start();
-    thread1.join();
 
-    final Thread thread2 = newThread(new IRunnable() {
-        @Override
-        public void run() {
-        try {
-        object.recycle();
-    } catch (InvalidOperationException e) {
-        exceptionStore.set(e);
-    }
-    }
-    });
-    thread2.start();
-    thread2.join();
-    HandledObject a = recycler.get();
-    HandledObject b = recycler.get();
-    Assert.NotSame(a, b);
-    InvalidOperationException exception = exceptionStore.get();
-    Assert.NotNull(exception);
-}
-
-[Fact]
-public void testMultipleRecycleAtDifferentThreadRacing() {
-    Recycler<HandledObject> recycler = newRecycler(1024);
-    final HandledObject object = recycler.get();
-    final AtomicReference<InvalidOperationException> exceptionStore = new AtomicReference<InvalidOperationException>();
-
-    final CountdownEvent countDownLatch = new CountdownEvent(2);
-    final Thread thread1 = newThread(new IRunnable() {
-        @Override
-        public void run() {
-        try {
-        object.recycle();
-    } catch (InvalidOperationException e) {
-        Exception x = exceptionStore.getAndSet(e);
-        if (x != null) {
-            e.addSuppressed(x);
+    [Theory]
+    [MemberData(nameof(owners))]
+    public void testMultipleRecycleAtDifferentThreadRacing(OwnerType ownerType) => runTest(() =>
+    {
+        // This test makes only sense for guarded recyclers
+        Recycler<HandledObject> recycler = newRecycler(ownerType, false, 1024);
+        HandledObject value = recycler.get();
+        Exception failure = null;
+        int failures = 0;
+        using var done = new CountdownEvent(2);
+        Action recycle = () =>
+        {
+            try { value.recycle(); }
+            catch (InvalidOperationException e) { Interlocked.Exchange(ref failure, e); Interlocked.Increment(ref failures); }
+            finally { done.Signal(); }
+        };
+        Thread first = worker(recycle), second = worker(recycle);
+        first.Start(); second.Start();
+        try
+        {
+            Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
+            Assert.NotSame(recycler.get(), recycler.get());
+            if (failure != null)
+            {
+                Assert.Contains("recycled already", failure.Message);
+                Assert.Equal(1, failures);
+            }
         }
-    } finally {
-        countDownLatch.Signal();
-    }
-    }
+        finally { join(first); join(second); }
     });
-    thread1.start();
 
-    final Thread thread2 = newThread(new IRunnable() {
-        @Override
-        public void run() {
-        try {
-        object.recycle();
-    } catch (InvalidOperationException e) {
-        Exception x = exceptionStore.getAndSet(e);
-        if (x != null) {
-            e.addSuppressed(x);
+    [Theory]
+    [MemberData(nameof(owners))]
+    public void testMultipleRecycleRacing(OwnerType ownerType) => runTest(() =>
+    {
+        // This test makes only sense for guarded recyclers
+        Recycler<HandledObject> recycler = newRecycler(ownerType, false, 1024);
+        HandledObject value = recycler.get();
+        Exception failure = null;
+        using var done = new CountdownEvent(1);
+        Thread first = worker(() =>
+        {
+            try { value.recycle(); }
+            catch (InvalidOperationException e) { Interlocked.Exchange(ref failure, e); }
+            finally { done.Signal(); }
+        });
+        first.Start();
+        try { value.recycle(); }
+        catch (InvalidOperationException e) { Interlocked.Exchange(ref failure, e); }
+        try
+        {
+            Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
+            Assert.NotSame(recycler.get(), recycler.get());
+            if (isPooling(ownerType)) Assert.NotNull(failure); // Object got recycled twice, so at least one of the calls must throw.
+            else Assert.Null(failure);
         }
-    } finally {
-        countDownLatch.Signal();
-    }
-    }
+        finally { join(first); }
     });
-    thread2.start();
 
-    try {
-        countDownLatch.await();
-        HandledObject a = recycler.get();
-        HandledObject b = recycler.get();
-        Assert.NotSame(a, b);
-        InvalidOperationException exception = exceptionStore.get();
-        if (exception != null) {
-            assertThat(exception).hasMessageContaining("recycled already");
-            Assert.Equal(0, exception.getSuppressed().length);
-        }
-    } finally {
-        thread1.join(1000);
-        thread2.join(1000);
-    }
-}
-
-[Fact]
-public void testMultipleRecycleRacing() {
-    Recycler<HandledObject> recycler = newRecycler(1024);
-    final HandledObject object = recycler.get();
-    final AtomicReference<InvalidOperationException> exceptionStore = new AtomicReference<InvalidOperationException>();
-
-    final CountdownEvent countDownLatch = new CountdownEvent(1);
-    final Thread thread1 = newThread(new IRunnable() {
-        @Override
-        public void run() {
-        try {
-        object.recycle();
-    } catch (InvalidOperationException e) {
-        Exception x = exceptionStore.getAndSet(e);
-        if (x != null) {
-            e.addSuppressed(x);
-        }
-    } finally {
-        countDownLatch.Signal();
-    }
-    }
+    [Theory]
+    [MemberData(nameof(ownerTypeAndUnguarded))]
+    public void testRecycle(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        Recycler<HandledObject> recycler = newRecycler(ownerType, unguarded, 1024);
+        HandledObject value = recycler.get();
+        value.recycle();
+        HandledObject other = recycler.get();
+        if (isPooling(ownerType)) Assert.Same(value, other);
+        else Assert.NotSame(value, other);
+        other.recycle();
     });
-    thread1.start();
+    [Theory]
+    [MemberData(nameof(ownerTypeAndUnguarded))]
+    public void testRecycleDisable(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        Recycler<HandledObject> recycler = newRecycler(ownerType, unguarded, -1);
+        HandledObject value = recycler.get();
+        value.recycle();
+        HandledObject other = recycler.get();
+        Assert.NotSame(value, other);
+        other.recycle();
+    });
+    [Theory]
+    [MemberData(nameof(ownerTypeAndUnguarded))]
+    public void testRecycleDisableDrop(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        assumeIsPooling(ownerType);
+        Recycler<HandledObject> recycler = newRecycler(ownerType, unguarded, 1024, 0, 16);
+        HandledObject value = recycler.get();
+        value.recycle();
+        HandledObject other = recycler.get();
+        Assert.Same(value, other);
+        other.recycle();
+        HandledObject third = recycler.get();
+        Assert.Same(value, third);
+        third.recycle();
+    });
 
-    try {
-        object.recycle();
-    } catch (InvalidOperationException e) {
-        Exception x = exceptionStore.getAndSet(e);
-        if (x != null) {
-            e.addSuppressed(x);
-        }
-    }
-
-    try {
-        countDownLatch.await();
-        HandledObject a = recycler.get();
-        HandledObject b = recycler.get();
-        Assert.NotSame(a, b);
-        InvalidOperationException exception = exceptionStore.get();
-        Assert.NotNull(exception); // object got recycled twice, so at least one of the calls must throw.
-    } finally {
-        thread1.join(1000);
-    }
-}
-
-[Fact]
-public void testRecycle() {
-    Recycler<HandledObject> recycler = newRecycler(1024);
-    HandledObject object = recycler.get();
-    object.recycle();
-    HandledObject object2 = recycler.get();
-    Assert.Same(object, object2);
-    object2.recycle();
-}
-
-[Fact]
-public void testRecycleDisable() {
-    Recycler<HandledObject> recycler = newRecycler(-1);
-    HandledObject object = recycler.get();
-    object.recycle();
-    HandledObject object2 = recycler.get();
-    Assert.NotSame(object, object2);
-    object2.recycle();
-}
-
-[Fact]
-public void testRecycleDisableDrop() {
-    Recycler<HandledObject> recycler = newRecycler(1024, 0, 16);
-    HandledObject object = recycler.get();
-    object.recycle();
-    HandledObject object2 = recycler.get();
-    Assert.Same(object, object2);
-    object2.recycle();
-    HandledObject object3 = recycler.get();
-    Assert.Same(object, object3);
-    object3.recycle();
-}
-
-/**
+    /**
      * Test to make sure bug #2848 never happens again
      * https://github.com/netty/netty/issues/2848
      */
-[Fact]
-public void testMaxCapacity() {
-    testMaxCapacity(300);
-    Random rand = new Random();
-    for (int i = 0; i < 50; i++) {
-        testMaxCapacity(rand.nextInt(1000) + 256); // 256 - 1256
-    }
-}
-
-private static void testMaxCapacity(int maxCapacity) {
-    Recycler<HandledObject> recycler = newRecycler(maxCapacity);
-    HandledObject[] objects = new HandledObject[maxCapacity * 3];
-    for (int i = 0; i < objects.length; i++) {
-        objects[i] = recycler.get();
-    }
-
-    for (int i = 0; i < objects.length; i++) {
-        objects[i].recycle();
-        objects[i] = null;
-    }
-
-    Assert.True(maxCapacity >= recycler.threadLocalSize(),
-        "The threadLocalSize (" + recycler.threadLocalSize() + ") must be <= maxCapacity ("
-        + maxCapacity + ") as we not pool all new handles internally");
-}
-
-[Fact]
-public void testRecycleAtDifferentThread() {
-    final Recycler<HandledObject> recycler = newRecycler(256, 2, 16);
-    final HandledObject o = recycler.get();
-    final HandledObject o2 = recycler.get();
-
-    final Thread thread = newThread(new IRunnable() {
-        @Override
-        public void run() {
-        o.recycle();
-        o2.recycle();
-    }
+    [Theory]
+    [MemberData(nameof(ownerTypeAndUnguarded))]
+    public void testMaxCapacity(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        checkMaxCapacity(ownerType, unguarded, 300);
+        var rand = new Random(2848);
+        for (int i = 0; i < 50; i++) checkMaxCapacity(ownerType, unguarded, rand.Next(1000) + 256); // 256 - 1256
     });
-    thread.start();
-    thread.join();
-
-    Assert.Same(recycler.get(), o);
-    Assert.NotSame(recycler.get(), o2);
-}
-
-[Fact]
-public void testRecycleAtTwoThreadsMulti() {
-    final Recycler<HandledObject> recycler = newRecycler(256);
-    final HandledObject o = recycler.get();
-
-    ExecutorService single = Executors.newSingleThreadExecutor(new IThreadFactory() {
-        @Override
-        public Thread newThread(@NotNull IRunnable r) {
-        return RecyclerTest.this.newThread(r);
+    private static void checkMaxCapacity(OwnerType owner, bool unguarded, int capacity)
+    {
+        Recycler<HandledObject> recycler = newRecycler(owner, unguarded, capacity);
+        var values = new HandledObject[capacity * 3];
+        for (int i = 0; i < values.Length; i++) values[i] = recycler.get();
+        for (int i = 0; i < values.Length; i++) { values[i].recycle(); values[i] = null; }
+        Assert.True(MathUtil.findNextPositivePowerOfTwo(capacity) >= recycler.threadLocalSize(),
+            "The threadLocalSize (" + recycler.threadLocalSize() + ") must be <= maxCapacity ("
+                + capacity + ") as we not pool all new handles internally");
     }
+
+    [Theory]
+    [MemberData(nameof(notNoneOwnerAndUnguarded))]
+    public void testRecycleAtDifferentThread(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        assumeIsPooling(ownerType);
+        Recycler<HandledObject> recycler = newRecycler(ownerType, unguarded, 256, 2, 16);
+        HandledObject first = recycler.get(), second = recycler.get();
+        Thread thread = worker(() => { first.recycle(); second.recycle(); });
+        thread.Start(); join(thread);
+        Assert.Same(recycler.get(), first);
+        Assert.NotSame(recycler.get(), second);
     });
 
-    final CountdownEvent latch1 = new CountdownEvent(1);
-    single.execute(new IRunnable() {
-        @Override
-        public void run() {
-        o.recycle();
-        latch1.Signal();
-    }
+    [Theory]
+    [MemberData(nameof(ownerTypeAndUnguarded))]
+    public void testRecycleAtTwoThreadsMulti(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        assumeIsPooling(ownerType);
+        Recycler<HandledObject> recycler = newRecycler(ownerType, unguarded, 256);
+        HandledObject first = recycler.get(), second = null;
+        using var work = new BlockingCollection<Action>();
+        Thread single = worker(() => { foreach (Action action in work.GetConsumingEnumerable()) action(); });
+        single.Start();
+        try
+        {
+            using var latch1 = new CountdownEvent(1);
+            work.Add(() => { first.recycle(); latch1.Signal(); });
+            Assert.True(latch1.Wait(TimeSpan.FromMilliseconds(100)));
+            second = recycler.get();
+            // Always recycler the first object, that is Ok
+            Assert.Same(second, first);
+            using var latch2 = new CountdownEvent(1);
+            work.Add(() =>
+            {
+                //The object should be recycled
+                second.recycle(); latch2.Signal();
+            });
+            Assert.True(latch2.Wait(TimeSpan.FromMilliseconds(100)));
+            // It should be the same object, right?
+            Assert.Same(recycler.get(), first);
+        }
+        finally { work.CompleteAdding(); join(single); }
     });
-    Assert.True(latch1.await(100, TimeUnit.MILLISECONDS));
-    final HandledObject o2 = recycler.get();
-    // Always recycler the first object, that is Ok
-    Assert.Same(o2, o);
 
-    final CountdownEvent latch2 = new CountdownEvent(1);
-    single.execute(new IRunnable() {
-        @Override
-        public void run() {
-        //The object should be recycled
-        o2.recycle();
-        latch2.Signal();
-    }
+    [Theory]
+    [MemberData(nameof(notNoneOwnerAndUnguarded))]
+    public void testMaxCapacityWithRecycleAtDifferentThread(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        assumeIsPooling(ownerType);
+        const int maxCapacity = 4;
+        Recycler<HandledObject> recycler = newRecycler(ownerType, unguarded, maxCapacity, 4, 4);
+        // Borrow 2 * maxCapacity objects.
+        // Return the half from the same thread.
+        // Return the other half from the different thread.
+        var values = new HandledObject[maxCapacity * 3];
+        for (int i = 0; i < values.Length; i++) values[i] = recycler.get();
+        for (int i = 0; i < maxCapacity; i++) values[i].recycle();
+        Thread thread = worker(() => { for (int i = maxCapacity; i < values.Length; i++) values[i].recycle(); });
+        thread.Start(); join(thread);
+        Assert.Equal(maxCapacity * 3 / 4, recycler.threadLocalSize());
+        for (int i = 0; i < values.Length; i++) recycler.get();
+        Assert.Equal(0, recycler.threadLocalSize());
     });
-    Assert.True(latch2.await(100, TimeUnit.MILLISECONDS));
 
-    // It should be the same object, right?
-    final HandledObject o3 = recycler.get();
-    Assert.Same(o3, o);
-    single.shutdown();
-}
-
-[Fact]
-public void testMaxCapacityWithRecycleAtDifferentThread() {
-    final int maxCapacity = 4;
-    final Recycler<HandledObject> recycler = newRecycler(maxCapacity, 4, 4);
-
-    // Borrow 2 * maxCapacity objects.
-    // Return the half from the same thread.
-    // Return the other half from the different thread.
-
-    final HandledObject[] array = new HandledObject[maxCapacity * 3];
-    for (int i = 0; i < array.length; i ++) {
-        array[i] = recycler.get();
-    }
-
-    for (int i = 0; i < maxCapacity; i ++) {
-        array[i].recycle();
-    }
-
-    final Thread thread = newThread(new IRunnable() {
-        @Override
-        public void run() {
-        for (int i1 = maxCapacity; i1 < array.length; i1++) {
-        array[i1].recycle();
-    }
-    }
+    [Theory]
+    [MemberData(nameof(notNoneOwnerAndUnguarded))]
+    public void testDiscardingExceedingElementsWithRecycleAtDifferentThread(OwnerType ownerType, bool unguarded) => runTest(() =>
+    {
+        const int maxCapacity = 32;
+        int instances = 0;
+        Recycler<HandledObject> recycler = newRecycler(ownerType, unguarded, maxCapacity, _ => Interlocked.Increment(ref instances));
+        // Borrow 2 * maxCapacity objects.
+        var values = new HandledObject[maxCapacity * 2];
+        for (int i = 0; i < values.Length; i++) values[i] = recycler.get();
+        Assert.Equal(values.Length, instances);
+        // Reset counter.
+        instances = 0;
+        // Recycle from other thread.
+        Thread thread = worker(() => { foreach (HandledObject value in values) value.recycle(); });
+        thread.Start(); join(thread);
+        Assert.Equal(0, instances);
+        // Borrow 2 * maxCapacity objects. Half of them should come from
+        // the recycler queue, the other half should be freshly allocated.
+        for (int i = 0; i < values.Length; i++) recycler.get();
+        // The implementation uses maxCapacity / 2 as limit per WeakOrderQueue
+        Assert.True(values.Length - maxCapacity / 2 <= instances,
+            "The instances count (" + instances + ") must be <= array.length (" + values.Length
+                + ") - maxCapacity (" + maxCapacity + ") / 2 as we not pool all new handles internally");
     });
-    thread.start();
-    thread.join();
-
-    Assert.Equal(maxCapacity * 3 / 4, recycler.threadLocalSize());
-
-    for (int i = 0; i < array.length; i ++) {
-        recycler.get();
-    }
-
-    Assert.Equal(0, recycler.threadLocalSize());
-}
-
-[Fact]
-public void testDiscardingExceedingElementsWithRecycleAtDifferentThread() {
-    final int maxCapacity = 32;
-    final AtomicInteger instancesCount = new AtomicInteger(0);
-
-    final Recycler<HandledObject> recycler = new Recycler<HandledObject>(maxCapacity) {
-        @Override
-        protected HandledObject newObject(Recycler.Handle<HandledObject> handle) {
-        instancesCount.incrementAndGet();
-        return new HandledObject(handle);
-    }
-    };
-
-    // Borrow 2 * maxCapacity objects.
-    final HandledObject[] array = new HandledObject[maxCapacity * 2];
-    for (int i = 0; i < array.length; i++) {
-        array[i] = recycler.get();
-    }
-
-    Assert.Equal(array.length, instancesCount.get());
-    // Reset counter.
-    instancesCount.set(0);
-
-    // Recycle from other thread.
-    final Thread thread = newThread(new IRunnable() {
-        @Override
-        public void run() {
-        for (HandledObject object: array) {
-        object.recycle();
-    }
-    }
-    });
-    thread.start();
-    thread.join();
-
-    Assert.Equal(0, instancesCount.get());
-
-    // Borrow 2 * maxCapacity objects. Half of them should come from
-    // the recycler queue, the other half should be freshly allocated.
-    for (int i = 0; i < array.length; i++) {
-        recycler.get();
-    }
-
-    // The implementation uses maxCapacity / 2 as limit per WeakOrderQueue
-    Assert.True(array.length - maxCapacity / 2 <= instancesCount.get(),
-        "The instances count (" +  instancesCount.get() + ") must be <= array.length (" + array.length
-        + ") - maxCapacity (" + maxCapacity + ") / 2 as we not pool all new handles" +
-        " internally");
-}
-
-static final class HandledObject {
-    Recycler.Handle<HandledObject> handle;
-
-    HandledObject(Recycler.Handle<HandledObject> handle) {
-        this.handle = handle;
-    }
-
-    void recycle() {
-        handle.recycle(this);
-    }
-}
 }

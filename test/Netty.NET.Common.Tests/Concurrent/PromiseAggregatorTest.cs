@@ -13,113 +13,78 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 using System;
-using Moq;
-using Netty.NET.Common.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
-using Void = Netty.NET.Common.Concurrent.Void;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 
-public class PromiseAggregatorTest
+// The deprecated Java aggregator can complete other producers on failure.
+// Native consumers aggregate read-only Tasks and explicitly own cancellation
+// requests. See the per-scenario migration map in common-task-composition.md.
+public class TaskAggregationOwnershipPortTest
 {
     [Fact]
-    public void testNullAggregatePromise() =>
-        Assert.Throws<ArgumentNullException>(() => new PromiseAggregator<Void, IFuture<Void>>(null));
-
-    [Fact]
-    public void testAddNullFuture()
+    public async Task AggregatingNoPendingWorkSucceeds()
     {
-        var p = new Mock<IPromise<Void>>();
-        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object);
-        Assert.Throws<ArgumentNullException>(() => a.add((IPromise<Void>[])null));
+        await Task.WhenAll(Array.Empty<Task>());
     }
 
     [Fact]
-    public void testSuccessfulNoPending()
+    public void ARequiredTaskCollectionCannotBeNull() =>
+        Assert.Throws<ArgumentNullException>(() => Task.WhenAll((Task[])null));
+
+    [Fact]
+    public async Task SuccessfulPendingWorkIsAggregatedWithoutWriters()
     {
-        var p = new Mock<IPromise<Void>>();
-        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object);
-        var future = new Mock<IFuture<Void>>();
-        p.Setup(x => x.setSuccess(null)).Returns(p.Object);
-        a.add();
-        a.operationComplete(future.Object);
-        future.VerifyNoOtherCalls();
-        p.Verify(x => x.setSuccess(null), Times.Once);
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task result = Task.WhenAll(first.Task, second.Task);
+        first.SetResult();
+        Assert.False(result.IsCompleted);
+        second.SetResult();
+        await result;
     }
 
     [Fact]
-    public void testSuccessfulPending()
+    public async Task AFailedSiblingNeverForcesCompletionOfAnotherProducer()
     {
-        var p = new Mock<IPromise<Void>>();
-        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object);
-        var p1 = new Mock<IPromise<Void>>();
-        var p2 = new Mock<IPromise<Void>>();
-        p1.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p1.Object);
-        p2.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p2.Object);
-        p1.Setup(x => x.isSuccess()).Returns(true);
-        p2.Setup(x => x.isSuccess()).Returns(true);
-        p.Setup(x => x.setSuccess(null)).Returns(p.Object);
-
-        Assert.Same(a, a.add(p1.Object, null, p2.Object));
-        a.operationComplete(p1.Object);
-        a.operationComplete(p2.Object);
-
-        p1.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
-        p2.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
-        p1.Verify(x => x.isSuccess(), Times.Once);
-        p2.Verify(x => x.isSuccess(), Times.Once);
-        p.Verify(x => x.setSuccess(null), Times.Once);
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var error = new InvalidOperationException("original");
+        Task result = Task.WhenAll(first.Task, second.Task);
+        first.SetException(error);
+        Assert.False(second.Task.IsCompleted);
+        Assert.False(result.IsCompleted);
+        second.SetResult();
+        Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await result));
+        Assert.True(second.Task.IsCompletedSuccessfully);
     }
 
     [Fact]
-    public void testFailedFutureFailPending()
+    public async Task FailFastObservationDoesNotRewritePendingSiblingResults()
     {
-        var p = new Mock<IPromise<Void>>();
-        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object);
-        var p1 = new Mock<IPromise<Void>>();
-        var p2 = new Mock<IPromise<Void>>();
-        var cause = new Exception();
-        p1.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p1.Object);
-        p2.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p2.Object);
-        p1.Setup(x => x.isSuccess()).Returns(false);
-        p1.Setup(x => x.cause()).Returns(cause);
-        p.Setup(x => x.setFailure(cause)).Returns(p.Object);
-        p2.Setup(x => x.setFailure(cause)).Returns(p2.Object);
-
-        a.add(p1.Object, p2.Object);
-        a.operationComplete(p1.Object);
-
-        p1.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
-        p2.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
-        p1.Verify(x => x.cause(), Times.Once);
-        p.Verify(x => x.setFailure(cause), Times.Once);
-        p2.Verify(x => x.setFailure(cause), Times.Once);
+        var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var second = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task all = Task.WhenAll(new Task[] { first.Task, second.Task });
+        var error = new InvalidOperationException("original");
+        first.SetException(error);
+        Task failed = await Task.WhenAny(first.Task, second.Task);
+        Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await failed));
+        Assert.False(second.Task.IsCompleted);
+        second.SetResult(23);
+        Assert.Equal(23, await second.Task);
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await all);
     }
 
     [Fact]
-    public void testFailedFutureNoFailPending()
+    public async Task ProducerOwnershipReplacesANullAggregatePromiseArgument()
     {
-        var p = new Mock<IPromise<Void>>();
-        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object, false);
-        var p1 = new Mock<IPromise<Void>>();
-        var p2 = new Mock<IPromise<Void>>();
-        var cause = new Exception();
-        p1.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p1.Object);
-        p2.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p2.Object);
-        p1.Setup(x => x.isSuccess()).Returns(false);
-        p1.Setup(x => x.cause()).Returns(cause);
-        p.Setup(x => x.setFailure(cause)).Returns(p.Object);
-
-        a.add(p1.Object, p2.Object);
-        a.operationComplete(p1.Object);
-
-        p1.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
-        p2.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
-        p1.Verify(x => x.isSuccess(), Times.Once);
-        p1.Verify(x => x.cause(), Times.Once);
-        p.Verify(x => x.setFailure(cause), Times.Once);
-        p2.Verify(x => x.setFailure(It.IsAny<Exception>()), Times.Never);
+        Task result = Task.WhenAll(Task.CompletedTask);
+        var owner = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Assert.True(owner.TrySetFromTask(result));
+        await owner.Task;
+        Assert.False(owner.TrySetFromTask(result));
     }
 }
