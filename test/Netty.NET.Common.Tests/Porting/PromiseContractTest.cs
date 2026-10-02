@@ -28,6 +28,49 @@ public class PromiseContractTest
         public void operationProgressed(IFuture<T> future, long progress, long total) => updates.Add((progress, total));
         public void operationComplete(IFuture<T> future) => ++completions;
     }
+    private sealed class TypedProgressiveListener<T> : IGenericProgressiveFutureListener<IProgressiveFuture<T>>
+    {
+        internal readonly List<(long progress, long total)> updates = new();
+        internal int completions;
+        public void operationProgressed(IProgressiveFuture<T> future, long progress, long total) => updates.Add((progress, total));
+        public void operationComplete(IProgressiveFuture<T> future) => ++completions;
+    }
+    private sealed class TypedPromiseListener<T> : IGenericFutureListener<IPromise<T>>
+    {
+        internal IPromise<T> completed;
+        public void operationComplete(IPromise<T> future) => completed = future;
+    }
+    [Fact]
+    public void ListenersBoundToProgressiveFutureRetainProgressIdentityAndFluentReturns()
+    {
+        IProgressivePromise<object> promise = ImmediateEventExecutor.INSTANCE.newProgressivePromise<object>();
+        var listener = new TypedProgressiveListener<object>();
+        var removed = new TypedProgressiveListener<object>();
+        Assert.Same(promise, promise.addListeners(listener, removed, listener, null, removed));
+        Assert.Same(promise, promise.removeListeners(listener, removed));
+        promise.setProgress(1, 2);
+        Assert.Equal(new[] { (1L, 2L) }, listener.updates);
+        Assert.Empty(removed.updates);
+        promise.setSuccess(null);
+        Assert.Equal(1, listener.completions);
+        Assert.Equal(0, removed.completions);
+        Assert.Same(promise, promise.addListener(listener));
+        Assert.Equal(2, listener.completions);
+    }
+    [Fact]
+    public void ListenersBoundToPromiseReceiveTheOriginalObject()
+    {
+        IPromise<object> promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+        var listener = new TypedPromiseListener<object>();
+        var removed = new TypedPromiseListener<object>();
+        Assert.Same(promise, promise.addListener(listener));
+        promise.addListener(removed);
+        promise.removeListener(removed);
+        promise.setSuccess(null);
+        Assert.Same(promise, listener.completed);
+        Assert.Null(removed.completed);
+        Assert.Same(promise, promise.removeListener(listener));
+    }
     [Fact]
     public void UncancellableCanStillSucceedOrFail()
     {
@@ -230,6 +273,38 @@ public class PromiseContractTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public void CompletedPromisePreservesInterruptButCompleteFutureAwaitConsumesIt(bool immutableFuture)
+    {
+        Exception failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var executor = ImmediateEventExecutor.INSTANCE;
+                IFuture<object> future;
+                if (immutableFuture) future = executor.newSucceededFuture<object>(null);
+                else { var promise = executor.newPromise<object>(); promise.setSuccess(null); future = promise; }
+                Thread.CurrentThread.Interrupt();
+                if (immutableFuture)
+                {
+                    Assert.Throws<ThreadInterruptedException>(() => future.await());
+                    Thread.Sleep(0);
+                }
+                else
+                {
+                    Assert.Same(future, future.await());
+                    Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(0));
+                }
+            }
+            catch (Exception error) { failure = error; }
+        }) { IsBackground = true };
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        Assert.Null(failure);
+    }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public void UninterruptibleWaitRestoresInterrupt(bool timed)
     {
         var promise = ImmediateEventExecutor.INSTANCE.newPromise<object>();
@@ -370,5 +445,92 @@ public class PromiseContractTest
         Assert.Same(future, future.removeListeners(null));
         Assert.Throws<ArgumentNullException>(() => future.addListener(null));
         Assert.Throws<ArgumentNullException>(() => future.addListeners(null));
+    }
+    [Fact]
+    public void NotifierClonesItsPromiseArrayAndPropagatesTheSameValue()
+    {
+        var executor = ImmediateEventExecutor.INSTANCE;
+        var first = executor.newPromise<object>();
+        var second = executor.newPromise<object>();
+        var replaced = executor.newPromise<object>();
+        IPromise<object>[] targets = { first, second };
+        var notifier = new PromiseNotifier<object, IFuture<object>>(targets);
+        targets[0] = replaced;
+        var value = new object();
+        notifier.operationComplete(executor.newSucceededFuture(value));
+        Assert.Same(value, first.getNow());
+        Assert.Same(value, second.getNow());
+        Assert.False(replaced.isDone());
+    }
+    [Fact]
+    public void CascadePropagatesTargetCancellationBackToSource()
+    {
+        var executor = ImmediateEventExecutor.INSTANCE;
+        var source = executor.newPromise<object>();
+        var target = executor.newPromise<object>();
+        PromiseNotifier<object, IPromise<object>>.cascade(source, target);
+        Assert.True(target.cancel(true));
+        Assert.True(source.isCancelled());
+        Assert.False(source.trySuccess(new object()));
+    }
+    [Fact]
+    public void CascadePreservesFailureIdentityAndDoesNotOverwriteCompletedTargets()
+    {
+        var executor = ImmediateEventExecutor.INSTANCE;
+        var source = executor.newPromise<object>();
+        var target = executor.newPromise<object>();
+        PromiseNotifier<object, IPromise<object>>.cascade(source, target);
+        var cause = new InvalidOperationException("original");
+        source.setFailure(cause);
+        Assert.Same(cause, target.cause());
+        var alreadyCompleted = executor.newPromise<object>();
+        var value = new object();
+        alreadyCompleted.setSuccess(value);
+        PromiseNotifier<object, IFuture<object>>.cascade(false, executor.newFailedFuture<object>(cause), alreadyCompleted);
+        Assert.Same(value, alreadyCompleted.getNow());
+        Assert.True(alreadyCompleted.isSuccess());
+    }
+    [Fact]
+    public void CombinerAcceptsDifferentGenericValuesAndAlreadyCompletedFutures()
+    {
+        var executor = ImmediateEventExecutor.INSTANCE;
+        var combiner = new PromiseCombiner(executor);
+        combiner.addAll(executor.newSucceededFuture(123), executor.newSucceededFuture("text"));
+        var aggregate = executor.newPromise<Netty.NET.Common.Concurrent.Void>();
+        combiner.finish(aggregate);
+        Assert.True(aggregate.isSuccess());
+        Assert.Null(aggregate.getNow());
+    }
+    [Fact]
+    public void CombinerMarshalsForeignCompletionsAndRetainsFirstFailureIdentity()
+    {
+        var executor = new DefaultEventExecutor();
+        try
+        {
+            var first = ImmediateEventExecutor.INSTANCE.newPromise<object>();
+            var second = ImmediateEventExecutor.INSTANCE.newPromise<int>();
+            var aggregate = executor.newPromise<Netty.NET.Common.Concurrent.Void>();
+            using var ready = new CountdownEvent(1);
+            using var notified = new CountdownEvent(1);
+            bool correctThread = false;
+            aggregate.addListener(new Listener<Netty.NET.Common.Concurrent.Void>(_ => { correctThread = executor.inEventLoop(); notified.Signal(); }));
+            executor.execute(Runnables.Create(() =>
+            {
+                var combiner = new PromiseCombiner(executor);
+                combiner.addAll(first, second);
+                combiner.finish(aggregate);
+                ready.Signal();
+            }));
+            Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
+            var cause = new InvalidOperationException("first failure");
+            first.setFailure(cause);
+            Assert.False(aggregate.isDone());
+            second.setFailure(new Exception("later failure"));
+            Assert.True(notified.Wait(TimeSpan.FromSeconds(5)));
+            Assert.True(correctThread);
+            Assert.Same(cause, aggregate.cause());
+            Assert.Same(cause, Assert.Throws<InvalidOperationException>(() => aggregate.Task.GetAwaiter().GetResult()));
+        }
+        finally { Assert.True(executor.shutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5))); }
     }
 }

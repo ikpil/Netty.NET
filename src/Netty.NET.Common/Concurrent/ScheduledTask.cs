@@ -1,149 +1,124 @@
+/*
+ * Copyright 2013 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Threading;
+using System.Text;
 using System.Threading.Tasks;
+using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
+// CLR compatibility name for the static delay helper.
 public static class ScheduledTask
 {
-    public static long deadlineToDelayNanos(long currentTimeNanos, long deadlineNanos)
-    {
-        return deadlineNanos == 0L ? 0L : Math.Max(0L, deadlineNanos - currentTimeNanos);
-    }
+    public static long deadlineToDelayNanos(long currentTimeNanos, long deadlineNanos) =>
+        deadlineNanos == 0L ? 0L : Math.Max(0L, deadlineNanos - currentTimeNanos);
 }
 
-public class ScheduledTask<T> : IScheduledTask<T>
+// CLR adaptation: ScheduledFutureTask<V> is exposed through the existing IScheduledTask wrappers.
+public class ScheduledTask<V> : PromiseTask<V>, IScheduledTask<V>, IPriorityQueueNode<IScheduledTask>
 {
-    public const int CancellationProhibited = 1;
-    public const int CancellationRequested = 1 << 1;
-
-    private const int INDEX_NOT_IN_QUEUE = -1;
-
-    protected readonly AbstractScheduledEventExecutor Executor;
-    protected readonly TaskCompletionSource<T> Promise;
-
+    // set once when added to priority queue
     private long _id;
     private long _deadlineNanos;
-
     /* 0 - no repeat, >0 - repeat at fixed rate, <0 - repeat with fixed delay */
     private readonly long _periodNanos;
-    private int _volatileCancellationState;
+    private int _queueIndex = IPriorityQueueNode<IScheduledTask>.INDEX_NOT_IN_QUEUE;
+    public Task<V> Completion => Task;
+    public V Result => get();
 
-    private int _queueIndex = INDEX_NOT_IN_QUEUE;
-    public Task<T> Completion => Promise.Task;
-    public T Result => Promise.Task.Result;
-
-    protected ScheduledTask(AbstractScheduledEventExecutor executor, TaskCompletionSource<T> promise, long deadlineNanos)
+    protected ScheduledTask(AbstractScheduledEventExecutor executor, IRunnable runnable, long deadlineNanos)
+        : base(executor, runnable)
     {
-        Executor = executor;
-        Promise = promise;
         _deadlineNanos = deadlineNanos;
         _periodNanos = 0;
     }
-
-    protected ScheduledTask(AbstractScheduledEventExecutor executor, TaskCompletionSource<T> promise, long deadlineNanos, long periodNanos)
+    protected ScheduledTask(AbstractScheduledEventExecutor executor, IRunnable runnable, long deadlineNanos, long periodNanos)
+        : base(executor, runnable)
     {
-        Executor = executor;
-        Promise = promise;
         _deadlineNanos = deadlineNanos;
         _periodNanos = validatePeriod(periodNanos);
     }
-
+    protected ScheduledTask(AbstractScheduledEventExecutor executor, ICallable<V> callable, long deadlineNanos)
+        : base(executor, callable)
+    {
+        _deadlineNanos = deadlineNanos;
+        _periodNanos = 0;
+    }
+    protected ScheduledTask(AbstractScheduledEventExecutor executor, ICallable<V> callable, long deadlineNanos, long periodNanos)
+        : base(executor, callable)
+    {
+        _deadlineNanos = deadlineNanos;
+        _periodNanos = validatePeriod(periodNanos);
+    }
     private static long validatePeriod(long period)
     {
-        if (period == 0)
-        {
-            throw new ArgumentException("period: 0 (expected: != 0)");
-        }
-
+        if (period == 0) throw new ArgumentException("period: 0 (expected: != 0)");
         return period;
     }
-
     public IScheduledTask setId(long id)
     {
-        if (_id == 0L)
-        {
-            _id = id;
-        }
-
+        if (_id == 0L) _id = id;
         return this;
     }
-
-    public int CompareTo(IScheduledTask o)
+    public long getId() => _id;
+    public long deadlineNanos() => _deadlineNanos;
+    public void setConsumed()
     {
-        if (this == o)
+        // Optimization to avoid checking system clock again
+        // after deadline has passed and task has been dequeued
+        if (_periodNanos == 0)
         {
-            return 0;
-        }
-
-        var that = (ScheduledTask<T>)o;
-        long d = deadlineNanos() - o.deadlineNanos();
-        if (d < 0)
-        {
-            return -1;
-        }
-        else if (d > 0)
-        {
-            return 1;
-        }
-        else if (_id < that._id)
-        {
-            return -1;
-        }
-        else
-        {
-            Debug.Assert(_id != that._id);
-            return 1;
+            Debug.Assert(scheduledExecutor().getCurrentTimeNanos() >= _deadlineNanos);
+            _deadlineNanos = 0L;
         }
     }
-
-    private T runTask()
+    public long delayNanos() => _deadlineNanos == 0L ? 0L : delayNanos(scheduledExecutor().getCurrentTimeNanos());
+    public long delayNanos(long currentTimeNanos) => ScheduledTask.deadlineToDelayNanos(currentTimeNanos, _deadlineNanos);
+    public long getDelay() => delayNanos();
+    public TimeSpan getDelayTimeSpan() => TimeSpan.FromTicks(delayNanos() / 100);
+    public int CompareTo(IScheduledTask other)
     {
-        throw new NotImplementedException();
+        if (ReferenceEquals(this, other)) return 0;
+        long difference = deadlineNanos() - other.deadlineNanos();
+        if (difference < 0) return -1;
+        if (difference > 0) return 1;
+        if (_id < other.getId()) return -1;
+        Debug.Assert(_id != other.getId());
+        return 1;
     }
-
-    private bool setUncancellableInternal()
+    public override void run()
     {
-        throw new NotImplementedException();
-    }
-
-    private bool setSuccessInternal(T result)
-    {
-        throw new NotImplementedException();
-    }
-
-    private bool setFailureInternal(Exception e)
-    {
-        throw new NotImplementedException();
-    }
-
-    public virtual void run()
-    {
-        Debug.Assert(Executor.inEventLoop());
+        Debug.Assert(executor().inEventLoop());
         try
         {
             if (delayNanos() > 0L)
             {
                 // Not yet expired, need to add or remove from queue
-                if (isCancelled())
-                {
-                    Executor.scheduledTaskQueue().remove(this);
-                }
-                else
-                {
-                    Executor.scheduleFromEventLoop(this);
-                }
-
+                if (isCancelled()) scheduledExecutor().scheduledTaskQueue().remove(this);
+                else scheduledExecutor().scheduleFromEventLoop(this);
                 return;
             }
-
             if (_periodNanos == 0)
             {
                 if (setUncancellableInternal())
                 {
-                    T result = runTask();
+                    V result = runTask();
                     setSuccessInternal(result);
                 }
             }
@@ -153,117 +128,38 @@ public class ScheduledTask<T> : IScheduledTask<T>
                 if (!isCancelled())
                 {
                     runTask();
-                    if (!Executor.isShutdown())
+                    if (!executor().isShutdown())
                     {
-                        if (_periodNanos > 0)
-                        {
-                            _deadlineNanos += _periodNanos;
-                        }
-                        else
-                        {
-                            _deadlineNanos = Executor.getCurrentTimeNanos() - _periodNanos;
-                        }
-
-                        if (!isCancelled())
-                        {
-                            Executor.scheduledTaskQueue().tryEnqueue(this);
-                        }
+                        if (_periodNanos > 0) _deadlineNanos += _periodNanos;
+                        else _deadlineNanos = scheduledExecutor().getCurrentTimeNanos() - _periodNanos;
+                        if (!isCancelled()) scheduledExecutor().scheduleFromEventLoop(this);
                     }
                 }
             }
         }
-        catch (Exception cause)
-        {
-            setFailureInternal(cause);
-        }
+        catch (Exception cause) { setFailureInternal(cause); }
     }
-
-    public bool isCancelled()
+    private AbstractScheduledEventExecutor scheduledExecutor() => (AbstractScheduledEventExecutor)executor();
+    /**
+     * {@inheritDoc}
+     *
+     * @param mayInterruptIfRunning this value has no effect in this implementation.
+     */
+    public override bool cancel(bool mayInterruptIfRunning)
     {
-        throw new NotImplementedException();
+        bool cancelled = base.cancel(mayInterruptIfRunning);
+        if (cancelled) scheduledExecutor().removeScheduled(this);
+        return cancelled;
     }
-
-    public bool cancel()
+    public bool cancel() => cancel(false);
+    public virtual bool cancelWithoutRemove(bool mayInterruptIfRunning) => base.cancel(mayInterruptIfRunning);
+    public TaskAwaiter<V> GetAwaiter() => Task.GetAwaiter();
+    protected override StringBuilder toStringBuilder()
     {
-        if (!AtomicCancellationStateUpdate(CancellationRequested, CancellationProhibited))
-        {
-            return false;
-        }
-
-        bool canceled = Promise.TrySetCanceled();
-        if (canceled)
-        {
-            Executor.removeScheduled(this);
-        }
-
-        return canceled;
+        StringBuilder buf = base.toStringBuilder();
+        buf[buf.Length - 1] = ',';
+        return buf.Append(" deadline: ").Append(_deadlineNanos).Append(", period: ").Append(_periodNanos).Append(')');
     }
-
-    public bool cancelWithoutRemove(bool mayInterruptIfRunning)
-    {
-        if (!AtomicCancellationStateUpdate(CancellationRequested, CancellationProhibited))
-        {
-            return false;
-        }
-
-        return Promise.TrySetCanceled();
-    }
-
-    public long deadlineNanos()
-    {
-        return _deadlineNanos;
-    }
-
-    public long delayNanos(long currentTimeNanos)
-    {
-        return ScheduledTask.deadlineToDelayNanos(currentTimeNanos, _deadlineNanos);
-    }
-
-    public long delayNanos()
-    {
-        if (_deadlineNanos == 0L)
-        {
-            return 0L;
-        }
-
-        return delayNanos(Executor.getCurrentTimeNanos());
-    }
-
-
-    public TaskAwaiter<T> GetAwaiter()
-    {
-        return Completion.GetAwaiter();
-    }
-
-    public void setConsumed()
-    {
-        throw new NotImplementedException();
-    }
-
-    private bool TrySetUncancelable()
-    {
-        return AtomicCancellationStateUpdate(CancellationProhibited, CancellationRequested);
-    }
-
-    private bool AtomicCancellationStateUpdate(int newBits, int illegalBits)
-    {
-        int cancellationState = Volatile.Read(ref _volatileCancellationState);
-        int oldCancellationState;
-        do
-        {
-            oldCancellationState = cancellationState;
-            if ((cancellationState & illegalBits) != 0)
-            {
-                return false;
-            }
-
-            cancellationState = Interlocked.CompareExchange(ref _volatileCancellationState, cancellationState | newBits, cancellationState);
-        } while (cancellationState != oldCancellationState);
-
-        return true;
-    }
-
-    public long getDelay() {
-        return delayNanos();
-    }
+    public int priorityQueueIndex(DefaultPriorityQueue<IScheduledTask> queue) => _queueIndex;
+    public void priorityQueueIndex(DefaultPriorityQueue<IScheduledTask> queue, int index) => _queueIndex = index;
 }

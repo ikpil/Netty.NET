@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
@@ -103,7 +103,7 @@ public interface IExecutorService : IExecutor
      *         scheduled for execution
      * @throws NullReferenceException if the task is null
      */
-    Task<T> submit<T>(ICallable<T> task);
+    IFuture<T> submit<T>(ICallable<T> task);
 
     /**
      * Submits a IRunnable task for execution and returns a Future
@@ -118,7 +118,7 @@ public interface IExecutorService : IExecutor
      *         scheduled for execution
      * @throws NullReferenceException if the task is null
      */
-    Task<T> submit<T>(IRunnable task, T result);
+    IFuture<T> submit<T>(IRunnable task, T result);
 
     /**
      * Submits a IRunnable task for execution and returns a Future
@@ -131,7 +131,7 @@ public interface IExecutorService : IExecutor
      *         scheduled for execution
      * @throws NullReferenceException if the task is null
      */
-    Task submit(IRunnable task);
+    IFuture<Void> submit(IRunnable task);
 
     /**
      * Executes the given tasks, returning a list of Futures holding
@@ -154,7 +154,7 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if any task cannot be
      *         scheduled for execution
      */
-    List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>;
+    List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks);
 
     /**
      * Executes the given tasks, returning a list of Futures holding
@@ -184,7 +184,7 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if any task cannot be scheduled
      *         for execution
      */
-    List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>;
+    List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout);
 
     /**
      * Executes the given tasks, returning the result
@@ -205,7 +205,7 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
      */
-    T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>;
+    T invokeAny<T>(ICollection<ICallable<T>> tasks);
 
     /**
      * Executes the given tasks, returning the result
@@ -230,5 +230,5 @@ public interface IExecutorService : IExecutor
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
      */
-    T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>;
+    T invokeAny<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout);
 }

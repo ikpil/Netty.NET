@@ -27,30 +27,6 @@ namespace Netty.NET.Common.Concurrent;
 // consumers await the read-only Task without access to the completion source.
 public interface IFuture
 {
-    Exception cause();
-    bool isSuccess();
-    bool isCancellable();
-    bool isCancelled();
-    bool isDone();
-    bool cancel(bool mayInterruptIfRunning);
-}
-public interface IFuture<V> : IFuture {
-    Task<V> Task { get; }
-    V get();
-    V get(TimeSpan timeout);
-    V get(long timeoutMillis);
-
-    /**
-     * Returns {@code true} if and only if the I/O operation was completed
-     * successfully.
-     */
-    bool isSuccess();
-
-    /**
-     * returns {@code true} if and only if the operation can be cancelled via {@link #cancel(boolean)}.
-     */
-    bool isCancellable();
-
     /**
      * Returns the cause of the failed I/O operation if the I/O operation has
      * failed.
@@ -60,6 +36,37 @@ public interface IFuture<V> : IFuture {
      *         completed yet.
      */
     Exception cause();
+    /**
+     * Returns {@code true} if and only if the I/O operation was completed
+     * successfully.
+     */
+    bool isSuccess();
+    /**
+     * returns {@code true} if and only if the operation can be cancelled via {@link #cancel(boolean)}.
+     */
+    bool isCancellable();
+    bool isCancelled();
+    bool isDone();
+    /**
+     * {@inheritDoc}
+     *
+     * If the cancellation was successful it will fail the future with a {@link CancellationException}.
+     */
+    bool cancel(bool mayInterruptIfRunning);
+    // CLR adaptation: Java Future<?> observers use this non-generic listener bridge.
+    IFuture addListener(IGenericFutureListener<IFuture> listener);
+}
+public interface IFuture<V> : IFuture {
+    Task<V> Task { get; }
+    V get();
+    V get(TimeSpan timeout);
+    V get(long timeoutMillis);
+
+
+
+
+
+
 
     /**
      * Adds the specified listener to this future.  The
@@ -174,11 +181,11 @@ public interface IFuture<V> : IFuture {
      */
     V getNow();
 
-    /**
-     * {@inheritDoc}
-     *
-     * If the cancellation was successful it will fail the future with a {@link CancellationException}.
-     */
-    bool cancel(bool mayInterruptIfRunning);
-}
 
+
+    // CLR adapters preserve Java listener wildcard bindings and fluent returns.
+    IFuture<V> addListener<F>(IGenericFutureListener<F> listener) where F : IFuture<V>;
+    IFuture<V> addListeners<F>(params IGenericFutureListener<F>[] listeners) where F : IFuture<V>;
+    IFuture<V> removeListener<F>(IGenericFutureListener<F> listener) where F : IFuture<V>;
+    IFuture<V> removeListeners<F>(params IGenericFutureListener<F>[] listeners) where F : IFuture<V>;
+}

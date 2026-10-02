@@ -68,19 +68,25 @@ public interface IPromise<V> : IFuture<V>
      */
     bool setUncancellable();
 
-    IPromise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
+    new IPromise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
 
-    IPromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    new IPromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    IPromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
+    new IPromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
 
-    IPromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    new IPromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    IPromise<V> await();
+    new IPromise<V> await();
 
-    IPromise<V> awaitUninterruptibly();
+    new IPromise<V> awaitUninterruptibly();
 
-    IPromise<V> sync();
+    new IPromise<V> sync();
 
-    IPromise<V> syncUninterruptibly();
+    new IPromise<V> syncUninterruptibly();
+
+    // CLR adapters preserve Java listener wildcard bindings and fluent returns.
+    new IPromise<V> addListener<F>(IGenericFutureListener<F> listener) where F : IFuture<V>;
+    new IPromise<V> addListeners<F>(params IGenericFutureListener<F>[] listeners) where F : IFuture<V>;
+    new IPromise<V> removeListener<F>(IGenericFutureListener<F> listener) where F : IFuture<V>;
+    new IPromise<V> removeListeners<F>(params IGenericFutureListener<F>[] listeners) where F : IFuture<V>;
 }

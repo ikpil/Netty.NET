@@ -56,7 +56,7 @@ public static class Mpsc
 
     public static IQueue<T> newMpscQueue<T>()
     {
-        throw new NotImplementedException();
+        return new ConcurrentQueueAdapter<T>();
         // return USE_MPSC_CHUNKED_ARRAY_QUEUE
         //     ? new MpscUnboundedArrayQueue<T>(MPSC_CHUNK_SIZE)
         //     : new MpscUnboundedAtomicArrayQueue<T>(MPSC_CHUNK_SIZE);

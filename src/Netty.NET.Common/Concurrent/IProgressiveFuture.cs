@@ -21,19 +21,25 @@ namespace Netty.NET.Common.Concurrent;
  */
 public interface IProgressiveFuture<V> : IFuture<V>
 {
-    IProgressiveFuture<V> addListener(IGenericFutureListener<IFuture<V>> listener);
+    new IProgressiveFuture<V> addListener(IGenericFutureListener<IFuture<V>> listener);
 
-    IProgressiveFuture<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    new IProgressiveFuture<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    IProgressiveFuture<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
+    new IProgressiveFuture<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
 
-    IProgressiveFuture<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    new IProgressiveFuture<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    IProgressiveFuture<V> sync();
+    new IProgressiveFuture<V> sync();
 
-    IProgressiveFuture<V> syncUninterruptibly();
+    new IProgressiveFuture<V> syncUninterruptibly();
 
-    IProgressiveFuture<V> await();
+    new IProgressiveFuture<V> await();
 
-    IProgressiveFuture<V> awaitUninterruptibly();
+    new IProgressiveFuture<V> awaitUninterruptibly();
+
+    // CLR adapters preserve Java listener wildcard bindings and fluent returns.
+    new IProgressiveFuture<V> addListener<F>(IGenericFutureListener<F> listener) where F : IFuture<V>;
+    new IProgressiveFuture<V> addListeners<F>(params IGenericFutureListener<F>[] listeners) where F : IFuture<V>;
+    new IProgressiveFuture<V> removeListener<F>(IGenericFutureListener<F> listener) where F : IFuture<V>;
+    new IProgressiveFuture<V> removeListeners<F>(params IGenericFutureListener<F>[] listeners) where F : IFuture<V>;
 }

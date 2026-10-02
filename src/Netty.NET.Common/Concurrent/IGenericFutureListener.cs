@@ -26,7 +26,7 @@ public interface IGenericFutureListener : IEventListener
     
 }
 
-public interface IGenericFutureListener<in T> : IGenericFutureListener
+public interface IGenericFutureListener<in T> : IGenericFutureListener where T : IFuture
 {
     /**
      * Invoked when the operation associated with the {@link Future} has been completed.

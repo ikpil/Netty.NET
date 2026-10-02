@@ -24,23 +24,29 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * {@link IEventExecutorGroup} which will preserve {@link IRunnable} execution order but makes no guarantees about what
- * {@link IEventExecutor} (and therefore {@link Thread}) will be used to execute the {@link IRunnable}s.
+ * {@link EventExecutorGroup} which will preserve {@link Runnable} execution order but makes no guarantees about what
+ * {@link EventExecutor} (and therefore {@link Thread}) will be used to execute the {@link Runnable}s.
  *
- * <p>The {@link IEventExecutorGroup#next()} for the wrapped {@link IEventExecutorGroup} must <strong>NOT</strong> return
- * executors of type {@link IOrderedEventExecutor}.
+ * <p>The {@link EventExecutorGroup#next()} for the wrapped {@link EventExecutorGroup} must <strong>NOT</strong> return
+ * executors of type {@link OrderedEventExecutor}.
  */
 [UnstableApi]
-public class NonStickyEventExecutorGroup : IEventExecutorGroup
+public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
 {
     private readonly IEventExecutorGroup _group;
     private readonly int _maxTaskExecutePerRun;
 
     /**
-     * Creates a new instance. Be aware that the given {@link IEventExecutorGroup} <strong>MUST NOT</strong> contain
-     * any {@link IOrderedEventExecutor}s.
+     * Creates a new instance. Be aware that the given {@link EventExecutorGroup} <strong>MUST NOT</strong> contain
+     * any {@link OrderedEventExecutor}s.
      */
-    public NonStickyEventExecutorGroup(IEventExecutorGroup group, int maxTaskExecutePerRun = 1024)
+    public NonStickyEventExecutorGroup(IEventExecutorGroup group) : this(group, 1024) { }
+
+    /**
+     * Creates a new instance. Be aware that the given {@link EventExecutorGroup} <strong>MUST NOT</strong> contain
+     * any {@link OrderedEventExecutor}s.
+     */
+    public NonStickyEventExecutorGroup(IEventExecutorGroup group, int maxTaskExecutePerRun)
     {
         _group = verify(group);
         _maxTaskExecutePerRun = ObjectUtil.checkPositive(maxTaskExecutePerRun, "maxTaskExecutePerRun");
@@ -70,9 +76,9 @@ public class NonStickyEventExecutorGroup : IEventExecutorGroup
         return _group.isShuttingDown();
     }
 
-    public Task shutdownGracefullyAsync()
+    public IFuture<Void> shutdownGracefully()
     {
-        return _group.shutdownGracefullyAsync();
+        return _group.shutdownGracefully();
     }
 
     public Ticker ticker()
@@ -80,15 +86,19 @@ public class NonStickyEventExecutorGroup : IEventExecutorGroup
         return Ticker.systemTicker();
     }
 
-    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+    public IFuture<Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return _group.shutdownGracefullyAsync(quietPeriod, timeout);
+        return _group.shutdownGracefully(quietPeriod, timeout);
     }
 
-    public Task terminationTask()
+    public IFuture<Void> terminationFuture()
     {
-        return _group.terminationTask();
+        return _group.terminationFuture();
     }
+
+    public Task shutdownGracefullyAsync() => shutdownGracefully().Task;
+    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => shutdownGracefully(quietPeriod, timeout).Task;
+    public Task terminationTask() => terminationFuture().Task;
 
     //@SuppressWarnings("deprecation")
     public void shutdown()
@@ -116,17 +126,17 @@ public class NonStickyEventExecutorGroup : IEventExecutorGroup
         }
     }
 
-    public Task submit(IRunnable task)
+    public IFuture<Void> submit(IRunnable task)
     {
         return _group.submit(task);
     }
 
-    public Task<T> submit<T>(IRunnable task, T result)
+    public IFuture<T> submit<T>(IRunnable task, T result)
     {
         return _group.submit(task, result);
     }
 
-    public Task<T> submit<T>(ICallable<T> task)
+    public IFuture<T> submit<T>(ICallable<T> task)
     {
         return _group.submit(task);
     }
@@ -166,22 +176,22 @@ public class NonStickyEventExecutorGroup : IEventExecutorGroup
         return _group.awaitTermination(timeout);
     }
 
-    public List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
+    public List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks)
     {
         return _group.invokeAll(tasks);
     }
 
-    public List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
+    public List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
     {
         return _group.invokeAll<T>(tasks, timeout);
     }
 
-    public T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>
+    public T invokeAny<T>(ICollection<ICallable<T>> tasks)
     {
         return _group.invokeAny(tasks);
     }
 
-    public T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
+    public T invokeAny<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
     {
         return _group.invokeAny(tasks, timeout);
     }

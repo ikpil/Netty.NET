@@ -126,4 +126,14 @@ public class DefaultProgressivePromise<V> : DefaultPromise<V>, IProgressivePromi
         base.setFailure(cause);
         return this;
     }
+
+    // CLR adapters retain covariant fluent returns for typed listener registrations.
+    public override IProgressivePromise<V> addListener<F>(IGenericFutureListener<F> listener) { base.addListener(listener); return this; }
+    IProgressiveFuture<V> IProgressiveFuture<V>.addListener<F>(IGenericFutureListener<F> listener) => addListener(listener);
+    public override IProgressivePromise<V> addListeners<F>(params IGenericFutureListener<F>[] listeners) { base.addListeners(listeners); return this; }
+    IProgressiveFuture<V> IProgressiveFuture<V>.addListeners<F>(params IGenericFutureListener<F>[] listeners) => addListeners(listeners);
+    public override IProgressivePromise<V> removeListener<F>(IGenericFutureListener<F> listener) { base.removeListener(listener); return this; }
+    IProgressiveFuture<V> IProgressiveFuture<V>.removeListener<F>(IGenericFutureListener<F> listener) => removeListener(listener);
+    public override IProgressivePromise<V> removeListeners<F>(params IGenericFutureListener<F>[] listeners) { base.removeListeners(listeners); return this; }
+    IProgressiveFuture<V> IProgressiveFuture<V>.removeListeners<F>(params IGenericFutureListener<F>[] listeners) => removeListeners(listeners);
 }

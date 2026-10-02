@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * The {@link IEventExecutorGroup} is responsible for providing the {@link IEventExecutor}'s to use
+ * The {@link EventExecutorGroup} is responsible for providing the {@link EventExecutor}'s to use
  * via its {@link #next()} method. Besides this, it is also responsible for handling their
  * life-cycle and allows shutting them down in a global fashion.
  *
@@ -29,19 +29,17 @@ namespace Netty.NET.Common.Concurrent;
 public interface IEventExecutorGroup : IScheduledExecutorService
 {
     /**
-     * Returns {@code true} if and only if all {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}
-     * are being {@linkplain #shutdownGracefullyAsync() shut down gracefully} or was {@linkplain #isShutdown() shut down}.
+     * Returns {@code true} if and only if all {@link EventExecutor}s managed by this {@link EventExecutorGroup}
+     * are being {@linkplain #shutdownGracefully() shut down gracefully} or was {@linkplain #isShutdown() shut down}.
      */
     bool isShuttingDown();
 
     /**
-     * Shortcut method for {@link #shutdownGracefullyAsync(long, long, TimeSpan)} with sensible default values.
+     * Shortcut method for {@link #shutdownGracefully(long, long, TimeUnit)} with sensible default values.
      *
-     * @return the {@link #terminationTask()}
+     * @return the {@link #terminationFuture()}
      */
-    Task shutdownGracefullyAsync();
-
-    Ticker ticker();
+    IFuture<Void> shutdownGracefully();
 
     /**
      * Signals this executor that the caller wants the executor to be shut down.  Once this method is called,
@@ -55,20 +53,48 @@ public interface IEventExecutorGroup : IScheduledExecutorService
      *                    regardless if a task was submitted during the quiet period
      * @param unit        the unit of {@code quietPeriod} and {@code timeout}
      *
-     * @return the {@link #terminationTask()}
+     * @return the {@link #terminationFuture()}
      */
-    Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
+    IFuture<Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout);
 
     /**
-     * Returns the {@link Future} which is notified when all {@link IEventExecutor}s managed by this
-     * {@link IEventExecutorGroup} have been terminated.
+     * Returns the {@link Future} which is notified when all {@link EventExecutor}s managed by this
+     * {@link EventExecutorGroup} have been terminated.
      */
-    Task terminationTask();
+    IFuture<Void> terminationFuture();
 
     /**
-     * Returns one of the {@link IEventExecutor}s managed by this {@link IEventExecutorGroup}.
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    [Obsolete]
+    new void shutdown();
+
+    /**
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    [Obsolete]
+    new List<Functional.IRunnable> shutdownNow();
+
+    /**
+     * Returns one of the {@link EventExecutor}s managed by this {@link EventExecutorGroup}.
      */
     IEventExecutor next();
 
     IEnumerable<IEventExecutor> iterator();
+
+    /**
+     * The ticker for this executor. Usually the {@link #schedule} methods will follow the
+     * {@link Ticker#systemTicker() system ticker} (i.e. {@link System#nanoTime()}), but especially for testing it is
+     * sometimes useful to have more control over the ticker. In that case, this method will be overridden. Code that
+     * schedules tasks on this executor should use this ticker in order to stay consistent with the executor (e.g. not
+     * be surprised by scheduled tasks running "early").
+     *
+     * @return The ticker for this scheduler
+     */
+    Ticker ticker() => Ticker.systemTicker();
+
+    // CLR convenience: all Task views use the same Netty Future completion.
+    Task shutdownGracefullyAsync() => shutdownGracefully().Task;
+    Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => shutdownGracefully(quietPeriod, timeout).Task;
+    Task terminationTask() => terminationFuture().Task;
 }

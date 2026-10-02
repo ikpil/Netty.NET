@@ -14,87 +14,59 @@
  * under the License.
  */
 
+using System;
+using Moq;
+using Netty.NET.Common.Concurrent;
+using Xunit;
+using Void = Netty.NET.Common.Concurrent.Void;
+
 namespace Netty.NET.Common.Tests.Concurrent;
 
-public class PromiseNotifierTest {
-
+public class PromiseNotifierTest
+{
     [Fact]
-    public void testNullPromisesArray() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                new PromiseNotifier<Void, Future<Void>>((Promise<Void>[]) null);
-            }
-        });
+    public void testNullPromisesArray() => Assert.Throws<ArgumentNullException>(() => new PromiseNotifier<Void, IFuture<Void>>((IPromise<Void>[])null));
+    [Fact]
+    public void testNullPromiseInArray() => Assert.Throws<ArgumentException>(() => new PromiseNotifier<Void, IFuture<Void>>((IPromise<Void>)null));
+    [Fact]
+    public void testListenerSuccess()
+    {
+        var p1 = new Mock<IPromise<Void>>();
+        var p2 = new Mock<IPromise<Void>>();
+        var notifier = new PromiseNotifier<Void, IFuture<Void>>(p1.Object, p2.Object);
+        var future = new Mock<IFuture<Void>>();
+        future.Setup(x => x.isSuccess()).Returns(true);
+        future.Setup(x => x.get()).Returns((Void)null);
+        p1.Setup(x => x.trySuccess(null)).Returns(true);
+        p2.Setup(x => x.trySuccess(null)).Returns(true);
+        notifier.operationComplete(future.Object);
+        p1.Verify(x => x.trySuccess(null), Times.Once);
+        p2.Verify(x => x.trySuccess(null), Times.Once);
     }
-
-    //@SuppressWarnings("unchecked")
     [Fact]
-    public void testNullPromiseInArray() {
-        Assert.Throws<ArgumentException>(new Executable() {
-            @Override
-            public void execute() {
-                new PromiseNotifier<Void, Future<Void>>((Promise<Void>) null);
-            }
-        });
+    public void testListenerFailure()
+    {
+        var p1 = new Mock<IPromise<Void>>();
+        var p2 = new Mock<IPromise<Void>>();
+        var notifier = new PromiseNotifier<Void, IFuture<Void>>(p1.Object, p2.Object);
+        var future = new Mock<IFuture<Void>>();
+        var cause = new Exception();
+        future.Setup(x => x.isSuccess()).Returns(false);
+        future.Setup(x => x.isCancelled()).Returns(false);
+        future.Setup(x => x.cause()).Returns(cause);
+        p1.Setup(x => x.tryFailure(cause)).Returns(true);
+        p2.Setup(x => x.tryFailure(cause)).Returns(true);
+        notifier.operationComplete(future.Object);
+        p1.Verify(x => x.tryFailure(cause), Times.Once);
+        p2.Verify(x => x.tryFailure(cause), Times.Once);
     }
-
     [Fact]
-    public void testListenerSuccess() {
-        //@SuppressWarnings("unchecked")
-        Promise<Void> p1 = Mock.Of<Promise>();
-        //@SuppressWarnings("unchecked")
-        Promise<Void> p2 = Mock.Of<Promise>();
-
-        //@SuppressWarnings("unchecked")
-        PromiseNotifier<Void, Future<Void>> notifier =
-                new PromiseNotifier<Void, Future<Void>>(p1, p2);
-
-        //@SuppressWarnings("unchecked")
-        Future<Void> future = Mock.Of<Future>();
-        when(future.isSuccess()).thenReturn(true);
-        when(future.get()).thenReturn(null);
-        when(p1.trySuccess(null)).thenReturn(true);
-        when(p2.trySuccess(null)).thenReturn(true);
-
-        notifier.operationComplete(future);
-        verify(p1).trySuccess(null);
-        verify(p2).trySuccess(null);
-    }
-
-    [Fact]
-    public void testListenerFailure() {
-        //@SuppressWarnings("unchecked")
-        Promise<Void> p1 = Mock.Of<Promise>();
-        //@SuppressWarnings("unchecked")
-        Promise<Void> p2 = Mock.Of<Promise>();
-
-        //@SuppressWarnings("unchecked")
-        PromiseNotifier<Void, Future<Void>> notifier =
-                new PromiseNotifier<Void, Future<Void>>(p1, p2);
-
-        //@SuppressWarnings("unchecked")
-        Future<Void> future = Mock.Of<Future>();
-        Exception t = Mock.Of<Exception>();
-        when(future.isSuccess()).thenReturn(false);
-        when(future.isCancelled()).thenReturn(false);
-        when(future.cause()).thenReturn(t);
-        when(p1.tryFailure(t)).thenReturn(true);
-        when(p2.tryFailure(t)).thenReturn(true);
-
-        notifier.operationComplete(future);
-        verify(p1).tryFailure(t);
-        verify(p2).tryFailure(t);
-    }
-
-    [Fact]
-    public void testCancelPropagationWhenFusedFromFuture() {
-        Promise<Void> p1 = ImmediateEventExecutor.INSTANCE.newPromise();
-        Promise<Void> p2 = ImmediateEventExecutor.INSTANCE.newPromise();
-
-        Promise<Void> returned = PromiseNotifier.cascade(p1, p2);
+    public void testCancelPropagationWhenFusedFromFuture()
+    {
+        var p1 = ImmediateEventExecutor.INSTANCE.newPromise<Void>();
+        var p2 = ImmediateEventExecutor.INSTANCE.newPromise<Void>();
+        var returned = PromiseNotifier<Void, IPromise<Void>>.cascade(p1, p2);
         Assert.Same(p1, returned);
-
         Assert.True(returned.cancel(false));
         Assert.True(returned.isCancelled());
         Assert.True(p2.isCancelled());

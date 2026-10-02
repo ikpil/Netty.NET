@@ -27,19 +27,19 @@ using Netty.NET.Common.Internal.Logging;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Executes {@link IRunnable} objects in the caller's thread. If the {@link #execute(IRunnable)} is reentrant it will be
- * queued until the original {@link IRunnable} finishes execution.
+ * Executes {@link Runnable} objects in the caller's thread. If the {@link #execute(Runnable)} is reentrant it will be
+ * queued until the original {@link Runnable} finishes execution.
  * <p>
- * All {@link Exception} objects thrown from {@link #execute(IRunnable)} will be swallowed and logged. This is to ensure
- * that all queued {@link IRunnable} objects have the chance to be run.
+ * All {@link Throwable} objects thrown from {@link #execute(Runnable)} will be swallowed and logged. This is to ensure
+ * that all queued {@link Runnable} objects have the chance to be run.
  */
-public class ImmediateEventExecutor : AbstractEventExecutor
+public sealed class ImmediateEventExecutor : AbstractEventExecutor
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ImmediateEventExecutor));
     public static readonly ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
 
     /**
-     * A IRunnable will be queued if we are executing a IRunnable. This is to prevent a {@link StackOverflowError}.
+     * A Runnable will be queued if we are executing a Runnable. This is to prevent a {@link StackOverflowError}.
      */
     private static readonly FastThreadLocal<Queue<IRunnable>> DELAYED_RUNNABLES =
         new FastThreadLocalFunc<Queue<IRunnable>>(() => new Queue<IRunnable>());
@@ -66,14 +66,14 @@ public class ImmediateEventExecutor : AbstractEventExecutor
         return true;
     }
 
-    public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return terminationTask();
+        return terminationFuture();
     }
 
-    public override Task terminationTask()
+    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
     {
-        return _terminationSource.Task;
+        return _terminationSource;
     }
 
     [Obsolete]
@@ -113,7 +113,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
             }
             catch (Exception cause)
             {
-                logger.info("Exception caught while executing IRunnable {}", command, cause);
+                logger.info("Throwable caught while executing Runnable {}", command, cause);
             }
             finally
             {
@@ -127,7 +127,7 @@ public class ImmediateEventExecutor : AbstractEventExecutor
                     }
                     catch (Exception cause)
                     {
-                        logger.info("Exception caught while executing IRunnable {}", runnable, cause);
+                        logger.info("Throwable caught while executing Runnable {}", runnable, cause);
                     }
                 }
 

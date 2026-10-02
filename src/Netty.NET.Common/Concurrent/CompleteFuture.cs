@@ -71,6 +71,9 @@ public abstract class CompleteFuture<V>  : AbstractFuture<V> {
         return this;
     }
 
+    public override IFuture<V> removeListener<F>(IGenericFutureListener<F> listener) => this;
+    public override IFuture<V> removeListeners<F>(params IGenericFutureListener<F>[] listeners) => this;
+
     public override IFuture<V> await() {
         Thread.Sleep(0);
         return this;

@@ -24,7 +24,7 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Abstract base class for {@link IEventExecutorGroup} implementations that handles their tasks with multiple threads at
+ * Abstract base class for {@link EventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
  */
 public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
@@ -32,15 +32,15 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     private readonly IEventExecutor[] children;
     private readonly ISet<IEventExecutor> readonlyChildren;
     private readonly AtomicInteger terminatedChildren = new AtomicInteger();
-    private readonly TaskCompletionSource<Void> _terminationSource = new TaskCompletionSource<Void>();
+    private readonly IPromise<Void> _terminationSource = new DefaultPromise<Void>(GlobalEventExecutor.INSTANCE);
     private readonly IEventExecutorChooser chooser;
 
     /**
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
-     * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
+     * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
+     * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args)
         : this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args)
@@ -51,8 +51,8 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param executor          the IExecutor to use, or {@code null} if the default should be used.
-     * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
+     * @param executor          the Executor to use, or {@code null} if the default should be used.
+     * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor, params object[] args)
         : this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args)
@@ -63,9 +63,9 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param executor          the IExecutor to use, or {@code null} if the default should be used.
-     * @param chooserFactory    the {@link IEventExecutorChooserFactory} to use.
-     * @param args              arguments which will passed to each {@link #newChild(IExecutor, object...)} call
+     * @param executor          the Executor to use, or {@code null} if the default should be used.
+     * @param chooserFactory    the {@link EventExecutorChooserFactory} to use.
+     * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor,
         IEventExecutorChooserFactory chooserFactory, params object[] args)
@@ -98,7 +98,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
                 {
                     for (int j = 0; j < i; j++)
                     {
-                        children[j].shutdownGracefullyAsync();
+                        children[j].shutdownGracefully();
                     }
 
                     for (int j = 0; j < i; j++)
@@ -124,24 +124,19 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
         chooser = chooserFactory.newChooser(children);
 
-        Action<Task> terminationListener = t =>
-        {
-            if (terminatedChildren.incrementAndGet() == children.Length)
-            {
-                _terminationSource.SetResult(Void.Empty);
-            }
-        };
+        var terminationListener = new TerminationListener(this);
 
         foreach (IEventExecutor e in children)
         {
-            e.terminationTask().ContinueWith(terminationListener);
+            e.terminationFuture().addListener(terminationListener);
         }
 
         var childrenSet = new LinkedHashSet<IEventExecutor>(children);
+        // CLR adaptation: callers can enumerate, but cannot cast back to a mutable set.
         readonlyChildren = childrenSet;
     }
 
-    protected IThreadFactory newDefaultThreadFactory()
+    protected virtual IThreadFactory newDefaultThreadFactory()
     {
         return new DefaultThreadFactory(GetType());
     }
@@ -153,11 +148,14 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
     public override IEnumerable<IEventExecutor> iterator()
     {
-        return readonlyChildren;
+        foreach (var child in readonlyChildren)
+        {
+            yield return child;
+        }
     }
 
     /**
-     * Return the number of {@link IEventExecutor} this implementation uses. This number is the maps
+     * Return the number of {@link EventExecutor} this implementation uses. This number is the maps
      * 1:1 to the threads it use.
      */
     public int executorCount()
@@ -166,25 +164,45 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     }
 
     /**
-     * Create a new IEventExecutor which will later then accessible via the {@link #next()}  method. This method will be
+     * Returns the number of currently active threads if the group is using an
+     * {@link ObservableEventExecutorChooser}. Otherwise, for a non-scaling group,
+     * this method returns the total number of threads, as all are considered active.
+     *
+     * @return the count of active threads.
+     */
+    public virtual int activeExecutorCount() => chooser is IObservableEventExecutorChooser observable ?
+        observable.activeExecutorCount() : executorCount();
+
+    /**
+     * Returns a list of real-time utilization metrics if the group was configured
+     * with a compatible {@link EventExecutorChooserFactory}, otherwise an empty list.
+     *
+     * @return A list of {@link AutoScalingUtilizationMetric} objects.
+     */
+    public virtual IReadOnlyList<AutoScalingUtilizationMetric> executorUtilizations() =>
+        chooser is IObservableEventExecutorChooser observable ? observable.executorUtilizations() :
+            Array.Empty<AutoScalingUtilizationMetric>();
+
+    /**
+     * Create a new EventExecutor which will later then accessible via the {@link #next()}  method. This method will be
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
      */
     protected abstract IEventExecutor newChild(IExecutor executor, params object[] args);
 
-    public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
     {
         foreach (IEventExecutor l in children)
         {
-            l.shutdownGracefullyAsync(quietPeriod, timeout);
+            l.shutdownGracefully(quietPeriod, timeout);
         }
 
-        return terminationTask();
+        return terminationFuture();
     }
 
-    public override Task terminationTask()
+    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
     {
-        return _terminationSource.Task;
+        return _terminationSource;
     }
 
     [Obsolete]
@@ -237,13 +255,13 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
     public override bool awaitTermination(TimeSpan timeout)
     {
-        long deadline = SystemTimer.nanoTime() + (long)timeout.TotalNanoseconds;
+        long deadline = unchecked(SystemTimer.nanoTime() + AbstractScheduledEventExecutor.toNanos(timeout));
         foreach (IEventExecutor l in children)
         {
             bool breakLoop = false;
             for (;;)
             {
-                long timeLeft = deadline - SystemTimer.nanoTime();
+                long timeLeft = unchecked(deadline - SystemTimer.nanoTime());
                 if (timeLeft <= 0)
                 {
                     breakLoop = true;
@@ -261,5 +279,18 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         }
 
         return isTerminated();
+    }
+
+    private sealed class TerminationListener : IGenericFutureListener<IFuture<Void>>
+    {
+        private readonly MultithreadEventExecutorGroup group;
+        internal TerminationListener(MultithreadEventExecutorGroup group) => this.group = group;
+        public void operationComplete(IFuture<Void> future)
+        {
+            if (group.terminatedChildren.incrementAndGet() == group.children.Length)
+            {
+                group._terminationSource.setSuccess(null);
+            }
+        }
     }
 }

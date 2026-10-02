@@ -1,20 +1,11 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
-public class ScheduledStateActionWithContextAsyncTask<T> : ScheduledAsyncTask<T>
+public sealed class ScheduledStateActionWithContextAsyncTask<T> : ScheduledAsyncTask<T>
 {
-    private readonly Action<object, object> _action;
-    private readonly object _context;
-
     public ScheduledStateActionWithContextAsyncTask(AbstractScheduledEventExecutor executor, Action<object, object> action, object context, object state, long deadline, CancellationToken cancellationToken)
-        : base(executor, new TaskCompletionSource<T>(state), deadline, cancellationToken)
-    {
-        _action = action;
-        _context = context;
-    }
-
-    public override void run() => _action.Invoke(_context, Completion.AsyncState);
+        : base(executor, new AnonymousCallable<T>(() => { action(context, state); return default; }), deadline, cancellationToken) { }
 }

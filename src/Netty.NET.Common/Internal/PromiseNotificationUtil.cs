@@ -15,24 +15,24 @@
  */
 
 using System;
-using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Internal;
 
 /**
- * Internal utilities to notify {@link IPromise}s.
+ * Internal utilities to notify {@link Promise}s.
  */
 public static class PromiseNotificationUtil
 {
     /**
-     * Try to cancel the {@link IPromise} and log if {@code logger} is not {@code null} in case this fails.
+     * Try to cancel the {@link Promise} and log if {@code logger} is not {@code null} in case this fails.
      */
-    public static void tryCancel<T>(TaskCompletionSource<T> p, IInternalLogger logger)
+    public static void tryCancel<T>(IPromise<T> p, IInternalLogger logger)
     {
-        if (!p.TrySetCanceled() && logger != null)
+        if (!p.cancel(false) && logger != null)
         {
-            Exception err = p.Task.Exception;
+            Exception err = p.cause();
             if (err == null)
             {
                 logger.warn($"Failed to cancel promise because it has succeeded already: {p}");
@@ -45,13 +45,13 @@ public static class PromiseNotificationUtil
     }
 
     /**
-     * Try to mark the {@link IPromise} as success and log if {@code logger} is not {@code null} in case this fails.
+     * Try to mark the {@link Promise} as success and log if {@code logger} is not {@code null} in case this fails.
      */
-    public static void trySuccess<V>(TaskCompletionSource<V> p, V result, IInternalLogger logger)
+    public static void trySuccess<V>(IPromise<V> p, V result, IInternalLogger logger)
     {
-        if (!p.TrySetResult(result) && logger != null)
+        if (!p.trySuccess(result) && logger != null)
         {
-            Exception err = p.Task.Exception;
+            Exception err = p.cause();
             if (err == null)
             {
                 logger.warn($"Failed to mark a promise as success because it has succeeded already: {p}");
@@ -64,13 +64,13 @@ public static class PromiseNotificationUtil
     }
 
     /**
-     * Try to mark the {@link IPromise} as failure and log if {@code logger} is not {@code null} in case this fails.
+     * Try to mark the {@link Promise} as failure and log if {@code logger} is not {@code null} in case this fails.
      */
-    public static void tryFailure<T>(TaskCompletionSource<T> p, Exception cause, IInternalLogger logger)
+    public static void tryFailure<T>(IPromise<T> p, Exception cause, IInternalLogger logger)
     {
-        if (!p.TrySetException(cause) && logger != null)
+        if (!p.tryFailure(cause) && logger != null)
         {
-            Exception err = p.Task.Exception;
+            Exception err = p.cause();
             if (err == null)
             {
                 logger.warn($"Failed to mark a promise as failure because it has succeeded already: {p}", cause);

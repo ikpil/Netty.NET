@@ -54,19 +54,20 @@ public class FastThreadLocalThread
     public FastThreadLocalThread(string name) : this(null, name, 0, false) { }
     public FastThreadLocalThread(IRunnable target) : this(target, null, 0, true) { }
     public FastThreadLocalThread(IRunnable target, string name) : this(target, name, 0, true) { }
-    public FastThreadLocalThread(ThreadGroup group, IRunnable target) : this(target) { }
-    public FastThreadLocalThread(ThreadGroup group, string name) : this(name) { }
-    public FastThreadLocalThread(ThreadGroup group, IRunnable target, string name) : this(target, name) { }
+    public FastThreadLocalThread(ThreadGroup group, IRunnable target) : this(target, null, 0, true, group) { }
+    public FastThreadLocalThread(ThreadGroup group, string name) : this(null, name, 0, false, group) { }
+    public FastThreadLocalThread(ThreadGroup group, IRunnable target, string name) : this(target, name, 0, true, group) { }
     public FastThreadLocalThread(ThreadGroup group, IRunnable target, string name, long stackSize)
-        : this(target, name, checked((int)stackSize), true) { }
+        : this(target, name, checked((int)stackSize), true, group) { }
 
-    // CLR ThreadGroup has no runtime counterpart. Group overloads preserve source
-    // compatibility; stack size is a CLR hint and must fit its Int32 parameter.
-    private FastThreadLocalThread(IRunnable target, string name, int stackSize, bool cleanup)
+    // CLR ThreadGroup identity uses weak metadata and inherits the creator group.
+    // Stack size is a CLR hint and must fit its Int32 parameter.
+    private FastThreadLocalThread(IRunnable target, string name, int stackSize, bool cleanup, ThreadGroup group = null)
     {
         cleanupFastThreadLocals = cleanup;
         _target = cleanup ? FastThreadLocalRunnable.wrap(target) : target;
         Thread = stackSize == 0 ? new Thread(entry) : new Thread(entry, stackSize);
+        ThreadGroup.assign(Thread, group);
         if (name != null) Thread.Name = name;
         OwnedThreads.Add(Thread, this);
     }

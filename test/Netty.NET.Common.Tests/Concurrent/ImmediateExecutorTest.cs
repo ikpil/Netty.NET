@@ -14,30 +14,33 @@
  * under the License.
  */
 
+using System;
+using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Functional;
+using Xunit;
+using Void = Netty.NET.Common.Concurrent.Void;
+
 namespace Netty.NET.Common.Tests.Concurrent;
-public class ImmediateExecutorTest {
+
+public class ImmediateExecutorTest
+{
+    [Fact]
+    public void testExecuteNullRunnable() =>
+        Assert.Throws<ArgumentNullException>(() => ImmediateExecutor.INSTANCE.execute(null));
 
     [Fact]
-    public void testExecuteNullRunnable() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                ImmediateExecutor.INSTANCE.execute(null);
-            }
+    public void testExecuteNonNullRunnable()
+    {
+        // CLR: Task.RunSynchronously is the BCL equivalent of executing JDK FutureTask.run.
+        var task = new Task<Void>(() =>
+        {
+            // NOOP
+            return null;
         });
-    }
-
-    [Fact]
-    public void testExecuteNonNullRunnable() {
-        FutureTask<Void> task = new FutureTask<Void>(new IRunnable() {
-            @Override
-            public void run() {
-                // NOOP
-            }
-        }, null);
-        ImmediateExecutor.INSTANCE.execute(task);
-        Assert.True(task.isDone());
-        Assert.False(task.isCancelled());
-        Assert.Null(task.get());
+        ImmediateExecutor.INSTANCE.execute(Runnables.Create(() => task.RunSynchronously()));
+        Assert.True(task.IsCompleted);
+        Assert.False(task.IsCanceled);
+        Assert.Null(task.GetAwaiter().GetResult());
     }
 }

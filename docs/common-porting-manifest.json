@@ -1,0 +1,4662 @@
+{
+  "baseline": "e66ce34777f9c4a0c57ac74bb97396ca2f54b43c",
+  "scope": [
+    "common/src/main/java",
+    "common/src/test/java"
+  ],
+  "statusMeaning": "verified means reviewed against the pinned source and tested; candidates alone imply nothing",
+  "entries": [
+    {
+      "upstream": "common/src/main/java/io/netty/util/AbstractConstant.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/AbstractConstant.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/AbstractReferenceCounted.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/AbstractReferenceCounted.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/AbstractReferenceCounted.cs"
+      ],
+      "evidence": [
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 4,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/AsciiString.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/AsciiString.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 99,
+        "preservedCount": 58,
+        "missingCount": 41
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/AsciiStringUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/AsciiStringUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 7,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/AsyncMapping.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IAsyncMapping.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 1,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/Attribute.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IAttribute.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 7,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/AttributeKey.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/AttributeKey.cs",
+        "src/Netty.NET.Common/IAttributeKey.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/AttributeKey.cs",
+        "src/Netty.NET.Common/IAttributeKey.cs"
+      ],
+      "evidence": [
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 6,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/AttributeMap.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IAttributeMap.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 1,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/BooleanSupplier.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Functional/IBooleanSupplier.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 0,
+        "missingCount": 5
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ByteProcessor.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/ByteProcessor.cs",
+        "src/Netty.NET.Common/IByteProcessor.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 18,
+        "preservedCount": 16,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ByteProcessorUtils.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/ByteProcessorUtils.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/CharsetUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/CharsetUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 16,
+        "preservedCount": 7,
+        "missingCount": 9
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/Constant.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IConstant.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 4,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ConstantPool.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/ConstantPool.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/ConstantPool.cs"
+      ],
+      "evidence": [
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 8,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/DefaultAttributeMap.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/DefaultAttributeMap.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 5,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/DomainMappingBuilder.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/DomainMappingBuilder.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 2,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/DomainNameMapping.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/DomainNameMapping.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/DomainNameMapping.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 8,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/DomainNameMappingBuilder.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/DomainNameMappingBuilder.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 2,
+        "missingCount": 7
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/DomainWildcardMappingBuilder.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/DomainWildcardMappingBuilder.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 3,
+        "missingCount": 5
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/HashedWheelTimer.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/HashedWheelTimer.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 63,
+        "preservedCount": 14,
+        "missingCount": 49
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/HashingStrategy.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IHashingStrategy.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 2,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/IllegalReferenceCountException.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IllegalReferenceCountException.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 1,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/IntSupplier.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 0,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/LeakPresenceDetector.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 16,
+        "preservedCount": 0,
+        "missingCount": 16
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/Mapping.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IMapping.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/NetUtil.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/NetUtil.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/NetUtil.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 118,
+        "preservedCount": 118,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/NetUtilInitializations.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/NetUtilInitializations.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 18,
+        "preservedCount": 14,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/NetUtilSubstitutions.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/NetUtilSubstitutions.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 1,
+        "missingCount": 8
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/NettyRuntime.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/NettyRuntime.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 4,
+        "missingCount": 5
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/Recycler.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Recycler.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 47,
+        "preservedCount": 13,
+        "missingCount": 34
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ReferenceCountUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/ReferenceCountUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 14,
+        "preservedCount": 1,
+        "missingCount": 13
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ReferenceCounted.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IReferenceCounted.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 7,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ResourceLeak.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IResourceLeak.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 3,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ResourceLeakDetector.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/ResourceLeakDetector.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 64,
+        "preservedCount": 24,
+        "missingCount": 40
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ResourceLeakDetectorFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/ResourceLeakDetectorFactory.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 7,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ResourceLeakException.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ResourceLeakHint.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IResourceLeakHint.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ResourceLeakTracker.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IResourceLeakTracker.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 2,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/Signal.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Signal.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 4,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/SuppressForbidden.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/SuppressForbidden.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/ThreadDeathWatcher.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 32,
+        "preservedCount": 0,
+        "missingCount": 32
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/Timeout.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/ITimeout.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 5,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/Timer.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/ITimer.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 1,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/TimerTask.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/ITimerTask.cs",
+        "src/Netty.NET.Common/TimerTask.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 1,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/UncheckedBooleanSupplier.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/IUncheckedBooleanSupplier.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 1,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/Version.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Version.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 9,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/AbstractEventExecutor.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/AbstractEventExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/AbstractEventExecutor.cs",
+        "src/Netty.NET.Common/Functional/LazyRunnable.cs"
+      ],
+      "adaptation": "JDK executor-service bulk operations use the documented CLR support adapter; Task convenience methods view the same Future.",
+      "evidence": [
+        "Pinned constructors, PromiseTask factories, Future shutdown, default suspension/scheduling, singleton iteration, safe execution and lazy execution reviewed. Submission and lifecycle contracts pass."
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 7,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/AbstractEventExecutorGroup.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/AbstractEventExecutorGroup.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/AbstractEventExecutorGroup.cs"
+      ],
+      "evidence": [
+        "All submission, scheduling, bulk and execution methods delegate through one next() selection. Restore inherited shutdownNow and overridable Java forwarding methods; default shutdown periods checked."
+      ],
+      "adaptation": "CLR typed collections replace erased Java wildcards; Task convenience methods view the same Future.",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 4,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/AbstractFuture.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/AbstractFuture.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/AbstractFuture.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/AbstractScheduledEventExecutor.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/AbstractScheduledEventExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/AbstractScheduledEventExecutor.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "TimeSpan replaces TimeUnit, with exact saturating 100 ns tick conversion. Existing CLR scheduling wrappers implement ScheduledFutureTask; virtual hooks and protected constructor/polling preserve subclass behavior.",
+      "comments": {
+        "upstreamCount": 28,
+        "preservedCount": 28,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/AutoScalingEventExecutorChooserFactory.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/AutoScalingEventExecutorChooserFactory.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/AutoScalingEventExecutorChooserFactory.cs",
+        "src/Netty.NET.Common/Concurrent/AutoScalingUtilizationMetric.cs"
+      ],
+      "evidence": [
+        "All pinned scaling strategy branches reviewed. Seven original cases and eight independent mock-clock CLR contracts pass: pre-increment patience boundaries, ramp limits, rotating wake index, zero-minimum recovery, channel/suspension guards, threshold equality, immutable metric identity, actual elapsed windows and shutdown/invalid-window skips."
+      ],
+      "adaptation": "TimeSpan replaces duration/TimeUnit, with saturated integer nanoseconds (100ns tick granularity). Java non-static inner classes hold explicit owner references; Interlocked.CompareExchange and Volatile.Read publish immutable snapshots. ReadOnlyCollection replaces the unmodifiable metric list; its contained metrics remain live. Protected-internal metric hooks retain Java protected package access. Very large saturated windows are rounded down by at most 99ns when scheduled through TimeSpan.",
+      "comments": {
+        "upstreamCount": 43,
+        "preservedCount": 43,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/BlockingOperationException.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/BlockingOperationException.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 1,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/CompleteFuture.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/CompleteFuture.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/CompleteFuture.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 7,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ConcurrentSkipListIntObjMultimap.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 138,
+        "preservedCount": 0,
+        "missingCount": 138
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultEventExecutor.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/DefaultEventExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/DefaultEventExecutor.cs"
+      ],
+      "evidence": [
+        "All eight constructors and the run/take/update/confirm loop match the pinned source. Default-group and shutdown lifecycle tests pass."
+      ],
+      "adaptation": "Uses the documented native-thread and blocking-queue support adapters.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultEventExecutorChooserFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/DefaultEventExecutorChooserFactory.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 1,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultEventExecutorGroup.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/DefaultEventExecutorGroup.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/DefaultEventExecutorGroup.cs"
+      ],
+      "evidence": [
+        "Constructor argument forwarding and newChild reviewed. Remove incorrect shutdownNow override so inherited shutdown behavior runs. Parented-worker and upstream invalid-group tests pass."
+      ],
+      "adaptation": "Uses the documented multithread group support; scaling extension methods in the superclass remain in progress.",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultFutureListeners.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/DefaultFutureListeners.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/DefaultFutureListeners.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultMockTicker.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/DefaultMockTicker.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 3,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultProgressivePromise.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/DefaultProgressivePromise.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/DefaultProgressivePromise.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultPromise.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/DefaultPromise.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/DefaultPromise.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 33,
+        "preservedCount": 33,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultThreadFactory.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/DefaultThreadFactory.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/DefaultThreadFactory.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "Weak CLR ThreadGroup metadata retains explicit group and creator inheritance. Native CLR ThreadPriority enum replaces Java integer priorities. CLR has no SecurityManager or JVM group permission policy.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/EventExecutor.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IEventExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IEventExecutor.cs"
+      ],
+      "adaptation": "Netty Future/Promise factories now return their interfaces; termination exposes a Task bridge. Global singleton initializes its quiet interval and quiet task before use. Remaining suspension, scaling, task submission, thread context and shutdown APIs need complete upstream review.",
+      "evidence": [
+        "Promise factory and basic execution paths exercised by DefaultPromiseTest and CLR contract tests.",
+        "Full upstream executor and scheduling test review remains pending."
+      ],
+      "status": "in-progress",
+      "comments": {
+        "upstreamCount": 11,
+        "preservedCount": 11,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/EventExecutorChooserFactory.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IEventExecutorChooserFactory.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IEventExecutorChooserFactory.cs",
+        "src/Netty.NET.Common/Concurrent/IEventExecutorChooser.cs",
+        "src/Netty.NET.Common/Concurrent/IObservableEventExecutorChooser.cs"
+      ],
+      "evidence": [
+        "All chooser/observable factory contracts and original comments reviewed. Group metric delegation, active/fallback counts and immutable utilization view pass lifecycle contracts."
+      ],
+      "adaptation": "Java nested interfaces are CLR standalone interfaces. IReadOnlyList replaces the documented unmodifiable metric List.",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 8,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/EventExecutorGroup.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IEventExecutorGroup.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IEventExecutorGroup.cs"
+      ],
+      "evidence": [
+        "Restore terminationFuture and both shutdownGracefully contracts, ticker default and shutdown deprecations. Every original comment preserved; lifecycle and forwarding contracts pass."
+      ],
+      "adaptation": "Java Future<?> termination uses IFuture<Void>; TimeSpan replaces value/unit pairs; iterator uses IEnumerable.",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 10,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/FailedFuture.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/FailedFuture.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/FailedFuture.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/FastThreadLocal.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/FastThreadLocal.cs",
+        "src/Netty.NET.Common/Concurrent/IFastThreadLocal.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/FastThreadLocal.cs",
+        "src/Netty.NET.Common/Concurrent/IFastThreadLocal.cs"
+      ],
+      "evidence": [
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 20,
+        "preservedCount": 20,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/FastThreadLocalRunnable.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/FastThreadLocalRunnable.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/FastThreadLocalThread.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 15,
+        "preservedCount": 15,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/Future.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IFuture.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IFuture.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 19,
+        "preservedCount": 19,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/FutureListener.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IFutureListener.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IFutureListener.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/GenericFutureListener.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IGenericFutureListener.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IGenericFutureListener.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/GenericProgressiveFutureListener.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IGenericProgressiveFutureListener.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IGenericProgressiveFutureListener.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/GlobalEventExecutor.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/GlobalEventExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/GlobalEventExecutor.cs"
+      ],
+      "adaptation": "Global quiet task initializes before use. ExecutionContext flow is suppressed during worker creation/start; weak metadata retains creator group. Queue nonblocking operations preserve pending interrupts. Persistent failed termination Future has a readonly Task view; native stack/classloader lifetime semantics retain explicit CLR limitations.",
+      "evidence": [
+        "All six original tests plus idle/restart and AsyncLocal context contracts pass.",
+        "Use the CLR LinkedBlockingQueue adapter matching original JDK queue behavior; large blocking waits now chunk native timeout limits.",
+        "Persistent failed termination Future exposed. awaitInactivity uses JDK millisecond truncation, zero/unbounded join and chunked large timeout; CLR tests cover zero/submillisecond and interruptible TimeSpan.MaxValue waits."
+      ],
+      "status": "in-progress",
+      "comments": {
+        "upstreamCount": 49,
+        "preservedCount": 49,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ImmediateEventExecutor.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/ImmediateEventExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/ImmediateEventExecutor.cs",
+        "src/Netty.NET.Common/Concurrent/ImmediatePromise.cs",
+        "src/Netty.NET.Common/ImmediateProgressivePromise.cs"
+      ],
+      "adaptation": "CLR Boolean state uses immutable shared StrongBox identities; Task methods are views of the persistent Future.",
+      "evidence": [
+        "Pinned caller-thread execution, reentrant FIFO, exception logging/drain, failed termination Future, state flags and disabled promise deadlock checks reviewed. Promise and lifecycle contracts pass."
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 6,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ImmediateExecutor.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/ImmediateExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/ImmediateExecutor.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "IExecutor/IRunnable replace JDK interfaces; null check and caller-thread execution unchanged.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/MockTicker.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/MockTicker.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 3,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/MpscIntQueue.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IMpscIntQueue.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 34,
+        "preservedCount": 9,
+        "missingCount": 25
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/MultithreadEventExecutorGroup.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/MultithreadEventExecutorGroup.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/MultithreadEventExecutorGroup.cs"
+      ],
+      "evidence": [
+        "All pinned methods and 11 original comments reviewed, including observable chooser metrics, construction failure cleanup, shutdown Future aggregation, readonly iteration and timeout arithmetic. Nineteen lifecycle/group contracts pass."
+      ],
+      "adaptation": "CLR readonly enumeration and IReadOnlyList expose the original immutable collection views; typed listener aggregates child completion on GlobalEventExecutor. TimeSpan converts with saturated integer nanoseconds and signed wraparound. Auto-scaling factory itself remains in progress.",
+      "comments": {
+        "upstreamCount": 11,
+        "preservedCount": 11,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/NonStickyEventExecutorGroup.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/NonStickyEventExecutorGroup.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/NonStickyEventExecutorGroup.cs",
+        "src/Netty.NET.Common/Concurrent/NonStickyOrderedEventExecutor.cs",
+        "src/Netty.NET.Common/Collections/ConcurrentQueueAdapter.cs"
+      ],
+      "evidence": [
+        "Every pinned method and all 30 comments reviewed. Restore both runner returns and executingThread after rejected reschedule. Ten original parameterized cases plus direct-delegation, batching and rejection contracts pass."
+      ],
+      "adaptation": "CLR cannot return from finally: set a completion flag and return afterward. IEnumerable replaces Java iterator/remove; native ConcurrentQueue supplies the unbounded FIFO, with CLR segment allocation instead of JCTools chunks.",
+      "comments": {
+        "upstreamCount": 30,
+        "preservedCount": 30,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/OrderedEventExecutor.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IOrderedEventExecutor.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 1,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ProgressiveFuture.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IProgressiveFuture.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IProgressiveFuture.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ProgressivePromise.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IProgressivePromise.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IProgressivePromise.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 4,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/Promise.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IPromise.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IPromise.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 7,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/PromiseAggregator.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/PromiseAggregator.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/PromiseAggregator.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "IPromise<Void> aggregate and ordered LinkedHashSet<IFuture<V>> retain original null skipping, registration, failure propagation and synchronization; typed listener overload bridges Java wildcard listeners.",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/PromiseCombiner.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/PromiseCombiner.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/PromiseCombiner.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 9,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/PromiseNotifier.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/PromiseNotifier.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/PromiseNotifier.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 7,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/PromiseTask.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/PromiseTask.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/PromiseTask.cs"
+      ],
+      "adaptation": "Object storage preserves Runnable/Callable distinction and completion sentinels. CLR runnable-only value-type results use default(V) where Java returns null; explicit generic results use a private RunnableAdapter. Readonly Task remains an interop view.",
+      "evidence": [
+        "Reviewed complete class against pinned Java, including RunnableAdapter text, task/sentinel storage, identity, sealed mutation restrictions and internal mutators. All seven original comments preserved.",
+        "Submission/invocation, scheduling and original SingleThreadEventExecutorTest paths pass in PortingBatch (558 passed, 4 skipped)."
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 7,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/RejectedExecutionHandler.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IRejectedExecutionHandler.cs",
+        "src/Netty.NET.Common/Concurrent/RejectedExecutionHandler.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 2,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/RejectedExecutionHandlers.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/RejectedExecutionHandlers.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 1,
+        "missingCount": 6
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ScheduledFuture.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/IScheduledTask.cs"
+      ],
+      "evidence": [
+        "Interface inheritance reviewed against pinned source; original scheduling tests and CLR scheduling tests exercise generic and nongeneric future status and delay APIs; all original comments preserved."
+      ],
+      "adaptation": "Existing IScheduledTask naming retained; generic interface now inherits IFuture<T> and nongeneric view inherits IFuture. getDelay reports nanoseconds; TimeSpan adapter exists on implementations. CLR Task completion/awaiter wrappers are additional APIs.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ScheduledFutureTask.java",
+      "kind": "source",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/ScheduledTask.cs",
+        "src/Netty.NET.Common/Concurrent/ScheduledRunnableTask.cs",
+        "src/Netty.NET.Common/Concurrent/ScheduledCallableTask.cs"
+      ],
+      "adaptation": "Use PromiseTask state rather than a separate completion source. IScheduledTask is the CLR compatibility name; non-generic IDs compare heterogeneous result types; priority-queue indexes are maintained. Additional CLR action/token wrappers use the same scheduling path.",
+      "evidence": [
+        "Reviewed pinned ScheduledFutureTask state and scheduling; all 8 comments preserved.",
+        "SchedulingContractTest: one-shot value/failure, cancellation, periodic execution, mixed generic queue and cancellation token lifecycle.",
+        "Original AbstractScheduledEventExecutorTest remains pending."
+      ],
+      "status": "in-progress",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 8,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/SingleThreadEventExecutor.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/SingleThreadEventExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/SingleThreadEventExecutor.cs",
+        "src/Netty.NET.Common/Concurrent/DefaultThreadProperties.cs",
+        "src/Netty.NET.Common/Collections/LinkedBlockingQueue.cs",
+        "src/Netty.NET.Common/Internal/UninterruptibleMonitor.cs"
+      ],
+      "adaptation": "Interlocked/Volatile replace field updaters. Uninterruptible monitor entry restores consumed interrupts. Timed waits chunk Int32 millisecond limits. ThreadProperties exposes CLR state/id/priority; remote stack and non-destructive interrupt-flag queries throw NotSupportedException. Postmortem priority/daemon values use last observed snapshots. Shutdown Task methods view the persistent Netty Future; complete source/platform review remains in progress.",
+      "evidence": [
+        "All 17 original tests pass and all 128 original comments preserved.",
+        "Startup request omission reproduced (expected 1, actual 0); restore original startup CAS retry and unstarted suspension. Restore cancellation/suspend state retries and re-requested suspension.",
+        "Port utilization methods and timed-drain accounting; seven CLR metrics/property tests pass. Five blocking-queue contract tests cover removal, nondestructive peek, FIFO, large waits and interrupt restoration.",
+        "Termination and shutdown now return the persistent Netty Future; Task methods are CLR views. Original failure-identity test observes both Future cause and Task.",
+        "Restore allocated-queue constructor activity initialization and explicit last-execution activity refresh against the pinned Java source. Mock-clock regression preserves the explicit-queue constructor zero value."
+      ],
+      "status": "in-progress",
+      "comments": {
+        "upstreamCount": 128,
+        "preservedCount": 128,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/SucceededFuture.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/SucceededFuture.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/SucceededFuture.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/SystemTicker.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/SystemTicker.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ThreadAwareExecutor.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IThreadAwareExecutor.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 1,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ThreadPerTaskExecutor.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/ThreadPerTaskExecutor.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/ThreadProperties.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/IThreadProperties.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 10,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/Ticker.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/Ticker.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 7,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/UnaryPromiseNotifier.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/UnorderedThreadPoolEventExecutor.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Concurrent/UnorderedThreadPoolEventExecutor.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/UnorderedThreadPoolEventExecutor.cs",
+        "src/Netty.NET.Common/Concurrent/JdkFutureTask.cs"
+      ],
+      "evidence": [
+        "All pinned Netty methods and 21 original comments ported. Five original tests and 34 CLR contracts pass: decoration, dedicated-worker membership/overlap, early shutdown Future, delayed/periodic shutdown policies, running bulk cancellation, queue removal/reinsertion, core resize/timeout, idle retirement, pool metrics, factory replacement/failure/null/reentrant reservation, rejection and huge deadlines. Large fixed-rate queue blocking and running invokeAll cancellation reproduced then fixed against local JDK source.",
+        "A separate deterministic test preserves the pending Netty outer promise when an already-claimed periodic backend is canceled by a shutdown policy change; the running periodic policy test uses a barrier to verify the distinct requeue cancellation path."
+      ],
+      "adaptation": "Inherited JDK pool behavior uses a dedicated-worker/deadline-queue adapter reviewed against local Corretto 21.0.11 src.zip. JdkFutureTask preserves cancellation while running and interrupt delivery before worker reuse; decorated Netty PromiseTask stays uncancellable after starting. Runnable backend failures and inherited raw factory replacement preserve pinned behavior. Idle wakes use monitor generation pulses rather than Java idle-thread interrupts. Queue view maps to CLR IQueue rather than Java BlockingQueue; complete inherited JDK API shape review remains in progress.",
+      "comments": {
+        "upstreamCount": 21,
+        "preservedCount": 21,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/concurrent/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/AdaptiveCalculator.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/AdaptiveCalculator.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/AppendableCharSequence.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/AppendableCharSequence.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/AppendableCharSequence.cs"
+      ],
+      "evidence": [
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 10,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/AtomicReferenceCountUpdater.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/BoundedInputStream.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/BoundedInputStream.cs",
+        "src/Netty.NET.Common/Internal/BoundedInputStream.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/BoundedInputStream.cs",
+        "src/Netty.NET.Common/Internal/BoundedInputStream.cs"
+      ],
+      "evidence": [
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ClassInitializerUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ClassInitializerUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 3,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/CleanableDirectBuffer.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ICleanableDirectBuffer.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 6,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/Cleaner.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ICleaner.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 0,
+        "missingCount": 6
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/CleanerJava24Linker.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 32,
+        "preservedCount": 0,
+        "missingCount": 32
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/CleanerJava25.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 70,
+        "preservedCount": 0,
+        "missingCount": 70
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/CleanerJava6.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 0,
+        "missingCount": 7
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/CleanerJava9.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 0,
+        "missingCount": 5
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ConcurrentSet.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 0,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ConstantTimeUtils.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ConstantTimeUtils.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 3,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/DefaultPriorityQueue.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/DefaultPriorityQueue.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/DefaultPriorityQueue.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 25,
+        "preservedCount": 25,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/DirectCleaner.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/DirectCleaner.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 1,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/EmptyArrays.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/EmptyArrays.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/EmptyPriorityQueue.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/EmptyPriorityQueue.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/EmptyPriorityQueue.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/Hidden.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 0,
+        "missingCount": 5
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/IntegerHolder.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/IntegerHolder.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/IntegerHolder.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/InternalThreadLocalMap.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/InternalThreadLocalMap.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/InternalThreadLocalMap.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 20,
+        "preservedCount": 20,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/LongAdderCounter.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/LongCounter.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/LongLongHashMap.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 0,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/MacAddressUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/MacAddressUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 24,
+        "preservedCount": 23,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/MathUtil.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/MathUtil.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/MathUtil.cs"
+      ],
+      "evidence": [
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 8,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/NativeLibraryLoader.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 42,
+        "preservedCount": 0,
+        "missingCount": 42
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/NativeLibraryUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/NativeLibraryUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 1,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/NoOpTypeParameterMatcher.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/NoOpTypeParameterMatcher.cs",
+        "src/Netty.NET.Common/NoopTypeParameterMatcher.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ObjectCleaner.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ObjectCleaner.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 26,
+        "preservedCount": 17,
+        "missingCount": 9
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ObjectPool.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ObjectPool.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 2,
+        "missingCount": 6
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ObjectUtil.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ObjectUtil.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/ObjectUtil.cs"
+      ],
+      "evidence": [
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 32,
+        "preservedCount": 32,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/OutOfDirectMemoryError.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/PendingWrite.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/PendingWrite.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 4,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/PlatformDependent.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/PlatformDependent.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/PlatformDependent.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 129,
+        "preservedCount": 83,
+        "missingCount": 46
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/PlatformDependent0.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/PlatformDependent0.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/PlatformDependent0.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 81,
+        "preservedCount": 25,
+        "missingCount": 56
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/PriorityQueue.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/IPriorityQueue.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 3,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/PriorityQueueNode.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/IPriorityQueueNode.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/PromiseNotificationUtil.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/PromiseNotificationUtil.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/PromiseNotificationUtil.cs"
+      ],
+      "adaptation": "Interlocked state and monitor wait/notify preserve Netty completion, cancellation and listener ordering. Expose a read-only Task; AggregateException represents ExecutionException, OperationCanceledException represents CancellationException, and sync preserves the cause object. TimeSpan replaces TimeUnit; waits round up to CLR millisecond resolution and pending interrupts are observed with Sleep(0). Typed listener adapters preserve identity and fluent returns; invariant CLR value types require explicit object/boxing for Java wildcard value widening. Progressive observer bounds also permit IFuture for the internal notification bridge.",
+      "evidence": [
+        "Pinned upstream source review; original comments preserved.",
+        "DefaultPromiseTest (20), PromiseCombinerTest (12), PromiseNotifierTest (5) and CLR PromiseContractTest.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true"
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ReadOnlyIterator.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/RecyclableArrayList.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/RecyclableArrayList.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 7,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/RefCnt.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 21,
+        "preservedCount": 0,
+        "missingCount": 21
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ReferenceCountUpdater.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ReferenceCountUpdater.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 11,
+        "preservedCount": 6,
+        "missingCount": 5
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ReflectionUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ReflectionUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 1,
+        "missingCount": 6
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ResourcesUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ResourcesUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 2,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/RuntimeJvmArgs.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 0,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/SWARUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/SWARUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 19,
+        "preservedCount": 17,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/SocketUtils.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/SocketUtils.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/StringUtil.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/StringUtil.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/StringUtil.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 67,
+        "preservedCount": 67,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/SuppressJava6Requirement.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/SuppressJava8Requirement.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/SystemPropertyUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/SystemPropertyUtil.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 11,
+        "preservedCount": 10,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ThreadExecutorMap.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ThreadExecutorMap.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 1,
+        "missingCount": 6
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ThreadLocalRandom.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ThreadLocalRandom.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 35,
+        "preservedCount": 0,
+        "missingCount": 35
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/ThrowableUtil.java",
+      "kind": "source",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/ThrowableUtil.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/ThrowableUtil.cs"
+      ],
+      "adaptation": "ConditionalWeakTable stores suppressed exceptions without replacing or retaining the target. Synthetic remote trace text replaces JVM trace setters for unthrown exceptions. CLR Thread cannot capture another managed thread stack; interrupt diagnostics explicitly report this limitation. Already-thrown unknownStackTrace replacement is not supported by CLR trace setter and remains a semantic limitation.",
+      "evidence": [
+        "Original five comments preserved; suppressed exception identity/snapshot/copy behavior exercised by PromiseContractTest."
+      ],
+      "status": "in-progress",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/TypeParameterMatcher.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/TypeParameterMatcher.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/UnpaddedInternalThreadLocalMap.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 0,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/UnsafeReferenceCountUpdater.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/UnstableApi.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/UnstableApi.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 2,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/VarHandleFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/VarHandleReferenceCountUpdater.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/AbstractInternalLogger.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/Logging/AbstractInternalLogger.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 2,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/CommonsLogger.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/Logging/CommonsLogger.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 34,
+        "preservedCount": 9,
+        "missingCount": 25
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/CommonsLoggerFactory.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/Logging/CommonsLoggerFactory.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/Logging/CommonsLoggerFactory.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/FormattingTuple.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/Logging/FormattingTuple.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/InternalLogLevel.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/Logging/InternalLogLevel.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 6,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/InternalLogger.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/Logging/IInternalLogger.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 46,
+        "preservedCount": 39,
+        "missingCount": 7
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/InternalLoggerFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/Logging/IInternalLoggerFactory.cs",
+        "src/Netty.NET.Common/Internal/Logging/InternalLoggerFactory.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 6,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/JdkLogger.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 38,
+        "preservedCount": 0,
+        "missingCount": 38
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/JdkLoggerFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 0,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/LocationAwareSlf4JLogger.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 0,
+        "missingCount": 4
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/Log4J2Logger.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 0,
+        "missingCount": 6
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/Log4J2LoggerFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/Log4JLogger.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 36,
+        "preservedCount": 0,
+        "missingCount": 36
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/Log4JLoggerFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 0,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/MessageFormatter.java",
+      "kind": "source",
+      "status": "in-progress",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/Logging/MessageFormatter.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/Logging/MessageFormatter.cs"
+      ],
+      "evidence": [
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+      ],
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "comments": {
+        "upstreamCount": 17,
+        "preservedCount": 14,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/Slf4JLogger.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/Slf4JLoggerFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 0,
+        "missingCount": 5
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/logging/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/counters/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/counters/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/maps/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/maps/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/atomic/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/atomic/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/atomic/unpadded/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/atomic/unpadded/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/unpadded/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/unpadded/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/varhandle/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/varhandle/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/varhandle/unpadded/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/queues/varhandle/unpadded/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/util/DoNotRemove.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/shaded/org/jctools/util/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/svm/PlatformDependent0Substitution.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/svm/PlatformDependentSubstitution.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/svm/RefCntSubstitution.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/svm/UnsafeRefArrayAccessSubstitution.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/svm/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/AbstractReferenceCountedTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/AbstractReferenceCountedTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/AbstractReferenceCountedTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/AsciiStringCharacterTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/AsciiStringCharacterTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 24,
+        "preservedCount": 13,
+        "missingCount": 11
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/AsciiStringMemoryTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/AsciiStringMemoryTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/AttributeKeyTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/AttributeKeyTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/AttributeKeyTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/ConstantPoolTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/ConstantPoolTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/ConstantPoolTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/DefaultAttributeMapTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/DefaultAttributeMapTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/DefaultAttributeMapTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/DomainNameMappingTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/DomainNameMappingTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/DomainNameMappingTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/DomainWildcardMappingBuilderTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/DomainWildcardMappingBuilderTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/DomainWildcardMappingBuilderTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/HashedWheelTimerTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/HashedWheelTimerTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 6,
+        "missingCount": 3
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/LeakPresenceDetectorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/NetUtilTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/NetUtilTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/NetUtilTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 120,
+        "preservedCount": 120,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/NettyRuntimeTests.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/NettyRuntimeTests.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/RecyclerFastThreadLocalTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/RecyclerFastThreadLocalTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/RecyclerTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/RecyclerTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 26,
+        "preservedCount": 19,
+        "missingCount": 7
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/ResourceLeakDetectorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/ResourceLeakDetectorTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 21,
+        "preservedCount": 20,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/RunInFastThreadLocalThreadExtension.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/RunInFastThreadLocalThreadExtension.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/RunInFastThreadLocalThreadExtensionTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/ThreadDeathWatcherTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/ThreadDeathWatcherTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 9,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/AbstractScheduledEventExecutorTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/AbstractScheduledEventExecutorTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/AbstractScheduledEventExecutorTest.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "TimeSpan minimum negative tick replaces -1 ns, retaining zero clamping; original fixed-delay Zero test retains its -1-day operand.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/AutoScalingEventExecutorChooserFactoryTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/AutoScalingEventExecutorChooserFactoryTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/AutoScalingEventExecutorChooserFactoryTest.cs"
+      ],
+      "evidence": [
+        "All seven original cases pass, retaining utilization workloads, bounds, original waits, scaling assertions and all original comments."
+      ],
+      "adaptation": "CountdownEvent replaces CountDownLatch with a bounded startup wait. Volatile Int32 replaces AtomicBoolean; explicit iterator and LINQ replace Java Iterable/stream. DefaultThreadFactory uses background CLR threads; Xunit keeps the original 30-second test timeout. The inner Java variable was renamed to satisfy CLR scope rules.",
+      "comments": {
+        "upstreamCount": 17,
+        "preservedCount": 17,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/ConcurrentSkipListIntObjMultimapTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/DefaultMockTickerTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/DefaultMockTickerTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/DefaultMockTickerTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 8,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/DefaultPromiseTest.java",
+      "kind": "test",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/DefaultPromiseTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/DefaultPromiseTest.cs"
+      ],
+      "adaptation": "Moq replaces Mockito. Dedicated CLR executor/thread harnesses retain original service shutdown and synchronization. CLR stack overflow is fatal: replace JVM stack-depth discovery with both original chain shapes at 20,000 promises, inside and outside executor thread. Preserve 100,000 listener-order iterations and 4,096 notification races; bound originally unbounded waits to expose failures.",
+      "evidence": [
+        "All original test methods, assertions and comments reviewed and ported.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true; original tests pass."
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 12,
+        "preservedCount": 12,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/DefaultThreadFactoryTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/DefaultThreadFactoryTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/DefaultThreadFactoryTest.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "Four portable original cases run, including explicit creator-group assertions. SecurityManager inheritance case retains upstream unsupported-runtime skip; descendant case validates inheritance/task count but cannot test JVM permissions. CLR cannot join an unstarted Thread; inspect its assigned group instead.",
+      "comments": {
+        "upstreamCount": 20,
+        "preservedCount": 20,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/FastThreadLocalTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/FastThreadLocalTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/FastThreadLocalTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 10,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/GlobalEventExecutorTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/GlobalEventExecutorTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/GlobalEventExecutorTest.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "Bounded joins/waits replace original unbounded waits; weak CLR ThreadGroup metadata retains factory inheritance. Throwing the stackless termination exception verifies stable synthetic trace in place of fillInStackTrace.",
+      "comments": {
+        "upstreamCount": 20,
+        "preservedCount": 20,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/ImmediateExecutorTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/ImmediateExecutorTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/ImmediateExecutorTest.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "BCL Task.RunSynchronously replaces JDK FutureTask.run; retains completed/not-cancelled/null-result assertions.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/MpscIntQueueTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/NonStickyEventExecutorGroupTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/NonStickyEventExecutorGroupTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/NonStickyEventExecutorGroupTest.cs"
+      ],
+      "evidence": [
+        "All four original methods pass in ten parameterized cases, retaining 10000 tasks per producer and 5000 two-submission races for all four batch sizes. Every original comment preserved."
+      ],
+      "adaptation": "Bounded waits expose hangs. Java CountDownLatch decrement after zero is a no-op; CLR checks before Signal. Nullable Boolean result is published by the completion latch.",
+      "comments": {
+        "upstreamCount": 12,
+        "preservedCount": 12,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/PromiseAggregatorTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/PromiseAggregatorTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/PromiseAggregatorTest.cs"
+      ],
+      "evidence": [
+        "Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+      ],
+      "adaptation": "Moq replaces Mockito; explicit generic listener bindings select the same overload as the generic implementation.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/PromiseCombinerTest.java",
+      "kind": "test",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/PromiseCombinerTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/PromiseCombinerTest.cs"
+      ],
+      "adaptation": "Moq replaces Mockito. Dedicated CLR executor/thread harnesses retain original service shutdown and synchronization. CLR stack overflow is fatal: replace JVM stack-depth discovery with both original chain shapes at 20,000 promises, inside and outside executor thread. Preserve 100,000 listener-order iterations and 4,096 notification races; bound originally unbounded waits to expose failures.",
+      "evidence": [
+        "All original test methods, assertions and comments reviewed and ported.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true; original tests pass."
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/PromiseNotifierTest.java",
+      "kind": "test",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/PromiseNotifierTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/PromiseNotifierTest.cs"
+      ],
+      "adaptation": "Moq replaces Mockito. Dedicated CLR executor/thread harnesses retain original service shutdown and synchronization. CLR stack overflow is fatal: replace JVM stack-depth discovery with both original chain shapes at 20,000 promises, inside and outside executor thread. Preserve 100,000 listener-order iterations and 4,096 notification races; bound originally unbounded waits to expose failures.",
+      "evidence": [
+        "All original test methods, assertions and comments reviewed and ported.",
+        "dotnet test Netty.NET.sln -p:PortingBatch=true; original tests pass."
+      ],
+      "status": "verified",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/SingleThreadEventExecutorTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/SingleThreadEventExecutorTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/SingleThreadEventExecutorTest.cs"
+      ],
+      "evidence": [
+        "All 17 pinned original tests pass, retaining 10000 startup/suspend races and 2000 scheduled cancellation/suspend races. All 57 original comments preserved.",
+        "Full PortingBatch: 558 passed, 4 skipped; default full build still fails with 1173 compiler diagnostics."
+      ],
+      "adaptation": "CLR Thread is sealed; native wrapper observes start and signals before runnable entry. Bounded waits expose hangs. Closed IExecutor supplies backing-service rejection. Remote stack query explicitly throws; the owner captures its own stack. Task shutdown bridge retains original failure identity.",
+      "comments": {
+        "upstreamCount": 57,
+        "preservedCount": 57,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/UnorderedThreadPoolEventExecutorTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Concurrent/UnorderedThreadPoolEventExecutorTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Concurrent/UnorderedThreadPoolEventExecutorTest.cs"
+      ],
+      "evidence": [
+        "All five original cases pass, including 10000 empty-queue inspections, fixed-rate repetition, callable success/failure and event-loop membership. Every original comment preserved."
+      ],
+      "adaptation": "Barrier replaces the two-party null Void Exchanger; CountdownEvent guards repeated decrements. Bounded joins/waits verify actual worker cleanup after the early shutdown Future.",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 8,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/AppendableCharSequenceTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/AppendableCharSequenceTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/AppendableCharSequenceTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/BoundedInputStreamTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/BoundedInputStreamTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/BoundedInputStreamTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/DefaultPriorityQueueTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/DefaultPriorityQueueTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/DefaultPriorityQueueTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 12,
+        "preservedCount": 12,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/JfrEventSafeTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/JfrEventSafeTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 4,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/LongLongHashMapTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 0,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/MacAddressUtilTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/MacAddressUtilTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/MacAddressUtilTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 9,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/MathUtilTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/MathUtilTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/MathUtilTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/NativeLibraryLoaderTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/NativeLibraryLoaderTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/ObjectCleanerTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/ObjectCleanerTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 6,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/ObjectUtilTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/ObjectUtilTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/ObjectUtilTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/OsClassifiersTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/OsClassifiersTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/OsClassifiersTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 6,
+        "preservedCount": 6,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/PlatformDependent0Test.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/PlatformDependent0Test.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 2,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/PlatformDependentTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/PlatformDependentTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 4,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/RuntimeJvmArgsTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/SWARUtilTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/SWARUtilTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/SWARUtilTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 25,
+        "preservedCount": 25,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/StringUtilTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/StringUtilTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/StringUtilTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/SystemPropertyUtilTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/SystemPropertyUtilTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/SystemPropertyUtilTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/ThreadExecutorMapTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/ThreadExecutorMapTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/ThreadLocalRandomTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/ThreadLocalRandomTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/ThreadLocalRandomTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/TypeParameterMatcherTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/TypeParameterMatcherTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/VirtualThreadCheckTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/VirtualThreadCheckTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/AbstractInternalLoggerTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/AbstractInternalLoggerTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/AbstractInternalLoggerTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 19,
+        "preservedCount": 19,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/CommonsLoggerFactoryTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/CommonsLoggerFactoryTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/CommonsLoggerFactoryTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/CommonsLoggerTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/CommonsLoggerTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/CommonsLoggerTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/InternalLoggerFactoryTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/InternalLoggerFactoryTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/InternalLoggerFactoryTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/JdkLoggerFactoryTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/JdkLoggerFactoryTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/Log4J2LoggerFactoryTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/Log4J2LoggerFactoryTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/Log4J2LoggerTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/Log4J2LoggerTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 1,
+        "missingCount": 1
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/Log4JLoggerFactoryTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/Log4JLoggerFactoryTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/MessageFormatterTest.java",
+      "kind": "test",
+      "status": "verified",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/MessageFormatterTest.cs"
+      ],
+      "implementation": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/MessageFormatterTest.cs"
+      ],
+      "evidence": [
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+      ],
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "comments": {
+        "upstreamCount": 9,
+        "preservedCount": 9,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/Slf4JLoggerFactoryTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/Slf4JLoggerFactoryTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/internal/logging/Slf4JLoggerTest.java",
+      "kind": "test",
+      "status": "pending",
+      "candidates": [
+        "test/Netty.NET.Common.Tests/Internal/Logging/Slf4JLoggerTest.cs"
+      ],
+      "implementation": [],
+      "evidence": [],
+      "adaptation": "",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
+    }
+  ]
+}

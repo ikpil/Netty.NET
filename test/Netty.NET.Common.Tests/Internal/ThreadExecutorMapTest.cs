@@ -42,12 +42,12 @@ public class ThreadExecutorMapTest
             return false;
         }
 
-        public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
         {
             throw new NotSupportedException();
         }
 
-        public override Task terminationTask()
+        public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
         {
             throw new NotSupportedException();
         }

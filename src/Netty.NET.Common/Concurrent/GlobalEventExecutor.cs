@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -28,12 +27,12 @@ using Netty.NET.Common.Internal.Logging;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Single-thread singleton {@link IEventExecutor}.  It starts the thread automatically and stops it when there is no
+ * Single-thread singleton {@link EventExecutor}.  It starts the thread automatically and stops it when there is no
  * task pending in the task queue for {@code io.netty.globalEventExecutor.quietPeriodSeconds} second
  * (default is 1 second).  Please note it is not scalable to schedule large number of tasks to this executor;
  * use a dedicated executor.
  */
-public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor
+public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(GlobalEventExecutor));
 
@@ -41,7 +40,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
     public static readonly GlobalEventExecutor INSTANCE;
 
-    private readonly BlockingCollection<IRunnable> _taskQueue = new BlockingCollection<IRunnable>();
+    private readonly LinkedBlockingQueue<IRunnable> _taskQueue = new(int.MaxValue);
 
     private readonly IScheduledTask _quietPeriodTask;
 
@@ -49,7 +48,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
     // be sticky about its thread group
     // visible for testing
-    private readonly IThreadFactory _threadFactory;
+    internal readonly IThreadFactory _threadFactory;
     private readonly TaskRunner _taskRunner;
     private readonly AtomicBoolean _started = new AtomicBoolean();
     internal volatile Thread _thread;
@@ -75,6 +74,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     {
         // note: the getCurrentTimeNanos() call here only works because this is a final class, otherwise the method
         // could be overridden leading to unsafe initialization here!
+        // NOOP
         _quietPeriodTask = new ScheduledRunnableTask(this, Runnables.Empty,
             deadlineNanos(getCurrentTimeNanos(),
                 SCHEDULE_QUIET_PERIOD_INTERVAL),
@@ -85,20 +85,20 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
             GetType(), false, ThreadPriority.Normal), this);
 
 
-        NotSupportedException terminationFailure = new NotSupportedException();
-        ThrowableUtil.unknownStackTrace(msg => new NotSupportedException(msg), typeof(GlobalEventExecutor), "terminationAsync");
+        NotSupportedException terminationFailure = ThrowableUtil.unknownStackTrace(new StacklessUnsupportedOperationException(),
+            typeof(GlobalEventExecutor), "terminationFuture");
         _terminationSource = FailedFuture.Create<Void>(this, terminationFailure);
         _taskRunner = new TaskRunner(this);
     }
 
     /**
-     * Take the next {@link IRunnable} from the task queue and so will block if no task is currently present.
+     * Take the next {@link Runnable} from the task queue and so will block if no task is currently present.
      *
      * @return {@code null} if the executor thread has been interrupted or waken up.
      */
     public IRunnable takeTask()
     {
-        BlockingCollection<IRunnable> taskQueue = _taskQueue;
+        LinkedBlockingQueue<IRunnable> taskQueue = _taskQueue;
         for (;;)
         {
             var scheduledTask = peekScheduledTask();
@@ -107,7 +107,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
                 IRunnable task = null;
                 try
                 {
-                    task = taskQueue.Take();
+                    task = taskQueue.take();
                 }
                 catch (ThreadInterruptedException e)
                 {
@@ -125,7 +125,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
                     try
                     {
                         var delayTs = TimeSpan.FromTicks(delayNanos / 100);
-                        taskQueue.TryTake(out task, delayTs);
+                        taskQueue.tryTake(out task, delayTs);
                     }
                     catch (ThreadInterruptedException e)
                     {
@@ -141,7 +141,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
                     // This is for example true for the read task of OIO Transport
                     // See https://github.com/netty/netty/issues/1614
                     fetchFromScheduledTaskQueue();
-                    taskQueue.TryTake(out task);
+                    taskQueue.tryTake(out task);
                 }
 
                 if (task != null)
@@ -158,7 +158,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         IRunnable scheduledTask = pollScheduledTask(nanoTime);
         while (scheduledTask != null)
         {
-            _taskQueue.Add(scheduledTask);
+            _taskQueue.add(scheduledTask);
             scheduledTask = pollScheduledTask(nanoTime);
         }
     }
@@ -177,7 +177,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
      */
     private void addTask(IRunnable task)
     {
-        _taskQueue.Add(ObjectUtil.checkNotNull(task, "task"));
+        _taskQueue.add(ObjectUtil.checkNotNull(task, "task"));
     }
 
     public override bool inEventLoop(Thread thread)
@@ -185,19 +185,19 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
         return thread == _thread;
     }
 
-    public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return terminationTask();
+        return terminationFuture();
     }
 
     public override bool isShuttingDown()
     {
-        throw new NotImplementedException();
+        return false;
     }
 
-    public override Task terminationTask()
+    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
     {
-        return _terminationSource.Task;
+        return _terminationSource;
     }
 
     [Obsolete]
@@ -237,7 +237,30 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
             throw new InvalidOperationException("thread was not started");
         }
 
-        thread.Join(timeout);
+        // CLR adaptation: Java join truncates to milliseconds and treats zero as unbounded.
+        // CLR Join(TimeSpan) instead treats zero as a poll and caps its argument at Int32 milliseconds.
+        long milliseconds = timeout.Ticks / TimeSpan.TicksPerMillisecond;
+        if (milliseconds < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout));
+        }
+        if (milliseconds == 0)
+        {
+            thread.Join();
+        }
+        else
+        {
+            var elapsed = Stopwatch.StartNew();
+            long remaining = milliseconds;
+            while (!thread.Join((int)Math.Min(remaining, int.MaxValue)))
+            {
+                remaining = milliseconds - elapsed.ElapsedMilliseconds;
+                if (remaining <= 0)
+                {
+                    break;
+                }
+            }
+        }
         return !thread.IsAlive;
     }
 
@@ -259,20 +282,39 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
     {
         if (_started.compareAndSet(false, true))
         {
-            Thread t = _threadFactory.newThread(_taskRunner);
-            // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
-            // classloader.
-            // See:
-            // - https://github.com/netty/netty/issues/7290
-            // - https://bugs.openjdk.java.net/browse/JDK-7008595
-            //setContextClassLoader(t, null);
-
-            // Set the thread before starting it as otherwise inEventLoop() may return false and so produce
-            // an assert error.
-            // See https://github.com/netty/netty/issues/4357
-            _thread = t;
-            t.Start();
+            // CLR counterpart of clearing inherited JVM loader/security context.
+            // Suppress only during creation/start and restore the submitting thread.
+            if (ExecutionContext.IsFlowSuppressed())
+            {
+                startThreadWithoutContext();
+            }
+            else
+            {
+                using (ExecutionContext.SuppressFlow())
+                {
+                    startThreadWithoutContext();
+                }
+            }
         }
+    }
+
+    private void startThreadWithoutContext()
+    {
+        Thread t = _threadFactory.newThread(_taskRunner);
+        // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
+        // classloader.
+        // See:
+        // - https://github.com/netty/netty/issues/7290
+        // - https://bugs.openjdk.java.net/browse/JDK-7008595
+        //setContextClassLoader(t, null);
+
+        // Set the thread before starting it as otherwise inEventLoop() may return false and so produce
+        // an assert error.
+        // See https://github.com/netty/netty/issues/4357
+        _thread = t;
+        // Avoid calling classloader leaking through Thread.inheritedAccessControlContext.
+        // CLR execution-context flow is suppressed by startThread().
+        t.Start();
     }
 
 
@@ -311,7 +353,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
 
                 IQueue<IScheduledTask> scheduledTaskQueue = _this._scheduledTaskQueue;
                 // Terminate if there is no task in the queue (except the noop task).
-                if (_this._taskQueue.IsEmpty() && (scheduledTaskQueue == null || scheduledTaskQueue.Count == 1))
+                if (_this._taskQueue.isEmpty() && (scheduledTaskQueue == null || scheduledTaskQueue.Count == 1))
                 {
                     // Mark the current thread as stopped.
                     // The following CAS must always success and must be uncontended,
@@ -322,7 +364,7 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
                     // Check if there are pending entries added by execute() or schedule*() while we do CAS above.
                     // Do not check scheduledTaskQueue because it is not thread-safe and can only be mutated from a
                     // TaskRunner actively running tasks.
-                    if (_this._taskQueue.IsEmpty())
+                    if (_this._taskQueue.isEmpty())
                     {
                         // A) No new task was added and thus there's nothing to handle
                         //    -> safe to terminate because there's nothing left to do
@@ -345,5 +387,15 @@ public class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEvent
                 }
             }
         }
+    }
+
+    private sealed class StacklessUnsupportedOperationException : NotSupportedException
+    {
+        // Override fillInStackTrace() so we not populate the backtrace via a native call and so leak the
+        // Classloader. As the GlobalEventExecutor.INSTANCE is a singleton and holds on to this exception via its
+        // terminationFuture, a populated backtrace would pin the Classloader of whatever thread happened to trigger
+        // the lazy initialization of INSTANCE (see https://github.com/netty/netty/issues/17128).
+        // CLR synthetic text does not retain captured caller frames.
+        public override string StackTrace => "at GlobalEventExecutor.terminationFuture(...)";
     }
 }

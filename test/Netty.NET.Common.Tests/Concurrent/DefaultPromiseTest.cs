@@ -35,8 +35,8 @@ public class DefaultPromiseTest
     {
         public int submissions;
         public override bool isShuttingDown() => false;
-        public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => null;
-        public override Task terminationTask() => null;
+        public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout) => null;
+        public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture() => null;
         public override void shutdown() { }
         public override bool isShutdown() => false;
         public override bool isTerminated() => false;
@@ -117,7 +117,8 @@ public class DefaultPromiseTest
     [Fact]
     public void testNoStackOverflowWithDefaultEventExecutorA()
     {
-        IEventExecutor executor = new DefaultEventExecutor();
+        using var service = new TestSingleThreadExecutor();
+        IEventExecutor executor = new DefaultEventExecutor(service);
         try
         {
             testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, true, false);
@@ -134,7 +135,8 @@ public class DefaultPromiseTest
     [Fact]
     public void testNoStackOverflowWithDefaultEventExecutorB()
     {
-        IEventExecutor executor = new DefaultEventExecutor();
+        using var service = new TestSingleThreadExecutor();
+        IEventExecutor executor = new DefaultEventExecutor(service);
         try
         {
             testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, true, true);
@@ -344,7 +346,7 @@ public class DefaultPromiseTest
     }
     private sealed class TestEventExecutor : SingleThreadEventExecutor
     {
-        internal TestEventExecutor() : base(null, new DefaultThreadFactory(typeof(TestEventExecutor)), true) { }
+        internal TestEventExecutor() : base(null, new AnonymousThreadFactory(task => new Thread(task.run) { IsBackground = true }), true) { }
         protected override void run()
         {
             for (;;)
@@ -353,6 +355,24 @@ public class DefaultPromiseTest
                 if (task != null) { task.run(); updateLastExecutionTime(); }
                 if (confirmShutdown()) break;
             }
+        }
+    }
+    // CLR test harness for Executors.newSingleThreadExecutor(); the original executor-service lifecycle is retained.
+    private sealed class TestSingleThreadExecutor : IExecutor, IDisposable
+    {
+        private readonly BlockingCollection<IRunnable> tasks = new();
+        private readonly Thread thread;
+        internal TestSingleThreadExecutor()
+        {
+            thread = new Thread(() => { foreach (var task in tasks.GetConsumingEnumerable()) task.run(); }) { IsBackground = true };
+            thread.Start();
+        }
+        public void execute(IRunnable task) => tasks.Add(task);
+        public void Dispose()
+        {
+            tasks.CompleteAdding();
+            Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+            tasks.Dispose();
         }
     }
     private static void shutdown(IEventExecutor executor)

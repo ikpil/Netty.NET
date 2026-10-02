@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
 
@@ -28,11 +29,7 @@ public abstract class AbstractExecutorService : IExecutorService
      * the underlying task
      * @since 1.6
      */
-    protected virtual QueueingTaskNode<T> newTaskFor<T>(IRunnable runnable, T value)
-    {
-        var node = new QueueingRunnableTaskNode<T>(runnable, value);
-        return node;
-    }
+    protected abstract IRunnableFuture<T> newTaskFor<T>(IRunnable runnable, T value);
 
     /**
      * Returns a {@code RunnableFuture} for the given callable task.
@@ -45,34 +42,30 @@ public abstract class AbstractExecutorService : IExecutorService
      * cancellation of the underlying task
      * @since 1.6
      */
-    protected virtual QueueingTaskNode<T> newTaskFor<T>(ICallable<T> callable)
-    {
-        var node = new QueueingCallableTaskNode<T>(callable);
-        return node;
-    }
+    protected abstract IRunnableFuture<T> newTaskFor<T>(ICallable<T> callable);
 
     /**
      * @throws RejectedExecutionException {@inheritDoc}
      * @throws NullReferenceException       {@inheritDoc}
      */
-    public virtual Task submit(IRunnable task)
+    public virtual IFuture<Void> submit(IRunnable task)
     {
-        if (task == null) throw new NullReferenceException();
-        var ftask = newTaskFor(task, Void.Empty);
+        ArgumentNullException.ThrowIfNull(task);
+        var ftask = newTaskFor<Void>(task, null);
         execute(ftask);
-        return ftask.Completion;
+        return ftask;
     }
 
     /**
      * @throws RejectedExecutionException {@inheritDoc}
      * @throws NullReferenceException       {@inheritDoc}
      */
-    public virtual Task<T> submit<T>(IRunnable task, T result)
+    public virtual IFuture<T> submit<T>(IRunnable task, T result)
     {
-        if (task == null) throw new NullReferenceException();
+        ArgumentNullException.ThrowIfNull(task);
         var ftask = newTaskFor(task, result);
         execute(ftask);
-        return ftask.Completion;
+        return ftask;
     }
 
 
@@ -80,246 +73,166 @@ public abstract class AbstractExecutorService : IExecutorService
      * @throws RejectedExecutionException {@inheritDoc}
      * @throws NullReferenceException       {@inheritDoc}
      */
-    public virtual Task<T> submit<T>(ICallable<T> task)
+    public virtual IFuture<T> submit<T>(ICallable<T> task)
     {
-        if (task == null) throw new NullReferenceException();
+        ArgumentNullException.ThrowIfNull(task);
         var ftask = newTaskFor(task);
         execute(ftask);
-        return ftask.Completion;
+        return ftask;
     }
 
     /**
      * the main mechanics of invokeAny.
      */
-    private T doInvokeAny<T>(ICollection<T> tasks, bool timed, long nanos) where T : ICallable<T>
+    // CLR implementation of the inherited JDK ExecutorService contract.
+    // Netty supplies PromiseTask from newTaskFor; completion is queued directly
+    // after run, independently of executor-dispatched future listeners.
+    private T doInvokeAny<T>(ICollection<ICallable<T>> tasks, bool timed, long nanos)
     {
-        throw new NotImplementedException();
-            
-        // if (tasks == null)
-        //     throw new NullReferenceException();
-        // int ntasks = tasks.Count;
-        // if (ntasks == 0)
-        //     throw new ArgumentException();
-        //
-        // var futures = new List<QueueingTaskNode<T>>(ntasks);
-        // ExecutorCompletionService<T> ecs =
-        //     new ExecutorCompletionService<T>(this);
-        //
-        // // For efficiency, especially in executors with limited
-        // // parallelism, check to see if previously submitted tasks are
-        // // done before submitting more of them. This interleaving
-        // // plus the exception mechanics account for messiness of main
-        // // loop.
-        //
-        // try
-        // {
-        //     // Record exceptions so that if we fail to obtain any
-        //     // result, we can throw the last exception we got.
-        //     AggregateException ee = null;
-        //     long deadline = timed ? SystemTimer.nanoTime() + nanos : 0L;
-        //     IEnumerable<T> it = tasks;
-        //
-        //     // Start one task for sure; the rest incrementally
-        //     futures.Add(ecs.submit(it.next()));
-        //     --ntasks;
-        //     int active = 1;
-        //
-        //     for (;;)
-        //     {
-        //         Task<T> f = ecs.poll();
-        //         if (f == null)
-        //         {
-        //             if (ntasks > 0)
-        //             {
-        //                 --ntasks;
-        //                 futures.Add(ecs.submit(it.next()));
-        //                 ++active;
-        //             }
-        //             else if (active == 0)
-        //                 break;
-        //             else if (timed)
-        //             {
-        //                 f = ecs.poll(nanos, NANOSECONDS);
-        //                 if (f == null)
-        //                     throw new TimeoutException();
-        //                 nanos = deadline - SystemTimer.nanoTime();
-        //             }
-        //             else
-        //                 f = ecs.take();
-        //         }
-        //
-        //         if (f != null)
-        //         {
-        //             --active;
-        //             try
-        //             {
-        //                 return f.get();
-        //             }
-        //             catch (AggregateException eex)
-        //             {
-        //                 ee = eex;
-        //             }
-        //             catch (Exception rex)
-        //             {
-        //                 ee = new AggregateException(rex);
-        //             }
-        //         }
-        //     }
-        //
-        //     if (ee == null)
-        //         ee = new AggregateException();
-        //     throw ee;
-        // }
-        // finally
-        // {
-        //     cancelAll(futures);
-        // }
-    }
-
-    public virtual T invokeAny<T>(ICollection<T> tasks) where T : ICallable<T>
-    {
+        ArgumentNullException.ThrowIfNull(tasks);
+        int remaining = tasks.Count;
+        if (remaining == 0) throw new ArgumentException("tasks is empty", nameof(tasks));
+        var futures = new List<IFuture<T>>(remaining);
+        var completed = new BlockingCollection<IFuture<T>>();
+        using var iterator = tasks.GetEnumerator();
+        long started = Stopwatch.GetTimestamp();
+        AggregateException failure = null;
         try
         {
-            return doInvokeAny(tasks, false, 0);
-        }
-        catch (TimeoutException cannotHappen)
-        {
-            Debug.Assert(false);
-            return default;
-        }
-    }
-
-    public virtual T invokeAny<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
-    {
-        return doInvokeAny(tasks, true, (long)timeout.TotalNanoseconds);
-    }
-
-    public virtual List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks) where T : ICallable<T>
-    {
-        if (tasks == null)
-            throw new NullReferenceException();
-        var futures = new List<QueueingTaskNode<T>>(tasks.Count);
-        try
-        {
-            foreach (var t in tasks)
+            void submitNext()
             {
-                var f = newTaskFor(t);
-                futures.Add(f);
-                execute(f);
+                if (!iterator.MoveNext()) throw new InvalidOperationException("tasks changed during invocation");
+                ICallable<T> callable = iterator.Current;
+                ArgumentNullException.ThrowIfNull(callable);
+                IRunnableFuture<T> future = newTaskFor(callable);
+                futures.Add(future);
+                execute(Runnables.Create(() =>
+                {
+                    try { future.run(); }
+                    finally { completed.Add(future); }
+                }));
+                --remaining;
             }
 
-            for (int i = 0, size = futures.Count; i < size; i++)
+            submitNext();
+            int active = 1;
+            for (;;)
             {
-                var f = futures[i];
-                if (!f.Completion.IsCompleted)
+                IFuture<T> future;
+                if (!completed.TryTake(out future))
                 {
-                    try
+                    if (remaining > 0)
                     {
-                        f.Completion.Wait();
+                        submitNext();
+                        ++active;
                     }
-                    catch (Exception e)
+                    else if (active == 0)
                     {
-                        _ = e;
-                    }
-                }
-            }
-
-            return futures;
-        }
-        catch (Exception t)
-        {
-            cancelAll(futures);
-            throw;
-        }
-    }
-
-    public virtual List<QueueingTaskNode<T>> invokeAll<T>(ICollection<T> tasks, TimeSpan timeout) where T : ICallable<T>
-    {
-        if (tasks == null)
-            throw new NullReferenceException();
-        long nanos = (long)timeout.TotalNanoseconds;
-        long deadline = SystemTimer.nanoTime() + nanos;
-        var futures = new List<QueueingTaskNode<T>>(tasks.Count);
-        int j = 0;
-        do
-        {
-            try
-            {
-                foreach (var t in tasks)
-                {
-                    var node = newTaskFor(t);
-                    futures.Add(node);
-                }
-
-                int size = futures.Count;
-
-                // Interleave time checks and calls to execute in case
-                // executor doesn't have any/much parallelism.
-                bool timedOut = false;
-                for (int i = 0; i < size; i++)
-                {
-                    if (((i == 0) ? nanos : deadline - SystemTimer.nanoTime()) <= 0L)
-                    {
-                        timedOut = true;
                         break;
                     }
-                    
-                    execute(futures[i]);
-                }
-
-                if (timedOut)
-                    break;
-
-                for (; j < size; j++)
-                {
-                    QueueingTaskNode<T> f = futures[j];
-                    if (!f.IsCompleted)
+                    else if (timed)
                     {
-                        try
+                        for (;;)
                         {
-                            var remainNanos = deadline - SystemTimer.nanoTime();
-                            var remainTs = TimeSpan.FromTicks(remainNanos / 100);
-                            f.Completion.Wait(remainTs);
-                        }
-                        catch (OperationCanceledException ignore) {
-                        }
-                        catch( AggregateException ignore)
-                        {
-                        }
-                        catch (TimeoutException e)
-                        {
-                            timedOut = true;
-                            break;
+                            long left = remainingNanos(started, nanos);
+                            if (left <= 0) throw new TimeoutException();
+                            int millis = (int)Math.Min(int.MaxValue, 1 + (left - 1) / 1_000_000);
+                            if (completed.TryTake(out future, millis)) break;
                         }
                     }
+                    else
+                    {
+                        future = completed.Take();
+                    }
                 }
-                
-                if (timedOut)
-                    break;
-
-                return futures;
+                if (future != null)
+                {
+                    --active;
+                    try { return future.get(); }
+                    catch (AggregateException error) { failure = error; }
+                    catch (OperationCanceledException error) { failure = new AggregateException(error); }
+                }
             }
-            catch (Exception t)
+            throw failure ?? new AggregateException();
+        }
+        finally { cancelAll(futures); }
+    }
+
+    public virtual T invokeAny<T>(ICollection<ICallable<T>> tasks) => doInvokeAny(tasks, false, 0);
+
+    public virtual T invokeAny<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout) =>
+        doInvokeAny(tasks, true, AbstractScheduledEventExecutor.toNanos(timeout));
+
+    public virtual List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks)
+    {
+        ArgumentNullException.ThrowIfNull(tasks);
+        var futures = new List<IFuture<T>>(tasks.Count);
+        bool done = false;
+        try
+        {
+            foreach (ICallable<T> callable in tasks)
             {
-                cancelAll(futures);
-                throw t;
+                ArgumentNullException.ThrowIfNull(callable);
+                IRunnableFuture<T> future = newTaskFor(callable);
+                futures.Add(future);
+                execute(future);
             }
-        } while (false);
-
-        // Timed out before all the tasks could be completed; cancel remaining
-        cancelAll(futures, j);
-        return futures;
+            foreach (IFuture<T> future in futures)
+            {
+                if (!future.isDone())
+                {
+                    try { future.get(); }
+                    catch (OperationCanceledException) { }
+                    catch (AggregateException) { }
+                }
+            }
+            done = true;
+            return futures;
+        }
+        finally { if (!done) cancelAll(futures); }
     }
 
-    private static void cancelAll<T>(List<QueueingTaskNode<T>> futures)
+    public virtual List<IFuture<T>> invokeAll<T>(ICollection<ICallable<T>> tasks, TimeSpan timeout)
     {
-        cancelAll(futures, 0);
+        ArgumentNullException.ThrowIfNull(tasks);
+        long nanos = AbstractScheduledEventExecutor.toNanos(timeout);
+        long started = Stopwatch.GetTimestamp();
+        var futures = new List<IFuture<T>>(tasks.Count);
+        bool done = false;
+        try
+        {
+            foreach (ICallable<T> callable in tasks)
+            {
+                ArgumentNullException.ThrowIfNull(callable);
+                futures.Add(newTaskFor(callable));
+            }
+            foreach (IFuture<T> future in futures)
+            {
+                if (remainingNanos(started, nanos) <= 0) return futures;
+                execute((IRunnableFuture<T>)future);
+            }
+            foreach (IFuture<T> future in futures)
+            {
+                if (future.isDone()) continue;
+                long left = remainingNanos(started, nanos);
+                if (left <= 0) return futures;
+                try { future.get(TimeSpan.FromTicks(left / 100)); }
+                catch (OperationCanceledException) { }
+                catch (AggregateException) { }
+                catch (TimeoutException) { return futures; }
+            }
+            done = true;
+            return futures;
+        }
+        finally { if (!done) cancelAll(futures); }
     }
 
-    /** Cancels all futures with index at least j. */
-    private static void cancelAll<T>(List<QueueingTaskNode<T>> futures, int j)
+    private static long remainingNanos(long started, long timeoutNanos) =>
+        timeoutNanos <= 0 ? timeoutNanos :
+            timeoutNanos - AbstractScheduledEventExecutor.toNanos(Stopwatch.GetElapsedTime(started));
+
+    private static void cancelAll<T>(List<IFuture<T>> futures)
     {
-        for (int size = futures.Count; j < size; j++)
-            futures[j].cancel(true);
+        foreach (IFuture<T> future in futures) future.cancel(true);
     }
 }

@@ -14,128 +14,112 @@
  * under the License.
  */
 
+using System;
+using Moq;
+using Netty.NET.Common.Concurrent;
+using Xunit;
+using Void = Netty.NET.Common.Concurrent.Void;
+
 namespace Netty.NET.Common.Tests.Concurrent;
-public class PromiseAggregatorTest {
+
+public class PromiseAggregatorTest
+{
+    [Fact]
+    public void testNullAggregatePromise() =>
+        Assert.Throws<ArgumentNullException>(() => new PromiseAggregator<Void, IFuture<Void>>(null));
 
     [Fact]
-    public void testNullAggregatePromise() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            //@SuppressWarnings("deprecation")
-            @Override
-            public void execute() {
-                new PromiseAggregator<Void, Future<Void>>(null);
-            }
-        });
+    public void testAddNullFuture()
+    {
+        var p = new Mock<IPromise<Void>>();
+        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object);
+        Assert.Throws<ArgumentNullException>(() => a.add((IPromise<Void>[])null));
     }
 
     [Fact]
-    public void testAddNullFuture() {
-        //@SuppressWarnings("unchecked")
-        Promise<Void> p = Mock.Of<Promise>();
-        //@SuppressWarnings("deprecation")
-        final PromiseAggregator<Void, Future<Void>> a =
-                new PromiseAggregator<Void, Future<Void>>(p);
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                a.add((Promise<Void>[]) null);
-            }
-        });
-    }
-
-    //@SuppressWarnings("unchecked")
-    [Fact]
-    public void testSuccessfulNoPending() {
-        Promise<Void> p = Mock.Of<Promise>();
-        //@SuppressWarnings("deprecation")
-        PromiseAggregator<Void, Future<Void>> a =
-                new PromiseAggregator<Void, Future<Void>>(p);
-
-        Future<Void> future = Mock.Of<Future>();
-        when(p.setSuccess(null)).thenReturn(p);
-
+    public void testSuccessfulNoPending()
+    {
+        var p = new Mock<IPromise<Void>>();
+        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object);
+        var future = new Mock<IFuture<Void>>();
+        p.Setup(x => x.setSuccess(null)).Returns(p.Object);
         a.add();
-        a.operationComplete(future);
-        verifyNoMoreInteractions(future);
-        verify(p).setSuccess(null);
+        a.operationComplete(future.Object);
+        future.VerifyNoOtherCalls();
+        p.Verify(x => x.setSuccess(null), Times.Once);
     }
 
-    //@SuppressWarnings("unchecked")
     [Fact]
-    public void testSuccessfulPending() {
-        Promise<Void> p = Mock.Of<Promise>();
-        PromiseAggregator<Void, Future<Void>> a =
-                new PromiseAggregator<Void, Future<Void>>(p);
-        Promise<Void> p1 = Mock.Of<Promise>();
-        Promise<Void> p2 = Mock.Of<Promise>();
+    public void testSuccessfulPending()
+    {
+        var p = new Mock<IPromise<Void>>();
+        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object);
+        var p1 = new Mock<IPromise<Void>>();
+        var p2 = new Mock<IPromise<Void>>();
+        p1.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p1.Object);
+        p2.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p2.Object);
+        p1.Setup(x => x.isSuccess()).Returns(true);
+        p2.Setup(x => x.isSuccess()).Returns(true);
+        p.Setup(x => x.setSuccess(null)).Returns(p.Object);
 
-        when(p1.addListener(a)).thenReturn(p1);
-        when(p2.addListener(a)).thenReturn(p2);
-        when(p1.isSuccess()).thenReturn(true);
-        when(p2.isSuccess()).thenReturn(true);
-        when(p.setSuccess(null)).thenReturn(p);
+        Assert.Same(a, a.add(p1.Object, null, p2.Object));
+        a.operationComplete(p1.Object);
+        a.operationComplete(p2.Object);
 
-        Assert.Equal(a, a.add(p1, null, p2));
-        a.operationComplete(p1);
-        a.operationComplete(p2);
-
-        verify(p1).addListener(a);
-        verify(p2).addListener(a);
-        verify(p1).isSuccess();
-        verify(p2).isSuccess();
-        verify(p).setSuccess(null);
+        p1.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
+        p2.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
+        p1.Verify(x => x.isSuccess(), Times.Once);
+        p2.Verify(x => x.isSuccess(), Times.Once);
+        p.Verify(x => x.setSuccess(null), Times.Once);
     }
 
-    //@SuppressWarnings("unchecked")
     [Fact]
-    public void testFailedFutureFailPending() {
-        Promise<Void> p = Mock.Of<Promise>();
-        PromiseAggregator<Void, Future<Void>> a =
-                new PromiseAggregator<Void, Future<Void>>(p);
-        Promise<Void> p1 = Mock.Of<Promise>();
-        Promise<Void> p2 = Mock.Of<Promise>();
-        Exception t = Mock.Of<Exception>();
+    public void testFailedFutureFailPending()
+    {
+        var p = new Mock<IPromise<Void>>();
+        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object);
+        var p1 = new Mock<IPromise<Void>>();
+        var p2 = new Mock<IPromise<Void>>();
+        var cause = new Exception();
+        p1.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p1.Object);
+        p2.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p2.Object);
+        p1.Setup(x => x.isSuccess()).Returns(false);
+        p1.Setup(x => x.cause()).Returns(cause);
+        p.Setup(x => x.setFailure(cause)).Returns(p.Object);
+        p2.Setup(x => x.setFailure(cause)).Returns(p2.Object);
 
-        when(p1.addListener(a)).thenReturn(p1);
-        when(p2.addListener(a)).thenReturn(p2);
-        when(p1.isSuccess()).thenReturn(false);
-        when(p1.cause()).thenReturn(t);
-        when(p.setFailure(t)).thenReturn(p);
-        when(p2.setFailure(t)).thenReturn(p2);
+        a.add(p1.Object, p2.Object);
+        a.operationComplete(p1.Object);
 
-        a.add(p1, p2);
-        a.operationComplete(p1);
-
-        verify(p1).addListener(a);
-        verify(p2).addListener(a);
-        verify(p1).cause();
-        verify(p).setFailure(t);
-        verify(p2).setFailure(t);
+        p1.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
+        p2.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
+        p1.Verify(x => x.cause(), Times.Once);
+        p.Verify(x => x.setFailure(cause), Times.Once);
+        p2.Verify(x => x.setFailure(cause), Times.Once);
     }
 
-    //@SuppressWarnings("unchecked")
     [Fact]
-    public void testFailedFutureNoFailPending() {
-        Promise<Void> p = Mock.Of<Promise>();
-        PromiseAggregator<Void, Future<Void>> a =
-                new PromiseAggregator<Void, Future<Void>>(p, false);
-        Promise<Void> p1 = Mock.Of<Promise>();
-        Promise<Void> p2 = Mock.Of<Promise>();
-        Exception t = Mock.Of<Exception>();
+    public void testFailedFutureNoFailPending()
+    {
+        var p = new Mock<IPromise<Void>>();
+        var a = new PromiseAggregator<Void, IFuture<Void>>(p.Object, false);
+        var p1 = new Mock<IPromise<Void>>();
+        var p2 = new Mock<IPromise<Void>>();
+        var cause = new Exception();
+        p1.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p1.Object);
+        p2.Setup(x => x.addListener<IFuture<Void>>(a)).Returns(p2.Object);
+        p1.Setup(x => x.isSuccess()).Returns(false);
+        p1.Setup(x => x.cause()).Returns(cause);
+        p.Setup(x => x.setFailure(cause)).Returns(p.Object);
 
-        when(p1.addListener(a)).thenReturn(p1);
-        when(p2.addListener(a)).thenReturn(p2);
-        when(p1.isSuccess()).thenReturn(false);
-        when(p1.cause()).thenReturn(t);
-        when(p.setFailure(t)).thenReturn(p);
+        a.add(p1.Object, p2.Object);
+        a.operationComplete(p1.Object);
 
-        a.add(p1, p2);
-        a.operationComplete(p1);
-
-        verify(p1).addListener(a);
-        verify(p2).addListener(a);
-        verify(p1).isSuccess();
-        verify(p1).cause();
-        verify(p).setFailure(t);
+        p1.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
+        p2.Verify(x => x.addListener<IFuture<Void>>(a), Times.Once);
+        p1.Verify(x => x.isSuccess(), Times.Once);
+        p1.Verify(x => x.cause(), Times.Once);
+        p.Verify(x => x.setFailure(cause), Times.Once);
+        p2.Verify(x => x.setFailure(It.IsAny<Exception>()), Times.Never);
     }
 }

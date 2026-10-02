@@ -24,18 +24,22 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Abstract base class for {@link IEventExecutor}s that want to support scheduling.
+ * Abstract base class for {@link EventExecutor}s that want to support scheduling.
  */
 public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 {
     private static readonly IComparer<IScheduledTask> SCHEDULED_FUTURE_TASK_COMPARATOR =
         Comparer<IScheduledTask>.Create((o1, o2) => o1.CompareTo(o2));
 
-    protected static readonly IRunnable WAKEUP_TASK = Runnables.Empty;
+    protected static readonly IRunnable WAKEUP_TASK = Runnables.Empty; // Do nothing
 
     protected IPriorityQueue<IScheduledTask> _scheduledTaskQueue;
 
     private long nextTaskId;
+
+    protected AbstractScheduledEventExecutor() : this(null)
+    {
+    }
 
     protected AbstractScheduledEventExecutor(IEventExecutorGroup parent)
         : base(parent)
@@ -55,7 +59,8 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @deprecated Please use (or override) {@link #ticker()} instead. This method delegates to {@link #ticker()}. Old
      * code may still call this method for compatibility.
      */
-    public long getCurrentTimeNanos()
+    [Obsolete]
+    public virtual long getCurrentTimeNanos()
     {
         return ticker().nanoTime();
     }
@@ -63,6 +68,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * @deprecated Use the non-static {@link #ticker()} instead.
      */
+    [Obsolete]
     protected static long nanoTime()
     {
         return Ticker.systemTicker().nanoTime();
@@ -72,7 +78,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @deprecated Use the non-static {@link #ticker()} instead.
      */
     [Obsolete]
-    static long defaultCurrentTimeNanos()
+    internal static long defaultCurrentTimeNanos()
     {
         return Ticker.systemTicker().nanoTime();
     }
@@ -147,7 +153,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      *
      * This method MUST be called only when {@link #inEventLoop()} is {@code true}.
      */
-    protected void cancelScheduledTasks()
+    protected virtual void cancelScheduledTasks()
     {
         Debug.Assert(inEventLoop());
         var scheduledTaskQueue = _scheduledTaskQueue;
@@ -169,7 +175,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * @see #pollScheduledTask(long)
      */
-    internal IRunnable pollScheduledTask()
+    protected internal IRunnable pollScheduledTask()
     {
         return pollScheduledTask(getCurrentTimeNanos());
     }
@@ -181,7 +187,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @return {@code true} if we were able to transfer everything, {@code false} if we need to call this method again
      *         as soon as there is space again in {@code taskQueue}.
      */
-    protected bool fetchFromScheduledTaskQueue(IQueue<IRunnable> taskQueue)
+    protected virtual bool fetchFromScheduledTaskQueue(IQueue<IRunnable> taskQueue)
     {
         Debug.Assert(inEventLoop());
         ObjectUtil.requireNonNull(taskQueue, "taskQueue");
@@ -199,6 +205,11 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
                 return true;
             }
 
+            if (((IScheduledTask)scheduledTask).isCancelled())
+            {
+                continue;
+            }
+
             if (!taskQueue.tryEnqueue(scheduledTask))
             {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
@@ -209,7 +220,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     /**
-     * Return the {@link IRunnable} which is ready to be executed with the given {@code nanoTime}.
+     * Return the {@link Runnable} which is ready to be executed with the given {@code nanoTime}.
      * You should use {@link #getCurrentTimeNanos()} to retrieve the correct {@code nanoTime}.
      */
     protected IRunnable pollScheduledTask(long nanoTime)
@@ -277,7 +288,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return schedule(new ScheduledRunnableTask(
             this,
             command,
-            deadlineNanos(getCurrentTimeNanos(), (long)delay.TotalNanoseconds))
+            deadlineNanos(getCurrentTimeNanos(), toNanos(delay)))
         );
     }
 
@@ -288,21 +299,20 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         if (delay.Ticks < 0)
         {
             delay = TimeSpan.Zero;
-            ;
         }
 
         validateScheduled0(delay);
 
         return schedule(new ScheduledCallableTask<V>(
-            this, callable, deadlineNanos(getCurrentTimeNanos(), (long)delay.TotalNanoseconds)));
+            this, callable, deadlineNanos(getCurrentTimeNanos(), toNanos(delay))));
     }
 
     public override IScheduledTask scheduleAtFixedRate(IRunnable command, TimeSpan initialDelay, TimeSpan period)
     {
         ObjectUtil.checkNotNull(command, "command");
         //ObjectUtil.checkNotNull(unit, "unit");
-        var initialDelayNanos = (long)initialDelay.TotalNanoseconds;
-        var periodNanos = (long)period.TotalNanoseconds;
+        var initialDelayNanos = toNanos(initialDelay);
+        var periodNanos = toNanos(period);
         if (initialDelayNanos < 0)
         {
             throw new ArgumentException($"initialDelay: {initialDelayNanos} (expected: >= 0)");
@@ -324,8 +334,8 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     {
         ObjectUtil.checkNotNull(command, "command");
         //ObjectUtil.checkNotNull(unit, "unit");
-        var initialDelayNanos = (long)initialDelay.TotalNanoseconds;
-        var delayNanos = (long)delay.TotalNanoseconds;
+        var initialDelayNanos = toNanos(initialDelay);
+        var delayNanos = toNanos(delay);
         if (initialDelayNanos < 0)
         {
             throw new ArgumentException($"initialDelay: {initialDelay} (expected: >= 0)");
@@ -349,13 +359,23 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         validateScheduled(amount);
     }
 
+    // CLR: TimeSpan stores 100 ns ticks. Saturate like Java TimeUnit.toNanos,
+    // retaining integer precision and avoiding a floating-point overflow cast.
+    internal static long toNanos(TimeSpan amount)
+    {
+        long ticks = amount.Ticks;
+        if (ticks > long.MaxValue / 100) return long.MaxValue;
+        if (ticks < long.MinValue / 100) return long.MinValue;
+        return ticks * 100;
+    }
+
     /**
      * Sub-classes may override this to restrict the maximal amount of time someone can use to schedule a task.
      *
      * @deprecated will be removed in the future.
      */
     [Obsolete]
-    protected void validateScheduled(TimeSpan amount)
+    protected virtual void validateScheduled(TimeSpan amount)
     {
         // NOOP
     }
@@ -363,7 +383,11 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     internal void scheduleFromEventLoop(IScheduledTask task)
     {
         // nextTaskId a long and so there is no chance it will overflow back to 0
-        scheduledTaskQueue().tryEnqueue(task.setId(++nextTaskId));
+        if (task.getId() == 0L)
+        {
+            task.setId(++nextTaskId);
+        }
+        scheduledTaskQueue().tryEnqueue(task);
     }
 
     private IScheduledTask<T> schedule<T>(IScheduledTask<T> task)
@@ -415,19 +439,19 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     }
 
     /**
-     * Called from arbitrary non-{@link IEventExecutor} threads prior to scheduled task submission.
-     * Returns {@code true} if the {@link IEventExecutor} thread should be woken immediately to
+     * Called from arbitrary non-{@link EventExecutor} threads prior to scheduled task submission.
+     * Returns {@code true} if the {@link EventExecutor} thread should be woken immediately to
      * process the scheduled task (if not already awake).
      * <p>
      * If {@code false} is returned, {@link #afterScheduledTaskSubmitted(long)} will be called with
      * the same value <i>after</i> the scheduled task is enqueued, providing another opportunity
-     * to wake the {@link IEventExecutor} thread if required.
+     * to wake the {@link EventExecutor} thread if required.
      *
      * @param deadlineNanos deadline of the to-be-scheduled task
      *     relative to {@link AbstractScheduledEventExecutor#getCurrentTimeNanos()}
-     * @return {@code true} if the {@link IEventExecutor} thread should be woken, {@code false} otherwise
+     * @return {@code true} if the {@link EventExecutor} thread should be woken, {@code false} otherwise
      */
-    protected bool beforeScheduledTaskSubmitted(long deadlineNanos)
+    protected virtual bool beforeScheduledTaskSubmitted(long deadlineNanos)
     {
         return true;
     }
@@ -436,9 +460,9 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * See {@link #beforeScheduledTaskSubmitted(long)}. Called only after that method returns false.
      *
      * @param deadlineNanos relative to {@link AbstractScheduledEventExecutor#getCurrentTimeNanos()}
-     * @return  {@code true} if the {@link IEventExecutor} thread should be woken, {@code false} otherwise
+     * @return  {@code true} if the {@link EventExecutor} thread should be woken, {@code false} otherwise
      */
-    protected bool afterScheduledTaskSubmitted(long deadlineNanos)
+    protected virtual bool afterScheduledTaskSubmitted(long deadlineNanos)
     {
         return true;
     }

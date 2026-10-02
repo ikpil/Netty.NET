@@ -39,8 +39,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
      * The default value is {@code 8}.
      */
     public const string PROPERTY_MAX_LISTENER_STACK_DEPTH = "io.netty.defaultPromise.maxListenerStackDepth";
-    private static readonly int MAX_LISTENER_STACK_DEPTH = Math.Min(8,
-        SystemPropertyUtil.getInt(PROPERTY_MAX_LISTENER_STACK_DEPTH, 8));
+    private static readonly int MAX_LISTENER_STACK_DEPTH = PromiseListenerNotificationSettings.MaxStackDepth;
     private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(DefaultPromise<V>));
     private static readonly IInternalLogger rejectedExecutionLogger =
         InternalLoggerFactory.getInstance(typeof(DefaultPromise<V>).FullName + ".rejectedExecution");
@@ -142,14 +141,14 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
     public override IPromise<V> addListener(IGenericFutureListener<IFuture<V>> listener)
     {
         ObjectUtil.checkNotNull(listener, "listener");
-        lock (this) addListener0(listener);
+        using (UninterruptibleMonitor.enter(this)) addListener0(listener);
         if (isDone()) notifyListeners();
         return this;
     }
     public override IPromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners)
     {
         ObjectUtil.checkNotNull(listeners, "listeners");
-        lock (this)
+        using (UninterruptibleMonitor.enter(this))
             foreach (var listener in listeners)
             {
                 if (listener == null) break;
@@ -161,13 +160,13 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
     public override IPromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener)
     {
         ObjectUtil.checkNotNull(listener, "listener");
-        lock (this) removeListener0(listener);
+        using (UninterruptibleMonitor.enter(this)) removeListener0(listener);
         return this;
     }
     public override IPromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners)
     {
         ObjectUtil.checkNotNull(listeners, "listeners");
-        lock (this)
+        using (UninterruptibleMonitor.enter(this))
             foreach (var listener in listeners)
             {
                 if (listener == null) break;
@@ -181,7 +180,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
         // CLR adaptation: Sleep(0) observes and clears an already pending interrupt without a flag API.
         Thread.Sleep(0);
         checkDeadLock();
-        lock (this)
+        using (UninterruptibleMonitor.enter(this))
             while (!isDone())
             {
                 incWaiters();
@@ -197,7 +196,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
         bool interrupted = false;
         try
         {
-            lock (this)
+            using (UninterruptibleMonitor.enter(this))
                 while (!isDone())
                 {
                     incWaiters();
@@ -338,7 +337,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
     {
         IGenericFutureListener<IFuture<V>> listener;
         DefaultFutureListeners<IFuture<V>> listeners;
-        lock (this)
+        using (UninterruptibleMonitor.enter(this))
         {
             listener = _listener;
             listeners = _listeners;
@@ -357,7 +356,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
                 int size = listeners.size();
                 for (int i = 0; i < size; i++) notifyListener0(this, array[i]);
             }
-            lock (this)
+            using (UninterruptibleMonitor.enter(this))
             {
                 if (_listener == null && _listeners == null)
                 {
@@ -418,7 +417,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
      */
     private bool checkNotifyWaiters()
     {
-        lock (this)
+        using (UninterruptibleMonitor.enter(this))
         {
             if (_waiters > 0) Monitor.PulseAll(this);
             return _listener != null || _listeners != null;
@@ -453,7 +452,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
         // Start counting time from here instead of the first line of this method,
         // to avoid/postpone performance cost of System.nanoTime().
         long startTime = Stopwatch.GetTimestamp();
-        lock (this)
+        using (UninterruptibleMonitor.enter(this))
         {
             bool interrupted = false;
             try
@@ -515,7 +514,7 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
      */
     private object progressiveListeners()
     {
-        lock (this)
+        using (UninterruptibleMonitor.enter(this))
         {
             if (_listener == null && _listeners == null)
             {
@@ -562,5 +561,17 @@ public class DefaultPromise<V> : AbstractFuture<V>, IPromise<V>
         // CLR adaptation: a synthetic frame replaces Java ThrowableUtil.unknownStackTrace().
         public override string StackTrace => "at DefaultPromise.cancel(...)";
     }
+
+    // CLR adapters retain covariant fluent returns for typed listener registrations.
+    public override IPromise<V> addListener<F>(IGenericFutureListener<F> listener) { base.addListener(listener); return this; }
+    public override IPromise<V> addListeners<F>(params IGenericFutureListener<F>[] listeners) { base.addListeners(listeners); return this; }
+    public override IPromise<V> removeListener<F>(IGenericFutureListener<F> listener) { base.removeListener(listener); return this; }
+    public override IPromise<V> removeListeners<F>(params IGenericFutureListener<F>[] listeners) { base.removeListeners(listeners); return this; }
 }
 
+// CLR generic static fields are per closed type. Read this process-wide setting once, as Java does.
+internal static class PromiseListenerNotificationSettings
+{
+    internal static readonly int MaxStackDepth = Math.Min(8,
+        SystemPropertyUtil.getInt("io.netty.defaultPromise.maxListenerStackDepth", 8));
+}

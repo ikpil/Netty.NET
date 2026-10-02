@@ -1,3 +1,18 @@
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,6 +55,8 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
         for (;;)
         {
             int i = 0;
+            // CLR cannot return from a finally block. Defer the original returns until it exits.
+            bool done = false;
             try
             {
                 for (; i < _maxTaskExecutePerRun; i++)
@@ -63,10 +80,12 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
                         // Only set executingThread to null if no other thread did update it yet.
                         _executingThread.compareAndSet(current, null);
                         _executor.execute(this);
-                        //return; // done
+                        done = true; // done
                     }
                     catch (Exception ignore)
                     {
+                        // Restore executingThread since we're continuing to execute tasks.
+                        _executingThread.set(current);
                         // Reset the state back to running as we will keep on executing tasks.
                         _state.set(RUNNING);
                         // if an error happened we should just ignore it and let the loop run again as there is not
@@ -79,7 +98,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
                     _state.set(NONE);
                     // After setting the state to NONE, look at the tasks queue one more time.
                     // If it is empty, then we can return from this method.
-                    // Otherwise, it means the producer thread has called execute(IRunnable)
+                    // Otherwise, it means the producer thread has called execute(Runnable)
                     // and enqueued a task in between the tasks.poll() above and the state.set(NONE) here.
                     // There are two possible scenarios when this happens
                     //
@@ -96,9 +115,13 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
                     {
                         // Only set executingThread to null if no other thread did update it yet.
                         _executingThread.compareAndSet(current, null);
-                        //return; // done
+                        done = true; // done
                     }
                 }
+            }
+            if (done)
+            {
+                return;
             }
         }
     }
@@ -113,14 +136,14 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IRu
         return _executor.isShutdown();
     }
 
-    public override Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+    public override IFuture<Netty.NET.Common.Concurrent.Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        return _executor.shutdownGracefullyAsync(quietPeriod, timeout);
+        return _executor.shutdownGracefully(quietPeriod, timeout);
     }
 
-    public override Task terminationTask()
+    public override IFuture<Netty.NET.Common.Concurrent.Void> terminationFuture()
     {
-        return _executor.terminationTask();
+        return _executor.terminationFuture();
     }
 
     public override void shutdown()

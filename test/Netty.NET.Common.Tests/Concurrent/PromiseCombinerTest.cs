@@ -13,235 +13,146 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-namespace Netty.NET.Common.Tests.Concurrent;public class PromiseCombinerTest {
-    @Mock
-    private Promise<Void> p1;
-    private GenericFutureListener<Future<Void>> l1;
-    private final GenericFutureListenerConsumer l1Consumer = new GenericFutureListenerConsumer() {
-        @Override
-        public void accept(GenericFutureListener<Future<Void>> listener) {
-            l1 = listener;
-        }
-    };
-    @Mock
-    private Promise<Void> p2;
-    private GenericFutureListener<Future<Void>> l2;
-    private final GenericFutureListenerConsumer l2Consumer = new GenericFutureListenerConsumer() {
-        @Override
-        public void accept(GenericFutureListener<Future<Void>> listener) {
-            l2 = listener;
-        }
-    };
-    @Mock
-    private Promise<Void> p3;
-    private PromiseCombiner combiner;
+using System;
+using Moq;
+using Netty.NET.Common.Concurrent;
+using Xunit;
+using Void = Netty.NET.Common.Concurrent.Void;
 
-    @BeforeEach
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-        combiner = new PromiseCombiner(ImmediateEventExecutor.INSTANCE);
-    }
+namespace Netty.NET.Common.Tests.Concurrent;
 
+public class PromiseCombinerTest
+{
+    private readonly Mock<IPromise<Void>> p1 = new Mock<IPromise<Void>>();
+    private readonly Mock<IPromise<Void>> p2 = new Mock<IPromise<Void>>();
+    private readonly Mock<IPromise<Void>> p3 = new Mock<IPromise<Void>>();
+    private IGenericFutureListener<IFuture> l1, l2;
+    private readonly PromiseCombiner combiner = new PromiseCombiner(ImmediateEventExecutor.INSTANCE);
     [Fact]
-    public void testNullArgument() {
-        try {
-            combiner.finish(null);
-            Assert.Fail();
-        } catch (NullReferenceException expected) {
-            // expected
-        }
-        combiner.finish(p1);
-        verify(p1).trySuccess(null);
+    public void testNullArgument()
+    {
+        Assert.Throws<ArgumentNullException>(() => combiner.finish(null));
+        combiner.finish(p1.Object);
+        verifySuccess(p1);
     }
-
     [Fact]
-    public void testNullAggregatePromise() {
-        combiner.finish(p1);
-        verify(p1).trySuccess(null);
+    public void testNullAggregatePromise()
+    {
+        combiner.finish(p1.Object);
+        verifySuccess(p1);
     }
-
     [Fact]
-    public void testAddNullPromise() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                combiner.add(null);
-            }
-        });
+    public void testAddNullPromise() => Assert.Throws<ArgumentNullException>(() => combiner.add((IFuture)null));
+    [Fact]
+    public void testAddAllNullPromise() => Assert.Throws<ArgumentNullException>(() => combiner.addAll((IFuture[])null));
+    [Fact]
+    public void testAddAfterFinish()
+    {
+        combiner.finish(p1.Object);
+        Assert.Throws<InvalidOperationException>(() => combiner.add(p2.Object));
     }
-
     [Fact]
-    public void testAddAllNullPromise() {
-        Assert.Throws<NullReferenceException>(new Executable() {
-            @Override
-            public void execute() {
-                combiner.addAll(null);
-            }
-        });
+    public void testAddAllAfterFinish()
+    {
+        combiner.finish(p1.Object);
+        Assert.Throws<InvalidOperationException>(() => combiner.addAll(p2.Object));
     }
-
     [Fact]
-    public void testAddAfterFinish() {
-        combiner.finish(p1);
-        Assert.Throws<InvalidOperationException>(new Executable() {
-            @Override
-            public void execute() {
-                combiner.add(p2);
-            }
-        });
+    public void testFinishCalledTwiceThrows()
+    {
+        combiner.finish(p1.Object);
+        Assert.Throws<InvalidOperationException>(() => combiner.finish(p1.Object));
     }
-
-    //@SuppressWarnings("unchecked")
     [Fact]
-    public void testAddAllAfterFinish() {
-        combiner.finish(p1);
-        Assert.Throws<InvalidOperationException>(new Executable() {
-            @Override
-            public void execute() {
-                combiner.addAll(p2);
-            }
-        });
-    }
-
-    //@SuppressWarnings("unchecked")
-    [Fact]
-    public void testFinishCalledTwiceThrows() {
-        combiner.finish(p1);
-        Assert.Throws<InvalidOperationException>(new Executable() {
-            @Override
-            public void execute() {
-                combiner.finish(p1);
-            }
-        });
-    }
-
-    [Fact]
-    public void testAddAllSuccess() {
-        mockSuccessPromise(p1, l1Consumer);
-        mockSuccessPromise(p2, l2Consumer);
-        combiner.addAll(p1, p2);
-        combiner.finish(p3);
-        l1.operationComplete(p1);
+    public void testAddAllSuccess()
+    {
+        mockSuccessPromise(p1, listener => l1 = listener);
+        mockSuccessPromise(p2, listener => l2 = listener);
+        combiner.addAll(p1.Object, p2.Object);
+        combiner.finish(p3.Object);
+        l1.operationComplete(p1.Object);
         verifyNotCompleted(p3);
-        l2.operationComplete(p2);
+        l2.operationComplete(p2.Object);
         verifySuccess(p3);
     }
-
     [Fact]
-    public void testAddSuccess() {
-        mockSuccessPromise(p1, l1Consumer);
-        mockSuccessPromise(p2, l2Consumer);
-        combiner.add(p1);
-        l1.operationComplete(p1);
-        combiner.add(p2);
-        l2.operationComplete(p2);
+    public void testAddSuccess()
+    {
+        mockSuccessPromise(p1, listener => l1 = listener);
+        mockSuccessPromise(p2, listener => l2 = listener);
+        combiner.add(p1.Object);
+        l1.operationComplete(p1.Object);
+        combiner.add(p2.Object);
+        l2.operationComplete(p2.Object);
         verifyNotCompleted(p3);
-        combiner.finish(p3);
+        combiner.finish(p3.Object);
         verifySuccess(p3);
     }
-
     [Fact]
-    public void testAddAllFail() {
-        Exception e1 = new Exception("fake exception 1");
-        Exception e2 = new Exception("fake exception 2");
-        mockFailedPromise(p1, e1, l1Consumer);
-        mockFailedPromise(p2, e2, l2Consumer);
-        combiner.addAll(p1, p2);
-        combiner.finish(p3);
-        l1.operationComplete(p1);
+    public void testAddAllFail()
+    {
+        var e1 = new Exception("fake exception 1");
+        var e2 = new Exception("fake exception 2");
+        mockFailedPromise(p1, e1, listener => l1 = listener);
+        mockFailedPromise(p2, e2, listener => l2 = listener);
+        combiner.addAll(p1.Object, p2.Object);
+        combiner.finish(p3.Object);
+        l1.operationComplete(p1.Object);
         verifyNotCompleted(p3);
-        l2.operationComplete(p2);
+        l2.operationComplete(p2.Object);
         verifyFail(p3, e1);
     }
-
     [Fact]
-    public void testAddFail() {
-        Exception e1 = new Exception("fake exception 1");
-        Exception e2 = new Exception("fake exception 2");
-        mockFailedPromise(p1, e1, l1Consumer);
-        mockFailedPromise(p2, e2, l2Consumer);
-        combiner.add(p1);
-        l1.operationComplete(p1);
-        combiner.add(p2);
-        l2.operationComplete(p2);
+    public void testAddFail()
+    {
+        var e1 = new Exception("fake exception 1");
+        var e2 = new Exception("fake exception 2");
+        mockFailedPromise(p1, e1, listener => l1 = listener);
+        mockFailedPromise(p2, e2, listener => l2 = listener);
+        combiner.add(p1.Object);
+        l1.operationComplete(p1.Object);
+        combiner.add(p2.Object);
+        l2.operationComplete(p2.Object);
         verifyNotCompleted(p3);
-        combiner.finish(p3);
+        combiner.finish(p3.Object);
         verifyFail(p3, e1);
     }
-
     [Fact]
-    public void testEventExecutor() {
-        EventExecutor executor = Mock.Of<EventExecutor>();
-        when(executor.inEventLoop()).thenReturn(false);
-        combiner = new PromiseCombiner(executor);
-
-        Future<?> future = Mock.Of<Future>();
-
-        try {
-            combiner.add(future);
-            Assert.Fail();
-        } catch (InvalidOperationException expected) {
-            // expected
-        }
-
-        try {
-            combiner.addAll(future);
-            Assert.Fail();
-        } catch (InvalidOperationException expected) {
-            // expected
-        }
-
-        //@SuppressWarnings("unchecked")
-        Promise<Void> promise = (Promise<Void>) Mock.Of<Promise>();
-        try {
-            combiner.finish(promise);
-            Assert.Fail();
-        } catch (InvalidOperationException expected) {
-            // expected
-        }
+    public void testEventExecutor()
+    {
+        var executor = new Mock<IEventExecutor>();
+        executor.Setup(e => e.inEventLoop()).Returns(false);
+        var other = new PromiseCombiner(executor.Object);
+        var future = new Mock<IFuture>();
+        Assert.Throws<InvalidOperationException>(() => other.add(future.Object));
+        Assert.Throws<InvalidOperationException>(() => other.addAll(future.Object));
+        Assert.Throws<InvalidOperationException>(() => other.finish(p1.Object));
     }
-
-    private static void verifyFail(Promise<Void> p, Exception cause) {
-        verify(p).tryFailure(eq(cause));
+    private static void verifyFail(Mock<IPromise<Void>> p, Exception cause) => p.Verify(x => x.tryFailure(cause), Times.Once);
+    private static void verifySuccess(Mock<IPromise<Void>> p) => p.Verify(x => x.trySuccess(null), Times.Once);
+    private static void verifyNotCompleted(Mock<IPromise<Void>> p)
+    {
+        p.Verify(x => x.trySuccess(It.IsAny<Void>()), Times.Never);
+        p.Verify(x => x.tryFailure(It.IsAny<Exception>()), Times.Never);
+        p.Verify(x => x.setSuccess(It.IsAny<Void>()), Times.Never);
+        p.Verify(x => x.setFailure(It.IsAny<Exception>()), Times.Never);
     }
-
-    private static void verifySuccess(Promise<Void> p) {
-        verify(p).trySuccess(null);
-    }
-
-    private static void verifyNotCompleted(Promise<Void> p) {
-        verify(p, never()).trySuccess(any(Void.class));
-        verify(p, never()).tryFailure(any(Exception.class));
-        verify(p, never()).setSuccess(any(Void.class));
-        verify(p, never()).setFailure(any(Exception.class));
-    }
-
-    private static void mockSuccessPromise(Promise<Void> p, GenericFutureListenerConsumer consumer) {
-        when(p.isDone()).thenReturn(true);
-        when(p.isSuccess()).thenReturn(true);
+    private static void mockSuccessPromise(Mock<IPromise<Void>> p, Action<IGenericFutureListener<IFuture>> consumer)
+    {
+        p.Setup(x => x.isDone()).Returns(true);
+        p.Setup(x => x.isSuccess()).Returns(true);
         mockListener(p, consumer);
     }
-
-    private static void mockFailedPromise(Promise<Void> p, Exception cause, GenericFutureListenerConsumer consumer) {
-        when(p.isDone()).thenReturn(true);
-        when(p.isSuccess()).thenReturn(false);
-        when(p.cause()).thenReturn(cause);
+    private static void mockFailedPromise(Mock<IPromise<Void>> p, Exception cause, Action<IGenericFutureListener<IFuture>> consumer)
+    {
+        p.Setup(x => x.isDone()).Returns(true);
+        p.Setup(x => x.isSuccess()).Returns(false);
+        p.Setup(x => x.cause()).Returns(cause);
         mockListener(p, consumer);
     }
-
-    //@SuppressWarnings("unchecked")
-    private static void mockListener(final Promise<Void> p, final GenericFutureListenerConsumer consumer) {
-        doAnswer(new Answer<Promise<Void>>() {
-            @SuppressWarnings({ "unchecked", "raw-types" })
-            @Override
-            public Promise<Void> answer(InvocationOnMock invocation) {
-                consumer.accept((GenericFutureListener) invocation.getArgument(0));
-                return p;
-            }
-        }).when(p).addListener(any(GenericFutureListener.class));
-    }
-
-    interface GenericFutureListenerConsumer {
-        void accept(GenericFutureListener<Future<Void>> listener);
+    private static void mockListener(Mock<IPromise<Void>> p, Action<IGenericFutureListener<IFuture>> consumer)
+    {
+        // CLR adaptation: the non-generic bridge models Java's erased Future<?> observer.
+        p.As<IFuture>().Setup(x => x.addListener(It.IsAny<IGenericFutureListener<IFuture>>())).Callback(consumer).Returns(p.Object);
     }
 }

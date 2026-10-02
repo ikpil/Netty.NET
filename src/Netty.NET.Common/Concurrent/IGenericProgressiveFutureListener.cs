@@ -16,7 +16,8 @@
 
 namespace Netty.NET.Common.Concurrent;
 
-public interface IGenericProgressiveFutureListener<in TProgressiveFuture> : IGenericFutureListener<TProgressiveFuture> 
+// CLR adaptation: observers may bind to IFuture, Promise or ProgressiveFuture; notification adapters retain progress.
+public interface IGenericProgressiveFutureListener<in TProgressiveFuture> : IGenericFutureListener<TProgressiveFuture> where TProgressiveFuture : IFuture
 {
     /**
      * Invoked when the operation has progressed.

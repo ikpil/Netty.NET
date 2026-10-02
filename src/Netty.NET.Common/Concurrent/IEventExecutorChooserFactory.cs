@@ -17,12 +17,12 @@
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Factory that creates new {@link IEventExecutorChooser}s.
+ * Factory that creates new {@link EventExecutorChooser}s.
  */
 public interface IEventExecutorChooserFactory
 {
     /**
-     * Returns a new {@link IEventExecutorChooser}.
+     * Returns a new {@link EventExecutorChooser}.
      */
     IEventExecutorChooser newChooser(IEventExecutor[] executors);
 }

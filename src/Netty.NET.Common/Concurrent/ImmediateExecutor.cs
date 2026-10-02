@@ -20,9 +20,9 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * {@link IExecutor} which execute tasks in the callers thread.
+ * {@link Executor} which execute tasks in the callers thread.
  */
-public class ImmediateExecutor : IExecutor
+public sealed class ImmediateExecutor : IExecutor
 {
     public static readonly ImmediateExecutor INSTANCE = new ImmediateExecutor();
 

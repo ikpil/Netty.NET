@@ -27,7 +27,7 @@ public interface IProgressivePromise<V> : IPromise<V>, IProgressiveFuture<V>
      * Sets the current progress of the operation and notifies the listeners that implement
      * {@link GenericProgressiveFutureListener}.
      */
-    IProgressivePromise<V> setProgress(long progress, long total);
+    new IProgressivePromise<V> setProgress(long progress, long total);
 
     /**
      * Tries to set the current progress of the operation and notifies the listeners that implement
@@ -36,22 +36,28 @@ public interface IProgressivePromise<V> : IPromise<V>, IProgressiveFuture<V>
      */
     bool tryProgress(long progress, long total);
 
-    IProgressivePromise<V> setSuccess(V result);
+    new IProgressivePromise<V> setSuccess(V result);
 
-    IProgressivePromise<V> setFailure(Exception cause);
+    new IProgressivePromise<V> setFailure(Exception cause);
 
-    IProgressivePromise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
+    new IProgressivePromise<V> addListener(IGenericFutureListener<IFuture<V>> listener);
 
-    IProgressivePromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    new IProgressivePromise<V> addListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    IProgressivePromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
+    new IProgressivePromise<V> removeListener(IGenericFutureListener<IFuture<V>> listener);
 
-    IProgressivePromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
+    new IProgressivePromise<V> removeListeners(params IGenericFutureListener<IFuture<V>>[] listeners);
 
-    IProgressivePromise<V> await();
-    IProgressivePromise<V> awaitUninterruptibly();
+    new IProgressivePromise<V> await();
+    new IProgressivePromise<V> awaitUninterruptibly();
 
-    IProgressivePromise<V> sync();
+    new IProgressivePromise<V> sync();
 
-    IProgressivePromise<V> syncUninterruptibly();
+    new IProgressivePromise<V> syncUninterruptibly();
+
+    // CLR adapters preserve Java listener wildcard bindings and fluent returns.
+    new IProgressivePromise<V> addListener<F>(IGenericFutureListener<F> listener) where F : IFuture<V>;
+    new IProgressivePromise<V> addListeners<F>(params IGenericFutureListener<F>[] listeners) where F : IFuture<V>;
+    new IProgressivePromise<V> removeListener<F>(IGenericFutureListener<F> listener) where F : IFuture<V>;
+    new IProgressivePromise<V> removeListeners<F>(params IGenericFutureListener<F>[] listeners) where F : IFuture<V>;
 }

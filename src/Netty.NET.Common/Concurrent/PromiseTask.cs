@@ -16,6 +16,8 @@
 
 using System;
 using System.Text;
+using System.Runtime.CompilerServices;
+using System.Globalization;
 using System.Threading.Tasks;
 using Netty.NET.Common.Functional;
 
@@ -31,20 +33,47 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
     private static readonly IRunnable CANCELLED = new SentinelRunnable("CANCELLED");
     private static readonly IRunnable FAILED = new SentinelRunnable("FAILED");
 
+    private sealed class SentinelRunnable : IRunnable
+    {
+        private readonly string name;
+        internal SentinelRunnable(string name) { this.name = name; }
+        public void run() { } // no-op
+        public override string ToString() => name;
+    }
 
-    // Strictly of type Func<V> or IRunnable
-    private ICallable<V> task;
+
+    // Strictly of type Callable<V> or Runnable
+    // CLR: Runnable completion without an explicit result yields default(V),
+    // including null for reference types, since value types cannot represent null.
+    private object task;
+
+    private sealed class RunnableAdapter<T> : ICallable<T>
+    {
+        private readonly IRunnable task;
+        private readonly T result;
+        internal RunnableAdapter(IRunnable task, T result) { this.task = task; this.result = result; }
+        public T call() { task.run(); return result; }
+        public override string ToString()
+        {
+            string value = result is bool flag ? (flag ? "true" : "false") :
+                result is IFormattable formattable ? formattable.ToString(null, CultureInfo.InvariantCulture) : result?.ToString();
+            return "Callable(task: " + task + ", result: " + value + ')';
+        }
+    }
+
+    public sealed override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
+    public sealed override bool Equals(object other) => ReferenceEquals(this, other);
 
     internal PromiseTask(IEventExecutor executor, IRunnable runnable, V result)
         : base(executor)
     {
-        task = new CallableAdapter<V>(runnable, result);
+        task = result is null ? runnable : new RunnableAdapter<V>(runnable, result);
     }
 
     internal PromiseTask(IEventExecutor executor, IRunnable runnable)
         : base(executor)
     {
-        task = new CallableAdapter<V>(runnable, default);
+        task = runnable;
     }
 
     internal PromiseTask(IEventExecutor executor, Func<V> callable)
@@ -53,10 +82,19 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
         task = new AnonymousCallable<V>(callable);
     }
 
-    //@SuppressWarnings("unchecked")
-    public V runTask()
+    internal PromiseTask(IEventExecutor executor, ICallable<V> callable)
+        : base(executor)
     {
-        return task.call();
+        task = callable;
+    }
+
+    //@SuppressWarnings("unchecked")
+    internal virtual V runTask()
+    {
+        object task = this.task;
+        if (task is ICallable<V> callable) return callable.call();
+        ((IRunnable)task).run();
+        return default;
     }
 
     public virtual void run()
@@ -83,13 +121,13 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
             // to be called is in the case of a periodic ScheduledFutureTask,
             // in which case it's a benign race with cancellation and the (null)
             // return value is not used.
-            task = new CallableAdapter<V>(result, default);
+            task = result;
         }
 
         return done;
     }
 
-    public override IPromise<V> setFailure(Exception cause)
+    public sealed override IPromise<V> setFailure(Exception cause)
     {
         throw new InvalidOperationException();
     }
@@ -101,44 +139,44 @@ public class PromiseTask<V> : DefaultPromise<V>, IRunnableFuture<V>
         return this;
     }
 
-    public override bool tryFailure(Exception cause)
+    public sealed override bool tryFailure(Exception cause)
     {
         return false;
     }
 
-    protected virtual bool tryFailureInternal(Exception cause)
+    protected bool tryFailureInternal(Exception cause)
     {
         return clearTaskAfterCompletion(base.tryFailure(cause), FAILED);
     }
 
-    public override IPromise<V> setSuccess(V result)
+    public sealed override IPromise<V> setSuccess(V result)
     {
         throw new InvalidOperationException();
     }
 
-    protected virtual IPromise<V> setSuccessInternal(V result)
+    protected IPromise<V> setSuccessInternal(V result)
     {
         base.setSuccess(result);
         clearTaskAfterCompletion(true, COMPLETED);
         return this;
     }
 
-    public override bool trySuccess(V result)
+    public sealed override bool trySuccess(V result)
     {
         return false;
     }
 
-    protected virtual bool trySuccessInternal(V result)
+    protected bool trySuccessInternal(V result)
     {
         return clearTaskAfterCompletion(base.trySuccess(result), COMPLETED);
     }
 
-    public override bool setUncancellable()
+    public sealed override bool setUncancellable()
     {
         throw new InvalidOperationException();
     }
 
-    protected virtual bool setUncancellableInternal()
+    protected bool setUncancellableInternal()
     {
         return base.setUncancellable();
     }

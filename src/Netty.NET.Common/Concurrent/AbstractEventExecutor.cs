@@ -25,7 +25,7 @@ using Netty.NET.Common.Internal.Logging;
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Abstract base class for {@link IEventExecutor} implementations.
+ * Abstract base class for {@link EventExecutor} implementations.
  */
 public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExecutor
 {
@@ -69,6 +69,12 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
 
     public abstract bool inEventLoop(Thread thread);
 
+    protected sealed override IRunnableFuture<T> newTaskFor<T>(IRunnable runnable, T value) =>
+        new PromiseTask<T>(this, runnable, value);
+
+    protected sealed override IRunnableFuture<T> newTaskFor<T>(ICallable<T> callable) =>
+        new PromiseTask<T>(this, callable);
+
     public virtual IPromise<V> newPromise<V>()
     {
         return new DefaultPromise<V>(this);
@@ -89,7 +95,9 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         return new FailedFuture<V>(this, cause);
     }
 
-    public abstract Task terminationTask();
+    public abstract IFuture<Void> terminationFuture();
+
+    public Task terminationTask() => terminationFuture().Task;
 
     public virtual IEventExecutor next()
     {
@@ -101,16 +109,19 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         return _selfCollection;
     }
 
-    public virtual Task shutdownGracefullyAsync()
+    public virtual IFuture<Void> shutdownGracefully()
     {
-        return shutdownGracefullyAsync(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT);
+        return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
-    public abstract Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
+    public abstract IFuture<Void> shutdownGracefully(TimeSpan quietPeriod, TimeSpan timeout);
+
+    public Task shutdownGracefullyAsync() => shutdownGracefully().Task;
+    public Task shutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => shutdownGracefully(quietPeriod, timeout).Task;
 
 
     /**
-     * @deprecated {@link #shutdownGracefullyAsync(long, long, TimeSpan)} or {@link #shutdownGracefullyAsync()} instead.
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
     public override List<IRunnable> shutdownNow()
@@ -118,6 +129,12 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
         shutdown();
         return new List<IRunnable>();
     }
+
+    /**
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    [Obsolete]
+    public abstract override void shutdown();
 
     public abstract bool isShuttingDown();
 
@@ -152,7 +169,7 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     /**
-     * Try to execute the given {@link IRunnable} and just log if it throws a {@link Exception}.
+     * Try to execute the given {@link Runnable} and just log if it throws a {@link Throwable}.
      */
     protected static void safeExecute(IRunnable task)
     {
@@ -172,10 +189,10 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     }
 
     /**
-     * Like {@link #execute(IRunnable)} but does not guarantee the task will be run until either
+     * Like {@link #execute(Runnable)} but does not guarantee the task will be run until either
      * a non-lazy task is executed or the executor is shut down.
      * <p>
-     * The default implementation just delegates to {@link #execute(IRunnable)}.
+     * The default implementation just delegates to {@link #execute(Runnable)}.
      * </p>
      */
     [UnstableApi]
@@ -183,4 +200,11 @@ public abstract class AbstractEventExecutor : AbstractExecutorService, IEventExe
     {
         execute(task);
     }
+
+    /**
+     *  @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
+     *
+     */
+    [Obsolete]
+    public interface LazyRunnable : ILazyRunnable { }
 }

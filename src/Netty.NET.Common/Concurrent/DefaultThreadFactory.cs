@@ -32,10 +32,23 @@ public class DefaultThreadFactory : IThreadFactory
     private readonly string _prefix;
     private readonly bool _daemon;
     private readonly ThreadPriority _priority;
-    //protected readonly ThreadGroup _threadGroup;
+    protected readonly ThreadGroup _threadGroup;
 
     public DefaultThreadFactory(Type poolType, bool daemon = false, ThreadPriority priority = ThreadPriority.Normal)
         : this(toPoolName(poolType), daemon, priority, null)
+    {
+    }
+
+    public DefaultThreadFactory(string poolName, bool daemon = false, ThreadPriority priority = ThreadPriority.Normal)
+        : this(poolName, daemon, priority, null)
+    {
+    }
+
+    public DefaultThreadFactory(Type poolType, ThreadPriority priority) : this(poolType, false, priority)
+    {
+    }
+
+    public DefaultThreadFactory(string poolName, ThreadPriority priority) : this(poolName, false, priority)
     {
     }
 
@@ -76,11 +89,11 @@ public class DefaultThreadFactory : IThreadFactory
         _prefix = poolName + '-' + _poolId.incrementAndGet() + '-';
         _daemon = daemon;
         _priority = priority;
-        //_threadGroup = threadGroup;
+        _threadGroup = threadGroup;
     }
 
 
-    public Thread newThread(IRunnable r)
+    public virtual Thread newThread(IRunnable r)
     {
         Thread t = newThread(FastThreadLocalRunnable.wrap(r), _prefix + _nextId.incrementAndGet());
         try
@@ -105,6 +118,6 @@ public class DefaultThreadFactory : IThreadFactory
 
     protected virtual Thread newThread(IRunnable r, string name)
     {
-        return new FastThreadLocalThread(r, name).Thread;
+        return new FastThreadLocalThread(_threadGroup, r, name).Thread;
     }
 }

@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Concurrent;
 public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
 {
     /**
-     * @see #DefaultEventExecutorGroup(int, IThreadFactory)
+     * @see #DefaultEventExecutorGroup(int, ThreadFactory)
      */
     public DefaultEventExecutorGroup(int nThreads)
         : this(nThreads, null)
@@ -37,7 +37,7 @@ public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
+     * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
      */
     public DefaultEventExecutorGroup(int nThreads, IThreadFactory threadFactory)
         : this(nThreads, threadFactory, SingleThreadEventExecutor.DEFAULT_MAX_PENDING_EXECUTOR_TASKS,
@@ -49,9 +49,9 @@ public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
      * Create a new instance.
      *
      * @param nThreads          the number of threads that will be used by this instance.
-     * @param threadFactory     the IThreadFactory to use, or {@code null} if the default should be used.
+     * @param threadFactory     the ThreadFactory to use, or {@code null} if the default should be used.
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
-     * @param rejectedHandler   the {@link IRejectedExecutionHandler} to use.
+     * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
     public DefaultEventExecutorGroup(int nThreads, IThreadFactory threadFactory, int maxPendingTasks,
         IRejectedExecutionHandler rejectedHandler)
@@ -64,9 +64,4 @@ public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
         return new DefaultEventExecutor(this, executor, (int)args[0], (IRejectedExecutionHandler)args[1]);
     }
 
-    public override List<IRunnable> shutdownNow()
-    {
-        // ...
-        throw new System.NotImplementedException();
-    }
 }

@@ -25,9 +25,8 @@ namespace Netty.NET.Common.Concurrent;
  * The result of a scheduled asynchronous operation.
  */
 //[SuppressWarnings("ClassNameSameAsAncestorName")]
-public interface IScheduledTask : IComparable<IScheduledTask>, IRunnable
+public interface IScheduledTask : IFuture, IComparable<IScheduledTask>, IRunnable
 {
-    bool isCancelled();
     bool cancel();
     bool cancelWithoutRemove(bool mayInterruptIfRunning);
 
@@ -35,11 +34,12 @@ public interface IScheduledTask : IComparable<IScheduledTask>, IRunnable
     long delayNanos(long nanos);
     long delayNanos();
     IScheduledTask setId(long id);
+    long getId();
     void setConsumed();
     long getDelay();
 }
 
-public interface IScheduledTask<T> : IScheduledTask
+public interface IScheduledTask<T> : IScheduledTask, IFuture<T>
 {
     T Result { get; }
     Task<T> Completion { get; }
