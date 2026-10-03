@@ -109,12 +109,15 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
         internal readonly long nextWakeUpIndex;
         internal readonly IEventExecutor[] activeExecutors;
         internal readonly IEventExecutorChooser activeExecutorsChooser;
+        internal readonly IReadOnlyDictionary<IEventExecutor, long> resumedAt;
 
-        internal AutoScalingState(int activeChildrenCount, long nextWakeUpIndex, IEventExecutor[] activeExecutors)
+        internal AutoScalingState(int activeChildrenCount, long nextWakeUpIndex, IEventExecutor[] activeExecutors,
+            IReadOnlyDictionary<IEventExecutor, long> resumedAt)
         {
             this.activeChildrenCount = activeChildrenCount;
             this.nextWakeUpIndex = nextWakeUpIndex;
             this.activeExecutors = activeExecutors;
+            this.resumedAt = resumedAt;
             activeExecutorsChooser = DefaultEventExecutorChooserFactory.INSTANCE.newChooser(activeExecutors);
         }
     }
@@ -139,7 +142,8 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             utilizationMetrics = metrics.AsReadOnly();
             allExecutorsChooser = DefaultEventExecutorChooserFactory.INSTANCE.newChooser(executors);
 
-            AutoScalingState initialState = new AutoScalingState(factory.maxChildren, 0L, executors);
+            AutoScalingState initialState = new AutoScalingState(factory.maxChildren, 0L, executors,
+                new Dictionary<IEventExecutor, long>(ReferenceEqualityComparer.Instance));
             state = initialState;
 
             var monitoringCancellation = new CancellationTokenSource();
@@ -241,10 +245,17 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 newActiveList.AddRange(oldState.activeExecutors);
                 newActiveList.AddRange(wokenUp);
 
+                // CLR: publish activation time with the same immutable membership snapshot.
+                // A resumed worker must have a complete configured window before its
+                // utilization can count toward sustained idle/busy patience.
+                var resumedAt = new Dictionary<IEventExecutor, long>(oldState.resumedAt, ReferenceEqualityComparer.Instance);
+                long resumeTime = executors[0].ticker().nanoTime();
+                foreach (IEventExecutor child in wokenUp) resumedAt[child] = resumeTime;
+
                 AutoScalingState newState = new AutoScalingState(
                         oldState.activeChildrenCount + wokenUp.Count,
                         startIndex + wokenUp.Count,
-                        newActiveList.ToArray());
+                        newActiveList.ToArray(), resumedAt);
 
                 if (ReferenceEquals(Interlocked.CompareExchange(ref state, newState, oldState), oldState))
                 {
@@ -374,7 +385,17 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
 
                         utilization = Math.Min(1.0, (double)activeTime / totalTime);
 
-                        if (utilization < chooser.factory.scaleDownThreshold)
+                        // Metrics still consume/publish actual activity in a partial resume
+                        // window. Only the sustained-load decision waits for a full window;
+                        // no activity is invented and subsequent patience semantics are unchanged.
+                        bool completeResumeWindow = !currentState.resumedAt.TryGetValue(eventExecutor, out long resumeTime) ||
+                            unchecked(now - resumeTime) >= chooser.factory.utilizationCheckPeriodNanos;
+                        if (!completeResumeWindow)
+                        {
+                            eventExecutor.resetIdleCycles();
+                            eventExecutor.resetBusyCycles();
+                        }
+                        else if (utilization < chooser.factory.scaleDownThreshold)
                         {
                             // Utilization is low, increment idle counter and reset busy counter.
                             int idleCycles = eventExecutor.getAndIncrementIdleCycles();
@@ -479,7 +500,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     // another thread likely changed it. We use the count from our fresh scan.
                     // The nextWakeUpIndex is preserved from the old state as this rebuild is not a scale-up action.
                     AutoScalingState newState = new AutoScalingState(
-                            newActiveExecutors.Length, oldState.nextWakeUpIndex, newActiveExecutors);
+                            newActiveExecutors.Length, oldState.nextWakeUpIndex, newActiveExecutors, oldState.resumedAt);
 
                     if (ReferenceEquals(Interlocked.CompareExchange(ref chooser.state, newState, oldState), oldState))
                     {

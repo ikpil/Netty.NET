@@ -104,3 +104,54 @@ timing stability. The monitor is still subject to late execution and batched I/O
 reports. The subsequent inherited unordered configuration decision is implemented
 in common-unordered-native-configuration.md. Further public API/backend review and
 the remaining source decisions remain required; this unit does not finish common.
+
+## Resumed-worker measurement eligibility
+
+At baseline 8d16bf2, an isolated copy with in-memory tracing repeats the unchanged
+original testScaleUpDoesNotExceedMaxThreads body. The seventh invocation fails;
+iteration-06.csv and autoscaling-load-probe.trx retain it. The 50ms monitor samples
+the resumed child at actual intervals 47.0048ms, 47.0246ms and 64.0973ms. Its wake
+request/decision occurs at 15,755,180,900ns, its no-op task completes at
+15,755,456,700ns, and highLoad is set at 15,817,708,900ns. The third low sample
+requests suspension at 15,913,307,600ns. Its first 35.0005ms I/O report arrives
+2.9942ms later, at 15,916,301,800ns. The first accepted interval was shorter than
+one configured period since activation, but already consumed idle patience.
+The counters reach three before the resumed worker can publish that report.
+
+The exact pinned Java utilization/counter decision block was extracted and
+executed with those three recorded inputs, producing the same 0.005867/0/0
+utilizations and third-sample suspension eligibility. This is a decision replay
+with simple input/counter stubs, not a claim that a Java runtime produced the
+CLR trace. See autoscaling-resume-java-decision.txt and
+artifacts/autoscaling-load-validation/TraceDecisionOracle.java. The original
+untraced earlier failures cannot retrospectively be assigned this same cause.
+
+The native membership snapshot now also owns a reference-keyed resumed-at map.
+Scale-up copies it, records the monitored clock's activation time, and publishes
+it with membership through the existing CAS. Rebuilds retain those times; a later
+resume replaces the previous epoch. Already-active initial children keep the
+original initial-window behavior. While less than one configured period has
+elapsed since resume, the monitor still samples/resets activity and publishes
+actual utilization, but resets idle/busy patience instead of counting that sample.
+Once eligible, the original thresholds, pre-increment patience, ramp bounds and
+channel guards apply. This changes decision eligibility, not measured activity,
+fixed-rate phase or the elapsed-time denominator. The map is bounded by the
+executor set and copied only during activation; it is never mutated after
+publication. Signed differences support zero timestamps and clock wraparound.
+
+Six controlled cases fail against the baseline and pass after the change:
+representative short-window/batched-report replay (ordinary time, signed wrap
+and a zero resume timestamp), low-utilization tasks still reaching suspension,
+partial-window metrics without busy patience, and a second resume after rebuilding
+the snapshot. The original seven tests' body, waits, load, thresholds, assertions
+and comments remain unchanged. The isolated trace-enabled harness subsequently
+passes forty repetitions of the original scenario (autoscaling-resume-fixed-probe.trx).
+The harness and trace code live only under ignored artifacts; no production
+tracing remains. Summary: autoscaling-resume-trace-summary.json.
+
+This repair covers the demonstrated premature-resuspension path. Forty traced
+passes and full-suite passes do not establish timing stability under arbitrary
+worker/report delay, and do not prove the cause of an untraced earlier failure.
+Future transport integration must retain accurate operation-owned I/O reports.
+
+Final validation: affected Debug 131 passed; full Debug/Release each 1477 passed, zero failed and the same 14 skips (1491 discovered). All 759 non-Porting and prior case identities/outcomes remain; only six new resume contracts are added. All 114 reviewed comment entries have zero missing, including 43 factory and 17 original fixture comments; all 271 inventory paths match. Evidence: autoscaling-resume-full-debug.trx, autoscaling-resume-full-release.trx, autoscaling-resume-identity-comparison.json, autoscaling-resume-comment-audit.json and autoscaling-resume-inventory-summary.json. Windows/net10.0, SDK 10.0.203/runtime 10.0.7; broader native runtime/common work remains open.

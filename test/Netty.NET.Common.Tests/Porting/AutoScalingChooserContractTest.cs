@@ -126,9 +126,17 @@ public class AutoScalingChooserContractTest
         internal readonly ManualExecutor[] children;
         internal readonly IObservableEventExecutorChooser chooser;
         private readonly IRunnable monitor;
-        internal Harness(int min, int max, int rampUp = 1, int rampDown = 1, int patience = 0)
+        internal Harness(int min, int max, int rampUp = 1, int rampDown = 1, int patience = 0, long initialTime = 0)
         {
+            if (initialTime > 0) clock.advance(initialTime);
+            else if (initialTime < 0)
+            {
+                clock.advance(long.MaxValue);
+                clock.advance(unchecked(initialTime - long.MaxValue));
+            }
             children = Enumerable.Range(0, max).Select(_ => new ManualExecutor(clock)).ToArray();
+            if (initialTime != 0)
+                foreach (ManualExecutor child in children) child.lastActivity = clock.nanoTime();
             var factory = new AutoScalingEventExecutorChooserFactory(min, max, TimeSpan.FromHours(1),
                 0.4, 0.6, rampUp, rampDown, patience);
             chooser = (IObservableEventExecutorChooser)factory.newChooser(children);
@@ -319,6 +327,106 @@ public class AutoScalingChooserContractTest
         h.tick(Period - 1);
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
         Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(0.5, metric.utilization()));
+    }
+
+    [Theory]
+    [InlineData(0L)]
+    [InlineData(long.MaxValue - 6 * Period)]
+    [InlineData(-6 * Period - Period / 10)]
+    public void NewlyResumedChildGetsACompleteWindowBeforeCountingIdleCycles(long initialTime)
+    {
+        using var h = new Harness(1, 2, patience: 2, initialTime: initialTime);
+        ManualExecutor resumed = ResumeOneChild(h);
+        ManualExecutor busy = h.children.Single(c => c != resumed);
+        // Exercise a short post-resume interval followed by two idle windows, as in the retained trace.
+        // The resumed child has not published its first batched I/O report yet.
+        foreach (long delta in new[] { Period * 94 / 100, Period * 96 / 100, Period * 128 / 100 })
+        {
+            busy.activeTime = Period;
+            h.tick(delta);
+            Assert.Equal(2, h.chooser.activeExecutorCount());
+            Assert.False(resumed.suspended);
+        }
+        resumed.activeTime = Period * 7 / 10;
+        busy.activeTime = Period;
+        h.tick(Period * 96 / 100);
+        Assert.Equal(2, h.chooser.activeExecutorCount());
+        Assert.False(resumed.suspended);
+    }
+
+    [Fact]
+    public void ResumedLowUtilizationStillSuspendsAfterTheFullPatienceSequence()
+    {
+        using var h = new Harness(1, 2, patience: 2);
+        ManualExecutor resumed = ResumeOneChild(h);
+        ManualExecutor busy = h.children.Single(c => c != resumed);
+        foreach (long delta in new[] { Period * 94 / 100, Period * 96 / 100, Period * 128 / 100 })
+        {
+            // Brief tasks remain low utilization; their recent timestamp does not imply a busy window.
+            resumed.activeTime = Period / 100;
+            resumed.lastActivity = unchecked(h.clock.nanoTime() + delta - 1);
+            busy.activeTime = Period;
+            h.tick(delta);
+            Assert.False(resumed.suspended);
+        }
+        resumed.activeTime = Period / 100;
+        busy.activeTime = Period;
+        h.tick(Period * 96 / 100);
+        Assert.True(resumed.suspended);
+        Assert.Equal(1, h.chooser.activeExecutorCount());
+    }
+
+    [Fact]
+    public void ResumedPartialWindowPublishesMetricsWithoutCountingBusyPatience()
+    {
+        using var h = new Harness(1, 2, patience: 2);
+        ManualExecutor resumed = ResumeOneChild(h);
+        resumed.activeTime = Period * 7 / 10;
+        int priorReads = resumed.metricReads;
+        h.tick(Period * 94 / 100);
+        Assert.Equal(priorReads + 1, resumed.metricReads);
+        Assert.Equal(0, resumed.activeTime);
+        Assert.Equal((Period * 7 / 10) / (double)(Period * 94 / 100),
+            h.chooser.executorUtilizations().Single(m => m.executor() == resumed).utilization());
+        Assert.Equal(0, resumed.busyCycles());
+        Assert.Equal(0, resumed.idleCycles());
+    }
+
+    [Fact]
+    public void ASecondResumeStartsANewEligibilityWindowAfterSnapshotRebuild()
+    {
+        using var h = new Harness(1, 2, patience: 2);
+        ManualExecutor resumed = ResumeOneChild(h);
+        ManualExecutor busy = h.children.Single(c => c != resumed);
+        foreach (long delta in new[] { Period * 94 / 100, Period * 96 / 100, Period * 128 / 100, Period * 96 / 100 })
+        {
+            busy.activeTime = Period;
+            h.tick(delta);
+        }
+        Assert.True(resumed.suspended);
+        busy.activeTime = Period;
+        h.tick(Period + Period / 10);
+        Assert.False(resumed.suspended);
+        Assert.Equal(2, resumed.wakes);
+        resumed.lastActivity = h.clock.nanoTime();
+        busy.activeTime = Period;
+        h.tick(Period * 94 / 100);
+        Assert.False(resumed.suspended);
+        Assert.Equal(0, resumed.idleCycles());
+    }
+
+    private static ManualExecutor ResumeOneChild(Harness h)
+    {
+        h.tick(); h.tick(); h.tick();
+        Assert.Equal(1, h.chooser.activeExecutorCount());
+        ManualExecutor busy = h.children.Single(c => !c.suspended);
+        busy.activeTime = Period; h.tick();
+        busy.activeTime = Period; h.tick();
+        busy.activeTime = Period; h.tick(Period + Period / 10);
+        Assert.Equal(2, h.chooser.activeExecutorCount());
+        ManualExecutor resumed = h.children.Single(c => c.wakes != 0);
+        resumed.lastActivity = h.clock.nanoTime(); // The wake-up task has completed, as in the retained trace.
+        return resumed;
     }
 
     [Fact]

@@ -121,14 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1485 cases** on Windows/net10.0:
-**1471 passed / 0 failed / 14 skipped** in Debug and the final Release run.
+The current default suite executes **1491 cases** on Windows/net10.0:
+**1477 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`encoding-full-debug.trx` and `encoding-full-release.trx`; the encoding boundary
-is covered by `encoding-affected-debug.trx`. The first Release run retained one
-existing auto-scaling real-time failure; the focused 40-case Release selection
-and final full rerun pass. Its cause remains unestablished, as detailed below.
+`autoscaling-resume-full-debug.trx` and `autoscaling-resume-full-release.trx`;
+the affected boundary is covered by `autoscaling-resume-affected-debug.trx`.
+An isolated traced reproduction identifies a premature post-resume sampling path,
+now repaired with six deterministic regressions. Earlier untraced failures cannot
+retrospectively be assigned that same cause; the finite timing evidence is detailed below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
@@ -499,6 +500,42 @@ Source decisions are 49 verified / 36 CLR replacements / 13 exclusions /
 Next: trace the recurring auto-scaling real-time failure with actual clock/I/O
 report evidence, then continue AsciiString integer parsing/radix/overflow review.
 Full native common completion remains open.
+
+The resumed-worker review reproduces the unchanged real-time auto-scaling scenario
+on its seventh invocation in an isolated tracing harness. A 47.0048ms first
+post-resume interval (50ms configured) consumes idle patience; two later empty
+samples request suspension 2.9942ms before the first I/O report arrives. Executing
+the pinned Java decision block with those recorded inputs yields the same decision.
+The chooser now publishes reference-keyed activation times with immutable CAS
+membership snapshots. Before one configured period has elapsed since resume,
+actual metrics still sample/reset/publish, while idle/busy patience stays reset.
+Rebuild preserves activation epochs; another resume replaces the old epoch. Once
+eligible, thresholds, pre-increment patience, phase, bounds and channel guards
+retain their behavior. No activity is invented and no original fixture is changed.
+See common-autoscaling-monitor-windows.md; no new feature MD is introduced.
+
+Six new controlled cases fail baseline 8d16bf2 and pass after repair, covering the
+short-window/report pattern, valid zero time, signed clock wrap, genuine low load,
+partial-window metric publication and a second activation. The affected Debug
+selection passes 131 with no failures/skips; the trace-enabled original scenario
+passes forty repetitions. The probe/tracing code remains only in ignored artifacts.
+Full Debug/Release each pass 1477 / fail zero / skip the same 14 (1491 discovered).
+All prior case identities/outcomes and all 759 non-Porting cases remain unchanged,
+with only six new contracts (autoscaling-resume-identity-comparison.json).
+All 114 reviewed comment entries have zero missing, including the factory's 43
+and original fixture's 17; all 271 pinned inventory paths match
+(autoscaling-resume-comment-audit.json, autoscaling-resume-inventory-summary.json).
+Additional evidence: autoscaling-resume-baseline.trx,
+autoscaling-resume-trace-summary.json, autoscaling-resume-java-decision.txt,
+autoscaling-resume-fixed-probe.trx. Validation uses --artifacts-path
+artifacts/autoscaling-load-validation/current-build, Windows/net10.0,
+SDK 10.0.203/runtime 10.0.7. Forty traced passes do not prove arbitrary timing
+stability or establish the cause of earlier untraced failures. Source decisions
+remain 49 verified / 36 CLR replacements / 13 exclusions / 86 pending /
+21 in progress; original tests remain 56 verified / ten exclusions.
+Next: continue AsciiString integer parsing, radix/sign/range and overflow review
+against pinned implementations and actual header/value-converter consumers.
+The remaining native common/runtime and future transport integration stay open.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already
