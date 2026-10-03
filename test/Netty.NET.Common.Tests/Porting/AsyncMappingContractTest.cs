@@ -20,12 +20,12 @@ public class AsyncMappingContractTest
         internal int Releases;
         internal bool ReleasedOnLoop;
         internal IEventExecutor Executor;
-        protected override void deallocate()
+        protected override void Deallocate()
         {
             ++Releases;
-            ReleasedOnLoop = Executor.inEventLoop();
+            ReleasedOnLoop = Executor.InEventLoop();
         }
-        public override IReferenceCounted touch(object hint) => this;
+        public override IReferenceCounted Touch(object hint) => this;
     }
 
     // Consumer model of SniHandler.lookup and SslClientHelloHandler.select:
@@ -67,8 +67,8 @@ public class AsyncMappingContractTest
                         observation = new ExecutorCompletion(executor, Operation);
                         registration = observation.Register(task =>
                         {
-                            CompletionOnLoop = executor.inEventLoop();
-                            hello.release();
+                            CompletionOnLoop = executor.InEventLoop();
+                            hello.Release();
                             Events.Add("release");
                             Suppressed = false;
                             try { Selected = ((Task<object>)task).GetAwaiter().GetResult(); }
@@ -84,7 +84,7 @@ public class AsyncMappingContractTest
                     }
                     catch
                     {
-                        if (registration == null && hello.refCnt() != 0) hello.release();
+                        if (registration == null && hello.RefCnt() != 0) hello.Release();
                         throw;
                     }
                     finally { Started.TrySetResult(); }
@@ -120,7 +120,7 @@ public class AsyncMappingContractTest
         {
             Assert.Equal((object)hostname, input);
             Assert.Equal(cancellation.Token, token);
-            invokedOnLoop = executor.inEventLoop();
+            invokedOnLoop = executor.InEventLoop();
             return producer.Task;
         });
         void Finish()
@@ -141,7 +141,7 @@ public class AsyncMappingContractTest
                 await executor.SubmitAsync(() =>
                 {
                     Assert.True(consumer.Suppressed);
-                    Assert.Equal(1, hello.refCnt());
+                    Assert.Equal(1, hello.RefCnt());
                 });
                 await consumer.RequestReadAsync();
                 await Task.Run(Finish);
@@ -160,7 +160,7 @@ public class AsyncMappingContractTest
             Assert.True(consumer.CompletionOnLoop);
             Assert.True(hello.ReleasedOnLoop);
             Assert.Equal(1, hello.Releases);
-            Assert.Equal(0, hello.refCnt());
+            Assert.Equal(0, hello.RefCnt());
             Assert.Same(producer.Task, consumer.Operation);
             Assert.False(consumer.Suppressed);
             Assert.False(consumer.ReadPending);
@@ -214,7 +214,7 @@ public class AsyncMappingContractTest
             Assert.Equal(cancellation.Token, received);
             Assert.True(received.IsCancellationRequested);
             Assert.False(lookup.IsCompleted);
-            Assert.Equal(1, hello.refCnt());
+            Assert.Equal(1, hello.RefCnt());
             producer.SetResult(value);
             Assert.Same(value, await lookup.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Same(value, consumer.Selected);
@@ -245,7 +245,7 @@ public class AsyncMappingContractTest
             waitCancellation.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await lookup.WaitAsync(waitCancellation.Token));
             Assert.False(producer.Task.IsCompleted);
-            Assert.Equal(1, hello.refCnt());
+            Assert.Equal(1, hello.RefCnt());
             await consumer.RequestReadAsync();
             producer.SetResult(value);
             Assert.Same(value, await lookup.WaitAsync(TimeSpan.FromSeconds(5)));

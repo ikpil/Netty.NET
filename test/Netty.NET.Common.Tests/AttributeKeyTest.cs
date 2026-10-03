@@ -21,39 +21,39 @@ namespace Netty.NET.Common.Tests;
 public class AttributeKeyTest
 {
     [Fact]
-    public void testExists()
+    public void TestExists()
     {
         string name = "test";
-        Assert.False(AttributeKey.exists<string>(name));
-        AttributeKey<string> attr = AttributeKey.valueOf<string>(name);
+        Assert.False(AttributeKey.Exists<string>(name));
+        AttributeKey<string> attr = AttributeKey.ValueOf<string>(name);
 
-        Assert.True(AttributeKey.exists<string>(name));
+        Assert.True(AttributeKey.Exists<string>(name));
         Assert.NotNull(attr);
     }
 
     [Fact]
-    public void testValueOf()
+    public void TestValueOf()
     {
         string name = "test1";
-        Assert.False(AttributeKey.exists<string>(name));
-        AttributeKey<string> attr = AttributeKey.valueOf<string>(name);
-        AttributeKey<string> attr2 = AttributeKey.valueOf<string>(name);
+        Assert.False(AttributeKey.Exists<string>(name));
+        AttributeKey<string> attr = AttributeKey.ValueOf<string>(name);
+        AttributeKey<string> attr2 = AttributeKey.ValueOf<string>(name);
 
         Assert.Same(attr, attr2);
     }
 
     [Fact]
-    public void testNewInstance()
+    public void TestNewInstance()
     {
         string name = "test2";
-        Assert.False(AttributeKey.exists<string>(name));
-        AttributeKey<string> attr = AttributeKey.newInstance<string>(name);
-        Assert.True(AttributeKey.exists<string>(name));
+        Assert.False(AttributeKey.Exists<string>(name));
+        AttributeKey<string> attr = AttributeKey.NewInstance<string>(name);
+        Assert.True(AttributeKey.Exists<string>(name));
         Assert.NotNull(attr);
 
         try
         {
-            AttributeKey.newInstance<string>(name);
+            AttributeKey.NewInstance<string>(name);
             Assert.Fail();
         }
         catch (ArgumentException e)

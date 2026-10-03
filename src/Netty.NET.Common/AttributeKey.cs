@@ -28,33 +28,33 @@ public class AttributeKey
     private static readonly ConcurrentDictionary<string, IAttributeKey> Keys = new();
     private static int _nextId;
 
-    public static bool exists(string name)
+    public static bool Exists(string name)
     {
-        return Keys.ContainsKey(ObjectUtil.checkNonEmpty(name, nameof(name)));
+        return Keys.ContainsKey(ObjectUtil.CheckNonEmpty(name, nameof(name)));
     }
 
-    public static bool exists<T>(string name) where T : class
+    public static bool Exists<T>(string name) where T : class
     {
-        return exists(name);
+        return Exists(name);
     }
     
-    public static AttributeKey<T> valueOf<T>(string name) where T : class
+    public static AttributeKey<T> ValueOf<T>(string name) where T : class
     {
-        ObjectUtil.checkNonEmpty(name, nameof(name));
+        ObjectUtil.CheckNonEmpty(name, nameof(name));
         IAttributeKey key = Keys.GetOrAdd(name,
             n => new AttributeKey<T>(Interlocked.Increment(ref _nextId), n));
         return key as AttributeKey<T> ?? throw new ArgumentException(
             "Attribute key '" + name + "' is already registered with a different value type.", nameof(name));
     }
 
-    public static AttributeKey<T> valueOf<T>(Type firstNameComponent, string secondNameComponent) where T : class
+    public static AttributeKey<T> ValueOf<T>(Type firstNameComponent, string secondNameComponent) where T : class
     {
-        return AttributeKey<T>.valueOf(firstNameComponent, secondNameComponent);
+        return AttributeKey<T>.ValueOf(firstNameComponent, secondNameComponent);
     }
     
-    public static AttributeKey<T> newInstance<T>(string name) where T : class
+    public static AttributeKey<T> NewInstance<T>(string name) where T : class
     {
-        ObjectUtil.checkNonEmpty(name, nameof(name));
+        ObjectUtil.CheckNonEmpty(name, nameof(name));
         var key = new AttributeKey<T>(Interlocked.Increment(ref _nextId), name);
         if (!Keys.TryAdd(name, key))
         {
@@ -77,33 +77,33 @@ public class AttributeKey<T> : AbstractConstant<AttributeKey<T>>, IAttributeKey 
     /**
      * Returns the singleton instance of the {@link AttributeKey} which has the specified {@code name}.
      */
-    public static AttributeKey<T> valueOf(string name)
+    public static AttributeKey<T> ValueOf(string name)
     {
-        return AttributeKey.valueOf<T>(name);
+        return AttributeKey.ValueOf<T>(name);
     }
 
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
      */
-    public static bool exists(string name)
+    public static bool Exists(string name)
     {
-        return AttributeKey.exists(name);
+        return AttributeKey.Exists(name);
     }
 
     /**
      * Creates a new {@link AttributeKey} for the given {@code name} or fail with an
      * {@link IllegalArgumentException} if a {@link AttributeKey} for the given {@code name} exists.
      */
-    public static AttributeKey<T> newInstance(string name)
+    public static AttributeKey<T> NewInstance(string name)
     {
-        return AttributeKey.newInstance<T>(name);
+        return AttributeKey.NewInstance<T>(name);
     }
 
-    public static AttributeKey<T> valueOf(Type firstNameComponent, string secondNameComponent)
+    public static AttributeKey<T> ValueOf(Type firstNameComponent, string secondNameComponent)
     {
-        ObjectUtil.checkNotNull(firstNameComponent, nameof(firstNameComponent));
-        ObjectUtil.checkNotNull(secondNameComponent, nameof(secondNameComponent));
-        return valueOf(firstNameComponent.FullName + '#' + secondNameComponent);
+        ObjectUtil.CheckNotNull(firstNameComponent, nameof(firstNameComponent));
+        ObjectUtil.CheckNotNull(secondNameComponent, nameof(secondNameComponent));
+        return ValueOf(firstNameComponent.FullName + '#' + secondNameComponent);
     }
 
     internal AttributeKey(int id, string name)

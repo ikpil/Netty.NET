@@ -11,7 +11,7 @@ public class FastThreadLocalFunc<V> : FastThreadLocal<V> where V : class
         _func = func;
     }
 
-    protected override V initialValue()
+    protected override V InitialValue()
     {
         return _func.Invoke();
     }

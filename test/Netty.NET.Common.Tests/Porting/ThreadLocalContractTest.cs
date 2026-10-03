@@ -14,11 +14,11 @@ public class ThreadLocalContractTest : IDisposable
     {
         // xUnit may reuse a worker that previously ran other Netty consumers.
         // These tests assert absolute counts on an explicitly empty map.
-        FastThreadLocal.removeAll();
-        Assert.Equal(0, FastThreadLocal.size());
+        FastThreadLocal.RemoveAll();
+        Assert.Equal(0, FastThreadLocal.Size());
     }
 
-    public void Dispose() => FastThreadLocal.removeAll();
+    public void Dispose() => FastThreadLocal.RemoveAll();
 
     [Fact]
     public void ScopeRejectsReentryAndCleansValuesWhenTheTaskThrows()
@@ -26,16 +26,16 @@ public class ThreadLocalContractTest : IDisposable
         var local = new TrackingLocal();
         var cause = new InvalidOperationException("task failed");
         Assert.Same(cause, Assert.Throws<InvalidOperationException>(() =>
-            FastThreadLocalThread.runWithFastThreadLocal(() =>
+            FastThreadLocalThread.RunWithFastThreadLocal(() =>
             {
-                local.set("value");
-                Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.runWithFastThreadLocal(() => { }));
+                local.Set("value");
+                Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() => { }));
                 throw cause;
             })));
-        Assert.False(FastThreadLocalThread.currentThreadHasFastThreadLocal());
-        Assert.False(local.isSet());
+        Assert.False(FastThreadLocalThread.CurrentThreadHasFastThreadLocal());
+        Assert.False(local.IsSet());
         Assert.Equal("value", local.Removed);
-        Assert.Null(InternalThreadLocalMap.getIfSet());
+        Assert.Null(InternalThreadLocalMap.GetIfSet());
     }
 
     [Fact]
@@ -45,13 +45,13 @@ public class ThreadLocalContractTest : IDisposable
         for (int i = 0; i < 100; i++)
         {
             var local = new FastThreadLocal<string>();
-            local.set(i.ToString());
+            local.Set(i.ToString());
             locals.Add(local);
         }
-        Assert.Equal(100, FastThreadLocal.size());
-        for (int i = 0; i < locals.Count; i++) Assert.Equal(i.ToString(), locals[i].get());
-        FastThreadLocal.removeAll();
-        Assert.Equal(0, FastThreadLocal.size());
+        Assert.Equal(100, FastThreadLocal.Size());
+        for (int i = 0; i < locals.Count; i++) Assert.Equal(i.ToString(), locals[i].Get());
+        FastThreadLocal.RemoveAll();
+        Assert.Equal(0, FastThreadLocal.Size());
     }
 
     [Fact]
@@ -60,18 +60,18 @@ public class ThreadLocalContractTest : IDisposable
         var local = new TrackingLocal();
         Exception failure = null;
         var factory = new DefaultThreadFactory(typeof(ThreadLocalContractTest), true);
-        var thread = factory.newThread(Runnables.Create(() =>
+        var thread = factory.NewThread(Runnables.Create(() =>
         {
             try
             {
-                Assert.True(FastThreadLocalThread.currentThreadHasFastThreadLocal());
-                Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
-                Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.runWithFastThreadLocal(() => { }));
-                local.set(Thread.CurrentThread.Name);
+                Assert.True(FastThreadLocalThread.CurrentThreadHasFastThreadLocal());
+                Assert.True(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
+                Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() => { }));
+                local.Set(Thread.CurrentThread.Name);
             }
             catch (Exception cause) { failure = cause; }
         }));
-        Assert.True(FastThreadLocalThread.willCleanupFastThreadLocals(thread));
+        Assert.True(FastThreadLocalThread.WillCleanupFastThreadLocals(thread));
         Assert.True(thread.IsBackground);
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -82,16 +82,16 @@ public class ThreadLocalContractTest : IDisposable
     [Fact]
     public void CachedCollectionsHandleDifferentClrElementTypesAndReleaseOldEntries()
     {
-        var map = InternalThreadLocalMap.get();
-        var strings = map.arrayList<string>();
+        var map = InternalThreadLocalMap.Get();
+        var strings = map.ArrayList<string>();
         strings.Add("entry");
-        var objects = map.arrayList<object>();
+        var objects = map.ArrayList<object>();
         Assert.Empty(objects);
         Assert.Empty(strings);
-        Assert.Same(objects, map.arrayList<object>());
-        var builder = map.stringBuilder();
+        Assert.Same(objects, map.ArrayList<object>());
+        var builder = map.StringBuilder();
         builder.Append('x', 10000);
-        Assert.Same(builder, map.stringBuilder());
+        Assert.Same(builder, map.StringBuilder());
         Assert.Empty(builder.ToString());
         Assert.Equal(1024, builder.Capacity);
     }
@@ -99,7 +99,7 @@ public class ThreadLocalContractTest : IDisposable
     private sealed class TrackingLocal : FastThreadLocal<string>
     {
         public string Removed;
-        protected override void onRemoval(string value) => Removed = value;
+        protected override void OnRemoval(string value) => Removed = value;
     }
 
     [Fact]
@@ -107,10 +107,10 @@ public class ThreadLocalContractTest : IDisposable
     {
         var first = new EqualLocal();
         var second = new EqualLocal();
-        first.set("first");
-        second.set("second");
-        Assert.Equal(2, FastThreadLocal.size());
-        FastThreadLocal.removeAll();
+        first.Set("first");
+        second.Set("second");
+        Assert.Equal(2, FastThreadLocal.Size());
+        FastThreadLocal.RemoveAll();
         Assert.Equal("first", first.Removed);
         Assert.Equal("second", second.Removed);
     }
@@ -120,6 +120,6 @@ public class ThreadLocalContractTest : IDisposable
         public string Removed;
         public override bool Equals(object other) => other is EqualLocal;
         public override int GetHashCode() => 1;
-        protected override void onRemoval(string value) => Removed = value;
+        protected override void OnRemoval(string value) => Removed = value;
     }
 }

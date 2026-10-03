@@ -25,7 +25,7 @@ public class DomainNameMappingTest
     // Deprecated API
 
     [Fact]
-    public void testNullDefaultValueInDeprecatedApi()
+    public void TestNullDefaultValueInDeprecatedApi()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
@@ -34,83 +34,83 @@ public class DomainNameMappingTest
     }
 
     [Fact]
-    public void testNullDomainNamePatternsAreForbiddenInDeprecatedApi()
+    public void TestNullDomainNamePatternsAreForbiddenInDeprecatedApi()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            new DomainNameMapping<string>("NotFound").add(null, "Some value");
+            new DomainNameMapping<string>("NotFound").Add(null, "Some value");
         });
     }
 
     [Fact]
-    public void testNullValuesAreForbiddenInDeprecatedApi()
+    public void TestNullValuesAreForbiddenInDeprecatedApi()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            new DomainNameMapping<string>("NotFound").add("Some key", null);
+            new DomainNameMapping<string>("NotFound").Add("Some key", null);
         });
     }
 
     [Fact]
-    public void testDefaultValueInDeprecatedApi()
+    public void TestDefaultValueInDeprecatedApi()
     {
         DomainNameMapping<string> mapping = new DomainNameMapping<string>("NotFound");
 
-        Assert.Equal("NotFound", mapping.map("not-existing"));
+        Assert.Equal("NotFound", mapping.Map("not-existing"));
 
-        mapping.add("*.netty.io", "Netty");
+        mapping.Add("*.netty.io", "Netty");
 
-        Assert.Equal("NotFound", mapping.map("not-existing"));
+        Assert.Equal("NotFound", mapping.Map("not-existing"));
     }
 
     [Fact]
-    public void testStrictEqualityInDeprecatedApi()
+    public void TestStrictEqualityInDeprecatedApi()
     {
         DomainNameMapping<string> mapping = new DomainNameMapping<string>("NotFound")
-            .add("netty.io", "Netty")
-            .add("downloads.netty.io", "Netty-Downloads");
+            .Add("netty.io", "Netty")
+            .Add("downloads.netty.io", "Netty-Downloads");
 
-        Assert.Equal("Netty", mapping.map("netty.io"));
-        Assert.Equal("Netty-Downloads", mapping.map("downloads.netty.io"));
+        Assert.Equal("Netty", mapping.Map("netty.io"));
+        Assert.Equal("Netty-Downloads", mapping.Map("downloads.netty.io"));
 
-        Assert.Equal("NotFound", mapping.map("x.y.z.netty.io"));
+        Assert.Equal("NotFound", mapping.Map("x.y.z.netty.io"));
     }
 
     [Fact]
-    public void testWildcardMatchesAnyPrefixInDeprecatedApi()
+    public void TestWildcardMatchesAnyPrefixInDeprecatedApi()
     {
         DomainNameMapping<string> mapping = new DomainNameMapping<string>("NotFound")
-            .add("*.netty.io", "Netty");
+            .Add("*.netty.io", "Netty");
 
-        Assert.Equal("Netty", mapping.map("netty.io"));
-        Assert.Equal("Netty", mapping.map("downloads.netty.io"));
-        Assert.Equal("Netty", mapping.map("x.y.z.netty.io"));
+        Assert.Equal("Netty", mapping.Map("netty.io"));
+        Assert.Equal("Netty", mapping.Map("downloads.netty.io"));
+        Assert.Equal("Netty", mapping.Map("x.y.z.netty.io"));
 
-        Assert.Equal("NotFound", mapping.map("netty.io.x"));
+        Assert.Equal("NotFound", mapping.Map("netty.io.x"));
     }
 
     [Fact]
-    public void testFirstMatchWinsInDeprecatedApi()
+    public void TestFirstMatchWinsInDeprecatedApi()
     {
         Assert.Equal("Netty",
             new DomainNameMapping<string>("NotFound")
-                .add("*.netty.io", "Netty")
-                .add("downloads.netty.io", "Netty-Downloads")
-                .map("downloads.netty.io"));
+                .Add("*.netty.io", "Netty")
+                .Add("downloads.netty.io", "Netty-Downloads")
+                .Map("downloads.netty.io"));
 
         Assert.Equal("Netty-Downloads",
             new DomainNameMapping<string>("NotFound")
-                .add("downloads.netty.io", "Netty-Downloads")
-                .add("*.netty.io", "Netty")
-                .map("downloads.netty.io"));
+                .Add("downloads.netty.io", "Netty-Downloads")
+                .Add("*.netty.io", "Netty")
+                .Map("downloads.netty.io"));
     }
 
     [Fact]
-    public void testToStringInDeprecatedApi()
+    public void TestToStringInDeprecatedApi()
     {
         DomainNameMapping<string> mapping = new DomainNameMapping<string>("NotFound")
-            .add("*.netty.io", "Netty")
-            .add("downloads.netty.io", "Netty-Downloads");
+            .Add("*.netty.io", "Netty")
+            .Add("downloads.netty.io", "Netty-Downloads");
 
         Assert.Equal(
             "DomainNameMapping(default: NotFound, map: {*.netty.io=Netty, downloads.netty.io=Netty-Downloads})",
@@ -120,7 +120,7 @@ public class DomainNameMappingTest
     // Immutable DomainNameMapping Builder API
 
     [Fact]
-    public void testNullDefaultValue()
+    public void TestNullDefaultValue()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
@@ -129,86 +129,86 @@ public class DomainNameMappingTest
     }
 
     [Fact]
-    public void testNullDomainNamePatternsAreForbidden()
+    public void TestNullDomainNamePatternsAreForbidden()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            new DomainNameMappingBuilder<string>("NotFound").add(null, "Some value");
+            new DomainNameMappingBuilder<string>("NotFound").Add(null, "Some value");
         });
     }
 
     [Fact]
-    public void testNullValuesAreForbidden()
+    public void TestNullValuesAreForbidden()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            new DomainNameMappingBuilder<string>("NotFound").add("Some key", null);
+            new DomainNameMappingBuilder<string>("NotFound").Add("Some key", null);
         });
     }
 
     [Fact]
-    public void testDefaultValue()
+    public void TestDefaultValue()
     {
         DomainNameMapping<string> mapping = new DomainNameMappingBuilder<string>("NotFound")
-            .add("*.netty.io", "Netty")
-            .build();
+            .Add("*.netty.io", "Netty")
+            .Build();
 
-        Assert.Equal("NotFound", mapping.map("not-existing"));
+        Assert.Equal("NotFound", mapping.Map("not-existing"));
     }
 
     [Fact]
-    public void testStrictEquality()
+    public void TestStrictEquality()
     {
         DomainNameMapping<string> mapping = new DomainNameMappingBuilder<string>("NotFound")
-            .add("netty.io", "Netty")
-            .add("downloads.netty.io", "Netty-Downloads")
-            .build();
+            .Add("netty.io", "Netty")
+            .Add("downloads.netty.io", "Netty-Downloads")
+            .Build();
 
-        Assert.Equal("Netty", mapping.map("netty.io"));
-        Assert.Equal("Netty-Downloads", mapping.map("downloads.netty.io"));
+        Assert.Equal("Netty", mapping.Map("netty.io"));
+        Assert.Equal("Netty-Downloads", mapping.Map("downloads.netty.io"));
 
-        Assert.Equal("NotFound", mapping.map("x.y.z.netty.io"));
+        Assert.Equal("NotFound", mapping.Map("x.y.z.netty.io"));
     }
 
     [Fact]
-    public void testWildcardMatchesAnyPrefix()
+    public void TestWildcardMatchesAnyPrefix()
     {
         DomainNameMapping<string> mapping = new DomainNameMappingBuilder<string>("NotFound")
-            .add("*.netty.io", "Netty")
-            .build();
+            .Add("*.netty.io", "Netty")
+            .Build();
 
-        Assert.Equal("Netty", mapping.map("netty.io"));
-        Assert.Equal("Netty", mapping.map("downloads.netty.io"));
-        Assert.Equal("Netty", mapping.map("x.y.z.netty.io"));
+        Assert.Equal("Netty", mapping.Map("netty.io"));
+        Assert.Equal("Netty", mapping.Map("downloads.netty.io"));
+        Assert.Equal("Netty", mapping.Map("x.y.z.netty.io"));
 
-        Assert.Equal("NotFound", mapping.map("netty.io.x"));
+        Assert.Equal("NotFound", mapping.Map("netty.io.x"));
     }
 
     [Fact]
-    public void testFirstMatchWins()
+    public void TestFirstMatchWins()
     {
         Assert.Equal("Netty",
             new DomainNameMappingBuilder<string>("NotFound")
-                .add("*.netty.io", "Netty")
-                .add("downloads.netty.io", "Netty-Downloads")
-                .build()
-                .map("downloads.netty.io"));
+                .Add("*.netty.io", "Netty")
+                .Add("downloads.netty.io", "Netty-Downloads")
+                .Build()
+                .Map("downloads.netty.io"));
 
         Assert.Equal("Netty-Downloads",
             new DomainNameMappingBuilder<string>("NotFound")
-                .add("downloads.netty.io", "Netty-Downloads")
-                .add("*.netty.io", "Netty")
-                .build()
-                .map("downloads.netty.io"));
+                .Add("downloads.netty.io", "Netty-Downloads")
+                .Add("*.netty.io", "Netty")
+                .Build()
+                .Map("downloads.netty.io"));
     }
 
     [Fact]
-    public void testToString()
+    public void TestToString()
     {
         DomainNameMapping<string> mapping = new DomainNameMappingBuilder<string>("NotFound")
-            .add("*.netty.io", "Netty")
-            .add("downloads.netty.io", "Netty-Download")
-            .build();
+            .Add("*.netty.io", "Netty")
+            .Add("downloads.netty.io", "Netty-Download")
+            .Build();
 
         Assert.Equal(
             "ImmutableDomainNameMapping(default: NotFound, map: {*.netty.io=Netty, downloads.netty.io=Netty-Download})",
@@ -216,13 +216,13 @@ public class DomainNameMappingTest
     }
 
     [Fact]
-    public void testAsMap()
+    public void TestAsMap()
     {
         DomainNameMapping<string> mapping = new DomainNameMapping<string>("NotFound")
-            .add("netty.io", "Netty")
-            .add("downloads.netty.io", "Netty-Downloads");
+            .Add("netty.io", "Netty")
+            .Add("downloads.netty.io", "Netty-Downloads");
 
-        IReadOnlyDictionary<string, string> entries = mapping.asMap();
+        IReadOnlyDictionary<string, string> entries = mapping.AsMap();
 
         Assert.Equal(2, entries.Count);
         Assert.Equal("Netty", entries.GetValueOrDefault("netty.io"));
@@ -230,14 +230,14 @@ public class DomainNameMappingTest
     }
 
     [Fact]
-    public void testAsMapWithImmutableDomainNameMapping()
+    public void TestAsMapWithImmutableDomainNameMapping()
     {
         DomainNameMapping<string> mapping = new DomainNameMappingBuilder<string>("NotFound")
-            .add("netty.io", "Netty")
-            .add("downloads.netty.io", "Netty-Downloads")
-            .build();
+            .Add("netty.io", "Netty")
+            .Add("downloads.netty.io", "Netty-Downloads")
+            .Build();
 
-        IReadOnlyDictionary<string, string> entries = mapping.asMap();
+        IReadOnlyDictionary<string, string> entries = mapping.AsMap();
 
         Assert.Equal(2, entries.Count);
         Assert.Equal("Netty", entries.GetValueOrDefault("netty.io"));

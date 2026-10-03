@@ -23,19 +23,19 @@ public class PlatformDependent0Test
     // CLR adaptation: address metadata uses a borrowed native view. No JVM
     // constructor/Unsafe assumption controls CLR memory support.
     [Fact]
-    public void testNewDirectBufferNegativeMemoryAddress()
+    public void TestNewDirectBufferNegativeMemoryAddress()
     {
-        testNewDirectBufferMemoryAddress(-1);
+        TestNewDirectBufferMemoryAddress(-1);
     }
 
     [Fact]
-    public void testNewDirectBufferNonNegativeMemoryAddress()
+    public void TestNewDirectBufferNonNegativeMemoryAddress()
     {
-        testNewDirectBufferMemoryAddress(10);
+        TestNewDirectBufferMemoryAddress(10);
     }
 
     [Fact]
-    public void testNewDirectBufferZeroMemoryAddress()
+    public void TestNewDirectBufferZeroMemoryAddress()
     {
         // The original ByteBuffer constructor permits metadata for a null
         // nonempty address. CLR Memory must reject that unusable span boundary.
@@ -44,7 +44,7 @@ public class PlatformDependent0Test
         Assert.Equal(0, empty.Memory.Length);
     }
 
-    private static void testNewDirectBufferMemoryAddress(long address)
+    private static void TestNewDirectBufferMemoryAddress(long address)
     {
         int capacity = 10;
         using var buffer = new NativeMemoryView(checked((nint)address), capacity);

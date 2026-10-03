@@ -33,9 +33,9 @@ namespace Netty.NET.Common.Concurrent;
 public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor
 {
     public static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
-        SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
+        SystemPropertyUtil.GetInt("io.netty.eventexecutor.maxPendingTasks", int.MaxValue));
 
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SingleThreadEventExecutor));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SingleThreadEventExecutor));
 
     private const int ST_NOT_STARTED = 1;
     private const int ST_SUSPENDING = 2;
@@ -148,7 +148,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *                          executor thread
      */
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor, bool addTaskWakesUp)
-        : this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.reject())
+        : this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.Reject())
     {
     }
 
@@ -195,10 +195,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         _addTaskWakesUp = addTaskWakesUp;
         _supportSuspension = supportSuspension;
         _maxPendingTasks = Math.Max(16, maxPendingTasks);
-        _executor = ThreadExecutorMap.apply(executor, this);
-        _taskQueue = newTaskQueue(_maxPendingTasks);
-        _rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
-        lastActivityTimeNanos = ticker().nanoTime();
+        _executor = ThreadExecutorMap.Apply(executor, this);
+        _taskQueue = NewTaskQueue(_maxPendingTasks);
+        _rejectedExecutionHandler = ObjectUtil.CheckNotNull(rejectedHandler, "rejectedHandler");
+        lastActivityTimeNanos = Ticker().NanoTime();
     }
 
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
@@ -216,18 +216,18 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         _addTaskWakesUp = addTaskWakesUp;
         _supportSuspension = supportSuspension;
         _maxPendingTasks = DEFAULT_MAX_PENDING_EXECUTOR_TASKS;
-        _executor = ThreadExecutorMap.apply(executor, this);
-        _taskQueue = ObjectUtil.checkNotNull(taskQueue, "taskQueue");
-        _rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
+        _executor = ThreadExecutorMap.Apply(executor, this);
+        _taskQueue = ObjectUtil.CheckNotNull(taskQueue, "taskQueue");
+        _rejectedExecutionHandler = ObjectUtil.CheckNotNull(rejectedHandler, "rejectedHandler");
     }
 
     /**
      * @deprecated Please use and override {@link #newTaskQueue(int)}.
      */
     [Obsolete]
-    protected virtual IQueue<IRunnable> newTaskQueue()
+    protected virtual IQueue<IRunnable> NewTaskQueue()
     {
-        return newTaskQueue(_maxPendingTasks);
+        return NewTaskQueue(_maxPendingTasks);
     }
 
     /**
@@ -236,7 +236,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * calls on the this {@link Queue} it may make sense to {@code @Override} this and return some more performant
      * implementation that does not support blocking operations at all.
      */
-    protected virtual IQueue<IRunnable> newTaskQueue(int maxPendingTasks)
+    protected virtual IQueue<IRunnable> NewTaskQueue(int maxPendingTasks)
     {
         return new LinkedBlockingQueue<IRunnable>(maxPendingTasks);
     }
@@ -244,7 +244,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * Interrupt the current running {@link Thread}.
      */
-    protected virtual void interruptThread()
+    protected virtual void InterruptThread()
     {
         Thread currentThread = _thread;
         if (currentThread == null)
@@ -260,17 +260,17 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * @see Queue#poll()
      */
-    protected virtual IRunnable pollTask()
+    protected virtual IRunnable PollTask()
     {
-        Debug.Assert(inEventLoop());
-        return pollTaskFrom(_taskQueue);
+        Debug.Assert(InEventLoop());
+        return PollTaskFrom(_taskQueue);
     }
 
-    protected static IRunnable pollTaskFrom(IQueue<IRunnable> taskQueue)
+    protected static IRunnable PollTaskFrom(IQueue<IRunnable> taskQueue)
     {
         for (;;)
         {
-            taskQueue.tryDequeue(out var task);
+            taskQueue.TryDequeue(out var task);
             if (task != WAKEUP_TASK)
             {
                 return task;
@@ -287,9 +287,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return {@code null} if the executor thread has been interrupted or waken up.
      */
-    protected virtual IRunnable takeTask()
+    protected virtual IRunnable TakeTask()
     {
-        Debug.Assert(inEventLoop());
+        Debug.Assert(InEventLoop());
         if (!(_taskQueue is IBlockingQueue<IRunnable>))
         {
             throw new NotSupportedException();
@@ -298,13 +298,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         IBlockingQueue<IRunnable> taskQueue = (IBlockingQueue<IRunnable>)_taskQueue;
         for (;;)
         {
-            IScheduledWork scheduledTask = peekScheduledTask();
+            IScheduledWork scheduledTask = PeekScheduledTask();
             if (scheduledTask == null)
             {
                 IRunnable task = null;
                 try
                 {
-                    task = taskQueue.take();
+                    task = taskQueue.Take();
                     if (task == WAKEUP_TASK)
                     {
                         task = null;
@@ -319,14 +319,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             }
             else
             {
-                long delayNanos = scheduledTask.delayNanos();
+                long delayNanos = scheduledTask.DelayNanos();
                 IRunnable task = null;
                 if (delayNanos > 0)
                 {
                     try
                     {
                         var delayTs = TimeSpan.FromTicks(delayNanos / 100);
-                        taskQueue.tryTake(out task, delayTs);
+                        taskQueue.TryTake(out task, delayTs);
                     }
                     catch (ThreadInterruptedException e)
                     {
@@ -341,8 +341,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     // scheduled tasks are never executed if there is always one task in the taskQueue.
                     // This is for example true for the read task of OIO Transport
                     // See https://github.com/netty/netty/issues/1614
-                    fetchFromScheduledTaskQueue();
-                    taskQueue.tryTake(out task);
+                    FetchFromScheduledTaskQueue();
+                    taskQueue.TryTake(out task);
                 }
 
                 if (task != null)
@@ -358,23 +358,23 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
     }
 
-    private bool fetchFromScheduledTaskQueue()
+    private bool FetchFromScheduledTaskQueue()
     {
-        return fetchFromScheduledTaskQueue(_taskQueue);
+        return FetchFromScheduledTaskQueue(_taskQueue);
     }
 
     /**
      * @return {@code true} if at least one scheduled task was executed.
      */
-    private bool executeExpiredScheduledTasks()
+    private bool ExecuteExpiredScheduledTasks()
     {
-        if (_scheduledTaskQueue == null || _scheduledTaskQueue.isEmpty())
+        if (_scheduledTaskQueue == null || _scheduledTaskQueue.IsEmpty())
         {
             return false;
         }
 
-        long nanoTime = getCurrentTimeNanos();
-        IRunnable scheduledTask = pollScheduledTask(nanoTime);
+        long nanoTime = GetCurrentTimeNanos();
+        IRunnable scheduledTask = PollScheduledTask(nanoTime);
         if (scheduledTask == null)
         {
             return false;
@@ -382,8 +382,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         do
         {
-            safeExecute(scheduledTask);
-        } while ((scheduledTask = pollScheduledTask(nanoTime)) != null);
+            SafeExecute(scheduledTask);
+        } while ((scheduledTask = PollScheduledTask(nanoTime)) != null);
 
         return true;
     }
@@ -391,25 +391,25 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * @see Queue#peek()
      */
-    protected virtual IRunnable peekTask()
+    protected virtual IRunnable PeekTask()
     {
-        Debug.Assert(inEventLoop());
-        return _taskQueue.tryPeek(out var task) ? task : null;
+        Debug.Assert(InEventLoop());
+        return _taskQueue.TryPeek(out var task) ? task : null;
     }
 
     /**
      * @see Queue#isEmpty()
      */
-    protected virtual bool hasTasks()
+    protected virtual bool HasTasks()
     {
-        Debug.Assert(inEventLoop());
-        return !_taskQueue.isEmpty();
+        Debug.Assert(InEventLoop());
+        return !_taskQueue.IsEmpty();
     }
 
     /**
      * Return the number of tasks that are pending for processing.
      */
-    public int pendingTasks()
+    public int PendingTasks()
     {
         return _taskQueue.Count;
     }
@@ -418,31 +418,31 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Add a task to the task queue, or throws a {@link RejectedExecutionException} if this instance was shutdown
      * before.
      */
-    protected virtual void addTask(IRunnable task)
+    protected virtual void AddTask(IRunnable task)
     {
-        ObjectUtil.checkNotNull(task, "task");
-        if (!offerTask(task))
+        ObjectUtil.CheckNotNull(task, "task");
+        if (!OfferTask(task))
         {
-            reject(task);
+            Reject(task);
         }
     }
 
-    public bool offerTask(IRunnable task)
+    public bool OfferTask(IRunnable task)
     {
-        if (isShutdown())
+        if (IsShutdown())
         {
-            reject();
+            Reject();
         }
 
-        return _taskQueue.tryEnqueue(task);
+        return _taskQueue.TryEnqueue(task);
     }
 
     /**
      * @see Queue#remove(Object)
      */
-    protected virtual bool removeTask(IRunnable task)
+    protected virtual bool RemoveTask(IRunnable task)
     {
-        return _taskQueue.tryRemove(ObjectUtil.checkNotNull(task, "task"));
+        return _taskQueue.TryRemove(ObjectUtil.CheckNotNull(task, "task"));
     }
 
     /**
@@ -450,16 +450,16 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return {@code true} if and only if at least one task was run
      */
-    protected virtual bool runAllTasks()
+    protected virtual bool RunAllTasks()
     {
-        Debug.Assert(inEventLoop());
+        Debug.Assert(InEventLoop());
         bool fetchedAll;
         bool ranAtLeastOne = false;
 
         do
         {
-            fetchedAll = fetchFromScheduledTaskQueue(_taskQueue);
-            if (runAllTasksFrom(_taskQueue))
+            fetchedAll = FetchFromScheduledTaskQueue(_taskQueue);
+            if (RunAllTasksFrom(_taskQueue))
             {
                 ranAtLeastOne = true;
             }
@@ -467,10 +467,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         if (ranAtLeastOne)
         {
-            lastExecutionTime = getCurrentTimeNanos();
+            lastExecutionTime = GetCurrentTimeNanos();
         }
 
-        afterRunningAllTasks();
+        AfterRunningAllTasks();
         return ranAtLeastOne;
     }
 
@@ -482,24 +482,24 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *                         make progress and return to the selector mechanism to process inbound I/O events.
      * @return {@code true} if at least one task was run.
      */
-    protected bool runScheduledAndExecutorTasks(int maxDrainAttempts)
+    protected bool RunScheduledAndExecutorTasks(int maxDrainAttempts)
     {
-        Debug.Assert(inEventLoop());
+        Debug.Assert(InEventLoop());
         bool ranAtLeastOneTask;
         int drainAttempt = 0;
         do
         {
             // We must run the taskQueue tasks first, because the scheduled tasks from outside the EventLoop are queued
             // here because the taskQueue is thread safe and the scheduledTaskQueue is not thread safe.
-            ranAtLeastOneTask = runExistingTasksFrom(_taskQueue) | executeExpiredScheduledTasks();
+            ranAtLeastOneTask = RunExistingTasksFrom(_taskQueue) | ExecuteExpiredScheduledTasks();
         } while (ranAtLeastOneTask && ++drainAttempt < maxDrainAttempts);
 
         if (drainAttempt > 0)
         {
-            lastExecutionTime = getCurrentTimeNanos();
+            lastExecutionTime = GetCurrentTimeNanos();
         }
 
-        afterRunningAllTasks();
+        AfterRunningAllTasks();
 
         return drainAttempt > 0;
     }
@@ -511,9 +511,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return {@code true} if at least one task was executed.
      */
-    protected bool runAllTasksFrom(IQueue<IRunnable> taskQueue)
+    protected bool RunAllTasksFrom(IQueue<IRunnable> taskQueue)
     {
-        IRunnable task = pollTaskFrom(taskQueue);
+        IRunnable task = PollTaskFrom(taskQueue);
         if (task == null)
         {
             return false;
@@ -521,8 +521,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         for (;;)
         {
-            safeExecute(task);
-            task = pollTaskFrom(taskQueue);
+            SafeExecute(task);
+            task = PollTaskFrom(taskQueue);
             if (task == null)
             {
                 return true;
@@ -535,21 +535,21 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param taskQueue the task queue to drain.
      * @return {@code true} if at least {@link Runnable#run()} was called.
      */
-    private bool runExistingTasksFrom(IQueue<IRunnable> taskQueue)
+    private bool RunExistingTasksFrom(IQueue<IRunnable> taskQueue)
     {
-        IRunnable task = pollTaskFrom(taskQueue);
+        IRunnable task = PollTaskFrom(taskQueue);
         if (task == null)
         {
             return false;
         }
 
         int remaining = Math.Min(_maxPendingTasks, taskQueue.Count);
-        safeExecute(task);
+        SafeExecute(task);
         // Use taskQueue.poll() directly rather than pollTaskFrom() since the latter may
         // silently consume more than one item from the queue (skips over WAKEUP_TASK instances)
-        while (remaining-- > 0 && taskQueue.tryDequeue(out task))
+        while (remaining-- > 0 && taskQueue.TryDequeue(out task))
         {
-            safeExecute(task);
+            SafeExecute(task);
         }
 
         return true;
@@ -559,23 +559,23 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Poll all tasks from the task queue and run them via {@link Runnable#run()} method.  This method stops running
      * the tasks in the task queue and returns if it ran longer than {@code timeoutNanos}.
      */
-    protected virtual bool runAllTasks(long timeoutNanos)
+    protected virtual bool RunAllTasks(long timeoutNanos)
     {
-        fetchFromScheduledTaskQueue(_taskQueue);
-        IRunnable task = pollTask();
+        FetchFromScheduledTaskQueue(_taskQueue);
+        IRunnable task = PollTask();
         if (task == null)
         {
-            afterRunningAllTasks();
+            AfterRunningAllTasks();
             return false;
         }
 
-        long deadline = timeoutNanos > 0 ? getCurrentTimeNanos() + timeoutNanos : 0;
+        long deadline = timeoutNanos > 0 ? GetCurrentTimeNanos() + timeoutNanos : 0;
         long runTasks = 0;
         long lastExecutionTime;
-        long workStartTime = ticker().nanoTime();
+        long workStartTime = Ticker().NanoTime();
         for (;;)
         {
-            safeExecute(task);
+            SafeExecute(task);
 
             runTasks++;
 
@@ -583,27 +583,27 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             // XXX: Hard-coded value - will make it configurable if it is really a problem.
             if ((runTasks & 0x3F) == 0)
             {
-                lastExecutionTime = getCurrentTimeNanos();
+                lastExecutionTime = GetCurrentTimeNanos();
                 if (lastExecutionTime >= deadline)
                 {
                     break;
                 }
             }
 
-            task = pollTask();
+            task = PollTask();
             if (task == null)
             {
-                lastExecutionTime = getCurrentTimeNanos();
+                lastExecutionTime = GetCurrentTimeNanos();
                 break;
             }
         }
 
-        long workEndTime = ticker().nanoTime();
+        long workEndTime = Ticker().NanoTime();
         // CLR: the monitor atomically consumes this counter on another thread.
         // A read/add/write can restore an already-consumed window or lose new work.
         Interlocked.Add(ref accumulatedActiveTimeNanos, workEndTime - workStartTime);
         Volatile.Write(ref lastActivityTimeNanos, workEndTime);
-        afterRunningAllTasks();
+        AfterRunningAllTasks();
         this.lastExecutionTime = lastExecutionTime;
         return true;
     }
@@ -611,37 +611,37 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * Invoked before returning from {@link #runAllTasks()} and {@link #runAllTasks(long)}.
      */
-    protected virtual void afterRunningAllTasks() { }
+    protected virtual void AfterRunningAllTasks() { }
 
     /**
      * Returns the amount of time left until the scheduled task with the closest dead line is executed.
      */
-    protected virtual long delayNanos(long currentTimeNanos)
+    protected virtual long DelayNanos(long currentTimeNanos)
     {
-        currentTimeNanos -= ticker().initialNanoTime();
+        currentTimeNanos -= Ticker().InitialNanoTime();
 
-        var scheduledTask = peekScheduledTask();
+        var scheduledTask = PeekScheduledTask();
         if (scheduledTask == null)
         {
             return SCHEDULE_PURGE_INTERVAL;
         }
 
-        return scheduledTask.delayNanos(currentTimeNanos);
+        return scheduledTask.DelayNanos(currentTimeNanos);
     }
 
     /**
      * Returns the absolute point in time (relative to {@link #getCurrentTimeNanos()}) at which the next
      * closest scheduled task should run.
      */
-    protected virtual long deadlineNanos()
+    protected virtual long DeadlineNanos()
     {
-        IScheduledWork scheduledTask = peekScheduledTask();
+        IScheduledWork scheduledTask = PeekScheduledTask();
         if (scheduledTask == null)
         {
-            return getCurrentTimeNanos() + SCHEDULE_PURGE_INTERVAL;
+            return GetCurrentTimeNanos() + SCHEDULE_PURGE_INTERVAL;
         }
 
-        return scheduledTask.deadlineNanos();
+        return scheduledTask.DeadlineNanos();
     }
 
     /**
@@ -651,9 +651,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * {@link #pollTask()}, you have to call this method at the end of task execution loop for accurate quiet period
      * checks.
      */
-    protected virtual void updateLastExecutionTime()
+    protected virtual void UpdateLastExecutionTime()
     {
-        long now = getCurrentTimeNanos();
+        long now = GetCurrentTimeNanos();
         lastExecutionTime = now;
         Volatile.Write(ref lastActivityTimeNanos, now);
     }
@@ -664,7 +664,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return The number of registered channels, or {@code -1} if not applicable.
      */
-    protected internal virtual int getNumOfRegisteredChannels() => -1;
+    protected internal virtual int GetNumOfRegisteredChannels() => -1;
 
     /**
      * Adds the given duration to the total active time for the current measurement window.
@@ -674,27 +674,27 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @param nanos The active time in nanoseconds to add.
      */
-    protected virtual void reportActiveIoTime(long nanos)
+    protected virtual void ReportActiveIoTime(long nanos)
     {
-        Debug.Assert(inEventLoop());
+        Debug.Assert(InEventLoop());
         if (nanos > 0)
         {
             // The event loop remains the reporting owner; atomic addition coordinates
             // that writer with the monitor's concurrent exchange-to-zero.
             Interlocked.Add(ref accumulatedActiveTimeNanos, nanos);
-            Volatile.Write(ref lastActivityTimeNanos, ticker().nanoTime());
+            Volatile.Write(ref lastActivityTimeNanos, Ticker().NanoTime());
         }
     }
 
     /**
      * Returns the accumulated active time since the last call and resets the counter.
      */
-    protected internal virtual long getAndResetAccumulatedActiveTimeNanos() => Interlocked.Exchange(ref accumulatedActiveTimeNanos, 0);
+    protected internal virtual long GetAndResetAccumulatedActiveTimeNanos() => Interlocked.Exchange(ref accumulatedActiveTimeNanos, 0);
 
     /**
      * Returns the timestamp of the last known activity (tasks + I/O).
      */
-    protected internal virtual long getLastActivityTimeNanos() => Volatile.Read(ref lastActivityTimeNanos);
+    protected internal virtual long GetLastActivityTimeNanos() => Volatile.Read(ref lastActivityTimeNanos);
 
     /**
      * Atomically increments the counter for consecutive monitor cycles where utilization was below the
@@ -702,13 +702,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return The number of consecutive idle cycles before the increment.
      */
-    protected internal virtual int getAndIncrementIdleCycles() => unchecked(Interlocked.Increment(ref consecutiveIdleCycles) - 1);
+    protected internal virtual int GetAndIncrementIdleCycles() => unchecked(Interlocked.Increment(ref consecutiveIdleCycles) - 1);
 
     /**
      * Resets the counter for consecutive idle cycles to zero. This is typically called when the
      * executor's utilization is no longer considered idle, breaking the streak.
      */
-    protected internal virtual void resetIdleCycles() => Volatile.Write(ref consecutiveIdleCycles, 0);
+    protected internal virtual void ResetIdleCycles() => Volatile.Write(ref consecutiveIdleCycles, 0);
 
     /**
      * Atomically increments the counter for consecutive monitor cycles where utilization was above the
@@ -716,18 +716,18 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return The number of consecutive busy cycles before the increment.
      */
-    protected internal virtual int getAndIncrementBusyCycles() => unchecked(Interlocked.Increment(ref consecutiveBusyCycles) - 1);
+    protected internal virtual int GetAndIncrementBusyCycles() => unchecked(Interlocked.Increment(ref consecutiveBusyCycles) - 1);
 
     /**
      * Resets the counter for consecutive busy cycles to zero. This is typically called when the
      * executor's utilization is no longer considered busy, breaking the streak.
      */
-    protected internal virtual void resetBusyCycles() => Volatile.Write(ref consecutiveBusyCycles, 0);
+    protected internal virtual void ResetBusyCycles() => Volatile.Write(ref consecutiveBusyCycles, 0);
 
     /**
      * Returns {@code true} if this {@link SingleThreadEventExecutor} supports suspension.
      */
-    protected virtual bool isSuspensionSupported() => _supportSuspension;
+    protected virtual bool IsSuspensionSupported() => _supportSuspension;
 
     /**
      * Runs the task-processing loop until {@link #confirmShutdown()} returns {@code true}.
@@ -741,32 +741,32 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * {@link #pollTask()} or {@link #takeTask()} are responsible for wrapping each task
      * invocation accordingly.
      */
-    protected abstract void run();
+    protected abstract void Run();
 
     /**
      * Do nothing, sub-classes may override
      */
-    protected virtual void cleanup()
+    protected virtual void Cleanup()
     {
         // NOOP
     }
 
-    public virtual void wakeup(bool inEventLoop)
+    public virtual void Wakeup(bool inEventLoop)
     {
         if (!inEventLoop)
         {
             // Use offer as we actually only need this to unblock the thread and if offer fails we do not care as there
             // is already something in the queue.
-            _taskQueue.tryEnqueue(WAKEUP_TASK);
+            _taskQueue.TryEnqueue(WAKEUP_TASK);
         }
     }
 
-    public override bool inEventLoop()
+    public override bool InEventLoop()
     {
-        return inEventLoop(Thread.CurrentThread);
+        return InEventLoop(Thread.CurrentThread);
     }
 
-    public override bool inEventLoop(Thread thread)
+    public override bool InEventLoop(Thread thread)
     {
         return thread == _thread;
     }
@@ -774,34 +774,34 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * Add a {@link Runnable} which will be executed on shutdown of this instance
      */
-    public void addShutdownHook(IRunnable task)
+    public void AddShutdownHook(IRunnable task)
     {
-        if (inEventLoop())
+        if (InEventLoop())
         {
             _shutdownHooks.Add(task);
         }
         else
         {
-            execute(Runnables.Create(() => _shutdownHooks.Add(task)));
+            Execute(Runnables.Create(() => _shutdownHooks.Add(task)));
         }
     }
 
     /**
      * Remove a previous added {@link Runnable} as a shutdown hook
      */
-    public void removeShutdownHook(IRunnable task)
+    public void RemoveShutdownHook(IRunnable task)
     {
-        if (inEventLoop())
+        if (InEventLoop())
         {
             _shutdownHooks.Remove(task);
         }
         else
         {
-            execute(Runnables.Create(() => _shutdownHooks.Remove(task)));
+            Execute(Runnables.Create(() => _shutdownHooks.Remove(task)));
         }
     }
 
-    private bool runShutdownHooks()
+    private bool RunShutdownHooks()
     {
         bool ran = false;
         // Note shutdown hooks can add / remove shutdown hooks.
@@ -813,11 +813,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             {
                 try
                 {
-                    runTask(task);
+                    RunTask(task);
                 }
                 catch (Exception t)
                 {
-                    logger.warn("Shutdown hook raised an exception.", t);
+                    logger.Warn("Shutdown hook raised an exception.", t);
                 }
                 finally
                 {
@@ -828,25 +828,25 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         if (ran)
         {
-            lastExecutionTime = getCurrentTimeNanos();
+            lastExecutionTime = GetCurrentTimeNanos();
         }
 
         return ran;
     }
 
-    private void shutdown0(long quietPeriod, long timeout, int shutdownState, bool escalate = false)
+    private void Shutdown0(long quietPeriod, long timeout, int shutdownState, bool escalate = false)
     {
-        if (escalate ? isShutdown() : isShuttingDown())
+        if (escalate ? IsShutdown() : IsShuttingDown())
         {
             return;
         }
 
-        bool inEventLoop = this.inEventLoop();
+        bool inEventLoop = this.InEventLoop();
         bool wakeup;
         int oldState;
         for (;;)
         {
-            oldState = _state.get();
+            oldState = _state.Get();
             // Check the same state snapshot used by CAS. A concurrent native
             // stop must not be downgraded back into graceful admission.
             if (oldState >= (escalate ? ST_SHUTDOWN : ST_SHUTTING_DOWN))
@@ -878,7 +878,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 }
             }
 
-            if (_state.compareAndSet(oldState, newState))
+            if (_state.CompareAndSet(oldState, newState))
             {
                 break;
             }
@@ -886,32 +886,32 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         if (quietPeriod != -1)
         {
-            _gracefulShutdownQuietPeriod.set(quietPeriod);
+            _gracefulShutdownQuietPeriod.Set(quietPeriod);
         }
 
         if (timeout != -1)
         {
-            _gracefulShutdownTimeout.set(timeout);
+            _gracefulShutdownTimeout.Set(timeout);
         }
 
-        if (ensureThreadStarted(oldState))
+        if (EnsureThreadStarted(oldState))
         {
             return;
         }
 
         if (wakeup)
         {
-            _taskQueue.tryEnqueue(WAKEUP_TASK);
+            _taskQueue.TryEnqueue(WAKEUP_TASK);
             if (!_addTaskWakesUp)
             {
-                this.wakeup(inEventLoop);
+                this.Wakeup(inEventLoop);
             }
         }
     }
 
     public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
-        ObjectUtil.checkPositiveOrZero(quietPeriod, "quietPeriod");
+        ObjectUtil.CheckPositiveOrZero(quietPeriod, "quietPeriod");
         if (timeout < quietPeriod)
         {
             throw new ArgumentException(
@@ -919,7 +919,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
         //ObjectUtil.checkNotNull(timeout, "timeout");
 
-        shutdown0(toNanos(quietPeriod), toNanos(timeout), ST_SHUTTING_DOWN);
+        Shutdown0(ToNanos(quietPeriod), ToNanos(timeout), ST_SHUTTING_DOWN);
         return Termination;
     }
 
@@ -930,53 +930,53 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         // Native stop closes admission even during an existing graceful quiet
         // period. Preserve ordered accepted-work drain and scheduled cancellation;
         // legacy shutdown entry points retain their pinned non-escalating behavior.
-        shutdown0(-1, -1, ST_SHUTDOWN, true);
+        Shutdown0(-1, -1, ST_SHUTDOWN, true);
         return Termination;
     }
 
     [Obsolete]
-    public override void shutdown()
+    public override void Shutdown()
     {
-        shutdown0(-1, -1, ST_SHUTDOWN);
+        Shutdown0(-1, -1, ST_SHUTDOWN);
     }
 
-    public override bool isShuttingDown()
+    public override bool IsShuttingDown()
     {
-        return _state.get() >= ST_SHUTTING_DOWN;
+        return _state.Get() >= ST_SHUTTING_DOWN;
     }
 
-    public override bool isShutdown()
+    public override bool IsShutdown()
     {
-        return _state.get() >= ST_SHUTDOWN;
+        return _state.Get() >= ST_SHUTDOWN;
     }
 
-    public override bool isTerminated()
+    public override bool IsTerminated()
     {
-        return _state.get() == ST_TERMINATED;
+        return _state.Get() == ST_TERMINATED;
     }
 
-    public override bool isSuspended()
+    public override bool IsSuspended()
     {
-        int currentState = _state.get();
+        int currentState = _state.Get();
         return currentState == ST_SUSPENDED || currentState == ST_SUSPENDING;
     }
 
-    public override bool trySuspend()
+    public override bool TrySuspend()
     {
         if (_supportSuspension)
         {
-            if (_state.compareAndSet(ST_STARTED, ST_SUSPENDING))
+            if (_state.CompareAndSet(ST_STARTED, ST_SUSPENDING))
             {
-                wakeup(inEventLoop());
+                Wakeup(InEventLoop());
                 return true;
             }
 
-            if (_state.compareAndSet(ST_NOT_STARTED, ST_SUSPENDED))
+            if (_state.CompareAndSet(ST_NOT_STARTED, ST_SUSPENDED))
             {
                 return true;
             }
 
-            int currentState = _state.get();
+            int currentState = _state.Get();
             return currentState == ST_SUSPENDED || currentState == ST_SUSPENDING;
         }
 
@@ -989,9 +989,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return  if suspension is possible at the moment.
      */
-    protected virtual bool canSuspend()
+    protected virtual bool CanSuspend()
     {
-        return canSuspend(_state.get());
+        return CanSuspend(_state.Get());
     }
 
     /**
@@ -1003,38 +1003,38 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param   state   the current internal state of the {@link SingleThreadEventExecutor}.
      * @return          if suspension is possible at the moment.
      */
-    protected virtual bool canSuspend(int state)
+    protected virtual bool CanSuspend(int state)
     {
-        Debug.Assert(inEventLoop());
+        Debug.Assert(InEventLoop());
         return _supportSuspension && (state == ST_SUSPENDED || state == ST_SUSPENDING)
-                                  && !hasTasks() && nextScheduledTaskDeadlineNanos() == -1;
+                                  && !HasTasks() && NextScheduledTaskDeadlineNanos() == -1;
     }
 
     /**
      * Confirm that the shutdown if the instance should be done now!
      */
-    protected virtual bool confirmShutdown()
+    protected virtual bool ConfirmShutdown()
     {
-        if (!isShuttingDown())
+        if (!IsShuttingDown())
         {
             return false;
         }
 
-        if (!inEventLoop())
+        if (!InEventLoop())
         {
             throw new InvalidOperationException("must be invoked from an event loop");
         }
 
-        cancelScheduledTasks();
+        CancelScheduledTasks();
 
         if (gracefulShutdownStartTime == 0)
         {
-            gracefulShutdownStartTime = getCurrentTimeNanos();
+            gracefulShutdownStartTime = GetCurrentTimeNanos();
         }
 
-        if (runAllTasks() || runShutdownHooks())
+        if (RunAllTasks() || RunShutdownHooks())
         {
-            if (isShutdown())
+            if (IsShutdown())
             {
                 // Executor shut down - no new tasks anymore.
                 return true;
@@ -1043,27 +1043,27 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             // There were tasks in the queue. Wait a little bit more until no tasks are queued for the quiet period or
             // terminate if the quiet period is 0.
             // See https://github.com/netty/netty/issues/4241
-            if (_gracefulShutdownQuietPeriod.get() == 0)
+            if (_gracefulShutdownQuietPeriod.Get() == 0)
             {
                 return true;
             }
 
-            _taskQueue.tryEnqueue(WAKEUP_TASK);
+            _taskQueue.TryEnqueue(WAKEUP_TASK);
             return false;
         }
 
-        long nanoTime = getCurrentTimeNanos();
+        long nanoTime = GetCurrentTimeNanos();
 
-        if (isShutdown() || nanoTime - gracefulShutdownStartTime > _gracefulShutdownTimeout.get())
+        if (IsShutdown() || nanoTime - gracefulShutdownStartTime > _gracefulShutdownTimeout.Get())
         {
             return true;
         }
 
-        if (nanoTime - lastExecutionTime <= _gracefulShutdownQuietPeriod.get())
+        if (nanoTime - lastExecutionTime <= _gracefulShutdownQuietPeriod.Get())
         {
             // Check if any tasks were added to the queue every 100ms.
             // TODO: Change the behavior of takeTask() so that it returns on timeout.
-            _taskQueue.tryEnqueue(WAKEUP_TASK);
+            _taskQueue.TryEnqueue(WAKEUP_TASK);
             try
             {
                 Thread.Sleep(100);
@@ -1081,9 +1081,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return true;
     }
 
-    public override bool awaitTermination(TimeSpan timeout)
+    public override bool AwaitTermination(TimeSpan timeout)
     {
-        if (inEventLoop())
+        if (InEventLoop())
         {
             throw new InvalidOperationException("cannot await termination of the current thread");
         }
@@ -1101,34 +1101,34 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             if (_threadLock.Wait(millis) || Stopwatch.GetElapsedTime(started).Ticks >= ticks) break;
         }
 
-        return isTerminated();
+        return IsTerminated();
     }
 
-    public override void execute(IRunnable task)
+    public override void Execute(IRunnable task)
     {
-        execute0(task);
+        Execute0(task);
     }
 
-    public override void lazyExecute(IRunnable task)
+    public override void LazyExecute(IRunnable task)
     {
-        lazyExecute0(task);
+        LazyExecute0(task);
     }
 
-    private void execute0(IRunnable task)
+    private void Execute0(IRunnable task)
     {
-        ObjectUtil.checkNotNull(task, "task");
-        execute(task, wakesUpForTask(task));
+        ObjectUtil.CheckNotNull(task, "task");
+        Execute(task, WakesUpForTask(task));
     }
 
-    private void lazyExecute0(IRunnable task)
+    private void LazyExecute0(IRunnable task)
     {
-        execute(ObjectUtil.checkNotNull(task, "task"), false);
+        Execute(ObjectUtil.CheckNotNull(task, "task"), false);
     }
 
-    protected override void scheduleRemoveScheduled(IScheduledWork task)
+    protected override void ScheduleRemoveScheduled(IScheduledWork task)
     {
-        ObjectUtil.checkNotNull(task, "task");
-        int currentState = _state.get();
+        ObjectUtil.CheckNotNull(task, "task");
+        int currentState = _state.Get();
         if (_supportSuspension && (currentState == ST_SUSPENDED || currentState == ST_SUSPENDING))
         {
             // In the case of scheduling for removal we need to also ensure we will recover the "suspend" state
@@ -1137,37 +1137,37 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             // was requested but not confirmed yet): if the removal task races with doStartThread() re-engaging
             // the thread as ST_STARTED (see the ST_SUSPENDED/ST_STARTED CAS dance below), nobody would otherwise
             // ever re-request suspension and the thread would keep running forever waiting for new tasks.
-            execute(Runnables.Create(() =>
+            Execute(Runnables.Create(() =>
             {
-                task.run();
-                if (canSuspend(ST_SUSPENDED))
+                task.Run();
+                if (CanSuspend(ST_SUSPENDED))
                 {
                     // Try suspending again to recover the state before we submitted the new task that will
                     // handle cancellation itself.
-                    trySuspend();
+                    TrySuspend();
                 }
             }), true);
         }
         else
         {
             // task will remove itself from scheduled task queue when it runs
-            execute(task, false);
+            Execute(task, false);
         }
     }
 
-    private void execute(IRunnable task, bool immediate)
+    private void Execute(IRunnable task, bool immediate)
     {
-        bool inEventLoop = this.inEventLoop();
-        addTask(task);
+        bool inEventLoop = this.InEventLoop();
+        AddTask(task);
         if (!inEventLoop)
         {
-            startThread();
-            if (isShutdown())
+            StartThread();
+            if (IsShutdown())
             {
                 bool reject = false;
                 try
                 {
-                    if (removeTask(task))
+                    if (RemoveTask(task))
                     {
                         reject = true;
                     }
@@ -1181,14 +1181,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
                 if (reject)
                 {
-                    SingleThreadEventExecutor.reject();
+                    SingleThreadEventExecutor.Reject();
                 }
             }
         }
 
         if (!_addTaskWakesUp && immediate)
         {
-            wakeup(inEventLoop);
+            Wakeup(inEventLoop);
         }
     }
 
@@ -1197,24 +1197,24 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * If the {@link SingleThreadEventExecutor} is not started yet, this operation will start it and block until
      * it is fully started.
      */
-    public IThreadProperties threadProperties()
+    public IThreadProperties ThreadProperties()
     {
-        IThreadProperties threadProperties = _threadProperties.get();
+        IThreadProperties threadProperties = _threadProperties.Get();
         if (threadProperties == null)
         {
             Thread thread = _thread;
             if (thread == null)
             {
-                Debug.Assert(!inEventLoop());
-                WaitForBootstrap(this.SubmitAsync(NOOP_TASK.run));
+                Debug.Assert(!InEventLoop());
+                WaitForBootstrap(this.SubmitAsync(NOOP_TASK.Run));
                 thread = _thread;
                 Debug.Assert(thread != null);
             }
 
             threadProperties = new DefaultThreadProperties(thread);
-            if (!_threadProperties.compareAndSet(null, threadProperties))
+            if (!_threadProperties.CompareAndSet(null, threadProperties))
             {
-                threadProperties = _threadProperties.get();
+                threadProperties = _threadProperties.Get();
             }
         }
 
@@ -1250,12 +1250,12 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Can be overridden to control which tasks require waking the {@link EventExecutor} thread
      * if it is waiting so that they can be run immediately.
      */
-    protected virtual bool wakesUpForTask(IRunnable task)
+    protected virtual bool WakesUpForTask(IRunnable task)
     {
         return true;
     }
 
-    protected static void reject()
+    protected static void Reject()
     {
         throw new RejectedExecutionException("event executor terminated");
     }
@@ -1265,34 +1265,34 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @param task to reject.
      */
-    protected void reject(IRunnable task)
+    protected void Reject(IRunnable task)
     {
-        _rejectedExecutionHandler.rejected(task, this);
+        _rejectedExecutionHandler.Rejected(task, this);
     }
 
     // ScheduledExecutorService implementation
     private static readonly long SCHEDULE_PURGE_INTERVAL = (long)TimeSpan.FromSeconds(1).TotalNanoseconds;
 
-    private void startThread()
+    private void StartThread()
     {
-        int currentState = _state.get();
+        int currentState = _state.Get();
         while (currentState == ST_NOT_STARTED || currentState == ST_SUSPENDED)
         {
-            if (_state.compareAndSet(currentState, ST_STARTED))
+            if (_state.CompareAndSet(currentState, ST_STARTED))
             {
-                resetIdleCycles();
-                resetBusyCycles();
+                ResetIdleCycles();
+                ResetBusyCycles();
                 bool success = false;
                 try
                 {
-                    doStartThread();
+                    DoStartThread();
                     success = true;
                 }
                 finally
                 {
                     if (!success)
                     {
-                        _state.compareAndSet(ST_STARTED, ST_NOT_STARTED);
+                        _state.CompareAndSet(ST_STARTED, ST_NOT_STARTED);
                     }
                 }
                 break;
@@ -1302,27 +1302,27 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             // This may deliberately un-suspend an executor that trySuspend() has just suspended, which is the same
             // thing execute() does for an executor that is already suspended. We only loop again if another thread
             // changed the state in between, so this can't spin.
-            currentState = _state.get();
+            currentState = _state.Get();
         }
     }
 
-    private bool ensureThreadStarted(int oldState)
+    private bool EnsureThreadStarted(int oldState)
     {
         if (oldState == ST_NOT_STARTED || oldState == ST_SUSPENDED)
         {
             try
             {
-                doStartThread();
+                DoStartThread();
             }
             catch (Exception cause)
             {
-                _state.set(ST_TERMINATED);
+                _state.Set(ST_TERMINATED);
                 _terminationSource.TrySetException(cause);
 
                 if (cause is OutOfMemoryException || cause is StackOverflowException || cause is ThreadAbortException)
                 {
                     // Also rethrow as it may be an OOME for example
-                    PlatformDependent.throwException(cause);
+                    PlatformDependent.ThrowException(cause);
                 }
 
                 return true;
@@ -1332,14 +1332,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return false;
     }
 
-    private void doStartThread()
+    private void DoStartThread()
     {
-        _executor.execute(Runnables.Create(doStartThreadInternal));
+        _executor.Execute(Runnables.Create(DoStartThreadInternal));
     }
 
-    private void doStartThreadInternal()
+    private void DoStartThreadInternal()
     {
-        using (UninterruptibleMonitor.enter(_processingLock))
+        using (UninterruptibleMonitor.Enter(_processingLock))
         {
             Debug.Assert(_thread == null);
             _thread = Thread.CurrentThread;
@@ -1351,29 +1351,29 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
             bool success = false;
             Exception unexpectedException = null;
-            updateLastExecutionTime();
+            UpdateLastExecutionTime();
             bool suspend = false;
             try
             {
                 for (;;)
                 {
-                    run();
+                    Run();
                     success = true;
 
-                    int currentState = _state.get();
-                    if (canSuspend(currentState))
+                    int currentState = _state.Get();
+                    if (CanSuspend(currentState))
                     {
                         // currentState might already be ST_SUSPENDED here (we can loop back around with the
                         // state still ST_SUSPENDED via the ST_SUSPENDING/ST_SUSPENDED branch below), so we must
                         // CAS from currentState and not hardcode ST_SUSPENDING as the expected value, or the CAS
                         // would spuriously "fail" forever and livelock this thread instead of finishing suspend.
-                        if (!_state.compareAndSet(currentState, ST_SUSPENDED))
+                        if (!_state.CompareAndSet(currentState, ST_SUSPENDED))
                         {
                             // Try again as the CAS failed.
                             continue;
                         }
 
-                        if (!canSuspend(ST_SUSPENDED) && _state.compareAndSet(ST_SUSPENDED, ST_STARTED))
+                        if (!CanSuspend(ST_SUSPENDED) && _state.CompareAndSet(ST_SUSPENDED, ST_STARTED))
                         {
                             // Seems like there was something added to the task queue again in the meantime but we
                             // were able to re-engage this thread as the event loop thread.
@@ -1398,7 +1398,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             catch (Exception t)
             {
                 unexpectedException = t;
-                logger.warn("Unexpected exception from an event executor: ", t);
+                logger.Warn("Unexpected exception from an event executor: ", t);
             }
             finally
             {
@@ -1408,8 +1408,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     for (;;)
                     {
                         // We are re-fetching the state as it might have been shutdown in the meantime.
-                        int oldState = _state.get();
-                        if (oldState >= ST_SHUTTING_DOWN || _state.compareAndSet(oldState, ST_SHUTTING_DOWN))
+                        int oldState = _state.Get();
+                        if (oldState >= ST_SHUTTING_DOWN || _state.CompareAndSet(oldState, ST_SHUTTING_DOWN))
                         {
                             break;
                         }
@@ -1418,9 +1418,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     if (success && gracefulShutdownStartTime == 0)
                     {
                         // Check if confirmShutdown() was called at the end of the loop.
-                        if (logger.isErrorEnabled())
+                        if (logger.IsErrorEnabled())
                         {
-                            logger.error("Buggy " + nameof(IEventExecutor) + " implementation; " +
+                            logger.Error("Buggy " + nameof(IEventExecutor) + " implementation; " +
                                          nameof(SingleThreadEventExecutor) + ".confirmShutdown() must " +
                                          "be called before run() implementation terminates.");
                         }
@@ -1436,7 +1436,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                         // graceful shutdown with quietPeriod.
                         for (;;)
                         {
-                            if (confirmShutdown())
+                            if (ConfirmShutdown())
                             {
                                 break;
                             }
@@ -1446,8 +1446,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                         // achieved by switching the state. Any new tasks beyond this point will be rejected.
                         for (;;)
                         {
-                            int currentState = _state.get();
-                            if (currentState >= ST_SHUTDOWN || _state.compareAndSet(currentState, ST_SHUTDOWN))
+                            int currentState = _state.Get();
+                            if (currentState >= ST_SHUTDOWN || _state.CompareAndSet(currentState, ST_SHUTDOWN))
                             {
                                 break;
                             }
@@ -1455,7 +1455,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
                         // We have the final set of tasks in the queue now, no more can be added, run all remaining.
                         // No need to loop here, this is the final pass.
-                        confirmShutdown();
+                        ConfirmShutdown();
                     }
                 }
                 finally
@@ -1466,7 +1466,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                         {
                             try
                             {
-                                cleanup();
+                                Cleanup();
                             }
                             finally
                             {
@@ -1474,14 +1474,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                                 // notify the future. The user may block on the future and once it unblocks the JVM
                                 // may terminate and start unloading classes.
                                 // See https://github.com/netty/netty/issues/6596.
-                                FastThreadLocal.removeAll();
+                                FastThreadLocal.RemoveAll();
 
-                                _state.set(ST_TERMINATED);
+                                _state.Set(ST_TERMINATED);
                                 _threadLock.Signal();
-                                int numUserTasks = drainTasks();
-                                if (numUserTasks > 0 && logger.isWarnEnabled())
+                                int numUserTasks = DrainTasks();
+                                if (numUserTasks > 0 && logger.IsWarnEnabled())
                                 {
-                                    logger.warn("An event executor terminated with " +
+                                    logger.Warn("An event executor terminated with " +
                                                 "non-empty task queue (" + numUserTasks + ')');
                                 }
 
@@ -1498,10 +1498,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                         else
                         {
                             // Lets remove all FastThreadLocals for the Thread as we are about to terminate it.
-                            FastThreadLocal.removeAll();
+                            FastThreadLocal.RemoveAll();
 
                             // Reset the stored threadProperties in case of suspension.
-                            _threadProperties.set(null);
+                            _threadProperties.Set(null);
                         }
                     }
                     finally
@@ -1515,12 +1515,12 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
     }
 
-    internal int drainTasks()
+    internal int DrainTasks()
     {
         int numTasks = 0;
         for (;;)
         {
-            _taskQueue.tryDequeue(out var runnable);
+            _taskQueue.TryDequeue(out var runnable);
             if (runnable == null)
             {
                 break;

@@ -27,5 +27,5 @@ public interface IRejectedExecutionHandler
      * Called when someone tried to add a task to {@link SingleThreadEventExecutor} but this failed due capacity
      * restrictions.
      */
-    void rejected(IRunnable task, SingleThreadEventExecutor executor);
+    void Rejected(IRunnable task, SingleThreadEventExecutor executor);
 }

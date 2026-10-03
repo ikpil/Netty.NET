@@ -36,47 +36,47 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
     /**
      * Returns an unmodifiable empty {@link PriorityQueue}.
      */
-    public static EmptyPriorityQueue<T> instance()
+    public static EmptyPriorityQueue<T> Instance()
     {
         return INSTANCE;
     }
 
-    public bool remove(T node)
+    public bool Remove(T node)
     {
         return false;
     }
 
-    public bool contains(T node)
+    public bool Contains(T node)
     {
         return false;
     }
 
-    public void priorityChanged(T node)
+    public void PriorityChanged(T node)
     {
     }
 
-    public int size()
+    public int Size()
     {
         return 0;
     }
 
-    public bool isEmpty()
+    public bool IsEmpty()
     {
         return true;
     }
 
-    public T[] toArray()
+    public T[] ToArray()
     {
         return Array.Empty<T>();
     }
 
-    public void clearIgnoringIndexes()
+    public void ClearIgnoringIndexes()
     {
     }
 
     public override bool Equals(object o)
     {
-        return o is IPriorityQueue<T> q && q.isEmpty();
+        return o is IPriorityQueue<T> q && q.IsEmpty();
     }
 
     public override int GetHashCode()
@@ -84,27 +84,27 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
         return 0;
     }
 
-    public bool offer(T t)
+    public bool Offer(T t)
     {
         return false;
     }
 
-    public T remove()
+    public T Remove()
     {
         throw new InvalidOperationException();
     }
 
-    public T poll()
+    public T Poll()
     {
         return default;
     }
 
-    public T element()
+    public T Element()
     {
         throw new InvalidOperationException();
     }
 
-    public T peek()
+    public T Peek()
     {
         return default;
     }
@@ -119,40 +119,35 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
         return GetEnumerator();
     }
 
-    public bool tryRemove(T item)
+    public bool TryRemove(T item)
     {
         return false;
     }
 
-    public bool tryEnqueue(T item)
+    public bool TryEnqueue(T item)
     {
         return false;
     }
 
-    public bool tryDequeue(out T item)
+    public bool TryDequeue(out T item)
     {
         item = default;
         return false;
     }
 
-    public bool tryPeek(out T item)
+    public bool TryPeek(out T item)
     {
         item = default;
         return false;
     }
 
-    public void clear()
+    public void Clear()
     {
     }
 
-    public int drain(IConsumer<T> consumer, int limit)
+    public int Drain(IConsumer<T> consumer, int limit)
     {
         return 0;
-    }
-
-    public T[] ToArray()
-    {
-        return Array.Empty<T>();
     }
 
     public override string ToString()

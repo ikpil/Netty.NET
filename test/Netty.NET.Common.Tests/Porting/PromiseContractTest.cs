@@ -129,7 +129,7 @@ public class PromiseContractTest
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await source.Task));
         Assert.Same(error, Assert.Throws<AggregateException>(() => source.Task.Result).InnerException);
         Assert.Same(error, Assert.Throws<InvalidOperationException>(() => source.Task.GetAwaiter().GetResult()));
-        Assert.Empty(ThrowableUtil.getSuppressed(error));
+        Assert.Empty(ThrowableUtil.GetSuppressed(error));
     }
     [Fact]
     public void NullFailureDoesNotConsumeTheProducer()
@@ -149,19 +149,19 @@ public class PromiseContractTest
         var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
         var error = new InvalidOperationException("original");
         var diagnostic = new Exception("existing");
-        ThrowableUtil.addSuppressed(error, diagnostic);
+        ThrowableUtil.AddSuppressed(error, diagnostic);
         source.SetException(error);
         Assert.Same(error, Assert.Throws<InvalidOperationException>(() => source.Task.GetAwaiter().GetResult()));
-        Assert.Equal(new[] { diagnostic }, ThrowableUtil.getSuppressed(error));
-        var snapshot = ThrowableUtil.getSuppressed(error);
+        Assert.Equal(new[] { diagnostic }, ThrowableUtil.GetSuppressed(error));
+        var snapshot = ThrowableUtil.GetSuppressed(error);
         snapshot[0] = null;
-        Assert.Same(diagnostic, ThrowableUtil.getSuppressed(error)[0]);
-        Assert.Throws<ArgumentException>(() => ThrowableUtil.addSuppressed(error, error));
-        ThrowableUtil.addSuppressed(error, (Exception)null);
+        Assert.Same(diagnostic, ThrowableUtil.GetSuppressed(error)[0]);
+        Assert.Throws<ArgumentException>(() => ThrowableUtil.AddSuppressed(error, error));
+        ThrowableUtil.AddSuppressed(error, (Exception)null);
         var others = new List<Exception> { diagnostic, new Exception("another") };
-        ThrowableUtil.addSuppressedAndClear(error, others);
+        ThrowableUtil.AddSuppressedAndClear(error, others);
         Assert.Empty(others);
-        Assert.Equal(3, ThrowableUtil.getSuppressed(error).Length);
+        Assert.Equal(3, ThrowableUtil.GetSuppressed(error).Length);
     }
     [Fact]
     public async Task RegistrationRemovalUsesItsHandleAndRetainsOtherDuplicateCallbacks()
@@ -356,10 +356,10 @@ public class PromiseContractTest
             bool invokedOnLoop = false;
             Task<bool> consumer = executor.SubmitAsync(async () =>
             {
-                invokedOnLoop = executor.inEventLoop();
+                invokedOnLoop = executor.InEventLoop();
                 entered.Set();
                 await source.Task.ConfigureAwait(false);
-                return await executor.SubmitAsync(() => executor.inEventLoop());
+                return await executor.SubmitAsync(() => executor.InEventLoop());
             });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Assert.False(consumer.IsCompleted);
@@ -382,7 +382,7 @@ public class PromiseContractTest
             var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             using var observation = new ExecutorCompletion(executor, source.Task);
             int correctThread = 0;
-            Action<Task> callback = _ => { if (executor.inEventLoop()) Interlocked.Increment(ref correctThread); };
+            Action<Task> callback = _ => { if (executor.InEventLoop()) Interlocked.Increment(ref correctThread); };
             using var early = observation.Register(callback);
             source.SetResult(null);
             using var late = observation.Register(callback);

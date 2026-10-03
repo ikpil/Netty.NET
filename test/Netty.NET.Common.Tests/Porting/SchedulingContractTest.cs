@@ -17,14 +17,14 @@ public class SchedulingContractTest
     {
         var executor = GlobalEventExecutor.INSTANCE;
         using var first = new CountdownEvent(1);
-        executor.execute(Runnables.Create(() => first.Signal()));
+        executor.Execute(Runnables.Create(() => first.Signal()));
         Assert.True(first.Wait(TimeSpan.FromSeconds(5)));
-        Assert.True(executor.awaitInactivity(TimeSpan.FromSeconds(5)));
+        Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         using var second = new CountdownEvent(1);
-        executor.execute(Runnables.Create(() => second.Signal()));
+        executor.Execute(Runnables.Create(() => second.Signal()));
         Assert.True(second.Wait(TimeSpan.FromSeconds(5)));
-        Assert.False(executor.isShuttingDown());
-        Assert.False(executor.isShutdown());
+        Assert.False(executor.IsShuttingDown());
+        Assert.False(executor.IsShutdown());
     }
     [Fact]
     public void OneShotCallableCompletesWithValueOnTheExecutor()
@@ -35,14 +35,14 @@ public class SchedulingContractTest
             bool ranOnExecutor = false;
             Task<object> task = executor.ScheduleAsync<object>(() =>
             {
-                ranOnExecutor = executor.inEventLoop();
+                ranOnExecutor = executor.InEventLoop();
                 return "result";
             }, TimeSpan.FromMilliseconds(15));
             Assert.Equal("result", task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.True(ranOnExecutor);
             Assert.True(task.IsCompletedSuccessfully);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     [Fact]
     public void FailureRetainsTheCallableException()
@@ -55,7 +55,7 @@ public class SchedulingContractTest
             var error = Assert.Throws<InvalidOperationException>(() => task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Same(cause, error);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     [Fact]
     public void CancellingBeforeDeadlinePreventsExecution()
@@ -69,11 +69,11 @@ public class SchedulingContractTest
             cancellation.Cancel();
             Assert.True(task.IsCanceled);
             using var drained = new CountdownEvent(1);
-            executor.execute(Runnables.Create(() => drained.Signal()));
+            executor.Execute(Runnables.Create(() => drained.Signal()));
             Assert.True(drained.Wait(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     [Theory]
     [InlineData(false)]
@@ -92,14 +92,14 @@ public class SchedulingContractTest
             Assert.True(repeated.Wait(TimeSpan.FromSeconds(5)));
             cancellation.Cancel();
             using var drained = new CountdownEvent(1);
-            executor.execute(Runnables.Create(() => drained.Signal()));
+            executor.Execute(Runnables.Create(() => drained.Signal()));
             Assert.True(drained.Wait(TimeSpan.FromSeconds(5)));
             int completedCalls = Volatile.Read(ref calls);
             Thread.Sleep(20);
             Assert.Equal(completedCalls, Volatile.Read(ref calls));
             Assert.True(task.IsCanceled);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     [Fact]
     public void DifferentGenericResultTypesCanShareTheDeadlineQueue()
@@ -112,33 +112,33 @@ public class SchedulingContractTest
             Assert.Equal("text", first.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(42, second.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     private class ManualExecutor : AbstractScheduledEventExecutor
     {
-        private readonly MockTicker clock = Ticker.newMockTicker();
+        private readonly MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         public ManualExecutor() : base(null) { }
-        public override Ticker ticker() => clock;
-        public void advance(long nanos) => clock.advance(nanos);
-        internal IScheduledWork Head => peekScheduledTask();
+        public override Ticker Ticker() => clock;
+        public void Advance(long nanos) => clock.Advance(nanos);
+        internal IScheduledWork Head => PeekScheduledTask();
         internal bool holdRemoval;
         internal readonly List<IRunnable> removals = new();
-        protected override void scheduleRemoveScheduled(IScheduledWork task)
+        protected override void ScheduleRemoveScheduled(IScheduledWork task)
         {
             if (holdRemoval) removals.Add(task);
-            else base.scheduleRemoveScheduled(task);
+            else base.ScheduleRemoveScheduled(task);
         }
-        public IRunnable pollDue() => pollScheduledTask(getCurrentTimeNanos());
-        public bool transferDue(IQueue<IRunnable> queue) => fetchFromScheduledTaskQueue(queue);
-        public override bool inEventLoop(Thread thread) => !holdRemoval;
-        public override void execute(IRunnable task) => task.run();
+        public IRunnable PollDue() => PollScheduledTask(GetCurrentTimeNanos());
+        public bool TransferDue(IQueue<IRunnable> queue) => FetchFromScheduledTaskQueue(queue);
+        public override bool InEventLoop(Thread thread) => !holdRemoval;
+        public override void Execute(IRunnable task) => task.Run();
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override Task Termination => Task.CompletedTask;
-        public override bool isShuttingDown() => false;
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
-        public override void shutdown() { }
+        public override bool IsShuttingDown() => false;
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override void Shutdown() { }
     }
     [Theory]
     [InlineData(false)]
@@ -155,13 +155,13 @@ public class SchedulingContractTest
             token.Cancel();
             Assert.True(task.IsCanceled);
         }
-        executor.advance(100);
-        executor.pollDue()?.run();
+        executor.Advance(100);
+        executor.PollDue()?.Run();
         Assert.Equal(cancel ? 0 : 1, calls);
         Assert.True(task.IsCompleted);
         if (!cancel) Assert.True(task.IsCompletedSuccessfully);
     }
-    private static void shutdown(IEventExecutor executor) =>
+    private static void Shutdown(IEventExecutor executor) =>
         Assert.True(executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
 
     [Fact]
@@ -169,11 +169,11 @@ public class SchedulingContractTest
     {
         var executor = new ManualExecutor();
         var task = executor.ScheduleAsync(() => { }, TimeSpan.MaxValue);
-        Assert.Equal(long.MaxValue, executor.Head.deadlineNanos());
-        Assert.Null(executor.pollDue());
-        Assert.Equal(long.MaxValue, AbstractScheduledEventExecutor.toNanos(TimeSpan.MaxValue));
-        Assert.Equal(long.MinValue, AbstractScheduledEventExecutor.toNanos(TimeSpan.MinValue));
-        Assert.Equal(9007199254740900L, AbstractScheduledEventExecutor.toNanos(TimeSpan.FromTicks(90071992547409L)));
+        Assert.Equal(long.MaxValue, executor.Head.DeadlineNanos());
+        Assert.Null(executor.PollDue());
+        Assert.Equal(long.MaxValue, AbstractScheduledEventExecutor.ToNanos(TimeSpan.MaxValue));
+        Assert.Equal(long.MinValue, AbstractScheduledEventExecutor.ToNanos(TimeSpan.MinValue));
+        Assert.Equal(9007199254740900L, AbstractScheduledEventExecutor.ToNanos(TimeSpan.FromTicks(90071992547409L)));
         var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.MaxValue);
         Assert.False(periodic.IsCompleted);
     }
@@ -191,15 +191,15 @@ public class SchedulingContractTest
         Assert.True(cancelled.IsCanceled);
         Assert.Single(executor.removals);
         executor.holdRemoval = false;
-        executor.advance(100);
+        executor.Advance(100);
         var queue = new LinkedBlockingQueue<IRunnable>(1);
-        Assert.True(executor.transferDue(queue));
+        Assert.True(executor.TransferDue(queue));
         Assert.Equal(1, queue.Count);
-        Assert.True(queue.tryDequeue(out var task));
+        Assert.True(queue.TryDequeue(out var task));
         Assert.NotSame(canceledWork, task);
-        task.run();
+        task.Run();
         Assert.True(ready.IsCompletedSuccessfully);
-        Assert.Null(executor.pollDue());
+        Assert.Null(executor.PollDue());
     }
 
     [Fact]
@@ -208,11 +208,11 @@ public class SchedulingContractTest
         var executor = new ManualExecutor();
         var ready = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
         var readyWork = executor.Head;
-        executor.advance(100);
+        executor.Advance(100);
         var queue = new LinkedBlockingQueue<IRunnable>(1);
-        Assert.True(queue.tryEnqueue(Runnables.Empty));
-        Assert.False(executor.transferDue(queue));
-        Assert.Same(readyWork, executor.pollDue());
+        Assert.True(queue.TryEnqueue(Runnables.Empty));
+        Assert.False(executor.TransferDue(queue));
+        Assert.Same(readyWork, executor.PollDue());
     }
 
     [Fact]
@@ -222,15 +222,15 @@ public class SchedulingContractTest
         using var cancellation = new CancellationTokenSource();
         var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
         var periodicWork = executor.Head;
-        long id = periodicWork.getId();
-        executor.pollDue().run();
-        Assert.Equal(id, periodicWork.getId());
+        long id = periodicWork.GetId();
+        executor.PollDue().Run();
+        Assert.Equal(id, periodicWork.GetId());
         var next = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
-        executor.advance(100);
-        Assert.Same(periodicWork, executor.pollDue());
-        var nextWork = Assert.IsAssignableFrom<IScheduledWork>(executor.pollDue());
-        Assert.Equal(id + 1, nextWork.getId());
-        nextWork.run();
+        executor.Advance(100);
+        Assert.Same(periodicWork, executor.PollDue());
+        var nextWork = Assert.IsAssignableFrom<IScheduledWork>(executor.PollDue());
+        Assert.Equal(id + 1, nextWork.GetId());
+        nextWork.Run();
         Assert.True(next.IsCompletedSuccessfully);
         cancellation.Cancel();
         Assert.True(periodic.IsCanceled);
@@ -243,12 +243,12 @@ public class SchedulingContractTest
         internal int afterCalls;
         internal int lazyCalls;
         internal readonly List<IRunnable> submissions = new();
-        public override bool inEventLoop(Thread thread) => false;
-        public override void execute(IRunnable command) => submissions.Add(command);
-        public override void lazyExecute(IRunnable command) { ++lazyCalls; submissions.Add(command); }
-        protected override bool beforeScheduledTaskSubmitted(long deadline) => before;
-        protected override bool afterScheduledTaskSubmitted(long deadline) { ++afterCalls; return after; }
-        protected override void validateScheduled(TimeSpan amount)
+        public override bool InEventLoop(Thread thread) => false;
+        public override void Execute(IRunnable command) => submissions.Add(command);
+        public override void LazyExecute(IRunnable command) { ++lazyCalls; submissions.Add(command); }
+        protected override bool BeforeScheduledTaskSubmitted(long deadline) => before;
+        protected override bool AfterScheduledTaskSubmitted(long deadline) { ++afterCalls; return after; }
+        protected override void ValidateScheduled(TimeSpan amount)
         {
             if (amount > TimeSpan.FromTicks(1)) throw new ArgumentException("test scheduling limit");
         }

@@ -28,7 +28,7 @@ public class ConcurrentSkipListIntObjMultimapTest
     private static KeyValuePair<int, string> Entry(int key, string value) => new(key, value);
 
     [Fact]
-    public void addIterateAndRemoveEntries()
+    public void AddIterateAndRemoveEntries()
     {
         Assert.Empty(_map.Snapshot());
         _map.Add(1, "a");
@@ -44,7 +44,7 @@ public class ConcurrentSkipListIntObjMultimapTest
     }
 
     [Fact]
-    public void clearMustRemoveAllEntries()
+    public void ClearMustRemoveAllEntries()
     {
         _map.Add(2, "b");
         _map.Add(1, "a");
@@ -61,7 +61,7 @@ public class ConcurrentSkipListIntObjMultimapTest
     [InlineData(true, false)]
     [InlineData(false, true)]
     [InlineData(true, true)]
-    public void pollingFirstOrLastEntryOfUniqueOrMultiMappedKeys(bool last, bool duplicate)
+    public void PollingFirstOrLastEntryOfUniqueOrMultiMappedKeys(bool last, bool duplicate)
     {
         // Maps pollingFirstEntryOfUniqueKeys, pollingLastEntryOfUniqueKeys,
         // pollingFirstEntryOfMultiMappedKeys and pollingLastEntryOfMultiMappedKeys.
@@ -85,7 +85,7 @@ public class ConcurrentSkipListIntObjMultimapTest
     }
 
     [Fact]
-    public void addMultipleEntriesForSameKey()
+    public void AddMultipleEntriesForSameKey()
     {
         _map.Add(2, "b1");
         _map.Add(1, "a");
@@ -107,7 +107,7 @@ public class ConcurrentSkipListIntObjMultimapTest
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void iteratorRemoveSecondOfMultiMappedEntry(bool withPriorRemoval)
+    public void IteratorRemoveSecondOfMultiMappedEntry(bool withPriorRemoval)
     {
         _map.Add(1, "a");
         _map.Add(1, "b");
@@ -123,7 +123,7 @@ public class ConcurrentSkipListIntObjMultimapTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void firstOrLastKeyOrEntry(bool last)
+    public void FirstOrLastKeyOrEntry(bool last)
     {
         // Both original firstKeyOrEntry / lastKeyOrEntry incremental scenarios.
         bool found = last ? _map.TryPeekLast(out var entry) : _map.TryPeekFirst(out entry);
@@ -145,7 +145,7 @@ public class ConcurrentSkipListIntObjMultimapTest
     }
 
     [Fact]
-    public void firstLastKeyOrEntry()
+    public void FirstLastKeyOrEntry()
     {
         var random = new Random(4201);
         for (int repetition = 0; repetition < 100; repetition++)
@@ -228,7 +228,7 @@ public class ConcurrentSkipListIntObjMultimapTest
     }
 
     [Fact]
-    public void pollCeilingEntry()
+    public void PollCeilingEntry()
     {
         _map.Add(1, "a");
         _map.Add(2, "b");

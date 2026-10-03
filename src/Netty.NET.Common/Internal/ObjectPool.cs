@@ -22,9 +22,9 @@ public static class ObjectPool
      * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link object}
      * that should be pooled.
      */
-    public static ObjectPool<T> newPool<T>(IObjectCreator<T> creator) where T : class
+    public static ObjectPool<T> NewPool<T>(IObjectCreator<T> creator) where T : class
     {
-        return new RecyclerObjectPool<T>(ObjectUtil.checkNotNull(creator, "creator"));
+        return new RecyclerObjectPool<T>(ObjectUtil.CheckNotNull(creator, "creator"));
     }
 }
 
@@ -43,5 +43,5 @@ public abstract class ObjectPool<T>
      * Get a {@link object} from the {@link ObjectPool}. The returned {@link object} may be created via
      * {@link ObjectCreator#newObject(Handle)} if no pooled {@link object} is ready to be reused.
      */
-    public abstract T get();
+    public abstract T Get();
 }

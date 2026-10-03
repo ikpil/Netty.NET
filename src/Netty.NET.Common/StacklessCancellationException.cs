@@ -13,12 +13,12 @@ public class StacklessCancellationException : TaskCanceledException
 
     // Override fillInStackTrace() so we not populate the backtrace via a native call and so leak the
     // Classloader.
-    public Exception fillInStackTrace() 
+    public Exception FillInStackTrace()
     {
         return this;
     }
 
-    public static StacklessCancellationException newInstance(Type clazz, string method) {
-        return ThrowableUtil.unknownStackTrace(msg => new StacklessCancellationException(msg), clazz, method);
+    public static StacklessCancellationException NewInstance(Type clazz, string method) {
+        return ThrowableUtil.UnknownStackTrace(msg => new StacklessCancellationException(msg), clazz, method);
     }
 }

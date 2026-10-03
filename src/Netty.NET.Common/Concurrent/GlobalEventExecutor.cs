@@ -34,7 +34,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(GlobalEventExecutor));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(GlobalEventExecutor));
 
     private static readonly long SCHEDULE_QUIET_PERIOD_INTERVAL;
 
@@ -57,13 +57,13 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     static GlobalEventExecutor()
     {
-        int quietPeriod = SystemPropertyUtil.getInt("io.netty.globalEventExecutor.quietPeriodSeconds", 1);
+        int quietPeriod = SystemPropertyUtil.GetInt("io.netty.globalEventExecutor.quietPeriodSeconds", 1);
         if (quietPeriod <= 0)
         {
             quietPeriod = 1;
         }
 
-        logger.debug("-Dio.netty.globalEventExecutor.quietPeriodSeconds: {}", quietPeriod);
+        logger.Debug("-Dio.netty.globalEventExecutor.quietPeriodSeconds: {}", quietPeriod);
 
         SCHEDULE_QUIET_PERIOD_INTERVAL = quietPeriod * SystemTimer.NanosecondsPerSecond;
         // CLR static field initializers precede the static constructor body.
@@ -76,16 +76,16 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         // could be overridden leading to unsafe initialization here!
         // NOOP
         _quietPeriodTask = new NativeScheduledWork<object>(_ => null, default,
-            deadlineNanos(getCurrentTimeNanos(),
+            DeadlineNanos(GetCurrentTimeNanos(),
                 SCHEDULE_QUIET_PERIOD_INTERVAL),
-            -SCHEDULE_QUIET_PERIOD_INTERVAL, getCurrentTimeNanos, () => true,
-            task => scheduleFromEventLoop(task), task => removeScheduled(task), captureContext: false
+            -SCHEDULE_QUIET_PERIOD_INTERVAL, GetCurrentTimeNanos, () => true,
+            task => ScheduleFromEventLoop(task), task => RemoveScheduled(task), captureContext: false
         );
-        scheduledTaskQueue().tryEnqueue(_quietPeriodTask);
-        _threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory(
+        ScheduledTaskQueue().TryEnqueue(_quietPeriodTask);
+        _threadFactory = ThreadExecutorMap.Apply(new DefaultThreadFactory(
             GetType(), false, ThreadPriority.Normal), this);
 
-        NotSupportedException terminationFailure = ThrowableUtil.unknownStackTrace(new StacklessUnsupportedOperationException(),
+        NotSupportedException terminationFailure = ThrowableUtil.UnknownStackTrace(new StacklessUnsupportedOperationException(),
             typeof(GlobalEventExecutor), "terminationFuture");
         _terminationTask = Task.FromException(terminationFailure);
         _taskRunner = new TaskRunner(this);
@@ -96,18 +96,18 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
      *
      * @return {@code null} if the executor thread has been interrupted or waken up.
      */
-    public IRunnable takeTask()
+    public IRunnable TakeTask()
     {
         LinkedBlockingQueue<IRunnable> taskQueue = _taskQueue;
         for (;;)
         {
-            var scheduledTask = peekScheduledTask();
+            var scheduledTask = PeekScheduledTask();
             if (scheduledTask == null)
             {
                 IRunnable task = null;
                 try
                 {
-                    task = taskQueue.take();
+                    task = taskQueue.Take();
                 }
                 catch (ThreadInterruptedException e)
                 {
@@ -118,14 +118,14 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
             }
             else
             {
-                long delayNanos = scheduledTask.delayNanos();
+                long delayNanos = scheduledTask.DelayNanos();
                 IRunnable task = null;
                 if (delayNanos > 0)
                 {
                     try
                     {
                         var delayTs = TimeSpan.FromTicks(delayNanos / 100);
-                        taskQueue.tryTake(out task, delayTs);
+                        taskQueue.TryTake(out task, delayTs);
                     }
                     catch (ThreadInterruptedException e)
                     {
@@ -140,8 +140,8 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
                     // scheduled tasks are never executed if there is always one task in the taskQueue.
                     // This is for example true for the read task of OIO Transport
                     // See https://github.com/netty/netty/issues/1614
-                    fetchFromScheduledTaskQueue();
-                    taskQueue.tryTake(out task);
+                    FetchFromScheduledTaskQueue();
+                    taskQueue.TryTake(out task);
                 }
 
                 if (task != null)
@@ -152,21 +152,21 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         }
     }
 
-    private void fetchFromScheduledTaskQueue()
+    private void FetchFromScheduledTaskQueue()
     {
-        long nanoTime = getCurrentTimeNanos();
-        IRunnable scheduledTask = pollScheduledTask(nanoTime);
+        long nanoTime = GetCurrentTimeNanos();
+        IRunnable scheduledTask = PollScheduledTask(nanoTime);
         while (scheduledTask != null)
         {
-            _taskQueue.add(scheduledTask);
-            scheduledTask = pollScheduledTask(nanoTime);
+            _taskQueue.Add(scheduledTask);
+            scheduledTask = PollScheduledTask(nanoTime);
         }
     }
 
     /**
      * Return the number of tasks that are pending for processing.
      */
-    public int pendingTasks()
+    public int PendingTasks()
     {
         return _taskQueue.Count;
     }
@@ -175,12 +175,12 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
      * Add a task to the task queue, or throws a {@link RejectedExecutionException} if this instance was shutdown
      * before.
      */
-    private void addTask(IRunnable task)
+    private void AddTask(IRunnable task)
     {
-        _taskQueue.add(ObjectUtil.checkNotNull(task, "task"));
+        _taskQueue.Add(ObjectUtil.CheckNotNull(task, "task"));
     }
 
-    public override bool inEventLoop(Thread thread)
+    public override bool InEventLoop(Thread thread)
     {
         return thread == _thread;
     }
@@ -190,7 +190,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         return Termination;
     }
 
-    public override bool isShuttingDown()
+    public override bool IsShuttingDown()
     {
         return false;
     }
@@ -199,22 +199,22 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     public override Task StopAsync() => Termination;
 
     [Obsolete]
-    public override void shutdown()
+    public override void Shutdown()
     {
         throw new NotSupportedException();
     }
 
-    public override bool isShutdown()
+    public override bool IsShutdown()
     {
         return false;
     }
 
-    public override bool isTerminated()
+    public override bool IsTerminated()
     {
         return false;
     }
 
-    public override bool awaitTermination(TimeSpan timeout)
+    public override bool AwaitTermination(TimeSpan timeout)
     {
         return false;
     }
@@ -227,7 +227,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
      *
      * @return {@code true} if and only if the worker thread has been terminated
      */
-    public bool awaitInactivity(TimeSpan timeout)
+    public bool AwaitInactivity(TimeSpan timeout)
     {
         Thread thread = _thread;
         if (thread == null)
@@ -262,43 +262,43 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         return !thread.IsAlive;
     }
 
-    public override void execute(IRunnable task)
+    public override void Execute(IRunnable task)
     {
-        execute0(task);
+        Execute0(task);
     }
 
-    private void execute0(IRunnable task)
+    private void Execute0(IRunnable task)
     {
-        addTask(ObjectUtil.checkNotNull(task, "task"));
-        if (!inEventLoop())
+        AddTask(ObjectUtil.CheckNotNull(task, "task"));
+        if (!InEventLoop())
         {
-            startThread();
+            StartThread();
         }
     }
 
-    private void startThread()
+    private void StartThread()
     {
-        if (_started.compareAndSet(false, true))
+        if (_started.CompareAndSet(false, true))
         {
             // CLR counterpart of clearing inherited JVM loader/security context.
             // Suppress only during creation/start and restore the submitting thread.
             if (ExecutionContext.IsFlowSuppressed())
             {
-                startThreadWithoutContext();
+                StartThreadWithoutContext();
             }
             else
             {
                 using (ExecutionContext.SuppressFlow())
                 {
-                    startThreadWithoutContext();
+                    StartThreadWithoutContext();
                 }
             }
         }
     }
 
-    private void startThreadWithoutContext()
+    private void StartThreadWithoutContext()
     {
-        Thread t = _threadFactory.newThread(_taskRunner);
+        Thread t = _threadFactory.NewThread(_taskRunner);
         // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
         // classloader.
         // See:
@@ -317,7 +317,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     private class TaskRunner : IRunnable
     {
-        private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(TaskRunner));
+        private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(TaskRunner));
 
         private readonly GlobalEventExecutor _this;
 
@@ -326,20 +326,20 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
             _this = executor;
         }
 
-        public void run()
+        public void Run()
         {
             for (;;)
             {
-                IRunnable task = _this.takeTask();
+                IRunnable task = _this.TakeTask();
                 if (task != null)
                 {
                     try
                     {
-                        runTask(task);
+                        RunTask(task);
                     }
                     catch (Exception t)
                     {
-                        logger.warn("Unexpected exception from the global event executor: ", t);
+                        logger.Warn("Unexpected exception from the global event executor: ", t);
                     }
 
                     if (task != _this._quietPeriodTask)
@@ -350,18 +350,18 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
                 IQueue<IScheduledWork> scheduledTaskQueue = _this._scheduledTaskQueue;
                 // Terminate if there is no task in the queue (except the noop task).
-                if (_this._taskQueue.isEmpty() && (scheduledTaskQueue == null || scheduledTaskQueue.Count == 1))
+                if (_this._taskQueue.IsEmpty() && (scheduledTaskQueue == null || scheduledTaskQueue.Count == 1))
                 {
                     // Mark the current thread as stopped.
                     // The following CAS must always success and must be uncontended,
                     // because only one thread should be running at the same time.
-                    bool stopped = _this._started.compareAndSet(true, false);
+                    bool stopped = _this._started.CompareAndSet(true, false);
                     Debug.Assert(stopped);
 
                     // Check if there are pending entries added by execute() or schedule*() while we do CAS above.
                     // Do not check scheduledTaskQueue because it is not thread-safe and can only be mutated from a
                     // TaskRunner actively running tasks.
-                    if (_this._taskQueue.isEmpty())
+                    if (_this._taskQueue.IsEmpty())
                     {
                         // A) No new task was added and thus there's nothing to handle
                         //    -> safe to terminate because there's nothing left to do
@@ -371,7 +371,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
                     }
 
                     // There are pending tasks added again.
-                    if (!_this._started.compareAndSet(false, true))
+                    if (!_this._started.CompareAndSet(false, true))
                     {
                         // startThread() started a new thread and set 'started' to true.
                         // -> terminate this thread so that the new thread reads from taskQueue exclusively.

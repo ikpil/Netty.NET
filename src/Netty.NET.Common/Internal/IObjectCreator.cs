@@ -14,5 +14,5 @@ public interface IObjectCreator<T>
      *
      * @param handle can NOT be null.
      */
-    T newObject(IObjectPoolHandle<T> handle);
+    T NewObject(IObjectPoolHandle<T> handle);
 }

@@ -58,16 +58,16 @@ public class CommonsLogger : AbstractInternalLogger
     public CommonsLogger(IInternalLogger logger, string name)
         : base(name)
     {
-        this.logger = ObjectUtil.checkNotNull(logger, "logger");
+        this.logger = ObjectUtil.CheckNotNull(logger, "logger");
     }
 
     /**
      * Delegates to the {@link Log#isTraceEnabled} method of the underlying
      * {@link Log} instance.
      */
-    public override bool isTraceEnabled()
+    public override bool IsTraceEnabled()
     {
-        return logger.isTraceEnabled();
+        return logger.IsTraceEnabled();
     }
 
     /**
@@ -76,9 +76,9 @@ public class CommonsLogger : AbstractInternalLogger
      *
      * @param msg - the message object to be logged
      */
-    public override void trace(string msg)
+    public override void Trace(string msg)
     {
-        logger.trace(msg);
+        logger.Trace(msg);
     }
 
     /**
@@ -95,12 +95,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param arg
      *          the argument
      */
-    public override void trace(string format, object arg)
+    public override void Trace(string format, object arg)
     {
-        if (logger.isTraceEnabled())
+        if (logger.IsTraceEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, arg);
-            logger.trace(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, arg);
+            logger.Trace(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -120,12 +120,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param argB
      *          the second argument
      */
-    public override void trace(string format, object argA, object argB)
+    public override void Trace(string format, object argA, object argB)
     {
-        if (logger.isTraceEnabled())
+        if (logger.IsTraceEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, argA, argB);
-            logger.trace(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, argA, argB);
+            logger.Trace(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -141,12 +141,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param format the format string
      * @param arguments a list of 3 or more arguments
      */
-    public override void trace(string format, params object[] arguments)
+    public override void Trace(string format, params object[] arguments)
     {
-        if (logger.isTraceEnabled())
+        if (logger.IsTraceEnabled())
         {
-            FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
-            logger.trace(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.ArrayFormat(format, arguments);
+            logger.Trace(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -159,18 +159,18 @@ public class CommonsLogger : AbstractInternalLogger
      * @param t
      *          the exception (throwable) to log
      */
-    public override void trace(string msg, Exception t)
+    public override void Trace(string msg, Exception t)
     {
-        logger.trace(msg, t);
+        logger.Trace(msg, t);
     }
 
     /**
      * Delegates to the {@link Log#isDebugEnabled} method of the underlying
      * {@link Log} instance.
      */
-    public override bool isDebugEnabled()
+    public override bool IsDebugEnabled()
     {
-        return logger.isDebugEnabled();
+        return logger.IsDebugEnabled();
     }
 
     //
@@ -181,9 +181,9 @@ public class CommonsLogger : AbstractInternalLogger
      *
      * @param msg - the message object to be logged
      */
-    public override void debug(string msg)
+    public override void Debug(string msg)
     {
-        logger.debug(msg);
+        logger.Debug(msg);
     }
 
     /**
@@ -200,12 +200,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param arg
      *          the argument
      */
-    public override void debug(string format, object arg)
+    public override void Debug(string format, object arg)
     {
-        if (logger.isDebugEnabled())
+        if (logger.IsDebugEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, arg);
-            logger.debug(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, arg);
+            logger.Debug(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -225,12 +225,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param argB
      *          the second argument
      */
-    public override void debug(string format, object argA, object argB)
+    public override void Debug(string format, object argA, object argB)
     {
-        if (logger.isDebugEnabled())
+        if (logger.IsDebugEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, argA, argB);
-            logger.debug(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, argA, argB);
+            logger.Debug(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -247,12 +247,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param format the format string
      * @param arguments a list of 3 or more arguments
      */
-    public override void debug(string format, params object[] arguments)
+    public override void Debug(string format, params object[] arguments)
     {
-        if (logger.isDebugEnabled())
+        if (logger.IsDebugEnabled())
         {
-            FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
-            logger.debug(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.ArrayFormat(format, arguments);
+            logger.Debug(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -265,18 +265,18 @@ public class CommonsLogger : AbstractInternalLogger
      * @param t
      *          the exception (throwable) to log
      */
-    public override void debug(string msg, Exception t)
+    public override void Debug(string msg, Exception t)
     {
-        logger.debug(msg, t);
+        logger.Debug(msg, t);
     }
 
     /**
      * Delegates to the {@link Log#isInfoEnabled} method of the underlying
      * {@link Log} instance.
      */
-    public override bool isInfoEnabled()
+    public override bool IsInfoEnabled()
     {
-        return logger.isInfoEnabled();
+        return logger.IsInfoEnabled();
     }
 
     /**
@@ -285,9 +285,9 @@ public class CommonsLogger : AbstractInternalLogger
      *
      * @param msg - the message object to be logged
      */
-    public override void info(string msg)
+    public override void Info(string msg)
     {
-        logger.info(msg);
+        logger.Info(msg);
     }
 
     /**
@@ -304,12 +304,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param arg
      *          the argument
      */
-    public override void info(string format, object arg)
+    public override void Info(string format, object arg)
     {
-        if (logger.isInfoEnabled())
+        if (logger.IsInfoEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, arg);
-            logger.info(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, arg);
+            logger.Info(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -329,12 +329,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param argB
      *          the second argument
      */
-    public override void info(string format, object argA, object argB)
+    public override void Info(string format, object argA, object argB)
     {
-        if (logger.isInfoEnabled())
+        if (logger.IsInfoEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, argA, argB);
-            logger.info(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, argA, argB);
+            logger.Info(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -350,12 +350,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param format the format string
      * @param arguments a list of 3 or more arguments
      */
-    public override void info(string format, params object[] arguments)
+    public override void Info(string format, params object[] arguments)
     {
-        if (logger.isInfoEnabled())
+        if (logger.IsInfoEnabled())
         {
-            FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
-            logger.info(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.ArrayFormat(format, arguments);
+            logger.Info(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -368,18 +368,18 @@ public class CommonsLogger : AbstractInternalLogger
      * @param t
      *          the exception (throwable) to log
      */
-    public override void info(string msg, Exception t)
+    public override void Info(string msg, Exception t)
     {
-        logger.info(msg, t);
+        logger.Info(msg, t);
     }
 
     /**
      * Delegates to the {@link Log#isWarnEnabled} method of the underlying
      * {@link Log} instance.
      */
-    public override bool isWarnEnabled()
+    public override bool IsWarnEnabled()
     {
-        return logger.isWarnEnabled();
+        return logger.IsWarnEnabled();
     }
 
     /**
@@ -388,9 +388,9 @@ public class CommonsLogger : AbstractInternalLogger
      *
      * @param msg - the message object to be logged
      */
-    public override void warn(string msg)
+    public override void Warn(string msg)
     {
-        logger.warn(msg);
+        logger.Warn(msg);
     }
 
     /**
@@ -407,12 +407,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param arg
      *          the argument
      */
-    public override void warn(string format, object arg)
+    public override void Warn(string format, object arg)
     {
-        if (logger.isWarnEnabled())
+        if (logger.IsWarnEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, arg);
-            logger.warn(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, arg);
+            logger.Warn(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -432,12 +432,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param argB
      *          the second argument
      */
-    public override void warn(string format, object argA, object argB)
+    public override void Warn(string format, object argA, object argB)
     {
-        if (logger.isWarnEnabled())
+        if (logger.IsWarnEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, argA, argB);
-            logger.warn(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, argA, argB);
+            logger.Warn(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -453,12 +453,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param format the format string
      * @param arguments a list of 3 or more arguments
      */
-    public override void warn(string format, params object[] arguments)
+    public override void Warn(string format, params object[] arguments)
     {
-        if (logger.isWarnEnabled())
+        if (logger.IsWarnEnabled())
         {
-            FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
-            logger.warn(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.ArrayFormat(format, arguments);
+            logger.Warn(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -471,18 +471,18 @@ public class CommonsLogger : AbstractInternalLogger
      * @param t
      *          the exception (throwable) to log
      */
-    public override void warn(string msg, Exception t)
+    public override void Warn(string msg, Exception t)
     {
-        logger.warn(msg, t);
+        logger.Warn(msg, t);
     }
 
     /**
      * Delegates to the {@link Log#isErrorEnabled} method of the underlying
      * {@link Log} instance.
      */
-    public override bool isErrorEnabled()
+    public override bool IsErrorEnabled()
     {
-        return logger.isErrorEnabled();
+        return logger.IsErrorEnabled();
     }
 
     /**
@@ -491,9 +491,9 @@ public class CommonsLogger : AbstractInternalLogger
      *
      * @param msg - the message object to be logged
      */
-    public override void error(string msg)
+    public override void Error(string msg)
     {
-        logger.error(msg);
+        logger.Error(msg);
     }
 
     /**
@@ -510,12 +510,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param arg
      *          the argument
      */
-    public override void error(string format, object arg)
+    public override void Error(string format, object arg)
     {
-        if (logger.isErrorEnabled())
+        if (logger.IsErrorEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, arg);
-            logger.error(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, arg);
+            logger.Error(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -535,12 +535,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param argB
      *          the second argument
      */
-    public override void error(string format, object argA, object argB)
+    public override void Error(string format, object argA, object argB)
     {
-        if (logger.isErrorEnabled())
+        if (logger.IsErrorEnabled())
         {
-            FormattingTuple ft = MessageFormatter.format(format, argA, argB);
-            logger.error(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.Format(format, argA, argB);
+            logger.Error(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -556,12 +556,12 @@ public class CommonsLogger : AbstractInternalLogger
      * @param format the format string
      * @param arguments a list of 3 or more arguments
      */
-    public override void error(string format, params object[] arguments)
+    public override void Error(string format, params object[] arguments)
     {
-        if (logger.isErrorEnabled())
+        if (logger.IsErrorEnabled())
         {
-            FormattingTuple ft = MessageFormatter.arrayFormat(format, arguments);
-            logger.error(ft.getMessage(), ft.getThrowable());
+            FormattingTuple ft = MessageFormatter.ArrayFormat(format, arguments);
+            logger.Error(ft.GetMessage(), ft.GetThrowable());
         }
     }
 
@@ -574,8 +574,8 @@ public class CommonsLogger : AbstractInternalLogger
      * @param t
      *          the exception (throwable) to log
      */
-    public override void error(string msg, Exception t)
+    public override void Error(string msg, Exception t)
     {
-        logger.error(msg, t);
+        logger.Error(msg, t);
     }
 }

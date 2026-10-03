@@ -27,16 +27,16 @@ public class MpscIntQueueTest
     [InlineData(15)]
     [InlineData(16)]
     [InlineData(17)]
-    public void mustFillWithSpecifiedEmptyEntry(int size)
+    public void MustFillWithSpecifiedEmptyEntry(int size)
     {
-        IMpscIntQueue queue = IMpscIntQueue.create(size, -1);
-        int filled = queue.fill(size, () => 42);
+        IMpscIntQueue queue = IMpscIntQueue.Create(size, -1);
+        int filled = queue.Fill(size, () => 42);
         Assert.Equal(size, filled);
         for (int i = 0; i < size; i++)
         {
-            Assert.Equal(42, queue.poll());
+            Assert.Equal(42, queue.Poll());
         }
-        Assert.Equal(-1, queue.poll());
-        Assert.True(queue.isEmpty());
+        Assert.Equal(-1, queue.Poll());
+        Assert.True(queue.IsEmpty());
     }
 }

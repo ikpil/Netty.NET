@@ -22,19 +22,19 @@ namespace Netty.NET.Common.Concurrent;
 sealed class SystemTicker : Ticker
 {
     public static readonly SystemTicker INSTANCE = new SystemTicker();
-    private static readonly long START_TIME = SystemTimer.nanoTime();
+    private static readonly long START_TIME = SystemTimer.NanoTime();
 
-    public override long initialNanoTime()
+    public override long InitialNanoTime()
     {
         return START_TIME;
     }
 
-    public override long nanoTime()
+    public override long NanoTime()
     {
-        return SystemTimer.nanoTime() - START_TIME;
+        return SystemTimer.NanoTime() - START_TIME;
     }
 
-    public override void sleep(long delayNanos)
+    public override void Sleep(long delayNanos)
     {
         if (delayNanos <= 0) return;
         // Thread.Sleep has millisecond resolution. Round a positive remainder up;
@@ -42,9 +42,9 @@ sealed class SystemTicker : Ticker
         SleepMilliseconds(delayNanos / 1_000_000 + (delayNanos % 1_000_000 == 0 ? 0 : 1));
     }
 
-    public override void sleepMillis(long delayMillis) => SleepMilliseconds(delayMillis);
+    public override void SleepMillis(long delayMillis) => SleepMilliseconds(delayMillis);
 
-    public override void sleep(TimeSpan delay)
+    public override void Sleep(TimeSpan delay)
     {
         if (delay.Ticks <= 0) return;
         // Keep the complete CLR duration rather than saturating it to 292 years.

@@ -27,5 +27,5 @@ public interface IThreadAwareExecutor : IExecutor
      * Return {@code true} if the given {@link Thread} is used by this {@link IThreadAwareExecutor} to execute
      * work.
      */
-    bool isExecutorThread(Thread thread);
+    bool IsExecutorThread(Thread thread);
 }

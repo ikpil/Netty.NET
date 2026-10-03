@@ -51,7 +51,7 @@ public class DomainWildcardMappingBuilder<T> where T : class
      */
     public DomainWildcardMappingBuilder(int initialCapacity, T defaultValue)
     {
-        this.defaultValue = checkNotNull(defaultValue, "defaultValue");
+        this.defaultValue = CheckNotNull(defaultValue, "defaultValue");
         map = new LinkedHashMap<string, T>(initialCapacity);
     }
 
@@ -72,22 +72,22 @@ public class DomainWildcardMappingBuilder<T> where T : class
      * @param output   the output value that will be returned by {@link Mapping#map(object)}
      *                 when the specified host name matches the specified input host name
      */
-    public DomainWildcardMappingBuilder<T> add(string hostname, T output)
+    public DomainWildcardMappingBuilder<T> Add(string hostname, T output)
     {
-        map.Add(normalizeHostName(hostname),
-            checkNotNull(output, "output"));
+        map.Add(NormalizeHostName(hostname),
+            CheckNotNull(output, "output"));
         return this;
     }
 
-    private string normalizeHostName(string hostname)
+    private string NormalizeHostName(string hostname)
     {
-        checkNotNull(hostname, "hostname");
+        CheckNotNull(hostname, "hostname");
         if (string.IsNullOrEmpty(hostname) || hostname[0] == '.')
         {
             throw new ArgumentException("Hostname '" + hostname + "' not valid");
         }
 
-        hostname = ImmutableDomainWildcardMapping<T>.normalize(checkNotNull(hostname, "hostname"));
+        hostname = ImmutableDomainWildcardMapping<T>.Normalize(CheckNotNull(hostname, "hostname"));
         if (hostname[0] == '*')
         {
             if (hostname.Length < 3 || hostname[1] != '.')
@@ -106,7 +106,7 @@ public class DomainWildcardMappingBuilder<T> where T : class
      *
      * @return new {@link Mapping} instance
      */
-    public IMapping<string, T> build()
+    public IMapping<string, T> Build()
     {
         return new ImmutableDomainWildcardMapping<T>(defaultValue, map);
     }

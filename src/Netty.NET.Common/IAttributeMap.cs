@@ -27,10 +27,10 @@ public interface IAttributeMap
      * Get the {@link IAttribute} for the given {@link AttributeKey}. This method will never return null, but may return
      * an {@link IAttribute} which does not have a value set yet.
      */
-    IAttribute<T> attr<T>(AttributeKey<T> key) where T : class;
+    IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class;
 
     /**
      * Returns {@code true} if and only if the given {@link IAttribute} exists in this {@link IAttributeMap}.
      */
-    bool hasAttr<T>(AttributeKey<T> key) where T : class;
+    bool HasAttr<T>(AttributeKey<T> key) where T : class;
 }

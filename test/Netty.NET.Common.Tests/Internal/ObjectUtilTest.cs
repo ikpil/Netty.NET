@@ -28,22 +28,22 @@ namespace Netty.NET.Common.Tests.Internal;
 public class ObjectUtilTest
 {
     [Fact]
-    public void testCheckInRangeDouble()
+    public void TestCheckInRangeDouble()
     {
-        Assert.Equal(0.5, ObjectUtil.checkInRange(0.5, 0.0, 1.0, "in range"));
-        Assert.Equal(0.0, ObjectUtil.checkInRange(0.0, 0.0, 1.0, "start of range"));
-        Assert.Equal(1.0, ObjectUtil.checkInRange(1.0, 0.0, 1.0, "end of range"));
-        Assert.Throws<ArgumentException>(() => ObjectUtil.checkInRange(-0.1, 0.0, 1.0, "below range"));
-        Assert.Throws<ArgumentException>(() => ObjectUtil.checkInRange(1.1, 0.0, 1.0, "above range"));
+        Assert.Equal(0.5, ObjectUtil.CheckInRange(0.5, 0.0, 1.0, "in range"));
+        Assert.Equal(0.0, ObjectUtil.CheckInRange(0.0, 0.0, 1.0, "start of range"));
+        Assert.Equal(1.0, ObjectUtil.CheckInRange(1.0, 0.0, 1.0, "end of range"));
+        Assert.Throws<ArgumentException>(() => ObjectUtil.CheckInRange(-0.1, 0.0, 1.0, "below range"));
+        Assert.Throws<ArgumentException>(() => ObjectUtil.CheckInRange(1.1, 0.0, 1.0, "above range"));
     }
 
     [Fact]
     public void NullableNumberWrappersPreserveDefaultValues()
     {
-        Assert.Equal(7, ObjectUtil.intValue(null, 7));
-        Assert.Equal(0, ObjectUtil.intValue(0, 7));
-        Assert.Equal(9L, ObjectUtil.longValue(null, 9L));
-        Assert.Equal(0L, ObjectUtil.longValue(0L, 9L));
+        Assert.Equal(7, ObjectUtil.IntValue(null, 7));
+        Assert.Equal(0, ObjectUtil.IntValue(0, 7));
+        Assert.Equal(9L, ObjectUtil.LongValue(null, 9L));
+        Assert.Equal(0L, ObjectUtil.LongValue(0L, 9L));
     }
 
     private static readonly object NULL_OBJECT = null;
@@ -89,12 +89,12 @@ public class ObjectUtilTest
     private static readonly string NUM_NEG_NAME = "NUMBER_NEGATIVE";
 
     [Fact]
-    public void testCheckNotNull()
+    public void TestCheckNotNull()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkNotNull(NON_NULL_OBJECT, NON_NULL_NAME);
+            ObjectUtil.CheckNotNull(NON_NULL_OBJECT, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -106,7 +106,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNotNull(NULL_OBJECT, NULL_NAME);
+            ObjectUtil.CheckNotNull(NULL_OBJECT, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -118,12 +118,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckNotNullWithIAE()
+    public void TestCheckNotNullWithIAE()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkNotNullWithIAE(NON_NULL_OBJECT, NON_NULL_NAME);
+            ObjectUtil.CheckNotNullWithIAE(NON_NULL_OBJECT, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -135,7 +135,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNotNullWithIAE(NULL_OBJECT, NULL_NAME);
+            ObjectUtil.CheckNotNullWithIAE(NULL_OBJECT, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -147,12 +147,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckNotNullArrayParam()
+    public void TestCheckNotNullArrayParam()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkNotNullArrayParam(NON_NULL_OBJECT, 1, NON_NULL_NAME);
+            ObjectUtil.CheckNotNullArrayParam(NON_NULL_OBJECT, 1, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -164,7 +164,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNotNullArrayParam(NULL_OBJECT, 1, NULL_NAME);
+            ObjectUtil.CheckNotNullArrayParam(NULL_OBJECT, 1, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -176,12 +176,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckPositiveIntString()
+    public void TestCheckPositiveIntString()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(POS_ONE_INT, NUM_POS_NAME);
+            ObjectUtil.CheckPositive(POS_ONE_INT, NUM_POS_NAME);
         }
         catch (Exception e)
         {
@@ -193,7 +193,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(ZERO_INT, NUM_ZERO_NAME);
+            ObjectUtil.CheckPositive(ZERO_INT, NUM_ZERO_NAME);
         }
         catch (Exception e)
         {
@@ -206,7 +206,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(NEG_ONE_INT, NUM_NEG_NAME);
+            ObjectUtil.CheckPositive(NEG_ONE_INT, NUM_NEG_NAME);
         }
         catch (Exception e)
         {
@@ -218,12 +218,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckPositiveLongString()
+    public void TestCheckPositiveLongString()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(POS_ONE_LONG, NUM_POS_NAME);
+            ObjectUtil.CheckPositive(POS_ONE_LONG, NUM_POS_NAME);
         }
         catch (Exception e)
         {
@@ -235,7 +235,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(ZERO_LONG, NUM_ZERO_NAME);
+            ObjectUtil.CheckPositive(ZERO_LONG, NUM_ZERO_NAME);
         }
         catch (Exception e)
         {
@@ -248,7 +248,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(NEG_ONE_LONG, NUM_NEG_NAME);
+            ObjectUtil.CheckPositive(NEG_ONE_LONG, NUM_NEG_NAME);
         }
         catch (Exception e)
         {
@@ -260,12 +260,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckPositiveDoubleString()
+    public void TestCheckPositiveDoubleString()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(POS_ONE_DOUBLE, NUM_POS_NAME);
+            ObjectUtil.CheckPositive(POS_ONE_DOUBLE, NUM_POS_NAME);
         }
         catch (Exception e)
         {
@@ -277,7 +277,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(ZERO_DOUBLE, NUM_ZERO_NAME);
+            ObjectUtil.CheckPositive(ZERO_DOUBLE, NUM_ZERO_NAME);
         }
         catch (Exception e)
         {
@@ -290,7 +290,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(NEG_ONE_DOUBLE, NUM_NEG_NAME);
+            ObjectUtil.CheckPositive(NEG_ONE_DOUBLE, NUM_NEG_NAME);
         }
         catch (Exception e)
         {
@@ -302,12 +302,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckPositiveFloatString()
+    public void TestCheckPositiveFloatString()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(POS_ONE_FLOAT, NUM_POS_NAME);
+            ObjectUtil.CheckPositive(POS_ONE_FLOAT, NUM_POS_NAME);
         }
         catch (Exception e)
         {
@@ -319,7 +319,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(ZERO_FLOAT, NUM_ZERO_NAME);
+            ObjectUtil.CheckPositive(ZERO_FLOAT, NUM_ZERO_NAME);
         }
         catch (Exception e)
         {
@@ -332,48 +332,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositive(NEG_ONE_FLOAT, NUM_NEG_NAME);
-        }
-        catch (Exception e)
-        {
-            actualEx = e;
-        }
-
-        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
-    }
-
-    [Fact]
-    public void testCheckPositiveOrZeroIntString()
-    {
-        Exception actualEx = null;
-        try
-        {
-            ObjectUtil.checkPositiveOrZero(POS_ONE_INT, NUM_POS_NAME);
-        }
-        catch (Exception e)
-        {
-            actualEx = e;
-        }
-
-        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
-
-        actualEx = null;
-        try
-        {
-            ObjectUtil.checkPositiveOrZero(ZERO_INT, NUM_ZERO_NAME);
-        }
-        catch (Exception e)
-        {
-            actualEx = e;
-        }
-
-        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
-
-        actualEx = null;
-        try
-        {
-            ObjectUtil.checkPositiveOrZero(NEG_ONE_INT, NUM_NEG_NAME);
+            ObjectUtil.CheckPositive(NEG_ONE_FLOAT, NUM_NEG_NAME);
         }
         catch (Exception e)
         {
@@ -385,12 +344,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckPositiveOrZeroLongString()
+    public void TestCheckPositiveOrZeroIntString()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(POS_ONE_LONG, NUM_POS_NAME);
+            ObjectUtil.CheckPositiveOrZero(POS_ONE_INT, NUM_POS_NAME);
         }
         catch (Exception e)
         {
@@ -402,7 +361,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(ZERO_LONG, NUM_ZERO_NAME);
+            ObjectUtil.CheckPositiveOrZero(ZERO_INT, NUM_ZERO_NAME);
         }
         catch (Exception e)
         {
@@ -414,7 +373,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(NEG_ONE_LONG, NUM_NEG_NAME);
+            ObjectUtil.CheckPositiveOrZero(NEG_ONE_INT, NUM_NEG_NAME);
         }
         catch (Exception e)
         {
@@ -426,12 +385,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckPositiveOrZeroDoubleString()
+    public void TestCheckPositiveOrZeroLongString()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(POS_ONE_DOUBLE, NUM_POS_NAME);
+            ObjectUtil.CheckPositiveOrZero(POS_ONE_LONG, NUM_POS_NAME);
         }
         catch (Exception e)
         {
@@ -443,7 +402,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(ZERO_DOUBLE, NUM_ZERO_NAME);
+            ObjectUtil.CheckPositiveOrZero(ZERO_LONG, NUM_ZERO_NAME);
         }
         catch (Exception e)
         {
@@ -455,7 +414,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(NEG_ONE_DOUBLE, NUM_NEG_NAME);
+            ObjectUtil.CheckPositiveOrZero(NEG_ONE_LONG, NUM_NEG_NAME);
         }
         catch (Exception e)
         {
@@ -467,12 +426,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckPositiveOrZeroFloatString()
+    public void TestCheckPositiveOrZeroDoubleString()
     {
         Exception actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(POS_ONE_FLOAT, NUM_POS_NAME);
+            ObjectUtil.CheckPositiveOrZero(POS_ONE_DOUBLE, NUM_POS_NAME);
         }
         catch (Exception e)
         {
@@ -484,7 +443,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(ZERO_FLOAT, NUM_ZERO_NAME);
+            ObjectUtil.CheckPositiveOrZero(ZERO_DOUBLE, NUM_ZERO_NAME);
         }
         catch (Exception e)
         {
@@ -496,7 +455,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkPositiveOrZero(NEG_ONE_FLOAT, NUM_NEG_NAME);
+            ObjectUtil.CheckPositiveOrZero(NEG_ONE_DOUBLE, NUM_NEG_NAME);
         }
         catch (Exception e)
         {
@@ -508,26 +467,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckNonEmptyTArrayString()
+    public void TestCheckPositiveOrZeroFloatString()
     {
         Exception actualEx = null;
-
         try
         {
-            ObjectUtil.checkNonEmpty((object[])NULL_OBJECT, NULL_NAME);
-        }
-        catch (Exception e)
-        {
-            actualEx = e;
-        }
-
-        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
-        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
-
-        actualEx = null;
-        try
-        {
-            ObjectUtil.checkNonEmpty((object[])NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
+            ObjectUtil.CheckPositiveOrZero(POS_ONE_FLOAT, NUM_POS_NAME);
         }
         catch (Exception e)
         {
@@ -539,7 +484,19 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((object[])NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckPositiveOrZero(ZERO_FLOAT, NUM_ZERO_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
+
+        actualEx = null;
+        try
+        {
+            ObjectUtil.CheckPositiveOrZero(NEG_ONE_FLOAT, NUM_NEG_NAME);
         }
         catch (Exception e)
         {
@@ -551,13 +508,13 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckNonEmptyByteArrayString()
+    public void TestCheckNonEmptyTArrayString()
     {
         Exception actualEx = null;
 
         try
         {
-            ObjectUtil.checkNonEmpty((byte[])NULL_OBJECT, NULL_NAME);
+            ObjectUtil.CheckNonEmpty((object[])NULL_OBJECT, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -570,7 +527,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((byte[])NON_NULL_FILLED_BYTE_ARRAY, NON_NULL_NAME);
+            ObjectUtil.CheckNonEmpty((object[])NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -582,7 +539,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((byte[])NON_NULL_EMPTY_BYTE_ARRAY, NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckNonEmpty((object[])NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {
@@ -594,13 +551,13 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckNonEmptyCharArrayString()
+    public void TestCheckNonEmptyByteArrayString()
     {
         Exception actualEx = null;
 
         try
         {
-            ObjectUtil.checkNonEmpty((char[])NULL_OBJECT, NULL_NAME);
+            ObjectUtil.CheckNonEmpty((byte[])NULL_OBJECT, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -613,7 +570,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((char[])NON_NULL_FILLED_CHAR_ARRAY, NON_NULL_NAME);
+            ObjectUtil.CheckNonEmpty((byte[])NON_NULL_FILLED_BYTE_ARRAY, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -625,7 +582,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((char[])NON_NULL_EMPTY_CHAR_ARRAY, NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckNonEmpty((byte[])NON_NULL_EMPTY_BYTE_ARRAY, NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {
@@ -637,12 +594,13 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckNonEmptyTString()
+    public void TestCheckNonEmptyCharArrayString()
     {
         Exception actualEx = null;
+
         try
         {
-            ObjectUtil.checkNonEmpty((object[])NULL_OBJECT, NULL_NAME);
+            ObjectUtil.CheckNonEmpty((char[])NULL_OBJECT, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -655,7 +613,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((object[])NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
+            ObjectUtil.CheckNonEmpty((char[])NON_NULL_FILLED_CHAR_ARRAY, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -667,7 +625,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((object[])NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckNonEmpty((char[])NON_NULL_EMPTY_CHAR_ARRAY, NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {
@@ -679,13 +637,12 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckNonEmptyStringString()
+    public void TestCheckNonEmptyTString()
     {
         Exception actualEx = null;
-
         try
         {
-            ObjectUtil.checkNonEmpty((string)NULL_OBJECT, NULL_NAME);
+            ObjectUtil.CheckNonEmpty((object[])NULL_OBJECT, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -698,7 +655,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((string)NON_NULL_OBJECT, NON_NULL_NAME);
+            ObjectUtil.CheckNonEmpty((object[])NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -710,7 +667,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((string)NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckNonEmpty((object[])NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {
@@ -719,28 +676,16 @@ public class ObjectUtilTest
 
         Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
         Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
-
-        actualEx = null;
-        try
-        {
-            ObjectUtil.checkNonEmpty((string)NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
-        }
-        catch (Exception e)
-        {
-            actualEx = e;
-        }
-
-        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
     }
 
     [Fact]
-    public void testCheckNonEmptyCharSequenceString()
+    public void TestCheckNonEmptyStringString()
     {
         Exception actualEx = null;
 
         try
         {
-            ObjectUtil.checkNonEmpty((ICharSequence)NULL_CHARSEQUENCE, NULL_NAME);
+            ObjectUtil.CheckNonEmpty((string)NULL_OBJECT, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -753,7 +698,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((ICharSequence)NON_NULL_CHARSEQUENCE, NON_NULL_NAME);
+            ObjectUtil.CheckNonEmpty((string)NON_NULL_OBJECT, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -765,7 +710,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty((ICharSequence)NON_NULL_EMPTY_CHARSEQUENCE, NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckNonEmpty((string)NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {
@@ -778,7 +723,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmpty(new StringCharSequence(NON_NULL_WHITESPACE_STRING), NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckNonEmpty((string)NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {
@@ -789,13 +734,13 @@ public class ObjectUtilTest
     }
 
     [Fact]
-    public void testCheckNonEmptyAfterTrim()
+    public void TestCheckNonEmptyCharSequenceString()
     {
         Exception actualEx = null;
 
         try
         {
-            ObjectUtil.checkNonEmptyAfterTrim((string)NULL_OBJECT, NULL_NAME);
+            ObjectUtil.CheckNonEmpty((ICharSequence)NULL_CHARSEQUENCE, NULL_NAME);
         }
         catch (Exception e)
         {
@@ -808,7 +753,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmptyAfterTrim((string)NON_NULL_OBJECT, NON_NULL_NAME);
+            ObjectUtil.CheckNonEmpty((ICharSequence)NON_NULL_CHARSEQUENCE, NON_NULL_NAME);
         }
         catch (Exception e)
         {
@@ -820,7 +765,7 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmptyAfterTrim(NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckNonEmpty((ICharSequence)NON_NULL_EMPTY_CHARSEQUENCE, NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {
@@ -833,7 +778,62 @@ public class ObjectUtilTest
         actualEx = null;
         try
         {
-            ObjectUtil.checkNonEmptyAfterTrim(NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
+            ObjectUtil.CheckNonEmpty(new StringCharSequence(NON_NULL_WHITESPACE_STRING), NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
+    }
+
+    [Fact]
+    public void TestCheckNonEmptyAfterTrim()
+    {
+        Exception actualEx = null;
+
+        try
+        {
+            ObjectUtil.CheckNonEmptyAfterTrim((string)NULL_OBJECT, NULL_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
+
+        actualEx = null;
+        try
+        {
+            ObjectUtil.CheckNonEmptyAfterTrim((string)NON_NULL_OBJECT, NON_NULL_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
+
+        actualEx = null;
+        try
+        {
+            ObjectUtil.CheckNonEmptyAfterTrim(NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
+        }
+        catch (Exception e)
+        {
+            actualEx = e;
+        }
+
+        Assert.NotNull(actualEx, TEST_RESULT_NULLEX_OK);
+        Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
+
+        actualEx = null;
+        try
+        {
+            ObjectUtil.CheckNonEmptyAfterTrim(NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
         }
         catch (Exception e)
         {

@@ -1,4 +1,4 @@
-﻿using Netty.NET.Common.Functional;
+using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -14,5 +14,5 @@ public interface IExecutor
       * accepted for execution
       * @throws NullReferenceException if command is null
       */
-    void execute(IRunnable command);
+    void Execute(IRunnable command);
 }

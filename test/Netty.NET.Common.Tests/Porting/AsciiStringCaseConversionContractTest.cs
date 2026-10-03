@@ -82,8 +82,8 @@ public class AsciiStringCaseConversionContractTest
             hasLower |= lowercase;
         }
         var source = new AsciiString(storage, offset, length, false);
-        AsciiString actualLower = source.toLowerCase();
-        AsciiString actualUpper = source.toUpperCase();
+        AsciiString actualLower = source.ToLowerCase();
+        AsciiString actualUpper = source.ToUpperCase();
         Assert.Equal(lower, actualLower.AsSpan().ToArray());
         Assert.Equal(upper, actualUpper.AsSpan().ToArray());
         Assert.Equal(original, storage);

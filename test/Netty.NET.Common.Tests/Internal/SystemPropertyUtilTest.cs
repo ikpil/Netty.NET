@@ -27,128 +27,128 @@ public class SystemPropertyUtilTest : IDisposable
 
     public SystemPropertyUtilTest()
     {
-        clearSystemPropertyBeforeEach();
+        ClearSystemPropertyBeforeEach();
     }
 
-    private void clearSystemPropertyBeforeEach()
+    private void ClearSystemPropertyBeforeEach()
     {
         Environment.SetEnvironmentVariable("key", null);
     }
 
     [Fact]
-    public void testGetWithKeyNull()
+    public void TestGetWithKeyNull()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            SystemPropertyUtil.get(null, null);
+            SystemPropertyUtil.Get(null, null);
         });
     }
 
     [Fact]
-    public void testGetWithKeyEmpty()
+    public void TestGetWithKeyEmpty()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            SystemPropertyUtil.get("", null);
+            SystemPropertyUtil.Get("", null);
         });
     }
 
     [Fact]
-    public void testGetDefaultValueWithPropertyNull()
+    public void TestGetDefaultValueWithPropertyNull()
     {
-        Assert.Equal("default", SystemPropertyUtil.get("key", "default"));
+        Assert.Equal("default", SystemPropertyUtil.Get("key", "default"));
     }
 
     [Fact]
-    public void testGetPropertyValue()
+    public void TestGetPropertyValue()
     {
         Environment.SetEnvironmentVariable("key", "value");
-        Assert.Equal("value", SystemPropertyUtil.get("key"));
+        Assert.Equal("value", SystemPropertyUtil.Get("key"));
     }
 
     [Fact]
-    public void testGetBooleanDefaultValueWithPropertyNull()
+    public void TestGetBooleanDefaultValueWithPropertyNull()
     {
-        Assert.True(SystemPropertyUtil.getBoolean("key", true));
-        Assert.False(SystemPropertyUtil.getBoolean("key", false));
+        Assert.True(SystemPropertyUtil.GetBoolean("key", true));
+        Assert.False(SystemPropertyUtil.GetBoolean("key", false));
     }
 
     [Fact]
-    public void testGetBooleanDefaultValueWithEmptyString()
+    public void TestGetBooleanDefaultValueWithEmptyString()
     {
         Environment.SetEnvironmentVariable("key", "");
-        Assert.True(SystemPropertyUtil.getBoolean("key", true));
-        Assert.False(SystemPropertyUtil.getBoolean("key", false));
+        Assert.True(SystemPropertyUtil.GetBoolean("key", true));
+        Assert.False(SystemPropertyUtil.GetBoolean("key", false));
     }
 
     [Fact]
-    public void testGetBooleanWithTrueValue()
+    public void TestGetBooleanWithTrueValue()
     {
         Environment.SetEnvironmentVariable("key", "true");
-        Assert.True(SystemPropertyUtil.getBoolean("key", false));
+        Assert.True(SystemPropertyUtil.GetBoolean("key", false));
         Environment.SetEnvironmentVariable("key", "yes");
-        Assert.True(SystemPropertyUtil.getBoolean("key", false));
+        Assert.True(SystemPropertyUtil.GetBoolean("key", false));
         Environment.SetEnvironmentVariable("key", "1");
-        Assert.True(SystemPropertyUtil.getBoolean("key", true));
+        Assert.True(SystemPropertyUtil.GetBoolean("key", true));
     }
 
     [Fact]
-    public void testGetBooleanWithFalseValue()
+    public void TestGetBooleanWithFalseValue()
     {
         Environment.SetEnvironmentVariable("key", "false");
-        Assert.False(SystemPropertyUtil.getBoolean("key", true));
+        Assert.False(SystemPropertyUtil.GetBoolean("key", true));
         Environment.SetEnvironmentVariable("key", "no");
-        Assert.False(SystemPropertyUtil.getBoolean("key", false));
+        Assert.False(SystemPropertyUtil.GetBoolean("key", false));
         Environment.SetEnvironmentVariable("key", "0");
-        Assert.False(SystemPropertyUtil.getBoolean("key", true));
+        Assert.False(SystemPropertyUtil.GetBoolean("key", true));
     }
 
     [Fact]
-    public void testGetBooleanDefaultValueWithWrongValue()
+    public void TestGetBooleanDefaultValueWithWrongValue()
     {
         Environment.SetEnvironmentVariable("key", "abc");
-        Assert.True(SystemPropertyUtil.getBoolean("key", true));
+        Assert.True(SystemPropertyUtil.GetBoolean("key", true));
         Environment.SetEnvironmentVariable("key", "123");
-        Assert.False(SystemPropertyUtil.getBoolean("key", false));
+        Assert.False(SystemPropertyUtil.GetBoolean("key", false));
     }
 
     [Fact]
-    public void getIntDefaultValueWithPropertyNull()
+    public void GetIntDefaultValueWithPropertyNull()
     {
-        Assert.Equal(1, SystemPropertyUtil.getInt("key", 1));
+        Assert.Equal(1, SystemPropertyUtil.GetInt("key", 1));
     }
 
     [Fact]
-    public void getIntWithPropertValueIsInt()
+    public void GetIntWithPropertValueIsInt()
     {
         Environment.SetEnvironmentVariable("key", "123");
-        Assert.Equal(123, SystemPropertyUtil.getInt("key", 1));
+        Assert.Equal(123, SystemPropertyUtil.GetInt("key", 1));
     }
 
     [Fact]
-    public void getIntDefaultValueWithPropertValueIsNotInt()
+    public void GetIntDefaultValueWithPropertValueIsNotInt()
     {
         Environment.SetEnvironmentVariable("key", "NotInt");
-        Assert.Equal(1, SystemPropertyUtil.getInt("key", 1));
+        Assert.Equal(1, SystemPropertyUtil.GetInt("key", 1));
     }
 
     [Fact]
-    public void getLongDefaultValueWithPropertyNull()
+    public void GetLongDefaultValueWithPropertyNull()
     {
-        Assert.Equal(1, SystemPropertyUtil.getLong("key", 1));
+        Assert.Equal(1, SystemPropertyUtil.GetLong("key", 1));
     }
 
     [Fact]
-    public void getLongWithPropertValueIsLong()
+    public void GetLongWithPropertValueIsLong()
     {
         Environment.SetEnvironmentVariable("key", "123");
-        Assert.Equal(123, SystemPropertyUtil.getLong("key", 1));
+        Assert.Equal(123, SystemPropertyUtil.GetLong("key", 1));
     }
 
     [Fact]
-    public void getLongDefaultValueWithPropertValueIsNotLong()
+    public void GetLongDefaultValueWithPropertValueIsNotLong()
     {
         Environment.SetEnvironmentVariable("key", "NotInt");
-        Assert.Equal(1, SystemPropertyUtil.getLong("key", 1));
+        Assert.Equal(1, SystemPropertyUtil.GetLong("key", 1));
     }
 }

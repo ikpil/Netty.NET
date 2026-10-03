@@ -25,11 +25,11 @@ public abstract class TypeParameterMatcher
 
     internal TypeParameterMatcher() { }
 
-    public static TypeParameterMatcher get(Type parameterType)
+    public static TypeParameterMatcher Get(Type parameterType)
     {
         ArgumentNullException.ThrowIfNull(parameterType);
         IDictionary<Type, TypeParameterMatcher> getCache =
-            InternalThreadLocalMap.get().typeParameterMatcherGetCache();
+            InternalThreadLocalMap.Get().TypeParameterMatcherGetCache();
 
         getCache.TryGetValue(parameterType, out TypeParameterMatcher matcher);
         if (matcher == null)
@@ -49,13 +49,13 @@ public abstract class TypeParameterMatcher
         return matcher;
     }
 
-    public static TypeParameterMatcher find(object obj, Type parametrizedSuperclass, string typeParamName)
+    public static TypeParameterMatcher Find(object obj, Type parametrizedSuperclass, string typeParamName)
     {
         ArgumentNullException.ThrowIfNull(obj);
         ArgumentNullException.ThrowIfNull(parametrizedSuperclass);
         ArgumentNullException.ThrowIfNull(typeParamName);
         IDictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> findCache =
-            InternalThreadLocalMap.get().typeParameterMatcherFindCache();
+            InternalThreadLocalMap.Get().TypeParameterMatcherFindCache();
         Type thisClass = obj.GetType();
 
         findCache.TryGetValue(thisClass, out IDictionary<(Type Superclass, string Name), TypeParameterMatcher> map);
@@ -69,12 +69,12 @@ public abstract class TypeParameterMatcher
         map.TryGetValue(key, out TypeParameterMatcher matcher);
         if (matcher == null)
         {
-            matcher = get(ReflectionUtil.resolveTypeParameter(obj, parametrizedSuperclass, typeParamName));
+            matcher = Get(ReflectionUtil.ResolveTypeParameter(obj, parametrizedSuperclass, typeParamName));
             map.Add(key, matcher);
         }
 
         return matcher;
     }
 
-    public abstract bool match(object msg);
+    public abstract bool Match(object msg);
 }

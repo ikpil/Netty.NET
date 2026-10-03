@@ -14,6 +14,20 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## C# method naming
+
+At the user's request, every tracked C# method and local-function declaration in
+src, test and the queue-cost tool now starts with an uppercase letter. Capitalize
+only the first character; retain behavior, parameter/return types, field names and
+Java provenance comments. Interfaces, overrides, explicit implementations,
+method-group/delegate references, nameof and callers change together. Reflection
+lookup names and stack/exclusion method names follow the new names. Qualified type
+expressions resolve method/type name hiding; identical EmptyPriorityQueue toArray/
+ToArray aliases become one ToArray implementation. Lowercase compatibility aliases
+are not retained. Java comment links/examples remain exact original provenance;
+historical design/checkpoint method spellings refer to their recorded version.
+This naming pass changes the public API, without completing pending porting work.
+
 ## Dependency review
 
 Paths in the evidence column are relative to the pinned original repository.

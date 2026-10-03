@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Internal;
  */
 public sealed class PendingWrite
 {
-    private static readonly ObjectPool<PendingWrite> RECYCLER = ObjectPool.newPool(
+    private static readonly ObjectPool<PendingWrite> RECYCLER = ObjectPool.NewPool(
         new AnonymousObjectCreator<PendingWrite>(x => new PendingWrite(x))
     );
 
@@ -38,7 +38,7 @@ public sealed class PendingWrite
     // capture Message and transfer the completion source before returning it to the pool.
     public static PendingWrite Rent(object message, TaskCompletionSource completion = null)
     {
-        PendingWrite pending = RECYCLER.get();
+        PendingWrite pending = RECYCLER.Get();
         pending._msg = message;
         pending._completion = completion;
         Volatile.Write(ref pending._active, 1);
@@ -77,7 +77,7 @@ public sealed class PendingWrite
     {
         _msg = null;
         _completion = null;
-        _handle.recycle(this);
+        _handle.Recycle(this);
     }
 
     /**
@@ -92,7 +92,7 @@ public sealed class PendingWrite
         Claim();
         try
         {
-            ReferenceCountUtil.release(_msg);
+            ReferenceCountUtil.Release(_msg);
             _completion?.TrySetException(cause);
         }
         finally { ClearAndRecycle(); }

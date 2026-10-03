@@ -42,7 +42,7 @@ public static class ReferenceCountUpdater
 
     public static void Retain(ref int count, int increment = 1)
     {
-        ObjectUtil.checkPositive(increment, nameof(increment));
+        ObjectUtil.CheckPositive(increment, nameof(increment));
         while (true)
         {
             int current = Volatile.Read(ref count);
@@ -56,7 +56,7 @@ public static class ReferenceCountUpdater
     /// <summary>Returns true exactly when this operation transitions a live count to zero.</summary>
     public static bool Release(ref int count, int decrement = 1)
     {
-        ObjectUtil.checkPositive(decrement, nameof(decrement));
+        ObjectUtil.CheckPositive(decrement, nameof(decrement));
         while (true)
         {
             int current = Volatile.Read(ref count);

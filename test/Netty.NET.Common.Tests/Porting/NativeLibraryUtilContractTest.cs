@@ -15,7 +15,7 @@ public class NativeLibraryUtilContractTest
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     private delegate uint ProcessId();
 
-    private static void verifyExport(IntPtr handle)
+    private static void VerifyExport(IntPtr handle)
     {
         Assert.NotEqual(IntPtr.Zero, handle);
         IntPtr export = NativeLibrary.GetExport(handle, OperatingSystem.IsWindows() ? "GetCurrentProcessId" : "getpid");
@@ -39,8 +39,8 @@ public class NativeLibraryUtilContractTest
                 }
             Assert.True(Path.IsPathFullyQualified(name));
         }
-        IntPtr handle = NativeLibraryUtil.loadLibrary(name, absolute);
-        try { verifyExport(handle); }
+        IntPtr handle = NativeLibraryUtil.LoadLibrary(name, absolute);
+        try { VerifyExport(handle); }
         finally { NativeLibrary.Free(handle); }
     }
 
@@ -48,21 +48,21 @@ public class NativeLibraryUtilContractTest
     public void MissingLibraryAndInvalidAbsolutePathUseClrExceptions()
     {
         string missing = "netty-missing-" + Guid.NewGuid().ToString("N");
-        Assert.Throws<DllNotFoundException>(() => NativeLibraryUtil.loadLibrary(missing, false));
-        Assert.Throws<DllNotFoundException>(() => NativeLibraryUtil.loadLibrary(Path.Combine(Path.GetTempPath(), missing), true));
-        Assert.Throws<ArgumentException>(() => NativeLibraryUtil.loadLibrary(library, true));
-        Assert.Throws<ArgumentNullException>(() => NativeLibraryUtil.loadLibrary(null, false));
-        Assert.Throws<ArgumentNullException>(() => NativeLibraryUtil.loadLibrary(null, true));
+        Assert.Throws<DllNotFoundException>(() => NativeLibraryUtil.LoadLibrary(missing, false));
+        Assert.Throws<DllNotFoundException>(() => NativeLibraryUtil.LoadLibrary(Path.Combine(Path.GetTempPath(), missing), true));
+        Assert.Throws<ArgumentException>(() => NativeLibraryUtil.LoadLibrary(library, true));
+        Assert.Throws<ArgumentNullException>(() => NativeLibraryUtil.LoadLibrary(null, false));
+        Assert.Throws<ArgumentNullException>(() => NativeLibraryUtil.LoadLibrary(null, true));
     }
 
     [Fact]
     public void SeparateLoadsReturnHandlesThatCanBeFreedIndependently()
     {
-        IntPtr first = NativeLibraryUtil.loadLibrary(library, false);
+        IntPtr first = NativeLibraryUtil.LoadLibrary(library, false);
         IntPtr second;
-        try { second = NativeLibraryUtil.loadLibrary(library, false); }
+        try { second = NativeLibraryUtil.LoadLibrary(library, false); }
         finally { NativeLibrary.Free(first); }
-        try { verifyExport(second); }
+        try { VerifyExport(second); }
         finally { NativeLibrary.Free(second); }
     }
 }

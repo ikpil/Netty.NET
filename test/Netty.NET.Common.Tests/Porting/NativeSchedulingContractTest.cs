@@ -12,21 +12,21 @@ public class NativeSchedulingContractTest
 {
     private sealed class ManualExecutor : AbstractScheduledEventExecutor
     {
-        private readonly MockTicker _clock = Ticker.newMockTicker();
+        private readonly MockTicker _clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         private bool _shutdown;
-        internal IScheduledWork Head => peekScheduledTask();
-        internal void Advance(long nanos) => _clock.advance(TimeSpan.FromTicks(nanos / 100));
-        internal IRunnable Poll() => pollScheduledTask();
-        public override Ticker ticker() => _clock;
-        public override bool inEventLoop(Thread thread) => true;
-        public override void execute(IRunnable task) => task.run();
+        internal IScheduledWork Head => PeekScheduledTask();
+        internal void Advance(long nanos) => _clock.Advance(TimeSpan.FromTicks(nanos / 100));
+        internal IRunnable Poll() => PollScheduledTask();
+        public override Ticker Ticker() => _clock;
+        public override bool InEventLoop(Thread thread) => true;
+        public override void Execute(IRunnable task) => task.Run();
         public override Task Termination => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { shutdown(); return Termination; }
-        public override void shutdown() { _shutdown = true; cancelScheduledTasks(); }
-        public override bool isShuttingDown() => _shutdown;
-        public override bool isShutdown() => _shutdown;
-        public override bool isTerminated() => _shutdown;
-        public override bool awaitTermination(TimeSpan timeout) => _shutdown;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Shutdown(); return Termination; }
+        public override void Shutdown() { _shutdown = true; CancelScheduledTasks(); }
+        public override bool IsShuttingDown() => _shutdown;
+        public override bool IsShutdown() => _shutdown;
+        public override bool IsTerminated() => _shutdown;
+        public override bool AwaitTermination(TimeSpan timeout) => _shutdown;
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class NativeSchedulingContractTest
         Task third = executor.ScheduleAsync(() => { order.Add(3); }, TimeSpan.FromTicks(1));
         Assert.Null(executor.Poll());
         executor.Advance(100);
-        executor.Poll().run(); executor.Poll().run(); executor.Poll().run();
+        executor.Poll().Run(); executor.Poll().Run(); executor.Poll().Run();
         Assert.Equal(new[] { 1, 2, 3 }, order);
         Assert.Equal(42, await first);
         Assert.Equal("text", await second);
@@ -60,13 +60,13 @@ public class NativeSchedulingContractTest
         Task task = fixedDelay
             ? executor.ScheduleWithFixedDelayAsync(callback, TimeSpan.Zero, TimeSpan.FromTicks(2), cancellation.Token)
             : executor.ScheduleAtFixedRateAsync(callback, TimeSpan.Zero, TimeSpan.FromTicks(2), cancellation.Token);
-        long sequence = executor.Head.getId();
-        executor.Poll().run();
-        Assert.Equal(fixedDelay ? 300 : 200, executor.Head.deadlineNanos());
-        Assert.Equal(sequence, executor.Head.getId());
+        long sequence = executor.Head.GetId();
+        executor.Poll().Run();
+        Assert.Equal(fixedDelay ? 300 : 200, executor.Head.DeadlineNanos());
+        Assert.Equal(sequence, executor.Head.GetId());
         Assert.False(task.IsCompleted);
         executor.Advance(fixedDelay ? 200 : 100);
-        executor.Poll().run();
+        executor.Poll().Run();
         Assert.Equal(2, calls);
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
@@ -82,7 +82,7 @@ public class NativeSchedulingContractTest
         Task task = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.Zero, cancellation.Token);
         IRunnable due = executor.Poll();
         cancellation.Cancel();
-        due.run();
+        due.Run();
         Assert.Equal(0, calls);
         var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
         Assert.Equal(cancellation.Token, error.CancellationToken);
@@ -96,7 +96,7 @@ public class NativeSchedulingContractTest
         var executor = new ManualExecutor();
         Task<int> task = executor.ScheduleAsync(() => 7, TimeSpan.FromTicks(ticks));
         Assert.False(task.IsCompleted);
-        executor.Poll().run();
+        executor.Poll().Run();
         Assert.Equal(7, await task);
     }
 
@@ -105,9 +105,9 @@ public class NativeSchedulingContractTest
     {
         var executor = new ManualExecutor();
         Task task = executor.ScheduleAsync(() => { }, TimeSpan.MaxValue);
-        Assert.Equal(long.MaxValue, executor.Head.deadlineNanos());
+        Assert.Equal(long.MaxValue, executor.Head.DeadlineNanos());
         Assert.Null(executor.Poll());
-        executor.shutdown();
+        executor.Shutdown();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
     }
 
@@ -140,10 +140,10 @@ public class NativeSchedulingContractTest
         }
         else task = executor.ScheduleAtFixedRateAsync(action, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
         ambient.Value = "executor";
-        executor.Poll().run();
+        executor.Poll().Run();
         Assert.Equal("executor", ambient.Value);
         executor.Advance(100);
-        executor.Poll().run();
+        executor.Poll().Run();
         Assert.Equal(new[] { suppressFlow ? "executor" : "caller", suppressFlow ? "executor" : "caller" }, values);
         Assert.Equal("executor", ambient.Value);
         cancellation.Cancel();
@@ -227,7 +227,7 @@ public class NativeSchedulingContractTest
 
     private sealed class FailingFactory(Exception error) : IThreadFactory
     {
-        public Thread newThread(IRunnable runnable) => throw error;
+        public Thread NewThread(IRunnable runnable) => throw error;
     }
 
     [Fact]
@@ -255,7 +255,7 @@ public class NativeSchedulingContractTest
                 if (!release.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException();
             }, TimeSpan.Zero, TimeSpan.FromDays(1));
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            executor.shutdown();
+            executor.Shutdown();
             release.Set();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.True(task.IsCanceled);
@@ -267,13 +267,13 @@ public class NativeSchedulingContractTest
     {
         internal InspectableExecutor() : base(null, new DefaultThreadFactory(typeof(InspectableExecutor)), true) { }
         internal int ScheduledCount => _scheduledTaskQueue?.Count ?? 0;
-        internal IScheduledWork ScheduledHead => peekScheduledTask();
-        protected override void run()
+        internal IScheduledWork ScheduledHead => PeekScheduledTask();
+        protected override void Run()
         {
-            while (!confirmShutdown())
+            while (!ConfirmShutdown())
             {
-                IRunnable task = takeTask();
-                if (task != null) { runTask(task); updateLastExecutionTime(); }
+                IRunnable task = TakeTask();
+                if (task != null) { RunTask(task); UpdateLastExecutionTime(); }
             }
         }
     }
@@ -303,7 +303,7 @@ public class NativeSchedulingContractTest
     {
         await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
         if (executor is UnorderedThreadPoolEventExecutor)
-            Assert.True(await Task.Run(() => executor.awaitTermination(TimeSpan.FromSeconds(5))));
+            Assert.True(await Task.Run(() => executor.AwaitTermination(TimeSpan.FromSeconds(5))));
     }
 
     [Theory]
@@ -432,7 +432,7 @@ public class NativeSchedulingContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         Task task = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
-        executor.shutdownNow();
+        executor.ShutdownNow();
         Assert.True(task.IsCanceled);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
         await Stop(executor);
@@ -446,7 +446,7 @@ public class NativeSchedulingContractTest
         try
         {
             Assert.Equal(29, await group.ScheduleAsync(() => 29, TimeSpan.Zero));
-            await Assert.ThrowsAsync<NotSupportedException>(async () => await group.next().ScheduleAsync(() => { }, TimeSpan.Zero));
+            await Assert.ThrowsAsync<NotSupportedException>(async () => await group.Next().ScheduleAsync(() => { }, TimeSpan.Zero));
         }
         finally { await Stop(pool); }
     }

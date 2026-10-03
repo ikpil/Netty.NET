@@ -21,12 +21,12 @@ public class TraceSourceLoggerInterfaceTest : AbstractInternalLoggerTest<TraceSo
         logger = new InternalDefaultLogger(loggerName, mockLog);
     }
 
-    protected override void setLevelEnable(InternalLogLevel level, bool enable)
+    protected override void SetLevelEnable(InternalLogLevel level, bool enable)
         => mockLog.Switch.Level = enable ? SourceLevels.All : SourceLevels.Off;
 
-    protected override void assertResult(InternalLogLevel level, string format, Exception cause, params object[] args)
+    protected override void AssertResult(InternalLogLevel level, string format, Exception cause, params object[] args)
     {
-        base.assertResult(level, format, cause, args);
+        base.AssertResult(level, format, cause, args);
         TraceEventType expected = level switch
         {
             InternalLogLevel.TRACE or InternalLogLevel.DEBUG => TraceEventType.Verbose,
@@ -37,7 +37,7 @@ public class TraceSourceLoggerInterfaceTest : AbstractInternalLoggerTest<TraceSo
         Assert.Equal(expected, result["level"]);
         string message = format == null
             ? args.Length == 0 ? "Unexpected exception:" : (string)args[0]
-            : MessageFormatter.arrayFormat(format, args).getMessage();
+            : MessageFormatter.ArrayFormat(format, args).GetMessage();
         if (cause != null) message += Environment.NewLine + cause;
         Assert.Equal(message, result["message"]);
     }

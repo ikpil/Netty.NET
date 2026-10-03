@@ -24,7 +24,7 @@ public interface IExecutorService : IExecutor
      *         or the security manager's {@code checkAccess} method
      *         denies access.
      */
-    void shutdown();
+    void Shutdown();
 
     /**
      * Attempts to stop all actively executing tasks, halts the
@@ -49,14 +49,14 @@ public interface IExecutorService : IExecutor
      *         or the security manager's {@code checkAccess} method
      *         denies access.
      */
-    List<IRunnable> shutdownNow();
+    List<IRunnable> ShutdownNow();
 
     /**
      * Returns {@code true} if this executor has been shut down.
      *
      * @return {@code true} if this executor has been shut down
      */
-    bool isShutdown();
+    bool IsShutdown();
 
     /**
      * Returns {@code true} if all tasks have completed following shut down.
@@ -65,7 +65,7 @@ public interface IExecutorService : IExecutor
      *
      * @return {@code true} if all tasks have completed following shut down
      */
-    bool isTerminated();
+    bool IsTerminated();
 
     /**
      * Blocks until all tasks have completed execution after a shutdown
@@ -78,6 +78,6 @@ public interface IExecutorService : IExecutor
      *         {@code false} if the timeout elapsed before termination
      * @throws ThreadInterruptedException if interrupted while waiting
      */
-    bool awaitTermination(TimeSpan timeout);
+    bool AwaitTermination(TimeSpan timeout);
 
 }

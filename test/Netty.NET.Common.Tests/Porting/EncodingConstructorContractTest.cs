@@ -90,10 +90,10 @@ public class EncodingConstructorContractTest
         {
             try
             {
-                Assert.Null(InternalThreadLocalMap.getIfSet());
+                Assert.Null(InternalThreadLocalMap.GetIfSet());
                 for (int i = 0; i < 6; i++)
                     _ = new AsciiString("Aé😀", CreateEncoding(i));
-                Assert.Null(InternalThreadLocalMap.getIfSet());
+                Assert.Null(InternalThreadLocalMap.GetIfSet());
             }
             catch (Exception exception) { failure = exception; }
         }) { IsBackground = true };

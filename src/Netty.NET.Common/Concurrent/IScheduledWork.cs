@@ -8,10 +8,10 @@ public interface IScheduledWork : IRunnable
 {
     bool IsCanceled { get; }
     void CancelForShutdown();
-    long deadlineNanos();
-    long delayNanos(long now);
-    long delayNanos();
-    long getId();
+    long DeadlineNanos();
+    long DelayNanos(long now);
+    long DelayNanos();
+    long GetId();
     void AssignId(long id);
-    void setConsumed();
+    void SetConsumed();
 }

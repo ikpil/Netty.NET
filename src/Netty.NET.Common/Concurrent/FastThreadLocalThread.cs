@@ -30,7 +30,7 @@ namespace Netty.NET.Common.Concurrent;
 // thread and marks its execution with thread-static state; factories return Thread.
 public class FastThreadLocalThread
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(FastThreadLocalThread));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(FastThreadLocalThread));
     private static readonly ConditionalWeakTable<Thread, FastThreadLocalThread> OwnedThreads = new();
     [ThreadStatic] private static FastThreadLocalThread _current;
     /**
@@ -48,7 +48,7 @@ public class FastThreadLocalThread
     private InternalThreadLocalMap _threadLocalMap;
     private readonly IRunnable _target;
     public Thread Thread { get; }
-    internal static FastThreadLocalThread currentFastThreadLocalThread() => _current;
+    internal static FastThreadLocalThread CurrentFastThreadLocalThread() => _current;
 
     public FastThreadLocalThread() : this(null, null, 0, false) { }
     public FastThreadLocalThread(string name) : this(null, name, 0, false) { }
@@ -65,34 +65,34 @@ public class FastThreadLocalThread
     private FastThreadLocalThread(IRunnable target, string name, int stackSize, bool cleanup, ThreadGroup group = null)
     {
         cleanupFastThreadLocals = cleanup;
-        _target = cleanup ? FastThreadLocalRunnable.wrap(target) : target;
-        Thread = stackSize == 0 ? new Thread(entry) : new Thread(entry, stackSize);
-        ThreadGroup.assign(Thread, group);
+        _target = cleanup ? FastThreadLocalRunnable.Wrap(target) : target;
+        Thread = stackSize == 0 ? new Thread(Entry) : new Thread(Entry, stackSize);
+        ThreadGroup.Assign(Thread, group);
         if (name != null) Thread.Name = name;
         OwnedThreads.Add(Thread, this);
     }
 
-    private void entry()
+    private void Entry()
     {
         _current = this;
-        try { run(); }
+        try { Run(); }
         finally { _current = null; }
     }
 
-    public virtual void run() => _target?.run();
-    public void start() => Thread.Start();
-    public void join() => Thread.Join();
-    public bool join(TimeSpan timeout) => Thread.Join(timeout);
-    public string getName() => Thread.Name;
+    public virtual void Run() => _target?.Run();
+    public void Start() => Thread.Start();
+    public void Join() => Thread.Join();
+    public bool Join(TimeSpan timeout) => Thread.Join(timeout);
+    public string GetName() => Thread.Name;
 
     /**
      * Returns the internal data structure that keeps the thread-local variables bound to this thread.
      * Note that this method is for internal use only, and thus is subject to change at any time.
      */
-    public InternalThreadLocalMap threadLocalMap()
+    public InternalThreadLocalMap ThreadLocalMap()
     {
-        if (_current != this && logger.isWarnEnabled())
-            logger.warn(new InvalidOperationException("It's not thread-safe to get 'threadLocalMap' which doesn't belong to the caller thread"));
+        if (_current != this && logger.IsWarnEnabled())
+            logger.Warn(new InvalidOperationException("It's not thread-safe to get 'threadLocalMap' which doesn't belong to the caller thread"));
         return _threadLocalMap;
     }
 
@@ -100,10 +100,10 @@ public class FastThreadLocalThread
      * Sets the internal data structure that keeps the thread-local variables bound to this thread.
      * Note that this method is for internal use only, and thus is subject to change at any time.
      */
-    public void setThreadLocalMap(InternalThreadLocalMap threadLocalMap)
+    public void SetThreadLocalMap(InternalThreadLocalMap threadLocalMap)
     {
-        if (_current != this && logger.isWarnEnabled())
-            logger.warn(new InvalidOperationException("It's not thread-safe to set 'threadLocalMap' which doesn't belong to the caller thread"));
+        if (_current != this && logger.IsWarnEnabled())
+            logger.Warn(new InvalidOperationException("It's not thread-safe to set 'threadLocalMap' which doesn't belong to the caller thread"));
         _threadLocalMap = threadLocalMap;
     }
 
@@ -112,14 +112,14 @@ public class FastThreadLocalThread
      *
      * @deprecated Use {@link FastThreadLocalThread#currentThreadWillCleanupFastThreadLocals()} instead
      */
-    public bool willCleanupFastThreadLocals() => cleanupFastThreadLocals;
+    public bool WillCleanupFastThreadLocals() => cleanupFastThreadLocals;
 
     /**
      * Returns {@code true} if {@link FastThreadLocal#removeAll()} will be called once {@link Thread#run()} completes.
      *
      * @deprecated Use {@link FastThreadLocalThread#currentThreadWillCleanupFastThreadLocals()} instead
      */
-    public static bool willCleanupFastThreadLocals(Thread thread)
+    public static bool WillCleanupFastThreadLocals(Thread thread)
     {
         return thread != null && OwnedThreads.TryGetValue(thread, out var owner) && owner.cleanupFastThreadLocals;
     }
@@ -127,7 +127,7 @@ public class FastThreadLocalThread
     /**
      * Returns {@code true} if {@link FastThreadLocal#removeAll()} will be called once {@link Thread#run()} completes.
      */
-    public static bool currentThreadWillCleanupFastThreadLocals()
+    public static bool CurrentThreadWillCleanupFastThreadLocals()
     {
         // intentionally doesn't accept a thread parameter to work with ScopedValue in the future
         return _current?.cleanupFastThreadLocals == true || _fallbackScope;
@@ -136,7 +136,7 @@ public class FastThreadLocalThread
     /**
      * Returns {@code true} if this thread supports {@link FastThreadLocal}.
      */
-    public static bool currentThreadHasFastThreadLocal()
+    public static bool CurrentThreadHasFastThreadLocal()
     {
         // intentionally doesn't accept a thread parameter to work with ScopedValue in the future
         return _current != null || _fallbackScope;
@@ -154,19 +154,19 @@ public class FastThreadLocalThread
      *
      * @param runnable The task to run
      */
-    public static void runWithFastThreadLocal(IRunnable runnable)
+    public static void RunWithFastThreadLocal(IRunnable runnable)
     {
         if (_current != null) throw new InvalidOperationException("Caller is a real FastThreadLocalThread");
         if (_fallbackScope) throw new InvalidOperationException("Reentrant call to run()");
         _fallbackScope = true;
-        try { runnable.run(); }
+        try { runnable.Run(); }
         finally
         {
             _fallbackScope = false;
-            FastThreadLocal.removeAll();
+            FastThreadLocal.RemoveAll();
         }
     }
-    public static void runWithFastThreadLocal(Action runnable) => runWithFastThreadLocal(Runnables.Create(runnable));
+    public static void RunWithFastThreadLocal(Action runnable) => RunWithFastThreadLocal(Runnables.Create(runnable));
 
     /**
      * Query whether this thread is allowed to perform blocking calls or not.
@@ -178,5 +178,5 @@ public class FastThreadLocalThread
      *
      * @return {@code false}, unless overridden by a subclass.
      */
-    public virtual bool permitBlockingCalls() => false;
+    public virtual bool PermitBlockingCalls() => false;
 }

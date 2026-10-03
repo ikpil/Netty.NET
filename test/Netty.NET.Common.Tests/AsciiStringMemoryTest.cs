@@ -42,13 +42,13 @@ public class AsciiStringMemoryTest
         aOffset = 22;
         bOffset = 53;
         length = 100;
-        Arrays.arraycopy(a, aOffset, b, bOffset, length);
+        Arrays.Arraycopy(a, aOffset, b, bOffset, length);
         aAsciiString = new AsciiString(a, aOffset, length, false);
         bAsciiString = new AsciiString(b, bOffset, length, false);
     }
 
     [Fact]
-    public void testSharedMemory()
+    public void TestSharedMemory()
     {
         ++a[aOffset];
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
@@ -57,22 +57,22 @@ public class AsciiStringMemoryTest
         Assert.Equal(aAsciiString, aAsciiString2);
         for (int i = aOffset; i < length; ++i)
         {
-            Assert.Equal(a[i], aAsciiString.byteAt(i - aOffset));
+            Assert.Equal(a[i], aAsciiString.ByteAt(i - aOffset));
         }
     }
 
     [Fact]
-    public void testNotSharedMemory()
+    public void TestNotSharedMemory()
     {
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
         ++a[aOffset];
         Assert.NotEqual(aAsciiString, aAsciiString1);
         int i = aOffset;
-        Assert.NotEqual(a[i], aAsciiString1.byteAt(i - aOffset));
+        Assert.NotEqual(a[i], aAsciiString1.ByteAt(i - aOffset));
         ++i;
         for (; i < length; ++i)
         {
-            Assert.Equal(a[i], aAsciiString1.byteAt(i - aOffset));
+            Assert.Equal(a[i], aAsciiString1.ByteAt(i - aOffset));
         }
     }
 
@@ -87,7 +87,7 @@ public class AsciiStringMemoryTest
             _processor = processor;
         }
 
-        public bool process(byte value)
+        public bool Process(byte value)
         {
             return _processor.Invoke(value, this);
         }
@@ -95,94 +95,94 @@ public class AsciiStringMemoryTest
 
 
     [Fact]
-    public void forEachTest()
+    public void ForEachTest()
     {
         int aCount = 0;
         int bCount = 0;
-        aAsciiString.forEachByte(new TestByteProcessor(0, (value, p) =>
+        aAsciiString.ForEachByte(new TestByteProcessor(0, (value, p) =>
         {
-            Assert.Equal(value, bAsciiString.byteAt(p.i++), "failed at index: " + p.i);
+            Assert.Equal(value, bAsciiString.ByteAt(p.i++), "failed at index: " + p.i);
             ++aCount;
             return true;
         }));
 
 
-        bAsciiString.forEachByte(new TestByteProcessor(0, (value, p) =>
+        bAsciiString.ForEachByte(new TestByteProcessor(0, (value, p) =>
         {
-            Assert.Equal(value, aAsciiString.byteAt(p.i++), "failed at index: " + p.i);
+            Assert.Equal(value, aAsciiString.ByteAt(p.i++), "failed at index: " + p.i);
             ++bCount;
             return true;
         }));
-        Assert.Equal(aAsciiString.length(), aCount);
-        Assert.Equal(bAsciiString.length(), bCount);
+        Assert.Equal(aAsciiString.Length(), aCount);
+        Assert.Equal(bAsciiString.Length(), bCount);
     }
 
     [Fact]
-    public void forEachWithIndexEndTest()
+    public void ForEachWithIndexEndTest()
     {
-        Assert.NotEqual(-1, aAsciiString.forEachByte(aAsciiString.length() - 1,
-            1, new IndexOfProcessor(aAsciiString.byteAt(aAsciiString.length() - 1))));
+        Assert.NotEqual(-1, aAsciiString.ForEachByte(aAsciiString.Length() - 1,
+            1, new IndexOfProcessor(aAsciiString.ByteAt(aAsciiString.Length() - 1))));
     }
 
     [Fact]
-    public void forEachWithIndexBeginTest()
+    public void ForEachWithIndexBeginTest()
     {
-        Assert.NotEqual(-1, aAsciiString.forEachByte(0,
-            1, new IndexOfProcessor(aAsciiString.byteAt(0))));
+        Assert.NotEqual(-1, aAsciiString.ForEachByte(0,
+            1, new IndexOfProcessor(aAsciiString.ByteAt(0))));
     }
 
     [Fact]
-    public void forEachDescTest()
+    public void ForEachDescTest()
     {
         int aCount = 0;
         int bCount = 0;
-        aAsciiString.forEachByteDesc(new TestByteProcessor(1, (value, p) =>
+        aAsciiString.ForEachByteDesc(new TestByteProcessor(1, (value, p) =>
         {
-            Assert.Equal(value, bAsciiString.byteAt(bAsciiString.length() - (p.i++)), "failed at index: " + p.i);
+            Assert.Equal(value, bAsciiString.ByteAt(bAsciiString.Length() - (p.i++)), "failed at index: " + p.i);
             ++aCount;
             return true;
         }));
 
-        bAsciiString.forEachByteDesc(new TestByteProcessor(1, (value, p) =>
+        bAsciiString.ForEachByteDesc(new TestByteProcessor(1, (value, p) =>
         {
-            Assert.Equal(value, aAsciiString.byteAt(aAsciiString.length() - (p.i++)), "failed at index: " + p.i);
+            Assert.Equal(value, aAsciiString.ByteAt(aAsciiString.Length() - (p.i++)), "failed at index: " + p.i);
             ++bCount;
             return true;
         }));
-        Assert.Equal(aAsciiString.length(), aCount);
-        Assert.Equal(bAsciiString.length(), bCount);
+        Assert.Equal(aAsciiString.Length(), aCount);
+        Assert.Equal(bAsciiString.Length(), bCount);
     }
 
     [Fact]
-    public void forEachDescWithIndexEndTest()
+    public void ForEachDescWithIndexEndTest()
     {
-        Assert.NotEqual(-1, bAsciiString.forEachByteDesc(bAsciiString.length() - 1,
-            1, new IndexOfProcessor(bAsciiString.byteAt(bAsciiString.length() - 1))));
+        Assert.NotEqual(-1, bAsciiString.ForEachByteDesc(bAsciiString.Length() - 1,
+            1, new IndexOfProcessor(bAsciiString.ByteAt(bAsciiString.Length() - 1))));
     }
 
     [Fact]
-    public void forEachDescWithIndexBeginTest()
+    public void ForEachDescWithIndexBeginTest()
     {
-        Assert.NotEqual(-1, bAsciiString.forEachByteDesc(0,
-            1, new IndexOfProcessor(bAsciiString.byteAt(0))));
+        Assert.NotEqual(-1, bAsciiString.ForEachByteDesc(0,
+            1, new IndexOfProcessor(bAsciiString.ByteAt(0))));
     }
 
     [Fact]
-    public void subSequenceTest()
+    public void SubSequenceTest()
     {
         int start = 12;
-        int end = aAsciiString.length();
-        AsciiString aSubSequence = aAsciiString.subSequence(start, end, false);
-        AsciiString bSubSequence = bAsciiString.subSequence(start, end, true);
+        int end = aAsciiString.Length();
+        AsciiString aSubSequence = aAsciiString.SubSequence(start, end, false);
+        AsciiString bSubSequence = bAsciiString.SubSequence(start, end, true);
         Assert.Equal(aSubSequence, bSubSequence);
         Assert.Equal(aSubSequence.GetHashCode(), bSubSequence.GetHashCode());
     }
 
     [Fact]
-    public void copyTest()
+    public void CopyTest()
     {
-        byte[] aCopy = new byte[aAsciiString.length()];
-        aAsciiString.copy(0, aCopy, 0, aCopy.Length);
+        byte[] aCopy = new byte[aAsciiString.Length()];
+        aAsciiString.Copy(0, aCopy, 0, aCopy.Length);
         AsciiString aAsciiStringCopy = new AsciiString(aCopy, false);
         Assert.Equal(aAsciiString, aAsciiStringCopy);
     }

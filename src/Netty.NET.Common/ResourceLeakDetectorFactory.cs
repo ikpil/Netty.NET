@@ -25,7 +25,7 @@ namespace Netty.NET.Common;
  */
 public abstract class ResourceLeakDetectorFactory
 {
-    internal static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ResourceLeakDetectorFactory));
+    internal static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(ResourceLeakDetectorFactory));
 
     private static volatile ResourceLeakDetectorFactory factoryInstance = new DefaultResourceLeakDetectorFactory();
 
@@ -34,7 +34,7 @@ public abstract class ResourceLeakDetectorFactory
      *
      * @return the current {@link ResourceLeakDetectorFactory}
      */
-    public static ResourceLeakDetectorFactory instance()
+    public static ResourceLeakDetectorFactory Instance()
     {
         return factoryInstance;
     }
@@ -46,9 +46,9 @@ public abstract class ResourceLeakDetectorFactory
      *
      * @param factory the instance that will become the current {@link ResourceLeakDetectorFactory}'s singleton
      */
-    public static void setResourceLeakDetectorFactory(ResourceLeakDetectorFactory factory)
+    public static void SetResourceLeakDetectorFactory(ResourceLeakDetectorFactory factory)
     {
-        factoryInstance = ObjectUtil.checkNotNull(factory, "factory");
+        factoryInstance = ObjectUtil.CheckNotNull(factory, "factory");
     }
 
     /**
@@ -58,9 +58,9 @@ public abstract class ResourceLeakDetectorFactory
      * @param <T> the type of the resource class
      * @return a new instance of {@link ResourceLeakDetector}
      */
-    public ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource) where T : class
+    public ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource) where T : class
     {
-        return newResourceLeakDetector<T>(resource, ResourceLeakDetector.SAMPLING_INTERVAL);
+        return NewResourceLeakDetector<T>(resource, ResourceLeakDetector.SAMPLING_INTERVAL);
     }
 
     /**
@@ -75,7 +75,7 @@ public abstract class ResourceLeakDetectorFactory
      * @return a new instance of {@link ResourceLeakDetector}
      */
     [Obsolete]
-    public abstract ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive) where T : class;
+    public abstract ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive) where T : class;
 
     /**
      * Returns a new instance of a {@link ResourceLeakDetector} with the given resource class.
@@ -86,9 +86,9 @@ public abstract class ResourceLeakDetectorFactory
      * @return a new instance of {@link ResourceLeakDetector}
      */
     //@SuppressWarnings("deprecation")
-    public virtual ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval) where T : class
+    public virtual ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int samplingInterval) where T : class
     {
-        ObjectUtil.checkPositive(samplingInterval, "samplingInterval");
-        return newResourceLeakDetector<T>(resource, samplingInterval, long.MaxValue);
+        ObjectUtil.CheckPositive(samplingInterval, "samplingInterval");
+        return NewResourceLeakDetector<T>(resource, samplingInterval, long.MaxValue);
     }
 }

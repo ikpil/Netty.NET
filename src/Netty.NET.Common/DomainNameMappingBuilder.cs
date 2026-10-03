@@ -51,7 +51,7 @@ public class DomainNameMappingBuilder<T> where T : class
      */
     public DomainNameMappingBuilder(int initialCapacity, T defaultValue)
     {
-        _defaultValue = checkNotNull(defaultValue, "defaultValue");
+        _defaultValue = CheckNotNull(defaultValue, "defaultValue");
         _map = new LinkedHashMap<string, T>(initialCapacity);
     }
 
@@ -67,9 +67,9 @@ public class DomainNameMappingBuilder<T> where T : class
      * @param output   the output value that will be returned by {@link DomainNameMapping#map(string)}
      *                 when the specified host name matches the specified input host name
      */
-    public DomainNameMappingBuilder<T> add(string hostname, T output)
+    public DomainNameMappingBuilder<T> Add(string hostname, T output)
     {
-        _map.Add(checkNotNull(hostname, "hostname"), checkNotNull(output, "output"));
+        _map.Add(CheckNotNull(hostname, "hostname"), CheckNotNull(output, "output"));
         return this;
     }
 
@@ -79,7 +79,7 @@ public class DomainNameMappingBuilder<T> where T : class
      *
      * @return new {@link DomainNameMapping} instance
      */
-    public DomainNameMapping<T> build()
+    public DomainNameMapping<T> Build()
     {
         return new ImmutableDomainNameMapping<T>(_defaultValue, _map);
     }

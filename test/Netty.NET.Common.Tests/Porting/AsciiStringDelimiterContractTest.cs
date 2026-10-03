@@ -16,7 +16,7 @@ public class AsciiStringDelimiterContractTest
     public void BeyondViewStartCannotOverflowBackingOffset(int start, bool dispatch)
     {
         var value = new AsciiString(new byte[] { 1, 2, (byte)'a', (byte)'b', 3 }, 2, 2, false);
-        int actual = dispatch ? AsciiString.indexOf(value, 'a', start) : value.indexOf('a', start);
+        int actual = dispatch ? AsciiString.IndexOf(value, 'a', start) : value.IndexOf('a', start);
         Assert.Equal(-1, actual);
     }
 
@@ -42,10 +42,10 @@ public class AsciiStringDelimiterContractTest
                 {
                     if (characters[i] == target) { expected = i; break; }
                 }
-                Assert.Equal(expected, bytes.indexOf((char)target, start));
-                Assert.Equal(expected, AsciiString.indexOf(bytes, (char)target, start));
-                Assert.Equal(expected, text.indexOf((char)target, start));
-                Assert.Equal(expected, AsciiString.indexOf(text, (char)target, start));
+                Assert.Equal(expected, bytes.IndexOf((char)target, start));
+                Assert.Equal(expected, AsciiString.IndexOf(bytes, (char)target, start));
+                Assert.Equal(expected, text.IndexOf((char)target, start));
+                Assert.Equal(expected, AsciiString.IndexOf(text, (char)target, start));
             }
         }
     }
@@ -58,8 +58,8 @@ public class AsciiStringDelimiterContractTest
     public void EmptyNonzeroOffsetViewNeverSearchesBacking(int start)
     {
         var value = new AsciiString(new byte[] { 1, 2, (byte)'a' }, 2, 0, false);
-        Assert.Equal(-1, value.indexOf('a', start));
-        Assert.Equal(-1, AsciiString.indexOf(value, 'a', start));
+        Assert.Equal(-1, value.IndexOf('a', start));
+        Assert.Equal(-1, AsciiString.IndexOf(value, 'a', start));
     }
 
     [Theory]
@@ -68,8 +68,8 @@ public class AsciiStringDelimiterContractTest
     public void NonLatin1CharacterIsNeverTruncatedToAByte(int character)
     {
         var value = new AsciiString(new byte[] { 0, 255 });
-        Assert.Equal(-1, value.indexOf((char)character, int.MinValue));
-        Assert.Equal(-1, AsciiString.indexOf(value, (char)character, 0));
+        Assert.Equal(-1, value.IndexOf((char)character, int.MinValue));
+        Assert.Equal(-1, AsciiString.IndexOf(value, (char)character, 0));
     }
 
     [Fact]
@@ -78,11 +78,11 @@ public class AsciiStringDelimiterContractTest
         byte[] backing = Encoding.ASCII.GetBytes("x!ab!x");
         var value = new AsciiString(backing, 2, 2, false);
         Assert.Equal("ab", value.ToString());
-        Assert.Equal(-1, value.indexOf('x', 0));
+        Assert.Equal(-1, value.IndexOf('x', 0));
         backing[3] = (byte)'x';
-        Assert.Equal(1, value.indexOf('x', 0));
+        Assert.Equal(1, value.IndexOf('x', 0));
         Assert.Equal(1, value.AsSpan().IndexOf((byte)'x'));
-        value.arrayChanged();
+        value.ArrayChanged();
         Assert.Equal("ax", value.ToString());
     }
 
@@ -169,12 +169,12 @@ public class AsciiStringDelimiterContractTest
         foreach (Range range in value.AsSpan().Split(',')) fields.Add(value.AsSpan()[range].ToString());
         Assert.Equal(new[] { "é😀", "\0Ā" }, fields.ToArray());
         for (int i = 0; i < logical.Length; i++)
-            Assert.Equal(logical.IndexOf(logical[i], i), value.indexOf(logical[i], i));
-        Assert.Equal(-1, value.indexOf('!', 0));
-        Assert.Equal(-1, value.indexOf('é', int.MaxValue));
-        Assert.Equal(0, value.indexOf('é', int.MinValue));
+            Assert.Equal(logical.IndexOf(logical[i], i), value.IndexOf(logical[i], i));
+        Assert.Equal(-1, value.IndexOf('!', 0));
+        Assert.Equal(-1, value.IndexOf('é', int.MaxValue));
+        Assert.Equal(0, value.IndexOf('é', int.MinValue));
         Assert.Equal(0x100, value.AsSpan()[^1]);
-        Assert.Equal(-1, new AsciiString(value).indexOf('Ā', 0));
+        Assert.Equal(-1, new AsciiString(value).IndexOf('Ā', 0));
     }
 
     [Fact]
@@ -182,15 +182,15 @@ public class AsciiStringDelimiterContractTest
     {
         ICharSequence[] values =
         {
-            new AsciiString("!!name:value!!").subSequence(2, 12, false),
+            new AsciiString("!!name:value!!").SubSequence(2, 12, false),
             new StringCharSequence("!!name:value!!", 2, 10),
-            new AppendableCharSequence(10).append("name:value")
+            new AppendableCharSequence(10).Append("name:value")
         };
         foreach (ICharSequence value in values)
         {
-            Assert.Equal(4, AsciiString.indexOf(value, ':', 0));
-            Assert.Equal("value", StringUtil.substringAfter(value.ToString(), ':'));
-            Assert.Null(StringUtil.substringAfter(value.ToString(), ','));
+            Assert.Equal(4, AsciiString.IndexOf(value, ':', 0));
+            Assert.Equal("value", StringUtil.SubstringAfter(value.ToString(), ':'));
+            Assert.Null(StringUtil.SubstringAfter(value.ToString(), ','));
         }
     }
 }

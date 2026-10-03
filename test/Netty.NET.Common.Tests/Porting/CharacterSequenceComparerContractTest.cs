@@ -12,7 +12,7 @@ public class CharacterSequenceComparerContractTest
     {
         ICharSequence ascii = new AsciiString(Encoding.ASCII.GetBytes("xxContent-Typeyy"), 2, 12, false);
         ICharSequence text = new StringCharSequence("zzcontent-typeww", 2, 12);
-        ICharSequence appendable = new AppendableCharSequence(12).append("CONTENT-TYPE");
+        ICharSequence appendable = new AppendableCharSequence(12).Append("CONTENT-TYPE");
         IEqualityComparer<ICharSequence> comparer = AsciiString.CASE_INSENSITIVE_HASHER;
         var dictionary = new Dictionary<ICharSequence, int>(comparer) { [ascii] = 1 };
         Assert.Equal(1, dictionary[text]);
@@ -43,7 +43,7 @@ public class CharacterSequenceComparerContractTest
         var dictionary = new Dictionary<ICharSequence, int>(comparer) { [upper] = 1, [lower] = 2 };
         Assert.Equal(2, dictionary.Count);
         Assert.Equal(1, dictionary[upperSlice]);
-        Assert.Equal(2, dictionary[new AppendableCharSequence(6).append("x-name")]);
+        Assert.Equal(2, dictionary[new AppendableCharSequence(6).Append("x-name")]);
         Assert.True(dictionary.Remove(upperSlice));
         Assert.Equal(2, dictionary[lower]);
     }
@@ -108,7 +108,7 @@ public class CharacterSequenceComparerContractTest
     public void HeaderComparerDoesNotIntroduceUnicodeCaseEquivalence(string left, string right)
     {
         ICharSequence a = new StringCharSequence(left);
-        ICharSequence b = new AppendableCharSequence(1).append(right);
+        ICharSequence b = new AppendableCharSequence(1).Append(right);
         IEqualityComparer<ICharSequence> comparer = AsciiString.CASE_INSENSITIVE_HASHER;
         Assert.False(comparer.Equals(a, b));
         Assert.False(comparer.Equals(b, a));
@@ -128,7 +128,7 @@ public class CharacterSequenceComparerContractTest
         // Follow AsciiString.arrayChanged's ownership contract; no hash collection repairs a resident mutated key.
         Assert.True(dictionary.Remove(key));
         Encoding.ASCII.GetBytes("bravo").CopyTo(backing, 2);
-        key.arrayChanged();
+        key.ArrayChanged();
         dictionary.Add(key, 2);
         Assert.False(dictionary.ContainsKey(new StringCharSequence("alpha")));
         Assert.Equal(2, dictionary[new StringCharSequence("BRAVO")]);

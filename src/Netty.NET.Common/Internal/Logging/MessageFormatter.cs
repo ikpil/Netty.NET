@@ -133,9 +133,9 @@ public static class MessageFormatter
      * @param arg            The argument to be substituted in place of the formatting anchor
      * @return The formatted message
      */
-    public static FormattingTuple format(string messagePattern, object arg)
+    public static FormattingTuple Format(string messagePattern, object arg)
     {
-        return arrayFormat(messagePattern, new object[] { arg });
+        return ArrayFormat(messagePattern, new object[] { arg });
     }
 
     /**
@@ -157,10 +157,10 @@ public static class MessageFormatter
      *                       anchor
      * @return The formatted message
      */
-    public static FormattingTuple format(string messagePattern,
+    public static FormattingTuple Format(string messagePattern,
         object argA, object argB)
     {
-        return arrayFormat(messagePattern, new object[] { argA, argB });
+        return ArrayFormat(messagePattern, new object[] { argA, argB });
     }
 
     /**
@@ -173,7 +173,7 @@ public static class MessageFormatter
      *                       anchors
      * @return The formatted message
      */
-    public static FormattingTuple arrayFormat(string messagePattern, object[] argArray)
+    public static FormattingTuple ArrayFormat(string messagePattern, object[] argArray)
     {
         if (argArray == null || argArray.Length == 0)
         {
@@ -217,7 +217,7 @@ public static class MessageFormatter
             i = j + 2;
             if (notEscaped)
             {
-                deeplyAppendParameter(sbuf, argArray[L], null);
+                DeeplyAppendParameter(sbuf, argArray[L], null);
                 L++;
                 if (L > lastArrIdx)
                 {
@@ -238,7 +238,7 @@ public static class MessageFormatter
     }
 
     // special treatment of array values was suggested by 'lizongbo'
-    private static void deeplyAppendParameter(StringBuilder sbuf, object o, ISet<object[]> seenSet)
+    private static void DeeplyAppendParameter(StringBuilder sbuf, object o, ISet<object[]> seenSet)
     {
         if (o == null)
         {
@@ -250,7 +250,7 @@ public static class MessageFormatter
         {
             // Prevent String instantiation for some number types
             // CLR adaptation: formatting is culture-independent, but boxes are handled by the shared formatter.
-            safeObjectAppend(sbuf, o);
+            SafeObjectAppend(sbuf, o);
         }
         else
         {
@@ -259,54 +259,54 @@ public static class MessageFormatter
             sbuf.Append('[');
             if (o is bool[] boolArray)
             {
-                booleanArrayAppend(sbuf, boolArray);
+                BooleanArrayAppend(sbuf, boolArray);
             }
             else if (o is byte[] byteArray)
             {
-                byteArrayAppend(sbuf, byteArray);
+                ByteArrayAppend(sbuf, byteArray);
             }
             else if (o is char[] charArray)
             {
-                charArrayAppend(sbuf, charArray);
+                CharArrayAppend(sbuf, charArray);
             }
             else if (o is short[] shortArray)
             {
-                shortArrayAppend(sbuf, shortArray);
+                ShortArrayAppend(sbuf, shortArray);
             }
             else if (o is int[] intArray)
             {
-                intArrayAppend(sbuf, intArray);
+                IntArrayAppend(sbuf, intArray);
             }
             else if (o is long[] longArray)
             {
-                longArrayAppend(sbuf, longArray);
+                LongArrayAppend(sbuf, longArray);
             }
             else if (o is float[] floatArray)
             {
-                floatArrayAppend(sbuf, floatArray);
+                FloatArrayAppend(sbuf, floatArray);
             }
             else if (o is double[] doubleArray)
             {
-                doubleArrayAppend(sbuf, doubleArray);
+                DoubleArrayAppend(sbuf, doubleArray);
             }
             else
             {
-                objectArrayAppend(sbuf, (object[])o, seenSet);
+                ObjectArrayAppend(sbuf, (object[])o, seenSet);
             }
 
             sbuf.Append(']');
         }
     }
 
-    private static void safeObjectAppend(StringBuilder sbuf, object o)
+    private static void SafeObjectAppend(StringBuilder sbuf, object o)
     {
         try
         {
             string oAsString = o switch
             {
                 bool value => value ? "true" : "false",
-                float value => floatingPointString(value.ToString("R", CultureInfo.InvariantCulture)),
-                double value => floatingPointString(value.ToString("R", CultureInfo.InvariantCulture)),
+                float value => FloatingPointString(value.ToString("R", CultureInfo.InvariantCulture)),
+                double value => FloatingPointString(value.ToString("R", CultureInfo.InvariantCulture)),
                 IFormattable value => value.ToString(null, CultureInfo.InvariantCulture),
                 _ => o.ToString()
             };
@@ -325,7 +325,7 @@ public static class MessageFormatter
         }
     }
 
-    private static void objectArrayAppend(StringBuilder sbuf, object[] a, ISet<object[]> seenSet)
+    private static void ObjectArrayAppend(StringBuilder sbuf, object[] a, ISet<object[]> seenSet)
     {
         if (a.Length == 0)
         {
@@ -339,11 +339,11 @@ public static class MessageFormatter
 
         if (seenSet.Add(a))
         {
-            deeplyAppendParameter(sbuf, a[0], seenSet);
+            DeeplyAppendParameter(sbuf, a[0], seenSet);
             for (int i = 1; i < a.Length; i++)
             {
                 sbuf.Append(", ");
-                deeplyAppendParameter(sbuf, a[i], seenSet);
+                DeeplyAppendParameter(sbuf, a[i], seenSet);
             }
 
             // allow repeats in siblings
@@ -355,7 +355,7 @@ public static class MessageFormatter
         }
     }
 
-    private static void booleanArrayAppend(StringBuilder sbuf, bool[] a)
+    private static void BooleanArrayAppend(StringBuilder sbuf, bool[] a)
     {
         if (a.Length == 0)
         {
@@ -370,7 +370,7 @@ public static class MessageFormatter
         }
     }
 
-    private static void byteArrayAppend(StringBuilder sbuf, byte[] a)
+    private static void ByteArrayAppend(StringBuilder sbuf, byte[] a)
     {
         if (a.Length == 0)
         {
@@ -385,7 +385,7 @@ public static class MessageFormatter
         }
     }
 
-    private static void charArrayAppend(StringBuilder sbuf, char[] a)
+    private static void CharArrayAppend(StringBuilder sbuf, char[] a)
     {
         if (a.Length == 0)
         {
@@ -400,7 +400,7 @@ public static class MessageFormatter
         }
     }
 
-    private static void shortArrayAppend(StringBuilder sbuf, short[] a)
+    private static void ShortArrayAppend(StringBuilder sbuf, short[] a)
     {
         if (a.Length == 0)
         {
@@ -415,7 +415,7 @@ public static class MessageFormatter
         }
     }
 
-    private static void intArrayAppend(StringBuilder sbuf, int[] a)
+    private static void IntArrayAppend(StringBuilder sbuf, int[] a)
     {
         if (a.Length == 0)
         {
@@ -430,7 +430,7 @@ public static class MessageFormatter
         }
     }
 
-    private static void longArrayAppend(StringBuilder sbuf, long[] a)
+    private static void LongArrayAppend(StringBuilder sbuf, long[] a)
     {
         if (a.Length == 0)
         {
@@ -446,39 +446,39 @@ public static class MessageFormatter
     }
 
     // CLR adaptation: retain Java's decimal marker for integral floating-point values.
-    private static string floatingPointString(string value)
+    private static string FloatingPointString(string value)
     {
         return value.IndexOfAny(new[] { '.', 'E', 'e' }) >= 0 ||
                value == "NaN" || value.EndsWith("Infinity", StringComparison.Ordinal)
             ? value : value + ".0";
     }
-    private static void floatArrayAppend(StringBuilder sbuf, float[] a)
+    private static void FloatArrayAppend(StringBuilder sbuf, float[] a)
     {
         if (a.Length == 0)
         {
             return;
         }
 
-        safeObjectAppend(sbuf, a[0]);
+        SafeObjectAppend(sbuf, a[0]);
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            safeObjectAppend(sbuf, a[i]);
+            SafeObjectAppend(sbuf, a[i]);
         }
     }
 
-    private static void doubleArrayAppend(StringBuilder sbuf, double[] a)
+    private static void DoubleArrayAppend(StringBuilder sbuf, double[] a)
     {
         if (a.Length == 0)
         {
             return;
         }
 
-        safeObjectAppend(sbuf, a[0]);
+        SafeObjectAppend(sbuf, a[0]);
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
-            safeObjectAppend(sbuf, a[i]);
+            SafeObjectAppend(sbuf, a[i]);
         }
     }
 }

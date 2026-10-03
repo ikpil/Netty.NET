@@ -31,17 +31,17 @@ namespace Netty.NET.Common.Internal;
  */
 public static class SocketUtils
 {
-    public static void connect(Socket socket, IPAddress remoteAddress, int timeout)
+    public static void Connect(Socket socket, IPAddress remoteAddress, int timeout)
     {
         socket.Connect(remoteAddress, timeout);
     }
 
-    public static void bind(Socket socket, EndPoint bindpoint)
+    public static void Bind(Socket socket, EndPoint bindpoint)
     {
         socket.Bind(bindpoint);
     }
 
-    public static bool connect(TcpClient socketChannel, IPEndPoint remoteAddress)
+    public static bool Connect(TcpClient socketChannel, IPEndPoint remoteAddress)
     {
         try
         {
@@ -54,17 +54,17 @@ public static class SocketUtils
         }
     }
 
-    public static Socket accept(Socket serverSocketChannel)
+    public static Socket Accept(Socket serverSocketChannel)
     {
         return serverSocketChannel.Accept();
     }
 
-    public static EndPoint localSocketAddress(Socket socket)
+    public static EndPoint LocalSocketAddress(Socket socket)
     {
         return socket.LocalEndPoint;
     }
 
-    public static IPAddress addressByName(string hostname)
+    public static IPAddress AddressByName(string hostname)
     {
         IPHostEntry hostEntry = Dns.GetHostEntry(hostname);
 
@@ -82,19 +82,19 @@ public static class SocketUtils
         return IPAddress.None;
     }
 
-    public static IPAddress[] allAddressesByName(string hostname)
+    public static IPAddress[] AllAddressesByName(string hostname)
     {
         var hostEntry = Dns.GetHostEntry(hostname);
         return hostEntry.AddressList;
     }
 
-    public static IPEndPoint socketAddress(string hostname, int port)
+    public static IPEndPoint SocketAddress(string hostname, int port)
     {
-        var ipAddress = addressByName(hostname);
+        var ipAddress = AddressByName(hostname);
         return new IPEndPoint(ipAddress, port);
     }
 
-    public static List<IPAddress> addressesFromNetworkInterface(NetworkInterface intf)
+    public static List<IPAddress> AddressesFromNetworkInterface(NetworkInterface intf)
     {
         IPInterfaceProperties properties = intf.GetIPProperties();
 
@@ -106,12 +106,12 @@ public static class SocketUtils
             .ToList();
     }
 
-    public static IPAddress loopbackAddress()
+    public static IPAddress LoopbackAddress()
     {
         return IPAddress.Loopback;
     }
 
-    public static byte[] hardwareAddressFromNetworkInterface(NetworkInterface intf)
+    public static byte[] HardwareAddressFromNetworkInterface(NetworkInterface intf)
     {
         PhysicalAddress macAddress = intf.GetPhysicalAddress();
         if (macAddress == PhysicalAddress.None)

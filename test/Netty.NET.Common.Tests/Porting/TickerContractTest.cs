@@ -14,19 +14,19 @@ public class TickerContractTest
     [InlineData(long.MaxValue, long.MaxValue)]
     public void TimeSpanAdvanceUsesExactIntegerNanosecondsAndSaturates(long ticks, long expected)
     {
-        var ticker = Ticker.newMockTicker();
-        ticker.advance(TimeSpan.FromTicks(ticks));
-        Assert.Equal(expected, ticker.nanoTime());
+        var ticker = Ticker.NewMockTicker();
+        ticker.Advance(TimeSpan.FromTicks(ticks));
+        Assert.Equal(expected, ticker.NanoTime());
     }
 
     [Fact]
     public void MillisecondAdvanceSaturatesBeforeCreatingTimeSpan()
     {
-        var ticker = Ticker.newMockTicker();
-        ticker.advanceMillis(long.MaxValue);
-        Assert.Equal(long.MaxValue, ticker.nanoTime());
-        ticker.advance(1);
-        Assert.Equal(long.MinValue, ticker.nanoTime());
+        var ticker = Ticker.NewMockTicker();
+        ticker.AdvanceMillis(long.MaxValue);
+        Assert.Equal(long.MaxValue, ticker.NanoTime());
+        ticker.Advance(1);
+        Assert.Equal(long.MinValue, ticker.NanoTime());
     }
 
     [Theory]
@@ -50,15 +50,15 @@ public class TickerContractTest
     public void NativeDurationSleepConversionSaturatesBothSignsWithoutRounding()
     {
         var ticker = new RecordingTicker();
-        ticker.sleep(TimeSpan.FromTicks(9_000_000_000_000_001L));
+        ticker.Sleep(TimeSpan.FromTicks(9_000_000_000_000_001L));
         Assert.Equal(900_000_000_000_000_100L, ticker.Delay);
-        ticker.sleep(TimeSpan.MaxValue);
+        ticker.Sleep(TimeSpan.MaxValue);
         Assert.Equal(long.MaxValue, ticker.Delay);
-        ticker.sleep(TimeSpan.MinValue);
+        ticker.Sleep(TimeSpan.MinValue);
         Assert.Equal(long.MinValue, ticker.Delay);
-        ticker.sleepMillis(long.MaxValue);
+        ticker.SleepMillis(long.MaxValue);
         Assert.Equal(long.MaxValue, ticker.Delay);
-        ticker.sleepMillis(long.MinValue);
+        ticker.SleepMillis(long.MinValue);
         Assert.Equal(long.MinValue, ticker.Delay);
     }
 
@@ -67,10 +67,10 @@ public class TickerContractTest
     [InlineData(-1L)]
     public void NegativeMockAdvanceDoesNotChangeClock(long amount)
     {
-        var ticker = Ticker.newMockTicker();
-        Assert.Throws<ArgumentException>(() => ticker.advance(TimeSpan.FromTicks(amount)));
-        Assert.Throws<ArgumentException>(() => ticker.advanceMillis(amount));
-        Assert.Equal(0, ticker.nanoTime());
+        var ticker = Ticker.NewMockTicker();
+        Assert.Throws<ArgumentException>(() => ticker.Advance(TimeSpan.FromTicks(amount)));
+        Assert.Throws<ArgumentException>(() => ticker.AdvanceMillis(amount));
+        Assert.Equal(0, ticker.NanoTime());
     }
 
     [Theory]
@@ -84,9 +84,9 @@ public class TickerContractTest
             try
             {
                 Thread.CurrentThread.Interrupt();
-                Ticker.systemTicker().sleep(delay);
-                Ticker.systemTicker().sleepMillis(delay);
-                Ticker.systemTicker().sleep(TimeSpan.FromTicks(delay));
+                Ticker.SystemTicker().Sleep(delay);
+                Ticker.SystemTicker().SleepMillis(delay);
+                Ticker.SystemTicker().Sleep(TimeSpan.FromTicks(delay));
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(1));
             }
             catch (Exception error) { failure = error; }
@@ -110,9 +110,9 @@ public class TickerContractTest
             entered.Set();
             try
             {
-                if (delay == -1) Ticker.systemTicker().sleepMillis(long.MaxValue);
-                else if (delay == -2) Ticker.systemTicker().sleep(TimeSpan.MaxValue);
-                else Ticker.systemTicker().sleep(delay);
+                if (delay == -1) Ticker.SystemTicker().SleepMillis(long.MaxValue);
+                else if (delay == -2) Ticker.SystemTicker().Sleep(TimeSpan.MaxValue);
+                else Ticker.SystemTicker().Sleep(delay);
             }
             catch (Exception error) { outcome = error; }
         }) { IsBackground = true };
@@ -137,8 +137,8 @@ public class TickerContractTest
     private sealed class RecordingTicker : Ticker
     {
         public long Delay { get; private set; }
-        public override long initialNanoTime() => 0;
-        public override long nanoTime() => 0;
-        public override void sleep(long delayNanos) => Delay = delayNanos;
+        public override long InitialNanoTime() => 0;
+        public override long NanoTime() => 0;
+        public override void Sleep(long delayNanos) => Delay = delayNanos;
     }
 }

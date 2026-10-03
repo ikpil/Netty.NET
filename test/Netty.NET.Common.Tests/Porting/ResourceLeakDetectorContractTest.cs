@@ -11,9 +11,9 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Leak detector globals")]
 public class ResourceLeakDetectorContractTest : IDisposable
 {
-    private readonly ResourceLeakDetectorLevel previous = ResourceLeakDetector.getLevel();
-    public ResourceLeakDetectorContractTest() => ResourceLeakDetector.setLevel(ResourceLeakDetectorLevel.PARANOID);
-    public void Dispose() => ResourceLeakDetector.setLevel(previous);
+    private readonly ResourceLeakDetectorLevel previous = ResourceLeakDetector.GetLevel();
+    public ResourceLeakDetectorContractTest() => ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
+    public void Dispose() => ResourceLeakDetector.SetLevel(previous);
     private sealed class Detector : ResourceLeakDetector<object>, ResourceLeakDetector<object>.LeakListener
     {
         internal readonly List<string> Reports = new();
@@ -22,28 +22,28 @@ public class ResourceLeakDetectorContractTest : IDisposable
         internal int ListenerCalls;
         internal int ReportThread;
         internal Detector(int sampling = 1) : base(typeof(object), sampling) { }
-        protected override bool needReport() => Reporting;
-        protected override object getInitialHint(string type) => Hint;
-        protected override void reportTracedLeak(string type, string records) { Reports.Add(records); ReportThread = Environment.CurrentManagedThreadId; }
-        protected override void reportUntracedLeak(string type) { Reports.Add(""); ReportThread = Environment.CurrentManagedThreadId; }
-        public void onLeak(string type, string records) { Assert.Equal("Object", type); ListenerCalls++; }
-        internal void flush() { object resource = new(); trackForcibly(resource).close(resource); }
+        protected override bool NeedReport() => Reporting;
+        protected override object GetInitialHint(string type) => Hint;
+        protected override void ReportTracedLeak(string type, string records) { Reports.Add(records); ReportThread = Environment.CurrentManagedThreadId; }
+        protected override void ReportUntracedLeak(string type) { Reports.Add(""); ReportThread = Environment.CurrentManagedThreadId; }
+        public void OnLeak(string type, string records) { Assert.Equal("Object", type); ListenerCalls++; }
+        internal void Flush() { object resource = new(); TrackForcibly(resource).Close(resource); }
     }
     private sealed class MutableHint : IResourceLeakHint
     {
         internal string Text;
-        public string toHintString() => Text;
+        public string ToHintString() => Text;
     }
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static IResourceLeakTracker<object> createLeak(Detector detector, out WeakReference<object> resource)
+    private static IResourceLeakTracker<object> CreateLeak(Detector detector, out WeakReference<object> resource)
     {
         object value = new();
         resource = new WeakReference<object>(value);
-        return detector.trackForcibly(value);
+        return detector.TrackForcibly(value);
     }
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool isCollected(WeakReference<object> resource) => !resource.TryGetTarget(out _);
-    private static void collectUntil(Action visit, Func<bool> done)
+    private static bool IsCollected(WeakReference<object> resource) => !resource.TryGetTarget(out _);
+    private static void CollectUntil(Action visit, Func<bool> done)
     {
         var elapsed = Stopwatch.StartNew();
         do
@@ -66,39 +66,39 @@ public class ResourceLeakDetectorContractTest : IDisposable
     [InlineData("02", ResourceLeakDetectorLevel.SIMPLE)]
     [InlineData("SIMPLE,ADVANCED", ResourceLeakDetectorLevel.SIMPLE)]
     public void LevelParsingAcceptsOnlyNamedLevelsAndExactOrdinals(string text, ResourceLeakDetectorLevel expected)
-        => Assert.Equal(expected, ResourceLeakDetector.parseLevel(text));
+        => Assert.Equal(expected, ResourceLeakDetector.ParseLevel(text));
 
     [Fact]
     public void ForceIgnoresDisabledLevelAndSamplingWhileRecordCapabilityFollowsLevel()
     {
         var detector = new Detector(0);
         object resource = new();
-        ResourceLeakDetector.setLevel(ResourceLeakDetectorLevel.DISABLED);
-        Assert.Null(detector.track(resource));
-        Assert.False(detector.isRecordEnabled());
-        Assert.True(detector.trackForcibly(resource).close(resource));
-        ResourceLeakDetector.setLevel(ResourceLeakDetectorLevel.SIMPLE);
-        Assert.Throws<ArgumentOutOfRangeException>(() => detector.track(resource));
-        ResourceLeakDetector.setLevel(ResourceLeakDetectorLevel.PARANOID);
-        Assert.True(detector.track(resource).close(resource));
-        Assert.Equal(ResourceLeakDetector.TARGET_RECORDS > 0, detector.isRecordEnabled());
-        Assert.Throws<ArgumentOutOfRangeException>(() => ResourceLeakDetector.setLevel((ResourceLeakDetectorLevel)999));
+        ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.DISABLED);
+        Assert.Null(detector.Track(resource));
+        Assert.False(detector.IsRecordEnabled());
+        Assert.True(detector.TrackForcibly(resource).Close(resource));
+        ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.SIMPLE);
+        Assert.Throws<ArgumentOutOfRangeException>(() => detector.Track(resource));
+        ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
+        Assert.True(detector.Track(resource).Close(resource));
+        Assert.Equal(ResourceLeakDetector.TARGET_RECORDS > 0, detector.IsRecordEnabled());
+        Assert.Throws<ArgumentOutOfRangeException>(() => ResourceLeakDetector.SetLevel((ResourceLeakDetectorLevel)999));
     }
 
     [Fact]
     public void RetainedTrackerDoesNotRootResourceAndReportsOnNextTrackingThread()
     {
         var detector = new Detector { Hint = "retained-tracker" };
-        detector.setLeakListener(detector);
-        IResourceLeakTracker<object> tracker = createLeak(detector, out var resource);
-        collectUntil(detector.flush, () => detector.Reports.Count == 1);
-        Assert.True(isCollected(resource));
+        detector.SetLeakListener(detector);
+        IResourceLeakTracker<object> tracker = CreateLeak(detector, out var resource);
+        CollectUntil(detector.Flush, () => detector.Reports.Count == 1);
+        Assert.True(IsCollected(resource));
         Assert.Contains("retained-tracker", detector.Reports[0]);
-        Assert.Contains(nameof(createLeak), detector.Reports[0]);
+        Assert.Contains(nameof(CreateLeak), detector.Reports[0]);
         Assert.Equal(Environment.CurrentManagedThreadId, detector.ReportThread);
         Assert.Equal(1, detector.ListenerCalls);
         Assert.Equal("", tracker.ToString());
-        detector.flush();
+        detector.Flush();
         Assert.Single(detector.Reports);
         GC.KeepAlive(tracker);
     }
@@ -108,43 +108,43 @@ public class ResourceLeakDetectorContractTest : IDisposable
     {
         var detector = new Detector();
         object resource = new();
-        var tracker = detector.trackForcibly(resource);
-        GC.Collect(); GC.WaitForPendingFinalizers(); detector.flush();
+        var tracker = detector.TrackForcibly(resource);
+        GC.Collect(); GC.WaitForPendingFinalizers(); detector.Flush();
         Assert.Empty(detector.Reports);
-        Assert.Null(tracker.getCloseStackTraceIfAny());
-        Assert.True(tracker.close(resource));
-        Exception close = tracker.getCloseStackTraceIfAny();
+        Assert.Null(tracker.GetCloseStackTraceIfAny());
+        Assert.True(tracker.Close(resource));
+        Exception close = tracker.GetCloseStackTraceIfAny();
         if (ResourceLeakDetector.TRACK_CLOSE)
         {
             Assert.NotNull(close);
             Assert.Contains(nameof(LiveResourceAndExplicitCloseSuppressReportsAndPreserveFirstCloseStack), close.StackTrace);
         }
         else Assert.Null(close);
-        Assert.False(tracker.close(resource));
-        Assert.Same(close, tracker.getCloseStackTraceIfAny());
-        tracker.record(new ThrowingHint());
-        Assert.Same(close, tracker.getCloseStackTraceIfAny());
+        Assert.False(tracker.Close(resource));
+        Assert.Same(close, tracker.GetCloseStackTraceIfAny());
+        tracker.Record(new ThrowingHint());
+        Assert.Same(close, tracker.GetCloseStackTraceIfAny());
         GC.KeepAlive(resource);
     }
-    private sealed class ThrowingHint : IResourceLeakHint { public string toHintString() => throw new InvalidOperationException(); }
+    private sealed class ThrowingHint : IResourceLeakHint { public string ToHintString() => throw new InvalidOperationException(); }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void recordFromCaller(IResourceLeakTracker<object> tracker, object hint) => tracker.record(hint);
+    private static void RecordFromCaller(IResourceLeakTracker<object> tracker, object hint) => tracker.Record(hint);
     [Fact]
     public void RecordsSnapshotHintAndAccessCallerRatherThanReportGenerationStack()
     {
         var detector = new Detector();
         object resource = new();
-        var tracker = detector.trackForcibly(resource);
+        var tracker = detector.TrackForcibly(resource);
         var hint = new MutableHint { Text = "original-hint" };
-        recordFromCaller(tracker, hint);
+        RecordFromCaller(tracker, hint);
         hint.Text = "mutated-hint";
         string report = tracker.ToString();
         Assert.Contains("original-hint", report);
         Assert.DoesNotContain("mutated-hint", report);
-        Assert.Contains(nameof(recordFromCaller), report);
-        Assert.DoesNotContain("generateReport", report);
-        tracker.close(resource);
+        Assert.Contains(nameof(RecordFromCaller), report);
+        Assert.DoesNotContain("GenerateReport", report);
+        tracker.Close(resource);
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
     {
         var detector = new Detector();
         object resource = new();
-        var tracker = detector.trackForcibly(resource);
+        var tracker = detector.TrackForcibly(resource);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var holder = new Thread(() => { lock (resource) { entered.Set(); release.Wait(); } }) { IsBackground = true };
@@ -160,7 +160,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            Task<bool> close = Task.Run(() => tracker.close(resource));
+            Task<bool> close = Task.Run(() => tracker.Close(resource));
             Assert.True(close.Wait(TimeSpan.FromSeconds(5)));
             Assert.True(close.Result);
         }
@@ -172,90 +172,90 @@ public class ResourceLeakDetectorContractTest : IDisposable
     {
         var detector = new Detector();
         object resource = new();
-        var tracker = detector.trackForcibly(resource);
+        var tracker = detector.TrackForcibly(resource);
         int successes = 0;
-        Parallel.For(0, 32, _ => { if (tracker.close(resource)) Interlocked.Increment(ref successes); });
+        Parallel.For(0, 32, _ => { if (tracker.Close(resource)) Interlocked.Increment(ref successes); });
         Assert.Equal(1, successes);
-        Assert.Equal(ResourceLeakDetector.TRACK_CLOSE, tracker.getCloseStackTraceIfAny() != null);
+        Assert.Equal(ResourceLeakDetector.TRACK_CLOSE, tracker.GetCloseStackTraceIfAny() != null);
     }
 
     private sealed class BlockingHint(ManualResetEventSlim entered, ManualResetEventSlim release) : IResourceLeakHint
     {
-        public string toHintString() { entered.Set(); release.Wait(); return "concurrent record"; }
+        public string ToHintString() { entered.Set(); release.Wait(); return "concurrent record"; }
     }
     [Fact]
     public void RecordThatStartedBeforeCloseCannotOverwriteCloseMarker()
     {
         var detector = new Detector();
         object resource = new();
-        var tracker = detector.trackForcibly(resource);
+        var tracker = detector.TrackForcibly(resource);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        Task record = Task.Run(() => tracker.record(new BlockingHint(entered, release)));
+        Task record = Task.Run(() => tracker.Record(new BlockingHint(entered, release)));
         Exception close = null;
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            tracker.close(resource);
-            close = tracker.getCloseStackTraceIfAny();
+            tracker.Close(resource);
+            close = tracker.GetCloseStackTraceIfAny();
         }
         finally { release.Set(); Assert.True(record.Wait(TimeSpan.FromSeconds(5))); }
-        Assert.Same(close, tracker.getCloseStackTraceIfAny());
+        Assert.Same(close, tracker.GetCloseStackTraceIfAny());
     }
 
     [Fact]
     public void DuplicateCreationReportsAreSuppressedAndDisabledReportingDrainsNotifications()
     {
         var detector = new Detector();
-        detector.setLeakListener(detector);
+        detector.SetLeakListener(detector);
         IResourceLeakTracker<object> first = null;
-        for (int i = 0; i < 2; i++) first = createLeak(detector, out _);
-        collectUntil(detector.flush, () => detector.Reports.Count == 1);
-        GC.Collect(); GC.WaitForPendingFinalizers(); detector.flush();
+        for (int i = 0; i < 2; i++) first = CreateLeak(detector, out _);
+        CollectUntil(detector.Flush, () => detector.Reports.Count == 1);
+        GC.Collect(); GC.WaitForPendingFinalizers(); detector.Flush();
         Assert.Single(detector.Reports);
         Assert.Equal(1, detector.ListenerCalls);
         detector.Reporting = false;
-        var discarded = createLeak(detector, out var resource);
-        collectUntil(detector.flush, () => isCollected(resource));
-        GC.Collect(); GC.WaitForPendingFinalizers(); detector.flush();
-        Assert.False(((IResourceLeak)discarded).close());
+        var discarded = CreateLeak(detector, out var resource);
+        CollectUntil(detector.Flush, () => IsCollected(resource));
+        GC.Collect(); GC.WaitForPendingFinalizers(); detector.Flush();
+        Assert.False(((IResourceLeak)discarded).Close());
         Assert.NotEmpty(discarded.ToString());
         detector.Reporting = true;
-        detector.flush();
+        detector.Flush();
         Assert.Single(detector.Reports);
         GC.KeepAlive(first); GC.KeepAlive(discarded);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void createTwoTrackers(Detector detector)
+    private static void CreateTwoTrackers(Detector detector)
     {
         object resource = new();
         detector.Hint = "first-tracker";
-        detector.trackForcibly(resource);
+        detector.TrackForcibly(resource);
         detector.Hint = "second-tracker";
-        detector.trackForcibly(resource);
+        detector.TrackForcibly(resource);
     }
     [Fact]
     public void OneResourceCanNotifyMultipleTrackersAfterTheirReferentIsCollected()
     {
         var detector = new Detector();
-        createTwoTrackers(detector);
-        collectUntil(detector.flush, () => detector.Reports.Count == 2);
+        CreateTwoTrackers(detector);
+        CollectUntil(detector.Flush, () => detector.Reports.Count == 2);
         Assert.Contains(detector.Reports, report => report.Contains("first-tracker"));
         Assert.Contains(detector.Reports, report => report.Contains("second-tracker"));
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static IResourceLeakTracker<object> closeAndRetrack(Detector detector, out WeakReference<object> weak)
+    private static IResourceLeakTracker<object> CloseAndRetrack(Detector detector, out WeakReference<object> weak)
     {
         object resource = new();
         weak = new WeakReference<object>(resource);
         detector.Hint = "closed-registration";
-        Assert.True(detector.trackForcibly(resource).close(resource));
+        Assert.True(detector.TrackForcibly(resource).Close(resource));
         detector.Hint = "live-registration";
-        var live = detector.trackForcibly(resource);
+        var live = detector.TrackForcibly(resource);
         detector.Hint = "cancelled-sibling";
-        Assert.True(detector.trackForcibly(resource).close(resource));
+        Assert.True(detector.TrackForcibly(resource).Close(resource));
         return live;
     }
 
@@ -263,26 +263,26 @@ public class ResourceLeakDetectorContractTest : IDisposable
     public void RetrackingAfterCloseRearmsCollectionAndCancellingOneSiblingKeepsTheOther()
     {
         var detector = new Detector();
-        var tracker = closeAndRetrack(detector, out var resource);
-        collectUntil(detector.flush, () => detector.Reports.Count == 1);
-        Assert.True(isCollected(resource));
+        var tracker = CloseAndRetrack(detector, out var resource);
+        CollectUntil(detector.Flush, () => detector.Reports.Count == 1);
+        Assert.True(IsCollected(resource));
         Assert.Contains("live-registration", detector.Reports[0]);
         Assert.DoesNotContain("closed-registration", detector.Reports[0]);
         Assert.DoesNotContain("cancelled-sibling", detector.Reports[0]);
-        Assert.False(((IResourceLeak)tracker).close());
+        Assert.False(((IResourceLeak)tracker).Close());
         GC.KeepAlive(tracker);
     }
 
     private sealed class ExcludedAccessHelper
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void record(IResourceLeakTracker<object> tracker) => tracker.record();
+        internal static void Record(IResourceLeakTracker<object> tracker) => tracker.Record();
     }
 
     private sealed class GenericExcludedAccessHelper<T>
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void record(IResourceLeakTracker<object> tracker) => tracker.record();
+        internal static void Record(IResourceLeakTracker<object> tracker) => tracker.Record();
     }
 
     [Fact]
@@ -290,20 +290,20 @@ public class ResourceLeakDetectorContractTest : IDisposable
     {
         var detector = new Detector();
         object resource = new();
-        var tracker = detector.trackForcibly(resource);
-        ExcludedAccessHelper.record(tracker);
+        var tracker = detector.TrackForcibly(resource);
+        ExcludedAccessHelper.Record(tracker);
         string displayedType = typeof(ExcludedAccessHelper).FullName.Replace('+', '.');
         Assert.Contains(displayedType, tracker.ToString());
-        Assert.Throws<ArgumentException>(() => ResourceLeakDetector.addExclusions(typeof(ExcludedAccessHelper), "missing"));
-        Assert.Throws<ArgumentException>(() => ResourceLeakDetector.addExclusions(typeof(ExcludedAccessHelper), nameof(ToString)));
-        ResourceLeakDetector.addExclusions(typeof(ExcludedAccessHelper), nameof(ExcludedAccessHelper.record));
+        Assert.Throws<ArgumentException>(() => ResourceLeakDetector.AddExclusions(typeof(ExcludedAccessHelper), "missing"));
+        Assert.Throws<ArgumentException>(() => ResourceLeakDetector.AddExclusions(typeof(ExcludedAccessHelper), nameof(ToString)));
+        ResourceLeakDetector.AddExclusions(typeof(ExcludedAccessHelper), nameof(ExcludedAccessHelper.Record));
         Assert.DoesNotContain(displayedType, tracker.ToString());
         Assert.Contains(nameof(ExclusionsUseDeclaredMethodsAndFullyQualifiedClrNamesIncludingNestedTypes), tracker.ToString());
-        GenericExcludedAccessHelper<object>.record(tracker);
-        GenericExcludedAccessHelper<string>.record(tracker);
+        GenericExcludedAccessHelper<object>.Record(tracker);
+        GenericExcludedAccessHelper<string>.Record(tracker);
         Assert.Contains("GenericExcludedAccessHelper", tracker.ToString());
-        ResourceLeakDetector.addExclusions(typeof(GenericExcludedAccessHelper<object>), nameof(GenericExcludedAccessHelper<object>.record));
+        ResourceLeakDetector.AddExclusions(typeof(GenericExcludedAccessHelper<object>), nameof(GenericExcludedAccessHelper<object>.Record));
         Assert.DoesNotContain("GenericExcludedAccessHelper", tracker.ToString());
-        Assert.True(tracker.close(resource));
+        Assert.True(tracker.Close(resource));
     }
 }

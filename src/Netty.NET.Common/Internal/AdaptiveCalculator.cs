@@ -51,7 +51,7 @@ public sealed class AdaptiveCalculator
         }
     }
 
-    private static int getSizeTableIndex(int size)
+    private static int GetSizeTableIndex(int size)
     {
         for (int low = 0, high = SIZE_TABLE.Length - 1;;)
         {
@@ -97,7 +97,7 @@ public sealed class AdaptiveCalculator
 
     public AdaptiveCalculator(int minimum, int initial, int maximum)
     {
-        checkPositive(minimum, "minimum");
+        CheckPositive(minimum, "minimum");
         if (initial < minimum)
         {
             throw new ArgumentException("initial: " + initial);
@@ -108,7 +108,7 @@ public sealed class AdaptiveCalculator
             throw new ArgumentException("maximum: " + maximum);
         }
 
-        int minIndex = getSizeTableIndex(minimum);
+        int minIndex = GetSizeTableIndex(minimum);
         if (SIZE_TABLE[minIndex] < minimum)
         {
             this.minIndex = minIndex + 1;
@@ -118,7 +118,7 @@ public sealed class AdaptiveCalculator
             this.minIndex = minIndex;
         }
 
-        int maxIndex = getSizeTableIndex(maximum);
+        int maxIndex = GetSizeTableIndex(maximum);
         if (SIZE_TABLE[maxIndex] > maximum)
         {
             this.maxIndex = maxIndex - 1;
@@ -128,7 +128,7 @@ public sealed class AdaptiveCalculator
             this.maxIndex = maxIndex;
         }
 
-        int initialIndex = getSizeTableIndex(initial);
+        int initialIndex = GetSizeTableIndex(initial);
         if (SIZE_TABLE[initialIndex] > initial)
         {
             this.index = initialIndex - 1;
@@ -143,7 +143,7 @@ public sealed class AdaptiveCalculator
         _nextSize = Math.Max(SIZE_TABLE[index], minCapacity);
     }
 
-    public void record(int size)
+    public void Record(int size)
     {
         if (size <= SIZE_TABLE[Math.Max(0, index - INDEX_DECREMENT)])
         {
@@ -166,7 +166,7 @@ public sealed class AdaptiveCalculator
         }
     }
 
-    public int nextSize()
+    public int NextSize()
     {
         return _nextSize;
     }

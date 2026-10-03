@@ -28,25 +28,25 @@ public class TimeProviderClockContractTest
         private bool stopped;
         internal void Pump()
         {
-            Assert.True(inEventLoop());
-            while (tasks.TryDequeue(out var normal)) normal.run();
+            Assert.True(InEventLoop());
+            while (tasks.TryDequeue(out var normal)) normal.Run();
             IRunnable due;
-            while ((due = pollScheduledTask()) != null) due.run();
+            while ((due = PollScheduledTask()) != null) due.Run();
         }
-        public override bool inEventLoop(Thread thread) => ReferenceEquals(thread, owner);
-        public override void execute(IRunnable task) => tasks.Enqueue(task);
-        public override bool isShutdown() => stopped;
-        public override bool isShuttingDown() => stopped;
-        public override bool isTerminated() => stopped;
-        public override bool awaitTermination(TimeSpan timeout) => stopped;
+        public override bool InEventLoop(Thread thread) => ReferenceEquals(thread, owner);
+        public override void Execute(IRunnable task) => tasks.Enqueue(task);
+        public override bool IsShutdown() => stopped;
+        public override bool IsShuttingDown() => stopped;
+        public override bool IsTerminated() => stopped;
+        public override bool AwaitTermination(TimeSpan timeout) => stopped;
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
-            shutdown();
+            Shutdown();
             return Termination;
         }
-        public override void shutdown() { stopped = true; cancelScheduledTasks(); }
-        public void Dispose() => shutdown();
+        public override void Shutdown() { stopped = true; CancelScheduledTasks(); }
+        public void Dispose() => Shutdown();
     }
 
     [Theory]
@@ -59,10 +59,10 @@ public class TimeProviderClockContractTest
         const long origin = 987_654_322;
         var provider = new TimestampProvider(frequency, origin);
         var clock = Ticker.FromTimeProvider(provider);
-        Assert.Equal((long)((Int128)origin * 1_000_000_000 / frequency), clock.initialNanoTime());
-        Assert.Equal(0, clock.nanoTime());
+        Assert.Equal((long)((Int128)origin * 1_000_000_000 / frequency), clock.InitialNanoTime());
+        Assert.Equal(0, clock.NanoTime());
         provider.Advance(5);
-        Assert.Equal(expected, clock.nanoTime());
+        Assert.Equal(expected, clock.NanoTime());
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class TimeProviderClockContractTest
         var provider = new TimestampProvider(3, long.MaxValue - 4);
         var clock = Ticker.FromTimeProvider(provider);
         provider.Advance(12);
-        Assert.Equal(4_000_000_000L, clock.nanoTime());
+        Assert.Equal(4_000_000_000L, clock.NanoTime());
     }
 
     [Theory]
@@ -87,7 +87,7 @@ public class TimeProviderClockContractTest
     [Fact]
     public void SystemSelectionKeepsTheSharedEpochAndNullSelectionFails()
     {
-        Assert.Same(Ticker.systemTicker(), Ticker.FromTimeProvider(TimeProvider.System));
+        Assert.Same(Ticker.SystemTicker(), Ticker.FromTimeProvider(TimeProvider.System));
         Assert.Throws<ArgumentNullException>(() => Ticker.FromTimeProvider(null));
         Assert.Throws<ArgumentNullException>(() => new DefaultEventExecutor((TimeProvider)null));
     }
@@ -96,9 +96,9 @@ public class TimeProviderClockContractTest
     public void TimestampOnlyProviderDoesNotPretendToSupplySynchronousSleep()
     {
         var clock = Ticker.FromTimeProvider(new TimestampProvider(1_000_000_000));
-        Assert.Throws<NotSupportedException>(() => clock.sleep(1));
-        Assert.Throws<NotSupportedException>(() => clock.sleepMillis(1));
-        Assert.Throws<NotSupportedException>(() => clock.sleep(TimeSpan.FromTicks(1)));
+        Assert.Throws<NotSupportedException>(() => clock.Sleep(1));
+        Assert.Throws<NotSupportedException>(() => clock.SleepMillis(1));
+        Assert.Throws<NotSupportedException>(() => clock.Sleep(TimeSpan.FromTicks(1)));
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public class TimeProviderClockContractTest
         {
             Task<int> delayed = executor.ScheduleAsync(() =>
             {
-                Assert.True(executor.inEventLoop());
+                Assert.True(executor.InEventLoop());
                 return Environment.CurrentManagedThreadId;
             }, TimeSpan.FromDays(1));
             int owner = await executor.SubmitAsync(() => Environment.CurrentManagedThreadId)

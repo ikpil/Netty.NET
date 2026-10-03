@@ -32,7 +32,7 @@ public abstract class Ticker
     public static Ticker FromTimeProvider(TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
-        return ReferenceEquals(timeProvider, TimeProvider.System) ? systemTicker() :
+        return ReferenceEquals(timeProvider, TimeProvider.System) ? SystemTicker() :
             new TimeProviderTicker(timeProvider);
     }
 
@@ -41,9 +41,9 @@ public abstract class Ticker
      * However, note that this is not the same as {@link System#nanoTime()} because we apply a fixed offset
      * to the {@link System#nanoTime() nanoTime}.
      */
-    public static Ticker systemTicker()
+    public static Ticker SystemTicker()
     {
-        return SystemTicker.INSTANCE;
+        return global::Netty.NET.Common.Concurrent.SystemTicker.INSTANCE;
     }
 
     /**
@@ -51,7 +51,7 @@ public abstract class Ticker
      * This can be useful when you test time-sensitive logic without waiting for too long or introducing
      * flakiness due to non-deterministic nature of system clock.
      */
-    public static MockTicker newMockTicker()
+    public static MockTicker NewMockTicker()
     {
         return new DefaultMockTicker();
     }
@@ -60,13 +60,13 @@ public abstract class Ticker
      * The initial value used for delay and computations based upon a monotonic time source.
      * @return initial value used for delay and computations based upon a monotonic time source.
      */
-    public abstract long initialNanoTime();
+    public abstract long InitialNanoTime();
 
     /**
      * The time elapsed since initialization of this class in nanoseconds. This may return a negative number just like
      * {@link System#nanoTime()}.
      */
-    public abstract long nanoTime();
+    public abstract long NanoTime();
 
     /**
      * Waits until the given amount of time goes by.
@@ -76,7 +76,7 @@ public abstract class Ticker
      *
      * @see Thread#sleep(long)
      */
-    public abstract void sleep(long delayNanos);
+    public abstract void Sleep(long delayNanos);
 
     /**
      * Waits until the given amount of time goes by.
@@ -85,15 +85,15 @@ public abstract class Ticker
      *
      * @see Thread#sleep(long)
      */
-    public virtual void sleepMillis(long delayMillis)
+    public virtual void SleepMillis(long delayMillis)
     {
-        sleep(TimeUtil.MillisecondsToNanoseconds(delayMillis));
+        Sleep(TimeUtil.MillisecondsToNanoseconds(delayMillis));
     }
 
     // CLR: the original TimeUnit comment is retained above. This overload accepts
     // native durations, with saturated integer conversion to the nanosecond clock.
-    public virtual void sleep(TimeSpan delay)
+    public virtual void Sleep(TimeSpan delay)
     {
-        sleep(TimeUtil.ToNanoseconds(delay));
+        Sleep(TimeUtil.ToNanoseconds(delay));
     }
 }

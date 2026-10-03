@@ -22,7 +22,7 @@ public class NativeExecutorTaskContractTest
         internal int Pending => _queue.Count;
         internal IRunnable LastSubmission;
         internal Action BeforeAdmission;
-        public override void execute(IRunnable command)
+        public override void Execute(IRunnable command)
         {
             ++Submissions;
             BeforeAdmission?.Invoke();
@@ -34,19 +34,19 @@ public class NativeExecutorTaskContractTest
         {
             IRunnable command = _queue.Dequeue();
             _executingThread = Thread.CurrentThread;
-            try { command.run(); }
+            try { command.Run(); }
             finally { _executingThread = null; }
         }
-        public override bool inEventLoop(Thread thread) => ReferenceEquals(thread, _executingThread);
-        public override bool isShuttingDown() => false;
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override void shutdown() => throw new NotSupportedException("Test harness has no worker lifecycle");
+        public override bool InEventLoop(Thread thread) => ReferenceEquals(thread, _executingThread);
+        public override bool IsShuttingDown() => false;
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override void Shutdown() => throw new NotSupportedException("Test harness has no worker lifecycle");
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
             throw new NotSupportedException("Test harness has no worker lifecycle");
         public override Task Termination =>
             throw new NotSupportedException("Test harness has no worker lifecycle");
-        public override bool awaitTermination(TimeSpan timeout) =>
+        public override bool AwaitTermination(TimeSpan timeout) =>
             throw new NotSupportedException("Test harness has no worker lifecycle");
     }
 
@@ -56,20 +56,20 @@ public class NativeExecutorTaskContractTest
         internal int Selections;
         internal Exception SelectionFailure;
         internal SelectingGroup(params IEventExecutor[] children) => _children = children;
-        public override IEventExecutor next()
+        public override IEventExecutor Next()
         {
             int selection = Selections++;
             if (SelectionFailure != null) throw SelectionFailure;
             return _children[selection % _children.Length];
         }
-        public override IEnumerable<IEventExecutor> iterator() => _children;
+        public override IEnumerable<IEventExecutor> Iterator() => _children;
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
-        public override void shutdown() { }
-        public override bool isShuttingDown() => false;
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
+        public override void Shutdown() { }
+        public override bool IsShuttingDown() => false;
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
     }
 
     [Fact]
@@ -170,7 +170,7 @@ public class NativeExecutorTaskContractTest
         Assert.Equal(1, await first);
         Assert.Equal(2, await second);
 
-        IEventExecutor orderedChild = group.next();
+        IEventExecutor orderedChild = group.Next();
         Task<int> third = orderedChild.SubmitAsync(() => 3);
         Task<int> fourth = orderedChild.SubmitAsync(() => 4);
         Assert.Equal(3, source.Selections);
@@ -206,11 +206,11 @@ public class NativeExecutorTaskContractTest
     public async Task UnorderedNativeRejectionFaultsEvenWhenTheLegacyHandlerDiscardsWork()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
-        executor.shutdown();
+        executor.Shutdown();
         Task result = executor.SubmitAsync(() => { });
         Assert.True(result.IsFaulted);
         await Assert.ThrowsAsync<RejectedExecutionException>(async () => await result);
-        Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+        Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 
     [Fact]
@@ -231,9 +231,9 @@ public class NativeExecutorTaskContractTest
             int calls = 0;
             Task queued = executor.SubmitAsync(() => { ++calls; });
             Assert.Equal(1, executor.PendingTaskCount);
-            IRunnable queuedWork = Assert.Single(executor.shutdownNow());
+            IRunnable queuedWork = Assert.Single(executor.ShutdownNow());
             Assert.False((object)queuedWork is System.Threading.Tasks.Task);
-            queuedWork.run();
+            queuedWork.Run();
             Assert.True(queued.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await queued);
             Assert.Equal(0, calls);
@@ -242,8 +242,8 @@ public class NativeExecutorTaskContractTest
         {
             release.Set();
             await running.WaitAsync(TimeSpan.FromSeconds(5));
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
@@ -252,7 +252,7 @@ public class NativeExecutorTaskContractTest
     {
         var original = new RejectedExecutionException("temporary full queue");
         var underlying = new QueuedExecutor { Rejection = original };
-        IEventExecutor child = new NonStickyEventExecutorGroup(underlying).next();
+        IEventExecutor child = new NonStickyEventExecutorGroup(underlying).Next();
         Task first = child.SubmitAsync(() => { });
         Assert.Same(original, await Assert.ThrowsAsync<RejectedExecutionException>(async () => await first));
         underlying.Rejection = null;
@@ -273,7 +273,7 @@ public class NativeExecutorTaskContractTest
             Rejection = original,
             BeforeAdmission = () => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); }
         };
-        IEventExecutor child = new NonStickyEventExecutorGroup(underlying).next();
+        IEventExecutor child = new NonStickyEventExecutorGroup(underlying).Next();
         Task<Task> firstAdmission = Task.Factory.StartNew(() => child.SubmitAsync(() => { }),
             CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         try
@@ -293,26 +293,26 @@ public class NativeExecutorTaskContractTest
     public async Task NonStickyNativeChildRejectsShutdownEvenWhenThePoolHandlerDiscards()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
-        IEventExecutor child = new NonStickyEventExecutorGroup(executor).next();
-        executor.shutdown();
+        IEventExecutor child = new NonStickyEventExecutorGroup(executor).Next();
+        executor.Shutdown();
         Task result = child.SubmitAsync(() => { });
         Assert.True(result.IsFaulted);
         await Assert.ThrowsAsync<RejectedExecutionException>(async () => await result);
-        Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+        Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 
     private sealed class ForwardingExecutor(UnorderedThreadPoolEventExecutor underlying) : AbstractEventExecutor
     {
-        public override void execute(IRunnable command) => underlying.execute(command);
-        public override bool inEventLoop(Thread thread) => underlying.inEventLoop(thread);
-        public override bool isShuttingDown() => underlying.isShuttingDown();
-        public override bool isShutdown() => underlying.isShutdown();
-        public override bool isTerminated() => underlying.isTerminated();
-        public override void shutdown() => underlying.shutdown();
+        public override void Execute(IRunnable command) => underlying.Execute(command);
+        public override bool InEventLoop(Thread thread) => underlying.InEventLoop(thread);
+        public override bool IsShuttingDown() => underlying.IsShuttingDown();
+        public override bool IsShutdown() => underlying.IsShutdown();
+        public override bool IsTerminated() => underlying.IsTerminated();
+        public override void Shutdown() => underlying.Shutdown();
         public override Task Termination => underlying.Termination;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
             underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
-        public override bool awaitTermination(TimeSpan timeout) => underlying.awaitTermination(timeout);
+        public override bool AwaitTermination(TimeSpan timeout) => underlying.AwaitTermination(timeout);
     }
 
     [Theory]
@@ -322,7 +322,7 @@ public class NativeExecutorTaskContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         IEventExecutorGroup underlying = forwarded ? new ForwardingExecutor(executor) : executor;
-        IEventExecutor child = new NonStickyEventExecutorGroup(underlying, 1).next();
+        IEventExecutor child = new NonStickyEventExecutorGroup(underlying, 1).Next();
         using var release = new ManualResetEventSlim();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Task running = executor.SubmitAsync(() =>
@@ -338,9 +338,9 @@ public class NativeExecutorTaskContractTest
             Task first = child.SubmitAsync(() => { ++calls; });
             Task second = child.SubmitAsync(() => { ++calls; });
             Assert.Equal(1, executor.PendingTaskCount);
-            IRunnable runner = Assert.Single(executor.shutdownNow());
+            IRunnable runner = Assert.Single(executor.ShutdownNow());
             Assert.False((object)runner is System.Threading.Tasks.Task);
-            runner.run();
+            runner.Run();
             Assert.True(first.IsCanceled);
             Assert.True(second.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);
@@ -351,8 +351,8 @@ public class NativeExecutorTaskContractTest
         {
             release.Set();
             await running.WaitAsync(TimeSpan.FromSeconds(5));
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
@@ -365,26 +365,26 @@ public class NativeExecutorTaskContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         IEventExecutorGroup underlying = forwarded ? new ForwardingExecutor(executor) : executor;
-        IEventExecutor child = new NonStickyEventExecutorGroup(underlying, 1).next();
+        IEventExecutor child = new NonStickyEventExecutorGroup(underlying, 1).Next();
         using var release = new ManualResetEventSlim();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var calls = new List<int>();
         Task<int> running = child.SubmitAsync(() =>
         {
-            Assert.True(child.inEventLoop());
+            Assert.True(child.InEventLoop());
             started.SetResult();
             try { Assert.True(release.Wait(TimeSpan.FromSeconds(5))); }
             catch (ThreadInterruptedException) { }
-            Assert.True(child.inEventLoop());
+            Assert.True(child.InEventLoop());
             return 42;
         });
         try
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
-            Task first = child.SubmitAsync(() => { Assert.True(child.inEventLoop()); calls.Add(1); });
-            Task second = child.SubmitAsync(() => { Assert.True(child.inEventLoop()); calls.Add(2); });
-            if (immediate) executor.shutdownNow();
-            else executor.shutdown();
+            Task first = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); calls.Add(1); });
+            Task second = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); calls.Add(2); });
+            if (immediate) executor.ShutdownNow();
+            else executor.Shutdown();
             release.Set();
             Assert.Equal(42, await running.WaitAsync(TimeSpan.FromSeconds(5)));
             if (immediate)
@@ -405,15 +405,15 @@ public class NativeExecutorTaskContractTest
         {
             release.Set();
             await running.WaitAsync(TimeSpan.FromSeconds(5));
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
     [Fact]
     public async Task NonStickyInlineBatchHandoffsHaveBoundedCallbackDepth()
     {
-        IEventExecutor child = new NonStickyEventExecutorGroup(ImmediateEventExecutor.INSTANCE, 1).next();
+        IEventExecutor child = new NonStickyEventExecutorGroup(ImmediateEventExecutor.INSTANCE, 1).Next();
         var operations = new List<Task>();
         int count = 0, depth = 0, maximumDepth = 0;
         Action invoke = null;
@@ -421,7 +421,7 @@ public class NativeExecutorTaskContractTest
         {
             ++depth;
             maximumDepth = Math.Max(maximumDepth, depth);
-            Assert.True(child.inEventLoop());
+            Assert.True(child.InEventLoop());
             if (++count < 10001) operations.Add(child.SubmitAsync(invoke));
             --depth;
         };
@@ -429,34 +429,34 @@ public class NativeExecutorTaskContractTest
         await Task.WhenAll(operations);
         Assert.Equal(10001, count);
         Assert.Equal(1, maximumDepth);
-        Assert.False(child.inEventLoop());
-        Assert.False(child.inEventLoop(null));
+        Assert.False(child.InEventLoop());
+        Assert.False(child.InEventLoop(null));
     }
 
     [Fact]
     public async Task NonStickyHandoffsCanChangeThreadsWithoutLosingFifoOrAffinity()
     {
         var underlying = new QueuedExecutor();
-        IEventExecutor child = new NonStickyEventExecutorGroup(underlying, 1).next();
+        IEventExecutor child = new NonStickyEventExecutorGroup(underlying, 1).Next();
         var threads = new List<int>();
-        Task first = child.SubmitAsync(() => { Assert.True(child.inEventLoop()); threads.Add(Thread.CurrentThread.ManagedThreadId); });
-        Task second = child.SubmitAsync(() => { Assert.True(child.inEventLoop()); threads.Add(Thread.CurrentThread.ManagedThreadId); });
+        Task first = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); threads.Add(Thread.CurrentThread.ManagedThreadId); });
+        Task second = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); threads.Add(Thread.CurrentThread.ManagedThreadId); });
         var firstWorker = new Thread(underlying.RunNext);
         firstWorker.Start();
         Assert.True(firstWorker.Join(TimeSpan.FromSeconds(5)));
-        Assert.False(child.inEventLoop(firstWorker));
+        Assert.False(child.InEventLoop(firstWorker));
         Assert.Equal(1, underlying.Pending);
         var secondWorker = new Thread(underlying.RunNext);
         secondWorker.Start();
         Assert.True(secondWorker.Join(TimeSpan.FromSeconds(5)));
         await Task.WhenAll(first, second);
         Assert.Equal(new[] { firstWorker.ManagedThreadId, secondWorker.ManagedThreadId }, threads);
-        Assert.False(child.inEventLoop(secondWorker));
+        Assert.False(child.InEventLoop(secondWorker));
     }
 
     private sealed class FailingThreadFactory(Exception error) : IThreadFactory
     {
-        public Thread newThread(IRunnable runnable) => throw error;
+        public Thread NewThread(IRunnable runnable) => throw error;
     }
 
     [Fact]
@@ -473,8 +473,8 @@ public class NativeExecutorTaskContractTest
         }
         finally
         {
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
@@ -485,7 +485,7 @@ public class NativeExecutorTaskContractTest
         var value = new object();
         Task<object> result = executor.SubmitAsync(() =>
         {
-            Assert.True(executor.inEventLoop());
+            Assert.True(executor.InEventLoop());
             return value;
         });
         Assert.False(result.IsCompleted);
@@ -793,13 +793,13 @@ public class NativeExecutorTaskContractTest
             int state = 0;
             Task<int> operation = executor.SubmitAsync(async () =>
             {
-                Assert.True(executor.inEventLoop());
+                Assert.True(executor.InEventLoop());
                 state = 1;
                 await continueIo.Task.ConfigureAwait(false);
-                Assert.False(executor.inEventLoop());
+                Assert.False(executor.InEventLoop());
                 return await executor.SubmitAsync(() =>
                 {
-                    Assert.True(executor.inEventLoop());
+                    Assert.True(executor.InEventLoop());
                     return ++state;
                 });
             });

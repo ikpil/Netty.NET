@@ -41,7 +41,7 @@ public class ByteOrder
      * @return  The native byte order of the hardware upon which this Java
      *          virtual machine is running
      */
-    public static ByteOrder nativeOrder()
+    public static ByteOrder NativeOrder()
     {
         return NATIVE_ORDER;
     }

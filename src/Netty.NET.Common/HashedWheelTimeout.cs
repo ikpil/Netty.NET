@@ -25,7 +25,7 @@ namespace Netty.NET.Common;
 
 internal sealed class HashedWheelTimeout : ITimeout, IRunnable
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(HashedWheelTimer));
 
     public const int ST_INIT = 0;
     public const int ST_CANCELLED = 1;
@@ -57,20 +57,20 @@ internal sealed class HashedWheelTimeout : ITimeout, IRunnable
         _deadline = deadline;
     }
 
-    public ITimer timer()
+    public ITimer Timer()
     {
         return _timer;
     }
 
-    public ITimerTask task()
+    public ITimerTask Task()
     {
         return _task;
     }
 
-    public bool cancel()
+    public bool Cancel()
     {
         // only update the state it will be removed from HashedWheelBucket on next tick.
-        if (!compareAndSetState(ST_INIT, ST_CANCELLED))
+        if (!CompareAndSetState(ST_INIT, ST_CANCELLED))
         {
             return false;
         }
@@ -82,87 +82,87 @@ internal sealed class HashedWheelTimeout : ITimeout, IRunnable
         return true;
     }
 
-    private void remove()
+    private void Remove()
     {
         HashedWheelBucket bucket = this._bucket;
         if (bucket != null)
         {
-            bucket.remove(this);
+            bucket.Remove(this);
         }
 
         Interlocked.Decrement(ref _timer._pendingTimeouts);
     }
 
-    internal void removeAfterCancellation()
+    internal void RemoveAfterCancellation()
     {
-        remove();
-        _task.cancelled(this);
+        Remove();
+        _task.Cancelled(this);
     }
 
-    public bool compareAndSetState(int expected, int state)
+    public bool CompareAndSetState(int expected, int state)
     {
         return Interlocked.CompareExchange(ref _state, state, expected) == expected;
     }
 
-    public int state()
+    public int State()
     {
         return Volatile.Read(ref _state);
     }
 
-    public bool isCancelled()
+    public bool IsCancelled()
     {
-        return state() == ST_CANCELLED;
+        return State() == ST_CANCELLED;
     }
 
-    public bool isExpired()
+    public bool IsExpired()
     {
-        return state() == ST_EXPIRED;
+        return State() == ST_EXPIRED;
     }
 
-    public void expire()
+    public void Expire()
     {
-        if (!compareAndSetState(ST_INIT, ST_EXPIRED))
+        if (!CompareAndSetState(ST_INIT, ST_EXPIRED))
         {
             return;
         }
 
         try
         {
-            remove();
-            _timer._taskExecutor.execute(this);
+            Remove();
+            _timer._taskExecutor.Execute(this);
         }
         catch (Exception t)
         {
-            if (logger.isWarnEnabled())
+            if (logger.IsWarnEnabled())
             {
-                logger.warn("An exception was thrown while submit " + nameof(ITimerTask)
+                logger.Warn("An exception was thrown while submit " + nameof(ITimerTask)
                                                                     + " for execution.", t);
             }
         }
     }
 
-    public void run()
+    public void Run()
     {
         try
         {
-            _task.run(this);
+            _task.Run(this);
         }
         catch (Exception t)
         {
-            if (logger.isWarnEnabled())
+            if (logger.IsWarnEnabled())
             {
-                logger.warn("An exception was thrown by " + nameof(ITimerTask) + '.', t);
+                logger.Warn("An exception was thrown by " + nameof(ITimerTask) + '.', t);
             }
         }
     }
 
     public override string ToString()
     {
-        long currentTime = SystemTimer.nanoTime();
+        long currentTime = SystemTimer.NanoTime();
         long remaining = _deadline - currentTime + Volatile.Read(ref _timer._startTime);
 
         StringBuilder buf = new StringBuilder(192)
-            .Append(StringUtil.simpleClassName(this))
+            .Append(StringUtil.SimpleClassName(this))
             .Append('(')
             .Append("deadline: ");
         if (remaining > 0)
@@ -180,13 +180,13 @@ internal sealed class HashedWheelTimeout : ITimeout, IRunnable
             buf.Append("now");
         }
 
-        if (isCancelled())
+        if (IsCancelled())
         {
             buf.Append(", cancelled");
         }
 
         return buf.Append(", task: ")
-            .Append(task())
+            .Append(Task())
             .Append(')')
             .ToString();
     }

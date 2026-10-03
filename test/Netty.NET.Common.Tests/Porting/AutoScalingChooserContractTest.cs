@@ -17,26 +17,26 @@ public class AutoScalingChooserContractTest
 
     private sealed class AccountingExecutor : SingleThreadEventExecutor
     {
-        private readonly MockTicker clock = Ticker.newMockTicker();
+        private readonly MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         private Thread reportingThread;
         internal AccountingExecutor()
             : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), true, true,
-                int.MaxValue, RejectedExecutionHandlers.reject()) { }
-        public override Ticker ticker() => clock ?? Ticker.systemTicker();
-        public override bool inEventLoop(Thread thread) => thread != null && thread == Volatile.Read(ref reportingThread);
-        protected override void run() => throw new Exception("must not run");
+                int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+        public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+        public override bool InEventLoop(Thread thread) => thread != null && thread == Volatile.Read(ref reportingThread);
+        protected override void Run() => throw new Exception("must not run");
         internal void Report(long nanos)
         {
             Volatile.Write(ref reportingThread, Thread.CurrentThread);
-            reportActiveIoTime(nanos);
+            ReportActiveIoTime(nanos);
         }
         internal void ReportTask(long nanos)
         {
             Volatile.Write(ref reportingThread, Thread.CurrentThread);
-            addTask(Runnables.Create(() => clock.advance(nanos)));
-            runAllTasks(1_000_000L);
+            AddTask(Runnables.Create(() => clock.Advance(nanos)));
+            RunAllTasks(1_000_000L);
         }
-        internal long Sample() => getAndResetAccumulatedActiveTimeNanos();
+        internal long Sample() => GetAndResetAccumulatedActiveTimeNanos();
     }
 
     [Theory]
@@ -94,58 +94,58 @@ public class AutoScalingChooserContractTest
 
         internal ManualExecutor(MockTicker clock)
             : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), true, true,
-                int.MaxValue, RejectedExecutionHandlers.reject()) => this.clock = clock;
-        public override Ticker ticker() => clock ?? Ticker.systemTicker();
-        public override bool isSuspended() => suspended;
-        public override bool isShuttingDown() => shuttingDown;
+                int.MaxValue, RejectedExecutionHandlers.Reject()) => this.clock = clock;
+        public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+        public override bool IsSuspended() => suspended;
+        public override bool IsShuttingDown() => shuttingDown;
         public override Task Termination => termination.Task;
-        public override bool trySuspend()
+        public override bool TrySuspend()
         {
             ++suspensionAttempts;
             if (!suspendAllowed) return false;
             return suspended = true;
         }
-        public override void execute(IRunnable command) { suspended = false; ++wakes; }
-        protected override void run() => throw new Exception("must not run");
-        protected internal override int getNumOfRegisteredChannels() => channels;
-        protected internal override long getAndResetAccumulatedActiveTimeNanos()
+        public override void Execute(IRunnable command) { suspended = false; ++wakes; }
+        protected override void Run() => throw new Exception("must not run");
+        protected internal override int GetNumOfRegisteredChannels() => channels;
+        protected internal override long GetAndResetAccumulatedActiveTimeNanos()
         {
             ++metricReads;
             long result = activeTime;
             activeTime = 0;
             return result;
         }
-        protected internal override long getLastActivityTimeNanos() => lastActivity;
-        internal int idleCycles() => getAndIncrementIdleCycles();
-        internal int busyCycles() => getAndIncrementBusyCycles();
+        protected internal override long GetLastActivityTimeNanos() => lastActivity;
+        internal int IdleCycles() => GetAndIncrementIdleCycles();
+        internal int BusyCycles() => GetAndIncrementBusyCycles();
     }
 
     private sealed class Harness : IDisposable
     {
-        internal readonly MockTicker clock = Ticker.newMockTicker();
+        internal readonly MockTicker clock = Ticker.NewMockTicker();
         internal readonly ManualExecutor[] children;
         internal readonly IObservableEventExecutorChooser chooser;
         private readonly IRunnable monitor;
         internal Harness(int min, int max, int rampUp = 1, int rampDown = 1, int patience = 0, long initialTime = 0)
         {
-            if (initialTime > 0) clock.advance(initialTime);
+            if (initialTime > 0) clock.Advance(initialTime);
             else if (initialTime < 0)
             {
-                clock.advance(long.MaxValue);
-                clock.advance(unchecked(initialTime - long.MaxValue));
+                clock.Advance(long.MaxValue);
+                clock.Advance(unchecked(initialTime - long.MaxValue));
             }
             children = Enumerable.Range(0, max).Select(_ => new ManualExecutor(clock)).ToArray();
             if (initialTime != 0)
-                foreach (ManualExecutor child in children) child.lastActivity = clock.nanoTime();
+                foreach (ManualExecutor child in children) child.lastActivity = clock.NanoTime();
             var factory = new AutoScalingEventExecutorChooserFactory(min, max, TimeSpan.FromHours(1),
                 0.4, 0.6, rampUp, rampDown, patience);
-            chooser = (IObservableEventExecutorChooser)factory.newChooser(children);
+            chooser = (IObservableEventExecutorChooser)factory.NewChooser(children);
             Type monitorType = chooser.GetType().GetNestedType("UtilizationMonitor", BindingFlags.NonPublic);
             monitor = (IRunnable)Activator.CreateInstance(monitorType,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
                 new object[] { chooser }, null);
         }
-        internal void tick(long delta = Period) { clock.advance(delta); monitor.run(); }
+        internal void Tick(long delta = Period) { clock.Advance(delta); monitor.Run(); }
         public void Dispose() => children[0].termination.TrySetResult();
     }
 
@@ -153,12 +153,12 @@ public class AutoScalingChooserContractTest
     public void PatienceUsesTheCounterBeforeIncrementAndRampDownRespectsTheMinimum()
     {
         using var h = new Harness(1, 4, rampDown: 1, patience: 2);
-        h.tick(); Assert.Equal(4, h.chooser.activeExecutorCount());
-        h.tick(); Assert.Equal(4, h.chooser.activeExecutorCount());
-        h.tick(); Assert.Equal(3, h.chooser.activeExecutorCount());
-        h.tick(); Assert.Equal(2, h.chooser.activeExecutorCount());
-        h.tick(); Assert.Equal(1, h.chooser.activeExecutorCount());
-        h.tick(); Assert.Equal(1, h.chooser.activeExecutorCount());
+        h.Tick(); Assert.Equal(4, h.chooser.ActiveExecutorCount());
+        h.Tick(); Assert.Equal(4, h.chooser.ActiveExecutorCount());
+        h.Tick(); Assert.Equal(3, h.chooser.ActiveExecutorCount());
+        h.Tick(); Assert.Equal(2, h.chooser.ActiveExecutorCount());
+        h.Tick(); Assert.Equal(1, h.chooser.ActiveExecutorCount());
+        h.Tick(); Assert.Equal(1, h.chooser.ActiveExecutorCount());
         Assert.Equal(3, h.children.Count(c => c.suspended));
         Assert.Equal(3, h.children.Sum(c => c.suspensionAttempts));
     }
@@ -167,18 +167,18 @@ public class AutoScalingChooserContractTest
     public void BusyScalingUsesRampLimitAndRotatingWakeIndexAndResetsCounters()
     {
         using var h = new Harness(1, 4, rampUp: 1, rampDown: 4);
-        h.tick(); Assert.Equal(1, h.chooser.activeExecutorCount());
+        h.Tick(); Assert.Equal(1, h.chooser.ActiveExecutorCount());
         ManualExecutor active = h.children.Single(c => !c.suspended);
         active.activeTime = Period;
-        h.tick(); Assert.Equal(2, h.chooser.activeExecutorCount());
+        h.Tick(); Assert.Equal(2, h.chooser.ActiveExecutorCount());
         Assert.Equal(1, h.children[0].wakes);
-        Assert.Equal(0, active.busyCycles());
-        Assert.Equal(0, active.idleCycles());
+        Assert.Equal(0, active.BusyCycles());
+        Assert.Equal(0, active.IdleCycles());
         foreach (ManualExecutor child in h.children.Where(c => !c.suspended)) child.activeTime = Period;
-        h.tick(); Assert.Equal(3, h.chooser.activeExecutorCount());
+        h.Tick(); Assert.Equal(3, h.chooser.ActiveExecutorCount());
         Assert.Equal(1, h.children[1].wakes);
         foreach (ManualExecutor child in h.children.Where(c => !c.suspended)) child.activeTime = Period;
-        h.tick(); Assert.Equal(4, h.chooser.activeExecutorCount());
+        h.Tick(); Assert.Equal(4, h.chooser.ActiveExecutorCount());
         Assert.Equal(1, h.children[2].wakes);
         Assert.Equal(0, active.wakes);
     }
@@ -187,13 +187,13 @@ public class AutoScalingChooserContractTest
     public void ZeroMinimumCanSuspendAllAndNextWakesOneUsingAllExecutorsChooser()
     {
         using var h = new Harness(0, 3, rampDown: 3);
-        h.tick(); Assert.Equal(0, h.chooser.activeExecutorCount());
+        h.Tick(); Assert.Equal(0, h.chooser.ActiveExecutorCount());
         Assert.All(h.children, child => Assert.True(child.suspended));
-        Assert.Same(h.children[0], h.chooser.next());
-        Assert.Equal(1, h.chooser.activeExecutorCount());
+        Assert.Same(h.children[0], h.chooser.Next());
+        Assert.Equal(1, h.chooser.ActiveExecutorCount());
         Assert.False(h.children[0].suspended);
         Assert.Equal(1, h.children[0].wakes);
-        Assert.Same(h.children[0], h.chooser.next());
+        Assert.Same(h.children[0], h.chooser.Next());
         Assert.Equal(1, h.children.Sum(c => c.wakes));
     }
 
@@ -203,32 +203,32 @@ public class AutoScalingChooserContractTest
         using var h = new Harness(0, 2, rampDown: 2);
         h.children[0].channels = 1;
         h.children[1].suspendAllowed = false;
-        h.tick(); Assert.Equal(2, h.chooser.activeExecutorCount());
+        h.Tick(); Assert.Equal(2, h.chooser.ActiveExecutorCount());
         Assert.Equal(0, h.children[0].suspensionAttempts);
         Assert.Equal(1, h.children[1].suspensionAttempts);
         h.children[0].channels = 0;
         h.children[1].suspendAllowed = true;
-        h.tick(); Assert.Equal(0, h.chooser.activeExecutorCount());
-        Assert.All(h.children, child => Assert.Equal(0, child.busyCycles()));
-        Assert.All(h.children, child => Assert.Equal(0, child.idleCycles()));
+        h.Tick(); Assert.Equal(0, h.chooser.ActiveExecutorCount());
+        Assert.All(h.children, child => Assert.Equal(0, child.BusyCycles()));
+        Assert.All(h.children, child => Assert.Equal(0, child.IdleCycles()));
     }
 
     [Fact]
     public void ThresholdEqualityResetsBothCountersAndMetricsRetainAnImmutableView()
     {
         using var h = new Harness(0, 2);
-        IReadOnlyList<AutoScalingUtilizationMetric> metrics = h.chooser.executorUtilizations();
+        IReadOnlyList<AutoScalingUtilizationMetric> metrics = h.chooser.ExecutorUtilizations();
         h.children[0].activeTime = Period * 4 / 10;
         h.children[1].activeTime = Period * 6 / 10;
-        h.tick(); Assert.Equal(2, h.chooser.activeExecutorCount());
-        Assert.Equal(0.4, metrics[0].utilization());
-        Assert.Equal(0.6, metrics[1].utilization());
-        Assert.All(h.children, child => Assert.Equal(0, child.idleCycles()));
-        Assert.All(h.children, child => Assert.Equal(0, child.busyCycles()));
-        Assert.Same(metrics, h.chooser.executorUtilizations());
+        h.Tick(); Assert.Equal(2, h.chooser.ActiveExecutorCount());
+        Assert.Equal(0.4, metrics[0].Utilization());
+        Assert.Equal(0.6, metrics[1].Utilization());
+        Assert.All(h.children, child => Assert.Equal(0, child.IdleCycles()));
+        Assert.All(h.children, child => Assert.Equal(0, child.BusyCycles()));
+        Assert.Same(metrics, h.chooser.ExecutorUtilizations());
         Assert.Throws<NotSupportedException>(() => ((IList<AutoScalingUtilizationMetric>)metrics).Clear());
-        Assert.Same(h.children[0], metrics[0].executor());
-        Assert.Same(h.children[1], metrics[1].executor());
+        Assert.Same(h.children[0], metrics[0].Executor());
+        Assert.Same(h.children[1], metrics[1].Executor());
     }
 
     [Fact]
@@ -237,14 +237,14 @@ public class AutoScalingChooserContractTest
         using var h = new Harness(2, 2);
         h.children[0].lastActivity = Period / 2;
         h.children[1].activeTime = Period * 2;
-        h.tick();
-        Assert.Equal(0.5, h.chooser.executorUtilizations()[0].utilization());
-        Assert.Equal(1.0, h.chooser.executorUtilizations()[1].utilization());
+        h.Tick();
+        Assert.Equal(0.5, h.chooser.ExecutorUtilizations()[0].Utilization());
+        Assert.Equal(1.0, h.chooser.ExecutorUtilizations()[1].Utilization());
         h.children[0].activeTime = Period;
         h.children[1].lastActivity = Period * 2;
-        h.tick(Period * 2);
-        Assert.Equal(0.5, h.chooser.executorUtilizations()[0].utilization());
-        Assert.Equal(0.5, h.chooser.executorUtilizations()[1].utilization());
+        h.Tick(Period * 2);
+        Assert.Equal(0.5, h.chooser.ExecutorUtilizations()[0].Utilization());
+        Assert.Equal(0.5, h.chooser.ExecutorUtilizations()[1].Utilization());
     }
 
     [Fact]
@@ -252,16 +252,16 @@ public class AutoScalingChooserContractTest
     {
         using var h = new Harness(1, 2, patience: 2);
         foreach (ManualExecutor child in h.children) child.activeTime = Period;
-        h.tick();
-        for (int callback = 0; callback < 8; ++callback) h.tick(1);
-        Assert.Equal(2, h.chooser.activeExecutorCount());
+        h.Tick();
+        for (int callback = 0; callback < 8; ++callback) h.Tick(1);
+        Assert.Equal(2, h.chooser.ActiveExecutorCount());
         Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
-        Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(1.0, metric.utilization()));
+        Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(1.0, metric.Utilization()));
 
         // Sustained idle time still reaches the original pre-increment patience boundary.
-        h.tick(Period - 8); Assert.Equal(2, h.chooser.activeExecutorCount());
-        h.tick(); Assert.Equal(2, h.chooser.activeExecutorCount());
-        h.tick(); Assert.Equal(1, h.chooser.activeExecutorCount());
+        h.Tick(Period - 8); Assert.Equal(2, h.chooser.ActiveExecutorCount());
+        h.Tick(); Assert.Equal(2, h.chooser.ActiveExecutorCount());
+        h.Tick(); Assert.Equal(1, h.chooser.ActiveExecutorCount());
     }
 
     [Fact]
@@ -269,21 +269,21 @@ public class AutoScalingChooserContractTest
     {
         using var h = new Harness(2, 2);
         foreach (ManualExecutor child in h.children) child.activeTime = Period;
-        h.tick();
+        h.Tick();
         for (int quarter = 1; quarter <= 4; ++quarter)
         {
             h.children[0].activeTime += Period / 8;
             h.children[1].activeTime += Period / 4;
-            h.tick(Period / 4);
+            h.Tick(Period / 4);
             if (quarter < 4)
             {
                 Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
-                Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(1.0, metric.utilization()));
+                Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(1.0, metric.Utilization()));
             }
         }
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
-        Assert.Equal(0.5, h.chooser.executorUtilizations()[0].utilization());
-        Assert.Equal(1.0, h.chooser.executorUtilizations()[1].utilization());
+        Assert.Equal(0.5, h.chooser.ExecutorUtilizations()[0].Utilization());
+        Assert.Equal(1.0, h.chooser.ExecutorUtilizations()[1].Utilization());
         Assert.All(h.children, child => Assert.Equal(0, child.activeTime));
     }
 
@@ -292,24 +292,24 @@ public class AutoScalingChooserContractTest
     {
         using var h = new Harness(2, 2);
         foreach (ManualExecutor child in h.children) child.activeTime = Period;
-        h.tick(Period + Period / 100);
+        h.Tick(Period + Period / 100);
         foreach (ManualExecutor child in h.children) child.activeTime = Period / 2;
-        h.tick(Period - Period / 100);
+        h.Tick(Period - Period / 100);
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
-        Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(50.0 / 99.0, metric.utilization()));
+        Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(50.0 / 99.0, metric.Utilization()));
     }
 
     [Fact]
     public void ADelayedWindowAndItsCatchUpCallbacksCountAsOneIdleSample()
     {
         using var h = new Harness(1, 2, patience: 2);
-        h.tick();
-        h.tick(Period * 4);
-        for (int callback = 0; callback < 8; ++callback) h.tick(1);
-        Assert.Equal(2, h.chooser.activeExecutorCount());
+        h.Tick();
+        h.Tick(Period * 4);
+        for (int callback = 0; callback < 8; ++callback) h.Tick(1);
+        Assert.Equal(2, h.chooser.ActiveExecutorCount());
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
-        h.tick(Period - 8);
-        Assert.Equal(1, h.chooser.activeExecutorCount());
+        h.Tick(Period - 8);
+        Assert.Equal(1, h.chooser.ActiveExecutorCount());
     }
 
     [Theory]
@@ -318,15 +318,15 @@ public class AutoScalingChooserContractTest
     public void AcceptedWindowBoundaryCanBeZeroOrCrossTheSignedClockRange(long initialTime)
     {
         using var h = new Harness(2, 2);
-        h.clock.advance(initialTime);
+        h.clock.Advance(initialTime);
         foreach (ManualExecutor child in h.children) child.activeTime = Period;
-        h.tick(0);
-        h.tick(1);
+        h.Tick(0);
+        h.Tick(1);
         Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
         foreach (ManualExecutor child in h.children) child.activeTime = Period / 2;
-        h.tick(Period - 1);
+        h.Tick(Period - 1);
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
-        Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(0.5, metric.utilization()));
+        Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(0.5, metric.Utilization()));
     }
 
     [Theory]
@@ -343,14 +343,14 @@ public class AutoScalingChooserContractTest
         foreach (long delta in new[] { Period * 94 / 100, Period * 96 / 100, Period * 128 / 100 })
         {
             busy.activeTime = Period;
-            h.tick(delta);
-            Assert.Equal(2, h.chooser.activeExecutorCount());
+            h.Tick(delta);
+            Assert.Equal(2, h.chooser.ActiveExecutorCount());
             Assert.False(resumed.suspended);
         }
         resumed.activeTime = Period * 7 / 10;
         busy.activeTime = Period;
-        h.tick(Period * 96 / 100);
-        Assert.Equal(2, h.chooser.activeExecutorCount());
+        h.Tick(Period * 96 / 100);
+        Assert.Equal(2, h.chooser.ActiveExecutorCount());
         Assert.False(resumed.suspended);
     }
 
@@ -364,16 +364,16 @@ public class AutoScalingChooserContractTest
         {
             // Brief tasks remain low utilization; their recent timestamp does not imply a busy window.
             resumed.activeTime = Period / 100;
-            resumed.lastActivity = unchecked(h.clock.nanoTime() + delta - 1);
+            resumed.lastActivity = unchecked(h.clock.NanoTime() + delta - 1);
             busy.activeTime = Period;
-            h.tick(delta);
+            h.Tick(delta);
             Assert.False(resumed.suspended);
         }
         resumed.activeTime = Period / 100;
         busy.activeTime = Period;
-        h.tick(Period * 96 / 100);
+        h.Tick(Period * 96 / 100);
         Assert.True(resumed.suspended);
-        Assert.Equal(1, h.chooser.activeExecutorCount());
+        Assert.Equal(1, h.chooser.ActiveExecutorCount());
     }
 
     [Fact]
@@ -383,13 +383,13 @@ public class AutoScalingChooserContractTest
         ManualExecutor resumed = ResumeOneChild(h);
         resumed.activeTime = Period * 7 / 10;
         int priorReads = resumed.metricReads;
-        h.tick(Period * 94 / 100);
+        h.Tick(Period * 94 / 100);
         Assert.Equal(priorReads + 1, resumed.metricReads);
         Assert.Equal(0, resumed.activeTime);
         Assert.Equal((Period * 7 / 10) / (double)(Period * 94 / 100),
-            h.chooser.executorUtilizations().Single(m => m.executor() == resumed).utilization());
-        Assert.Equal(0, resumed.busyCycles());
-        Assert.Equal(0, resumed.idleCycles());
+            h.chooser.ExecutorUtilizations().Single(m => m.Executor() == resumed).Utilization());
+        Assert.Equal(0, resumed.BusyCycles());
+        Assert.Equal(0, resumed.IdleCycles());
     }
 
     [Fact]
@@ -401,31 +401,31 @@ public class AutoScalingChooserContractTest
         foreach (long delta in new[] { Period * 94 / 100, Period * 96 / 100, Period * 128 / 100, Period * 96 / 100 })
         {
             busy.activeTime = Period;
-            h.tick(delta);
+            h.Tick(delta);
         }
         Assert.True(resumed.suspended);
         busy.activeTime = Period;
-        h.tick(Period + Period / 10);
+        h.Tick(Period + Period / 10);
         Assert.False(resumed.suspended);
         Assert.Equal(2, resumed.wakes);
-        resumed.lastActivity = h.clock.nanoTime();
+        resumed.lastActivity = h.clock.NanoTime();
         busy.activeTime = Period;
-        h.tick(Period * 94 / 100);
+        h.Tick(Period * 94 / 100);
         Assert.False(resumed.suspended);
-        Assert.Equal(0, resumed.idleCycles());
+        Assert.Equal(0, resumed.IdleCycles());
     }
 
     private static ManualExecutor ResumeOneChild(Harness h)
     {
-        h.tick(); h.tick(); h.tick();
-        Assert.Equal(1, h.chooser.activeExecutorCount());
+        h.Tick(); h.Tick(); h.Tick();
+        Assert.Equal(1, h.chooser.ActiveExecutorCount());
         ManualExecutor busy = h.children.Single(c => !c.suspended);
-        busy.activeTime = Period; h.tick();
-        busy.activeTime = Period; h.tick();
-        busy.activeTime = Period; h.tick(Period + Period / 10);
-        Assert.Equal(2, h.chooser.activeExecutorCount());
+        busy.activeTime = Period; h.Tick();
+        busy.activeTime = Period; h.Tick();
+        busy.activeTime = Period; h.Tick(Period + Period / 10);
+        Assert.Equal(2, h.chooser.ActiveExecutorCount());
         ManualExecutor resumed = h.children.Single(c => c.wakes != 0);
-        resumed.lastActivity = h.clock.nanoTime(); // The wake-up task has completed, as in the retained trace.
+        resumed.lastActivity = h.clock.NanoTime(); // The wake-up task has completed, as in the retained trace.
         return resumed;
     }
 
@@ -435,34 +435,34 @@ public class AutoScalingChooserContractTest
         using var h = new Harness(1, 2);
         h.children[0].activeTime = Period / 2;
         h.children[1].activeTime = Period / 2;
-        h.tick();
-        h.tick(0);
+        h.Tick();
+        h.Tick(0);
         Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
         h.children[0].shuttingDown = true;
-        h.tick();
+        h.Tick();
         Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
-        Assert.Equal(2, h.chooser.activeExecutorCount());
-        Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(0.5, metric.utilization()));
+        Assert.Equal(2, h.chooser.ActiveExecutorCount());
+        Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(0.5, metric.Utilization()));
     }
 
     [Fact]
     public void ConstructorChecksPinnedRangesAndKeepsJavaNaNComparisonSemantics()
     {
-        AutoScalingEventExecutorChooserFactory create(int min = 0, int max = 1, double down = 0.4,
+        AutoScalingEventExecutorChooserFactory Create(int min = 0, int max = 1, double down = 0.4,
             double up = 0.6, int rampUp = 1, int rampDown = 1, int patience = 0, TimeSpan? window = null) =>
             new(min, max, window ?? TimeSpan.FromHours(1), down, up, rampUp, rampDown, patience);
-        Assert.Throws<ArgumentException>(() => create(min: -1));
-        Assert.Throws<ArgumentException>(() => create(max: 0));
-        Assert.Throws<ArgumentException>(() => create(min: 2));
-        Assert.Throws<ArgumentException>(() => create(window: TimeSpan.Zero));
-        Assert.Throws<ArgumentException>(() => create(down: -0.1));
-        Assert.Throws<ArgumentException>(() => create(up: 1.1));
-        Assert.Throws<ArgumentException>(() => create(down: 0.6));
-        Assert.Throws<ArgumentException>(() => create(rampUp: 0));
-        Assert.Throws<ArgumentException>(() => create(rampDown: 0));
-        Assert.Throws<ArgumentException>(() => create(patience: -1));
-        Assert.NotNull(create(down: double.NaN, up: double.NaN));
-        Assert.NotNull(create(window: TimeSpan.MaxValue));
-        Assert.NotNull(create(down: 0, up: 1));
+        Assert.Throws<ArgumentException>(() => Create(min: -1));
+        Assert.Throws<ArgumentException>(() => Create(max: 0));
+        Assert.Throws<ArgumentException>(() => Create(min: 2));
+        Assert.Throws<ArgumentException>(() => Create(window: TimeSpan.Zero));
+        Assert.Throws<ArgumentException>(() => Create(down: -0.1));
+        Assert.Throws<ArgumentException>(() => Create(up: 1.1));
+        Assert.Throws<ArgumentException>(() => Create(down: 0.6));
+        Assert.Throws<ArgumentException>(() => Create(rampUp: 0));
+        Assert.Throws<ArgumentException>(() => Create(rampDown: 0));
+        Assert.Throws<ArgumentException>(() => Create(patience: -1));
+        Assert.NotNull(Create(down: double.NaN, up: double.NaN));
+        Assert.NotNull(Create(window: TimeSpan.MaxValue));
+        Assert.NotNull(Create(down: 0, up: 1));
     }
 }

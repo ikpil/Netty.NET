@@ -31,7 +31,7 @@ public static class ClassInitializerUtil
      * @param loadingClass      the {@link Class} that wants to load the classes.
      * @param classes           the classes to load.
      */
-    public static void tryLoadClasses(Type loadingType, params Type[] classes)
+    public static void TryLoadClasses(Type loadingType, params Type[] classes)
     {
         if (loadingType == null)
             throw new ArgumentNullException(nameof(loadingType));
@@ -39,11 +39,11 @@ public static class ClassInitializerUtil
         Assembly assembly = loadingType.Assembly;
         foreach (Type type in classes)
         {
-            tryLoadType(assembly, type.FullName);
+            TryLoadType(assembly, type.FullName);
         }
     }
 
-    private static void tryLoadType(Assembly assembly, string typeName)
+    private static void TryLoadType(Assembly assembly, string typeName)
     {
         try
         {

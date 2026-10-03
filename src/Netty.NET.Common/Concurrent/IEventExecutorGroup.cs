@@ -32,7 +32,7 @@ public interface IEventExecutorGroup : IExecutorService
      * Returns {@code true} if and only if all {@link EventExecutor}s managed by this {@link EventExecutorGroup}
      * are being {@linkplain #shutdownGracefully() shut down gracefully} or was {@linkplain #isShutdown() shut down}.
      */
-    bool isShuttingDown();
+    bool IsShuttingDown();
 
     /**
      * Shortcut method for {@link #shutdownGracefully(long, long, TimeUnit)} with sensible default values.
@@ -95,20 +95,20 @@ public interface IEventExecutorGroup : IExecutorService
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    new void shutdown();
+    new void Shutdown();
 
     /**
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    new List<Functional.IRunnable> shutdownNow();
+    new List<Functional.IRunnable> ShutdownNow();
 
     /**
      * Returns one of the {@link EventExecutor}s managed by this {@link EventExecutorGroup}.
      */
-    IEventExecutor next();
+    IEventExecutor Next();
 
-    IEnumerable<IEventExecutor> iterator();
+    IEnumerable<IEventExecutor> Iterator();
 
     /**
      * The ticker for this executor. Usually the {@link #schedule} methods will follow the
@@ -119,6 +119,6 @@ public interface IEventExecutorGroup : IExecutorService
      *
      * @return The ticker for this scheduler
      */
-    Ticker ticker() => Ticker.systemTicker();
+    Ticker Ticker() => global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
 
 }

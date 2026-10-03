@@ -47,44 +47,44 @@ namespace Netty.NET.Common.Internal;
  */
 public static class PlatformDependent
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(PlatformDependent));
 
     private static readonly bool MAYBE_SUPER_USER;
 
-    private static readonly bool CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !isAndroid();
+    private static readonly bool CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !IsAndroid();
 
-    private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE = unsafeUnavailabilityCause0();
+    private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE = UnsafeUnavailabilityCause0();
 
     public static readonly int MPSC_CHUNK_SIZE = 1024;
     public static readonly int MIN_MAX_MPSC_CAPACITY = MPSC_CHUNK_SIZE * 2;
     public static readonly int MAX_ALLOWED_MPSC_CAPACITY = Pow2.MAX_POW2;
-    private static readonly long BYTE_ARRAY_BASE_OFFSET = byteArrayBaseOffset0();
-    private static readonly DirectoryInfo TMPDIR = tmpdir0();
-    private static readonly int BIT_MODE = bitMode0();
-    private static readonly string NORMALIZED_ARCH = normalizeArch(SystemPropertyUtil.get("os.arch", RuntimeInformation.ProcessArchitecture.ToString()));
-    private static readonly string NORMALIZED_OS = normalizeOs(SystemPropertyUtil.get("os.name",
+    private static readonly long BYTE_ARRAY_BASE_OFFSET = ByteArrayBaseOffset0();
+    private static readonly DirectoryInfo TMPDIR = Tmpdir0();
+    private static readonly int BIT_MODE = BitMode0();
+    private static readonly string NORMALIZED_ARCH = NormalizeArch(SystemPropertyUtil.Get("os.arch", RuntimeInformation.ProcessArchitecture.ToString()));
+    private static readonly string NORMALIZED_OS = NormalizeOs(SystemPropertyUtil.Get("os.name",
         OperatingSystem.IsWindows() ? "Windows" : OperatingSystem.IsMacOS() ? "Mac OS X" :
         OperatingSystem.IsLinux() ? "Linux" : RuntimeInformation.OSDescription));
     private static readonly ISet<string> LINUX_OS_CLASSIFIERS;
-    private static readonly bool IS_WINDOWS = isWindows0();
-    private static readonly bool IS_OSX = isOsx0();
-    private static readonly bool IS_J9_JVM = isJ9Jvm0();
-    private static readonly bool IS_IVKVM_DOT_NET = isIkvmDotNet0();
-    private static readonly int ADDRESS_SIZE = addressSize0();
+    private static readonly bool IS_WINDOWS = IsWindows0();
+    private static readonly bool IS_OSX = IsOsx0();
+    private static readonly bool IS_J9_JVM = IsJ9Jvm0();
+    private static readonly bool IS_IVKVM_DOT_NET = IsIkvmDotNet0();
+    private static readonly int ADDRESS_SIZE = AddressSize0();
     private static readonly string LINUX_ID_PREFIX = "ID=";
     private static readonly string LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
-    public static readonly bool BIG_ENDIAN_NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
+    public static readonly bool BIG_ENDIAN_NATIVE_ORDER = ByteOrder.NativeOrder() == ByteOrder.BIG_ENDIAN;
     private static readonly bool JFR;
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
-    public static void addFilesystemOsClassifiers(ISet<string> availableClassifiers) {
-        if (processOsReleaseFile("/etc/os-release", availableClassifiers)) {
+    public static void AddFilesystemOsClassifiers(ISet<string> availableClassifiers) {
+        if (ProcessOsReleaseFile("/etc/os-release", availableClassifiers)) {
             return;
         }
-        processOsReleaseFile("/usr/lib/os-release", availableClassifiers);
+        ProcessOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
-    private static bool processOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers)
+    private static bool ProcessOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers)
     {
         if (string.IsNullOrEmpty(osReleaseFileName) || availableClassifiers == null)
             return false;
@@ -103,41 +103,41 @@ public static class PlatformDependent
                     {
                         if (line.StartsWith(LINUX_ID_PREFIX))
                         {
-                            string id = normalizeOsReleaseVariableValue(line[LINUX_ID_PREFIX.Length..]);
-                            addClassifier(availableClassifiers, id);
+                            string id = NormalizeOsReleaseVariableValue(line[LINUX_ID_PREFIX.Length..]);
+                            AddClassifier(availableClassifiers, id);
                         }
                         else if (line.StartsWith(LINUX_ID_LIKE_PREFIX))
                         {
-                            line = normalizeOsReleaseVariableValue(line[LINUX_ID_LIKE_PREFIX.Length..]);
-                            addClassifier(availableClassifiers, line.Split(" "));
+                            line = NormalizeOsReleaseVariableValue(line[LINUX_ID_LIKE_PREFIX.Length..]);
+                            AddClassifier(availableClassifiers, line.Split(" "));
                         }
                     }
                 } catch (SecurityException e) {
-                    logger.debug("Unable to read {}", osReleaseFileName, e);
+                    logger.Debug("Unable to read {}", osReleaseFileName, e);
                 } catch (IOException e) {
-                    logger.debug("Error while reading content of {}", osReleaseFileName, e);
+                    logger.Debug("Error while reading content of {}", osReleaseFileName, e);
                 }
                 // specification states we should only fall back if /etc/os-release does not exist
                 return true;
             }
 
         } catch (SecurityException e) {
-            logger.debug("Unable to check if {} exists", osReleaseFileName, e);
+            logger.Debug("Unable to check if {} exists", osReleaseFileName, e);
         }
         return false;
     }
 
-    public static bool addPropertyOsClassifiers(ISet<string> availableClassifiers) {
+    public static bool AddPropertyOsClassifiers(ISet<string> availableClassifiers) {
         // empty: -Dio.netty.osClassifiers (no distro specific classifiers for native libs)
         // single ID: -Dio.netty.osClassifiers=ubuntu
         // pair ID, ID_LIKE: -Dio.netty.osClassifiers=ubuntu,debian
         // illegal otherwise
         string osClassifiersPropertyName = "io.netty.osClassifiers";
-        string osClassifiers = SystemPropertyUtil.get(osClassifiersPropertyName);
+        string osClassifiers = SystemPropertyUtil.Get(osClassifiersPropertyName);
         if (osClassifiers == null) {
             return false;
         }
-        if (osClassifiers.isEmpty()) {
+        if (osClassifiers.IsEmpty()) {
             // let users omit classifiers with just -Dio.netty.osClassifiers
             return true;
         }
@@ -157,33 +157,33 @@ public static class PlatformDependent
                     osClassifiersPropertyName + " property contains more than 2 classifiers: " + osClassifiers);
         }
         foreach (string classifier in classifiers) {
-            addClassifier(availableClassifiers, classifier);
+            AddClassifier(availableClassifiers, classifier);
         }
         return true;
     }
 
-    public static long byteArrayBaseOffset() {
+    public static long ByteArrayBaseOffset() {
         return BYTE_ARRAY_BASE_OFFSET;
     }
 
     /**
      * Returns {@code true} if and only if the current platform is Android
      */
-    public static bool isAndroid() {
-        return PlatformDependent0.isAndroid();
+    public static bool IsAndroid() {
+        return PlatformDependent0.IsAndroid();
     }
 
     /**
      * Return {@code true} if the JVM is running on Windows
      */
-    public static bool isWindows() {
+    public static bool IsWindows() {
         return IS_WINDOWS;
     }
 
     /**
      * Return {@code true} if the JVM is running on OSX / MacOS
      */
-    public static bool isOsx() {
+    public static bool IsOsx() {
         return IS_OSX;
     }
 
@@ -191,7 +191,7 @@ public static class PlatformDependent
      * Return {@code true} if the current user may be a super-user. Be aware that this is just an hint and so it may
      * return false-positives.
      */
-    public static bool maybeSuperUser() {
+    public static bool MaybeSuperUser() {
         return MAYBE_SUPER_USER;
     }
 
@@ -199,14 +199,14 @@ public static class PlatformDependent
      * @param thread The thread to be checked.
      * @return {@code true} if this {@link Thread} is a virtual thread, {@code false} otherwise.
      */
-    public static bool isVirtualThread(Thread thread) {
-        return PlatformDependent0.isVirtualThread(thread);
+    public static bool IsVirtualThread(Thread thread) {
+        return PlatformDependent0.IsVirtualThread(thread);
     }
 
     /**
      * Returns {@code true} if and only if it is fine to enable TCP_NODELAY socket option by default.
      */
-    public static bool canEnableTcpNoDelayByDefault() {
+    public static bool CanEnableTcpNoDelayByDefault() {
         return CAN_ENABLE_TCP_NODELAY_BY_DEFAULT;
     }
 
@@ -214,14 +214,14 @@ public static class PlatformDependent
      * Return {@code true} if {@code sun.misc.Unsafe} was found on the classpath and can be used for accelerated
      * direct memory access.
      */
-    public static bool hasUnsafe() {
+    public static bool HasUnsafe() {
         return UNSAFE_UNAVAILABILITY_CAUSE == null;
     }
 
     /**
      * Return the reason (if any) why {@code sun.misc.Unsafe} was not available.
      */
-    public static Exception getUnsafeUnavailabilityCause() {
+    public static Exception GetUnsafeUnavailabilityCause() {
         return UNSAFE_UNAVAILABILITY_CAUSE;
     }
 
@@ -230,8 +230,8 @@ public static class PlatformDependent
      *
      * @see <a href="https://en.wikipedia.org/wiki/Segmentation_fault#Bus_error">Wikipedia on segfault</a>
      */
-    public static bool isUnaligned() {
-        return PlatformDependent0.isUnaligned();
+    public static bool IsUnaligned() {
+        return PlatformDependent0.IsUnaligned();
     }
 
 
@@ -247,14 +247,14 @@ public static class PlatformDependent
     /**
      * Returns the temporary directory.
      */
-    public static DirectoryInfo tmpdir() {
+    public static DirectoryInfo Tmpdir() {
         return TMPDIR;
     }
 
     /**
      * Returns the bit mode of the current VM (usually 32 or 64.)
      */
-    public static int bitMode() {
+    public static int BitMode() {
         return BIT_MODE;
     }
 
@@ -262,27 +262,27 @@ public static class PlatformDependent
      * Return the address size of the OS.
      * 4 (for 32 bits systems ) and 8 (for 64 bits systems).
      */
-    public static int addressSize() {
+    public static int AddressSize() {
         return ADDRESS_SIZE;
     }
 
-    public static long allocateMemory(long size) {
-        return PlatformDependent0.allocateMemory(size);
+    public static long AllocateMemory(long size) {
+        return PlatformDependent0.AllocateMemory(size);
     }
 
-    public static void freeMemory(long address) {
-        PlatformDependent0.freeMemory(address);
+    public static void FreeMemory(long address) {
+        PlatformDependent0.FreeMemory(address);
     }
 
-    public static long reallocateMemory(long address, long newSize) {
-        return PlatformDependent0.reallocateMemory(address, newSize);
+    public static long ReallocateMemory(long address, long newSize) {
+        return PlatformDependent0.ReallocateMemory(address, newSize);
     }
 
     /**
      * Raises an exception bypassing compiler checks for checked exceptions.
      */
-    public static void throwException(Exception t) {
-        PlatformDependent0.throwException(t);
+    public static void ThrowException(Exception t) {
+        PlatformDependent0.ThrowException(t);
     }
 
     /**
@@ -290,7 +290,7 @@ public static class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>() {
+    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>() {
         return new ConcurrentDictionary<K, V>();
     }
 
@@ -299,7 +299,7 @@ public static class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>(int initialCapacity) {
+    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(int initialCapacity) {
         return new ConcurrentDictionary<K, V>();
     }
 
@@ -308,7 +308,7 @@ public static class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>(int initialCapacity, float loadFactor) {
+    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(int initialCapacity, float loadFactor) {
         return new ConcurrentDictionary<K, V>();
     }
 
@@ -317,7 +317,7 @@ public static class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>(
+    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(
             int initialCapacity, float loadFactor, int concurrencyLevel)
     {
         return new ConcurrentDictionary<K, V>();
@@ -328,69 +328,69 @@ public static class PlatformDependent
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
     [Obsolete]
-    public static ConcurrentDictionary<K, V> newConcurrentHashMap<K, V>(IDictionary<K, V> map) {
+    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(IDictionary<K, V> map) {
         return new ConcurrentDictionary<K, V>(map);
     }
 
 
 
-    public static void putShortOrdered(long adddress, short newValue) {
-        PlatformDependent0.putShortOrdered(adddress, newValue);
+    public static void PutShortOrdered(long adddress, short newValue) {
+        PlatformDependent0.PutShortOrdered(adddress, newValue);
     }
 
-    public static int getIntVolatile(long address) {
-        return PlatformDependent0.getIntVolatile(address);
+    public static int GetIntVolatile(long address) {
+        return PlatformDependent0.GetIntVolatile(address);
     }
 
-    public static void putIntOrdered(long adddress, int newValue) {
-        PlatformDependent0.putIntOrdered(adddress, newValue);
+    public static void PutIntOrdered(long adddress, int newValue) {
+        PlatformDependent0.PutIntOrdered(adddress, newValue);
     }
 
-    public static byte getByte(long address) {
-        return PlatformDependent0.getByte(address);
+    public static byte GetByte(long address) {
+        return PlatformDependent0.GetByte(address);
     }
 
-    public static short getShort(long address) {
-        return PlatformDependent0.getShort(address);
+    public static short GetShort(long address) {
+        return PlatformDependent0.GetShort(address);
     }
 
-    public static int getInt(long address) {
-        return PlatformDependent0.getInt(address);
+    public static int GetInt(long address) {
+        return PlatformDependent0.GetInt(address);
     }
 
-    public static long getLong(long address) {
-        return PlatformDependent0.getLong(address);
+    public static long GetLong(long address) {
+        return PlatformDependent0.GetLong(address);
     }
 
-    public static byte getByte(byte[] data, int index) {
+    public static byte GetByte(byte[] data, int index) {
         return data[index];
     }
 
-    public static byte getByte(byte[] data, long index) {
-        return data[toIntExact(index)];
+    public static byte GetByte(byte[] data, long index) {
+        return data[ToIntExact(index)];
     }
 
-    public static short getShort(byte[] data, int index) {
+    public static short GetShort(byte[] data, int index) {
         return MemoryMarshal.Read<short>(data.AsSpan(index, sizeof(short)));
     }
 
-    public static int getInt(byte[] data, int index) {
+    public static int GetInt(byte[] data, int index) {
         return MemoryMarshal.Read<int>(data.AsSpan(index, sizeof(int)));
     }
 
-    public static int getInt(int[] data, long index) {
-        return data[toIntExact(index)];
+    public static int GetInt(int[] data, long index) {
+        return data[ToIntExact(index)];
     }
 
-    public static long getLong(byte[] data, int index) {
+    public static long GetLong(byte[] data, int index) {
         return MemoryMarshal.Read<long>(data.AsSpan(index, sizeof(long)));
     }
 
-    public static long getLong(long[] data, long index) {
-        return data[toIntExact(index)];
+    public static long GetLong(long[] data, long index) {
+        return data[ToIntExact(index)];
     }
 
-    private static int toIntExact(long value)
+    private static int ToIntExact(long value)
     {
         if (value > int.MaxValue || value < int.MinValue)
         {
@@ -399,7 +399,7 @@ public static class PlatformDependent
         return (int)value;
     }
 
-    private static long getLongSafe(byte[] bytes, int offset) {
+    private static long GetLongSafe(byte[] bytes, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             return (long) bytes[offset] << 56 |
                     ((long) bytes[offset + 1] & 0xff) << 48 |
@@ -420,7 +420,7 @@ public static class PlatformDependent
                 (long) bytes[offset + 7] << 56;
     }
 
-    private static int getIntSafe(byte[] bytes, int offset) {
+    private static int GetIntSafe(byte[] bytes, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             return bytes[offset] << 24 |
                     (bytes[offset + 1] & 0xff) << 16 |
@@ -433,7 +433,7 @@ public static class PlatformDependent
                 bytes[offset + 3] << 24;
     }
 
-    private static short getShortSafe(byte[] bytes, int offset) {
+    private static short GetShortSafe(byte[] bytes, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             return unchecked((short) (bytes[offset] << 8 | (bytes[offset + 1] & 0xff)));
         }
@@ -443,99 +443,99 @@ public static class PlatformDependent
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link CharSequence}.
      */
-    private static int hashCodeAsciiCompute(ICharSequence value, int offset, int hash) {
+    private static int HashCodeAsciiCompute(ICharSequence value, int offset, int hash) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             return unchecked(hash * HASH_CODE_C1 +
                     // Low order int
-                    hashCodeAsciiSanitizeInt(value, offset + 4) * HASH_CODE_C2 +
+                    HashCodeAsciiSanitizeInt(value, offset + 4) * HASH_CODE_C2 +
                     // High order int
-                    hashCodeAsciiSanitizeInt(value, offset));
+                    HashCodeAsciiSanitizeInt(value, offset));
         }
         return unchecked(hash * HASH_CODE_C1 +
                 // Low order int
-                hashCodeAsciiSanitizeInt(value, offset) * HASH_CODE_C2 +
+                HashCodeAsciiSanitizeInt(value, offset) * HASH_CODE_C2 +
                 // High order int
-                hashCodeAsciiSanitizeInt(value, offset + 4));
+                HashCodeAsciiSanitizeInt(value, offset + 4));
     }
 
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(int)} but for {@link CharSequence}.
      */
-    private static int hashCodeAsciiSanitizeInt(ICharSequence value, int offset) {
+    private static int HashCodeAsciiSanitizeInt(ICharSequence value, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             // mimic a unsafe.getInt call on a big endian machine
-            return (value.charAt(offset + 3) & 0x1f) |
-                   (value.charAt(offset + 2) & 0x1f) << 8 |
-                   (value.charAt(offset + 1) & 0x1f) << 16 |
-                   (value.charAt(offset) & 0x1f) << 24;
+            return (value.CharAt(offset + 3) & 0x1f) |
+                   (value.CharAt(offset + 2) & 0x1f) << 8 |
+                   (value.CharAt(offset + 1) & 0x1f) << 16 |
+                   (value.CharAt(offset) & 0x1f) << 24;
         }
-        return (value.charAt(offset + 3) & 0x1f) << 24 |
-               (value.charAt(offset + 2) & 0x1f) << 16 |
-               (value.charAt(offset + 1) & 0x1f) << 8 |
-               (value.charAt(offset) & 0x1f);
+        return (value.CharAt(offset + 3) & 0x1f) << 24 |
+               (value.CharAt(offset + 2) & 0x1f) << 16 |
+               (value.CharAt(offset + 1) & 0x1f) << 8 |
+               (value.CharAt(offset) & 0x1f);
     }
 
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(short)} but for {@link CharSequence}.
      */
-    private static int hashCodeAsciiSanitizeShort(ICharSequence value, int offset) {
+    private static int HashCodeAsciiSanitizeShort(ICharSequence value, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
             // mimic a unsafe.getShort call on a big endian machine
-            return (value.charAt(offset + 1) & 0x1f) |
-                    (value.charAt(offset) & 0x1f) << 8;
+            return (value.CharAt(offset + 1) & 0x1f) |
+                    (value.CharAt(offset) & 0x1f) << 8;
         }
-        return (value.charAt(offset + 1) & 0x1f) << 8 |
-                (value.charAt(offset) & 0x1f);
+        return (value.CharAt(offset + 1) & 0x1f) << 8 |
+                (value.CharAt(offset) & 0x1f);
     }
 
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiSanitize(byte)} but for {@link CharSequence}.
      */
-    private static int hashCodeAsciiSanitizeByte(char value) {
+    private static int HashCodeAsciiSanitizeByte(char value) {
         return value & 0x1f;
     }
 
-    public static void putByte(long address, byte value) {
-        PlatformDependent0.putByte(address, value);
+    public static void PutByte(long address, byte value) {
+        PlatformDependent0.PutByte(address, value);
     }
 
-    public static void putShort(long address, short value) {
-        PlatformDependent0.putShort(address, value);
+    public static void PutShort(long address, short value) {
+        PlatformDependent0.PutShort(address, value);
     }
 
-    public static void putInt(long address, int value) {
-        PlatformDependent0.putInt(address, value);
+    public static void PutInt(long address, int value) {
+        PlatformDependent0.PutInt(address, value);
     }
 
-    public static void putLong(long address, long value) {
-        PlatformDependent0.putLong(address, value);
+    public static void PutLong(long address, long value) {
+        PlatformDependent0.PutLong(address, value);
     }
 
-    public static void putByte(byte[] data, int index, byte value) {
+    public static void PutByte(byte[] data, int index, byte value) {
         data[index] = value;
     }
 
-    public static void putShort(byte[] data, int index, short value) {
+    public static void PutShort(byte[] data, int index, short value) {
         MemoryMarshal.Write(data.AsSpan(index, sizeof(short)), in value);
     }
 
-    public static void putInt(byte[] data, int index, int value) {
+    public static void PutInt(byte[] data, int index, int value) {
         MemoryMarshal.Write(data.AsSpan(index, sizeof(int)), in value);
     }
 
-    public static void putLong(byte[] data, int index, long value) {
+    public static void PutLong(byte[] data, int index, long value) {
         MemoryMarshal.Write(data.AsSpan(index, sizeof(long)), in value);
     }
 
-    public static void copyMemory(long srcAddr, long dstAddr, long length) {
-        PlatformDependent0.copyMemory(srcAddr, dstAddr, length);
+    public static void CopyMemory(long srcAddr, long dstAddr, long length) {
+        PlatformDependent0.CopyMemory(srcAddr, dstAddr, length);
     }
 
-    public static void copyMemory(byte[] src, int srcIndex, long dstAddr, long length) {
-        PlatformDependent0.copyMemory(src, BYTE_ARRAY_BASE_OFFSET + srcIndex, null, dstAddr, length);
+    public static void CopyMemory(byte[] src, int srcIndex, long dstAddr, long length) {
+        PlatformDependent0.CopyMemory(src, BYTE_ARRAY_BASE_OFFSET + srcIndex, null, dstAddr, length);
     }
 
-    public static void copyMemory(byte[] src, int srcIndex, byte[] dst, int dstIndex, long length) {
+    public static void CopyMemory(byte[] src, int srcIndex, byte[] dst, int dstIndex, long length) {
         ArgumentNullException.ThrowIfNull(src);
         ArgumentNullException.ThrowIfNull(dst);
         int count = checked((int)length);
@@ -544,17 +544,17 @@ public static class PlatformDependent
         src.AsSpan(srcIndex, count).CopyTo(dst.AsSpan(dstIndex, count));
     }
 
-    public static void copyMemory(long srcAddr, byte[] dst, int dstIndex, long length) {
-        PlatformDependent0.copyMemory(null, srcAddr, dst, BYTE_ARRAY_BASE_OFFSET + dstIndex, length);
+    public static void CopyMemory(long srcAddr, byte[] dst, int dstIndex, long length) {
+        PlatformDependent0.CopyMemory(null, srcAddr, dst, BYTE_ARRAY_BASE_OFFSET + dstIndex, length);
     }
 
-    public static void setMemory(byte[] dst, int dstIndex, long bytes, byte value) {
+    public static void SetMemory(byte[] dst, int dstIndex, long bytes, byte value) {
         ArgumentNullException.ThrowIfNull(dst);
         dst.AsSpan(dstIndex, checked((int)bytes)).Fill(value);
     }
 
-    public static void setMemory(long address, long bytes, byte value) {
-        PlatformDependent0.setMemory(address, bytes, value);
+    public static void SetMemory(long address, long bytes, byte value) {
+        PlatformDependent0.SetMemory(address, bytes, value);
     }
 
 
@@ -567,8 +567,8 @@ public static class PlatformDependent
 
 
 
-    public static long align(long value, int alignment) {
-        return Pow2.align(value, alignment);
+    public static long Align(long value, int alignment) {
+        return Pow2.Align(value, alignment);
     }
 
     /**
@@ -582,15 +582,15 @@ public static class PlatformDependent
      * @param length the amount of bytes to compare. This is assumed to be validated as not going out of bounds
      * by the caller.
      */
-    public static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    public static bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         // CLR adaptation: Span equality is available on the declared target.
         // A JDK-version threshold cannot be applied to Environment.Version.
         if ((startPos2 | startPos1 | (bytes1.Length - length) | bytes2.Length - length) == 0) {
             return bytes1.AsSpan().SequenceEqual(bytes2);
         }
-        return !hasUnsafe() || !unalignedAccess() ?
-                  equalsSafe(bytes1, startPos1, bytes2, startPos2, length) :
-                  PlatformDependent0.equals(bytes1, startPos1, bytes2, startPos2, length);
+        return !HasUnsafe() || !UnalignedAccess() ?
+                  EqualsSafe(bytes1, startPos1, bytes2, startPos2, length) :
+                  PlatformDependent0.Equals(bytes1, startPos1, bytes2, startPos2, length);
     }
 
     /**
@@ -600,10 +600,10 @@ public static class PlatformDependent
      * @param length The amount of bytes to check for zero.
      * @return {@code false} if {@code bytes[startPos:startsPos+length)} contains a value other than zero.
      */
-    public static bool isZero(byte[] bytes, int startPos, int length) {
-        return !hasUnsafe() || !unalignedAccess() ?
-                isZeroSafe(bytes, startPos, length) :
-                PlatformDependent0.isZero(bytes, startPos, length);
+    public static bool IsZero(byte[] bytes, int startPos, int length) {
+        return !HasUnsafe() || !UnalignedAccess() ?
+                IsZeroSafe(bytes, startPos, length) :
+                PlatformDependent0.IsZero(bytes, startPos, length);
     }
 
     /**
@@ -627,10 +627,10 @@ public static class PlatformDependent
      * by the caller.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
-        return !hasUnsafe() || !unalignedAccess() ?
-                  ConstantTimeUtils.equalsConstantTime(bytes1, startPos1, bytes2, startPos2, length) :
-                  PlatformDependent0.equalsConstantTime(bytes1, startPos1, bytes2, startPos2, length);
+    public static int EqualsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+        return !HasUnsafe() || !UnalignedAccess() ?
+                  ConstantTimeUtils.EqualsConstantTime(bytes1, startPos1, bytes2, startPos2, length) :
+                  PlatformDependent0.EqualsConstantTime(bytes1, startPos1, bytes2, startPos2, length);
     }
 
     /**
@@ -642,16 +642,16 @@ public static class PlatformDependent
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      */
-    public static int hashCodeAscii(byte[] bytes, int startPos, int length) {
-        return !hasUnsafe() || !unalignedAccess() ?
-                hashCodeAsciiSafe(bytes, startPos, length) :
-                PlatformDependent0.hashCodeAscii(bytes, startPos, length);
+    public static int HashCodeAscii(byte[] bytes, int startPos, int length) {
+        return !HasUnsafe() || !UnalignedAccess() ?
+                HashCodeAsciiSafe(bytes, startPos, length) :
+                PlatformDependent0.HashCodeAscii(bytes, startPos, length);
     }
 
-    public static int hashCodeAscii(string bytes)
+    public static int HashCodeAscii(string bytes)
     {
         var scs = new StringCharSequence(bytes);
-        return hashCodeAscii(scs);
+        return HashCodeAscii(scs);
     }
 
     /**
@@ -664,9 +664,9 @@ public static class PlatformDependent
      * @return The hash code of {@code bytes} assuming ASCII character encoding.
      * The resulting hash code will be case insensitive.
      */
-    public static int hashCodeAscii(ICharSequence bytes)
+    public static int HashCodeAscii(ICharSequence bytes)
     {
-        int length = bytes.length();
+        int length = bytes.Length();
         int remainingBytes = length & 7;
         int hash = HASH_CODE_ASCII_SEED;
         // Benchmarking shows that by just naively looping for inputs 8~31 bytes long we incur a relatively large
@@ -674,14 +674,14 @@ public static class PlatformDependent
         // of this we take special provisions to unroll the looping for these conditions.
         if (length >= 32) {
             for (int i = length - 8; i >= remainingBytes; i -= 8) {
-                hash = hashCodeAsciiCompute(bytes, i, hash);
+                hash = HashCodeAsciiCompute(bytes, i, hash);
             }
         } else if (length >= 8) {
-            hash = hashCodeAsciiCompute(bytes, length - 8, hash);
+            hash = HashCodeAsciiCompute(bytes, length - 8, hash);
             if (length >= 16) {
-                hash = hashCodeAsciiCompute(bytes, length - 16, hash);
+                hash = HashCodeAsciiCompute(bytes, length - 16, hash);
                 if (length >= 24) {
-                    hash = hashCodeAsciiCompute(bytes, length - 24, hash);
+                    hash = HashCodeAsciiCompute(bytes, length - 24, hash);
                 }
             }
         }
@@ -690,17 +690,17 @@ public static class PlatformDependent
         }
         int offset = 0;
         if (remainingBytes != 2 & remainingBytes != 4 & remainingBytes != 6) { // 1, 3, 5, 7
-            hash = unchecked(hash * HASH_CODE_C1 + hashCodeAsciiSanitizeByte(bytes.charAt(0)));
+            hash = unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitizeByte(bytes.CharAt(0)));
             offset = 1;
         }
         if (remainingBytes != 1 & remainingBytes != 4 & remainingBytes != 5) { // 2, 3, 6, 7
             hash = unchecked(hash * (offset == 0 ? HASH_CODE_C1 : HASH_CODE_C2)
-                    + hashCodeAsciiSanitize(hashCodeAsciiSanitizeShort(bytes, offset)));
+                    + HashCodeAsciiSanitize(HashCodeAsciiSanitizeShort(bytes, offset)));
             offset += 2;
         }
         if (remainingBytes >= 4) { // 4, 5, 6, 7
             return unchecked(hash * ((offset == 0 | offset == 3) ? HASH_CODE_C1 : HASH_CODE_C2)
-                    + hashCodeAsciiSanitizeInt(bytes, offset));
+                    + HashCodeAsciiSanitizeInt(bytes, offset));
         }
         return hash;
     }
@@ -710,16 +710,16 @@ public static class PlatformDependent
      * consumer (one thread!).
      * @return A MPSC queue which may be unbounded.
      */
-    public static IQueue<T> newMpscQueue<T>() {
-        return Mpsc.newMpscQueue<T>();
+    public static IQueue<T> NewMpscQueue<T>() {
+        return Mpsc.NewMpscQueue<T>();
     }
 
     /**
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!).
      */
-    public static IQueue<T> newMpscQueue<T>(int maxCapacity) {
-        return Mpsc.newMpscQueue<T>(maxCapacity);
+    public static IQueue<T> NewMpscQueue<T>(int maxCapacity) {
+        return Mpsc.NewMpscQueue<T>(maxCapacity);
     }
 
     /**
@@ -727,15 +727,15 @@ public static class PlatformDependent
      * consumer (one thread!).
      * The queue will grow and shrink its capacity in units of the given chunk size.
      */
-    public static IQueue<T> newMpscQueue<T>(int chunkSize, int maxCapacity) {
-        return Mpsc.newChunkedMpscQueue<T>(chunkSize, maxCapacity);
+    public static IQueue<T> NewMpscQueue<T>(int chunkSize, int maxCapacity) {
+        return Mpsc.NewChunkedMpscQueue<T>(chunkSize, maxCapacity);
     }
 
     /**
      * Create a new {@link Queue} which is safe to use for single producer (one thread!) and a single
      * consumer (one thread!).
      */
-    public static IQueue<T> newSpscQueue<T>() {
+    public static IQueue<T> NewSpscQueue<T>() {
         throw new NotImplementedException();
         //return hasUnsafe() ? new SpscLinkedQueue<T>() : new SpscLinkedAtomicQueue<T>();
     }
@@ -744,7 +744,7 @@ public static class PlatformDependent
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
      * consumer (one thread!) with the given fixes {@code capacity}.
      */
-    public static IQueue<T> newFixedMpscQueue<T>(int capacity) {
+    public static IQueue<T> NewFixedMpscQueue<T>(int capacity) {
         throw new NotImplementedException();
         //return hasUnsafe() ? new MpscArrayQueue<T>(capacity) : new MpscAtomicArrayQueue<T>(capacity);
     }
@@ -754,7 +754,7 @@ public static class PlatformDependent
      * consumer (one thread!) with the given fixes {@code capacity}.<br>
      * This should be preferred to {@link #newFixedMpscQueue(int)} when the queue is not to be heavily contended.
      */
-    public static IQueue<T> newFixedMpscUnpaddedQueue<T>(int capacity) {
+    public static IQueue<T> NewFixedMpscUnpaddedQueue<T>(int capacity) {
         throw new NotImplementedException();
         //return hasUnsafe() ? new MpscUnpaddedArrayQueue<T>(capacity) : new MpscAtomicUnpaddedArrayQueue<T>(capacity);
     }
@@ -763,7 +763,7 @@ public static class PlatformDependent
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and multiple
      * consumers with the given fixes {@code capacity}.
      */
-    public static IQueue<T> newFixedMpmcQueue<T>(int capacity) {
+    public static IQueue<T> NewFixedMpmcQueue<T>(int capacity) {
         throw new NotImplementedException();
         //return hasUnsafe() ? new MpmcArrayQueue<T>(capacity) : new MpmcAtomicArrayQueue<T>(capacity);
     }
@@ -771,28 +771,28 @@ public static class PlatformDependent
     /**
      * Return the {@link ClassLoader} for the given {@link Class}.
      */
-    public static Assembly getClassLoader(Type clazz) {
-        return PlatformDependent0.getClassLoader(clazz);
+    public static Assembly GetClassLoader(Type clazz) {
+        return PlatformDependent0.GetClassLoader(clazz);
     }
 
     /**
      * Return the context {@link ClassLoader} for the current {@link Thread}.
      */
-    public static Assembly getContextClassLoader() {
-        return PlatformDependent0.getContextClassLoader();
+    public static Assembly GetContextClassLoader() {
+        return PlatformDependent0.GetContextClassLoader();
     }
 
     /**
      * Return the system {@link ClassLoader}.
      */
-    public static Assembly getSystemClassLoader() {
-        return PlatformDependent0.getSystemClassLoader();
+    public static Assembly GetSystemClassLoader() {
+        return PlatformDependent0.GetSystemClassLoader();
     }
 
     /**
      * Returns a new concurrent {@link Deque}.
      */
-    public static IQueue<C> newConcurrentDeque<C>()
+    public static IQueue<C> NewConcurrentDeque<C>()
     {
         throw new NotImplementedException();
         //return new ConcurrentLinkedDeque<C>();
@@ -803,30 +803,30 @@ public static class PlatformDependent
      * @deprecated Use ThreadLocalRandom.current() instead.
      */
     [Obsolete]
-    public static Random threadLocalRandom() {
-        return ThreadLocalRandom.current();
+    public static Random ThreadLocalRandom() {
+        return global::Netty.NET.Common.Internal.ThreadLocalRandom.Current();
     }
 
-    private static bool isWindows0()
+    private static bool IsWindows0()
     {
         bool windows = string.Equals("windows", NORMALIZED_OS, StringComparison.OrdinalIgnoreCase);
         if (windows) {
-            logger.debug("Platform: Windows");
+            logger.Debug("Platform: Windows");
         }
         return windows;
     }
 
-    private static bool isOsx0() {
+    private static bool IsOsx0() {
         bool osx = string.Equals("osx", NORMALIZED_OS, StringComparison.OrdinalIgnoreCase);
         if (osx) {
-            logger.debug("Platform: MacOS");
+            logger.Debug("Platform: MacOS");
         }
         return osx;
     }
 
-    private static bool maybeSuperUser0() {
-        string username = SystemPropertyUtil.get("user.name");
-        if (isWindows())
+    private static bool MaybeSuperUser0() {
+        string username = SystemPropertyUtil.Get("user.name");
+        if (IsWindows())
         {
             return "Administrator" == username;
         }
@@ -834,28 +834,28 @@ public static class PlatformDependent
         return "root" == username || "toor" == username;
     }
 
-    private static Exception unsafeUnavailabilityCause0() {
-        if (isAndroid()) {
-            logger.debug("sun.misc.Unsafe: unavailable (Android)");
+    private static Exception UnsafeUnavailabilityCause0() {
+        if (IsAndroid()) {
+            logger.Debug("sun.misc.Unsafe: unavailable (Android)");
             return new NotSupportedException("sun.misc.Unsafe: unavailable (Android)");
         }
 
-        if (isIkvmDotNet()) {
-            logger.debug("sun.misc.Unsafe: unavailable (IKVM.NET)");
+        if (IsIkvmDotNet()) {
+            logger.Debug("sun.misc.Unsafe: unavailable (IKVM.NET)");
             return new NotSupportedException("sun.misc.Unsafe: unavailable (IKVM.NET)");
         }
 
-        Exception cause = PlatformDependent0.getUnsafeUnavailabilityCause();
+        Exception cause = PlatformDependent0.GetUnsafeUnavailabilityCause();
         if (cause != null) {
             return cause;
         }
 
         try {
-            bool hasUnsafe = PlatformDependent0.hasUnsafe();
-            logger.debug("sun.misc.Unsafe: {}", hasUnsafe ? "available" : "unavailable");
+            bool hasUnsafe = PlatformDependent0.HasUnsafe();
+            logger.Debug("sun.misc.Unsafe: {}", hasUnsafe ? "available" : "unavailable");
             return null;
         } catch (Exception t) {
-            logger.trace("Could not determine if Unsafe is available", t);
+            logger.Trace("Could not determine if Unsafe is available", t);
             // Probably failed to initialize PlatformDependent0.
             return new NotSupportedException("Could not determine if Unsafe is available", t);
         }
@@ -865,24 +865,24 @@ public static class PlatformDependent
      * Returns {@code true} if the running JVM is either <a href="https://developer.ibm.com/javasdk/">IBM J9</a> or
      * <a href="https://www.eclipse.org/openj9/">Eclipse OpenJ9</a>, {@code false} otherwise.
      */
-    public static bool isJ9Jvm() {
+    public static bool IsJ9Jvm() {
         return IS_J9_JVM;
     }
 
-    private static bool isJ9Jvm0() {
-        string vmName = SystemPropertyUtil.get("java.vm.name", "").ToLower();
+    private static bool IsJ9Jvm0() {
+        string vmName = SystemPropertyUtil.Get("java.vm.name", "").ToLower();
         return vmName.StartsWith("ibm j9") || vmName.StartsWith("eclipse openj9");
     }
 
     /**
      * Returns {@code true} if the running JVM is <a href="https://www.ikvm.net">IKVM.NET</a>, {@code false} otherwise.
      */
-    public static bool isIkvmDotNet() {
+    public static bool IsIkvmDotNet() {
         return IS_IVKVM_DOT_NET;
     }
 
-    private static bool isIkvmDotNet0() {
-        string vmName = SystemPropertyUtil.get(".name", "").ToUpper(CultureInfo.GetCultureInfo("en-US"));
+    private static bool IsIkvmDotNet0() {
+        string vmName = SystemPropertyUtil.Get(".name", "").ToUpper(CultureInfo.GetCultureInfo("en-US"));
         return vmName.Equals("IKVM.NET");
     }
 
@@ -897,47 +897,47 @@ public static class PlatformDependent
      */
     //@SuppressWarnings("unchecked")
 
-    private static DirectoryInfo tmpdir0() {
+    private static DirectoryInfo Tmpdir0() {
         DirectoryInfo f;
         try {
-            f = toDirectory(SystemPropertyUtil.get("io.netty.tmpdir"));
+            f = ToDirectory(SystemPropertyUtil.Get("io.netty.tmpdir"));
             if (f != null) {
-                logger.debug("-Dio.netty.tmpdir: {}", f);
+                logger.Debug("-Dio.netty.tmpdir: {}", f);
                 return f;
             }
 
-            f = toDirectory(SystemPropertyUtil.get("java.io.tmpdir", Path.GetTempPath()));
+            f = ToDirectory(SystemPropertyUtil.Get("java.io.tmpdir", Path.GetTempPath()));
             if (f != null) {
-                logger.debug("-Dio.netty.tmpdir: {} (java.io.tmpdir)", f);
+                logger.Debug("-Dio.netty.tmpdir: {} (java.io.tmpdir)", f);
                 return f;
             }
 
             // This shouldn't happen, but just in case ..
-            if (isWindows()) {
-                f = toDirectory(Environment.GetEnvironmentVariable("TEMP"));
+            if (IsWindows()) {
+                f = ToDirectory(Environment.GetEnvironmentVariable("TEMP"));
                 if (f != null) {
-                    logger.debug("-Dio.netty.tmpdir: {} (%TEMP%)", f);
+                    logger.Debug("-Dio.netty.tmpdir: {} (%TEMP%)", f);
                     return f;
                 }
 
                 string userprofile = Environment.GetEnvironmentVariable("USERPROFILE");
                 if (userprofile != null) {
-                    f = toDirectory(userprofile + "\\AppData\\Local\\Temp");
+                    f = ToDirectory(userprofile + "\\AppData\\Local\\Temp");
                     if (f != null) {
-                        logger.debug("-Dio.netty.tmpdir: {} (%USERPROFILE%\\AppData\\Local\\Temp)", f);
+                        logger.Debug("-Dio.netty.tmpdir: {} (%USERPROFILE%\\AppData\\Local\\Temp)", f);
                         return f;
                     }
 
-                    f = toDirectory(userprofile + "\\Local Settings\\Temp");
+                    f = ToDirectory(userprofile + "\\Local Settings\\Temp");
                     if (f != null) {
-                        logger.debug("-Dio.netty.tmpdir: {} (%USERPROFILE%\\Local Settings\\Temp)", f);
+                        logger.Debug("-Dio.netty.tmpdir: {} (%USERPROFILE%\\Local Settings\\Temp)", f);
                         return f;
                     }
                 }
             } else {
-                f = toDirectory(Environment.GetEnvironmentVariable("TMPDIR"));
+                f = ToDirectory(Environment.GetEnvironmentVariable("TMPDIR"));
                 if (f != null) {
-                    logger.debug("-Dio.netty.tmpdir: {} ($TMPDIR)", f);
+                    logger.Debug("-Dio.netty.tmpdir: {} ($TMPDIR)", f);
                     return f;
                 }
             }
@@ -946,18 +946,18 @@ public static class PlatformDependent
         }
 
         // Last resort.
-        if (isWindows()) {
+        if (IsWindows()) {
             f = new DirectoryInfo("C:\\Windows\\Temp");
         } else {
             f = new DirectoryInfo("/tmp");
         }
 
-        logger.warn("Failed to get the temporary directory; falling back to: {}", f);
+        logger.Warn("Failed to get the temporary directory; falling back to: {}", f);
         return f;
     }
 
     //@SuppressWarnings("ResultOfMethodCallIgnored")
-    private static DirectoryInfo toDirectory(string path) {
+    private static DirectoryInfo ToDirectory(string path) {
         if (path == null)
             return null;
 
@@ -979,28 +979,28 @@ public static class PlatformDependent
         }
     }
 
-    private static int bitMode0() {
+    private static int BitMode0() {
         // Check user-specified bit mode first.
-        int bitMode = SystemPropertyUtil.getInt("io.netty.bitMode", 0);
+        int bitMode = SystemPropertyUtil.GetInt("io.netty.bitMode", 0);
         if (bitMode > 0) {
-            logger.debug("-Dio.netty.bitMode: {}", bitMode);
+            logger.Debug("-Dio.netty.bitMode: {}", bitMode);
             return bitMode;
         }
 
         // And then the vendor specific ones which is probably most reliable.
-        bitMode = SystemPropertyUtil.getInt("sun.arch.data.model", 0);
+        bitMode = SystemPropertyUtil.GetInt("sun.arch.data.model", 0);
         if (bitMode > 0) {
-            logger.debug("-Dio.netty.bitMode: {} (sun.arch.data.model)", bitMode);
+            logger.Debug("-Dio.netty.bitMode: {} (sun.arch.data.model)", bitMode);
             return bitMode;
         }
-        bitMode = SystemPropertyUtil.getInt("com.ibm.vm.bitmode", 0);
+        bitMode = SystemPropertyUtil.GetInt("com.ibm.vm.bitmode", 0);
         if (bitMode > 0) {
-            logger.debug("-Dio.netty.bitMode: {} (com.ibm.vm.bitmode)", bitMode);
+            logger.Debug("-Dio.netty.bitMode: {} (com.ibm.vm.bitmode)", bitMode);
             return bitMode;
         }
 
         // os.arch also gives us a good hint.
-        string arch = SystemPropertyUtil.get("os.arch", "").ToLower(CultureInfo.GetCultureInfo("en-US")).Trim();
+        string arch = SystemPropertyUtil.Get("os.arch", "").ToLower(CultureInfo.GetCultureInfo("en-US")).Trim();
         if ("amd64".Equals(arch) || "x86_64".Equals(arch)) {
             bitMode = 64;
         } else if ("i386".Equals(arch) || "i486".Equals(arch) || "i586".Equals(arch) || "i686".Equals(arch)) {
@@ -1008,11 +1008,11 @@ public static class PlatformDependent
         }
 
         if (bitMode > 0) {
-            logger.debug("-Dio.netty.bitMode: {} (os.arch: {})", bitMode, arch);
+            logger.Debug("-Dio.netty.bitMode: {} (os.arch: {})", bitMode, arch);
         }
 
         // Last resort: guess from VM name and then fall back to most common 64-bit mode.
-        string vm = SystemPropertyUtil.get("java.vm.name", "").ToLower(CultureInfo.GetCultureInfo("en-US"));
+        string vm = SystemPropertyUtil.Get("java.vm.name", "").ToLower(CultureInfo.GetCultureInfo("en-US"));
         Regex bitPattern = new Regex("([1-9][0-9]+)-?bit");
         var m = bitPattern.Match(vm);
         if (m.Success) {
@@ -1023,19 +1023,19 @@ public static class PlatformDependent
         }
     }
 
-    private static int addressSize0() {
+    private static int AddressSize0() {
         // CLR pointer width is available independently of JVM Unsafe.
         return IntPtr.Size;
     }
 
-    private static long byteArrayBaseOffset0() {
-        if (!hasUnsafe()) {
+    private static long ByteArrayBaseOffset0() {
+        if (!HasUnsafe()) {
             return -1;
         }
-        return PlatformDependent0.byteArrayBaseOffset();
+        return PlatformDependent0.ByteArrayBaseOffset();
     }
 
-    private static bool equalsSafe(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
+    private static bool EqualsSafe(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         int end = startPos1 + length;
         for (; startPos1 < end; ++startPos1, ++startPos2) {
             if (bytes1[startPos1] != bytes2[startPos2]) {
@@ -1045,7 +1045,7 @@ public static class PlatformDependent
         return true;
     }
 
-    private static bool isZeroSafe(byte[] bytes, int startPos, int length) {
+    private static bool IsZeroSafe(byte[] bytes, int startPos, int length) {
         int end = startPos + length;
         for (; startPos < end; ++startPos) {
             if (bytes[startPos] != 0) {
@@ -1058,51 +1058,51 @@ public static class PlatformDependent
     /**
      * Package private for testing purposes only!
      */
-    public static int hashCodeAsciiSafe(byte[] bytes, int startPos, int length) {
+    public static int HashCodeAsciiSafe(byte[] bytes, int startPos, int length) {
         int hash = HASH_CODE_ASCII_SEED;
         int remainingBytes = length & 7;
         int end = startPos + remainingBytes;
         for (int i = startPos - 8 + length; i >= end; i -= 8) {
-            hash = PlatformDependent0.hashCodeAsciiCompute(getLongSafe(bytes, i), hash);
+            hash = PlatformDependent0.HashCodeAsciiCompute(GetLongSafe(bytes, i), hash);
         }
         switch(remainingBytes) {
         case 7:
-            return unchecked(((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
-                          * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1)))
-                          * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 3)));
+            return unchecked(((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(bytes[startPos]))
+                          * HASH_CODE_C2 + HashCodeAsciiSanitize(GetShortSafe(bytes, startPos + 1)))
+                          * HASH_CODE_C1 + HashCodeAsciiSanitize(GetIntSafe(bytes, startPos + 3)));
         case 6:
-            return unchecked((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos)))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 2)));
+            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(GetShortSafe(bytes, startPos)))
+                         * HASH_CODE_C2 + HashCodeAsciiSanitize(GetIntSafe(bytes, startPos + 2)));
         case 5:
-            return unchecked((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 1)));
+            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(bytes[startPos]))
+                         * HASH_CODE_C2 + HashCodeAsciiSanitize(GetIntSafe(bytes, startPos + 1)));
         case 4:
-            return unchecked(hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos)));
+            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(GetIntSafe(bytes, startPos)));
         case 3:
-            return unchecked((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1)));
+            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(bytes[startPos]))
+                         * HASH_CODE_C2 + HashCodeAsciiSanitize(GetShortSafe(bytes, startPos + 1)));
         case 2:
-            return unchecked(hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos)));
+            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(GetShortSafe(bytes, startPos)));
         case 1:
-            return unchecked(hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]));
+            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(bytes[startPos]));
         default:
             return hash;
         }
     }
 
-    public static string normalizedArch() {
+    public static string NormalizedArch() {
         return NORMALIZED_ARCH;
     }
 
-    public static string normalizedOs() {
+    public static string NormalizedOs() {
         return NORMALIZED_OS;
     }
 
-    public static ISet<string> normalizedLinuxClassifiers() {
+    public static ISet<string> NormalizedLinuxClassifiers() {
         return LINUX_OS_CLASSIFIERS;
     }
 
-    public static FileInfo createTempFile(string prefix, string suffix, FileInfo directory) {
+    public static FileInfo CreateTempFile(string prefix, string suffix, FileInfo directory) {
         string dirPath = directory?.FullName ?? Path.GetTempPath();
 
         var randomFileName =Path.GetRandomFileName();
@@ -1122,15 +1122,15 @@ public static class PlatformDependent
      * @param dest             destination set
      * @param maybeClassifiers potential classifiers to add
      */
-    private static void addClassifier(ISet<string> dest, params string[] maybeClassifiers) {
+    private static void AddClassifier(ISet<string> dest, params string[] maybeClassifiers) {
         foreach (string id in maybeClassifiers) {
-            if (isAllowedClassifier(id)) {
+            if (IsAllowedClassifier(id)) {
                 dest.Add(id);
             }
         }
     }
     // keep in sync with maven's pom.xml via os.detection.classifierWithLikes!
-    private static bool isAllowedClassifier(string classifier) {
+    private static bool IsAllowedClassifier(string classifier) {
         switch (classifier) {
             case "fedora":
             case "suse":
@@ -1142,7 +1142,7 @@ public static class PlatformDependent
     }
 
     //replaces value.trim().replaceAll("[\"']", "") to avoid regexp overhead
-    private static string normalizeOsReleaseVariableValue(string value) {
+    private static string NormalizeOsReleaseVariableValue(string value) {
         string trimmed = value.Trim();
         StringBuilder sb = new StringBuilder(trimmed.Length);
         for (int i = 0; i < trimmed.Length; i++) {
@@ -1155,7 +1155,7 @@ public static class PlatformDependent
     }
 
     //replaces value.toLowerCase(CultureInfo.GetCultureInfo("en-US")).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
-    private static string normalize(string value) {
+    private static string Normalize(string value) {
         StringBuilder sb = new StringBuilder(value.Length);
         for (int i = 0; i < value.Length; i++) {
             char c = char.ToLowerInvariant(value[i]);
@@ -1166,8 +1166,8 @@ public static class PlatformDependent
         return sb.ToString();
     }
 
-    private static string normalizeArch(string value) {
-        value = normalize(value);
+    private static string NormalizeArch(string value) {
+        value = Normalize(value);
         switch (value) {
             case "x8664":
             case "amd64":
@@ -1233,7 +1233,7 @@ public static class PlatformDependent
         }
     }
 
-    public static string normalizeRuntime()
+    public static string NormalizeRuntime()
     {
         // dotnet version
         string desc = RuntimeInformation.FrameworkDescription ?? "Unknown CLR";
@@ -1257,8 +1257,8 @@ public static class PlatformDependent
         return desc; // fallback (NativeAOT, Wasm 등)
     }
 
-    private static string normalizeOs(string value) {
-        value = normalize(value);
+    private static string NormalizeOs(string value) {
+        value = Normalize(value);
         if (value.StartsWith("aix")) {
             return "aix";
         }
@@ -1299,7 +1299,7 @@ public static class PlatformDependent
     /**
      * Check if JFR events are supported on this platform.
      */
-    public static bool isJfrEnabled() {
+    public static bool IsJfrEnabled() {
         return JFR;
     }
 

@@ -30,7 +30,7 @@ public class InternalLoggerFactoryTest : IDisposable
 
     public InternalLoggerFactoryTest()
     {
-        oldLoggerFactory = InternalLoggerFactory.getDefaultFactory();
+        oldLoggerFactory = InternalLoggerFactory.GetDefaultFactory();
 
         InternalLoggerFactory mockFactory = Mock.Of<InternalLoggerFactory>();
         mockLogger = Mock.Of<IInternalLogger>();
@@ -38,35 +38,35 @@ public class InternalLoggerFactoryTest : IDisposable
         // CLR tests share process-wide factories with background executors.
         // Only the observed category is mocked; unrelated logger creation
         // must still return a real logger even during this exclusive test.
-        Mock.Get(mockFactory).Setup(x => x.newInstance(It.IsAny<string>()))
-            .Returns((string name) => name == "mock" ? mockLogger : oldLoggerFactory.newInstance(name));
-        InternalLoggerFactory.setDefaultFactory(mockFactory);
+        Mock.Get(mockFactory).Setup(x => x.NewInstance(It.IsAny<string>()))
+            .Returns((string name) => name == "mock" ? mockLogger : oldLoggerFactory.NewInstance(name));
+        InternalLoggerFactory.SetDefaultFactory(mockFactory);
     }
 
     public void Dispose()
     {
         Mock.Get(mockLogger).Reset();
-        InternalLoggerFactory.setDefaultFactory(oldLoggerFactory);
+        InternalLoggerFactory.SetDefaultFactory(oldLoggerFactory);
     }
 
     [Fact]
-    public void shouldNotAllowNullDefaultFactory()
+    public void ShouldNotAllowNullDefaultFactory()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            InternalLoggerFactory.setDefaultFactory(null);
+            InternalLoggerFactory.SetDefaultFactory(null);
         });
     }
 
     [Fact]
-    public void shouldGetInstance()
+    public void ShouldGetInstance()
     {
-        InternalLoggerFactory.setDefaultFactory(oldLoggerFactory);
+        InternalLoggerFactory.SetDefaultFactory(oldLoggerFactory);
 
         string helloWorld = "Hello, world!";
 
-        IInternalLogger one = InternalLoggerFactory.getInstance("helloWorld");
-        IInternalLogger two = InternalLoggerFactory.getInstance(helloWorld.GetType());
+        IInternalLogger one = InternalLoggerFactory.GetInstance("helloWorld");
+        IInternalLogger two = InternalLoggerFactory.GetInstance(helloWorld.GetType());
 
         Assert.NotNull(one);
         Assert.NotNull(two);
@@ -74,133 +74,133 @@ public class InternalLoggerFactoryTest : IDisposable
     }
 
     [Fact]
-    public void testIsTraceEnabled()
+    public void TestIsTraceEnabled()
     {
-        Mock.Get(mockLogger).Setup(x => x.isTraceEnabled()).Returns(true);
+        Mock.Get(mockLogger).Setup(x => x.IsTraceEnabled()).Returns(true);
 
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        Assert.True(logger.isTraceEnabled());
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        Assert.True(logger.IsTraceEnabled());
         
-        Mock.Get(mockLogger).Verify(x => x.isTraceEnabled(), Times.Once);
+        Mock.Get(mockLogger).Verify(x => x.IsTraceEnabled(), Times.Once);
     }
 
     [Fact]
-    public void testIsDebugEnabled()
+    public void TestIsDebugEnabled()
     {
-        Mock.Get(mockLogger).Setup(x => x.isDebugEnabled()).Returns(true);
+        Mock.Get(mockLogger).Setup(x => x.IsDebugEnabled()).Returns(true);
 
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        Assert.True(logger.isDebugEnabled());
-        Mock.Get(mockLogger).Verify(x => x.isDebugEnabled(), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        Assert.True(logger.IsDebugEnabled());
+        Mock.Get(mockLogger).Verify(x => x.IsDebugEnabled(), Times.Once);
     }
 
     [Fact]
-    public void testIsInfoEnabled()
+    public void TestIsInfoEnabled()
     {
-        Mock.Get(mockLogger).Setup(x => x.isInfoEnabled()).Returns(true);
+        Mock.Get(mockLogger).Setup(x => x.IsInfoEnabled()).Returns(true);
 
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        Assert.True(logger.isInfoEnabled());
-        Mock.Get(mockLogger).Verify(x => x.isInfoEnabled(), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        Assert.True(logger.IsInfoEnabled());
+        Mock.Get(mockLogger).Verify(x => x.IsInfoEnabled(), Times.Once);
     }
 
     [Fact]
-    public void testIsWarnEnabled()
+    public void TestIsWarnEnabled()
     {
-        Mock.Get(mockLogger).Setup(x => x.isWarnEnabled()).Returns(true);
+        Mock.Get(mockLogger).Setup(x => x.IsWarnEnabled()).Returns(true);
 
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        Assert.True(logger.isWarnEnabled());
-        Mock.Get(mockLogger).Verify(x => x.isWarnEnabled(), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        Assert.True(logger.IsWarnEnabled());
+        Mock.Get(mockLogger).Verify(x => x.IsWarnEnabled(), Times.Once);
     }
 
     [Fact]
-    public void testIsErrorEnabled()
+    public void TestIsErrorEnabled()
     {
-        Mock.Get(mockLogger).Setup(x => x.isErrorEnabled()).Returns(true);
+        Mock.Get(mockLogger).Setup(x => x.IsErrorEnabled()).Returns(true);
 
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        Assert.True(logger.isErrorEnabled());
-        Mock.Get(mockLogger).Verify(x => x.isErrorEnabled(), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        Assert.True(logger.IsErrorEnabled());
+        Mock.Get(mockLogger).Verify(x => x.IsErrorEnabled(), Times.Once);
     }
 
     [Fact]
-    public void testTrace()
+    public void TestTrace()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.trace("a");
-        Mock.Get(mockLogger).Verify(x => x.trace("a"), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Trace("a");
+        Mock.Get(mockLogger).Verify(x => x.Trace("a"), Times.Once);
     }
 
     [Fact]
-    public void testTraceWithException()
+    public void TestTraceWithException()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.trace("a", e);
-        Mock.Get(mockLogger).Verify(x => x.trace("a", e), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Trace("a", e);
+        Mock.Get(mockLogger).Verify(x => x.Trace("a", e), Times.Once);
     }
 
     [Fact]
-    public void testDebug()
+    public void TestDebug()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.debug("a");
-        Mock.Get(mockLogger).Verify(x => x.debug("a"), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Debug("a");
+        Mock.Get(mockLogger).Verify(x => x.Debug("a"), Times.Once);
     }
 
     [Fact]
-    public void testDebugWithException()
+    public void TestDebugWithException()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.debug("a", e);
-        Mock.Get(mockLogger).Verify(x => x.debug("a", e), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Debug("a", e);
+        Mock.Get(mockLogger).Verify(x => x.Debug("a", e), Times.Once);
     }
 
     [Fact]
-    public void testInfo()
+    public void TestInfo()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.info("a");
-        Mock.Get(mockLogger).Verify(x => x.info("a"), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Info("a");
+        Mock.Get(mockLogger).Verify(x => x.Info("a"), Times.Once);
     }
 
     [Fact]
-    public void testInfoWithException()
+    public void TestInfoWithException()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.info("a", e);
-        Mock.Get(mockLogger).Verify(x => x.info("a", e), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Info("a", e);
+        Mock.Get(mockLogger).Verify(x => x.Info("a", e), Times.Once);
     }
 
     [Fact]
-    public void testWarn()
+    public void TestWarn()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.warn("a");
-        Mock.Get(mockLogger).Verify(x => x.warn("a"), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Warn("a");
+        Mock.Get(mockLogger).Verify(x => x.Warn("a"), Times.Once);
     }
 
     [Fact]
-    public void testWarnWithException()
+    public void TestWarnWithException()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.warn("a", e);
-        Mock.Get(mockLogger).Verify(x => x.warn("a", e), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Warn("a", e);
+        Mock.Get(mockLogger).Verify(x => x.Warn("a", e), Times.Once);
     }
 
     [Fact]
-    public void testError()
+    public void TestError()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.error("a");
-        Mock.Get(mockLogger).Verify(x => x.error("a"), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Error("a");
+        Mock.Get(mockLogger).Verify(x => x.Error("a"), Times.Once);
     }
 
     [Fact]
-    public void testErrorWithException()
+    public void TestErrorWithException()
     {
-        IInternalLogger logger = InternalLoggerFactory.getInstance("mock");
-        logger.error("a", e);
-        Mock.Get(mockLogger).Verify(x => x.error("a", e), Times.Once);
+        IInternalLogger logger = InternalLoggerFactory.GetInstance("mock");
+        logger.Error("a", e);
+        Mock.Get(mockLogger).Verify(x => x.Error("a", e), Times.Once);
     }
 }

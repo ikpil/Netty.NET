@@ -35,31 +35,31 @@ public interface IReferenceCounted
     /**
      * Returns the reference count of this object.  If {@code 0}, it means this object has been deallocated.
      */
-    int refCnt();
+    int RefCnt();
 
     /**
      * Increases the reference count by {@code 1}.
      */
-    IReferenceCounted retain();
+    IReferenceCounted Retain();
 
     /**
      * Increases the reference count by the specified {@code increment}.
      */
-    IReferenceCounted retain(int increment);
+    IReferenceCounted Retain(int increment);
 
     /**
      * Records the current access location of this object for debugging purposes.
      * If this object is determined to be leaked, the information recorded by this operation will be provided to you
      * via {@link ResourceLeakDetector}.  This method is a shortcut to {@link #touch(object) touch(null)}.
      */
-    IReferenceCounted touch();
+    IReferenceCounted Touch();
 
     /**
      * Records the current access location of this object with an additional arbitrary information for debugging
      * purposes.  If this object is determined to be leaked, the information recorded by this operation will be
      * provided to you via {@link ResourceLeakDetector}.
      */
-    IReferenceCounted touch(object hint);
+    IReferenceCounted Touch(object hint);
 
     /**
      * Decreases the reference count by {@code 1} and deallocates this object if the reference count reaches at
@@ -67,7 +67,7 @@ public interface IReferenceCounted
      *
      * @return {@code true} if and only if the reference count became {@code 0} and this object has been deallocated
      */
-    bool release();
+    bool Release();
 
     /**
      * Decreases the reference count by the specified {@code decrement} and deallocates this object if the reference
@@ -75,5 +75,5 @@ public interface IReferenceCounted
      *
      * @return {@code true} if and only if the reference count became {@code 0} and this object has been deallocated
      */
-    bool release(int decrement);
+    bool Release(int decrement);
 }

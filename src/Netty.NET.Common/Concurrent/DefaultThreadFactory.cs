@@ -35,7 +35,7 @@ public class DefaultThreadFactory : IThreadFactory
     protected readonly ThreadGroup _threadGroup;
 
     public DefaultThreadFactory(Type poolType, bool daemon = false, ThreadPriority priority = ThreadPriority.Normal)
-        : this(toPoolName(poolType), daemon, priority, null)
+        : this(ToPoolName(poolType), daemon, priority, null)
     {
     }
 
@@ -52,11 +52,11 @@ public class DefaultThreadFactory : IThreadFactory
     {
     }
 
-    public static string toPoolName(Type poolType)
+    public static string ToPoolName(Type poolType)
     {
-        ObjectUtil.checkNotNull(poolType, "poolType");
+        ObjectUtil.CheckNotNull(poolType, "poolType");
 
-        string poolName = StringUtil.simpleClassName(poolType);
+        string poolName = StringUtil.SimpleClassName(poolType);
         switch (poolName.Length)
         {
             case 0:
@@ -78,7 +78,7 @@ public class DefaultThreadFactory : IThreadFactory
 
     public DefaultThreadFactory(string poolName, bool daemon, ThreadPriority priority, ThreadGroup threadGroup)
     {
-        ObjectUtil.checkNotNull(poolName, "poolName");
+        ObjectUtil.CheckNotNull(poolName, "poolName");
 
         if (priority < ThreadPriority.Lowest || priority > ThreadPriority.Highest)
         {
@@ -86,16 +86,16 @@ public class DefaultThreadFactory : IThreadFactory
                 "priority: " + priority + " (expected: ThreadPriority.Lowest <= priority <= ThreadPriority.Highest)");
         }
 
-        _prefix = poolName + '-' + _poolId.incrementAndGet() + '-';
+        _prefix = poolName + '-' + _poolId.IncrementAndGet() + '-';
         _daemon = daemon;
         _priority = priority;
         _threadGroup = threadGroup;
     }
 
 
-    public virtual Thread newThread(IRunnable r)
+    public virtual Thread NewThread(IRunnable r)
     {
-        Thread t = newThread(FastThreadLocalRunnable.wrap(r), _prefix + _nextId.incrementAndGet());
+        Thread t = NewThread(FastThreadLocalRunnable.Wrap(r), _prefix + _nextId.IncrementAndGet());
         try
         {
             if (t.IsBackground != _daemon)
@@ -116,7 +116,7 @@ public class DefaultThreadFactory : IThreadFactory
         return t;
     }
 
-    protected virtual Thread newThread(IRunnable r, string name)
+    protected virtual Thread NewThread(IRunnable r, string name)
     {
         return new FastThreadLocalThread(_threadGroup, r, name).Thread;
     }

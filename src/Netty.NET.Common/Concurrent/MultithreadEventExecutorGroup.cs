@@ -70,11 +70,11 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor,
         IEventExecutorChooserFactory chooserFactory, params object[] args)
     {
-        ObjectUtil.checkPositive(nThreads, "nThreads");
+        ObjectUtil.CheckPositive(nThreads, "nThreads");
 
         if (executor == null)
         {
-            executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
+            executor = new ThreadPerTaskExecutor(NewDefaultThreadFactory());
         }
 
         children = new IEventExecutor[nThreads];
@@ -84,7 +84,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
             bool success = false;
             try
             {
-                children[i] = newChild(executor, args);
+                children[i] = NewChild(executor, args);
                 success = true;
             }
             catch (Exception e)
@@ -106,9 +106,9 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
                         IEventExecutor e = children[j];
                         try
                         {
-                            while (!e.isTerminated())
+                            while (!e.IsTerminated())
                             {
-                                e.awaitTermination(TimeSpan.FromSeconds(int.MaxValue));
+                                e.AwaitTermination(TimeSpan.FromSeconds(int.MaxValue));
                             }
                         }
                         catch (ThreadInterruptedException interrupted)
@@ -122,7 +122,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
             }
         }
 
-        chooser = chooserFactory.newChooser(children);
+        chooser = chooserFactory.NewChooser(children);
 
         foreach (IEventExecutor e in children)
         {
@@ -144,17 +144,17 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         readonlyChildren = childrenSet;
     }
 
-    protected virtual IThreadFactory newDefaultThreadFactory()
+    protected virtual IThreadFactory NewDefaultThreadFactory()
     {
         return new DefaultThreadFactory(GetType());
     }
 
-    public override IEventExecutor next()
+    public override IEventExecutor Next()
     {
-        return chooser.next();
+        return chooser.Next();
     }
 
-    public override IEnumerable<IEventExecutor> iterator()
+    public override IEnumerable<IEventExecutor> Iterator()
     {
         foreach (var child in readonlyChildren)
         {
@@ -166,7 +166,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * Return the number of {@link EventExecutor} this implementation uses. This number is the maps
      * 1:1 to the threads it use.
      */
-    public int executorCount()
+    public int ExecutorCount()
     {
         return children.Length;
     }
@@ -178,8 +178,8 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      *
      * @return the count of active threads.
      */
-    public virtual int activeExecutorCount() => chooser is IObservableEventExecutorChooser observable ?
-        observable.activeExecutorCount() : executorCount();
+    public virtual int ActiveExecutorCount() => chooser is IObservableEventExecutorChooser observable ?
+        observable.ActiveExecutorCount() : ExecutorCount();
 
     /**
      * Returns a list of real-time utilization metrics if the group was configured
@@ -187,8 +187,8 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      *
      * @return A list of {@link AutoScalingUtilizationMetric} objects.
      */
-    public virtual IReadOnlyList<AutoScalingUtilizationMetric> executorUtilizations() =>
-        chooser is IObservableEventExecutorChooser observable ? observable.executorUtilizations() :
+    public virtual IReadOnlyList<AutoScalingUtilizationMetric> ExecutorUtilizations() =>
+        chooser is IObservableEventExecutorChooser observable ? observable.ExecutorUtilizations() :
             Array.Empty<AutoScalingUtilizationMetric>();
 
     /**
@@ -196,7 +196,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
      */
-    protected abstract IEventExecutor newChild(IExecutor executor, params object[] args);
+    protected abstract IEventExecutor NewChild(IExecutor executor, params object[] args);
 
     public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {
@@ -226,19 +226,19 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     }
 
     [Obsolete]
-    public override void shutdown()
+    public override void Shutdown()
     {
         foreach (IEventExecutor l in children)
         {
-            l.shutdown();
+            l.Shutdown();
         }
     }
 
-    public override bool isShuttingDown()
+    public override bool IsShuttingDown()
     {
         foreach (IEventExecutor l in children)
         {
-            if (!l.isShuttingDown())
+            if (!l.IsShuttingDown())
             {
                 return false;
             }
@@ -247,11 +247,11 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         return true;
     }
 
-    public override bool isShutdown()
+    public override bool IsShutdown()
     {
         foreach (IEventExecutor l in children)
         {
-            if (!l.isShutdown())
+            if (!l.IsShutdown())
             {
                 return false;
             }
@@ -260,11 +260,11 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         return true;
     }
 
-    public override bool isTerminated()
+    public override bool IsTerminated()
     {
         foreach (IEventExecutor l in children)
         {
-            if (!l.isTerminated())
+            if (!l.IsTerminated())
             {
                 return false;
             }
@@ -273,22 +273,22 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         return true;
     }
 
-    public override bool awaitTermination(TimeSpan timeout)
+    public override bool AwaitTermination(TimeSpan timeout)
     {
-        long deadline = unchecked(SystemTimer.nanoTime() + AbstractScheduledEventExecutor.toNanos(timeout));
+        long deadline = unchecked(SystemTimer.NanoTime() + AbstractScheduledEventExecutor.ToNanos(timeout));
         foreach (IEventExecutor l in children)
         {
             bool breakLoop = false;
             for (;;)
             {
-                long timeLeft = unchecked(deadline - SystemTimer.nanoTime());
+                long timeLeft = unchecked(deadline - SystemTimer.NanoTime());
                 if (timeLeft <= 0)
                 {
                     breakLoop = true;
                     break;
                 }
 
-                if (l.awaitTermination(TimeSpan.FromTicks(timeLeft / 100)))
+                if (l.AwaitTermination(TimeSpan.FromTicks(timeLeft / 100)))
                 {
                     break;
                 }
@@ -298,7 +298,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
                 break;
         }
 
-        return isTerminated();
+        return IsTerminated();
     }
 
 }

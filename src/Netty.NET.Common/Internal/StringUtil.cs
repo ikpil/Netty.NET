@@ -30,7 +30,7 @@ namespace Netty.NET.Common.Internal;
 public static class StringUtil
 {
     public static readonly string EMPTY_STRING = "";
-    public static readonly string NEWLINE = SystemPropertyUtil.get("line.separator", "\n");
+    public static readonly string NEWLINE = SystemPropertyUtil.Get("line.separator", "\n");
 
     public const char DOUBLE_QUOTE = '\"';
     public const char COMMA = ',';
@@ -67,7 +67,7 @@ public static class StringUtil
         // the size of the table is such that the JVM is capable of save any bounds-check
         // if a char type is used as an index.
         HEX2B = new byte[char.MaxValue + 1];
-        Arrays.fill(HEX2B, byte.MaxValue);
+        Arrays.Fill(HEX2B, byte.MaxValue);
         HEX2B['0'] = 0;
         HEX2B['1'] = 1;
         HEX2B['2'] = 2;
@@ -97,7 +97,7 @@ public static class StringUtil
      * This operation is a simplified and optimized
      * version of {@link String#split(String, int)}.
      */
-    public static string substringAfter(string value, char delim)
+    public static string SubstringAfter(string value, char delim)
     {
         int pos = value.IndexOf(delim);
         if (pos >= 0)
@@ -113,7 +113,7 @@ public static class StringUtil
      * This operation is a simplified and optimized
      * version of {@link String#split(String, int)}.
      */
-    public static string substringBefore(string value, char delim)
+    public static string SubstringBefore(string value, char delim)
     {
         int pos = value.IndexOf(delim);
         if (pos >= 0)
@@ -132,7 +132,7 @@ public static class StringUtil
      * @param len length of the common suffix
      * @return true if both s and p are not null and both have the same suffix. Otherwise - false
      */
-    public static bool commonSuffixOfLength(string s, string p, int len)
+    public static bool CommonSuffixOfLength(string s, string p, int len)
     {
         return s != null && p != null && len >= 0 && len <= s.Length && len <= p.Length &&
                s.AsSpan(s.Length - len).SequenceEqual(p.AsSpan(p.Length - len));
@@ -141,7 +141,7 @@ public static class StringUtil
     /**
      * Converts the specified byte value into a 2-digit hexadecimal integer.
      */
-    public static string byteToHexStringPadded(int value)
+    public static string ByteToHexStringPadded(int value)
     {
         return BYTE2HEX_PAD[value & 0xff];
     }
@@ -149,15 +149,15 @@ public static class StringUtil
     /**
      * Converts the specified byte value into a 2-digit hexadecimal integer and appends it to the specified buffer.
      */
-    public static StringBuilder byteToHexStringPadded(StringBuilder buf, int value)
+    public static StringBuilder ByteToHexStringPadded(StringBuilder buf, int value)
     {
         try
         {
-            buf.Append(byteToHexStringPadded(value));
+            buf.Append(ByteToHexStringPadded(value));
         }
         catch (IOException e)
         {
-            PlatformDependent.throwException(e);
+            PlatformDependent.ThrowException(e);
         }
 
         return buf;
@@ -166,36 +166,36 @@ public static class StringUtil
     /**
      * Converts the specified byte array into a hexadecimal value.
      */
-    public static string toHexStringPadded(byte[] src)
+    public static string ToHexStringPadded(byte[] src)
     {
-        return toHexStringPadded(src, 0, src.Length);
+        return ToHexStringPadded(src, 0, src.Length);
     }
 
     /**
      * Converts the specified byte array into a hexadecimal value.
      */
-    public static string toHexStringPadded(byte[] src, int offset, int length)
+    public static string ToHexStringPadded(byte[] src, int offset, int length)
     {
-        return toHexStringPadded(new StringBuilder(length << 1), src, offset, length).ToString();
+        return ToHexStringPadded(new StringBuilder(length << 1), src, offset, length).ToString();
     }
 
     /**
      * Converts the specified byte array into a hexadecimal value and appends it to the specified buffer.
      */
-    public static StringBuilder toHexStringPadded(StringBuilder dst, byte[] src)
+    public static StringBuilder ToHexStringPadded(StringBuilder dst, byte[] src)
     {
-        return toHexStringPadded(dst, src, 0, src.Length);
+        return ToHexStringPadded(dst, src, 0, src.Length);
     }
 
     /**
      * Converts the specified byte array into a hexadecimal value and appends it to the specified buffer.
      */
-    public static StringBuilder toHexStringPadded(StringBuilder dst, byte[] src, int offset, int length)
+    public static StringBuilder ToHexStringPadded(StringBuilder dst, byte[] src, int offset, int length)
     {
         int end = offset + length;
         for (int i = offset; i < end; i++)
         {
-            byteToHexStringPadded(dst, src[i]);
+            ByteToHexStringPadded(dst, src[i]);
         }
 
         return dst;
@@ -204,7 +204,7 @@ public static class StringUtil
     /**
      * Converts the specified byte value into a hexadecimal integer.
      */
-    public static string byteToHexString(int value)
+    public static string ByteToHexString(int value)
     {
         return BYTE2HEX_NOPAD[value & 0xff];
     }
@@ -212,15 +212,15 @@ public static class StringUtil
     /**
      * Converts the specified byte value into a hexadecimal integer and appends it to the specified buffer.
      */
-    public static StringBuilder byteToHexString(StringBuilder buf, int value)
+    public static StringBuilder ByteToHexString(StringBuilder buf, int value)
     {
         try
         {
-            buf.Append(byteToHexString(value));
+            buf.Append(ByteToHexString(value));
         }
         catch (IOException e)
         {
-            PlatformDependent.throwException(e);
+            PlatformDependent.ThrowException(e);
         }
 
         return buf;
@@ -229,31 +229,31 @@ public static class StringUtil
     /**
      * Converts the specified byte array into a hexadecimal value.
      */
-    public static string toHexString(byte[] src)
+    public static string ToHexString(byte[] src)
     {
-        return toHexString(src, 0, src.Length);
+        return ToHexString(src, 0, src.Length);
     }
 
     /**
      * Converts the specified byte array into a hexadecimal value.
      */
-    public static string toHexString(byte[] src, int offset, int length)
+    public static string ToHexString(byte[] src, int offset, int length)
     {
-        return toHexString(new StringBuilder(length << 1), src, offset, length).ToString();
+        return ToHexString(new StringBuilder(length << 1), src, offset, length).ToString();
     }
 
     /**
      * Converts the specified byte array into a hexadecimal value and appends it to the specified buffer.
      */
-    public static StringBuilder toHexString(StringBuilder dst, byte[] src)
+    public static StringBuilder ToHexString(StringBuilder dst, byte[] src)
     {
-        return toHexString(dst, src, 0, src.Length);
+        return ToHexString(dst, src, 0, src.Length);
     }
 
     /**
      * Converts the specified byte array into a hexadecimal value and appends it to the specified buffer.
      */
-    public static StringBuilder toHexString(StringBuilder dst, byte[] src, int offset, int length)
+    public static StringBuilder ToHexString(StringBuilder dst, byte[] src, int offset, int length)
     {
         Debug.Assert(length >= 0);
         if (length == 0)
@@ -274,9 +274,9 @@ public static class StringUtil
             }
         }
 
-        byteToHexString(dst, src[i++]);
+        ByteToHexString(dst, src[i++]);
         int remaining = end - i;
-        toHexStringPadded(dst, src, i, remaining);
+        ToHexStringPadded(dst, src, i, remaining);
 
         return dst;
     }
@@ -288,7 +288,7 @@ public static class StringUtil
      * @return The hexadecimal value represented in the ASCII character
      * given, or {@code -1} if the character is invalid.
      */
-    public static int decodeHexNibble(char c)
+    public static int DecodeHexNibble(char c)
     {
         // Character.digit() is not used here, as it addresses a larger
         // set of characters (both ASCII and full-width latin letters).
@@ -302,7 +302,7 @@ public static class StringUtil
      * @return The hexadecimal value represented in the ASCII character
      * given, or {@code -1} if the character is invalid.
      */
-    public static int decodeHexNibble(byte b)
+    public static int DecodeHexNibble(byte b)
     {
         // Character.digit() is not used here, as it addresses a larger
         // set of characters (both ASCII and full-width latin letters).
@@ -312,19 +312,19 @@ public static class StringUtil
     /**
      * Decode a 2-digit hex byte from within a string.
      */
-    public static byte decodeHexByte(ICharSequence s, int pos)
+    public static byte DecodeHexByte(ICharSequence s, int pos)
     {
-        int hi = decodeHexNibble(s.charAt(pos));
-        int lo = decodeHexNibble(s.charAt(pos + 1));
+        int hi = DecodeHexNibble(s.CharAt(pos));
+        int lo = DecodeHexNibble(s.CharAt(pos + 1));
         if (hi == -1 || lo == -1)
         {
-            throw new ArgumentException($"invalid hex byte '{s.subSequence(pos, pos + 2)}' at index {pos} of '{s}'");
+            throw new ArgumentException($"invalid hex byte '{s.SubSequence(pos, pos + 2)}' at index {pos} of '{s}'");
         }
 
         return (byte)((hi << 4) + lo);
     }
 
-    public static byte decodeHexByte(string str, int index)
+    public static byte DecodeHexByte(string str, int index)
     {
         if (index + 1 >= str.Length)
         {
@@ -351,7 +351,7 @@ public static class StringUtil
      * @param fromIndex start of hex dump in {@code hexDump}
      * @param length hex string length
      */
-    public static byte[] decodeHexDump(ICharSequence hexDump, int fromIndex, int length)
+    public static byte[] DecodeHexDump(ICharSequence hexDump, int fromIndex, int length)
     {
         if (length < 0 || (length & 1) != 0)
         {
@@ -366,7 +366,7 @@ public static class StringUtil
         byte[] bytes = new byte[length >>> 1];
         for (int i = 0; i < length; i += 2)
         {
-            bytes[i >>> 1] = decodeHexByte(hexDump, fromIndex + i);
+            bytes[i >>> 1] = DecodeHexByte(hexDump, fromIndex + i);
         }
 
         return bytes;
@@ -375,32 +375,32 @@ public static class StringUtil
     /**
      * Decodes a <a href="https://en.wikipedia.org/wiki/Hex_dump">hex dump</a>
      */
-    public static byte[] decodeHexDump(ICharSequence hexDump)
+    public static byte[] DecodeHexDump(ICharSequence hexDump)
     {
-        return decodeHexDump(hexDump, 0, hexDump.length());
+        return DecodeHexDump(hexDump, 0, hexDump.Length());
     }
-    public static byte[] decodeHexDump(string hexDump)
+    public static byte[] DecodeHexDump(string hexDump)
     {
         var str = new StringCharSequence(hexDump);
-        return decodeHexDump(str, 0, str.length());
+        return DecodeHexDump(str, 0, str.Length());
     }
 
     /**
      * Generates a class name from a {@link Class}. Similar to {@link Class#getName()}, but null-safe.
      */
-    public static string className(object o)
+    public static string ClassName(object o)
     {
         return o == null ? "null_object" : o.GetType().FullName;
     }
-    public static string simpleClassName<T>()
+    public static string SimpleClassName<T>()
     {
-        return simpleClassName(typeof(T));
+        return SimpleClassName(typeof(T));
     }
     
     /**
      * The shortcut to {@link #simpleClassName(Class) simpleClassName(o.getClass())}.
      */
-    public static string simpleClassName(object o)
+    public static string SimpleClassName(object o)
     {
         if (o == null)
         {
@@ -408,7 +408,7 @@ public static class StringUtil
         }
         else
         {
-            return simpleClassName(o.GetType());
+            return SimpleClassName(o.GetType());
         }
     }
 
@@ -416,9 +416,9 @@ public static class StringUtil
      * Generates a simplified name from a {@link Class}.  Similar to {@link Class#getSimpleName()}, but it works fine
      * with anonymous classes.
      */
-    public static string simpleClassName(Type t)
+    public static string SimpleClassName(Type t)
     {
-        ObjectUtil.checkNotNull(t, nameof(t));
+        ObjectUtil.CheckNotNull(t, nameof(t));
         if (t.IsGenericType) t = t.GetGenericTypeDefinition();
         string name = t.FullName ?? t.Name;
         int namespaceEnd = name.LastIndexOf('.');
@@ -434,9 +434,9 @@ public static class StringUtil
      *              <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
      * @return {@link CharSequence} the escaped value if necessary, or the value unchanged
      */
-    public static string escapeCsv(string value)
+    public static string EscapeCsv(string value)
     {
-        return escapeCsv(value, false);
+        return EscapeCsv(value, false);
     }
 
     /**
@@ -449,15 +449,15 @@ public static class StringUtil
      *                       according to <a href="https://tools.ietf.org/html/rfc7230#section-7">RFC-7230</a>
      * @return {@link CharSequence} the escaped value if necessary, or the value unchanged
      */
-    public static string escapeCsv(string value, bool trimWhiteSpace)
+    public static string EscapeCsv(string value, bool trimWhiteSpace)
     {
-        int length = ObjectUtil.checkNotNull(value, "value").Length;
+        int length = ObjectUtil.CheckNotNull(value, "value").Length;
         int start;
         int last;
         if (trimWhiteSpace)
         {
-            start = indexOfFirstNonOwsChar(value, length);
-            last = indexOfLastNonOwsChar(value, start, length);
+            start = IndexOfFirstNonOwsChar(value, length);
+            last = IndexOfLastNonOwsChar(value, start, length);
         }
         else
         {
@@ -472,9 +472,9 @@ public static class StringUtil
 
         int firstUnescapedSpecial = -1;
         bool quoted = false;
-        if (isDoubleQuote(value[start]))
+        if (IsDoubleQuote(value[start]))
         {
-            quoted = isDoubleQuote(value[last]) && last > start;
+            quoted = IsDoubleQuote(value[last]) && last > start;
             if (quoted)
             {
                 start++;
@@ -492,9 +492,9 @@ public static class StringUtil
             {
                 for (int i = start; i <= last; i++)
                 {
-                    if (isDoubleQuote(value[i]))
+                    if (IsDoubleQuote(value[i]))
                     {
-                        if (i == last || !isDoubleQuote(value[i + 1]))
+                        if (i == last || !IsDoubleQuote(value[i + 1]))
                         {
                             firstUnescapedSpecial = i;
                             break;
@@ -515,9 +515,9 @@ public static class StringUtil
                         break;
                     }
 
-                    if (isDoubleQuote(c))
+                    if (IsDoubleQuote(c))
                     {
-                        if (i == last || !isDoubleQuote(value[i + 1]))
+                        if (i == last || !IsDoubleQuote(value[i + 1]))
                         {
                             firstUnescapedSpecial = i;
                             break;
@@ -542,10 +542,10 @@ public static class StringUtil
         for (int i = firstUnescapedSpecial; i <= last; i++)
         {
             char c = value[i];
-            if (isDoubleQuote(c))
+            if (IsDoubleQuote(c))
             {
                 result.Append(DOUBLE_QUOTE);
-                if (i < last && isDoubleQuote(value[i + 1]))
+                if (i < last && IsDoubleQuote(value[i + 1]))
                 {
                     i++;
                 }
@@ -565,29 +565,29 @@ public static class StringUtil
      *              <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
      * @return {@link CharSequence} the unescaped value if necessary, or the value unchanged
      */
-    public static string unescapeCsv(string value)
+    public static string UnescapeCsv(string value)
     {
-        int length = ObjectUtil.checkNotNull(value, "value").Length;
+        int length = ObjectUtil.CheckNotNull(value, "value").Length;
         if (length == 0)
         {
             return value;
         }
 
         int last = length - 1;
-        bool quoted = isDoubleQuote(value[0]) && isDoubleQuote(value[last]) && length != 1;
+        bool quoted = IsDoubleQuote(value[0]) && IsDoubleQuote(value[last]) && length != 1;
         if (!quoted)
         {
-            validateCsvFormat(value);
+            ValidateCsvFormat(value);
             return value;
         }
 
-        StringBuilder unescaped = InternalThreadLocalMap.get().stringBuilder();
+        StringBuilder unescaped = InternalThreadLocalMap.Get().StringBuilder();
         for (int i = 1; i < last; i++)
         {
             char current = value[i];
             if (current == DOUBLE_QUOTE)
             {
-                if (isDoubleQuote(value[i + 1]) && (i + 1) != last)
+                if (IsDoubleQuote(value[i + 1]) && (i + 1) != last)
                 {
                     // Followed by a double-quote but not the last character
                     // Just skip the next double-quote
@@ -596,7 +596,7 @@ public static class StringUtil
                 else
                 {
                     // Not followed by a double-quote or the following double-quote is the last character
-                    throw newInvalidEscapedCsvFieldException(value, i);
+                    throw NewInvalidEscapedCsvFieldException(value, i);
                 }
             }
 
@@ -614,10 +614,10 @@ public static class StringUtil
      *              <a href="https://tools.ietf.org/html/rfc4180#section-2">RFC-4180</a>
      * @return {@link List} the list of unescaped fields
      */
-    public static List<string> unescapeCsvFields(string value)
+    public static List<string> UnescapeCsvFields(string value)
     {
         List<string> unescaped = new List<string>(2);
-        StringBuilder current = InternalThreadLocalMap.get().stringBuilder();
+        StringBuilder current = InternalThreadLocalMap.Get().StringBuilder();
         bool quoted = false;
         int last = value.Length - 1;
         for (int i = 0; i <= last; i++)
@@ -653,7 +653,7 @@ public static class StringUtil
                         }
 
                         // double-quote followed by other character is invalid
-                        throw newInvalidEscapedCsvFieldException(value, i - 1);
+                        throw NewInvalidEscapedCsvFieldException(value, i - 1);
                     default:
                         current.Append(c);
                         break;
@@ -674,14 +674,14 @@ public static class StringUtil
                             quoted = true;
                             break;
                         }
-                        throw newInvalidEscapedCsvFieldException(value, i);
+                        throw NewInvalidEscapedCsvFieldException(value, i);
                     // double-quote appears without being enclosed with double-quotes
                     // fall through
                     case LINE_FEED:
                     // fall through
                     case CARRIAGE_RETURN:
                         // special characters appears without being enclosed with double-quotes
-                        throw newInvalidEscapedCsvFieldException(value, i);
+                        throw NewInvalidEscapedCsvFieldException(value, i);
                     default:
                         current.Append(c);
                         break;
@@ -691,7 +691,7 @@ public static class StringUtil
 
         if (quoted)
         {
-            throw newInvalidEscapedCsvFieldException(value, last);
+            throw NewInvalidEscapedCsvFieldException(value, last);
         }
 
         unescaped.Add(current.ToString());
@@ -703,7 +703,7 @@ public static class StringUtil
      *
      * @throws IllegalArgumentException if {@code value} needs to be encoded with double-quotes.
      */
-    private static void validateCsvFormat(string value)
+    private static void ValidateCsvFormat(string value)
     {
         int length = value.Length;
         for (int i = 0; i < length; i++)
@@ -715,14 +715,14 @@ public static class StringUtil
                 case CARRIAGE_RETURN:
                 case COMMA:
                     // If value contains any special character, it should be enclosed with double-quotes
-                    throw newInvalidEscapedCsvFieldException(value, i);
+                    throw NewInvalidEscapedCsvFieldException(value, i);
                 default:
                     break;
             }
         }
     }
 
-    private static ArgumentException newInvalidEscapedCsvFieldException(string value, int index)
+    private static ArgumentException NewInvalidEscapedCsvFieldException(string value, int index)
     {
         return new ArgumentException("invalid escaped CSV field: " + value + " index: " + index);
     }
@@ -730,7 +730,7 @@ public static class StringUtil
     /**
      * Get the length of a string, {@code null} input is considered {@code 0} length.
      */
-    public static int length(string s)
+    public static int Length(string s)
     {
         return s == null ? 0 : s.Length;
     }
@@ -738,7 +738,7 @@ public static class StringUtil
     /**
      * Determine if a string is {@code null} or {@link String#isEmpty()} returns {@code true}.
      */
-    public static bool isNullOrEmpty(string s)
+    public static bool IsNullOrEmpty(string s)
     {
         return string.IsNullOrEmpty(s);
     }
@@ -750,7 +750,7 @@ public static class StringUtil
      * @param offset The offset to start searching at.
      * @return the index of the first non-white space character or &lt;{@code -1} if none was found.
      */
-    public static int indexOfNonWhiteSpace(string seq, int offset)
+    public static int IndexOfNonWhiteSpace(string seq, int offset)
     {
         for (; offset < seq.Length; ++offset)
         {
@@ -770,7 +770,7 @@ public static class StringUtil
      * @param offset The offset to start searching at.
      * @return the index of the first white space character or &lt;{@code -1} if none was found.
      */
-    public static int indexOfWhiteSpace(string seq, int offset)
+    public static int IndexOfWhiteSpace(string seq, int offset)
     {
         for (; offset < seq.Length; ++offset)
         {
@@ -791,12 +791,12 @@ public static class StringUtil
      * @return {@code true} if {@code c} lies within the range of values defined for
      * <a href="https://unicode.org/glossary/#surrogate_code_point">Surrogate Code Point</a>. {@code false} otherwise.
      */
-    public static bool isSurrogate(char c)
+    public static bool IsSurrogate(char c)
     {
         return c >= '\uD800' && c <= '\uDFFF';
     }
 
-    private static bool isDoubleQuote(char c)
+    private static bool IsDoubleQuote(char c)
     {
         return c == DOUBLE_QUOTE;
     }
@@ -808,7 +808,7 @@ public static class StringUtil
      * @param c the tested char
      * @return true if {@code s} ends with the char {@code c}
      */
-    public static bool endsWith(string s, char c)
+    public static bool EndsWith(string s, char c)
     {
         int len = s.Length;
         return len > 0 && s[len - 1] == c;
@@ -821,7 +821,7 @@ public static class StringUtil
      * @param value the value to trim
      * @return {@link CharSequence} the trimmed value if necessary, or the value unchanged
      */
-    public static string trimOws(string value)
+    public static string TrimOws(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
         ReadOnlySpan<char> trimmed = value.AsSpan().Trim(" \t".AsSpan());
@@ -836,17 +836,17 @@ public static class StringUtil
      *
      * @return a char sequence joined by a given separator.
      */
-    public static string join(string separator, IEnumerable<string> elements)
+    public static string Join(string separator, IEnumerable<string> elements)
     {
-        ObjectUtil.checkNotNull(separator, nameof(separator));
-        ObjectUtil.checkNotNull(elements, nameof(elements));
+        ObjectUtil.CheckNotNull(separator, nameof(separator));
+        ObjectUtil.CheckNotNull(elements, nameof(elements));
         return string.Join(separator, elements.Select(element => element ?? "null"));
     }
 
     /**
      * @return {@code length} if no OWS is found.
      */
-    private static int indexOfFirstNonOwsChar(string value, int length)
+    private static int IndexOfFirstNonOwsChar(string value, int length)
     {
         int index = value.AsSpan(0, length).IndexOfAnyExcept(SPACE, TAB);
         return index < 0 ? length : index;
@@ -855,7 +855,7 @@ public static class StringUtil
     /**
      * @return {@code start} if no OWS is found.
      */
-    private static int indexOfLastNonOwsChar(string value, int start, int length)
+    private static int IndexOfLastNonOwsChar(string value, int start, int length)
     {
         if (start == length)
         {

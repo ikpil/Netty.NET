@@ -22,10 +22,10 @@ namespace Netty.NET.Common.Tests.Internal.Logging;
 public class CommonsLoggerFactoryTest
 {
     [Fact]
-    public void testCreation()
+    public void TestCreation()
     {
-        IInternalLogger logger = CommonsLoggerFactory.INSTANCE.newInstance("foo");
+        IInternalLogger logger = CommonsLoggerFactory.INSTANCE.NewInstance("foo");
         Assert.True(logger is CommonsLogger);
-        Assert.Equal("foo", logger.name());
+        Assert.Equal("foo", logger.Name());
     }
 }

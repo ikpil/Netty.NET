@@ -25,9 +25,9 @@ namespace Netty.NET.Common.Tests.Internal;
 public class DefaultPriorityQueueTest 
 {
     [Fact]
-    public void testPoll() {
+    public void TestPoll() {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
-        assertEmptyQueue(queue);
+        AssertEmptyQueue(queue);
 
         TestElement a = new TestElement(5);
         TestElement b = new TestElement(10);
@@ -35,73 +35,73 @@ public class DefaultPriorityQueueTest
         TestElement d = new TestElement(7);
         TestElement e = new TestElement(6);
 
-        assertOffer(queue, a);
-        assertOffer(queue, b);
-        assertOffer(queue, c);
-        assertOffer(queue, d);
+        AssertOffer(queue, a);
+        AssertOffer(queue, b);
+        AssertOffer(queue, c);
+        AssertOffer(queue, d);
 
         // Remove the first element
-        Assert.Same(c, queue.peek());
-        Assert.Same(c, queue.poll());
-        Assert.Equal(3, queue.size());
+        Assert.Same(c, queue.Peek());
+        Assert.Same(c, queue.Poll());
+        Assert.Equal(3, queue.Size());
 
         // Test that offering another element preserves the priority queue semantics.
-        assertOffer(queue, e);
-        Assert.Equal(4, queue.size());
-        Assert.Same(a, queue.peek());
-        Assert.Same(a, queue.poll());
-        Assert.Equal(3, queue.size());
+        AssertOffer(queue, e);
+        Assert.Equal(4, queue.Size());
+        Assert.Same(a, queue.Peek());
+        Assert.Same(a, queue.Poll());
+        Assert.Equal(3, queue.Size());
 
         // Keep removing the remaining elements
-        Assert.Same(e, queue.peek());
-        Assert.Same(e, queue.poll());
-        Assert.Equal(2, queue.size());
+        Assert.Same(e, queue.Peek());
+        Assert.Same(e, queue.Poll());
+        Assert.Equal(2, queue.Size());
 
-        Assert.Same(d, queue.peek());
-        Assert.Same(d, queue.poll());
-        Assert.Equal(1, queue.size());
+        Assert.Same(d, queue.Peek());
+        Assert.Same(d, queue.Poll());
+        Assert.Equal(1, queue.Size());
 
-        Assert.Same(b, queue.peek());
-        Assert.Same(b, queue.poll());
-        assertEmptyQueue(queue);
+        Assert.Same(b, queue.Peek());
+        Assert.Same(b, queue.Poll());
+        AssertEmptyQueue(queue);
     }
 
     [Fact]
-    public void testClear() {
+    public void TestClear() {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
-        assertEmptyQueue(queue);
+        AssertEmptyQueue(queue);
 
         TestElement a = new TestElement(5);
         TestElement b = new TestElement(10);
         TestElement c = new TestElement(2);
         TestElement d = new TestElement(6);
 
-        assertOffer(queue, a);
-        assertOffer(queue, b);
-        assertOffer(queue, c);
-        assertOffer(queue, d);
+        AssertOffer(queue, a);
+        AssertOffer(queue, b);
+        AssertOffer(queue, c);
+        AssertOffer(queue, d);
 
-        queue.clear();
-        assertEmptyQueue(queue);
+        queue.Clear();
+        AssertEmptyQueue(queue);
 
         // Test that elements can be re-inserted after the clear operation
-        assertOffer(queue, a);
-        Assert.Same(a, queue.peek());
+        AssertOffer(queue, a);
+        Assert.Same(a, queue.Peek());
 
-        assertOffer(queue, b);
-        Assert.Same(a, queue.peek());
+        AssertOffer(queue, b);
+        Assert.Same(a, queue.Peek());
 
-        assertOffer(queue, c);
-        Assert.Same(c, queue.peek());
+        AssertOffer(queue, c);
+        Assert.Same(c, queue.Peek());
 
-        assertOffer(queue, d);
-        Assert.Same(c, queue.peek());
+        AssertOffer(queue, d);
+        Assert.Same(c, queue.Peek());
     }
 
     [Fact]
-    public void testClearIgnoringIndexes() {
+    public void TestClearIgnoringIndexes() {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
-        assertEmptyQueue(queue);
+        AssertEmptyQueue(queue);
 
         TestElement a = new TestElement(5);
         TestElement b = new TestElement(10);
@@ -109,39 +109,39 @@ public class DefaultPriorityQueueTest
         TestElement d = new TestElement(6);
         TestElement e = new TestElement(11);
 
-        assertOffer(queue, a);
-        assertOffer(queue, b);
-        assertOffer(queue, c);
-        assertOffer(queue, d);
+        AssertOffer(queue, a);
+        AssertOffer(queue, b);
+        AssertOffer(queue, c);
+        AssertOffer(queue, d);
 
-        queue.clearIgnoringIndexes();
-        assertEmptyQueue(queue);
+        queue.ClearIgnoringIndexes();
+        AssertEmptyQueue(queue);
 
         // Elements cannot be re-inserted but new ones can.
         try {
-            queue.offer(a);
+            queue.Offer(a);
             Assert.Fail();
         } catch (ArgumentException t) {
             // expected
         }
 
-        assertOffer(queue, e);
-        Assert.Same(e, queue.peek());
+        AssertOffer(queue, e);
+        Assert.Same(e, queue.Peek());
     }
 
     [Fact]
-    public void testRemoval() {
-        testRemoval0(false);
+    public void TestRemoval() {
+        TestRemoval0(false);
     }
 
     [Fact]
-    public void testRemovalTyped() {
-        testRemoval0(true);
+    public void TestRemovalTyped() {
+        TestRemoval0(true);
     }
 
     [Fact]
-    public void testRemovalFuzz() {
-        var threadLocalRandom = ThreadLocalRandom.current();
+    public void TestRemovalFuzz() {
+        var threadLocalRandom = ThreadLocalRandom.Current();
         int numElements = threadLocalRandom.Next(0, 30);
         TestElement[] values = new TestElement[numElements];
         DefaultPriorityQueue<TestElement> queue =
@@ -149,13 +149,13 @@ public class DefaultPriorityQueueTest
         for (int i = 0; i < values.Length; ++i) {
             do {
                 values[i] = new TestElement(threadLocalRandom.Next(0, numElements * 2));
-            } while (!queue.offer(values[i]));
+            } while (!queue.Offer(values[i]));
         }
 
         for (int i = 0; i < values.Length; ++i) {
             try {
-                Assert.True(queue.removeTyped(values[i]));
-                Assert.Equal(queue.size(), values.Length - (i + 1));
+                Assert.True(queue.RemoveTyped(values[i]));
+                Assert.Equal(queue.Size(), values.Length - (i + 1));
             } catch (Exception cause) {
                 StringBuilder sb = new StringBuilder(values.Length * 2);
                 sb.Append("error on removal of index: ").Append(i).Append(" [");
@@ -166,12 +166,12 @@ public class DefaultPriorityQueueTest
                 throw new InvalidOperationException(sb.ToString(), cause);
             }
         }
-        assertEmptyQueue(queue);
+        AssertEmptyQueue(queue);
     }
 
-    private static void testRemoval0(bool typed) {
+    private static void TestRemoval0(bool typed) {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 4);
-        assertEmptyQueue(queue);
+        AssertEmptyQueue(queue);
 
         TestElement a = new TestElement(5);
         TestElement b = new TestElement(10);
@@ -179,118 +179,118 @@ public class DefaultPriorityQueueTest
         TestElement d = new TestElement(6);
         TestElement notInQueue = new TestElement(-1);
 
-        assertOffer(queue, a);
-        assertOffer(queue, b);
-        assertOffer(queue, c);
-        assertOffer(queue, d);
+        AssertOffer(queue, a);
+        AssertOffer(queue, b);
+        AssertOffer(queue, c);
+        AssertOffer(queue, d);
 
         // Remove an element that isn't in the queue.
-        Assert.False(typed ? queue.removeTyped(notInQueue) : queue.remove(notInQueue));
-        Assert.Same(c, queue.peek());
-        Assert.Equal(4, queue.size());
+        Assert.False(typed ? queue.RemoveTyped(notInQueue) : queue.Remove(notInQueue));
+        Assert.Same(c, queue.Peek());
+        Assert.Equal(4, queue.Size());
 
         // Remove the last element in the array, when the array is non-empty.
-        Assert.True(typed ? queue.removeTyped(b) : queue.remove(b));
-        Assert.Same(c, queue.peek());
-        Assert.Equal(3, queue.size());
+        Assert.True(typed ? queue.RemoveTyped(b) : queue.Remove(b));
+        Assert.Same(c, queue.Peek());
+        Assert.Equal(3, queue.Size());
 
         // Re-insert the element after removal
-        assertOffer(queue, b);
-        Assert.Same(c, queue.peek());
-        Assert.Equal(4, queue.size());
+        AssertOffer(queue, b);
+        Assert.Same(c, queue.Peek());
+        Assert.Equal(4, queue.Size());
 
         // Repeat remove the last element in the array, when the array is non-empty.
-        Assert.True(typed ? queue.removeTyped(d) : queue.remove(d));
-        Assert.Same(c, queue.peek());
-        Assert.Equal(3, queue.size());
+        Assert.True(typed ? queue.RemoveTyped(d) : queue.Remove(d));
+        Assert.Same(c, queue.Peek());
+        Assert.Equal(3, queue.Size());
 
-        Assert.True(typed ? queue.removeTyped(b) : queue.remove(b));
-        Assert.Same(c, queue.peek());
-        Assert.Equal(2, queue.size());
+        Assert.True(typed ? queue.RemoveTyped(b) : queue.Remove(b));
+        Assert.Same(c, queue.Peek());
+        Assert.Equal(2, queue.Size());
 
         // Remove the head of the queue.
-        Assert.True(typed ? queue.removeTyped(c) : queue.remove(c));
-        Assert.Same(a, queue.peek());
-        Assert.Equal(1, queue.size());
+        Assert.True(typed ? queue.RemoveTyped(c) : queue.Remove(c));
+        Assert.Same(a, queue.Peek());
+        Assert.Equal(1, queue.Size());
 
-        Assert.True(typed ? queue.removeTyped(a) : queue.remove(a));
-        assertEmptyQueue(queue);
+        Assert.True(typed ? queue.RemoveTyped(a) : queue.Remove(a));
+        AssertEmptyQueue(queue);
     }
 
     [Fact]
-    public void testZeroInitialSize() {
+    public void TestZeroInitialSize() {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
-        assertEmptyQueue(queue);
+        AssertEmptyQueue(queue);
         TestElement e = new TestElement(1);
-        assertOffer(queue, e);
-        Assert.Same(e, queue.peek());
-        Assert.Equal(1, queue.size());
-        Assert.False(queue.isEmpty());
-        Assert.Same(e, queue.poll());
-        assertEmptyQueue(queue);
+        AssertOffer(queue, e);
+        Assert.Same(e, queue.Peek());
+        Assert.Equal(1, queue.Size());
+        Assert.False(queue.IsEmpty());
+        Assert.Same(e, queue.Poll());
+        AssertEmptyQueue(queue);
     }
 
     [Fact]
-    public void testPriorityChange() {
+    public void TestPriorityChange() {
         DefaultPriorityQueue<TestElement> queue = new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, 0);
-        assertEmptyQueue(queue);
+        AssertEmptyQueue(queue);
         TestElement a = new TestElement(10);
         TestElement b = new TestElement(20);
         TestElement c = new TestElement(30);
         TestElement d = new TestElement(25);
         TestElement e = new TestElement(23);
         TestElement f = new TestElement(15);
-        queue.offer(a);
-        queue.offer(b);
-        queue.offer(c);
-        queue.offer(d);
-        queue.offer(e);
-        queue.offer(f);
+        queue.Offer(a);
+        queue.Offer(b);
+        queue.Offer(c);
+        queue.Offer(d);
+        queue.Offer(e);
+        queue.Offer(f);
 
         e.value = 35;
-        queue.priorityChanged(e);
+        queue.PriorityChanged(e);
 
         a.value = 40;
-        queue.priorityChanged(a);
+        queue.PriorityChanged(a);
 
         a.value = 31;
-        queue.priorityChanged(a);
+        queue.PriorityChanged(a);
 
         d.value = 10;
-        queue.priorityChanged(d);
+        queue.PriorityChanged(d);
 
         f.value = 5;
-        queue.priorityChanged(f);
+        queue.PriorityChanged(f);
 
         var expectedOrderList = new List<TestElement> { a, b, c, d, e, f };
         expectedOrderList.Sort(TestElementComparator.INSTANCE);
-        Assert.Equal(expectedOrderList.Count, queue.size());
-        Assert.Equal(expectedOrderList.Count == 0, queue.isEmpty());
+        Assert.Equal(expectedOrderList.Count, queue.Size());
+        Assert.Equal(expectedOrderList.Count == 0, queue.IsEmpty());
         foreach (TestElement expected in expectedOrderList.ToArray())
         {
-            Assert.Equal(expected, queue.poll());
+            Assert.Equal(expected, queue.Poll());
             expectedOrderList.RemoveAt(0);
-            Assert.Equal(expectedOrderList.Count, queue.size());
-            Assert.Equal(expectedOrderList.Count == 0, queue.isEmpty());
+            Assert.Equal(expectedOrderList.Count, queue.Size());
+            Assert.Equal(expectedOrderList.Count == 0, queue.IsEmpty());
         }
     }
-    private static void assertOffer(DefaultPriorityQueue<TestElement> queue, TestElement a) {
-        Assert.True(queue.offer(a));
-        Assert.True(queue.contains(a));
-        Assert.True(queue.containsTyped(a));
+    private static void AssertOffer(DefaultPriorityQueue<TestElement> queue, TestElement a) {
+        Assert.True(queue.Offer(a));
+        Assert.True(queue.Contains(a));
+        Assert.True(queue.ContainsTyped(a));
         try { // An element can not be inserted more than 1 time.
-            queue.offer(a);
+            queue.Offer(a);
             Assert.Fail();
         } catch (ArgumentException ignored) {
             // ignored
         }
     }
 
-    private static void assertEmptyQueue(DefaultPriorityQueue<TestElement> queue) {
-        Assert.Null(queue.peek());
-        Assert.Null(queue.poll());
-        Assert.Equal(0, queue.size());
-        Assert.True(queue.isEmpty());
+    private static void AssertEmptyQueue(DefaultPriorityQueue<TestElement> queue) {
+        Assert.Null(queue.Peek());
+        Assert.Null(queue.Poll());
+        Assert.Equal(0, queue.Size());
+        Assert.True(queue.IsEmpty());
     }
 
     private sealed class TestElementComparator : IComparer<TestElement>
@@ -306,7 +306,7 @@ public class DefaultPriorityQueueTest
         public TestElement(int value) => this.value = value;
         public override bool Equals(object o) => o is TestElement element && element.value == value;
         public override int GetHashCode() => value;
-        public int priorityQueueIndex(DefaultPriorityQueue<TestElement> queue) => _index;
-        public void priorityQueueIndex(DefaultPriorityQueue<TestElement> queue, int i) => _index = i;
+        public int PriorityQueueIndex(DefaultPriorityQueue<TestElement> queue) => _index;
+        public void PriorityQueueIndex(DefaultPriorityQueue<TestElement> queue, int i) => _index = i;
     }
 }

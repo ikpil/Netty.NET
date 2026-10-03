@@ -47,106 +47,106 @@ namespace Netty.NET.Common.Tests.Internal.Logging;
 public class MessageFormatterTest
 {
     [Fact]
-    public void testNull()
+    public void TestNull()
     {
-        string result = MessageFormatter.format(null, 1).getMessage();
+        string result = MessageFormatter.Format(null, 1).GetMessage();
         Assert.Null(result);
     }
 
     [Fact]
-    public void nullParametersShouldBeHandledWithoutBarfing()
+    public void NullParametersShouldBeHandledWithoutBarfing()
     {
-        string result = MessageFormatter.format("Value is {}.", null).getMessage();
+        string result = MessageFormatter.Format("Value is {}.", null).GetMessage();
         Assert.Equal("Value is null.", result);
 
-        result = MessageFormatter.format("Val1 is {}, val2 is {}.", null, null).getMessage();
+        result = MessageFormatter.Format("Val1 is {}, val2 is {}.", null, null).GetMessage();
         Assert.Equal("Val1 is null, val2 is null.", result);
 
-        result = MessageFormatter.format("Val1 is {}, val2 is {}.", 1, null).getMessage();
+        result = MessageFormatter.Format("Val1 is {}, val2 is {}.", 1, null).GetMessage();
         Assert.Equal("Val1 is 1, val2 is null.", result);
 
-        result = MessageFormatter.format("Val1 is {}, val2 is {}.", null, 2).getMessage();
+        result = MessageFormatter.Format("Val1 is {}, val2 is {}.", null, 2).GetMessage();
         Assert.Equal("Val1 is null, val2 is 2.", result);
 
-        result = MessageFormatter.arrayFormat(
-            "Val1 is {}, val2 is {}, val3 is {}", new object[] { null, null, null }).getMessage();
+        result = MessageFormatter.ArrayFormat(
+            "Val1 is {}, val2 is {}, val3 is {}", new object[] { null, null, null }).GetMessage();
         Assert.Equal("Val1 is null, val2 is null, val3 is null", result);
 
-        result = MessageFormatter.arrayFormat(
-            "Val1 is {}, val2 is {}, val3 is {}", new object[] { null, 2, 3 }).getMessage();
+        result = MessageFormatter.ArrayFormat(
+            "Val1 is {}, val2 is {}, val3 is {}", new object[] { null, 2, 3 }).GetMessage();
         Assert.Equal("Val1 is null, val2 is 2, val3 is 3", result);
 
-        result = MessageFormatter.arrayFormat(
-            "Val1 is {}, val2 is {}, val3 is {}", new object[] { null, null, 3 }).getMessage();
+        result = MessageFormatter.ArrayFormat(
+            "Val1 is {}, val2 is {}, val3 is {}", new object[] { null, null, 3 }).GetMessage();
         Assert.Equal("Val1 is null, val2 is null, val3 is 3", result);
     }
 
     [Fact]
-    public void verifyOneParameterIsHandledCorrectly()
+    public void VerifyOneParameterIsHandledCorrectly()
     {
-        string result = MessageFormatter.format("Value is {}.", 3).getMessage();
+        string result = MessageFormatter.Format("Value is {}.", 3).GetMessage();
         Assert.Equal("Value is 3.", result);
 
-        result = MessageFormatter.format("Value is {", 3).getMessage();
+        result = MessageFormatter.Format("Value is {", 3).GetMessage();
         Assert.Equal("Value is {", result);
 
-        result = MessageFormatter.format("{} is larger than 2.", 3).getMessage();
+        result = MessageFormatter.Format("{} is larger than 2.", 3).GetMessage();
         Assert.Equal("3 is larger than 2.", result);
 
-        result = MessageFormatter.format("No subst", 3).getMessage();
+        result = MessageFormatter.Format("No subst", 3).GetMessage();
         Assert.Equal("No subst", result);
 
-        result = MessageFormatter.format("Incorrect {subst", 3).getMessage();
+        result = MessageFormatter.Format("Incorrect {subst", 3).GetMessage();
         Assert.Equal("Incorrect {subst", result);
 
-        result = MessageFormatter.format("Value is {bla} {}", 3).getMessage();
+        result = MessageFormatter.Format("Value is {bla} {}", 3).GetMessage();
         Assert.Equal("Value is {bla} 3", result);
 
-        result = MessageFormatter.format("Escaped \\{} subst", 3).getMessage();
+        result = MessageFormatter.Format("Escaped \\{} subst", 3).GetMessage();
         Assert.Equal("Escaped {} subst", result);
 
-        result = MessageFormatter.format("{Escaped", 3).getMessage();
+        result = MessageFormatter.Format("{Escaped", 3).GetMessage();
         Assert.Equal("{Escaped", result);
 
-        result = MessageFormatter.format("\\{}Escaped", 3).getMessage();
+        result = MessageFormatter.Format("\\{}Escaped", 3).GetMessage();
         Assert.Equal("{}Escaped", result);
 
-        result = MessageFormatter.format("File name is {{}}.", "App folder.zip").getMessage();
+        result = MessageFormatter.Format("File name is {{}}.", "App folder.zip").GetMessage();
         Assert.Equal("File name is {App folder.zip}.", result);
 
         // escaping the escape character
-        result = MessageFormatter.format("File name is C:\\\\{}.", "App folder.zip").getMessage();
+        result = MessageFormatter.Format("File name is C:\\\\{}.", "App folder.zip").GetMessage();
         Assert.Equal("File name is C:\\App folder.zip.", result);
     }
 
     [Fact]
-    public void testTwoParameters()
+    public void TestTwoParameters()
     {
-        string result = MessageFormatter.format("Value {} is smaller than {}.", 1, 2).getMessage();
+        string result = MessageFormatter.Format("Value {} is smaller than {}.", 1, 2).GetMessage();
         Assert.Equal("Value 1 is smaller than 2.", result);
 
-        result = MessageFormatter.format("Value {} is smaller than {}", 1, 2).getMessage();
+        result = MessageFormatter.Format("Value {} is smaller than {}", 1, 2).GetMessage();
         Assert.Equal("Value 1 is smaller than 2", result);
 
-        result = MessageFormatter.format("{}{}", 1, 2).getMessage();
+        result = MessageFormatter.Format("{}{}", 1, 2).GetMessage();
         Assert.Equal("12", result);
 
-        result = MessageFormatter.format("Val1={}, Val2={", 1, 2).getMessage();
+        result = MessageFormatter.Format("Val1={}, Val2={", 1, 2).GetMessage();
         Assert.Equal("Val1=1, Val2={", result);
 
-        result = MessageFormatter.format("Value {} is smaller than \\{}", 1, 2).getMessage();
+        result = MessageFormatter.Format("Value {} is smaller than \\{}", 1, 2).GetMessage();
         Assert.Equal("Value 1 is smaller than {}", result);
 
-        result = MessageFormatter.format("Value {} is smaller than \\{} tail", 1, 2).getMessage();
+        result = MessageFormatter.Format("Value {} is smaller than \\{} tail", 1, 2).GetMessage();
         Assert.Equal("Value 1 is smaller than {} tail", result);
 
-        result = MessageFormatter.format("Value {} is smaller than \\{", 1, 2).getMessage();
+        result = MessageFormatter.Format("Value {} is smaller than \\{", 1, 2).GetMessage();
         Assert.Equal("Value 1 is smaller than \\{", result);
 
-        result = MessageFormatter.format("Value {} is smaller than {tail", 1, 2).getMessage();
+        result = MessageFormatter.Format("Value {} is smaller than {tail", 1, 2).GetMessage();
         Assert.Equal("Value 1 is smaller than {tail", result);
 
-        result = MessageFormatter.format("Value \\{} is smaller than {}", 1, 2).getMessage();
+        result = MessageFormatter.Format("Value \\{} is smaller than {}", 1, 2).GetMessage();
         Assert.Equal("Value {} is smaller than 1", result);
     }
 
@@ -159,15 +159,15 @@ public class MessageFormatterTest
     }
 
     [Fact]
-    public void testExceptionIn_toString()
+    public void TestExceptionIn_toString()
     {
         var o = new TestObject();
-        string result = MessageFormatter.format("Troublesome object {}", o).getMessage();
+        string result = MessageFormatter.Format("Troublesome object {}", o).GetMessage();
         Assert.Equal("Troublesome object [FAILED ToString()]", result);
     }
 
     [Fact]
-    public void testNullArray()
+    public void TestNullArray()
     {
         string msg0 = "msg0";
         string msg1 = "msg1 {}";
@@ -176,114 +176,114 @@ public class MessageFormatterTest
 
         object[] args = null;
 
-        string result = MessageFormatter.arrayFormat(msg0, args).getMessage();
+        string result = MessageFormatter.ArrayFormat(msg0, args).GetMessage();
         Assert.Equal(msg0, result);
 
-        result = MessageFormatter.arrayFormat(msg1, args).getMessage();
+        result = MessageFormatter.ArrayFormat(msg1, args).GetMessage();
         Assert.Equal(msg1, result);
 
-        result = MessageFormatter.arrayFormat(msg2, args).getMessage();
+        result = MessageFormatter.ArrayFormat(msg2, args).GetMessage();
         Assert.Equal(msg2, result);
 
-        result = MessageFormatter.arrayFormat(msg3, args).getMessage();
+        result = MessageFormatter.ArrayFormat(msg3, args).GetMessage();
         Assert.Equal(msg3, result);
     }
 
     // tests the case when the parameters are supplied in a single array
     [Fact]
-    public void testArrayFormat()
+    public void TestArrayFormat()
     {
         object[] ia0 = { 1, 2, 3 };
 
-        string result = MessageFormatter.arrayFormat("Value {} is smaller than {} and {}.", ia0).getMessage();
+        string result = MessageFormatter.ArrayFormat("Value {} is smaller than {} and {}.", ia0).GetMessage();
         Assert.Equal("Value 1 is smaller than 2 and 3.", result);
 
-        result = MessageFormatter.arrayFormat("{}{}{}", ia0).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}{}", ia0).GetMessage();
         Assert.Equal("123", result);
 
-        result = MessageFormatter.arrayFormat("Value {} is smaller than {}.", ia0).getMessage();
+        result = MessageFormatter.ArrayFormat("Value {} is smaller than {}.", ia0).GetMessage();
         Assert.Equal("Value 1 is smaller than 2.", result);
 
-        result = MessageFormatter.arrayFormat("Value {} is smaller than {}", ia0).getMessage();
+        result = MessageFormatter.ArrayFormat("Value {} is smaller than {}", ia0).GetMessage();
         Assert.Equal("Value 1 is smaller than 2", result);
 
-        result = MessageFormatter.arrayFormat("Val={}, {, Val={}", ia0).getMessage();
+        result = MessageFormatter.ArrayFormat("Val={}, {, Val={}", ia0).GetMessage();
         Assert.Equal("Val=1, {, Val=2", result);
 
-        result = MessageFormatter.arrayFormat("Val={}, {, Val={}", ia0).getMessage();
+        result = MessageFormatter.ArrayFormat("Val={}, {, Val={}", ia0).GetMessage();
         Assert.Equal("Val=1, {, Val=2", result);
 
-        result = MessageFormatter.arrayFormat("Val1={}, Val2={", ia0).getMessage();
+        result = MessageFormatter.ArrayFormat("Val1={}, Val2={", ia0).GetMessage();
         Assert.Equal("Val1=1, Val2={", result);
     }
 
     [Fact]
-    public void testArrayValues()
+    public void TestArrayValues()
     {
         object[] p1 = { 2, 3 };
 
-        string result = MessageFormatter.format("{}{}", 1, p1).getMessage();
+        string result = MessageFormatter.Format("{}{}", 1, p1).GetMessage();
         Assert.Equal("1[2, 3]", result);
 
         // Integer[]
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", p1 }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", p1 }).GetMessage();
         Assert.Equal("a[2, 3]", result);
 
         // byte[]
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", new byte[] { 1, 2 } }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", new byte[] { 1, 2 } }).GetMessage();
         Assert.Equal("a[1, 2]", result);
 
         // int[]
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", new int[] { 1, 2 } }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", new int[] { 1, 2 } }).GetMessage();
         Assert.Equal("a[1, 2]", result);
 
         // float[]
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", new float[] { 1, 2 } }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", new float[] { 1, 2 } }).GetMessage();
         Assert.Equal("a[1.0, 2.0]", result);
 
         // double[]
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", new double[] { 1, 2 } }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", new double[] { 1, 2 } }).GetMessage();
         Assert.Equal("a[1.0, 2.0]", result);
     }
 
     [Fact]
-    public void testMultiDimensionalArrayValues()
+    public void TestMultiDimensionalArrayValues()
     {
         object[] ia0 = { 1, 2, 3 };
         object[] ia1 = { 10, 20, 30 };
 
         object[][] multiIntegerA = { ia0, ia1 };
-        string result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", multiIntegerA }).getMessage();
+        string result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", multiIntegerA }).GetMessage();
         Assert.Equal("a[[1, 2, 3], [10, 20, 30]]", result);
 
         int[][] multiIntA = { [1, 2], [10, 20] };
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", multiIntA }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", multiIntA }).GetMessage();
         Assert.Equal("a[[1, 2], [10, 20]]", result);
 
         float[][] multiFloatA = { [1, 2], [10, 20] };
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", multiFloatA }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", multiFloatA }).GetMessage();
         Assert.Equal("a[[1.0, 2.0], [10.0, 20.0]]", result);
 
         object[][] multiOA = { ia0, ia1 };
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", multiOA }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", multiOA }).GetMessage();
         Assert.Equal("a[[1, 2, 3], [10, 20, 30]]", result);
 
         object[][][] _3DOA = { multiOA, multiOA };
-        result = MessageFormatter.arrayFormat("{}{}", new object[] { "a", _3DOA }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}{}", new object[] { "a", _3DOA }).GetMessage();
         Assert.Equal("a[[[1, 2, 3], [10, 20, 30]], [[1, 2, 3], [10, 20, 30]]]", result);
 
         byte[] ba0 = { 0, (byte)sbyte.MaxValue, unchecked((byte)sbyte.MinValue) };
         short[] sa0 = { 0, short.MinValue, short.MaxValue };
-        result = MessageFormatter.arrayFormat("{}\\{}{}", new object[] { new object[] { ba0, sa0 }, ia1 }).getMessage();
+        result = MessageFormatter.ArrayFormat("{}\\{}{}", new object[] { new object[] { ba0, sa0 }, ia1 }).GetMessage();
         Assert.Equal("[[0, 127, -128], [0, -32768, 32767]]{}[10, 20, 30]", result);
     }
 
     [Fact]
-    public void testCyclicArrays()
+    public void TestCyclicArrays()
     {
         object[] cyclicA = new object[1];
         cyclicA[0] = cyclicA;
-        Assert.Equal("[[...]]", MessageFormatter.arrayFormat("{}", cyclicA).getMessage());
+        Assert.Equal("[[...]]", MessageFormatter.ArrayFormat("{}", cyclicA).GetMessage());
 
         object[] a = new object[2];
         a[0] = 1;
@@ -291,50 +291,50 @@ public class MessageFormatterTest
         object[] b = { 2, c };
         a[1] = b;
         Assert.Equal("1[2, [3, [1, [...]]]]",
-            MessageFormatter.arrayFormat("{}{}", a).getMessage());
+            MessageFormatter.ArrayFormat("{}{}", a).GetMessage());
     }
 
     [Fact]
-    public void testArrayThrowable()
+    public void TestArrayThrowable()
     {
         FormattingTuple ft;
         Exception t = new Exception();
         object[] ia = { 1, 2, 3, t };
 
-        ft = MessageFormatter.arrayFormat("Value {} is smaller than {} and {}.", ia);
-        Assert.Equal("Value 1 is smaller than 2 and 3.", ft.getMessage());
-        Assert.Equal(t, ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("Value {} is smaller than {} and {}.", ia);
+        Assert.Equal("Value 1 is smaller than 2 and 3.", ft.GetMessage());
+        Assert.Equal(t, ft.GetThrowable());
 
-        ft = MessageFormatter.arrayFormat("{}{}{}", ia);
-        Assert.Equal("123", ft.getMessage());
-        Assert.Equal(t, ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("{}{}{}", ia);
+        Assert.Equal("123", ft.GetMessage());
+        Assert.Equal(t, ft.GetThrowable());
 
-        ft = MessageFormatter.arrayFormat("Value {} is smaller than {}.", ia);
-        Assert.Equal("Value 1 is smaller than 2.", ft.getMessage());
-        Assert.Equal(t, ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("Value {} is smaller than {}.", ia);
+        Assert.Equal("Value 1 is smaller than 2.", ft.GetMessage());
+        Assert.Equal(t, ft.GetThrowable());
 
-        ft = MessageFormatter.arrayFormat("Value {} is smaller than {}", ia);
-        Assert.Equal("Value 1 is smaller than 2", ft.getMessage());
-        Assert.Equal(t, ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("Value {} is smaller than {}", ia);
+        Assert.Equal("Value 1 is smaller than 2", ft.GetMessage());
+        Assert.Equal(t, ft.GetThrowable());
 
-        ft = MessageFormatter.arrayFormat("Val={}, {, Val={}", ia);
-        Assert.Equal("Val=1, {, Val=2", ft.getMessage());
-        Assert.Equal(t, ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("Val={}, {, Val={}", ia);
+        Assert.Equal("Val=1, {, Val=2", ft.GetMessage());
+        Assert.Equal(t, ft.GetThrowable());
 
-        ft = MessageFormatter.arrayFormat("Val={}, \\{, Val={}", ia);
-        Assert.Equal("Val=1, \\{, Val=2", ft.getMessage());
-        Assert.Equal(t, ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("Val={}, \\{, Val={}", ia);
+        Assert.Equal("Val=1, \\{, Val=2", ft.GetMessage());
+        Assert.Equal(t, ft.GetThrowable());
 
-        ft = MessageFormatter.arrayFormat("Val1={}, Val2={", ia);
-        Assert.Equal("Val1=1, Val2={", ft.getMessage());
-        Assert.Equal(t, ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("Val1={}, Val2={", ia);
+        Assert.Equal("Val1=1, Val2={", ft.GetMessage());
+        Assert.Equal(t, ft.GetThrowable());
 
-        ft = MessageFormatter.arrayFormat("Value {} is smaller than {} and {}.", ia);
-        Assert.Equal("Value 1 is smaller than 2 and 3.", ft.getMessage());
-        Assert.Equal(t, ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("Value {} is smaller than {} and {}.", ia);
+        Assert.Equal("Value 1 is smaller than 2 and 3.", ft.GetMessage());
+        Assert.Equal(t, ft.GetThrowable());
 
-        ft = MessageFormatter.arrayFormat("{}{}{}{}", ia);
-        Assert.Equal("123" + t, ft.getMessage());
-        Assert.Null(ft.getThrowable());
+        ft = MessageFormatter.ArrayFormat("{}{}{}{}", ia);
+        Assert.Equal("123" + t, ft.GetMessage());
+        Assert.Null(ft.GetThrowable());
     }
 }

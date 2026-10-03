@@ -34,244 +34,244 @@ public abstract class AbstractInternalLogger : IInternalLogger
      */
     protected AbstractInternalLogger(string name)
     {
-        _name = ObjectUtil.checkNotNull(name, "name");
+        _name = ObjectUtil.CheckNotNull(name, "name");
     }
 
-    public string name()
+    public string Name()
     {
         return _name;
     }
 
-    public abstract bool isTraceEnabled();
-    public abstract void trace(string msg);
-    public abstract void trace(string format, object arg);
-    public abstract void trace(string format, object argA, object argB);
-    public abstract void trace(string format, params object[] arguments);
-    public abstract void trace(string msg, Exception t);
+    public abstract bool IsTraceEnabled();
+    public abstract void Trace(string msg);
+    public abstract void Trace(string format, object arg);
+    public abstract void Trace(string format, object argA, object argB);
+    public abstract void Trace(string format, params object[] arguments);
+    public abstract void Trace(string msg, Exception t);
 
-    public bool isEnabled(InternalLogLevel level)
+    public bool IsEnabled(InternalLogLevel level)
     {
         switch (level)
         {
             case InternalLogLevel.TRACE:
-                return isTraceEnabled();
+                return IsTraceEnabled();
             case InternalLogLevel.DEBUG:
-                return isDebugEnabled();
+                return IsDebugEnabled();
             case InternalLogLevel.INFO:
-                return isInfoEnabled();
+                return IsInfoEnabled();
             case InternalLogLevel.WARN:
-                return isWarnEnabled();
+                return IsWarnEnabled();
             case InternalLogLevel.ERROR:
-                return isErrorEnabled();
+                return IsErrorEnabled();
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    public void trace(Exception t)
+    public void Trace(Exception t)
     {
-        trace(EXCEPTION_MESSAGE, t);
+        Trace(EXCEPTION_MESSAGE, t);
     }
 
-    public abstract bool isDebugEnabled();
-    public abstract void debug(string msg);
-    public abstract void debug(string format, object arg);
-    public abstract void debug(string format, object argA, object argB);
-    public abstract void debug(string format, params object[] arguments);
-    public abstract void debug(string msg, Exception t);
+    public abstract bool IsDebugEnabled();
+    public abstract void Debug(string msg);
+    public abstract void Debug(string format, object arg);
+    public abstract void Debug(string format, object argA, object argB);
+    public abstract void Debug(string format, params object[] arguments);
+    public abstract void Debug(string msg, Exception t);
 
-    public void debug(Exception t)
+    public void Debug(Exception t)
     {
-        debug(EXCEPTION_MESSAGE, t);
+        Debug(EXCEPTION_MESSAGE, t);
     }
 
-    public abstract bool isInfoEnabled();
-    public abstract void info(string msg);
-    public abstract void info(string format, object arg);
-    public abstract void info(string format, object argA, object argB);
-    public abstract void info(string format, params object[] arguments);
-    public abstract void info(string msg, Exception t);
+    public abstract bool IsInfoEnabled();
+    public abstract void Info(string msg);
+    public abstract void Info(string format, object arg);
+    public abstract void Info(string format, object argA, object argB);
+    public abstract void Info(string format, params object[] arguments);
+    public abstract void Info(string msg, Exception t);
 
-    public void info(Exception t)
+    public void Info(Exception t)
     {
-        info(EXCEPTION_MESSAGE, t);
+        Info(EXCEPTION_MESSAGE, t);
     }
 
-    public abstract bool isWarnEnabled();
-    public abstract void warn(string msg);
-    public abstract void warn(string format, object arg);
-    public abstract void warn(string format, params object[] arguments);
-    public abstract void warn(string format, object argA, object argB);
-    public abstract void warn(string msg, Exception t);
+    public abstract bool IsWarnEnabled();
+    public abstract void Warn(string msg);
+    public abstract void Warn(string format, object arg);
+    public abstract void Warn(string format, params object[] arguments);
+    public abstract void Warn(string format, object argA, object argB);
+    public abstract void Warn(string msg, Exception t);
 
-    public void warn(Exception t)
+    public void Warn(Exception t)
     {
-        warn(EXCEPTION_MESSAGE, t);
+        Warn(EXCEPTION_MESSAGE, t);
     }
 
-    public abstract bool isErrorEnabled();
-    public abstract void error(string msg);
-    public abstract void error(string format, object arg);
-    public abstract void error(string format, object argA, object argB);
-    public abstract void error(string format, params object[] arguments);
-    public abstract void error(string msg, Exception t);
+    public abstract bool IsErrorEnabled();
+    public abstract void Error(string msg);
+    public abstract void Error(string format, object arg);
+    public abstract void Error(string format, object argA, object argB);
+    public abstract void Error(string format, params object[] arguments);
+    public abstract void Error(string msg, Exception t);
 
-    public void error(Exception t)
+    public void Error(Exception t)
     {
-        error(EXCEPTION_MESSAGE, t);
+        Error(EXCEPTION_MESSAGE, t);
     }
 
-    public void log(InternalLogLevel level, string msg, Exception cause)
+    public void Log(InternalLogLevel level, string msg, Exception cause)
     {
         switch (level)
         {
             case InternalLogLevel.TRACE:
-                trace(msg, cause);
+                Trace(msg, cause);
                 break;
             case InternalLogLevel.DEBUG:
-                debug(msg, cause);
+                Debug(msg, cause);
                 break;
             case InternalLogLevel.INFO:
-                info(msg, cause);
+                Info(msg, cause);
                 break;
             case InternalLogLevel.WARN:
-                warn(msg, cause);
+                Warn(msg, cause);
                 break;
             case InternalLogLevel.ERROR:
-                error(msg, cause);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-
-    public void log(InternalLogLevel level, Exception cause)
-    {
-        switch (level)
-        {
-            case InternalLogLevel.TRACE:
-                trace(cause);
-                break;
-            case InternalLogLevel.DEBUG:
-                debug(cause);
-                break;
-            case InternalLogLevel.INFO:
-                info(cause);
-                break;
-            case InternalLogLevel.WARN:
-                warn(cause);
-                break;
-            case InternalLogLevel.ERROR:
-                error(cause);
+                Error(msg, cause);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    public void log(InternalLogLevel level, string msg)
+    public void Log(InternalLogLevel level, Exception cause)
     {
         switch (level)
         {
             case InternalLogLevel.TRACE:
-                trace(msg);
+                Trace(cause);
                 break;
             case InternalLogLevel.DEBUG:
-                debug(msg);
+                Debug(cause);
                 break;
             case InternalLogLevel.INFO:
-                info(msg);
+                Info(cause);
                 break;
             case InternalLogLevel.WARN:
-                warn(msg);
+                Warn(cause);
                 break;
             case InternalLogLevel.ERROR:
-                error(msg);
+                Error(cause);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    public void log(InternalLogLevel level, string format, object arg)
+    public void Log(InternalLogLevel level, string msg)
     {
         switch (level)
         {
             case InternalLogLevel.TRACE:
-                trace(format, arg);
+                Trace(msg);
                 break;
             case InternalLogLevel.DEBUG:
-                debug(format, arg);
+                Debug(msg);
                 break;
             case InternalLogLevel.INFO:
-                info(format, arg);
+                Info(msg);
                 break;
             case InternalLogLevel.WARN:
-                warn(format, arg);
+                Warn(msg);
                 break;
             case InternalLogLevel.ERROR:
-                error(format, arg);
+                Error(msg);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    public void log(InternalLogLevel level, string format, object argA, object argB)
+    public void Log(InternalLogLevel level, string format, object arg)
     {
         switch (level)
         {
             case InternalLogLevel.TRACE:
-                trace(format, argA, argB);
+                Trace(format, arg);
                 break;
             case InternalLogLevel.DEBUG:
-                debug(format, argA, argB);
+                Debug(format, arg);
                 break;
             case InternalLogLevel.INFO:
-                info(format, argA, argB);
+                Info(format, arg);
                 break;
             case InternalLogLevel.WARN:
-                warn(format, argA, argB);
+                Warn(format, arg);
                 break;
             case InternalLogLevel.ERROR:
-                error(format, argA, argB);
+                Error(format, arg);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    public void log(InternalLogLevel level, string format, params object[] arguments)
+    public void Log(InternalLogLevel level, string format, object argA, object argB)
     {
         switch (level)
         {
             case InternalLogLevel.TRACE:
-                trace(format, arguments);
+                Trace(format, argA, argB);
                 break;
             case InternalLogLevel.DEBUG:
-                debug(format, arguments);
+                Debug(format, argA, argB);
                 break;
             case InternalLogLevel.INFO:
-                info(format, arguments);
+                Info(format, argA, argB);
                 break;
             case InternalLogLevel.WARN:
-                warn(format, arguments);
+                Warn(format, argA, argB);
                 break;
             case InternalLogLevel.ERROR:
-                error(format, arguments);
+                Error(format, argA, argB);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    protected object readResolve()
+    public void Log(InternalLogLevel level, string format, params object[] arguments)
     {
-        return InternalLoggerFactory.getInstance(name());
+        switch (level)
+        {
+            case InternalLogLevel.TRACE:
+                Trace(format, arguments);
+                break;
+            case InternalLogLevel.DEBUG:
+                Debug(format, arguments);
+                break;
+            case InternalLogLevel.INFO:
+                Info(format, arguments);
+                break;
+            case InternalLogLevel.WARN:
+                Warn(format, arguments);
+                break;
+            case InternalLogLevel.ERROR:
+                Error(format, arguments);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    protected object ReadResolve()
+    {
+        return InternalLoggerFactory.GetInstance(Name());
     }
 
     public override string ToString()
     {
-        return StringUtil.simpleClassName(this) + '(' + name() + ')';
+        return StringUtil.SimpleClassName(this) + '(' + Name() + ')';
     }
 }

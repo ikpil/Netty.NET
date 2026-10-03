@@ -13,7 +13,7 @@ public class AnonymousExecutor : IExecutor
         _action = action;
     }
 
-    public void execute(IRunnable command)
+    public void Execute(IRunnable command)
     {
         _action.Invoke(command);
     }

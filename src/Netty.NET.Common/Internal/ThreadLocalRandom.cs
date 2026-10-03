@@ -23,5 +23,5 @@ public static class ThreadLocalRandom
         return _rnd;
     }
 
-    public static Random current() => CreateOrGetLocalRandom();
+    public static Random Current() => CreateOrGetLocalRandom();
 }

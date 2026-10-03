@@ -73,12 +73,12 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     internal Task<T> ResultTask => _completion.Task;
     public Task Completion => _completion.Task;
     public bool IsCanceled => Completion.IsCanceled;
-    public long deadlineNanos() => _deadline;
-    public long delayNanos() => delayNanos(_clock());
-    public long delayNanos(long now) => AbstractScheduledEventExecutor.DeadlineToDelayNanos(now, _deadline);
-    public long getId() => _id;
+    public long DeadlineNanos() => _deadline;
+    public long DelayNanos() => DelayNanos(_clock());
+    public long DelayNanos(long now) => AbstractScheduledEventExecutor.DeadlineToDelayNanos(now, _deadline);
+    public long GetId() => _id;
     public void AssignId(long id) { if (_id == 0) _id = id; }
-    public void setConsumed()
+    public void SetConsumed()
     {
         // Optimization to avoid checking system clock again
         // after deadline has passed and task has been dequeued
@@ -142,10 +142,10 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         _registration.Unregister();
     }
 
-    public void run()
+    public void Run()
     {
         if (Completion.IsCompleted) { if (IsCanceled) RemoveCanceled(); return; }
-        if (delayNanos() > 0)
+        if (DelayNanos() > 0)
         {
             // Not yet expired, need to add or remove from queue
             _enqueue(this);
@@ -217,6 +217,6 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         finally { ExecutionContext.SuppressFlow(); }
     }
 
-    public int priorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue) => _queueIndex;
-    public void priorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue, int index) => _queueIndex = index;
+    public int PriorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue) => _queueIndex;
+    public void PriorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue, int index) => _queueIndex = index;
 }

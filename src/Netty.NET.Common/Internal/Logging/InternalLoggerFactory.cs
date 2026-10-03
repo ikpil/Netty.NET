@@ -38,7 +38,7 @@ public abstract class InternalLoggerFactory : IInternalLoggerFactory
 {
     private static IInternalLoggerFactory defaultFactory;
 
-    private static IInternalLoggerFactory newDefaultFactory(string name)
+    private static IInternalLoggerFactory NewDefaultFactory(string name)
     {
         return new InternalDefaultLoggerFactory();
     }
@@ -47,14 +47,14 @@ public abstract class InternalLoggerFactory : IInternalLoggerFactory
      * Returns the default factory.  The initial default factory is
      * {@link JdkLoggerFactory}.
      */
-    public static IInternalLoggerFactory getDefaultFactory()
+    public static IInternalLoggerFactory GetDefaultFactory()
     {
         if (defaultFactory == null)
         {
             var factory = Volatile.Read(ref defaultFactory);
             if (factory == null)
             {
-                factory = newDefaultFactory(typeof(InternalLoggerFactory).FullName);
+                factory = NewDefaultFactory(typeof(InternalLoggerFactory).FullName);
                 var current = Interlocked.CompareExchange(ref defaultFactory, factory, null);
                 if (current == null)
                 {
@@ -69,36 +69,36 @@ public abstract class InternalLoggerFactory : IInternalLoggerFactory
     /**
      * Changes the default factory.
      */
-    public static void setDefaultFactory(IInternalLoggerFactory factory)
+    public static void SetDefaultFactory(IInternalLoggerFactory factory)
     {
-        ObjectUtil.checkNotNull(factory, "defaultFactory");
+        ObjectUtil.CheckNotNull(factory, "defaultFactory");
         Volatile.Write(ref defaultFactory, factory);
     }
 
     /**
      * Creates a new logger instance with the name of the specified class.
      */
-    public static IInternalLogger getInstance<T>()
+    public static IInternalLogger GetInstance<T>()
     {
-        return getInstance(typeof(T));
+        return GetInstance(typeof(T));
     }
 
-    public static IInternalLogger getInstance(Type type)
+    public static IInternalLogger GetInstance(Type type)
     {
-        return getInstance(type.FullName);
+        return GetInstance(type.FullName);
     }
 
 
     /**
      * Creates a new logger instance with the specified name.
      */
-    public static IInternalLogger getInstance(string name)
+    public static IInternalLogger GetInstance(string name)
     {
-        return getDefaultFactory().newInstance(name);
+        return GetDefaultFactory().NewInstance(name);
     }
 
     /**
      * Creates a new logger instance with the specified name.
      */
-    public abstract IInternalLogger newInstance(string name);
+    public abstract IInternalLogger NewInstance(string name);
 }

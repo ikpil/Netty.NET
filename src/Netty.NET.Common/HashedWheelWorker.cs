@@ -24,7 +24,7 @@ namespace Netty.NET.Common;
 
 internal sealed class HashedWheelWorker : IRunnable
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(HashedWheelTimer));
 
     private readonly HashSet<ITimeout> _unprocessedTimeouts = new HashSet<ITimeout>();
 
@@ -36,10 +36,10 @@ internal sealed class HashedWheelWorker : IRunnable
         _timer = timer;
     }
 
-    public void run()
+    public void Run()
     {
         // Initialize the startTime.
-        Volatile.Write(ref _timer._startTime, SystemTimer.nanoTime());
+        Volatile.Write(ref _timer._startTime, SystemTimer.NanoTime());
         if (Volatile.Read(ref _timer._startTime) == 0)
         {
             // We use 0 as an indicator for the uninitialized value here, so make sure it's not 0 when initialized.
@@ -51,15 +51,15 @@ internal sealed class HashedWheelWorker : IRunnable
 
         do
         {
-            long deadline = waitForNextTick();
+            long deadline = WaitForNextTick();
             if (deadline > 0)
             {
                 int idx = (int)(_tick & _timer._mask);
-                processCancelledTasks();
+                ProcessCancelledTasks();
                 HashedWheelBucket bucket =
                     _timer._wheel[idx];
-                transferTimeoutsToBuckets();
-                bucket.expireTimeouts(deadline);
+                TransferTimeoutsToBuckets();
+                bucket.ExpireTimeouts(deadline);
                 _tick++;
             }
         } while (Volatile.Read(ref _timer._workerState) == HashedWheelTimer.WORKER_STATE_STARTED);
@@ -67,7 +67,7 @@ internal sealed class HashedWheelWorker : IRunnable
         // Fill the unprocessedTimeouts so we can return them from stop() method.
         foreach (HashedWheelBucket bucket in _timer._wheel)
         {
-            bucket.clearTimeouts(_unprocessedTimeouts);
+            bucket.ClearTimeouts(_unprocessedTimeouts);
         }
 
         for (;;)
@@ -78,16 +78,16 @@ internal sealed class HashedWheelWorker : IRunnable
                 break;
             }
 
-            if (!timeout.isCancelled())
+            if (!timeout.IsCancelled())
             {
                 _unprocessedTimeouts.Add(timeout);
             }
         }
 
-        processCancelledTasks();
+        ProcessCancelledTasks();
     }
 
-    private void transferTimeoutsToBuckets()
+    private void TransferTimeoutsToBuckets()
     {
         // transfer only max. 100000 timeouts per tick to prevent a thread to stale the workerThread when it just
         // adds new timeouts in a loop.
@@ -100,7 +100,7 @@ internal sealed class HashedWheelWorker : IRunnable
                 break;
             }
 
-            if (timeout.state() == HashedWheelTimeout.ST_CANCELLED)
+            if (timeout.State() == HashedWheelTimeout.ST_CANCELLED)
             {
                 // Was cancelled in the meantime.
                 continue;
@@ -113,11 +113,11 @@ internal sealed class HashedWheelWorker : IRunnable
             int stopIndex = (int)(ticks & _timer._mask);
 
             HashedWheelBucket bucket = _timer._wheel[stopIndex];
-            bucket.addTimeout(timeout);
+            bucket.AddTimeout(timeout);
         }
     }
 
-    private void processCancelledTasks()
+    private void ProcessCancelledTasks()
     {
         for (;;)
         {
@@ -130,13 +130,13 @@ internal sealed class HashedWheelWorker : IRunnable
 
             try
             {
-                timeout.removeAfterCancellation();
+                timeout.RemoveAfterCancellation();
             }
             catch (Exception t)
             {
-                if (logger.isWarnEnabled())
+                if (logger.IsWarnEnabled())
                 {
-                    logger.warn("An exception was thrown while process a cancellation task", t);
+                    logger.Warn("An exception was thrown while process a cancellation task", t);
                 }
             }
         }
@@ -148,13 +148,13 @@ internal sealed class HashedWheelWorker : IRunnable
          * @return Long.MIN_VALUE if received a shutdown request,
          * current time otherwise (with Long.MIN_VALUE changed by +1)
          */
-    private long waitForNextTick()
+    private long WaitForNextTick()
     {
         long deadline = _timer._tickDuration * (_tick + 1);
 
         for (;;)
         {
-            long currentTime = SystemTimer.nanoTime() - Volatile.Read(ref _timer._startTime);
+            long currentTime = SystemTimer.NanoTime() - Volatile.Read(ref _timer._startTime);
             long sleepTimeMs = (deadline - currentTime + 999999) / 1000000;
 
             if (sleepTimeMs <= 0)
@@ -193,7 +193,7 @@ internal sealed class HashedWheelWorker : IRunnable
         }
     }
 
-    public IReadOnlyCollection<ITimeout> unprocessedTimeouts()
+    public IReadOnlyCollection<ITimeout> UnprocessedTimeouts()
     {
         return Array.AsReadOnly<ITimeout>([.. _unprocessedTimeouts]);
     }

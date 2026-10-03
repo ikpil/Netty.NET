@@ -29,16 +29,16 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         : this(boundedCapacity)
     {
         ArgumentNullException.ThrowIfNull(collection);
-        foreach (T item in collection.ToArray()) add(item);
+        foreach (T item in collection.ToArray()) Add(item);
     }
 
     public int Count => Volatile.Read(ref count);
-    public bool isEmpty() => Count == 0;
+    public bool IsEmpty() => Count == 0;
 
-    public bool tryEnqueue(T item)
+    public bool TryEnqueue(T item)
     {
         if (item is null) throw new ArgumentNullException(nameof(item));
-        using (UninterruptibleMonitor.enter(gate))
+        using (UninterruptibleMonitor.Enter(gate))
         {
             if (queue.Count >= capacity) return false;
             queue.AddLast(item);
@@ -48,19 +48,19 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         }
     }
 
-    public void add(T item)
+    public void Add(T item)
     {
-        if (!tryEnqueue(item)) throw new InvalidOperationException("Queue full");
+        if (!TryEnqueue(item)) throw new InvalidOperationException("Queue full");
     }
 
-    public bool tryDequeue(out T item) => tryTake(out item);
+    public bool TryDequeue(out T item) => TryTake(out item);
 
-    public bool tryTake(out T item)
+    public bool TryTake(out T item)
     {
-        using (UninterruptibleMonitor.enter(gate)) return poll(out item);
+        using (UninterruptibleMonitor.Enter(gate)) return Poll(out item);
     }
 
-    private bool poll(out T item)
+    private bool Poll(out T item)
     {
         var head = queue.First;
         if (head == null) { item = default; return false; }
@@ -70,9 +70,9 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         return true;
     }
 
-    public bool tryPeek(out T item)
+    public bool TryPeek(out T item)
     {
-        using (UninterruptibleMonitor.enter(gate))
+        using (UninterruptibleMonitor.Enter(gate))
         {
             var head = queue.First;
             if (head == null) { item = default; return false; }
@@ -81,10 +81,10 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         }
     }
 
-    public virtual bool tryRemove(T item)
+    public virtual bool TryRemove(T item)
     {
         if (item is null) return false;
-        using (UninterruptibleMonitor.enter(gate))
+        using (UninterruptibleMonitor.Enter(gate))
         {
             var node = queue.Find(item);
             if (node == null) return false;
@@ -94,7 +94,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         }
     }
 
-    public T take()
+    public T Take()
     {
         // JDK take/lockInterruptibly observes a pending interrupt even if the
         // queue is populated. CLR only exposes it at an interruptible wait.
@@ -102,12 +102,12 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         lock (gate)
         {
             while (queue.Count == 0) Monitor.Wait(gate);
-            poll(out T item);
+            Poll(out T item);
             return item;
         }
     }
 
-    public bool tryTake(out T item, TimeSpan timeout)
+    public bool TryTake(out T item, TimeSpan timeout)
     {
         Thread.Sleep(0);
         long started = Stopwatch.GetTimestamp();
@@ -121,26 +121,26 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
                 int millis = (int)Math.Min(int.MaxValue, 1 + (remaining - 1) / TimeSpan.TicksPerMillisecond);
                 Monitor.Wait(gate, millis);
             }
-            return poll(out item);
+            return Poll(out item);
         }
     }
 
-    public void clear()
+    public void Clear()
     {
-        using (UninterruptibleMonitor.enter(gate))
+        using (UninterruptibleMonitor.Enter(gate))
         {
             queue.Clear();
             Volatile.Write(ref count, 0);
         }
     }
 
-    public int drain(IConsumer<T> consumer, int limit)
+    public int Drain(IConsumer<T> consumer, int limit)
     {
         ArgumentNullException.ThrowIfNull(consumer);
         int count = 0;
-        while (count < limit && tryTake(out T item))
+        while (count < limit && TryTake(out T item))
         {
-            consumer.accept(item);
+            consumer.Accept(item);
             ++count;
         }
         return count;

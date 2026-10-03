@@ -12,7 +12,7 @@ public sealed class IndexNotOfProcessor : IByteProcessor
         this.byteToNotFind = byteToNotFind;
     }
 
-    public bool process(byte value)
+    public bool Process(byte value)
     {
         return value == byteToNotFind;
     }

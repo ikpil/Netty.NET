@@ -33,12 +33,12 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public AppendableCharSequence(int length)
     {
-        chars = new char[checkPositive(length, "length")];
+        chars = new char[CheckPositive(length, "length")];
     }
 
     private AppendableCharSequence(char[] chars)
     {
-        this.chars = checkNonEmpty(chars, "chars");
+        this.chars = CheckNonEmpty(chars, "chars");
         pos = chars.Length;
     }
 
@@ -55,7 +55,7 @@ public sealed class AppendableCharSequence : ICharSequence
         }
     }
 
-    public void setLength(int length)
+    public void SetLength(int length)
     {
         if (length < 0 || length > pos)
         {
@@ -65,60 +65,60 @@ public sealed class AppendableCharSequence : ICharSequence
         this.pos = length;
     }
 
-    ICharSequence ICharSequence.subSequence(int start, int end)
+    ICharSequence ICharSequence.SubSequence(int start, int end)
     {
-        return subSequence(start, end);
+        return SubSequence(start, end);
     }
 
-    public ICharSequence subSequence(int start)
+    public ICharSequence SubSequence(int start)
     {
-        return subSequence(start, pos);
+        return SubSequence(start, pos);
     }
 
-    public char charAt(int index)
+    public char CharAt(int index)
     {
         return this[index];
     }
 
-    public int length()
+    public int Length()
     {
         return pos;
     }
 
-    public int indexOf(char ch, int start = 0)
+    public int IndexOf(char ch, int start = 0)
     {
         start = Math.Max(0, start);
         return start >= pos ? -1 : Array.IndexOf(chars, ch, start, pos - start);
     }
 
-    public bool regionMatches(int thisStart, ICharSequence seq, int start, int length)
+    public bool RegionMatches(int thisStart, ICharSequence seq, int start, int length)
     {
         return CharUtil.RegionMatches(this, thisStart, seq, start, length);
     }
 
-    public bool regionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length)
+    public bool RegionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length)
     {
         return CharUtil.RegionMatchesIgnoreCase(this, thisStart, seq, start, length);
     }
 
-    public bool contentEquals(ICharSequence other)
+    public bool ContentEquals(ICharSequence other)
     {
         return CharUtil.ContentEquals(this, other);
     }
 
-    public bool contentEqualsIgnoreCase(ICharSequence other)
+    public bool ContentEqualsIgnoreCase(ICharSequence other)
     {
         return CharUtil.ContentEqualsIgnoreCase(this, other);
     }
 
-    public int hashCode(bool ignoreCase)
+    public int HashCode(bool ignoreCase)
     {
         return string.GetHashCode(AsSpan(), ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
     }
 
     public string ToString(int start)
     {
-        return substring(start, pos);
+        return Substring(start, pos);
     }
 
     /**
@@ -128,14 +128,14 @@ public sealed class AppendableCharSequence : ICharSequence
      * @param index The index to access the underlying array at.
      * @return The value at {@code index}.
      */
-    public char charAtUnsafe(int index)
+    public char CharAtUnsafe(int index)
     {
         return chars[index];
     }
 
-    public AppendableCharSequence subSequence(int start, int end)
+    public AppendableCharSequence SubSequence(int start, int end)
     {
-        checkRange(start, end, pos);
+        CheckRange(start, end, pos);
         if (start == end)
         {
             // If start and end index is the same we need to return an empty sequence to conform to the interface.
@@ -144,43 +144,43 @@ public sealed class AppendableCharSequence : ICharSequence
             return new AppendableCharSequence(Math.Min(16, chars.Length));
         }
 
-        return new AppendableCharSequence(Arrays.copyOfRange(chars, start, end));
+        return new AppendableCharSequence(Arrays.CopyOfRange(chars, start, end));
     }
 
-    public AppendableCharSequence append(char c)
+    public AppendableCharSequence Append(char c)
     {
         if (pos == chars.Length)
         {
             char[] old = chars;
             chars = new char[old.Length << 1];
-            Arrays.arraycopy(old, 0, chars, 0, old.Length);
+            Arrays.Arraycopy(old, 0, chars, 0, old.Length);
         }
 
         chars[pos++] = c;
         return this;
     }
 
-    public AppendableCharSequence append(ICharSequence csq)
+    public AppendableCharSequence Append(ICharSequence csq)
     {
-        checkNotNull(csq, nameof(csq));
-        return append(csq, 0, csq.Count);
+        CheckNotNull(csq, nameof(csq));
+        return Append(csq, 0, csq.Count);
     }
     
-    public AppendableCharSequence append(string str)
+    public AppendableCharSequence Append(string str)
     {
         var csq = new StringCharSequence(str);
-        return append(csq, 0, csq.Count);
+        return Append(csq, 0, csq.Count);
     }
 
-    public AppendableCharSequence append(ICharSequence csq, int start, int end)
+    public AppendableCharSequence Append(ICharSequence csq, int start, int end)
     {
-        checkNotNull(csq, nameof(csq));
-        checkRange(start, end, csq.Count);
+        CheckNotNull(csq, nameof(csq));
+        CheckRange(start, end, csq.Count);
 
         int length = end - start;
         if (length > chars.Length - pos)
         {
-            chars = expand(chars, pos + length, pos);
+            chars = Expand(chars, pos + length, pos);
         }
 
         if (csq is AppendableCharSequence)
@@ -188,7 +188,7 @@ public sealed class AppendableCharSequence : ICharSequence
             // Optimize append operations via array copy
             AppendableCharSequence seq = (AppendableCharSequence)csq;
             char[] src = seq.chars;
-            Arrays.arraycopy(src, start, chars, pos, length);
+            Arrays.Arraycopy(src, start, chars, pos, length);
             pos += length;
             return this;
         }
@@ -205,7 +205,7 @@ public sealed class AppendableCharSequence : ICharSequence
      * Reset the {@link AppendableCharSequence}. Be aware this will only reset the current internal position and not
      * shrink the internal char array.
      */
-    public void reset()
+    public void Reset()
     {
         pos = 0;
     }
@@ -228,9 +228,9 @@ public sealed class AppendableCharSequence : ICharSequence
     /**
      * Create a new {@link String} from the given start to end.
      */
-    public string substring(int start, int end)
+    public string Substring(int start, int end)
     {
-        checkRange(start, end, pos);
+        CheckRange(start, end, pos);
         return new string(chars, start, end - start);
     }
 
@@ -239,12 +239,12 @@ public sealed class AppendableCharSequence : ICharSequence
      * This method is considered unsafe as index values are assumed to be legitimate.
      * Only underlying array bounds checking is done.
      */
-    public string subStringUnsafe(int start, int end)
+    public string SubStringUnsafe(int start, int end)
     {
         return new string(chars, start, end - start);
     }
 
-    private static char[] expand(char[] array, int neededSpace, int size)
+    private static char[] Expand(char[] array, int neededSpace, int size)
     {
         int newCapacity = array.Length;
         do
@@ -259,12 +259,12 @@ public sealed class AppendableCharSequence : ICharSequence
         } while (neededSpace > newCapacity);
 
         char[] newArray = new char[newCapacity];
-        Arrays.arraycopy(array, 0, newArray, 0, size);
+        Arrays.Arraycopy(array, 0, newArray, 0, size);
 
         return newArray;
     }
 
-    private static void checkRange(int start, int end, int length)
+    private static void CheckRange(int start, int end, int length)
     {
         if (start < 0 || end < start || end > length)
         {

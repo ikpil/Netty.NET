@@ -26,7 +26,7 @@ public class PlatformDependentTest
 
     interface IEqualityChecker
     {
-        bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length);
+        bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length);
     }
 
     class EqualityChecker : IEqualityChecker
@@ -38,43 +38,43 @@ public class PlatformDependentTest
             _invoker = invoker;
         }
 
-        public bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
+        public bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
         {
             return _invoker.Invoke(bytes1, startPos1, bytes2, startPos2, length);
         }
     }
 
     [Fact]
-    public void testEqualsConsistentTime()
+    public void TestEqualsConsistentTime()
     {
-        testEquals0(new EqualityChecker((byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) =>
+        TestEquals0(new EqualityChecker((byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) =>
         {
-            return PlatformDependent.equalsConstantTime(bytes1, startPos1, bytes2, startPos2, length) != 0;
+            return PlatformDependent.EqualsConstantTime(bytes1, startPos1, bytes2, startPos2, length) != 0;
         }));
     }
 
     [Fact]
-    public void testEquals()
+    public void TestEquals()
     {
-        testEquals0(new EqualityChecker((byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) =>
+        TestEquals0(new EqualityChecker((byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) =>
         {
-            return PlatformDependent.equals(bytes1, startPos1, bytes2, startPos2, length);
+            return PlatformDependent.Equals(bytes1, startPos1, bytes2, startPos2, length);
         }));
     }
 
     [Fact]
-    public void testIsZero()
+    public void TestIsZero()
     {
         byte[] bytes = new byte[100];
-        Assert.True(PlatformDependent.isZero(bytes, 0, 0));
-        Assert.True(PlatformDependent.isZero(bytes, 0, -1));
-        Assert.True(PlatformDependent.isZero(bytes, 0, 100));
-        Assert.True(PlatformDependent.isZero(bytes, 10, 90));
+        Assert.True(PlatformDependent.IsZero(bytes, 0, 0));
+        Assert.True(PlatformDependent.IsZero(bytes, 0, -1));
+        Assert.True(PlatformDependent.IsZero(bytes, 0, 100));
+        Assert.True(PlatformDependent.IsZero(bytes, 10, 90));
         bytes[10] = 1;
-        Assert.True(PlatformDependent.isZero(bytes, 0, 10));
-        Assert.False(PlatformDependent.isZero(bytes, 0, 11));
-        Assert.False(PlatformDependent.isZero(bytes, 10, 1));
-        Assert.True(PlatformDependent.isZero(bytes, 11, 89));
+        Assert.True(PlatformDependent.IsZero(bytes, 0, 10));
+        Assert.False(PlatformDependent.IsZero(bytes, 0, 11));
+        Assert.False(PlatformDependent.IsZero(bytes, 10, 1));
+        Assert.True(PlatformDependent.IsZero(bytes, 11, 89));
     }
 
     private static byte[] B(char[] c)
@@ -82,34 +82,34 @@ public class PlatformDependentTest
         return c.Select(x => (byte)x).ToArray();
     }
 
-    private static void testEquals0(IEqualityChecker equalsChecker)
+    private static void TestEquals0(IEqualityChecker equalsChecker)
     {
         byte[] bytes1 = B(['H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd']);
         byte[] bytes2 = B(['H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd']);
         Assert.NotSame(bytes1, bytes2);
-        Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, bytes1.Length));
-        Assert.True(equalsChecker.equals(bytes1, 2, bytes2, 2, bytes1.Length - 2));
+        Assert.True(equalsChecker.Equals(bytes1, 0, bytes2, 0, bytes1.Length));
+        Assert.True(equalsChecker.Equals(bytes1, 2, bytes2, 2, bytes1.Length - 2));
 
         bytes1 = new byte[] { 1, 2, 3, 4, 5, 6 };
         bytes2 = new byte[] { 1, 2, 3, 4, 5, 6, 7 };
         Assert.NotSame(bytes1, bytes2);
-        Assert.False(equalsChecker.equals(bytes1, 0, bytes2, 1, bytes1.Length));
-        Assert.True(equalsChecker.equals(bytes2, 0, bytes1, 0, bytes1.Length));
+        Assert.False(equalsChecker.Equals(bytes1, 0, bytes2, 1, bytes1.Length));
+        Assert.True(equalsChecker.Equals(bytes2, 0, bytes1, 0, bytes1.Length));
 
         bytes1 = new byte[] { 1, 2, 3, 4 };
         bytes2 = new byte[] { 1, 2, 3, 5 };
-        Assert.False(equalsChecker.equals(bytes1, 0, bytes2, 0, bytes1.Length));
-        Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, 3));
+        Assert.False(equalsChecker.Equals(bytes1, 0, bytes2, 0, bytes1.Length));
+        Assert.True(equalsChecker.Equals(bytes1, 0, bytes2, 0, 3));
 
         bytes1 = new byte[] { 1, 2, 3, 4 };
         bytes2 = new byte[] { 1, 3, 3, 4 };
-        Assert.False(equalsChecker.equals(bytes1, 0, bytes2, 0, bytes1.Length));
-        Assert.True(equalsChecker.equals(bytes1, 2, bytes2, 2, bytes1.Length - 2));
+        Assert.False(equalsChecker.Equals(bytes1, 0, bytes2, 0, bytes1.Length));
+        Assert.True(equalsChecker.Equals(bytes1, 2, bytes2, 2, bytes1.Length - 2));
 
         bytes1 = new byte[0];
         bytes2 = new byte[0];
         Assert.NotSame(bytes1, bytes2);
-        Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, 0));
+        Assert.True(equalsChecker.Equals(bytes1, 0, bytes2, 0, 0));
 
         bytes1 = new byte[100];
         bytes2 = new byte[100];
@@ -119,37 +119,37 @@ public class PlatformDependentTest
             bytes2[i] = (byte)i;
         }
 
-        Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, bytes1.Length));
+        Assert.True(equalsChecker.Equals(bytes1, 0, bytes2, 0, bytes1.Length));
         bytes1[50] = 0;
-        Assert.False(equalsChecker.equals(bytes1, 0, bytes2, 0, bytes1.Length));
-        Assert.True(equalsChecker.equals(bytes1, 51, bytes2, 51, bytes1.Length - 51));
-        Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, 50));
+        Assert.False(equalsChecker.Equals(bytes1, 0, bytes2, 0, bytes1.Length));
+        Assert.True(equalsChecker.Equals(bytes1, 51, bytes2, 51, bytes1.Length - 51));
+        Assert.True(equalsChecker.Equals(bytes1, 0, bytes2, 0, 50));
 
         bytes1 = new byte[] { 1, 2, 3, 4, 5 };
         bytes2 = new byte[] { 3, 4, 5 };
-        Assert.False(equalsChecker.equals(bytes1, 0, bytes2, 0, bytes2.Length));
-        Assert.True(equalsChecker.equals(bytes1, 2, bytes2, 0, bytes2.Length));
-        Assert.True(equalsChecker.equals(bytes2, 0, bytes1, 2, bytes2.Length));
+        Assert.False(equalsChecker.Equals(bytes1, 0, bytes2, 0, bytes2.Length));
+        Assert.True(equalsChecker.Equals(bytes1, 2, bytes2, 0, bytes2.Length));
+        Assert.True(equalsChecker.Equals(bytes2, 0, bytes1, 2, bytes2.Length));
 
         for (int i = 0; i < 1000; ++i)
         {
             bytes1 = new byte[i];
-            r.nextBytes(bytes1);
+            r.NextBytes(bytes1);
             bytes2 = bytes1.ToArray();
-            Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, bytes1.Length));
+            Assert.True(equalsChecker.Equals(bytes1, 0, bytes2, 0, bytes1.Length));
         }
 
-        Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, 0));
-        Assert.True(equalsChecker.equals(bytes1, 0, bytes2, 0, -1));
+        Assert.True(equalsChecker.Equals(bytes1, 0, bytes2, 0, 0));
+        Assert.True(equalsChecker.Equals(bytes1, 0, bytes2, 0, -1));
     }
 
-    private static char randomCharInByteRange()
+    private static char RandomCharInByteRange()
     {
         return (char)r.Next(255 + 1);
     }
 
     [Fact]
-    public void testHashCodeAscii()
+    public void TestHashCodeAscii()
     {
         for (int i = 0; i < 1000; ++i)
         {
@@ -158,26 +158,26 @@ public class PlatformDependentTest
             char[] bytesChar = new char[i];
             for (int j = 0; j < bytesChar.Length; ++j)
             {
-                bytesChar[j] = randomCharInByteRange();
+                bytesChar[j] = RandomCharInByteRange();
                 bytes[j] = (byte)(bytesChar[j] & 0xff);
             }
 
             string str = new string(bytesChar);
             Assert.Equal(
-                PlatformDependent.hashCodeAsciiSafe(bytes, 0, bytes.Length),
-                PlatformDependent.hashCodeAscii(bytes, 0, bytes.Length),
+                PlatformDependent.HashCodeAsciiSafe(bytes, 0, bytes.Length),
+                PlatformDependent.HashCodeAscii(bytes, 0, bytes.Length),
                 "length=" + i
             );
             Assert.Equal(
-                PlatformDependent.hashCodeAscii(bytes, 0, bytes.Length),
-                PlatformDependent.hashCodeAscii(str),
+                PlatformDependent.HashCodeAscii(bytes, 0, bytes.Length),
+                PlatformDependent.HashCodeAscii(str),
                 "length=" + i
             );
         }
     }
 
     [Fact]
-    public unsafe void testAllocateWithCapacity0()
+    public unsafe void TestAllocateWithCapacity0()
     {
         var allocator = new NativeMemoryAllocator();
         using (var buffer = allocator.Allocate(0))

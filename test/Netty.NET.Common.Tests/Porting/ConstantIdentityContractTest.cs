@@ -13,8 +13,8 @@ public class ConstantIdentityContractTest
     private sealed class Second(int id, string name) : AbstractConstant<Second>(id, name);
     private readonly struct ValueConstant : IConstant<ValueConstant>
     {
-        public int id() => 1;
-        public string name() => "value";
+        public int Id() => 1;
+        public string Name() => "value";
         public int CompareTo(ValueConstant other) => 0;
     }
 
@@ -65,8 +65,8 @@ public class ConstantIdentityContractTest
     public void ConstantMetadataAndDescriptionRemainStable()
     {
         var value = new First(19, "name");
-        Assert.Equal(19, value.id());
-        Assert.Equal("name", value.name());
+        Assert.Equal(19, value.Id());
+        Assert.Equal("name", value.Name());
         Assert.Equal("name", value.ToString());
     }
 

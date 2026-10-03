@@ -5,5 +5,5 @@ namespace Netty.NET.Common.Concurrent;
 
 public interface IThreadFactory
 {
-    Thread newThread(IRunnable r);
+    Thread NewThread(IRunnable r);
 }

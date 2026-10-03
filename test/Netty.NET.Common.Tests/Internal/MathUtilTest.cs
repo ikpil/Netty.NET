@@ -21,54 +21,54 @@ using static Netty.NET.Common.Internal.MathUtil;
 public class MathUtilTest
 {
     [Fact]
-    public void testFindNextPositivePowerOfTwo()
+    public void TestFindNextPositivePowerOfTwo()
     {
-        Assert.Equal(1, findNextPositivePowerOfTwo(0));
-        Assert.Equal(1, findNextPositivePowerOfTwo(1));
-        Assert.Equal(1024, findNextPositivePowerOfTwo(1000));
-        Assert.Equal(1024, findNextPositivePowerOfTwo(1023));
-        Assert.Equal(2048, findNextPositivePowerOfTwo(2048));
-        Assert.Equal(1 << 30, findNextPositivePowerOfTwo((1 << 30) - 1));
-        Assert.Equal(1, findNextPositivePowerOfTwo(-1));
-        Assert.Equal(1, findNextPositivePowerOfTwo(-10000));
+        Assert.Equal(1, FindNextPositivePowerOfTwo(0));
+        Assert.Equal(1, FindNextPositivePowerOfTwo(1));
+        Assert.Equal(1024, FindNextPositivePowerOfTwo(1000));
+        Assert.Equal(1024, FindNextPositivePowerOfTwo(1023));
+        Assert.Equal(2048, FindNextPositivePowerOfTwo(2048));
+        Assert.Equal(1 << 30, FindNextPositivePowerOfTwo((1 << 30) - 1));
+        Assert.Equal(1, FindNextPositivePowerOfTwo(-1));
+        Assert.Equal(1, FindNextPositivePowerOfTwo(-10000));
     }
 
     [Fact]
-    public void testSafeFindNextPositivePowerOfTwo()
+    public void TestSafeFindNextPositivePowerOfTwo()
     {
-        Assert.Equal(1, safeFindNextPositivePowerOfTwo(0));
-        Assert.Equal(1, safeFindNextPositivePowerOfTwo(1));
-        Assert.Equal(1024, safeFindNextPositivePowerOfTwo(1000));
-        Assert.Equal(1024, safeFindNextPositivePowerOfTwo(1023));
-        Assert.Equal(2048, safeFindNextPositivePowerOfTwo(2048));
-        Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo((1 << 30) - 1));
-        Assert.Equal(1, safeFindNextPositivePowerOfTwo(-1));
-        Assert.Equal(1, safeFindNextPositivePowerOfTwo(-10000));
-        Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo(int.MaxValue));
-        Assert.Equal(1 << 30, safeFindNextPositivePowerOfTwo((1 << 30) + 1));
-        Assert.Equal(1, safeFindNextPositivePowerOfTwo(int.MinValue));
-        Assert.Equal(1, safeFindNextPositivePowerOfTwo(int.MinValue + 1));
+        Assert.Equal(1, SafeFindNextPositivePowerOfTwo(0));
+        Assert.Equal(1, SafeFindNextPositivePowerOfTwo(1));
+        Assert.Equal(1024, SafeFindNextPositivePowerOfTwo(1000));
+        Assert.Equal(1024, SafeFindNextPositivePowerOfTwo(1023));
+        Assert.Equal(2048, SafeFindNextPositivePowerOfTwo(2048));
+        Assert.Equal(1 << 30, SafeFindNextPositivePowerOfTwo((1 << 30) - 1));
+        Assert.Equal(1, SafeFindNextPositivePowerOfTwo(-1));
+        Assert.Equal(1, SafeFindNextPositivePowerOfTwo(-10000));
+        Assert.Equal(1 << 30, SafeFindNextPositivePowerOfTwo(int.MaxValue));
+        Assert.Equal(1 << 30, SafeFindNextPositivePowerOfTwo((1 << 30) + 1));
+        Assert.Equal(1, SafeFindNextPositivePowerOfTwo(int.MinValue));
+        Assert.Equal(1, SafeFindNextPositivePowerOfTwo(int.MinValue + 1));
     }
 
     [Fact]
-    public void testIsOutOfBounds()
+    public void TestIsOutOfBounds()
     {
-        Assert.False(isOutOfBounds(0, 0, 0));
-        Assert.False(isOutOfBounds(0, 0, 1));
-        Assert.False(isOutOfBounds(0, 1, 1));
-        Assert.True(isOutOfBounds(1, 1, 1));
-        Assert.True(isOutOfBounds(int.MaxValue, 1, 1));
-        Assert.True(isOutOfBounds(int.MaxValue, int.MaxValue, 1));
-        Assert.True(isOutOfBounds(int.MaxValue, int.MaxValue, int.MaxValue));
-        Assert.False(isOutOfBounds(0, int.MaxValue, int.MaxValue));
-        Assert.False(isOutOfBounds(0, int.MaxValue - 1, int.MaxValue));
-        Assert.True(isOutOfBounds(0, int.MaxValue, int.MaxValue - 1));
-        Assert.False(isOutOfBounds(int.MaxValue - 1, 1, int.MaxValue));
-        Assert.True(isOutOfBounds(int.MaxValue - 1, 1, int.MaxValue - 1));
-        Assert.True(isOutOfBounds(int.MaxValue - 1, 2, int.MaxValue));
-        Assert.True(isOutOfBounds(1, int.MaxValue, int.MaxValue));
-        Assert.True(isOutOfBounds(0, 1, int.MinValue));
-        Assert.True(isOutOfBounds(0, 1, -1));
-        Assert.True(isOutOfBounds(0, int.MaxValue, 0));
+        Assert.False(IsOutOfBounds(0, 0, 0));
+        Assert.False(IsOutOfBounds(0, 0, 1));
+        Assert.False(IsOutOfBounds(0, 1, 1));
+        Assert.True(IsOutOfBounds(1, 1, 1));
+        Assert.True(IsOutOfBounds(int.MaxValue, 1, 1));
+        Assert.True(IsOutOfBounds(int.MaxValue, int.MaxValue, 1));
+        Assert.True(IsOutOfBounds(int.MaxValue, int.MaxValue, int.MaxValue));
+        Assert.False(IsOutOfBounds(0, int.MaxValue, int.MaxValue));
+        Assert.False(IsOutOfBounds(0, int.MaxValue - 1, int.MaxValue));
+        Assert.True(IsOutOfBounds(0, int.MaxValue, int.MaxValue - 1));
+        Assert.False(IsOutOfBounds(int.MaxValue - 1, 1, int.MaxValue));
+        Assert.True(IsOutOfBounds(int.MaxValue - 1, 1, int.MaxValue - 1));
+        Assert.True(IsOutOfBounds(int.MaxValue - 1, 2, int.MaxValue));
+        Assert.True(IsOutOfBounds(1, int.MaxValue, int.MaxValue));
+        Assert.True(IsOutOfBounds(0, 1, int.MinValue));
+        Assert.True(IsOutOfBounds(0, 1, -1));
+        Assert.True(IsOutOfBounds(0, int.MaxValue, 0));
     }
 }

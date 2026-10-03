@@ -4,5 +4,5 @@ namespace Netty.NET.Common.Concurrent;
 
 public interface IFastThreadLocal
 {
-    void remove(InternalThreadLocalMap threadLocalMap);
+    void Remove(InternalThreadLocalMap threadLocalMap);
 }

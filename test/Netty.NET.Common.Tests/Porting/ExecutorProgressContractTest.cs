@@ -21,18 +21,18 @@ public class ExecutorProgressContractTest
         internal void RunAll()
         {
             _running = Thread.CurrentThread;
-            try { while (_queue.TryDequeue(out var work)) work.run(); }
+            try { while (_queue.TryDequeue(out var work)) work.Run(); }
             finally { _running = null; }
         }
-        public override bool inEventLoop(Thread thread) => thread == _running;
-        public override void execute(IRunnable work) { if (rejection != null) throw rejection; _queue.Enqueue(work); }
+        public override bool InEventLoop(Thread thread) => thread == _running;
+        public override void Execute(IRunnable work) { if (rejection != null) throw rejection; _queue.Enqueue(work); }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
-        public override void shutdown() { }
-        public override bool isShuttingDown() => false;
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
+        public override void Shutdown() { }
+        public override bool IsShuttingDown() => false;
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
     }
 
     private static async Task Drain(QueuedExecutor executor, Task completion)
@@ -53,7 +53,7 @@ public class ExecutorProgressContractTest
         var operation = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var events = new List<string>();
         var reporter = new ExecutorProgress(executor, operation.Task,
-            value => { Assert.True(executor.inEventLoop()); events.Add($"p:{value.Completed}/{value.Total}"); },
+            value => { Assert.True(executor.InEventLoop()); events.Add($"p:{value.Completed}/{value.Total}"); },
             task => { Assert.Same(operation.Task, task); events.Add("done"); });
         IProgress<TransferProgress> progress = reporter;
         progress.Report(new TransferProgress(3, 10));
@@ -301,7 +301,7 @@ public class ExecutorProgressContractTest
         {
             reporter.Dispose();
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
-            if (unordered) Assert.True(await Task.Run(() => executor.awaitTermination(TimeSpan.FromSeconds(5))));
+            if (unordered) Assert.True(await Task.Run(() => executor.AwaitTermination(TimeSpan.FromSeconds(5))));
         }
     }
 
@@ -352,7 +352,7 @@ public class ExecutorProgressContractTest
             try { release.Wait(); } catch (ThreadInterruptedException) { }
         });
         Assert.True(started.Wait(TimeSpan.FromSeconds(5)));
-        IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).next() : pool;
+        IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).Next() : pool;
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         if (completedSource) source.SetResult();
         int callbacks = 0;
@@ -361,7 +361,7 @@ public class ExecutorProgressContractTest
         try
         {
             Assert.Equal(1, pool.PendingTaskCount);
-            pool.shutdownNow();
+            pool.ShutdownNow();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await reporter.NotificationsCompleted.WaitAsync(TimeSpan.FromSeconds(2)));
             Assert.Equal(0, callbacks);
@@ -372,7 +372,7 @@ public class ExecutorProgressContractTest
         {
             release.Set();
             await active.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(await Task.Run(() => pool.awaitTermination(TimeSpan.FromSeconds(5))));
+            Assert.True(await Task.Run(() => pool.AwaitTermination(TimeSpan.FromSeconds(5))));
         }
     }
 }

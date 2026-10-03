@@ -24,5 +24,5 @@ public interface IResourceLeakHint
     /**
      * Returns a human-readable message that potentially enables easier resource leak tracking.
      */
-    string toHintString();
+    string ToHintString();
 }

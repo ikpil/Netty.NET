@@ -56,12 +56,12 @@ public readonly struct FormattingTuple
         this.throwable = throwable;
     }
 
-    public string getMessage()
+    public string GetMessage()
     {
         return message;
     }
 
-    public Exception getThrowable()
+    public Exception GetThrowable()
     {
         return throwable;
     }

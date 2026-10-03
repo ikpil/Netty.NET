@@ -11,12 +11,12 @@ public class UtilityContractTest
     public void ObjectChecksDistinguishRootFromDeepNulls()
     {
         IEnumerable<object> values = new object[] { null };
-        Assert.Same(values, ObjectUtil.checkNotNull(values, "values"));
-        Assert.Throws<ArgumentNullException>(() => ObjectUtil.deepCheckNotNull("values", new object[] { null }));
+        Assert.Same(values, ObjectUtil.CheckNotNull(values, "values"));
+        Assert.Throws<ArgumentNullException>(() => ObjectUtil.DeepCheckNotNull("values", new object[] { null }));
         ICollection<object> collection = new List<object> { null };
-        Assert.Same(collection, ObjectUtil.checkNonEmpty(collection, "collection"));
-        Assert.Throws<ArgumentException>(() => ObjectUtil.checkNonEmpty(new List<object>(), "collection"));
-        Assert.Equal("\u00a0", ObjectUtil.checkNonEmptyAfterTrim(" \u00a0 ", "value"));
+        Assert.Same(collection, ObjectUtil.CheckNonEmpty(collection, "collection"));
+        Assert.Throws<ArgumentException>(() => ObjectUtil.CheckNonEmpty(new List<object>(), "collection"));
+        Assert.Equal("\u00a0", ObjectUtil.CheckNonEmptyAfterTrim(" \u00a0 ", "value"));
     }
 
     [Fact]
@@ -36,11 +36,11 @@ public class UtilityContractTest
     [Fact]
     public void EmptyPriorityQueueNeverAcceptsElements()
     {
-        var queue = EmptyPriorityQueue<object>.instance();
-        Assert.False(queue.tryEnqueue(new object()));
-        Assert.False(queue.tryDequeue(out var item));
+        var queue = EmptyPriorityQueue<object>.Instance();
+        Assert.False(queue.TryEnqueue(new object()));
+        Assert.False(queue.TryDequeue(out var item));
         Assert.Null(item);
-        Assert.Empty(queue.toArray());
+        Assert.Empty(queue.ToArray());
         Assert.Empty(queue);
     }
 

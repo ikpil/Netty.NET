@@ -12,7 +12,7 @@ public class SentinelRunnable : IRunnable
     }
 
     // no-op 
-    public void run()
+    public void Run()
     {
     }
 

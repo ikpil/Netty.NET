@@ -10,23 +10,23 @@ public class MockTickerPhaseContractTest
     [Fact]
     public void AWaiterSurvivesSignedClockWrapAndOnlyCompletesAtItsDeadline()
     {
-        var ticker = (DefaultMockTicker)Ticker.newMockTicker();
-        ticker.advance(long.MaxValue - 50);
+        var ticker = (DefaultMockTicker)Ticker.NewMockTicker();
+        ticker.Advance(long.MaxValue - 50);
         Exception failure = null;
         var sleeper = new Thread(() =>
         {
-            try { ticker.sleep(100); }
+            try { ticker.Sleep(100); }
             catch (Exception cause) { failure = cause; }
         }) { IsBackground = true };
         sleeper.Start();
         try
         {
-            ticker.awaitSleepingThread(sleeper);
-            ticker.advance(99);
-            ticker.awaitSleepingThread(sleeper);
-            Assert.Equal(unchecked(long.MaxValue + 49), ticker.nanoTime());
+            ticker.AwaitSleepingThread(sleeper);
+            ticker.Advance(99);
+            ticker.AwaitSleepingThread(sleeper);
+            Assert.Equal(unchecked(long.MaxValue + 49), ticker.NanoTime());
             Assert.True(sleeper.IsAlive);
-            ticker.advance(1);
+            ticker.Advance(1);
             Assert.True(sleeper.Join(TimeSpan.FromSeconds(5)));
             Assert.Null(failure);
         }
@@ -40,40 +40,40 @@ public class MockTickerPhaseContractTest
     [Fact]
     public void InterruptedSleepRegistrationDoesNotBlockLaterClockPhases()
     {
-        var ticker = (DefaultMockTicker)Ticker.newMockTicker();
+        var ticker = (DefaultMockTicker)Ticker.NewMockTicker();
         Exception interrupted = null;
         var first = new Thread(() =>
         {
-            try { ticker.sleep(100); }
+            try { ticker.Sleep(100); }
             catch (Exception cause) { interrupted = cause; }
         }) { IsBackground = true };
         using var observed = new ManualResetEventSlim();
         Exception failure = null;
         var next = new Thread(() =>
         {
-            try { ticker.sleep(1); }
+            try { ticker.Sleep(1); }
             catch (Exception cause) { failure = cause; }
         }) { IsBackground = true };
         var observer = new Thread(() =>
         {
-            try { ticker.awaitSleepingThread(next); observed.Set(); }
+            try { ticker.AwaitSleepingThread(next); observed.Set(); }
             catch (ThreadInterruptedException) { }
         }) { IsBackground = true };
         first.Start();
         try
         {
-            ticker.awaitSleepingThread(first);
+            ticker.AwaitSleepingThread(first);
             first.Interrupt();
             Assert.True(first.Join(TimeSpan.FromSeconds(5)));
             Assert.IsType<ThreadInterruptedException>(interrupted);
-            ticker.advance(1);
+            ticker.Advance(1);
             next.Start();
             observer.Start();
             Assert.True(observed.Wait(TimeSpan.FromSeconds(5)));
-            ticker.advance(1);
+            ticker.Advance(1);
             Assert.True(next.Join(TimeSpan.FromSeconds(5)));
             Assert.Null(failure);
-            Assert.Equal(2, ticker.nanoTime());
+            Assert.Equal(2, ticker.NanoTime());
         }
         finally
         {
@@ -89,7 +89,7 @@ public class MockTickerPhaseContractTest
     [Fact]
     public void ContendedAdvancePreservesInterruptForTheNextInterruptibleWait()
     {
-        var ticker = (DefaultMockTicker)Ticker.newMockTicker();
+        var ticker = (DefaultMockTicker)Ticker.NewMockTicker();
         // Only hold the native gate to force contention; assertions concern the
         // public advance result and interrupt policy, not private state values.
         object gate = typeof(DefaultMockTicker).GetField("_lock", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -101,7 +101,7 @@ public class MockTickerPhaseContractTest
         {
             try
             {
-                ticker.advance(7);
+                ticker.Advance(7);
                 try { Thread.Sleep(1); }
                 catch (ThreadInterruptedException) { preserved = true; }
             }
@@ -121,7 +121,7 @@ public class MockTickerPhaseContractTest
             Assert.True(advancer.Join(TimeSpan.FromSeconds(5)));
             Assert.Null(failure);
             Assert.True(preserved);
-            Assert.Equal(7, ticker.nanoTime());
+            Assert.Equal(7, ticker.NanoTime());
         }
         finally
         {
@@ -134,7 +134,7 @@ public class MockTickerPhaseContractTest
     public void ObservingTheNextSleepCannotConsumeThePreviousSleepRegistration()
     {
         const int phases = 128;
-        var ticker = (DefaultMockTicker)Ticker.newMockTicker();
+        var ticker = (DefaultMockTicker)Ticker.NewMockTicker();
         Exception failure = null;
         int completed = 0;
         var sleeper = new Thread(() =>
@@ -143,7 +143,7 @@ public class MockTickerPhaseContractTest
             {
                 for (int phase = 0; phase < phases; phase++)
                 {
-                    ticker.sleep(1);
+                    ticker.Sleep(1);
                     Interlocked.Increment(ref completed);
                 }
             }
@@ -154,8 +154,8 @@ public class MockTickerPhaseContractTest
         {
             for (int phase = 0; phase < phases; phase++)
             {
-                ticker.awaitSleepingThread(sleeper);
-                ticker.advance(1);
+                ticker.AwaitSleepingThread(sleeper);
+                ticker.Advance(1);
             }
             Assert.True(sleeper.Join(TimeSpan.FromSeconds(2)),
                 "Each advancement must reach the next sleep phase, rather than advancing past a stale registration");

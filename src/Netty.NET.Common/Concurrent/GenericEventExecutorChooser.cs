@@ -15,8 +15,8 @@ public class GenericEventExecutorChooser : IEventExecutorChooser
         this.executors = executors;
     }
 
-    public IEventExecutor next()
+    public IEventExecutor Next()
     {
-        return executors[(int)Math.Abs(idx.getAndIncrement() % executors.Length)];
+        return executors[(int)Math.Abs(idx.GetAndIncrement() % executors.Length)];
     }
 }

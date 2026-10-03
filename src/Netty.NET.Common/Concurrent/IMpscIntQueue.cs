@@ -34,7 +34,7 @@ public interface IMpscIntQueue
      * and giving this value to {@link #offer(int)} will cause an exception to be thrown.
      * @return The queue instance.
      */
-    static IMpscIntQueue create(int size, int emptyValue)
+    static IMpscIntQueue Create(int size, int emptyValue)
     {
         return new MpscAtomicIntegerArrayQueue(size, emptyValue);
     }
@@ -45,13 +45,13 @@ public interface IMpscIntQueue
      * @return {@code true} if the value was added to the queue,
      * or {@code false} if the value could not be added because the queue is full.
      */
-    bool offer(int value);
+    bool Offer(int value);
 
     /**
      * Remove and return the next value from the queue, or return the "empty" value if the queue is empty.
      * @return The next value or the "empty" value.
      */
-    int poll();
+    int Poll();
 
     /**
      * Remove up to the given limit of elements from the queue, and pass them to the consumer in order.
@@ -59,7 +59,7 @@ public interface IMpscIntQueue
      * @param consumer The consumer to pass the removed elements to.
      * @return The actual number of elements removed.
      */
-    int drain(int limit, Action<int> consumer);
+    int Drain(int limit, Action<int> consumer);
 
     /**
      * Add up to the given limit of elements to this queue, from the given supplier.
@@ -67,7 +67,7 @@ public interface IMpscIntQueue
      * @param supplier The supplier to obtain the elements from.
      * @return The actual number of elements added.
      */
-    int fill(int limit, Func<int> supplier);
+    int Fill(int limit, Func<int> supplier);
 
     /**
      * Peek at all available elements and compute a reduction.
@@ -77,7 +77,7 @@ public interface IMpscIntQueue
      * @param op The reduction operation, taking a prior result and an element, and producing a new result.
      * @return The last result of the reduction operation.
      */
-    int weakPeekReduce(int limit, int initial, Func<int, int, int> op)
+    int WeakPeekReduce(int limit, int initial, Func<int, int, int> op)
     {
         // There's no safe way to implement this method in terms of the other operations.
         // Take the "weak" definition to the extreme and just return the initial value.
@@ -90,7 +90,7 @@ public interface IMpscIntQueue
      * This method is inherently racy and the result may be out of date by the time the method returns.
      * @return {@code true} if the queue was observed to be empty, otherwise {@code false.
      */
-    bool isEmpty();
+    bool IsEmpty();
 
     /**
      * Query the number of elements currently in the queue.
@@ -98,6 +98,6 @@ public interface IMpscIntQueue
      * This method is inherently racy and the result may be out of date by the time the method returns.
      * @return An estimate of the number of elements observed in the queue.
      */
-    int size();
+    int Size();
 
 }

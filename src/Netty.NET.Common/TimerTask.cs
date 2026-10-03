@@ -18,12 +18,12 @@ public class TimerTask : ITimerTask
         _canceled = canceled;
     }
 
-    public void run(ITimeout timeout)
+    public void Run(ITimeout timeout)
     {
         _run.Invoke(timeout);
     }
 
-    public void cancelled(ITimeout timeout)
+    public void Cancelled(ITimeout timeout)
     {
         _canceled?.Invoke(timeout);
     }

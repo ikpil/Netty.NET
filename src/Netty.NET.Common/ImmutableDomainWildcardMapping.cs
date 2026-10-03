@@ -19,11 +19,11 @@ public class ImmutableDomainWildcardMapping<T> : IMapping<string, T> where T : c
         _map = new LinkedHashMap<string, T>(map);
     }
 
-    public T map(string hostname)
+    public T Map(string hostname)
     {
         if (hostname != null)
         {
-            hostname = normalize(hostname);
+            hostname = Normalize(hostname);
 
             // Let's try an exact match first
             if (_map.TryGetValue(hostname, out var value))
@@ -45,9 +45,9 @@ public class ImmutableDomainWildcardMapping<T> : IMapping<string, T> where T : c
         return defaultValue;
     }
 
-    public static string normalize(string hostname)
+    public static string Normalize(string hostname)
     {
-        return DomainNameMapping<T>.normalizeHostname(hostname);
+        return DomainNameMapping<T>.NormalizeHostname(hostname);
     }
 
     public override string ToString()

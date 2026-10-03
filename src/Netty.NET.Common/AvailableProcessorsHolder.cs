@@ -18,11 +18,11 @@ internal class AvailableProcessorsHolder
      * @throws IllegalArgumentException if the specified number of available processors is non-positive
      * @throws IllegalStateException    if the number of available processors is already configured
      */
-    public void setAvailableProcessors(int availableProcessors)
+    public void SetAvailableProcessors(int availableProcessors)
     {
-        using (UninterruptibleMonitor.enter(_lock))
+        using (UninterruptibleMonitor.Enter(_lock))
         {
-            ObjectUtil.checkPositive(availableProcessors, "availableProcessors");
+            ObjectUtil.CheckPositive(availableProcessors, "availableProcessors");
             if (_availableProcessors != 0)
             {
                 string message = FormattableString.Invariant($"availableProcessors is already set to [{_availableProcessors}], rejecting [{availableProcessors}]");
@@ -41,14 +41,14 @@ internal class AvailableProcessorsHolder
      * @return the configured number of available processors
      */
     [SuppressForbidden("to obtain default number of available processors")]
-    public int availableProcessors()
+    public int AvailableProcessors()
     {
-        using (UninterruptibleMonitor.enter(_lock))
+        using (UninterruptibleMonitor.Enter(_lock))
         {
             if (_availableProcessors == 0)
             {
-                int availableProcessors = SystemPropertyUtil.getInt("io.netty.availableProcessors", Environment.ProcessorCount);
-                setAvailableProcessors(availableProcessors);
+                int availableProcessors = SystemPropertyUtil.GetInt("io.netty.availableProcessors", Environment.ProcessorCount);
+                SetAvailableProcessors(availableProcessors);
             }
 
             return _availableProcessors;

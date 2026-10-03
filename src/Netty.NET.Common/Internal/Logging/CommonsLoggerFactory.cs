@@ -35,7 +35,7 @@ public class CommonsLoggerFactory : InternalLoggerFactory
     {
     }
 
-    public override IInternalLogger newInstance(string name)
+    public override IInternalLogger NewInstance(string name)
     {
         // CLR adaptation: TraceSource supplies the underlying logging backend.
         return new CommonsLogger(new InternalDefaultLogger(name), name);

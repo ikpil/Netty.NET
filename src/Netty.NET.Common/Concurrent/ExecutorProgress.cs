@@ -32,7 +32,7 @@ namespace Netty.NET.Common.Concurrent;
 /// </remarks>
 public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
 {
-    private static readonly IInternalLogger Logger = InternalLoggerFactory.getInstance(typeof(ExecutorProgress));
+    private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(ExecutorProgress));
     private readonly object _gate = new();
     private IEventExecutor _executor;
     private Task _operation;
@@ -178,8 +178,8 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
         var reservation = new DrainReservation(this);
         try
         {
-            if (executor.inEventLoop()) reservation.run();
-            else executor.execute(reservation);
+            if (executor.InEventLoop()) reservation.Run();
+            else executor.Execute(reservation);
         }
         catch (Exception error) { reservation.Reject(error); }
     }
@@ -280,7 +280,7 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
             ExecutionContext.Run(NativeScheduledWork<object>.CaptureExecutorContext(),
                 static state => ((Action)state)(), callback);
         }
-        catch (Exception error) { Logger.warn("An exception was thrown by a progress observer.", error); }
+        catch (Exception error) { Logger.Warn("An exception was thrown by a progress observer.", error); }
     }
 
     public void Dispose()
@@ -320,7 +320,7 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
         private readonly WeakReference<ExecutorProgress> _owner = new(owner);
         private int _claim;
         public bool IsCanceled => Volatile.Read(ref _claim) == 2;
-        public void run()
+        public void Run()
         {
             if (Interlocked.CompareExchange(ref _claim, 1, 0) == 0 && _owner.TryGetTarget(out var target))
                 target.Drain();

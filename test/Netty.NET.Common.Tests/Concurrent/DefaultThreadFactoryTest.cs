@@ -25,7 +25,7 @@ namespace Netty.NET.Common.Tests.Concurrent;
 public class DefaultThreadFactoryTest
 {
     [Fact]
-    public void testDescendantThreadGroups()
+    public void TestDescendantThreadGroups()
     {
         // install security manager that only allows parent thread groups to mess with descendant thread groups
         // so we can restore the security manager at the end of the test
@@ -43,13 +43,13 @@ public class DefaultThreadFactoryTest
         // we then create a thread from the factory to run a "task" for us
         var brother = new ThreadGroup("brother");
         ThreadGroup firstCaptured = null;
-        var first = brother.newThread(Runnables.Create(() =>
+        var first = brother.NewThread(Runnables.Create(() =>
         {
             try
             {
                 factory = new DefaultThreadFactory("test", false, ThreadPriority.Normal, null);
-                Thread t = factory.newThread(task);
-                firstCaptured = ThreadGroup.getThreadGroup(t);
+                Thread t = factory.NewThread(task);
+                firstCaptured = ThreadGroup.GetThreadGroup(t);
                 t.Start();
                 if (!t.Join(TimeSpan.FromSeconds(2))) throw new TimeoutException();
             }
@@ -65,12 +65,12 @@ public class DefaultThreadFactoryTest
         // that forbids sibling thread groups from messing with each other will strike this down
         var sister = new ThreadGroup("sister");
         ThreadGroup secondCaptured = null;
-        var second = sister.newThread(Runnables.Create(() =>
+        var second = sister.NewThread(Runnables.Create(() =>
         {
             try
             {
-                Thread t = factory.newThread(task);
-                secondCaptured = ThreadGroup.getThreadGroup(t);
+                Thread t = factory.NewThread(task);
+                secondCaptured = ThreadGroup.GetThreadGroup(t);
                 t.Start();
                 if (!t.Join(TimeSpan.FromSeconds(2))) throw new TimeoutException();
             }
@@ -86,16 +86,16 @@ public class DefaultThreadFactoryTest
     // test that when DefaultThreadFactory is constructed with a sticky thread group, threads
     // created by it have the sticky thread group
     [Fact]
-    public void testDefaultThreadFactoryStickyThreadGroupConstructor()
+    public void TestDefaultThreadFactoryStickyThreadGroupConstructor()
     {
         var sticky = new ThreadGroup("sticky");
-        runStickyThreadGroupTest(() => new DefaultThreadFactory("test", false, ThreadPriority.Normal, sticky), sticky);
+        RunStickyThreadGroupTest(() => new DefaultThreadFactory("test", false, ThreadPriority.Normal, sticky), sticky);
     }
 
     // test that when a security manager is installed that provides a ThreadGroup, DefaultThreadFactory inherits from
     // the security manager
     [Fact(Skip = "CLR has no JVM SecurityManager; upstream also skips when installing it is unsupported.")]
-    public void testDefaultThreadFactoryInheritsThreadGroupFromSecurityManager()
+    public void TestDefaultThreadFactoryInheritsThreadGroupFromSecurityManager()
     {
         // so we can restore the security manager at the end of the test
         // CLR: no process-wide security manager or implicit security-manager group
@@ -103,17 +103,17 @@ public class DefaultThreadFactoryTest
         throw new NotSupportedException("JVM SecurityManager is not available on the CLR.");
     }
 
-    private static void runStickyThreadGroupTest(Func<DefaultThreadFactory> callable, ThreadGroup expected)
+    private static void RunStickyThreadGroupTest(Func<DefaultThreadFactory> callable, ThreadGroup expected)
     {
         ThreadGroup captured = null;
         Exception exception = null;
-        var first = new ThreadGroup("wrong").newThread(Runnables.Create(() =>
+        var first = new ThreadGroup("wrong").NewThread(Runnables.Create(() =>
         {
             try
             {
                 DefaultThreadFactory factory = callable();
-                Thread t = factory.newThread(Runnables.Empty);
-                captured = ThreadGroup.getThreadGroup(t);
+                Thread t = factory.NewThread(Runnables.Empty);
+                captured = ThreadGroup.GetThreadGroup(t);
             }
             catch (Exception error) { exception = error; }
         }));
@@ -126,16 +126,16 @@ public class DefaultThreadFactoryTest
     // test that when DefaultThreadFactory is constructed without a sticky thread group, threads
     // created by it inherit the correct thread group
     [Fact]
-    public void testDefaultThreadFactoryNonStickyThreadGroupConstructor()
+    public void TestDefaultThreadFactoryNonStickyThreadGroupConstructor()
     {
         DefaultThreadFactory factory = null;
         ThreadGroup firstCaptured = null;
         var firstGroup = new ThreadGroup("first");
-        var first = firstGroup.newThread(Runnables.Create(() =>
+        var first = firstGroup.NewThread(Runnables.Create(() =>
         {
             factory = new DefaultThreadFactory("sticky", false, ThreadPriority.Normal, null);
-            Thread t = factory.newThread(Runnables.Empty);
-            firstCaptured = ThreadGroup.getThreadGroup(t);
+            Thread t = factory.NewThread(Runnables.Empty);
+            firstCaptured = ThreadGroup.GetThreadGroup(t);
         }));
         first.Start();
         Assert.True(first.Join(TimeSpan.FromSeconds(2)));
@@ -143,10 +143,10 @@ public class DefaultThreadFactoryTest
 
         ThreadGroup secondCaptured = null;
         var secondGroup = new ThreadGroup("second");
-        var second = secondGroup.newThread(Runnables.Create(() =>
+        var second = secondGroup.NewThread(Runnables.Create(() =>
         {
-            Thread t = factory.newThread(Runnables.Empty);
-            secondCaptured = ThreadGroup.getThreadGroup(t);
+            Thread t = factory.NewThread(Runnables.Empty);
+            secondCaptured = ThreadGroup.GetThreadGroup(t);
         }));
         second.Start();
         Assert.True(second.Join(TimeSpan.FromSeconds(2)));
@@ -156,27 +156,27 @@ public class DefaultThreadFactoryTest
     // test that when DefaultThreadFactory is constructed without a sticky thread group, threads
     // created by it inherit the correct thread group
     [Fact]
-    public void testCurrentThreadGroupIsUsed()
+    public void TestCurrentThreadGroupIsUsed()
     {
         DefaultThreadFactory factory = null;
         ThreadGroup firstCaptured = null;
         var group = new ThreadGroup("first");
-        var first = group.newThread(Runnables.Create(() =>
+        var first = group.NewThread(Runnables.Create(() =>
         {
-            firstCaptured = ThreadGroup.getThreadGroup(Thread.CurrentThread);
+            firstCaptured = ThreadGroup.GetThreadGroup(Thread.CurrentThread);
             factory = new DefaultThreadFactory("sticky", false);
         }));
         first.Start();
         Assert.True(first.Join(TimeSpan.FromSeconds(2)));
         Assert.Same(group, firstCaptured);
 
-        ThreadGroup currentThreadGroup = ThreadGroup.currentThreadGroup();
-        Thread second = factory.newThread(Runnables.Create(() =>
+        ThreadGroup currentThreadGroup = ThreadGroup.CurrentThreadGroup();
+        Thread second = factory.NewThread(Runnables.Create(() =>
         {
             // NOOP.
         }));
         // CLR cannot join an unstarted Thread. Inspect its assigned identity instead,
         // strengthening the upstream's final self-equality assertion.
-        Assert.Same(currentThreadGroup, ThreadGroup.getThreadGroup(second));
+        Assert.Same(currentThreadGroup, ThreadGroup.GetThreadGroup(second));
     }
 }

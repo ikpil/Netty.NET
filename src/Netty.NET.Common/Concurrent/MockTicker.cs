@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class MockTicker : Ticker
 {
-    public override long initialNanoTime()
+    public override long InitialNanoTime()
     {
         return 0;
     }
@@ -37,20 +37,20 @@ public abstract class MockTicker : Ticker
      * @param amount the amount of time to advance this ticker by.
      * @param unit the {@link TimeUnit} of {@code amount}.
      */
-    public abstract void advance(long amountNanos);
+    public abstract void Advance(long amountNanos);
 
     /**
      * Advances the current {@link #nanoTime()} by the given amount of time.
      *
      * @param amountMillis the number of milliseconds to advance this ticker by.
      */
-    public void advanceMillis(long amountMillis)
+    public void AdvanceMillis(long amountMillis)
     {
-        advance(TimeUtil.MillisecondsToNanoseconds(amountMillis));
+        Advance(TimeUtil.MillisecondsToNanoseconds(amountMillis));
     }
 
-    public void advance(TimeSpan amount)
+    public void Advance(TimeSpan amount)
     {
-        advance(TimeUtil.ToNanoseconds(amount));
+        Advance(TimeUtil.ToNanoseconds(amount));
     }
 }

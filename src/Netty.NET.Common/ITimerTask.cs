@@ -28,7 +28,7 @@ public interface ITimerTask
      *
      * @param timeout a handle which is associated with this task
      */
-    void run(ITimeout timeout);
+    void Run(ITimeout timeout);
 
     /**
      * Called for {@link TimerTask}s that are successfully canceled via {@link Timeout#cancel()}. Overriding this
@@ -36,7 +36,7 @@ public interface ITimerTask
      *
      * @param timeout a handle which is associated with this task
      */
-    void cancelled(ITimeout timeout)
+    void Cancelled(ITimeout timeout)
     {
         // By default do nothing.
     }

@@ -31,7 +31,7 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
     {
     }
 
-    public override bool tryRemove(T item)
+    public override bool TryRemove(T item)
     {
         throw new System.NotImplementedException();
     }
@@ -43,7 +43,7 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
     /// <param name="e">The item to enqueue.</param>
     /// <returns><c>true</c> if the item was added successfully, otherwise <c>false</c>.</returns>
     /// <seealso cref="IQueue{T}.tryEnqueue"/>
-    public override bool tryEnqueue(T e)
+    public override bool TryEnqueue(T e)
     {
         Contract.Requires(e != null);
 
@@ -127,7 +127,7 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
     /// <param name="item">The dequeued item.</param>
     /// <returns><c>true</c> if an item was retrieved, otherwise <c>false</c>.</returns>
     /// <seealso cref="IQueue{T}.tryDequeue"/>
-    public override bool tryDequeue(out T item)
+    public override bool TryDequeue(out T item)
     {
         long consumerIndex = this.ConsumerIndex; // LoadLoad
         long offset = this.CalcElementOffset(consumerIndex);
@@ -168,7 +168,7 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
     /// <param name="item">The peeked item.</param>
     /// <returns><c>true</c> if an item was retrieved, otherwise <c>false</c>.</returns>
     /// <seealso cref="IQueue{T}.tryPeek"/>
-    public override bool tryPeek(out T item)
+    public override bool TryPeek(out T item)
     {
         // Copy field to avoid re-reading after volatile load
         T[] buffer = this.Buffer;
@@ -201,13 +201,13 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
         return true;
     }
 
-    public override int drain(IConsumer<T> c, int limit)
+    public override int Drain(IConsumer<T> c, int limit)
     {
         T item;
         int i = 0;
-        for (; i < limit && tryDequeue(out item); i++)
+        for (; i < limit && TryDequeue(out item); i++)
         {
-            c.accept(item);
+            c.Accept(item);
         }
 
         return i;
@@ -239,7 +239,7 @@ sealed class MpscArrayQueue<T> : MpscArrayQueueConsumerField<T>
         }
     }
 
-    public override bool isEmpty()
+    public override bool IsEmpty()
     {
         // Order matters!
         // Loading consumer before producer allows for producer increments after consumer index is read.

@@ -26,7 +26,7 @@ public interface IObservableEventExecutorChooser : IEventExecutorChooser
      * Returns the current number of active {@link EventExecutor}s.
      * @return the number of active executors.
      */
-    int activeExecutorCount();
+    int ActiveExecutorCount();
 
     /**
      * Returns a list containing the last calculated utilization for each
@@ -34,5 +34,5 @@ public interface IObservableEventExecutorChooser : IEventExecutorChooser
      *
      * @return an umodifiable view of the executor utilizations.
      */
-    IReadOnlyList<AutoScalingUtilizationMetric> executorUtilizations();
+    IReadOnlyList<AutoScalingUtilizationMetric> ExecutorUtilizations();
 }

@@ -33,7 +33,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
 
     public MpscAtomicIntegerArrayQueue(int capacity, int emptyValue)
     {
-        elements = new int[MathUtil.safeFindNextPositivePowerOfTwo(capacity)];
+        elements = new int[MathUtil.SafeFindNextPositivePowerOfTwo(capacity)];
         if (emptyValue != 0)
         {
             this.emptyValue = emptyValue;
@@ -51,7 +51,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         mask = elements.Length - 1;
     }
 
-    public bool offer(int value)
+    public bool Offer(int value)
     {
         if (value == emptyValue)
         {
@@ -92,7 +92,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         return true;
     }
 
-    public int poll()
+    public int Poll()
     {
         long cIndex = Volatile.Read(ref consumerIndex);
         int offset = (int)(cIndex & mask);
@@ -123,10 +123,10 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         return value;
     }
 
-    public int drain(int limit, Action<int> consumer)
+    public int Drain(int limit, Action<int> consumer)
     {
         ArgumentNullException.ThrowIfNull(consumer);
-        ObjectUtil.checkPositiveOrZero(limit, "limit");
+        ObjectUtil.CheckPositiveOrZero(limit, "limit");
         if (limit == 0)
         {
             return 0;
@@ -150,10 +150,10 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         return limit;
     }
 
-    public int fill(int limit, Func<int> supplier)
+    public int Fill(int limit, Func<int> supplier)
     {
         ArgumentNullException.ThrowIfNull(supplier);
-        ObjectUtil.checkPositiveOrZero(limit, "limit");
+        ObjectUtil.CheckPositiveOrZero(limit, "limit");
         if (limit == 0)
         {
             return 0;
@@ -195,10 +195,10 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         return actualLimit;
     }
 
-    public int weakPeekReduce(int limit, int initial, Func<int, int, int> op)
+    public int WeakPeekReduce(int limit, int initial, Func<int, int, int> op)
     {
         ArgumentNullException.ThrowIfNull(op);
-        ObjectUtil.checkPositiveOrZero(limit, "limit");
+        ObjectUtil.CheckPositiveOrZero(limit, "limit");
         if (limit == 0)
         {
             return 0;
@@ -222,7 +222,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         return result;
     }
 
-    public bool isEmpty()
+    public bool IsEmpty()
     {
         // Load consumer index before producer index, so our check is conservative.
         long cIndex = Volatile.Read(ref consumerIndex);
@@ -230,7 +230,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         return cIndex >= pIndex;
     }
 
-    public int size()
+    public int Size()
     {
         // Loop until we get a consistent read of both the consumer and producer indices.
         long after = Volatile.Read(ref consumerIndex);

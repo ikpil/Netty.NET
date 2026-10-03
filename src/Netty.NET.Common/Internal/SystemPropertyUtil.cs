@@ -27,18 +27,18 @@ namespace Netty.NET.Common.Internal;
  */
 public static class SystemPropertyUtil
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SystemPropertyUtil));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SystemPropertyUtil));
 
     /**
      * Returns {@code true} if and only if the system property with the specified {@code key}
      * exists.
      */
-    public static bool contains(string key)
+    public static bool Contains(string key)
     {
-        return get(key) != null;
+        return Get(key) != null;
     }
 
-    public static Dictionary<string, string> getProperties()
+    public static Dictionary<string, string> GetProperties()
     {
         var properties = new Dictionary<string, string>();
         foreach (var kvp in Environment.GetEnvironmentVariables())
@@ -56,9 +56,9 @@ public static class SystemPropertyUtil
      *
      * @return the property value or {@code null}
      */
-    public static string get(string key)
+    public static string Get(string key)
     {
-        return get(key, null);
+        return Get(key, null);
     }
 
     /**
@@ -70,9 +70,9 @@ public static class SystemPropertyUtil
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static string get(string key, string def)
+    public static string Get(string key, string def)
     {
-        checkNonEmpty(key, "key");
+        CheckNonEmpty(key, "key");
 
         string value = null;
         try
@@ -81,7 +81,7 @@ public static class SystemPropertyUtil
         }
         catch (Exception e)
         {
-            logger.warn($"Unable to retrieve a system property '{key}'; default values will be used.", e);
+            logger.Warn($"Unable to retrieve a system property '{key}'; default values will be used.", e);
         }
 
         return value;
@@ -96,9 +96,9 @@ public static class SystemPropertyUtil
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static bool getBoolean(string key, bool def)
+    public static bool GetBoolean(string key, bool def)
     {
-        string value = get(key);
+        string value = Get(key);
         if (value == null)
         {
             return def;
@@ -124,7 +124,7 @@ public static class SystemPropertyUtil
             return false;
         }
 
-        logger.warn($"Unable to parse the bool system property '{key}':{value} - using the default value: {def}");
+        logger.Warn($"Unable to parse the bool system property '{key}':{value} - using the default value: {def}");
 
         return def;
     }
@@ -138,9 +138,9 @@ public static class SystemPropertyUtil
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static int getInt(string key, int def)
+    public static int GetInt(string key, int def)
     {
-        string value = get(key);
+        string value = Get(key);
         if (value == null)
         {
             return def;
@@ -156,7 +156,7 @@ public static class SystemPropertyUtil
             // Ignore
         }
 
-        logger.warn($"Unable to parse the integer system property '{key}':{value} - using the default value: {def}");
+        logger.Warn($"Unable to parse the integer system property '{key}':{value} - using the default value: {def}");
 
         return def;
     }
@@ -170,9 +170,9 @@ public static class SystemPropertyUtil
      *         {@code def} if there's no such property or if an access to the
      *         specified property is not allowed.
      */
-    public static long getLong(string key, long def)
+    public static long GetLong(string key, long def)
     {
-        string value = get(key);
+        string value = Get(key);
         if (value == null)
         {
             return def;
@@ -188,7 +188,7 @@ public static class SystemPropertyUtil
             // Ignore
         }
 
-        logger.warn($"Unable to parse the long integer system property '{key}':{value} - using the default value: {def}");
+        logger.Warn($"Unable to parse the long integer system property '{key}':{value} - using the default value: {def}");
 
         return def;
     }

@@ -29,29 +29,29 @@ public static class ThreadExecutorMap
     /**
      * Returns the current {@link EventExecutor} that uses the {@link Thread}, or {@code null} if none / unknown.
      */
-    public static IEventExecutor currentExecutor()
+    public static IEventExecutor CurrentExecutor()
     {
-        return _mappings.get();
+        return _mappings.Get();
     }
 
     /**
      * Set the current {@link EventExecutor} that is used by the {@link Thread}.
      */
-    public static IEventExecutor setCurrentExecutor(IEventExecutor executor)
+    public static IEventExecutor SetCurrentExecutor(IEventExecutor executor)
     {
-        return _mappings.getAndSet(executor);
+        return _mappings.GetAndSet(executor);
     }
 
     /**
      * Decorate the given {@link Executor} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static IExecutor apply(IExecutor executor, IEventExecutor eventExecutor)
+    public static IExecutor Apply(IExecutor executor, IEventExecutor eventExecutor)
     {
-        ObjectUtil.checkNotNull(executor, "executor");
-        ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
+        ObjectUtil.CheckNotNull(executor, "executor");
+        ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
         return new AnonymousExecutor(command =>
-            executor.execute(apply(command, eventExecutor))
+            executor.Execute(Apply(command, eventExecutor))
         );
     }
 
@@ -59,20 +59,20 @@ public static class ThreadExecutorMap
      * Decorate the given {@link Runnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static IRunnable apply(IRunnable command, IEventExecutor eventExecutor)
+    public static IRunnable Apply(IRunnable command, IEventExecutor eventExecutor)
     {
-        ObjectUtil.checkNotNull(command, "command");
-        ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
+        ObjectUtil.CheckNotNull(command, "command");
+        ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
         return Runnables.Create(() =>
         {
-            IEventExecutor old = setCurrentExecutor(eventExecutor);
+            IEventExecutor old = SetCurrentExecutor(eventExecutor);
             try
             {
-                command.run();
+                command.Run();
             }
             finally
             {
-                setCurrentExecutor(old);
+                SetCurrentExecutor(old);
             }
         });
     }
@@ -81,12 +81,12 @@ public static class ThreadExecutorMap
      * Decorate the given {@link ThreadFactory} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static IThreadFactory apply(IThreadFactory threadFactory, IEventExecutor eventExecutor)
+    public static IThreadFactory Apply(IThreadFactory threadFactory, IEventExecutor eventExecutor)
     {
-        ObjectUtil.checkNotNull(threadFactory, "threadFactory");
-        ObjectUtil.checkNotNull(eventExecutor, "eventExecutor");
+        ObjectUtil.CheckNotNull(threadFactory, "threadFactory");
+        ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
         return new AnonymousThreadFactory(r =>
-            threadFactory.newThread(apply(r, eventExecutor))
+            threadFactory.NewThread(Apply(r, eventExecutor))
         );
     }
 }

@@ -20,22 +20,22 @@ public class DynamicProgressContractTest
         internal void RunAll()
         {
             _running = Thread.CurrentThread;
-            try { while (_queue.TryDequeue(out var work)) work.run(); }
+            try { while (_queue.TryDequeue(out var work)) work.Run(); }
             finally { _running = null; }
         }
-        public override bool inEventLoop(Thread thread) => thread != null && thread == _running;
-        public override void execute(IRunnable task)
+        public override bool InEventLoop(Thread thread) => thread != null && thread == _running;
+        public override void Execute(IRunnable task)
         {
             if (Rejection != null) throw Rejection;
             _queue.Enqueue(task);
         }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
-        public override void shutdown() { }
-        public override bool isShuttingDown() => false;
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
+        public override void Shutdown() { }
+        public override bool IsShuttingDown() => false;
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
     }
 
     private static async Task Drain(QueuedExecutor executor, Task completion)
@@ -233,7 +233,7 @@ public class DynamicProgressContractTest
         try
         {
             Assert.True(started.Wait(TimeSpan.FromSeconds(5)));
-            IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).next() : pool;
+            IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).Next() : pool;
             var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             using var reporter = new ExecutorProgress(executor, source.Task);
             int callbacks = 0;
@@ -246,7 +246,7 @@ public class DynamicProgressContractTest
             }
             else reporter.Report(new TransferProgress(1));
             Assert.Equal(1, pool.PendingTaskCount);
-            pool.shutdownNow();
+            pool.ShutdownNow();
             foreach (var task in new[] { reporter.NotificationsCompleted, first.NotificationsCompleted, second.NotificationsCompleted })
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, callbacks);
@@ -256,9 +256,9 @@ public class DynamicProgressContractTest
         finally
         {
             release.Set();
-            pool.shutdownNow();
+            pool.ShutdownNow();
             await active.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(await Task.Run(() => pool.awaitTermination(TimeSpan.FromSeconds(5))));
+            Assert.True(await Task.Run(() => pool.AwaitTermination(TimeSpan.FromSeconds(5))));
         }
     }
 

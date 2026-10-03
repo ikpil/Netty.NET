@@ -30,17 +30,17 @@ public sealed class Signal : Exception, IConstant<Signal>
     /**
      * Returns the {@link Signal} of the specified name.
      */
-    public static Signal valueOf(string name)
+    public static Signal ValueOf(string name)
     {
-        return _pool.valueOf(name);
+        return _pool.ValueOf(name);
     }
 
     /**
      * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
-    public static Signal valueOf(Type firstNameComponent, string secondNameComponent)
+    public static Signal ValueOf(Type firstNameComponent, string secondNameComponent)
     {
-        return _pool.valueOf(firstNameComponent, secondNameComponent);
+        return _pool.ValueOf(firstNameComponent, secondNameComponent);
     }
 
     private readonly SignalConstant constant;
@@ -57,7 +57,7 @@ public sealed class Signal : Exception, IConstant<Signal>
      * Check if the given {@link Signal} is the same as this instance. If not an {@link InvalidOperationException} will
      * be thrown.
      */
-    public void expect(Signal signal)
+    public void Expect(Signal signal)
     {
         if (!ReferenceEquals(this, signal))
         {
@@ -65,14 +65,14 @@ public sealed class Signal : Exception, IConstant<Signal>
         }
     }
 
-    public int id()
+    public int Id()
     {
-        return constant.id();
+        return constant.Id();
     }
 
-    public string name()
+    public string Name()
     {
-        return constant.name();
+        return constant.Name();
     }
 
     public override bool Equals(object obj)
@@ -97,6 +97,6 @@ public sealed class Signal : Exception, IConstant<Signal>
 
     public override string ToString()
     {
-        return name();
+        return Name();
     }
 }

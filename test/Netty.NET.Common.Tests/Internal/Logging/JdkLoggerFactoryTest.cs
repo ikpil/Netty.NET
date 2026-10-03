@@ -21,14 +21,14 @@ namespace Netty.NET.Common.Tests.Internal.Logging;
 public class JdkLoggerFactoryTest
 {
     [Fact]
-    public void testCreation()
+    public void TestCreation()
     {
         var factory = new InternalDefaultLoggerFactory();
         try
         {
-            IInternalLogger logger = factory.newInstance("foo");
+            IInternalLogger logger = factory.NewInstance("foo");
             Assert.IsType<InternalDefaultLogger>(logger);
-            Assert.Equal("foo", logger.name());
+            Assert.Equal("foo", logger.Name());
         }
         finally { factory.Dispose(); }
     }

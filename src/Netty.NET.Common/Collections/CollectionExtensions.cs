@@ -6,7 +6,7 @@ namespace Netty.NET.Common.Collections;
 
 public static class CollectionExtensions
 {
-    public static bool isEmpty(this string str)
+    public static bool IsEmpty(this string str)
     {
         return string.IsNullOrEmpty(str);
     }

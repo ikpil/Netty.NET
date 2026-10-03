@@ -4,7 +4,7 @@ namespace Netty.NET.Common;
 
 public class NoopTypeParameterMatcher : TypeParameterMatcher
 {
-    public override bool match(object msg)
+    public override bool Match(object msg)
     {
         return true;
     }

@@ -105,7 +105,7 @@ public static class EventExecutorSchedulingExtensions
         ArgumentNullException.ThrowIfNull(action);
         if (initialDelay < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(initialDelay));
         if (interval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(interval));
-        long period = AbstractScheduledEventExecutor.toNanos(interval);
+        long period = AbstractScheduledEventExecutor.ToNanos(interval);
         return ScheduleCore<object>(executor, ct => { action(ct); return null; }, initialDelay,
             fixedDelay ? -period : period, token);
     }
@@ -119,7 +119,7 @@ public static class EventExecutorSchedulingExtensions
         // A NonSticky group directly delegates scheduling to its underlying group;
         // its ordered child wrapper deliberately does not support scheduling.
         while (group is NonStickyEventExecutorGroup wrapper) group = wrapper.DelegatedGroup;
-        IEventExecutor executor = group is IEventExecutor child ? child : group.next();
+        IEventExecutor executor = group is IEventExecutor child ? child : group.Next();
         if (executor is AbstractScheduledEventExecutor ordered)
             return ordered.ScheduleNative(function, delay, period, token);
         if (executor is UnorderedThreadPoolEventExecutor unordered)

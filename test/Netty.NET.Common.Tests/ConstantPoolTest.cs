@@ -33,7 +33,7 @@ public class ConstantPoolTest
 
     public class TestContentPool : ConstantPool<TestConstant>
     {
-        protected override TestConstant newConstant(int id, string name)
+        protected override TestConstant NewConstant(int id, string name)
         {
             return new TestConstant(id, name);
         }
@@ -42,39 +42,39 @@ public class ConstantPoolTest
     private static readonly ConstantPool<TestConstant> pool = new TestContentPool();
 
     [Fact]
-    public void testCannotProvideNullName()
+    public void TestCannotProvideNullName()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            pool.valueOf(null);
+            pool.ValueOf(null);
         });
     }
 
     [Fact]
     //@SuppressWarnings("RedundantStringConstructorCall")
-    public void testUniqueness()
+    public void TestUniqueness()
     {
-        TestConstant a = pool.valueOf(new string("Leroy"));
-        TestConstant b = pool.valueOf(new string("Leroy"));
+        TestConstant a = pool.ValueOf(new string("Leroy"));
+        TestConstant b = pool.ValueOf(new string("Leroy"));
         Assert.Same(a, b);
     }
 
     [Fact]
-    public void testIdUniqueness()
+    public void TestIdUniqueness()
     {
-        TestConstant one = pool.valueOf("one");
-        TestConstant two = pool.valueOf("two");
-        Assert.NotEqual(one.id(), two.id());
+        TestConstant one = pool.ValueOf("one");
+        TestConstant two = pool.ValueOf("two");
+        Assert.NotEqual(one.Id(), two.Id());
     }
 
     [Fact]
-    public void testCompare()
+    public void TestCompare()
     {
-        TestConstant a = pool.valueOf("a_alpha");
-        TestConstant b = pool.valueOf("b_beta");
-        TestConstant c = pool.valueOf("c_gamma");
-        TestConstant d = pool.valueOf("d_delta");
-        TestConstant e = pool.valueOf("e_epsilon");
+        TestConstant a = pool.ValueOf("a_alpha");
+        TestConstant b = pool.ValueOf("b_beta");
+        TestConstant c = pool.ValueOf("c_gamma");
+        TestConstant d = pool.ValueOf("d_delta");
+        TestConstant e = pool.ValueOf("e_epsilon");
 
         ISet<TestConstant> set = new SortedSet<TestConstant>();
         set.Add(b);
@@ -87,7 +87,7 @@ public class ConstantPoolTest
         Assert.Equal(5, array.Count);
 
         // Sort by name
-        array.Sort((o1, o2) => string.Compare(o1.name(), o2.name(), StringComparison.Ordinal));
+        array.Sort((o1, o2) => string.Compare(o1.Name(), o2.Name(), StringComparison.Ordinal));
 
         Assert.Same(a, array[0]);
         Assert.Same(b, array[1]);
@@ -97,9 +97,9 @@ public class ConstantPoolTest
     }
 
     [Fact]
-    public void testComposedName()
+    public void TestComposedName()
     {
-        TestConstant a = pool.valueOf(typeof(object), "A");
-        Assert.Equal(typeof(object).FullName + "#A", a.name());
+        TestConstant a = pool.ValueOf(typeof(object), "A");
+        Assert.Equal(typeof(object).FullName + "#A", a.Name());
     }
 }

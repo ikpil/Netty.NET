@@ -41,7 +41,7 @@ public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
      */
     public DefaultEventExecutorGroup(int nThreads, IThreadFactory threadFactory)
         : this(nThreads, threadFactory, SingleThreadEventExecutor.DEFAULT_MAX_PENDING_EXECUTOR_TASKS,
-            RejectedExecutionHandlers.reject())
+            RejectedExecutionHandlers.Reject())
     {
     }
 
@@ -59,7 +59,7 @@ public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
     {
     }
 
-    protected override IEventExecutor newChild(IExecutor executor, params object[] args)
+    protected override IEventExecutor NewChild(IExecutor executor, params object[] args)
     {
         return new DefaultEventExecutor(this, executor, (int)args[0], (IRejectedExecutionHandler)args[1]);
     }

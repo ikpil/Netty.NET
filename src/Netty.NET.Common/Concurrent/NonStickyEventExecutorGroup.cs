@@ -49,13 +49,13 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
      */
     public NonStickyEventExecutorGroup(IEventExecutorGroup group, int maxTaskExecutePerRun)
     {
-        _group = verify(group);
-        _maxTaskExecutePerRun = ObjectUtil.checkPositive(maxTaskExecutePerRun, "maxTaskExecutePerRun");
+        _group = Verify(group);
+        _maxTaskExecutePerRun = ObjectUtil.CheckPositive(maxTaskExecutePerRun, "maxTaskExecutePerRun");
     }
 
-    private static IEventExecutorGroup verify(IEventExecutorGroup group)
+    private static IEventExecutorGroup Verify(IEventExecutorGroup group)
     {
-        IEnumerable<IEventExecutor> executors = ObjectUtil.checkNotNull(group, "group").iterator();
+        IEnumerable<IEventExecutor> executors = ObjectUtil.CheckNotNull(group, "group").Iterator();
         foreach (var executor in executors)
         {
             if (executor is IOrderedEventExecutor)
@@ -67,14 +67,14 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
         return group;
     }
 
-    private NonStickyOrderedEventExecutor newExecutor(IEventExecutor executor)
+    private NonStickyOrderedEventExecutor NewExecutor(IEventExecutor executor)
     {
         return new NonStickyOrderedEventExecutor(executor, _maxTaskExecutePerRun);
     }
 
-    public bool isShuttingDown()
+    public bool IsShuttingDown()
     {
-        return _group.isShuttingDown();
+        return _group.IsShuttingDown();
     }
 
     public Task ShutdownGracefullyAsync()
@@ -82,9 +82,9 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
         return _group.ShutdownGracefullyAsync();
     }
 
-    public Ticker ticker()
+    public Ticker Ticker()
     {
-        return Ticker.systemTicker();
+        return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
     }
 
     public Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
@@ -96,48 +96,48 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
     public Task StopAsync() => _group.StopAsync();
 
     //@SuppressWarnings("deprecation")
-    public void shutdown()
+    public void Shutdown()
     {
-        _group.shutdown();
+        _group.Shutdown();
     }
 
     //@SuppressWarnings("deprecation")
-    public List<IRunnable> shutdownNow()
+    public List<IRunnable> ShutdownNow()
     {
-        return _group.shutdownNow();
+        return _group.ShutdownNow();
     }
 
-    public IEventExecutor next()
+    public IEventExecutor Next()
     {
-        return newExecutor(_group.next());
+        return NewExecutor(_group.Next());
     }
 
-    public IEnumerable<IEventExecutor> iterator()
+    public IEnumerable<IEventExecutor> Iterator()
     {
-        IEnumerable<IEventExecutor> itr = _group.iterator();
+        IEnumerable<IEventExecutor> itr = _group.Iterator();
         foreach (var it in itr)
         {
-            yield return newExecutor(it);
+            yield return NewExecutor(it);
         }
     }
 
-    public bool isShutdown()
+    public bool IsShutdown()
     {
-        return _group.isShutdown();
+        return _group.IsShutdown();
     }
 
-    public bool isTerminated()
+    public bool IsTerminated()
     {
-        return _group.isTerminated();
+        return _group.IsTerminated();
     }
 
-    public bool awaitTermination(TimeSpan timeout)
+    public bool AwaitTermination(TimeSpan timeout)
     {
-        return _group.awaitTermination(timeout);
+        return _group.AwaitTermination(timeout);
     }
 
-    public void execute(IRunnable command)
+    public void Execute(IRunnable command)
     {
-        _group.execute(command);
+        _group.Execute(command);
     }
 }

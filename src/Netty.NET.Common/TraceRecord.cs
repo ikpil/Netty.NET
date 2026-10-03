@@ -23,7 +23,7 @@ internal sealed class TraceRecord : Exception
     {
         trace = new StackTrace(0, true);
         // This needs to be generated even if toString() is never called as it may change later on.
-        hintString = hint is IResourceLeakHint leakHint ? leakHint.toHintString() : hint.ToString();
+        hintString = hint is IResourceLeakHint leakHint ? leakHint.ToHintString() : hint.ToString();
         nextRecord = next;
         position = next.position + 1;
     }
@@ -42,8 +42,8 @@ internal sealed class TraceRecord : Exception
         position = closeMarker ? CLOSE_MARK_POS : -1;
     }
     public override string StackTrace => trace?.ToString();
-    internal int pos() => position;
-    internal TraceRecord next() => nextRecord;
+    internal int Pos() => position;
+    internal TraceRecord Next() => nextRecord;
     public override string ToString()
     {
         var buffer = new StringBuilder(2048);
@@ -54,12 +54,12 @@ internal sealed class TraceRecord : Exception
         // CLR inlining can remove those implementation frames. Skip by identity,
         // rather than dropping a fixed number of frames that may belong to callers.
         int firstCaller = 0;
-        while (firstCaller < frames.Length && isImplementationFrame(frames[firstCaller])) firstCaller++;
+        while (firstCaller < frames.Length && IsImplementationFrame(frames[firstCaller])) firstCaller++;
         for (int i = firstCaller; i < frames.Length; i++)
         {
             MethodBaseInfo(frames[i], out string className, out string methodName);
             // Strip the noisy stack trace elements.
-            string[] exclusions = ResourceLeakDetector.excludedMethods.get();
+            string[] exclusions = ResourceLeakDetector.excludedMethods.Get();
             bool excluded = false;
             for (int k = 0; k < exclusions.Length; k += 2)
             {
@@ -74,10 +74,10 @@ internal sealed class TraceRecord : Exception
     private static void MethodBaseInfo(StackFrame frame, out string className, out string methodName)
     {
         var method = frame.GetMethod();
-        className = ResourceLeakDetector.exclusionTypeName(method?.DeclaringType);
+        className = ResourceLeakDetector.ExclusionTypeName(method?.DeclaringType);
         methodName = method?.Name;
     }
-    private static bool isImplementationFrame(StackFrame frame)
+    private static bool IsImplementationFrame(StackFrame frame)
     {
         var method = frame.GetMethod();
         Type type = method?.DeclaringType;
@@ -85,6 +85,6 @@ internal sealed class TraceRecord : Exception
         if (type?.IsGenericType != true) return false;
         Type definition = type.GetGenericTypeDefinition();
         return definition == typeof(DefaultResourceLeak<>) ||
-            definition == typeof(ResourceLeakDetector<>) && method.Name == "track0";
+            definition == typeof(ResourceLeakDetector<>) && method.Name == "Track0";
     }
 }

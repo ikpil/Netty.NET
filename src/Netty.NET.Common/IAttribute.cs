@@ -26,28 +26,28 @@ public interface IAttribute<T> where T : class
     /**
      * Returns the key of this attribute.
      */
-    AttributeKey<T> key();
+    AttributeKey<T> Key();
 
     /**
      * Returns the current value, which may be {@code null}
      */
-    T get();
+    T Get();
 
     /**
      * Sets the value
      */
-    void set(T value);
+    void Set(T value);
 
     /**
      *  Atomically sets to the given value and returns the old value which may be {@code null} if non was set before.
      */
-    T getAndSet(T value);
+    T GetAndSet(T value);
 
     /**
      *  Atomically sets to the given value if this {@link IAttribute}'s value is {@code null}.
      *  If it was not possible to set the value as it contains a value it will just return the current value.
      */
-    T setIfAbsent(T value);
+    T SetIfAbsent(T value);
 
     /**
      * Removes this attribute from the {@link IAttributeMap} and returns the old value. Subsequent {@link #get()}
@@ -65,13 +65,13 @@ public interface IAttribute<T> where T : class
      *
      * @deprecated please consider using {@link #getAndSet(object)} (with value of {@code null}).
      */
-    T getAndRemove();
+    T GetAndRemove();
 
     /**
      * Atomically sets the value to the given updated value if the current value == the expected value.
      * If it the set was successful it returns {@code true} otherwise {@code false}.
      */
-    bool compareAndSet(T oldValue, T newValue);
+    bool CompareAndSet(T oldValue, T newValue);
 
     /**
      * Removes this attribute from the {@link IAttributeMap}. Subsequent {@link #get()} calls will return @{code null}.
@@ -88,5 +88,5 @@ public interface IAttribute<T> where T : class
      *
      * @deprecated please consider using {@link #set(object)} (with value of {@code null}).
      */
-    void remove();
+    void Remove();
 }

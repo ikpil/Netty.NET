@@ -60,8 +60,8 @@ public static class EventExecutorExtensions
                 IEventExecutorGroup targetGroup = executor;
                 while (targetGroup is NonStickyEventExecutorGroup nonSticky)
                     targetGroup = nonSticky.DelegatedGroup;
-                IEventExecutor target = targetGroup as IEventExecutor ?? targetGroup.next();
-                target.execute(submitted);
+                IEventExecutor target = targetGroup as IEventExecutor ?? targetGroup.Next();
+                target.Execute(submitted);
             }
             catch (Exception error) { submitted.Reject(error); }
         }
@@ -170,7 +170,7 @@ public static class EventExecutorExtensions
             _registration.Unregister();
         }
 
-        public void run()
+        public void Run()
         {
             bool execute = Interlocked.CompareExchange(ref _claimed, 1, 0) == 0;
             Interlocked.Exchange(ref _removeCanceled, null);

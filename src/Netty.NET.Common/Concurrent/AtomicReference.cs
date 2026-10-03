@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -11,22 +11,22 @@ public class AtomicReference<T> where T : class
         _location = location;
     }
 
-    public T get()
+    public T Get()
     {
         return Volatile.Read(ref _location);
     }
 
-    public void set(T newValue)
+    public void Set(T newValue)
     {
         Volatile.Write(ref _location, newValue);
     }
 
-    public T getAndSet(T value)
+    public T GetAndSet(T value)
     {
         return Interlocked.Exchange(ref _location, value);
     }
 
-    public bool compareAndSet(T expectedValue, T newValue)
+    public bool CompareAndSet(T expectedValue, T newValue)
     {
         var original = Interlocked.CompareExchange(ref _location, newValue, expectedValue);
         return original == expectedValue;
@@ -34,7 +34,7 @@ public class AtomicReference<T> where T : class
 
     public override string ToString()
     {
-        var value = get();
+        var value = Get();
         return value?.ToString() ?? "null";
     }
 }

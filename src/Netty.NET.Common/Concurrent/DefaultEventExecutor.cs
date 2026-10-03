@@ -32,7 +32,7 @@ public sealed class DefaultEventExecutor : SingleThreadEventExecutor
     /// </summary>
     public DefaultEventExecutor(TimeProvider timeProvider)
         : base(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventExecutor))),
-            true, false, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.reject(), timeProvider)
+            true, false, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.Reject(), timeProvider)
     {
     }
 
@@ -76,18 +76,18 @@ public sealed class DefaultEventExecutor : SingleThreadEventExecutor
     {
     }
 
-    protected override void run()
+    protected override void Run()
     {
         for (;;)
         {
-            IRunnable task = takeTask();
+            IRunnable task = TakeTask();
             if (task != null)
             {
-                runTask(task);
-                updateLastExecutionTime();
+                RunTask(task);
+                UpdateLastExecutionTime();
             }
 
-            if (confirmShutdown())
+            if (ConfirmShutdown())
             {
                 break;
             }

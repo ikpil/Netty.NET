@@ -28,7 +28,7 @@ public class RecyclableArrayList
 {
     private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
-    private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.newPool(
+    private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.NewPool(
         new AnonymousObjectCreator<RecyclableArrayList>(x => new RecyclableArrayList(x))
     );
 
@@ -39,9 +39,9 @@ public class RecyclableArrayList
     /**
      * Create a new empty {@link RecyclableArrayList} instance with the given capacity.
      */
-    public static RecyclableArrayList newInstance(int minCapacity)
+    public static RecyclableArrayList NewInstance(int minCapacity)
     {
-        RecyclableArrayList ret = RECYCLER.get();
+        RecyclableArrayList ret = RECYCLER.Get();
         ret._list.EnsureCapacity(minCapacity);
         return ret;
     }
@@ -49,9 +49,9 @@ public class RecyclableArrayList
     /**
      * Create a new empty {@link RecyclableArrayList} instance
      */
-    public static RecyclableArrayList newInstance<T>()
+    public static RecyclableArrayList NewInstance<T>()
     {
-        return newInstance(DEFAULT_INITIAL_CAPACITY);
+        return NewInstance(DEFAULT_INITIAL_CAPACITY);
     }
 
     private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle)
@@ -65,23 +65,23 @@ public class RecyclableArrayList
         _list = new List<object>(initialCapacity);
     }
 
-    public bool addAll<T>(ICollection<T> c) where T : class
+    public bool AddAll<T>(ICollection<T> c) where T : class
     {
-        checkNullElements(c);
+        CheckNullElements(c);
         _list.AddRange(c);
         _insertSinceRecycled = true;
         return true;
     }
 
-    public bool addAll<T>(int index, ICollection<T> c) where T : class
+    public bool AddAll<T>(int index, ICollection<T> c) where T : class
     {
-        checkNullElements(c);
+        CheckNullElements(c);
         _list.InsertRange(index, c);
         _insertSinceRecycled = true;
         return true;
     }
 
-    private static void checkNullElements<T>(ICollection<T> c) where T : class
+    private static void CheckNullElements<T>(ICollection<T> c) where T : class
     {
         if (c is IList<T> list)
         {
@@ -107,23 +107,23 @@ public class RecyclableArrayList
         }
     }
 
-    public bool add(object element)
+    public bool Add(object element)
     {
-        _list.Add(ObjectUtil.checkNotNull(element, "element"));
+        _list.Add(ObjectUtil.CheckNotNull(element, "element"));
         _insertSinceRecycled = true;
         return true;
     }
 
-    public void add(int index, object element)
+    public void Add(int index, object element)
     {
-        _list.Insert(index, ObjectUtil.checkNotNull(element, "element"));
+        _list.Insert(index, ObjectUtil.CheckNotNull(element, "element"));
         _insertSinceRecycled = true;
     }
 
-    public object set(int index, object element)
+    public object Set(int index, object element)
     {
         object old = _list[index];
-        _list[index] = ObjectUtil.checkNotNull(element, "element");
+        _list[index] = ObjectUtil.CheckNotNull(element, "element");
         _insertSinceRecycled = true;
         return old;
     }
@@ -131,7 +131,7 @@ public class RecyclableArrayList
     /**
      * Returns {@code true} if any elements where added or set. This will be reset once {@link #recycle()} was called.
      */
-    public bool insertSinceRecycled()
+    public bool InsertSinceRecycled()
     {
         return _insertSinceRecycled;
     }
@@ -139,11 +139,11 @@ public class RecyclableArrayList
     /**
      * Clear and recycle this instance.
      */
-    public bool recycle()
+    public bool Recycle()
     {
         _list.Clear();
         _insertSinceRecycled = false;
-        _handle.recycle(this);
+        _handle.Recycle(this);
         return true;
     }
 }

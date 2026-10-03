@@ -8,7 +8,7 @@ namespace Netty.NET.Common.Internal;
 // acquires the lock while retaining that flag for a later interruptible wait.
 internal static class UninterruptibleMonitor
 {
-    internal static Lease enter(object monitor)
+    internal static Lease Enter(object monitor)
     {
         bool interrupted = false;
         for (;;)

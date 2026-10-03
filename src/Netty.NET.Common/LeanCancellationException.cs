@@ -6,7 +6,7 @@ namespace Netty.NET.Common;
 public class LeanCancellationException : TaskCanceledException
 {
     // Suppress a warning since the method doesn't need synchronization
-    public Exception fillInStackTrace()
+    public Exception FillInStackTrace()
     {
         //setStackTrace(CANCELLATION_STACK);
         return this;

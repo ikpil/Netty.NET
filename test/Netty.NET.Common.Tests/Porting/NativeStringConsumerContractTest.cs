@@ -23,7 +23,7 @@ public class NativeStringConsumerContractTest
     [InlineData("a\ud800", "b\ud800", 1, true)]
     public void SuffixComparisonUsesCodeUnitsAndRejectsInvalidLengths(string text, string suffix, int length, bool expected)
     {
-        Assert.Equal(expected, StringUtil.commonSuffixOfLength(text, suffix, length));
+        Assert.Equal(expected, StringUtil.CommonSuffixOfLength(text, suffix, length));
     }
 
     [Theory]
@@ -39,7 +39,7 @@ public class NativeStringConsumerContractTest
     [InlineData("example.com", null, false)]
     public void DomainComparisonRetainsPinnedPrefixAndSuffixRules(string pattern, string host, bool expected)
     {
-        Assert.Equal(expected, DomainNameMapping<object>.matches(pattern, host));
+        Assert.Equal(expected, DomainNameMapping<object>.Matches(pattern, host));
     }
 
     [Theory]
@@ -49,7 +49,7 @@ public class NativeStringConsumerContractTest
     [InlineData("111.22.%")]
     public void TruncatedIpv4AddressesReturnFalseWithoutOutOfRangeSearch(string address)
     {
-        Assert.False(NetUtil.isValidIpV4Address(address));
+        Assert.False(NetUtil.IsValidIpV4Address(address));
     }
 
     [Theory]
@@ -59,7 +59,7 @@ public class NativeStringConsumerContractTest
     [InlineData("[::ffff:111.22.%1]")]
     public void TruncatedEmbeddedIpv4AddressesReturnFalseWithoutOutOfRangeSearch(string address)
     {
-        Assert.False(NetUtil.isValidIpV6Address(address));
+        Assert.False(NetUtil.IsValidIpV6Address(address));
     }
 
     [Theory]
@@ -71,7 +71,7 @@ public class NativeStringConsumerContractTest
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
-            Assert.False(DomainNameMapping<object>.matches("*\u00ad.example", "a.example"));
+            Assert.False(DomainNameMapping<object>.Matches("*\u00ad.example", "a.example"));
         }
         finally { CultureInfo.CurrentCulture = previous; }
     }

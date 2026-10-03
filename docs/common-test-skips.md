@@ -1,7 +1,9 @@
 # Current full-suite skips
 
 Baseline: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` in `D:/workspace/netty`.
-Both reference-count-field-full-debug.trx and reference-count-field-full-release.trx
+C# method names now start uppercase; historical Java names in this table retain
+their source spelling. No skipped case was added or removed.
+Both method-casing-final-full-debug.trx and method-casing-full-release.trx
 report 1847 passed, zero failed and the same 14 skipped cases on Windows/net10.0
 (1861 discovered cases). The earlier auto-scaling failure is preserved in
 encoding-full-release-first.trx; it adds no skip and is not counted as a pass

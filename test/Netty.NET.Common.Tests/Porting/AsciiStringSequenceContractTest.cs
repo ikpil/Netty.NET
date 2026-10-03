@@ -22,8 +22,8 @@ public class AsciiStringSequenceContractTest
     public void InvalidSliceEndpointsHaveNativeArgumentErrorsEvenWhenChecked(int start, int end)
     {
         var value = new AsciiString(new byte[] { 1, 2, 3, 4 }, 1, 2, false);
-        Assert.Throws<ArgumentOutOfRangeException>(() => value.subSequence(start, end, false));
-        Assert.Throws<ArgumentOutOfRangeException>(() => value.subSequence(start, end, true));
+        Assert.Throws<ArgumentOutOfRangeException>(() => value.SubSequence(start, end, false));
+        Assert.Throws<ArgumentOutOfRangeException>(() => value.SubSequence(start, end, true));
     }
 
     [Theory]
@@ -97,19 +97,19 @@ public class AsciiStringSequenceContractTest
     {
         byte[] backing = Encoding.ASCII.GetBytes("!!abcdef!!");
         var parent = new AsciiString(backing, 2, 6, false);
-        var borrowed = parent.subSequence(1, 4, false);
-        var detached = parent.subSequence(1, 4, true);
+        var borrowed = parent.SubSequence(1, 4, false);
+        var detached = parent.SubSequence(1, 4, true);
         Assert.Equal("bcd", borrowed.ToString());
         Assert.Equal("bcd", detached.ToString());
         Assert.True(MemoryMarshal.TryGetArray(borrowed.AsMemory(), out ArraySegment<byte> shared));
         Assert.Same(backing, shared.Array);
         Assert.Equal(3, shared.Offset);
-        Assert.NotSame(backing, detached.array());
-        Assert.Equal(0, detached.arrayOffset());
+        Assert.NotSame(backing, detached.Array());
+        Assert.Equal(0, detached.ArrayOffset());
         backing[3] = (byte)'x';
         Assert.Equal(0, borrowed.AsSpan().IndexOf("xcd"u8));
-        borrowed.arrayChanged();
-        parent.arrayChanged();
+        borrowed.ArrayChanged();
+        parent.ArrayChanged();
         Assert.Equal("xcd", borrowed.ToString());
         Assert.Equal("axcdef", parent.ToString());
         Assert.Equal("bcd", detached.ToString());
@@ -119,17 +119,17 @@ public class AsciiStringSequenceContractTest
     public void NestedSlicesAndNativeRangesStayRelativeToTheirOwnLength()
     {
         var parent = new AsciiString(Encoding.ASCII.GetBytes("!!abcdef!!"), 2, 6, false);
-        var child = parent.subSequence(1, 5, false).subSequence(1, 3, false);
+        var child = parent.SubSequence(1, 5, false).SubSequence(1, 3, false);
         Assert.Equal("cd", child.ToString());
-        Assert.Equal(4, child.arrayOffset());
+        Assert.Equal(4, child.ArrayOffset());
         Assert.Equal(-1, child.AsSpan().IndexOf("bc"u8));
-        Assert.Throws<ArgumentOutOfRangeException>(() => child.subSequence(0, 3, false));
+        Assert.Throws<ArgumentOutOfRangeException>(() => child.SubSequence(0, 3, false));
         Assert.Equal("e", Encoding.ASCII.GetString(parent.AsMemory().Slice(1, 4).Span[^1..]));
         var text = new StringCharSequence("!!Ā😀abc!!", 2, 6);
-        var textChild = (StringCharSequence)text.subSequence(1, 3);
+        var textChild = (StringCharSequence)text.SubSequence(1, 3);
         Assert.Equal("😀", textChild.ToString());
         Assert.Equal(0, textChild.AsSpan().IndexOf("😀".AsSpan(), StringComparison.Ordinal));
-        Assert.Throws<ArgumentOutOfRangeException>(() => textChild.subSequence(0, 3));
+        Assert.Throws<ArgumentOutOfRangeException>(() => textChild.SubSequence(0, 3));
     }
 
     [Fact]
@@ -137,15 +137,15 @@ public class AsciiStringSequenceContractTest
     {
         byte[] backing = { 1, 2, 3, 4 };
         var parent = new AsciiString(backing, 1, 2, false);
-        Assert.Same(parent, parent.subSequence(0, parent.Count, true));
-        Assert.Same(parent, parent.subSequence(0, parent.Count, false));
-        Assert.Same(AsciiString.EMPTY_STRING, parent.subSequence(1, 1, true));
-        Assert.Same(AsciiString.EMPTY_STRING, parent.subSequence(1, 1, false));
+        Assert.Same(parent, parent.SubSequence(0, parent.Count, true));
+        Assert.Same(parent, parent.SubSequence(0, parent.Count, false));
+        Assert.Same(AsciiString.EMPTY_STRING, parent.SubSequence(1, 1, true));
+        Assert.Same(AsciiString.EMPTY_STRING, parent.SubSequence(1, 1, false));
         byte[] independent = parent.AsMemory().ToArray();
         backing[1] = 9;
         Assert.Equal(new byte[] { 2, 3 }, independent);
         Assert.Equal(new byte[] { 9, 3 }, parent.AsSpan().ToArray());
         var empty = new AsciiString(backing, 2, 0, false);
-        Assert.Same(empty, empty.subSequence(0, 0, true));
+        Assert.Same(empty, empty.SubSequence(0, 0, true));
     }
 }

@@ -21,101 +21,101 @@ namespace Netty.NET.Common.Tests.Internal;
 public class AppendableCharSequenceTest
 {
     [Fact]
-    public void testSimpleAppend()
+    public void TestSimpleAppend()
     {
-        testSimpleAppend0(new AppendableCharSequence(128));
+        TestSimpleAppend0(new AppendableCharSequence(128));
     }
 
     [Fact]
-    public void testAppendString()
+    public void TestAppendString()
     {
-        testAppendString0(new AppendableCharSequence(128));
+        TestAppendString0(new AppendableCharSequence(128));
     }
 
     [Fact]
-    public void testAppendAppendableCharSequence()
+    public void TestAppendAppendableCharSequence()
     {
         AppendableCharSequence seq = new AppendableCharSequence(128);
 
         string text = "testdata";
         AppendableCharSequence seq2 = new AppendableCharSequence(128);
-        seq2.append(text);
-        seq.append(seq2);
+        seq2.Append(text);
+        seq.Append(seq2);
 
         Assert.Equal(text, seq.ToString());
-        Assert.Equal(text[1..(text.Length - 2)], seq.substring(1, text.Length - 2));
+        Assert.Equal(text[1..(text.Length - 2)], seq.Substring(1, text.Length - 2));
 
         AssertEqualChars(text, seq);
     }
 
     [Fact]
-    public void testSimpleAppendWithExpand()
+    public void TestSimpleAppendWithExpand()
     {
-        testSimpleAppend0(new AppendableCharSequence(2));
+        TestSimpleAppend0(new AppendableCharSequence(2));
     }
 
     [Fact]
-    public void testAppendStringWithExpand()
+    public void TestAppendStringWithExpand()
     {
-        testAppendString0(new AppendableCharSequence(2));
+        TestAppendString0(new AppendableCharSequence(2));
     }
 
     [Fact]
-    public void testSubSequence()
+    public void TestSubSequence()
     {
         AppendableCharSequence master = new AppendableCharSequence(26);
-        master.append("abcdefghijlkmonpqrstuvwxyz");
-        Assert.Equal("abcdefghij", master.subSequence(0, 10).ToString());
+        master.Append("abcdefghijlkmonpqrstuvwxyz");
+        Assert.Equal("abcdefghij", master.SubSequence(0, 10).ToString());
     }
 
     [Fact]
-    public void testEmptySubSequence()
+    public void TestEmptySubSequence()
     {
         AppendableCharSequence master = new AppendableCharSequence(26);
-        master.append("abcdefghijlkmonpqrstuvwxyz");
-        AppendableCharSequence sub = master.subSequence(0, 0);
-        Assert.Equal(0, sub.length());
-        sub.append('b');
-        Assert.Equal('b', sub.charAt(0));
+        master.Append("abcdefghijlkmonpqrstuvwxyz");
+        AppendableCharSequence sub = master.SubSequence(0, 0);
+        Assert.Equal(0, sub.Length());
+        sub.Append('b');
+        Assert.Equal('b', sub.CharAt(0));
     }
 
-    private static void testSimpleAppend0(AppendableCharSequence seq)
+    private static void TestSimpleAppend0(AppendableCharSequence seq)
     {
         string text = "testdata";
         for (int i = 0; i < text.Length; i++)
         {
-            seq.append(text[i]);
+            seq.Append(text[i]);
         }
 
         Assert.Equal(text, seq.ToString());
-        Assert.Equal(text[1..(text.Length - 2)], seq.substring(1, text.Length - 2));
+        Assert.Equal(text[1..(text.Length - 2)], seq.Substring(1, text.Length - 2));
 
         AssertEqualChars(text, seq);
 
-        seq.reset();
-        Assert.Equal(0, seq.length());
+        seq.Reset();
+        Assert.Equal(0, seq.Length());
     }
 
-    private static void testAppendString0(AppendableCharSequence seq)
+    private static void TestAppendString0(AppendableCharSequence seq)
     {
         string text = "testdata";
-        seq.append(text);
+        seq.Append(text);
 
         Assert.Equal(text, seq.ToString());
-        Assert.Equal(text[1..(text.Length - 2)], seq.substring(1, text.Length - 2));
+        Assert.Equal(text[1..(text.Length - 2)], seq.Substring(1, text.Length - 2));
 
         AssertEqualChars(text, seq);
 
-        seq.reset();
-        Assert.Equal(0, seq.length());
+        seq.Reset();
+        Assert.Equal(0, seq.Length());
     }
 
     private static void AssertEqualChars(string seq1, ICharSequence seq2)
     {
-        Assert.Equal(seq1.Length, seq2.length());
+        Assert.Equal(seq1.Length, seq2.Length());
         for (int i = 0; i < seq1.Length; i++)
         {
-            Assert.Equal(seq1[i], seq2.charAt(i));
+            Assert.Equal(seq1[i], seq2.CharAt(i));
         }
     }
 }

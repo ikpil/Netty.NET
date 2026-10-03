@@ -35,9 +35,9 @@ public static class NettyRuntime
      * @throws IllegalStateException    if the number of available processors is already configured
      */
     // this method is part of the public API
-    public static void setAvailableProcessors(int availableProcessors)
+    public static void SetAvailableProcessors(int availableProcessors)
     {
-        holder.setAvailableProcessors(availableProcessors);
+        holder.SetAvailableProcessors(availableProcessors);
     }
 
     /**
@@ -47,8 +47,8 @@ public static class NettyRuntime
      *
      * @return the configured number of available processors
      */
-    public static int availableProcessors()
+    public static int AvailableProcessors()
     {
-        return holder.availableProcessors();
+        return holder.AvailableProcessors();
     }
 }

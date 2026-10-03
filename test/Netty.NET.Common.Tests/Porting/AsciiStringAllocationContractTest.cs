@@ -45,12 +45,12 @@ public class AsciiStringAllocationContractTest
         var characters = new char[length];
         for (int i = 0; i < length; i++) characters[i] = pattern[i % pattern.Length];
         string text = new string(characters);
-        AsciiString source = new AsciiString("!" + text + "!").subSequence(1, length + 1, false);
+        AsciiString source = new AsciiString("!" + text + "!").SubSequence(1, length + 1, false);
 
-        Assert.Equal(text.ToUpperInvariant(), source.toUpperCase().ToString());
-        Assert.Equal(text.ToLowerInvariant(), source.toLowerCase().ToString());
-        Assert.Equal(text.Replace('a', 'Q'), source.replace('a', 'Q').ToString());
-        Assert.Equal(text + "tail", source.concat(new AsciiString("tail")).ToString());
-        Assert.Equal(text + "tail", source.concat(new StringCharSequence("tail")).ToString());
+        Assert.Equal(text.ToUpperInvariant(), source.ToUpperCase().ToString());
+        Assert.Equal(text.ToLowerInvariant(), source.ToLowerCase().ToString());
+        Assert.Equal(text.Replace('a', 'Q'), source.Replace('a', 'Q').ToString());
+        Assert.Equal(text + "tail", source.Concat(new AsciiString("tail")).ToString());
+        Assert.Equal(text + "tail", source.Concat(new StringCharSequence("tail")).ToString());
     }
 }

@@ -33,7 +33,7 @@ public class StringUtilOwsContractTest
     public void TrimRemovesOnlySpaceAndTabAtTheEdges(int index)
     {
         var row = TrimCases[index];
-        string actual = StringUtil.trimOws(row.Input);
+        string actual = StringUtil.TrimOws(row.Input);
         Assert.Equal(row.Expected, actual);
         if (row.Input == row.Expected) Assert.Same(row.Input, actual);
     }
@@ -45,7 +45,7 @@ public class StringUtilOwsContractTest
     public void CsvTrimmingKeepsQuoteAndEmbeddedWhitespaceSemantics(int index)
     {
         var row = CsvCases[index];
-        Assert.Equal(row.Expected, StringUtil.escapeCsv(row.Input, true));
+        Assert.Equal(row.Expected, StringUtil.EscapeCsv(row.Input, true));
     }
 
     [Fact]
@@ -55,8 +55,8 @@ public class StringUtilOwsContractTest
         {
             string text = new((char)code, 1);
             string expected = code is ' ' or '\t' ? "" : text;
-            Assert.Equal(expected, StringUtil.trimOws(" \t" + text + "\t "));
-            string actual = StringUtil.trimOws(text);
+            Assert.Equal(expected, StringUtil.TrimOws(" \t" + text + "\t "));
+            string actual = StringUtil.TrimOws(text);
             Assert.Equal(expected, actual);
             if (expected.Length != 0) Assert.Same(text, actual);
         }
@@ -68,15 +68,15 @@ public class StringUtilOwsContractTest
         foreach (string input in new[] { "a\t b", "\u00a0a\u00a0", "\" a,b \"" })
         {
             string value = new(input.AsSpan());
-            Assert.Same(value, StringUtil.escapeCsv(value, true));
-            Assert.Same(value, StringUtil.escapeCsv(value, false));
+            Assert.Same(value, StringUtil.EscapeCsv(value, true));
+            Assert.Same(value, StringUtil.EscapeCsv(value, false));
         }
     }
 
     [Fact]
     public void NullTrimUsesTheNativeArgumentException()
     {
-        var error = Assert.Throws<ArgumentNullException>(() => StringUtil.trimOws(null));
+        var error = Assert.Throws<ArgumentNullException>(() => StringUtil.TrimOws(null));
         Assert.Equal("value", error.ParamName);
     }
 }

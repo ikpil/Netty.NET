@@ -13,7 +13,7 @@ public class ReflectiveMatcher : TypeParameterMatcher
         _type = type;
     }
 
-    public override bool match(object msg)
+    public override bool Match(object msg)
     {
         return _type.IsInstanceOfType(msg);
     }

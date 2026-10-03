@@ -10,14 +10,14 @@ public class UnorderedWorkerIdentityContractTest
 {
     private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
     {
-        public Thread newThread(IRunnable task) => create(task);
+        public Thread NewThread(IRunnable task) => create(task);
     }
 
     [Fact]
     public void ConstructorFactoryCreatesThreadsIndependentlyOfWorkerAccounting()
     {
         Thread created = null;
-        var original = new Factory(task => created = new Thread(task.run) { IsBackground = true });
+        var original = new Factory(task => created = new Thread(task.Run) { IsBackground = true });
         var executor = new UnorderedThreadPoolEventExecutor(1, original);
         try
         {
@@ -25,12 +25,12 @@ public class UnorderedWorkerIdentityContractTest
             Thread invoked = executor.SubmitAsync(() => Thread.CurrentThread)
                 .WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             Assert.Same(created, invoked);
-            Assert.True(executor.inEventLoop(created));
+            Assert.True(executor.InEventLoop(created));
         }
         finally
         {
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
@@ -45,21 +45,21 @@ public class UnorderedWorkerIdentityContractTest
         using var suffixDone = new ManualResetEventSlim();
         var factory = new Factory(task => worker = new Thread(() =>
         {
-            prefixAffinity = executor.inEventLoop();
-            try { task.run(); }
+            prefixAffinity = executor.InEventLoop();
+            try { task.Run(); }
             finally
             {
-                suffixAffinity = executor.inEventLoop();
+                suffixAffinity = executor.InEventLoop();
                 suffixDone.Set();
             }
         }) { IsBackground = true });
         executor = forwardFactory
-            ? new UnorderedThreadPoolEventExecutor(1, new Factory(task => factory.newThread(task)))
+            ? new UnorderedThreadPoolEventExecutor(1, new Factory(task => factory.NewThread(task)))
             : new UnorderedThreadPoolEventExecutor(1, factory);
         try
         {
             var invocation = executor.ScheduleAsync(() =>
-                (Thread.CurrentThread, executor.inEventLoop(), executor.isExecutorThread(Thread.CurrentThread)),
+                (Thread.CurrentThread, executor.InEventLoop(), executor.IsExecutorThread(Thread.CurrentThread)),
                 TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             Assert.Same(worker, invocation.Item1);
             Assert.True(invocation.Item2);
@@ -69,12 +69,12 @@ public class UnorderedWorkerIdentityContractTest
             Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
             Assert.False(prefixAffinity);
             Assert.False(suffixAffinity);
-            Assert.False(executor.inEventLoop(worker));
+            Assert.False(executor.InEventLoop(worker));
         }
         finally
         {
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
             if (worker != null) Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
         }
     }
@@ -83,7 +83,7 @@ public class UnorderedWorkerIdentityContractTest
     public void StatefulConstructorFactoryKeepsConcurrentWorkersRecognizedTogether()
     {
         int creations = 0;
-        var factory = new Factory(task => new Thread(task.run)
+        var factory = new Factory(task => new Thread(task.Run)
         {
             IsBackground = true,
             Name = Interlocked.Increment(ref creations) == 1 ? "first" : "second"
@@ -97,27 +97,27 @@ public class UnorderedWorkerIdentityContractTest
             oldWorker = Thread.CurrentThread;
             entered.Set();
             release.Wait();
-            return executor.inEventLoop();
+            return executor.InEventLoop();
         });
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            var second = executor.ScheduleAsync(() => (Thread.CurrentThread, executor.inEventLoop()),
+            var second = executor.ScheduleAsync(() => (Thread.CurrentThread, executor.InEventLoop()),
                 TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             Assert.NotSame(oldWorker, second.Item1);
             Assert.Equal("first", oldWorker.Name);
             Assert.Equal("second", second.Item1.Name);
             Assert.True(second.Item2);
-            Assert.True(executor.inEventLoop(oldWorker));
-            Assert.True(executor.inEventLoop(second.Item1));
+            Assert.True(executor.InEventLoop(oldWorker));
+            Assert.True(executor.InEventLoop(second.Item1));
             release.Set();
             Assert.True(first.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
         finally
         {
             release.Set();
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 }

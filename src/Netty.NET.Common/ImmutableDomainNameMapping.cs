@@ -36,7 +36,7 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
         int index = 0;
         foreach (var mapping in map)
         {
-            string hostname = normalizeHostname(mapping.Key);
+            string hostname = NormalizeHostname(mapping.Key);
             T value = mapping.Value;
             _domainNamePatterns[index] = hostname;
             _values[index] = value;
@@ -47,21 +47,21 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
         _map = mapCopy;
     }
 
-    public override DomainNameMapping<T> add(string hostname, T output)
+    public override DomainNameMapping<T> Add(string hostname, T output)
     {
         throw new NotSupportedException("Immutable DomainNameMapping does not support modification after initial creation");
     }
 
-    public override T map(string hostname)
+    public override T Map(string hostname)
     {
         if (hostname != null)
         {
-            hostname = normalizeHostname(hostname);
+            hostname = NormalizeHostname(hostname);
 
             int length = _domainNamePatterns.Length;
             for (int index = 0; index < length; ++index)
             {
-                if (matches(_domainNamePatterns[index], hostname))
+                if (Matches(_domainNamePatterns[index], hostname))
                 {
                     return _values[index];
                 }
@@ -71,7 +71,7 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
         return _defaultValue;
     }
 
-    public override IReadOnlyDictionary<string, T> asMap()
+    public override IReadOnlyDictionary<string, T> AsMap()
     {
         return _map;
     }
@@ -89,16 +89,16 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
         string pattern0 = _domainNamePatterns[0];
         string value0 = _values[0].ToString();
         int oneMappingLength = pattern0.Length + value0.Length + 3; // 2 for separator ", " and 1 for '='
-        int estimatedBufferSize = estimateBufferSize(defaultValueStr.Length, numberOfMappings, oneMappingLength);
+        int estimatedBufferSize = EstimateBufferSize(defaultValueStr.Length, numberOfMappings, oneMappingLength);
 
         StringBuilder sb = new StringBuilder(estimatedBufferSize)
             .Append(REPR_HEADER).Append(defaultValueStr).Append(REPR_MAP_OPENING);
 
-        appendMapping(sb, pattern0, value0);
+        AppendMapping(sb, pattern0, value0);
         for (int index = 1; index < numberOfMappings; ++index)
         {
             sb.Append(", ");
-            appendMapping(sb, index);
+            AppendMapping(sb, index);
         }
 
         return sb.Append(REPR_MAP_CLOSING).ToString();
@@ -114,7 +114,7 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
      * @param estimatedMappingLength estimated size taken by one mapping
      * @return estimated length of string returned by {@link #ToString()}
      */
-    private static int estimateBufferSize(int defaultValueLength,
+    private static int EstimateBufferSize(int defaultValueLength,
         int numberOfMappings,
         int estimatedMappingLength)
     {
@@ -122,12 +122,12 @@ public class ImmutableDomainNameMapping<T> : DomainNameMapping<T> where T : clas
                                       + (int)(estimatedMappingLength * numberOfMappings * 1.10);
     }
 
-    private StringBuilder appendMapping(StringBuilder sb, int mappingIndex)
+    private StringBuilder AppendMapping(StringBuilder sb, int mappingIndex)
     {
-        return appendMapping(sb, _domainNamePatterns[mappingIndex], _values[mappingIndex].ToString());
+        return AppendMapping(sb, _domainNamePatterns[mappingIndex], _values[mappingIndex].ToString());
     }
 
-    private static StringBuilder appendMapping(StringBuilder sb, string domainNamePattern, string value)
+    private static StringBuilder AppendMapping(StringBuilder sb, string domainNamePattern, string value)
     {
         return sb.Append(domainNamePattern).Append('=').Append(value);
     }

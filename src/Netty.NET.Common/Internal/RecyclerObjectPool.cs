@@ -9,8 +9,8 @@ public class RecyclerObjectPool<T> : ObjectPool<T> where T : class
         _recycler = new AnonymousRecycler<T>(creator);
     }
 
-    public override T get()
+    public override T Get()
     {
-        return _recycler.get();
+        return _recycler.Get();
     }
 }

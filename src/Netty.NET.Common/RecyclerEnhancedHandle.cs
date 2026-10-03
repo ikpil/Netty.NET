@@ -6,6 +6,6 @@ namespace Netty.NET.Common;
 public abstract class RecyclerEnhancedHandle<T> : IRecyclerHandle<T>
 {
     private protected RecyclerEnhancedHandle() { }
-    public abstract void unguardedRecycle(object obj);
-    public abstract void recycle(T self);
+    public abstract void UnguardedRecycle(object obj);
+    public abstract void Recycle(T self);
 }

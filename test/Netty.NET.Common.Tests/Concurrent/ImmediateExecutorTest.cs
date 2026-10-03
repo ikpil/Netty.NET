@@ -26,11 +26,11 @@ namespace Netty.NET.Common.Tests.Concurrent;
 public class ImmediateExecutorTest
 {
     [Fact]
-    public void testExecuteNullRunnable() =>
-        Assert.Throws<ArgumentNullException>(() => ImmediateExecutor.INSTANCE.execute(null));
+    public void TestExecuteNullRunnable() =>
+        Assert.Throws<ArgumentNullException>(() => ImmediateExecutor.INSTANCE.Execute(null));
 
     [Fact]
-    public void testExecuteNonNullRunnable()
+    public void TestExecuteNonNullRunnable()
     {
         // CLR: Task.RunSynchronously is the BCL equivalent of executing JDK FutureTask.run.
         var task = new Task<Void>(() =>
@@ -38,7 +38,7 @@ public class ImmediateExecutorTest
             // NOOP
             return null;
         });
-        ImmediateExecutor.INSTANCE.execute(Runnables.Create(() => task.RunSynchronously()));
+        ImmediateExecutor.INSTANCE.Execute(Runnables.Create(() => task.RunSynchronously()));
         Assert.True(task.IsCompleted);
         Assert.False(task.IsCanceled);
         Assert.Null(task.GetAwaiter().GetResult());

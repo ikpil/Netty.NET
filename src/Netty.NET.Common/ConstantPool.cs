@@ -37,12 +37,12 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
     /**
      * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
-    public T valueOf(Type firstNameComponent, string secondNameComponent)
+    public T ValueOf(Type firstNameComponent, string secondNameComponent)
     {
-        return valueOf(
-            checkNotNull(firstNameComponent, "firstNameComponent").FullName +
+        return ValueOf(
+            CheckNotNull(firstNameComponent, "firstNameComponent").FullName +
             '#' +
-            checkNotNull(secondNameComponent, "secondNameComponent"));
+            CheckNotNull(secondNameComponent, "secondNameComponent"));
     }
 
     /**
@@ -53,9 +53,9 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
      *
      * @param name the name of the {@link Constant}
      */
-    public T valueOf(string name)
+    public T ValueOf(string name)
     {
-        return getOrCreate(checkNonEmpty(name, "name"));
+        return GetOrCreate(CheckNonEmpty(name, "name"));
     }
 
     /**
@@ -63,29 +63,29 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
      *
      * @param name the name of the {@link Constant}
      */
-    private T getOrCreate(string name)
+    private T GetOrCreate(string name)
     {
         // CLR adaptation: competing factories may create unused constants, just
         // as upstream get/newConstant/putIfAbsent does. Return the published value,
         // not the factory's temporary instance; ID gaps are allowed.
-        return _constants.GetOrAdd(name, k => newConstant(nextId(), name));
+        return _constants.GetOrAdd(name, k => NewConstant(NextId(), name));
     }
 
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
      */
-    public bool exists(string name)
+    public bool Exists(string name)
     {
-        return _constants.ContainsKey(checkNonEmpty(name, "name"));
+        return _constants.ContainsKey(CheckNonEmpty(name, "name"));
     }
 
     /**
      * Creates a new {@link Constant} for the given {@code name} or fail with an
      * {@link IllegalArgumentException} if a {@link Constant} for the given {@code name} exists.
      */
-    public T newInstance(string name)
+    public T NewInstance(string name)
     {
-        return createOrThrow(checkNonEmpty(name, "name"));
+        return CreateOrThrow(CheckNonEmpty(name, "name"));
     }
 
     /**
@@ -93,12 +93,12 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
      *
      * @param name the name of the {@link Constant}
      */
-    private T createOrThrow(string name)
+    private T CreateOrThrow(string name)
     {
         _constants.TryGetValue(name, out var constant);
         if (constant == null)
         {
-            T tempConstant = newConstant(nextId(), name);
+            T tempConstant = NewConstant(NextId(), name);
             bool added = _constants.TryAdd(name, tempConstant);
             if (added)
             {
@@ -109,9 +109,9 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
         throw new ArgumentException(($"'{name}' is already in use"));
     }
 
-    protected abstract T newConstant(int id, string name);
+    protected abstract T NewConstant(int id, string name);
 
-    public int nextId()
+    public int NextId()
     {
         // Preserve Java getAndIncrement, including unchecked integer wrapping,
         // using the CLR primitive rather than an AtomicInteger compatibility object.

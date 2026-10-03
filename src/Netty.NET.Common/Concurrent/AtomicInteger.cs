@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -15,44 +15,44 @@ public class AtomicInteger
         _location = location;
     }
 
-    public int incrementAndGet()
+    public int IncrementAndGet()
     {
         return Interlocked.Increment(ref _location);
     }
 
-    public int getAndIncrement()
+    public int GetAndIncrement()
     {
         var next = Interlocked.Increment(ref _location);
         return next - 1;
     }
 
-    public int decrementAndGet()
+    public int DecrementAndGet()
     {
         return Interlocked.Decrement(ref _location);
     }
 
-    public int get()
+    public int Get()
     {
         return _location;
     }
 
-    public int set(int exchange)
+    public int Set(int exchange)
     {
         return Interlocked.Exchange(ref _location, exchange);
     }
 
-    public int decrease(int value)
+    public int Decrease(int value)
     {
         return Interlocked.Add(ref _location, -value);
     }
 
-    public bool compareAndSet(int expectedValue, int newValue)
+    public bool CompareAndSet(int expectedValue, int newValue)
     {
         var original = Interlocked.CompareExchange(ref _location, newValue, expectedValue);
         return original == expectedValue;
     }
 
-    public int addAndGet(int value)
+    public int AddAndGet(int value)
     {
         return Interlocked.Add(ref _location, value);
     }

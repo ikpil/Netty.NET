@@ -27,17 +27,17 @@ public class ThreadExecutorMapTest
 {
     class TestEventExecutor : AbstractEventExecutor
     {
-        public override void shutdown()
+        public override void Shutdown()
         {
             throw new NotSupportedException();
         }
 
-        public override bool inEventLoop(Thread thread)
+        public override bool InEventLoop(Thread thread)
         {
             return false;
         }
 
-        public override bool isShuttingDown()
+        public override bool IsShuttingDown()
         {
             return false;
         }
@@ -49,22 +49,22 @@ public class ThreadExecutorMapTest
 
         public override Task Termination => throw new NotSupportedException();
 
-        public override bool isShutdown()
+        public override bool IsShutdown()
         {
             return false;
         }
 
-        public override bool isTerminated()
+        public override bool IsTerminated()
         {
             return false;
         }
 
-        public override bool awaitTermination(TimeSpan timeout)
+        public override bool AwaitTermination(TimeSpan timeout)
         {
             return false;
         }
 
-        public override void execute(IRunnable command)
+        public override void Execute(IRunnable command)
         {
             throw new NotSupportedException();
         }
@@ -73,49 +73,49 @@ public class ThreadExecutorMapTest
     private static readonly IEventExecutor EVENT_EXECUTOR = new TestEventExecutor();
 
     [Fact]
-    public void testOldExecutorIsRestored()
+    public void TestOldExecutorIsRestored()
     {
-        IExecutor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
-        IExecutor executor2 = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, EVENT_EXECUTOR);
-        executor.execute(Runnables.Create(() =>
+        IExecutor executor = ThreadExecutorMap.Apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
+        IExecutor executor2 = ThreadExecutorMap.Apply(ImmediateExecutor.INSTANCE, EVENT_EXECUTOR);
+        executor.Execute(Runnables.Create(() =>
         {
-            executor2.execute(Runnables.Create(() =>
+            executor2.Execute(Runnables.Create(() =>
             {
-                Assert.Same(EVENT_EXECUTOR, ThreadExecutorMap.currentExecutor());
+                Assert.Same(EVENT_EXECUTOR, ThreadExecutorMap.CurrentExecutor());
             }));
 
-            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor());
         }));
     }
 
     [Fact]
-    public void testDecorateExecutor()
+    public void TestDecorateExecutor()
     {
-        IExecutor executor = ThreadExecutorMap.apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
-        executor.execute(Runnables.Create(() =>
+        IExecutor executor = ThreadExecutorMap.Apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
+        executor.Execute(Runnables.Create(() =>
         {
-            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
+            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor());
         }));
     }
 
     [Fact]
-    public void testDecorateRunnable()
+    public void TestDecorateRunnable()
     {
-        ThreadExecutorMap.apply(Runnables.Create(() =>
+        ThreadExecutorMap.Apply(Runnables.Create(() =>
         {
-            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor());
-        }), ImmediateEventExecutor.INSTANCE).run();
+            Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor());
+        }), ImmediateEventExecutor.INSTANCE).Run();
     }
 
     [Fact]
-    public void testDecorateThreadFactory()
+    public void TestDecorateThreadFactory()
     {
-        IThreadFactory threadFactory = ThreadExecutorMap.apply(new DefaultThreadFactory("thread-executor-map-test"),
+        IThreadFactory threadFactory = ThreadExecutorMap.Apply(new DefaultThreadFactory("thread-executor-map-test"),
             ImmediateEventExecutor.INSTANCE);
         Exception failure = null;
-        Thread thread = threadFactory.newThread(Runnables.Create(() =>
+        Thread thread = threadFactory.NewThread(Runnables.Create(() =>
         {
-            try { Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.currentExecutor()); }
+            try { Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor()); }
             catch (Exception exception) { failure = exception; }
         }));
         thread.Start();

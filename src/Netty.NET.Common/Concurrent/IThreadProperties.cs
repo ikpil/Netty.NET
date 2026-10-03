@@ -26,40 +26,40 @@ public interface IThreadProperties
     /**
      * @see Thread#getState()
      */
-    ThreadState state();
+    ThreadState State();
 
     /**
      * @see Thread#getPriority()
      */
-    ThreadPriority priority();
+    ThreadPriority Priority();
 
     /**
      * @see Thread#isInterrupted()
      */
-    bool isInterrupted();
+    bool IsInterrupted();
 
     /**
      * @see Thread#isDaemon()
      */
-    bool isDaemon();
+    bool IsDaemon();
 
     /**
      * @see Thread#getName()
      */
-    string name();
+    string Name();
 
     /**
      * @see Thread#getId()
      */
-    long id();
+    long Id();
 
     /**
      * @see Thread#getStackTrace()
      */
-    System.Diagnostics.StackFrame[] stackTrace();
+    System.Diagnostics.StackFrame[] StackTrace();
 
     /**
      * @see Thread#isAlive()
      */
-    bool isAlive();
+    bool IsAlive();
 }

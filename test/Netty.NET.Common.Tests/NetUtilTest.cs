@@ -611,161 +611,161 @@ public class NetUtilTest
         "::ffff:192.168.0.1", "::ffff:192.168.0.1");
 
     [Fact]
-    public void testLocalhost()
+    public void TestLocalhost()
     {
         Assert.NotNull(LOCALHOST);
     }
 
     [Fact]
-    public void testLoopback()
+    public void TestLoopback()
     {
         Assert.NotNull(LOOPBACK_IF);
     }
 
     [Fact]
-    public void testIsValidIpV4Address()
+    public void TestIsValidIpV4Address()
     {
         foreach (string host in validIpV4Hosts.Keys)
         {
-            Assert.True(isValidIpV4Address(host), host);
+            Assert.True(IsValidIpV4Address(host), host);
         }
 
         foreach (string host in invalidIpV4Hosts.Keys)
         {
-            Assert.False(isValidIpV4Address(host), host);
+            Assert.False(IsValidIpV4Address(host), host);
         }
     }
 
     [Fact]
-    public void testIsValidIpV6Address()
+    public void TestIsValidIpV6Address()
     {
         foreach (string host in validIpV6Hosts.Keys)
         {
-            Assert.True(isValidIpV6Address(host), host);
+            Assert.True(IsValidIpV6Address(host), host);
             if (host[0] != '[' && !host.Contains("%"))
             {
-                Assert.NotNull(getByName(host, true), host);
+                Assert.NotNull(GetByName(host, true), host);
 
                 string hostMod = '[' + host + ']';
-                Assert.True(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(IsValidIpV6Address(hostMod), hostMod);
 
                 hostMod = host + '%';
-                Assert.True(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(IsValidIpV6Address(hostMod), hostMod);
 
                 hostMod = host + "%eth1";
-                Assert.True(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(IsValidIpV6Address(hostMod), hostMod);
 
                 hostMod = '[' + host + "%]";
-                Assert.True(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(IsValidIpV6Address(hostMod), hostMod);
 
                 hostMod = '[' + host + "%1]";
-                Assert.True(isValidIpV6Address(hostMod), hostMod);
+                Assert.True(IsValidIpV6Address(hostMod), hostMod);
 
                 hostMod = '[' + host + "]%";
-                Assert.False(isValidIpV6Address(hostMod), hostMod);
+                Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
                 hostMod = '[' + host + "]%1";
-                Assert.False(isValidIpV6Address(hostMod), hostMod);
+                Assert.False(IsValidIpV6Address(hostMod), hostMod);
             }
         }
 
         foreach (string host in invalidIpV6Hosts.Keys)
         {
-            Assert.False(isValidIpV6Address(host), host);
-            Assert.Null(getByName(host)); //, host);
+            Assert.False(IsValidIpV6Address(host), host);
+            Assert.Null(GetByName(host)); //, host);
 
             string hostMod = '[' + host + ']';
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
             hostMod = host + '%';
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
             hostMod = host + "%eth1";
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host + "%]";
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host + "%1]";
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host + "]%";
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host + "]%1";
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
             hostMod = host + ']';
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
 
             hostMod = '[' + host;
-            Assert.False(isValidIpV6Address(hostMod), hostMod);
+            Assert.False(IsValidIpV6Address(hostMod), hostMod);
         }
     }
 
     [Fact]
-    public void testCreateByteArrayFromIpAddressString()
+    public void TestCreateByteArrayFromIpAddressString()
     {
         foreach (var e in validIpV4Hosts)
         {
             string ip = e.Key;
-            assertHexDumpEquals(e.Value, createByteArrayFromIpAddressString(ip), ip);
+            AssertHexDumpEquals(e.Value, CreateByteArrayFromIpAddressString(ip), ip);
         }
 
         foreach (var e in invalidIpV4Hosts)
         {
             string ip = e.Key;
-            assertHexDumpEquals(e.Value, createByteArrayFromIpAddressString(ip), ip);
+            AssertHexDumpEquals(e.Value, CreateByteArrayFromIpAddressString(ip), ip);
         }
 
         foreach (var e in validIpV6Hosts)
         {
             string ip = e.Key;
-            assertHexDumpEquals(e.Value, createByteArrayFromIpAddressString(ip), ip);
+            AssertHexDumpEquals(e.Value, CreateByteArrayFromIpAddressString(ip), ip);
         }
 
         foreach (var e in invalidIpV6Hosts)
         {
             string ip = e.Key;
-            assertHexDumpEquals(e.Value, createByteArrayFromIpAddressString(ip), ip);
+            AssertHexDumpEquals(e.Value, CreateByteArrayFromIpAddressString(ip), ip);
         }
     }
 
     [Fact]
-    public void testBytesToIpAddress()
+    public void TestBytesToIpAddress()
     {
         foreach (var e in validIpV4Hosts)
         {
-            Assert.Equal(e.Key, bytesToIpAddress(createByteArrayFromIpAddressString(e.Key)));
-            Assert.Equal(e.Key, bytesToIpAddress(validIpV4ToBytes(e.Key)));
+            Assert.Equal(e.Key, BytesToIpAddress(CreateByteArrayFromIpAddressString(e.Key)));
+            Assert.Equal(e.Key, BytesToIpAddress(ValidIpV4ToBytes(e.Key)));
         }
 
         foreach (var testEntry in ipv6ToAddressStrings)
         {
-            Assert.Equal(testEntry.Value, bytesToIpAddress(testEntry.Key));
+            Assert.Equal(testEntry.Value, BytesToIpAddress(testEntry.Key));
         }
     }
 
     [Fact]
-    public void testBytesToIpAddressWithOffset()
+    public void TestBytesToIpAddressWithOffset()
     {
         foreach (var e in validIpV4Hosts)
         {
-            byte[] bytes = copyWithOffset(createByteArrayFromIpAddressString(e.Key));
-            Assert.Equal(e.Key, bytesToIpAddress(bytes, 1, bytes.Length - 2));
+            byte[] bytes = CopyWithOffset(CreateByteArrayFromIpAddressString(e.Key));
+            Assert.Equal(e.Key, BytesToIpAddress(bytes, 1, bytes.Length - 2));
 
-            byte[] bytes2 = copyWithOffset(createByteArrayFromIpAddressString(e.Key));
-            Assert.Equal(e.Key, bytesToIpAddress(bytes2, 1, bytes2.Length - 2));
+            byte[] bytes2 = CopyWithOffset(CreateByteArrayFromIpAddressString(e.Key));
+            Assert.Equal(e.Key, BytesToIpAddress(bytes2, 1, bytes2.Length - 2));
         }
 
         foreach (var testEntry in ipv6ToAddressStrings)
         {
-            byte[] bytes = copyWithOffset(testEntry.Key);
-            Assert.Equal(testEntry.Value, bytesToIpAddress(bytes, 1, bytes.Length - 2));
+            byte[] bytes = CopyWithOffset(testEntry.Key);
+            Assert.Equal(testEntry.Value, BytesToIpAddress(bytes, 1, bytes.Length - 2));
         }
     }
 
-    private static byte[] copyWithOffset(byte[] bytes)
+    private static byte[] CopyWithOffset(byte[] bytes)
     {
         if (bytes == null)
         {
@@ -773,88 +773,88 @@ public class NetUtilTest
         }
 
         byte[] array = new byte[bytes.Length + 2];
-        Arrays.arraycopy(bytes, 0, array, 1, bytes.Length);
+        Arrays.Arraycopy(bytes, 0, array, 1, bytes.Length);
         return array;
     }
 
     [Fact]
-    public void testIp6AddressToString()
+    public void TestIp6AddressToString()
     {
         foreach (var testEntry in ipv6ToAddressStrings)
         {
-            Assert.Equal(testEntry.Value, toAddressString(new IPAddress(testEntry.Key)));
+            Assert.Equal(testEntry.Value, ToAddressString(new IPAddress(testEntry.Key)));
         }
     }
 
     [Fact]
-    public void testIp4AddressToString()
+    public void TestIp4AddressToString()
     {
         foreach (var e in validIpV4Hosts)
         {
-            Assert.Equal(e.Key, toAddressString(new IPAddress(unhex(e.Value))));
+            Assert.Equal(e.Key, ToAddressString(new IPAddress(Unhex(e.Value))));
         }
     }
 
     [Fact]
-    public void testIPv4ToInt()
+    public void TestIPv4ToInt()
     {
-        Assert.Equal(2130706433, ipv4AddressToInt((IPAddress)IPAddress.Parse("127.0.0.1")));
-        Assert.Equal(-1062731519, ipv4AddressToInt((IPAddress)IPAddress.Parse("192.168.1.1")));
+        Assert.Equal(2130706433, Ipv4AddressToInt((IPAddress)IPAddress.Parse("127.0.0.1")));
+        Assert.Equal(-1062731519, Ipv4AddressToInt((IPAddress)IPAddress.Parse("192.168.1.1")));
     }
 
     [Fact]
-    public void testIpv4MappedIp6GetByName()
+    public void TestIpv4MappedIp6GetByName()
     {
         foreach (var testEntry in ipv4MappedToIPv6AddressStrings)
         {
             string srcIp = testEntry.Key;
             string dstIp = testEntry.Value;
-            IPAddress inet6Address = getByName(srcIp, true);
+            IPAddress inet6Address = GetByName(srcIp, true);
             Assert.NotNull(inet6Address); //, srcIp + ", " + dstIp);
-            Assert.Equal(dstIp, toAddressString(inet6Address, true)); //, srcIp);
+            Assert.Equal(dstIp, ToAddressString(inet6Address, true)); //, srcIp);
         }
     }
 
     [Fact]
-    public void testInvalidIpv4MappedIp6GetByName()
+    public void TestInvalidIpv4MappedIp6GetByName()
     {
         foreach (string host in invalidIpV4Hosts.Keys)
         {
-            Assert.Null(getByName(host, true)); //, host);
+            Assert.Null(GetByName(host, true)); //, host);
         }
 
         foreach (string host in invalidIpV6Hosts.Keys)
         {
-            Assert.Null(getByName(host, true)); //, host);
+            Assert.Null(GetByName(host, true)); //, host);
         }
     }
 
     [Fact]
-    public void testIp6InetSocketAddressToString()
+    public void TestIp6InetSocketAddressToString()
     {
         foreach (var testEntry in ipv6ToAddressStrings)
         {
             Assert.Equal('[' + testEntry.Value + "]:9999",
-                toSocketAddressString(new IPEndPoint(new IPAddress(testEntry.Key), 9999)));
+                ToSocketAddressString(new IPEndPoint(new IPAddress(testEntry.Key), 9999)));
         }
     }
 
     [Fact]
-    public void testIp4SocketAddressToString()
+    public void TestIp4SocketAddressToString()
     {
         foreach (var e in validIpV4Hosts)
         {
             Assert.Equal(e.Key + ":9999",
-                toSocketAddressString(new IPEndPoint(new IPAddress(unhex(e.Value)), 9999)));
+                ToSocketAddressString(new IPEndPoint(new IPAddress(Unhex(e.Value)), 9999)));
         }
     }
 
-    private static void assertHexDumpEquals(string expected, byte[] actual, string message)
+    private static void AssertHexDumpEquals(string expected, byte[] actual, string message)
     {
-        Assert.Equal(expected, hex(actual)); //, message);
+        Assert.Equal(expected, Hex(actual)); //, message);
     }
 
-    private static string hex(byte[] value)
+    private static string Hex(byte[] value)
     {
         if (value == null || value.Length == 0)
         {
@@ -864,7 +864,7 @@ public class NetUtilTest
         StringBuilder buf = new StringBuilder(value.Length << 1);
         foreach (byte b in value)
         {
-            string hex = StringUtil.byteToHexString(b);
+            string hex = StringUtil.ByteToHexString(b);
             if (hex.Length == 1)
             {
                 buf.Append('0');
@@ -876,8 +876,8 @@ public class NetUtilTest
         return buf.ToString();
     }
 
-    private static byte[] unhex(string value)
+    private static byte[] Unhex(string value)
     {
-        return value != null ? StringUtil.decodeHexDump(value) : null;
+        return value != null ? StringUtil.DecodeHexDump(value) : null;
     }
 }

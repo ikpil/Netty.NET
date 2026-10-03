@@ -38,7 +38,7 @@ public static class NativeLibraryUtil
      * @param libName - The native library path or name
      * @param absolute - Whether the native library will be loaded by path or by name
      */
-    public static IntPtr loadLibrary(string libName, bool absolute)
+    public static IntPtr LoadLibrary(string libName, bool absolute)
     {
         ArgumentNullException.ThrowIfNull(libName);
         if (absolute)

@@ -74,27 +74,27 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                                                   double scaleUpThreshold, int maxRampUpStep, int maxRampDownStep,
                                                   int scalingPatienceCycles)
     {
-        minChildren = ObjectUtil.checkPositiveOrZero(minThreads, "minThreads");
-        maxChildren = ObjectUtil.checkPositive(maxThreads, "maxThreads");
+        minChildren = ObjectUtil.CheckPositiveOrZero(minThreads, "minThreads");
+        maxChildren = ObjectUtil.CheckPositive(maxThreads, "maxThreads");
         if (minThreads > maxThreads)
         {
             throw new ArgumentException($"minThreads: {minThreads} must not be greater than maxThreads: {maxThreads}");
         }
-        utilizationCheckPeriodNanos = AbstractScheduledEventExecutor.toNanos(ObjectUtil.checkPositive(utilizationWindow, "utilizationWindow"));
-        this.scaleDownThreshold = ObjectUtil.checkInRange(scaleDownThreshold, 0.0, 1.0, "scaleDownThreshold");
-        this.scaleUpThreshold = ObjectUtil.checkInRange(scaleUpThreshold, 0.0, 1.0, "scaleUpThreshold");
+        utilizationCheckPeriodNanos = AbstractScheduledEventExecutor.ToNanos(ObjectUtil.CheckPositive(utilizationWindow, "utilizationWindow"));
+        this.scaleDownThreshold = ObjectUtil.CheckInRange(scaleDownThreshold, 0.0, 1.0, "scaleDownThreshold");
+        this.scaleUpThreshold = ObjectUtil.CheckInRange(scaleUpThreshold, 0.0, 1.0, "scaleUpThreshold");
         if (scaleDownThreshold >= scaleUpThreshold)
         {
             throw new ArgumentException(
                     "scaleDownThreshold must be less than scaleUpThreshold: " +
                     scaleDownThreshold + " >= " + scaleUpThreshold);
         }
-        this.maxRampUpStep = ObjectUtil.checkPositive(maxRampUpStep, "maxRampUpStep");
-        this.maxRampDownStep = ObjectUtil.checkPositive(maxRampDownStep, "maxRampDownStep");
-        this.scalingPatienceCycles = ObjectUtil.checkPositiveOrZero(scalingPatienceCycles, "scalingPatienceCycles");
+        this.maxRampUpStep = ObjectUtil.CheckPositive(maxRampUpStep, "maxRampUpStep");
+        this.maxRampDownStep = ObjectUtil.CheckPositive(maxRampDownStep, "maxRampDownStep");
+        this.scalingPatienceCycles = ObjectUtil.CheckPositiveOrZero(scalingPatienceCycles, "scalingPatienceCycles");
     }
 
-    public IEventExecutorChooser newChooser(IEventExecutor[] executors)
+    public IEventExecutorChooser NewChooser(IEventExecutor[] executors)
     {
         return new AutoScalingEventExecutorChooser(this, executors);
     }
@@ -118,7 +118,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             this.nextWakeUpIndex = nextWakeUpIndex;
             this.activeExecutors = activeExecutors;
             this.resumedAt = resumedAt;
-            activeExecutorsChooser = DefaultEventExecutorChooserFactory.INSTANCE.newChooser(activeExecutors);
+            activeExecutorsChooser = DefaultEventExecutorChooserFactory.INSTANCE.NewChooser(activeExecutors);
         }
     }
 
@@ -140,7 +140,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 metrics.Add(new AutoScalingUtilizationMetric(executor));
             }
             utilizationMetrics = metrics.AsReadOnly();
-            allExecutorsChooser = DefaultEventExecutorChooserFactory.INSTANCE.newChooser(executors);
+            allExecutorsChooser = DefaultEventExecutorChooserFactory.INSTANCE.NewChooser(executors);
 
             AutoScalingState initialState = new AutoScalingState(factory.maxChildren, 0L, executors,
                 new Dictionary<IEventExecutor, long>(ReferenceEqualityComparer.Instance));
@@ -149,7 +149,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             var monitoringCancellation = new CancellationTokenSource();
             var monitor = new UtilizationMonitor(this);
             Task utilizationMonitoringTask = GlobalEventExecutor.INSTANCE.ScheduleNative<object>(
-                    _ => { monitor.run(); return null; }, TimeSpan.FromTicks(factory.utilizationCheckPeriodNanos / 100),
+                    _ => { monitor.Run(); return null; }, TimeSpan.FromTicks(factory.utilizationCheckPeriodNanos / 100),
                     factory.utilizationCheckPeriodNanos, monitoringCancellation.Token, captureContext: false);
             utilizationMonitoringTask.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
             {
@@ -175,7 +175,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
          * The monitor handles all scaling decisions.
          */
 
-        public IEventExecutor next()
+        public IEventExecutor Next()
         {
             // Get a snapshot of the current state.
             AutoScalingState currentState = Volatile.Read(ref state);
@@ -185,10 +185,10 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 // This is only reachable if minChildren is 0 and the monitor has just suspended the last active thread.
                 // To prevent an error and ensure the group can recover, we wake one up and use the
                 // chooser that contains all executors as a safe temporary choice.
-                tryScaleUpBy(1);
-                return allExecutorsChooser.next();
+                TryScaleUpBy(1);
+                return allExecutorsChooser.Next();
             }
-            return currentState.activeExecutorsChooser.next();
+            return currentState.activeExecutorsChooser.Next();
         }
 
         /**
@@ -197,7 +197,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
          *
          * @param amount    The desired number of threads to add to the active count.
          */
-        private void tryScaleUpBy(int amount)
+        private void TryScaleUpBy(int amount)
         {
             if (amount <= 0)
             {
@@ -227,9 +227,9 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     if (child is SingleThreadEventExecutor)
                     {
                         SingleThreadEventExecutor stee = (SingleThreadEventExecutor)child;
-                        if (stee.isSuspended())
+                        if (stee.IsSuspended())
                         {
-                            stee.execute(NO_OOP_TASK);
+                            stee.Execute(NO_OOP_TASK);
                             wokenUp.Add(stee);
                         }
                     }
@@ -249,7 +249,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 // A resumed worker must have a complete configured window before its
                 // utilization can count toward sustained idle/busy patience.
                 var resumedAt = new Dictionary<IEventExecutor, long>(oldState.resumedAt, ReferenceEqualityComparer.Instance);
-                long resumeTime = executors[0].ticker().nanoTime();
+                long resumeTime = executors[0].Ticker().NanoTime();
                 foreach (IEventExecutor child in wokenUp) resumedAt[child] = resumeTime;
 
                 AutoScalingState newState = new AutoScalingState(
@@ -265,12 +265,12 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             }
         }
 
-        public int activeExecutorCount()
+        public int ActiveExecutorCount()
         {
             return Volatile.Read(ref state).activeChildrenCount;
         }
 
-        public IReadOnlyList<AutoScalingUtilizationMetric> executorUtilizations()
+        public IReadOnlyList<AutoScalingUtilizationMetric> ExecutorUtilizations()
         {
             return utilizationMetrics;
         }
@@ -290,13 +290,13 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 consistentlyIdleChildren = new List<SingleThreadEventExecutor>(chooser.factory.maxChildren);
                 consistentlyBusyChildren = new List<SingleThreadEventExecutor>(chooser.factory.maxChildren);
                 if (chooser.executors.Length > 0)
-                    nextCheckTimeNanos = unchecked(chooser.executors[0].ticker().nanoTime() +
+                    nextCheckTimeNanos = unchecked(chooser.executors[0].Ticker().NanoTime() +
                         chooser.factory.utilizationCheckPeriodNanos);
             }
 
-            public void run()
+            public void Run()
             {
-                if (chooser.executors.Length == 0 || chooser.executors[0].isShuttingDown())
+                if (chooser.executors.Length == 0 || chooser.executors[0].IsShuttingDown())
                 {
                     // The group is shutting down, so no scaling decisions should be made.
                     // The lifecycle listener on the terminationFuture will handle the final cancellation.
@@ -304,7 +304,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 }
 
                 // Calculate the actual elapsed time since the last run.
-                long now = chooser.executors[0].ticker().nanoTime();
+                long now = chooser.executors[0].Ticker().NanoTime();
                 long totalTime;
 
                 if (!hasCheckTime)
@@ -365,13 +365,13 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     SingleThreadEventExecutor eventExecutor = (SingleThreadEventExecutor)child;
 
                     double utilization = 0.0;
-                    if (!eventExecutor.isSuspended())
+                    if (!eventExecutor.IsSuspended())
                     {
-                        long activeTime = eventExecutor.getAndResetAccumulatedActiveTimeNanos();
+                        long activeTime = eventExecutor.GetAndResetAccumulatedActiveTimeNanos();
 
                         if (activeTime == 0)
                         {
-                            long lastActivity = eventExecutor.getLastActivityTimeNanos();
+                            long lastActivity = eventExecutor.GetLastActivityTimeNanos();
                             long idleTime = now - lastActivity;
 
                             // If the event loop has been idle for less time than our utilization window,
@@ -392,16 +392,16 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                             unchecked(now - resumeTime) >= chooser.factory.utilizationCheckPeriodNanos;
                         if (!completeResumeWindow)
                         {
-                            eventExecutor.resetIdleCycles();
-                            eventExecutor.resetBusyCycles();
+                            eventExecutor.ResetIdleCycles();
+                            eventExecutor.ResetBusyCycles();
                         }
                         else if (utilization < chooser.factory.scaleDownThreshold)
                         {
                             // Utilization is low, increment idle counter and reset busy counter.
-                            int idleCycles = eventExecutor.getAndIncrementIdleCycles();
-                            eventExecutor.resetBusyCycles();
+                            int idleCycles = eventExecutor.GetAndIncrementIdleCycles();
+                            eventExecutor.ResetBusyCycles();
                             if (idleCycles >= chooser.factory.scalingPatienceCycles &&
-                                eventExecutor.getNumOfRegisteredChannels() <= 0)
+                                eventExecutor.GetNumOfRegisteredChannels() <= 0)
                             {
                                 consistentlyIdleChildren.Add(eventExecutor);
                             }
@@ -409,8 +409,8 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                         else if (utilization > chooser.factory.scaleUpThreshold)
                         {
                             // Utilization is high, increment busy counter and reset idle counter.
-                            int busyCycles = eventExecutor.getAndIncrementBusyCycles();
-                            eventExecutor.resetIdleCycles();
+                            int busyCycles = eventExecutor.GetAndIncrementBusyCycles();
+                            eventExecutor.ResetIdleCycles();
                             if (busyCycles >= chooser.factory.scalingPatienceCycles)
                             {
                                 consistentlyBusyChildren.Add(eventExecutor);
@@ -419,12 +419,12 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                         else
                         {
                             // Utilization is in the normal range, reset counters.
-                            eventExecutor.resetIdleCycles();
-                            eventExecutor.resetBusyCycles();
+                            eventExecutor.ResetIdleCycles();
+                            eventExecutor.ResetBusyCycles();
                         }
                     }
 
-                    chooser.utilizationMetrics[i].setUtilization(utilization);
+                    chooser.utilizationMetrics[i].SetUtilization(utilization);
                 }
 
                 int currentActive = currentState.activeChildrenCount;
@@ -441,10 +441,10 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                         // another full patience period of sustained load before triggering a further scale-up.
                         foreach (SingleThreadEventExecutor busyChild in consistentlyBusyChildren)
                         {
-                            busyChild.resetBusyCycles();
-                            busyChild.resetIdleCycles();
+                            busyChild.ResetBusyCycles();
+                            busyChild.ResetIdleCycles();
                         }
-                        chooser.tryScaleUpBy(threadsToAdd);
+                        chooser.TryScaleUpBy(threadsToAdd);
                         // State change is handled by tryScaleUpBy, no need for rebuild here.
                         return; // Exit to avoid conflicting scale down logic in the same cycle.
                     }
@@ -461,11 +461,11 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     for (int i = 0; i < threadsToRemove; i++)
                     {
                         SingleThreadEventExecutor childToSuspend = consistentlyIdleChildren[i];
-                        if (childToSuspend.trySuspend())
+                        if (childToSuspend.TrySuspend())
                         {
                             // Reset cycles upon suspension so it doesn't get immediately re-suspended on wake-up.
-                            childToSuspend.resetBusyCycles();
-                            childToSuspend.resetIdleCycles();
+                            childToSuspend.ResetBusyCycles();
+                            childToSuspend.ResetIdleCycles();
                             changed = true;
                         }
                     }
@@ -474,14 +474,14 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 // If a scale-down occurred, or if the actual state differs from our view, rebuild.
                 if (changed || currentActive != currentState.activeExecutors.Length)
                 {
-                    rebuildActiveExecutors();
+                    RebuildActiveExecutors();
                 }
             }
 
             /**
              * Atomically updates the state by creating a new snapshot with the current set of active executors.
              */
-            private void rebuildActiveExecutors()
+            private void RebuildActiveExecutors()
             {
                 for (; ; )
                 {
@@ -489,7 +489,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     List<IEventExecutor> active = new List<IEventExecutor>(oldState.activeChildrenCount);
                     foreach (IEventExecutor executor in chooser.executors)
                     {
-                        if (!executor.isSuspended())
+                        if (!executor.IsSuspended())
                         {
                             active.Add(executor);
                         }

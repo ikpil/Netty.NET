@@ -65,7 +65,7 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
 
     public DomainNameMapping(IDictionary<string, T> map, T defaultValue)
     {
-        _defaultValue = checkNotNull(defaultValue, "defaultValue");
+        _defaultValue = CheckNotNull(defaultValue, "defaultValue");
         _map = map;
         _unmodifiableMap = map != null
             ? new ReadOnlyDictionary<string, T>(map)
@@ -84,22 +84,22 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
      *                 matches the specified input host name
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
-    public virtual DomainNameMapping<T> add(string hostname, T output)
+    public virtual DomainNameMapping<T> Add(string hostname, T output)
     {
-        _map.Add(normalizeHostname(checkNotNull(hostname, "hostname")), checkNotNull(output, "output"));
+        _map.Add(NormalizeHostname(CheckNotNull(hostname, "hostname")), CheckNotNull(output, "output"));
         return this;
     }
 
     /**
      * Simple function to match <a href="https://en.wikipedia.org/wiki/Wildcard_DNS_record">DNS wildcard</a>.
      */
-    public static bool matches(string template, string hostName)
+    public static bool Matches(string template, string hostName)
     {
         if (template.StartsWith("*.", StringComparison.Ordinal))
         {
             return hostName.Length <= template.Length - 2 &&
                    template.AsSpan(2, hostName.Length).SequenceEqual(hostName.AsSpan())
-                   || StringUtil.commonSuffixOfLength(hostName, template, template.Length - 1);
+                   || StringUtil.CommonSuffixOfLength(hostName, template, template.Length - 1);
         }
 
         return template.Equals(hostName);
@@ -114,9 +114,9 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
     /**
      * IDNA ASCII conversion and case normalization
      */
-    public static string normalizeHostname(string hostname)
+    public static string NormalizeHostname(string hostname)
     {
-        if (needsNormalization(hostname))
+        if (NeedsNormalization(hostname))
         {
             hostname = IDN.GetAscii(hostname);
         }
@@ -124,7 +124,7 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
         return hostname.ToLower(CultureInfo.GetCultureInfo("en-US"));
     }
 
-    private static bool needsNormalization(string hostname)
+    private static bool NeedsNormalization(string hostname)
     {
         int length = hostname.Length;
         for (int i = 0; i < length; i++)
@@ -139,15 +139,15 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
         return false;
     }
 
-    public virtual T map(string hostname)
+    public virtual T Map(string hostname)
     {
         if (hostname != null)
         {
-            hostname = normalizeHostname(hostname);
+            hostname = NormalizeHostname(hostname);
 
             foreach (var entry in _map)
             {
-                if (matches(entry.Key, hostname))
+                if (Matches(entry.Key, hostname))
                 {
                     return entry.Value;
                 }
@@ -160,13 +160,13 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
     /**
      * Returns a read-only {@link Map} of the domain mapping patterns and their associated value objects.
      */
-    public virtual IReadOnlyDictionary<string, T> asMap()
+    public virtual IReadOnlyDictionary<string, T> AsMap()
     {
         return _unmodifiableMap;
     }
 
     public override string ToString()
     {
-        return StringUtil.simpleClassName(this) + "(default: " + _defaultValue + ", map: " + _map + ')';
+        return StringUtil.SimpleClassName(this) + "(default: " + _defaultValue + ", map: " + _map + ')';
     }
 }

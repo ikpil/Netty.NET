@@ -37,29 +37,29 @@ public class SingleThreadEventExecutorTest
         private readonly CountdownEvent runLatch = new(1);
         internal TestThread(IRunnable task)
         {
-            thread = new Thread(() => { runLatch.Signal(); task.run(); }) { IsBackground = true };
+            thread = new Thread(() => { runLatch.Signal(); task.Run(); }) { IsBackground = true };
         }
-        internal void awaitStarted() =>
+        internal void AwaitStarted() =>
             Assert.True(SpinWait.SpinUntil(() => (thread.ThreadState & System.Threading.ThreadState.Unstarted) == 0,
                 TimeSpan.FromSeconds(5)));
-        internal void awaitRunnableExecution() => Assert.True(runLatch.Wait(TimeSpan.FromSeconds(5)));
-        internal void join() => Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        internal void AwaitRunnableExecution() => Assert.True(runLatch.Wait(TimeSpan.FromSeconds(5)));
+        internal void Join() => Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
     }
     private sealed class TestThreadFactory : IThreadFactory
     {
         internal readonly BlockingCollection<TestThread> threads = new();
-        public Thread newThread(IRunnable runnable)
+        public Thread NewThread(IRunnable runnable)
         {
             var wrapper = new TestThread(runnable);
             threads.Add(wrapper);
             return wrapper.thread;
         }
-        internal TestThread take()
+        internal TestThread Take()
         {
             Assert.True(threads.TryTake(out var thread, TimeSpan.FromSeconds(5)));
             return thread;
         }
-        internal void drain() { while (threads.TryTake(out var thread)) thread.join(); }
+        internal void Drain() { while (threads.TryTake(out var thread)) thread.Join(); }
     }
     private class LoopExecutor : SingleThreadEventExecutor
     {
@@ -67,50 +67,50 @@ public class SingleThreadEventExecutorTest
         internal LoopExecutor(IThreadFactory factory, bool wake = true) : base(null, factory, wake) { }
         internal LoopExecutor(IExecutor executor, bool wake = true) : base(null, executor, wake) { }
         internal LoopExecutor(IExecutor executor, IQueue<IRunnable> queue)
-            : base(null, executor, false, queue, RejectedExecutionHandlers.reject()) { }
-        protected override void run()
+            : base(null, executor, false, queue, RejectedExecutionHandlers.Reject()) { }
+        protected override void Run()
         {
             started?.Invoke();
-            while (!confirmShutdown())
+            while (!ConfirmShutdown())
             {
-                IRunnable task = takeTask();
-                task?.run();
+                IRunnable task = TakeTask();
+                task?.Run();
             }
         }
     }
     private sealed class SuspendingSingleThreadEventExecutor : SingleThreadEventExecutor
     {
         internal SuspendingSingleThreadEventExecutor(IThreadFactory factory)
-            : base(null, factory, false, true, int.MaxValue, RejectedExecutionHandlers.reject()) { }
-        protected override void run()
+            : base(null, factory, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+        protected override void Run()
         {
-            while (!confirmShutdown() && !canSuspend()) takeTask()?.run();
+            while (!ConfirmShutdown() && !CanSuspend()) TakeTask()?.Run();
         }
-        public override void wakeup(bool inEventLoop) => interruptThread();
+        public override void Wakeup(bool inEventLoop) => InterruptThread();
     }
     private sealed class CountingExecutor : SingleThreadEventExecutor
     {
         internal CountingExecutor(IExecutor executor)
-            : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.reject()) { }
-        protected override void run() => throw new Exception("must not run");
+            : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+        protected override void Run() => throw new Exception("must not run");
     }
     private class LatchTask : IRunnable
     {
         internal readonly CountdownEvent latch = new(1);
-        public void run() => latch.Signal();
-        internal void await() => Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
+        public void Run() => latch.Signal();
+        internal void Await() => Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
     }
     private sealed class LazyLatchTask : LatchTask { }
-    private static void shutdown(IEventExecutor executor) =>
+    private static void Shutdown(IEventExecutor executor) =>
         executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
-    private static void sync(Task future)
+    private static void Sync(Task future)
     {
         future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     }
-    private static void suspend(SingleThreadEventExecutor executor, int sleep = 50)
+    private static void Suspend(SingleThreadEventExecutor executor, int sleep = 50)
     {
         var time = Stopwatch.StartNew();
-        while (!executor.trySuspend())
+        while (!executor.TrySuspend())
         {
             Assert.True(time.Elapsed < TimeSpan.FromSeconds(2), "executor did not suspend");
             Thread.Sleep(sleep);
@@ -118,75 +118,75 @@ public class SingleThreadEventExecutorTest
     }
 
     [Fact]
-    public void testSuspension()
+    public void TestSuspension()
     {
         var factory = new TestThreadFactory();
         var executor = new SuspendingSingleThreadEventExecutor(factory);
         try
         {
             var task1 = new LatchTask();
-            executor.execute(task1);
-            var currentThread = factory.take();
-            Assert.True(executor.trySuspend());
-            task1.await();
+            executor.Execute(task1);
+            var currentThread = factory.Take();
+            Assert.True(executor.TrySuspend());
+            task1.Await();
 
             // Let's wait till the current Thread did die....
-            currentThread.join();
+            currentThread.Join();
 
             // Should be suspended now, we should be able to also call trySuspend() again.
-            Assert.True(executor.isSuspended());
+            Assert.True(executor.IsSuspended());
             // There was no thread created as we did not try to execute something yet.
             Assert.Equal(0, factory.threads.Count);
 
             var task2 = new LatchTask();
-            executor.execute(task2);
+            executor.Execute(task2);
             // Suspendion was reset as a task was executed.
-            Assert.False(executor.isSuspended());
-            currentThread = factory.take();
-            task2.await();
+            Assert.False(executor.IsSuspended());
+            currentThread = factory.Take();
+            task2.Await();
 
-            shutdown(executor);
-            currentThread.join();
-            Assert.False(executor.isSuspended());
-            Assert.True(executor.isShutdown());
+            Shutdown(executor);
+            currentThread.Join();
+            Assert.False(executor.IsSuspended());
+            Assert.True(executor.IsShutdown());
 
             // Guarantee that al tasks were able to die...
-            factory.drain();
+            factory.Drain();
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
 
     [Fact]
-    public void testSuspensionWhenExecutorIsNotStarted()
+    public void TestSuspensionWhenExecutorIsNotStarted()
     {
         var factory = new TestThreadFactory();
         var executor = new SuspendingSingleThreadEventExecutor(factory);
         try
         {
             // suspend when executor is not started yet
-            Assert.True(executor.trySuspend());
-            Assert.True(executor.isSuspended());
+            Assert.True(executor.TrySuspend());
+            Assert.True(executor.IsSuspended());
 
             // recover from suspension by executing a task
             var task1 = new LatchTask();
-            executor.execute(task1);
-            var currentThread = factory.take();
-            Assert.False(executor.isSuspended());
-            task1.await();
+            executor.Execute(task1);
+            var currentThread = factory.Take();
+            Assert.False(executor.IsSuspended());
+            task1.Await();
 
-            shutdown(executor);
-            currentThread.join();
-            Assert.False(executor.isSuspended());
-            Assert.True(executor.isShutdown());
+            Shutdown(executor);
+            currentThread.Join();
+            Assert.False(executor.IsSuspended());
+            Assert.True(executor.IsShutdown());
 
             // Guarantee that all threads were able to die...
-            factory.drain();
+            factory.Drain();
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
 
     [Fact]
-    public void testExecuteRacingTrySuspendWhenExecutorIsNotStarted()
+    public void TestExecuteRacingTrySuspendWhenExecutorIsNotStarted()
     {
         // execute() on a never started executor races with trySuspend(), which moves the executor from
         // ST_NOT_STARTED to ST_SUSPENDED. Whatever the interleaving, execute() must request a thread, otherwise the
@@ -200,7 +200,7 @@ public class SingleThreadEventExecutorTest
             {
                 var executor = Interlocked.Exchange(ref executorRef, null);
                 if (executor == null) Thread.Yield();
-                else { executor.trySuspend(); Interlocked.Increment(ref suspended); }
+                else { executor.TrySuspend(); Interlocked.Increment(ref suspended); }
             }
         }) { IsBackground = true };
         suspender.Start();
@@ -212,7 +212,7 @@ public class SingleThreadEventExecutorTest
                 // Only count the requests to start a thread, no thread is ever started.
                 var executor = new CountingExecutor(new AnonymousExecutor(_ => Interlocked.Increment(ref threadStarts)));
                 Volatile.Write(ref executorRef, executor);
-                executor.execute(Runnables.Empty);
+                executor.Execute(Runnables.Empty);
                 Assert.True(SpinWait.SpinUntil(() => Volatile.Read(ref suspended) == i, TimeSpan.FromSeconds(2)));
                 Assert.Equal(1, Volatile.Read(ref threadStarts));
             }
@@ -225,7 +225,7 @@ public class SingleThreadEventExecutorTest
     }
 
     [Fact]
-    public void testNotSuspendedUntilScheduledTaskIsCancelled()
+    public void TestNotSuspendedUntilScheduledTaskIsCancelled()
     {
         var factory = new TestThreadFactory();
         var executor = new SuspendingSingleThreadEventExecutor(factory);
@@ -234,36 +234,36 @@ public class SingleThreadEventExecutorTest
             // Schedule a task which is so far in the future that we are sure it will not run at all.
             using var cancellation = new CancellationTokenSource();
             var future = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1), cancellation.Token);
-            var currentThread = factory.take();
+            var currentThread = factory.Take();
             // Let's wait until the thread is started
-            currentThread.awaitStarted();
-            currentThread.awaitRunnableExecution();
-            Assert.True(executor.trySuspend());
+            currentThread.AwaitStarted();
+            currentThread.AwaitRunnableExecution();
+            Assert.True(executor.TrySuspend());
 
             // Now cancel the task which should allow the suspension to let the thread die once we call trySuspend() again
             cancellation.Cancel();
             Assert.True(future.IsCanceled);
 
             // Call in a loop as removal of scheduled tasks from task queue might be lazy
-            suspend(executor);
-            currentThread.join();
+            Suspend(executor);
+            currentThread.Join();
 
             // Should be suspended now, we should be able to also call trySuspend() again.
-            Assert.True(executor.trySuspend());
-            Assert.True(executor.isSuspended());
+            Assert.True(executor.TrySuspend());
+            Assert.True(executor.IsSuspended());
 
-            shutdown(executor);
-            Assert.False(executor.isSuspended());
-            Assert.True(executor.isShutdown());
+            Shutdown(executor);
+            Assert.False(executor.IsSuspended());
+            Assert.True(executor.IsShutdown());
 
             // Guarantee that al tasks were able to die...
-            factory.drain();
+            factory.Drain();
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
 
     [Fact]
-    public void testSuspendDoesNotRaceWithCancelledScheduledTask()
+    public void TestSuspendDoesNotRaceWithCancelledScheduledTask()
     {
         // Regression test: cancelling a scheduled task right as the executor is about to suspend used to
         // be able to race with the suspend confirmation in doStartThread(). The cancelled task schedules
@@ -281,28 +281,28 @@ public class SingleThreadEventExecutorTest
             {
                 using var cancellation = new CancellationTokenSource();
                 var future = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1), cancellation.Token);
-                var currentThread = factory.take();
-                currentThread.awaitStarted();
-                currentThread.awaitRunnableExecution();
-                Assert.True(executor.trySuspend(), "iteration " + i);
+                var currentThread = factory.Take();
+                currentThread.AwaitStarted();
+                currentThread.AwaitRunnableExecution();
+                Assert.True(executor.TrySuspend(), "iteration " + i);
 
                 cancellation.Cancel();
                 Assert.True(future.IsCanceled, "iteration " + i);
-                suspend(executor, 1);
+                Suspend(executor, 1);
                 Assert.True(currentThread.thread.Join(TimeSpan.FromSeconds(2)), "worker did not terminate: " + i);
                 Assert.False(currentThread.thread.IsAlive);
-                Assert.True(executor.trySuspend(), "iteration " + i);
-                Assert.True(executor.isSuspended(), "iteration " + i);
+                Assert.True(executor.TrySuspend(), "iteration " + i);
+                Assert.True(executor.IsSuspended(), "iteration " + i);
 
-                shutdown(executor);
-                factory.drain();
+                Shutdown(executor);
+                factory.Drain();
             }
-            finally { shutdown(executor); }
+            finally { Shutdown(executor); }
         }
     }
 
     [Fact]
-    public void testNotSuspendedUntilScheduledTaskDidRun()
+    public void TestNotSuspendedUntilScheduledTaskDidRun()
     {
         var factory = new TestThreadFactory();
         var executor = new SuspendingSingleThreadEventExecutor(factory);
@@ -316,87 +316,87 @@ public class SingleThreadEventExecutorTest
                 catch (ThreadInterruptedException) { /* ignore */ }
                 // ignore
             }, TimeSpan.FromMilliseconds(100));
-            var currentThread = factory.take();
+            var currentThread = factory.Take();
             // Let's wait until the thread is started
-            currentThread.awaitStarted();
-            currentThread.awaitRunnableExecution();
+            currentThread.AwaitStarted();
+            currentThread.AwaitRunnableExecution();
             latch.Signal();
-            Assert.True(executor.trySuspend());
+            Assert.True(executor.TrySuspend());
 
             // Now wait till the scheduled task was run
-            sync(future);
-            currentThread.join();
+            Sync(future);
+            currentThread.Join();
 
             // Should be suspended now, we should be able to also call trySuspend() again.
-            Assert.True(executor.trySuspend());
-            Assert.True(executor.isSuspended());
+            Assert.True(executor.TrySuspend());
+            Assert.True(executor.IsSuspended());
 
-            shutdown(executor);
-            Assert.False(executor.isSuspended());
-            Assert.True(executor.isShutdown());
+            Shutdown(executor);
+            Assert.False(executor.IsSuspended());
+            Assert.True(executor.IsShutdown());
 
             // Guarantee that al tasks were able to die...
-            factory.drain();
+            factory.Drain();
         }
         finally
         {
             if (!latch.IsSet) latch.Signal();
-            shutdown(executor);
+            Shutdown(executor);
         }
     }
 
     private sealed class ClosedExecutor : IExecutor
     {
-        public void execute(IRunnable command) => throw new RejectedExecutionException();
+        public void Execute(IRunnable command) => throw new RejectedExecutionException();
     }
     [Fact]
-    public void testWrappedExecutorIsShutdown()
+    public void TestWrappedExecutorIsShutdown()
     {
         // CLR: a closed backing executor reproduces ExecutorService.shutdownNow rejection.
         var executor = new LoopExecutor(new ClosedExecutor(), false);
-        executeShouldFail(executor);
-        executeShouldFail(executor);
+        ExecuteShouldFail(executor);
+        ExecuteShouldFail(executor);
         Assert.Throws<RejectedExecutionException>(() =>
             executor.ShutdownGracefullyAsync().GetAwaiter().GetResult());
-        Assert.True(executor.isShutdown());
+        Assert.True(executor.IsShutdown());
     }
-    private static void executeShouldFail(IExecutor executor) =>
-        Assert.Throws<RejectedExecutionException>(() => executor.execute(Runnables.Create(() =>
+    private static void ExecuteShouldFail(IExecutor executor) =>
+        Assert.Throws<RejectedExecutionException>(() => executor.Execute(Runnables.Create(() =>
         {
             // Noop.
         })));
 
     [Fact]
-    public void testThreadProperties()
+    public void TestThreadProperties()
     {
         Thread threadRef = null;
         var executor = new LoopExecutor(new DefaultThreadFactory("test"), false);
         executor.started = () => threadRef = Thread.CurrentThread;
         try
         {
-            var properties = executor.threadProperties();
-            Assert.Equal(threadRef.ManagedThreadId, properties.id());
-            Assert.Equal(threadRef.Name, properties.name());
-            Assert.Equal(threadRef.Priority, properties.priority());
-            Assert.Equal(threadRef.IsAlive, properties.isAlive());
-            Assert.Equal(threadRef.IsBackground, properties.isDaemon());
+            var properties = executor.ThreadProperties();
+            Assert.Equal(threadRef.ManagedThreadId, properties.Id());
+            Assert.Equal(threadRef.Name, properties.Name());
+            Assert.Equal(threadRef.Priority, properties.Priority());
+            Assert.Equal(threadRef.IsAlive, properties.IsAlive());
+            Assert.Equal(threadRef.IsBackground, properties.IsDaemon());
             // CLR cannot inspect another managed thread's stack. Verify native owner
             // stack capture in its loop and explicit failure of a foreign query.
-            Assert.Throws<NotSupportedException>(() => properties.stackTrace());
-            var trace = executor.SubmitAsync<StackFrame[]>(properties.stackTrace);
+            Assert.Throws<NotSupportedException>(() => properties.StackTrace());
+            var trace = executor.SubmitAsync<StackFrame[]>(properties.StackTrace);
             Assert.NotEmpty(trace.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
 
     // The pinned four JDK blocking-guard tests have no retained bulk method.
     // Native async composition yields the owner and explicitly dispatches owned
     // state after await. The design record maps these replacement scenarios.
-    [Fact] public Task NativeWhenAnyYieldsInEventLoop() => testNativeCompositionInEventLoop(true, false);
-    [Fact] public Task NativeWhenAnyWithObserverTimeoutYieldsInEventLoop() => testNativeCompositionInEventLoop(true, true);
-    [Fact] public Task NativeWhenAllYieldsInEventLoop() => testNativeCompositionInEventLoop(false, false);
-    [Fact] public Task NativeWhenAllWithObserverTimeoutYieldsInEventLoop() => testNativeCompositionInEventLoop(false, true);
-    private static async Task testNativeCompositionInEventLoop(bool any, bool timeout)
+    [Fact] public Task NativeWhenAnyYieldsInEventLoop() => TestNativeCompositionInEventLoop(true, false);
+    [Fact] public Task NativeWhenAnyWithObserverTimeoutYieldsInEventLoop() => TestNativeCompositionInEventLoop(true, true);
+    [Fact] public Task NativeWhenAllYieldsInEventLoop() => TestNativeCompositionInEventLoop(false, false);
+    [Fact] public Task NativeWhenAllWithObserverTimeoutYieldsInEventLoop() => TestNativeCompositionInEventLoop(false, true);
+    private static async Task TestNativeCompositionInEventLoop(bool any, bool timeout)
     {
         var executor = new LoopExecutor(new DefaultThreadFactory("compose"));
         int calls = 0;
@@ -404,62 +404,62 @@ public class SingleThreadEventExecutorTest
         {
             Task operation = executor.SubmitAsync(async () =>
             {
-                Assert.True(executor.inEventLoop());
+                Assert.True(executor.InEventLoop());
                 Task<int>[] children =
                 {
-                    executor.SubmitAsync(() => { Assert.True(executor.inEventLoop()); return ++calls; }),
-                    executor.SubmitAsync(() => { Assert.True(executor.inEventLoop()); return ++calls; })
+                    executor.SubmitAsync(() => { Assert.True(executor.InEventLoop()); return ++calls; }),
+                    executor.SubmitAsync(() => { Assert.True(executor.InEventLoop()); return ++calls; })
                 };
                 Task composition = any ? Task.WhenAny(children) : Task.WhenAll(children);
                 if (timeout) await composition.WaitAsync(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
                 else await composition.ConfigureAwait(false);
                 await executor.SubmitAsync(() =>
                 {
-                    Assert.True(executor.inEventLoop());
+                    Assert.True(executor.InEventLoop());
                     Assert.Equal(2, calls);
                 }).ConfigureAwait(false);
                 Assert.Equal(new[] { 1, 2 }, await Task.WhenAll(children).ConfigureAwait(false));
             });
             await operation.WaitAsync(TimeSpan.FromSeconds(5));
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     private sealed class LazyExecutor : LoopExecutor
     {
         internal LazyExecutor() : base(new DefaultThreadFactory("lazy"), false) { }
-        protected override bool wakesUpForTask(IRunnable task) => task is not LazyLatchTask;
-        protected override void run()
+        protected override bool WakesUpForTask(IRunnable task) => task is not LazyLatchTask;
+        protected override void Run()
         {
-            while (!confirmShutdown())
+            while (!ConfirmShutdown())
             {
-                lock (this) { if (!hasTasks()) Monitor.Wait(this); }
-                runAllTasks();
+                lock (this) { if (!HasTasks()) Monitor.Wait(this); }
+                RunAllTasks();
             }
         }
-        public override void wakeup(bool inEventLoop)
+        public override void Wakeup(bool inEventLoop)
         {
             if (!inEventLoop) { lock (this) Monitor.PulseAll(this); }
         }
     }
     [Fact]
-    public void testLazyExecution()
+    public void TestLazyExecution()
     {
         var executor = new LazyExecutor();
         try
         {
             // Ensure event loop is started
             var latch0 = new LatchTask();
-            executor.execute(latch0);
+            executor.Execute(latch0);
             Assert.True(latch0.latch.Wait(100));
             // Pause to ensure it enters waiting state
             Thread.Sleep(100);
 
             // Submit task via lazyExecute
             var latch1 = new LatchTask();
-            executor.lazyExecute(latch1);
+            executor.LazyExecute(latch1);
             // Sumbit lazy task via regular execute
             var latch2 = new LazyLatchTask();
-            executor.execute(latch2);
+            executor.Execute(latch2);
 
             // Neither should run yet
             Assert.False(latch1.latch.Wait(100));
@@ -467,20 +467,20 @@ public class SingleThreadEventExecutorTest
 
             // Submit regular task via regular execute
             var latch3 = new LatchTask();
-            executor.execute(latch3);
+            executor.Execute(latch3);
 
             // Should flush latch1 and latch2 and then run latch3 immediately
             Assert.True(latch3.latch.Wait(100));
             Assert.Equal(0, latch1.latch.CurrentCount);
             Assert.Equal(0, latch2.latch.CurrentCount);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
 
     private sealed class NoRemoveQueue : LinkedBlockingQueue<IRunnable>
     {
         internal NoRemoveQueue() : base(int.MaxValue) { }
-        public override bool tryRemove(IRunnable task) => throw new NotSupportedException();
+        public override bool TryRemove(IRunnable task) => throw new NotSupportedException();
     }
     private sealed class AfterShutdownExecutor : LoopExecutor
     {
@@ -489,9 +489,9 @@ public class SingleThreadEventExecutorTest
         internal readonly ConcurrentQueue<Task> submittedTasks = new();
         internal AfterShutdownExecutor(IQueue<IRunnable> queue)
             : base(new ThreadPerTaskExecutor(new DefaultThreadFactory("after-shutdown")), queue) { }
-        protected override bool confirmShutdown()
+        protected override bool ConfirmShutdown()
         {
-            bool result = base.confirmShutdown();
+            bool result = base.ConfirmShutdown();
             // After shutdown is confirmed, scheduled one more task and record it
             if (result)
             {
@@ -508,7 +508,7 @@ public class SingleThreadEventExecutorTest
         }
     }
     [Fact]
-    public void testTaskAddedAfterShutdownNotAbandoned()
+    public void TestTaskAddedAfterShutdownNotAbandoned()
     {
         // A queue that doesn't support remove, so tasks once added cannot be rejected anymore
         var taskQueue = new NoRemoveQueue();
@@ -521,45 +521,45 @@ public class SingleThreadEventExecutorTest
             executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMilliseconds(100))
                 .WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             // Ensure there are no user-tasks left.
-            Assert.Equal(0, executor.drainTasks());
+            Assert.Equal(0, executor.DrainTasks());
             // Verify that queue is empty and all attempts either succeeded or were rejected
-            Assert.True(taskQueue.isEmpty());
+            Assert.True(taskQueue.IsEmpty());
             Assert.True(executor.attempts > 0);
             Assert.Equal(executor.attempts, executor.submittedTasks.Count + executor.rejects);
             foreach (Task future in executor.submittedTasks) Assert.True(future.IsCompletedSuccessfully);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
 
     private sealed class TestRunnable : IRunnable
     {
         internal volatile bool ran;
-        public void run() => ran = true;
+        public void Run() => ran = true;
     }
     [Fact]
-    public void testTakeTask()
+    public void TestTakeTask()
     {
         var executor = new LoopExecutor(new DefaultThreadFactory("take"));
         try
         {
             //add task
             var beforeTask = new TestRunnable();
-            executor.execute(beforeTask);
+            executor.Execute(beforeTask);
             //add scheduled task
             var scheduledTask = new TestRunnable();
-            var f = executor.ScheduleAsync(scheduledTask.run, TimeSpan.FromMilliseconds(1500));
+            var f = executor.ScheduleAsync(scheduledTask.Run, TimeSpan.FromMilliseconds(1500));
             //add task
             var afterTask = new TestRunnable();
-            executor.execute(afterTask);
-            sync(f);
+            executor.Execute(afterTask);
+            Sync(f);
             Assert.True(beforeTask.ran);
             Assert.True(scheduledTask.ran);
             Assert.True(afterTask.ran);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     [Fact]
-    public void testTakeTaskAlwaysHasTask()
+    public void TestTakeTaskAlwaysHasTask()
     {
         //for https://github.com/netty/netty/issues/1614
         var executor = new LoopExecutor(new DefaultThreadFactory("busy-take"));
@@ -567,30 +567,30 @@ public class SingleThreadEventExecutorTest
         {
             //add scheduled task
             var t = new TestRunnable();
-            var f = executor.ScheduleAsync(t.run, TimeSpan.FromMilliseconds(1500));
+            var f = executor.ScheduleAsync(t.Run, TimeSpan.FromMilliseconds(1500));
             //ensure always has at least one task in taskQueue
             //check if scheduled tasks are triggered
             IRunnable repeat = null;
-            repeat = Runnables.Create(() => { if (!f.IsCompleted) executor.execute(repeat); });
-            executor.execute(repeat);
-            sync(f);
+            repeat = Runnables.Create(() => { if (!f.IsCompleted) executor.Execute(repeat); });
+            executor.Execute(repeat);
+            Sync(f);
             Assert.True(t.ran);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     private sealed class ThrowingExecutor : LoopExecutor
     {
         private readonly Exception exception;
         internal ThrowingExecutor(Exception exception) : base(new DefaultThreadFactory("throwing")) => this.exception = exception;
-        protected override void run() => throw exception;
+        protected override void Run() => throw exception;
     }
     [Fact]
-    public async Task testExceptionIsPropagatedToTerminationFuture()
+    public async Task TestExceptionIsPropagatedToTerminationFuture()
     {
         var exception = new InvalidOperationException();
         var executor = new ThrowingExecutor(exception);
         // Schedule something so we are sure the run() method will be called.
-        executor.execute(Runnables.Create(() =>
+        executor.Execute(Runnables.Create(() =>
         {
             // Noop.
         }));

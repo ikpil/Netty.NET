@@ -9,8 +9,8 @@ public class AnonymousRecycler<T> : Recycler<T> where T : class
         _creator = creator;
     }
 
-    protected override T newObject(IRecyclerHandle<T> handle)
+    protected override T NewObject(IRecyclerHandle<T> handle)
     {
-        return _creator.newObject(handle);
+        return _creator.NewObject(handle);
     }
 }

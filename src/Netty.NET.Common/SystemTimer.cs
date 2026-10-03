@@ -13,19 +13,19 @@ public static class SystemTimer
     public static readonly double MilliPerFrequency = 1_000.0 / Frequency;
 
     // System.nanoTime()
-    public static long nanoTime()
+    public static long NanoTime()
     {
         long timestamp = Clock.GetTimestamp();
         return NanosMultiplier != 0 ? unchecked(timestamp * NanosMultiplier) :
             ScaleTimestamp(timestamp, NanosecondsPerSecond);
     }
 
-    public static long millis()
+    public static long Millis()
     {
         return ScaleTimestamp(Clock.GetTimestamp(), 1_000);
     }
 
-    public static long seconds()
+    public static long Seconds()
     {
         return Clock.GetTimestamp() / Frequency;
     }

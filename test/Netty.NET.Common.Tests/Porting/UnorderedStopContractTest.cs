@@ -11,7 +11,7 @@ public class UnorderedStopContractTest
     private static readonly AsyncLocal<string> Ambient = new();
     private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
     {
-        public Thread newThread(IRunnable task) => create(task);
+        public Thread NewThread(IRunnable task) => create(task);
     }
 
     [Theory]
@@ -30,7 +30,7 @@ public class UnorderedStopContractTest
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task queued = executor.SubmitAsync(() => Assert.Fail("Removed work ran"));
             Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
-            if (legacy) Assert.Equal(2, executor.shutdownNow().Count);
+            if (legacy) Assert.Equal(2, executor.ShutdownNow().Count);
             Task stopping = executor.StopAsync();
             Assert.Same(executor.Termination, stopping);
             Assert.Same(stopping, executor.StopAsync());
@@ -41,7 +41,7 @@ public class UnorderedStopContractTest
             Assert.Equal(executor.StopToken, error.CancellationToken);
             await stopping.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(1, notifications);
-            Assert.True(executor.isTerminated());
+            Assert.True(executor.IsTerminated());
         }
         finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
     }
@@ -93,11 +93,11 @@ public class UnorderedStopContractTest
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Assert.NotEqual(caller, callback);
             Assert.False(stopping.IsCompleted);
-            Assert.False(executor.isTerminated());
-            Assert.False(executor.awaitTermination(TimeSpan.FromMilliseconds(1)));
+            Assert.False(executor.IsTerminated());
+            Assert.False(executor.AwaitTermination(TimeSpan.FromMilliseconds(1)));
             release.Set();
             await stopping.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(executor.isTerminated());
+            Assert.True(executor.IsTerminated());
             Assert.Equal(executor.StopToken, executor.StopToken);
         }
         finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
@@ -116,8 +116,8 @@ public class UnorderedStopContractTest
         Assert.True(stopping.IsFaulted);
         Assert.Contains(first, stopping.Exception.Flatten().InnerExceptions);
         Assert.Contains(second, stopping.Exception.Flatten().InnerExceptions);
-        Assert.True(executor.isTerminated());
-        Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+        Assert.True(executor.IsTerminated());
+        Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         Assert.Same(stopping, executor.StopAsync());
     }
 
@@ -164,7 +164,7 @@ public class UnorderedStopContractTest
         bool suffixInterrupted = false;
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(task => worker = new Thread(() =>
         {
-            task.run();
+            task.Run();
             try { Thread.Sleep(1); }
             catch (ThreadInterruptedException) { suffixInterrupted = true; }
         }) { IsBackground = true }));

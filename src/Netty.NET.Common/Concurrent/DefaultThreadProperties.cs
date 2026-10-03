@@ -16,12 +16,12 @@ public class DefaultThreadProperties : IThreadProperties
         lastDaemon = t.IsBackground;
     }
 
-    public ThreadState state()
+    public ThreadState State()
     {
         return _t.ThreadState;
     }
 
-    public ThreadPriority priority()
+    public ThreadPriority Priority()
     {
         // CLR discards native priority after termination. Retain the last observed
         // value for postmortem queries; live queries still read the current value.
@@ -30,29 +30,29 @@ public class DefaultThreadProperties : IThreadProperties
         return lastPriority;
     }
 
-    public bool isInterrupted()
+    public bool IsInterrupted()
     {
         throw new NotSupportedException("The CLR does not expose a non-destructive pending interrupt flag.");
     }
 
-    public bool isDaemon()
+    public bool IsDaemon()
     {
         try { lastDaemon = _t.IsBackground; }
         catch (ThreadStateException) { }
         return lastDaemon;
     }
 
-    public string name()
+    public string Name()
     {
         return _t.Name;
     }
 
-    public long id()
+    public long Id()
     {
         return _t.ManagedThreadId;
     }
 
-    public System.Diagnostics.StackFrame[] stackTrace()
+    public System.Diagnostics.StackFrame[] StackTrace()
     {
         // CLR has no supported remote managed-thread stack API. Never substitute
         // the caller's stack for the requested thread; its owner can query itself.
@@ -61,7 +61,7 @@ public class DefaultThreadProperties : IThreadProperties
         return new System.Diagnostics.StackTrace(1, true).GetFrames();
     }
 
-    public bool isAlive()
+    public bool IsAlive()
     {
         return _t.IsAlive;
     }

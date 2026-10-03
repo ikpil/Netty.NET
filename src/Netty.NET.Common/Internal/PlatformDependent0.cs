@@ -31,7 +31,7 @@ namespace Netty.NET.Common.Internal;
  */
 public class PlatformDependent0
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(PlatformDependent0));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(PlatformDependent0));
     private static readonly long ADDRESS_FIELD_OFFSET;
     private static readonly long BYTE_ARRAY_BASE_OFFSET;
     private static readonly long INT_ARRAY_BASE_OFFSET;
@@ -43,8 +43,8 @@ public class PlatformDependent0
     // private static readonly MethodHandle DIRECT_BUFFER_CONSTRUCTOR;
     // private static readonly MethodHandle ALLOCATE_ARRAY_METHOD;
     // private static readonly MethodHandle ALIGN_SLICE;
-    private static readonly bool IS_ANDROID = isAndroid0();
-    private static readonly Exception EXPLICIT_NO_UNSAFE_CAUSE = explicitNoUnsafeCause0();
+    private static readonly bool IS_ANDROID = IsAndroid0();
+    private static readonly Exception EXPLICIT_NO_UNSAFE_CAUSE = ExplicitNoUnsafeCause0();
 
     // CLR adaptation: JVM Unsafe is unavailable; native CLR operations are ported explicitly.
     private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE =
@@ -54,7 +54,7 @@ public class PlatformDependent0
     // ImageInfo.java
     // CLR adaptation: Graal native-image properties do not describe this runtime.
 
-    private static readonly bool IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = explicitTryReflectionSetAccessible0();
+    private static readonly bool IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = ExplicitTryReflectionSetAccessible0();
 
     // Package-private for testing.
     //public static readonly MethodHandle IS_VIRTUAL_THREAD_METHOD_HANDLE = getIsVirtualThreadMethodHandle();
@@ -474,7 +474,7 @@ public class PlatformDependent0
         //         DIRECT_BUFFER_CONSTRUCTOR != null ? "available" : "unavailable");
     }
 
-    private static object getIsVirtualThreadMethodHandle()
+    private static object GetIsVirtualThreadMethodHandle()
     {
         return null;
         // try {
@@ -497,7 +497,7 @@ public class PlatformDependent0
      * @param thread The thread to be checked.
      * @return {@code true} if this {@link Thread} is a virtual thread, {@code false} otherwise.
      */
-    public static bool isVirtualThread(Thread thread)
+    public static bool IsVirtualThread(Thread thread)
     {
         // CLR thread-pool workers are native threads, not Java virtual threads.
         return false;
@@ -515,15 +515,15 @@ public class PlatformDependent0
         // }
     }
 
-    public static bool isExplicitNoUnsafe()
+    public static bool IsExplicitNoUnsafe()
     {
         return EXPLICIT_NO_UNSAFE_CAUSE != null;
     }
 
-    private static Exception explicitNoUnsafeCause0()
+    private static Exception ExplicitNoUnsafeCause0()
     {
-        bool noUnsafe = SystemPropertyUtil.getBoolean("io.netty.noUnsafe", false);
-        logger.debug("-Dio.netty.noUnsafe: {}", noUnsafe);
+        bool noUnsafe = SystemPropertyUtil.GetBoolean("io.netty.noUnsafe", false);
+        logger.Debug("-Dio.netty.noUnsafe: {}", noUnsafe);
 
         // See JDK 23 JEP 471 https://openjdk.org/jeps/471 and sun.misc.Unsafe.beforeMemoryAccess() on JDK 23+.
         // And JDK 24 JEP 498 https://openjdk.org/jeps/498, that enable warnings by default.
@@ -536,13 +536,13 @@ public class PlatformDependent0
         if (noUnsafe)
         {
             string msg = "sun.misc.Unsafe: unavailable (" + reason + ')';
-            logger.debug(msg);
+            logger.Debug(msg);
             return new NotSupportedException(msg);
         }
 
         // Legacy properties
         string unsafePropName;
-        if (SystemPropertyUtil.contains("io.netty.tryUnsafe"))
+        if (SystemPropertyUtil.Contains("io.netty.tryUnsafe"))
         {
             unsafePropName = "io.netty.tryUnsafe";
         }
@@ -551,53 +551,53 @@ public class PlatformDependent0
             unsafePropName = "org.jboss.netty.tryUnsafe";
         }
 
-        if (!SystemPropertyUtil.getBoolean(unsafePropName, true))
+        if (!SystemPropertyUtil.GetBoolean(unsafePropName, true))
         {
             string msg = "sun.misc.Unsafe: unavailable (" + unsafePropName + ')';
-            logger.debug(msg);
+            logger.Debug(msg);
             return new NotSupportedException(msg);
         }
 
         return null;
     }
 
-    public static bool isUnaligned()
+    public static bool IsUnaligned()
     {
         return UNALIGNED;
     }
 
 
 
-    public static bool hasUnsafe()
+    public static bool HasUnsafe()
     {
         return false;
         //return UNSAFE != null;
     }
 
-    public static Exception getUnsafeUnavailabilityCause()
+    public static Exception GetUnsafeUnavailabilityCause()
     {
         return UNSAFE_UNAVAILABILITY_CAUSE;
     }
 
-    public static bool unalignedAccess()
+    public static bool UnalignedAccess()
     {
         return UNALIGNED;
     }
 
-    public static void throwException<E>(E cause) where E : Exception
+    public static void ThrowException<E>(E cause) where E : Exception
     {
-        throwException0<E>(cause);
+        ThrowException0<E>(cause);
     }
 
     //@SuppressWarnings("unchecked")
-    private static void throwException0<E>(E t) where E : Exception
+    private static void ThrowException0<E>(E t) where E : Exception
     {
         throw t;
     }
 
-    private static void rethrowIfPossible(Exception cause)
+    private static void RethrowIfPossible(Exception cause)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         // if (cause instanceof Error) {
         //     throw (Error) cause;
         // }
@@ -606,84 +606,84 @@ public class PlatformDependent0
         // }
     }
 
-    public static long byteArrayBaseOffset()
+    public static long ByteArrayBaseOffset()
     {
         return BYTE_ARRAY_BASE_OFFSET;
     }
 
-    public static byte getByte(long address)
+    public static byte GetByte(long address)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         //return UNSAFE.getByte(address);
     }
 
-    public static short getShort(long address)
+    public static short GetShort(long address)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         //return UNSAFE.getShort(address);
     }
 
-    public static int getInt(long address)
+    public static int GetInt(long address)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         //return UNSAFE.getInt(address);
     }
 
-    public static long getLong(long address)
+    public static long GetLong(long address)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         //return UNSAFE.getLong(address);
     }
 
-    public static int getIntVolatile(long address)
+    public static int GetIntVolatile(long address)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         //return UNSAFE.getIntVolatile(null, address);
     }
 
-    public static void putIntOrdered(long address, int newValue)
+    public static void PutIntOrdered(long address, int newValue)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         //UNSAFE.putOrderedInt(null, address, newValue);
     }
 
-    public static void putByte(long address, byte value)
+    public static void PutByte(long address, byte value)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         //UNSAFE.putByte(address, value);
     }
 
-    public static void putShort(long address, short value)
+    public static void PutShort(long address, short value)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         //UNSAFE.putShort(address, value);
     }
 
-    public static void putShortOrdered(long address, short newValue)
+    public static void PutShortOrdered(long address, short newValue)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         // UNSAFE.storeFence();
         // UNSAFE.putShort(null, address, newValue);
     }
 
-    public static void putInt(long address, int value)
+    public static void PutInt(long address, int value)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         //UNSAFE.putInt(address, value);
     }
 
-    public static void putLong(long address, long value)
+    public static void PutLong(long address, long value)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         //UNSAFE.putLong(address, value);
     }
 
-    public static void copyMemory(long srcAddr, long dstAddr, long length)
+    public static void CopyMemory(long srcAddr, long dstAddr, long length)
     {
         // Manual safe-point polling is only needed prior Java9:
         // See https://bugs.openjdk.java.net/browse/JDK-8149596
@@ -692,7 +692,7 @@ public class PlatformDependent0
         throw new NotImplementedException();
     }
 
-    public static void copyMemory(object src, long srcOffset, object dst, long dstOffset, long length)
+    public static void CopyMemory(object src, long srcOffset, object dst, long dstOffset, long length)
     {
         // Manual safe-point polling is only needed prior Java9:
         // See https://bugs.openjdk.java.net/browse/JDK-8149596
@@ -701,21 +701,21 @@ public class PlatformDependent0
         throw new NotImplementedException();
     }
 
-    public static void setMemory(long address, long bytes, byte value)
+    public static void SetMemory(long address, long bytes, byte value)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         //UNSAFE.setMemory(address, bytes, value);
     }
 
-    public static void setMemory(object o, long offset, long bytes, byte value)
+    public static void SetMemory(object o, long offset, long bytes, byte value)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         //UNSAFE.setMemory(o, offset, bytes, value);
     }
 
-    public static bool equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
+    public static bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return false;
         // int remainingBytes = length & 7;
         // long baseOffset1 = BYTE_ARRAY_BASE_OFFSET + startPos1;
@@ -745,9 +745,9 @@ public class PlatformDependent0
         //         UNSAFE.getByte(bytes1, baseOffset1) == UNSAFE.getByte(bytes2, baseOffset2);
     }
 
-    public static int equalsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
+    public static int EqualsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         // long result = 0;
         // long remainingBytes = length & 7;
@@ -773,9 +773,9 @@ public class PlatformDependent0
         // return ConstantTimeUtils.equalsConstantTime(result, 0);
     }
 
-    public static bool isZero(byte[] bytes, int startPos, int length)
+    public static bool IsZero(byte[] bytes, int startPos, int length)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return false;
         // if (length <= 0) {
         //     return true;
@@ -802,9 +802,9 @@ public class PlatformDependent0
         // return bytes[startPos] == 0;
     }
 
-    public static int hashCodeAscii(byte[] bytes, int startPos, int length)
+    public static int HashCodeAscii(byte[] bytes, int startPos, int length)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         // int hash = HASH_CODE_ASCII_SEED;
         // long baseOffset = BYTE_ARRAY_BASE_OFFSET + startPos;
@@ -833,7 +833,7 @@ public class PlatformDependent0
         // return hash;
     }
 
-    public static int hashCodeAsciiCompute(long value, int hash)
+    public static int HashCodeAsciiCompute(long value, int hash)
     {
         // CLR adaptation: this operation is pure integer arithmetic and needs
         // neither JVM Unsafe nor a native-memory implementation. Java's int
@@ -842,73 +842,73 @@ public class PlatformDependent0
         // code the same regardless of character case (upper case or lower case hash is the same).
         return unchecked(hash * HASH_CODE_C1 +
                 // Low order int
-                hashCodeAsciiSanitize((int)value) * HASH_CODE_C2 +
+                HashCodeAsciiSanitize((int)value) * HASH_CODE_C2 +
                 // High order int
                 (int)((value & 0x1f1f1f1f00000000L) >>> 32));
     }
 
-    public static int hashCodeAsciiSanitize(int value)
+    public static int HashCodeAsciiSanitize(int value)
     {
         return value & 0x1f1f1f1f;
     }
 
-    public static int hashCodeAsciiSanitize(short value)
+    public static int HashCodeAsciiSanitize(short value)
     {
         return value & 0x1f1f;
     }
 
-    public static int hashCodeAsciiSanitize(byte value)
+    public static int HashCodeAsciiSanitize(byte value)
     {
         return value & 0x1f;
     }
 
-    public static Assembly getClassLoader(Type clazz)
+    public static Assembly GetClassLoader(Type clazz)
     {
         return clazz.Assembly;
     }
 
-    public static Assembly getContextClassLoader()
+    public static Assembly GetContextClassLoader()
     {
         return Thread.CurrentThread.GetType().Assembly;
     }
 
-    public static Assembly getSystemClassLoader()
+    public static Assembly GetSystemClassLoader()
     {
         return Assembly.GetEntryAssembly();
     }
 
-    public static int addressSize()
+    public static int AddressSize()
     {
         // CLR adaptation: native pointer width is available without sun.misc.Unsafe.
         return IntPtr.Size;
     }
 
-    public static long allocateMemory(long size)
+    public static long AllocateMemory(long size)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         //return UNSAFE.allocateMemory(size);
     }
 
-    public static void freeMemory(long address)
+    public static void FreeMemory(long address)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         //UNSAFE.freeMemory(address);
     }
 
-    public static long reallocateMemory(long address, long newSize)
+    public static long ReallocateMemory(long address, long newSize)
     {
-        throwException(new NotImplementedException());
+        ThrowException(new NotImplementedException());
         return 0;
         //return UNSAFE.reallocateMemory(address, newSize);
     }
 
-    public static bool isAndroid()
+    public static bool IsAndroid()
     {
         return IS_ANDROID;
     }
 
-    private static bool isAndroid0()
+    private static bool IsAndroid0()
     {
         // Idea: Sometimes java binaries include Android classes on the classpath, even if it isn't actually Android.
         // Rather than check if certain classes are present, just check the VM, which is tied to the JDK.
@@ -921,20 +921,20 @@ public class PlatformDependent0
         bool isAndroid = OperatingSystem.IsAndroid();
         if (isAndroid)
         {
-            logger.debug("Platform: Android");
+            logger.Debug("Platform: Android");
         }
 
         return isAndroid;
     }
 
-    private static bool explicitTryReflectionSetAccessible0()
+    private static bool ExplicitTryReflectionSetAccessible0()
     {
         // we disable reflective access
-        return SystemPropertyUtil.getBoolean("io.netty.tryReflectionSetAccessible",
+        return SystemPropertyUtil.GetBoolean("io.netty.tryReflectionSetAccessible",
             false);
     }
 
-    public static bool isExplicitTryReflectionSetAccessible()
+    public static bool IsExplicitTryReflectionSetAccessible()
     {
         return IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE;
     }

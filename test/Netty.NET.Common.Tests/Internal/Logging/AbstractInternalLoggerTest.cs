@@ -34,7 +34,7 @@ public abstract class AbstractInternalLoggerTest<T>
     protected readonly Dictionary<string, object> result = new Dictionary<string, object>();
 
     //@SuppressWarnings("unchecked")
-    protected V getResult<V>(string key)
+    protected V GetResult<V>(string key)
     {
         result.TryGetValue(key, out var o);
         if (null == o)
@@ -44,22 +44,22 @@ public abstract class AbstractInternalLoggerTest<T>
     }
 
     [Fact]
-    public void testName()
+    public void TestName()
     {
-        Assert.Equal(loggerName, logger.name());
+        Assert.Equal(loggerName, logger.Name());
     }
 
     [Fact]
-    public void testAllLevel()
+    public void TestAllLevel()
     {
-        testLevel(InternalLogLevel.TRACE);
-        testLevel(InternalLogLevel.DEBUG);
-        testLevel(InternalLogLevel.INFO);
-        testLevel(InternalLogLevel.WARN);
-        testLevel(InternalLogLevel.ERROR);
+        TestLevel(InternalLogLevel.TRACE);
+        TestLevel(InternalLogLevel.DEBUG);
+        TestLevel(InternalLogLevel.INFO);
+        TestLevel(InternalLogLevel.WARN);
+        TestLevel(InternalLogLevel.ERROR);
     }
 
-    protected void testLevel(InternalLogLevel level)
+    protected void TestLevel(InternalLogLevel level)
     {
         result.Clear();
 
@@ -68,12 +68,12 @@ public abstract class AbstractInternalLoggerTest<T>
         Exception ex = new Exception("a test Exception from Junit");
 
         Type clazz = typeof(IInternalLogger);
-        string levelName = level.ToString(), logMethod = levelName.ToLower();
+        string levelName = level.ToString(), logMethod = levelName[0] + levelName[1..].ToLowerInvariant();
         var isXXEnabled = clazz
-            .GetMethod("is" + levelName[0] + levelName[1..].ToLower() + "Enabled")!;
+            .GetMethod("Is" + levelName[0] + levelName[1..].ToLowerInvariant() + "Enabled")!;
 
         // when level log is disabled
-        setLevelEnable(level, false);
+        SetLevelEnable(level, false);
         Assert.False((bool)isXXEnabled.Invoke(logger, null));
 
         // test xx(msg)
@@ -105,50 +105,50 @@ public abstract class AbstractInternalLoggerTest<T>
         Assert.True(result.IsEmpty());
 
         // when level log is enabled
-        setLevelEnable(level, true);
+        SetLevelEnable(level, true);
         Assert.True((bool)isXXEnabled.Invoke(logger, null));
 
         // test xx(msg)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string)]).Invoke(logger, new object[] { msg });
-        assertResult(level, null, null, msg);
+        AssertResult(level, null, null, msg);
 
         // test xx(format, arg)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string), typeof(object)]).Invoke(logger, new object[] { format1, msg });
-        assertResult(level, format1, null, msg);
+        AssertResult(level, format1, null, msg);
 
         // test xx(format, argA, argB)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string), typeof(object), typeof(object)]).Invoke(logger, new object[] { format2, msg, msg });
-        assertResult(level, format2, null, msg, msg);
+        AssertResult(level, format2, null, msg, msg);
 
         // test xx(format, ...arguments)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, new object[] { msg, msg, msg } });
-        assertResult(level, format3, null, msg, msg, msg);
+        AssertResult(level, format3, null, msg, msg, msg);
 
         // test xx(format, ...arguments), the last argument is Throwable
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string), typeof(object[])]).Invoke(logger, new object[] { format3, new object[] { msg, msg, msg, ex } });
-        assertResult(level, format3, ex, msg, msg, msg, ex);
+        AssertResult(level, format3, ex, msg, msg, msg, ex);
 
         // test xx(msg, Throwable)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(string), typeof(Exception)]).Invoke(logger, new object[] { msg, ex });
-        assertResult(level, null, ex, msg);
+        AssertResult(level, null, ex, msg);
 
         // test xx(Throwable)
         result.Clear();
         clazz.GetMethod(logMethod, [typeof(Exception)]).Invoke(logger, [ex]);
-        assertResult(level, null, ex);
+        AssertResult(level, null, ex);
     }
 
     /** a just default code, you can override to fix {@linkplain #mockLog} */
-    protected virtual void assertResult(InternalLogLevel level, string format, Exception t, params object[] args)
+    protected virtual void AssertResult(InternalLogLevel level, string format, Exception t, params object[] args)
     {
         Assert.False(result.IsEmpty());
     }
 
-    protected abstract void setLevelEnable(InternalLogLevel level, bool enable);
+    protected abstract void SetLevelEnable(InternalLogLevel level, bool enable);
 }

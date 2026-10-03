@@ -10,7 +10,7 @@ public class FastThreadLocalTestRunnerContractTest
     private sealed class Local(Exception removalFailure = null) : FastThreadLocal<object>
     {
         internal int Removals;
-        protected override void onRemoval(object value)
+        protected override void OnRemoval(object value)
         {
             Interlocked.Increment(ref Removals);
             if (removalFailure != null) throw removalFailure;
@@ -30,21 +30,21 @@ public class FastThreadLocalTestRunnerContractTest
         {
             worker = Thread.CurrentThread;
             Assert.NotSame(caller, worker);
-            Assert.True(FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals());
-            local.set(new object());
+            Assert.True(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
+            local.Set(new object());
             Assert.Equal(0, local.Removals);
             if (fail) throw cause;
         };
         if (fail)
         {
             Assert.Same(cause, Assert.Throws<InvalidOperationException>(() =>
-                RunInFastThreadLocalThreadExtension.run(invocation)));
+                RunInFastThreadLocalThreadExtension.Run(invocation)));
             Assert.Contains(nameof(WorkerOwnsIndexedMapAndCleansUpBeforeFailureIsRethrown), cause.StackTrace);
         }
-        else RunInFastThreadLocalThreadExtension.run(invocation);
+        else RunInFastThreadLocalThreadExtension.Run(invocation);
         Assert.Equal(1, local.Removals);
         Assert.False(worker.IsAlive);
-        Assert.False(local.isSet());
+        Assert.False(local.IsSet());
     }
 
     [Theory]
@@ -55,13 +55,13 @@ public class FastThreadLocalTestRunnerContractTest
         var cleanupFailure = new InvalidOperationException("cleanup failure");
         var invocationFailure = new InvalidOperationException("invocation failure");
         var local = new Local(cleanupFailure);
-        var error = Assert.Throws<InvalidOperationException>(() => RunInFastThreadLocalThreadExtension.run(() =>
+        var error = Assert.Throws<InvalidOperationException>(() => RunInFastThreadLocalThreadExtension.Run(() =>
         {
-            local.set(new object());
+            local.Set(new object());
             if (failInvocation) throw invocationFailure;
         }));
         Assert.Same(failInvocation ? invocationFailure : cleanupFailure, error);
         Assert.Equal(1, local.Removals);
-        Assert.False(local.isSet());
+        Assert.False(local.IsSet());
     }
 }

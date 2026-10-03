@@ -23,5 +23,5 @@ public interface IEventExecutorChooser
     /**
      * Returns the new {@link EventExecutor} to use.
      */
-    IEventExecutor next();
+    IEventExecutor Next();
 }

@@ -32,16 +32,16 @@ public static class RunInFastThreadLocalThreadExtension
 {
     private sealed class Worker(IRunnable invocation, Action<Exception> cleanupFailure) : FastThreadLocalThread(invocation)
     {
-        public override void run()
+        public override void Run()
         {
-            try { base.run(); }
+            try { base.Run(); }
             catch (Exception error) { cleanupFailure(error); }
         }
     }
 
     // CLR adaptation: xUnit cases call this helper explicitly rather than using
     // JUnit interception. ExceptionDispatchInfo preserves the worker's stack.
-    public static void run(Action invocation)
+    public static void Run(Action invocation)
     {
         ArgumentNullException.ThrowIfNull(invocation);
         ExceptionDispatchInfo failure = null;
@@ -50,8 +50,8 @@ public static class RunInFastThreadLocalThreadExtension
             try { invocation(); }
             catch (Exception error) { failure = ExceptionDispatchInfo.Capture(error); }
         }), error => failure ??= ExceptionDispatchInfo.Capture(error));
-        thread.start();
-        thread.join();
+        thread.Start();
+        thread.Join();
         failure?.Throw();
     }
 }

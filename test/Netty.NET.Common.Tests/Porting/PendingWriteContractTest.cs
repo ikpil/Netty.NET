@@ -12,8 +12,8 @@ public class PendingWriteContractTest
     {
         internal int Deallocations;
         internal Exception ReleaseError;
-        public override IReferenceCounted touch(object hint) => this;
-        protected override void deallocate()
+        public override IReferenceCounted Touch(object hint) => this;
+        protected override void Deallocate()
         {
             ++Deallocations;
             if (ReleaseError != null) throw ReleaseError;
@@ -32,7 +32,7 @@ public class PendingWriteContractTest
         Assert.Same(source.Task, result);
         Assert.True(node.FailAndRecycle(cause));
         Assert.Same(cause, await Assert.ThrowsAsync<InvalidOperationException>(async () => await result));
-        Assert.Equal(0, message.refCnt());
+        Assert.Equal(0, message.RefCnt());
         Assert.Equal(1, message.Deallocations);
         Assert.Null(node.Message);
         Assert.Null(node.Completion);
@@ -50,12 +50,12 @@ public class PendingWriteContractTest
         Task result = node.Completion;
         Assert.True(node.SucceedAndRecycle());
         await result;
-        Assert.Equal(1, message.refCnt());
+        Assert.Equal(1, message.RefCnt());
         Assert.Equal(0, message.Deallocations);
         Assert.Null(node.Message);
         Assert.Null(node.Completion);
         Assert.Throws<InvalidOperationException>(() => node.SucceedAndRecycle());
-        Assert.True(ReferenceCountUtil.release(nextOwnerMessage));
+        Assert.True(ReferenceCountUtil.Release(nextOwnerMessage));
     }
 
     [Fact]
@@ -69,12 +69,12 @@ public class PendingWriteContractTest
         var nextProducer = node.RecycleAndGetCompletionSource();
         Assert.Same(source, nextProducer);
         Assert.False(result.IsCompleted);
-        Assert.Equal(1, message.refCnt());
+        Assert.Equal(1, message.RefCnt());
         Assert.Null(node.Message);
         Assert.Null(node.Completion);
         nextProducer.SetResult();
         await result;
-        Assert.True(ReferenceCountUtil.release(nextOwnerMessage));
+        Assert.True(ReferenceCountUtil.Release(nextOwnerMessage));
     }
 
     [Theory]
@@ -137,13 +137,13 @@ public class PendingWriteContractTest
         Assert.Null(node.Completion);
         Assert.Throws<ArgumentNullException>(() => node.FailAndRecycle(null));
         Assert.Same(message, node.Message);
-        Assert.Equal(1, message.refCnt());
+        Assert.Equal(1, message.RefCnt());
         node.FailAndRecycle(new Exception("unobserved write failed"));
         Assert.Equal(1, message.Deallocations);
         var transferred = new Message();
         var next = PendingWrite.Rent(transferred);
         Assert.True(next.Recycle());
-        Assert.Equal(1, transferred.refCnt());
-        Assert.True(transferred.release());
+        Assert.Equal(1, transferred.RefCnt());
+        Assert.True(transferred.Release());
     }
 }

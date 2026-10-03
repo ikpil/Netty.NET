@@ -23,11 +23,11 @@ public class ExecutorCompletionContractTest
         internal void RunAll()
         {
             _running = Thread.CurrentThread;
-            try { while (_queue.TryDequeue(out var work)) work.run(); }
+            try { while (_queue.TryDequeue(out var work)) work.Run(); }
             finally { _running = null; }
         }
-        public override bool inEventLoop(Thread thread) => thread != null && thread == _running;
-        public override void execute(IRunnable work)
+        public override bool InEventLoop(Thread thread) => thread != null && thread == _running;
+        public override void Execute(IRunnable work)
         {
             if (Rejection != null) throw Rejection;
             LastWork = work;
@@ -35,11 +35,11 @@ public class ExecutorCompletionContractTest
         }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
-        public override void shutdown() { }
-        public override bool isShuttingDown() => false;
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
+        public override void Shutdown() { }
+        public override bool IsShuttingDown() => false;
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
     }
 
     private static async Task Drain(QueuedExecutor executor, Task completion)
@@ -64,7 +64,7 @@ public class ExecutorCompletionContractTest
         using var observation = new ExecutorCompletion(executor, source.Task);
         Task observed = null;
         bool affinity = false;
-        using var registration = observation.Register(task => { observed = task; affinity = executor.inEventLoop(); });
+        using var registration = observation.Register(task => { observed = task; affinity = executor.InEventLoop(); });
         var failure = new InvalidOperationException("source failure");
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
@@ -306,13 +306,13 @@ public class ExecutorCompletionContractTest
     public async Task RejectedNativeNotificationsCannotBeSilentlyDiscarded(bool orderedChild)
     {
         var pool = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
-        IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).next() : pool;
-        pool.shutdownNow();
+        IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).Next() : pool;
+        pool.ShutdownNow();
         using var observation = new ExecutorCompletion(executor, Task.CompletedTask);
         using var registration = observation.Register(_ => { });
         await Assert.ThrowsAsync<RejectedExecutionException>(async () =>
             await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)));
-        Assert.True(pool.awaitTermination(TimeSpan.FromSeconds(5)));
+        Assert.True(pool.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 
     [Fact]
@@ -349,7 +349,7 @@ public class ExecutorCompletionContractTest
         finally
         {
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
-            Assert.True(await Task.Run(() => executor.awaitTermination(TimeSpan.FromSeconds(5))));
+            Assert.True(await Task.Run(() => executor.AwaitTermination(TimeSpan.FromSeconds(5))));
         }
     }
 
@@ -383,16 +383,16 @@ public class ExecutorCompletionContractTest
             try { release.Wait(); } catch (ThreadInterruptedException) { }
         });
         Assert.True(started.Wait(TimeSpan.FromSeconds(5)));
-        IEventExecutor target = orderedChild ? new NonStickyEventExecutorGroup(executor, 1).next() : executor;
+        IEventExecutor target = orderedChild ? new NonStickyEventExecutorGroup(executor, 1).Next() : executor;
         using var observation = new ExecutorCompletion(target, Task.CompletedTask);
         int calls = 0;
         using var registration = observation.Register(_ => ++calls);
         try
         {
             Assert.Equal(1, executor.PendingTaskCount);
-            IRunnable queued = Assert.Single(executor.shutdownNow());
+            IRunnable queued = Assert.Single(executor.ShutdownNow());
             Assert.False((object)queued is System.Threading.Tasks.Task);
-            queued.run();
+            queued.Run();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);
@@ -401,7 +401,7 @@ public class ExecutorCompletionContractTest
         {
             release.Set();
             await active.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(await Task.Run(() => executor.awaitTermination(TimeSpan.FromSeconds(5))));
+            Assert.True(await Task.Run(() => executor.AwaitTermination(TimeSpan.FromSeconds(5))));
         }
     }
 
@@ -496,7 +496,7 @@ public class ExecutorCompletionContractTest
         Task timeout = executor.ScheduleAsync(() => Interlocked.Increment(ref timeouts), TimeSpan.FromHours(1), timeoutCancellation.Token);
         using var registration = observation.Register(_ =>
         {
-            affinity = executor.inEventLoop();
+            affinity = executor.InEventLoop();
             timeoutCancellation.Cancel();
         });
         try

@@ -25,24 +25,24 @@ public interface ITimeout
     /**
      * Returns the {@link Timer} that created this handle.
      */
-    ITimer timer();
+    ITimer Timer();
 
     /**
      * Returns the {@link TimerTask} which is associated with this handle.
      */
-    ITimerTask task();
+    ITimerTask Task();
 
     /**
      * Returns {@code true} if and only if the {@link TimerTask} associated
      * with this handle has been expired.
      */
-    bool isExpired();
+    bool IsExpired();
 
     /**
      * Returns {@code true} if and only if the {@link TimerTask} associated
      * with this handle has been cancelled.
      */
-    bool isCancelled();
+    bool IsCancelled();
 
     /**
      * Attempts to cancel the {@link TimerTask} associated with this handle.
@@ -51,5 +51,5 @@ public interface ITimeout
      *
      * @return True if the cancellation completed successfully, otherwise false
      */
-    bool cancel();
+    bool Cancel();
 }

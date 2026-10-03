@@ -11,7 +11,7 @@ public class FalseSupplier : ISupplier<bool>
     {
     }
 
-    public bool get()
+    public bool Get()
     {
         return false;
     }

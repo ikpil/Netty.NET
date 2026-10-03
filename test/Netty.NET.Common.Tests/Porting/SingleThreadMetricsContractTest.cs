@@ -15,60 +15,60 @@ public class SingleThreadMetricsContractTest
 {
     private sealed class ActivityClockExecutor : SingleThreadEventExecutor
     {
-        internal static readonly MockTicker clock = createClock();
-        private static MockTicker createClock()
+        internal static readonly MockTicker clock = CreateClock();
+        private static MockTicker CreateClock()
         {
-            MockTicker clock = Ticker.newMockTicker();
-            clock.advance(1000);
+            MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
+            clock.Advance(1000);
             return clock;
         }
         internal ActivityClockExecutor()
             : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), false, true,
-                int.MaxValue, RejectedExecutionHandlers.reject()) { }
+                int.MaxValue, RejectedExecutionHandlers.Reject()) { }
         internal ActivityClockExecutor(IQueue<IRunnable> queue)
             : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), false, true,
-                queue, RejectedExecutionHandlers.reject()) { }
-        public override Ticker ticker() => clock;
-        protected override void run() => throw new Exception("must not run");
-        internal long lastActivity() => getLastActivityTimeNanos();
-        internal void updateActivity() => updateLastExecutionTime();
+                queue, RejectedExecutionHandlers.Reject()) { }
+        public override Ticker Ticker() => clock;
+        protected override void Run() => throw new Exception("must not run");
+        internal long LastActivity() => GetLastActivityTimeNanos();
+        internal void UpdateActivity() => UpdateLastExecutionTime();
     }
 
     [Fact]
     public void AllocatedQueueConstructorInitializesActivityAndExplicitUpdateRefreshesIt()
     {
-        long now = ActivityClockExecutor.clock.nanoTime();
+        long now = ActivityClockExecutor.clock.NanoTime();
         var executor = new ActivityClockExecutor();
-        Assert.Equal(now, executor.lastActivity());
-        ActivityClockExecutor.clock.advance(123);
-        executor.updateActivity();
-        Assert.Equal(now + 123, executor.lastActivity());
+        Assert.Equal(now, executor.LastActivity());
+        ActivityClockExecutor.clock.Advance(123);
+        executor.UpdateActivity();
+        Assert.Equal(now + 123, executor.LastActivity());
         // The pinned constructor accepting an explicit queue does not initialize this field.
         var explicitQueue = new ActivityClockExecutor(new LinkedBlockingQueue<IRunnable>(int.MaxValue));
-        Assert.Equal(0, explicitQueue.lastActivity());
-        explicitQueue.updateActivity();
-        Assert.Equal(now + 123, explicitQueue.lastActivity());
+        Assert.Equal(0, explicitQueue.LastActivity());
+        explicitQueue.UpdateActivity();
+        Assert.Equal(now + 123, explicitQueue.LastActivity());
     }
 
     private sealed class ManualExecutor : SingleThreadEventExecutor
     {
-        internal readonly MockTicker clock = Ticker.newMockTicker();
+        internal readonly MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         internal ManualExecutor(bool support = false)
             : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), false, support,
-                int.MaxValue, RejectedExecutionHandlers.reject()) { }
-        public override bool inEventLoop(Thread thread) => thread == Thread.CurrentThread;
-        public override Ticker ticker() => clock;
-        protected override void run() => throw new Exception("must not run");
-        internal bool drain(long nanos) => runAllTasks(nanos);
-        internal long resetActive() => getAndResetAccumulatedActiveTimeNanos();
-        internal long lastActivity() => getLastActivityTimeNanos();
-        internal void io(long nanos) => reportActiveIoTime(nanos);
-        internal int idle() => getAndIncrementIdleCycles();
-        internal int busy() => getAndIncrementBusyCycles();
-        internal void resetIdle() => resetIdleCycles();
-        internal void resetBusy() => resetBusyCycles();
-        internal int channels() => getNumOfRegisteredChannels();
-        internal bool supportsSuspension() => isSuspensionSupported();
+                int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+        public override bool InEventLoop(Thread thread) => thread == Thread.CurrentThread;
+        public override Ticker Ticker() => clock;
+        protected override void Run() => throw new Exception("must not run");
+        internal bool Drain(long nanos) => RunAllTasks(nanos);
+        internal long ResetActive() => GetAndResetAccumulatedActiveTimeNanos();
+        internal long LastActivity() => GetLastActivityTimeNanos();
+        internal void Io(long nanos) => ReportActiveIoTime(nanos);
+        internal int Idle() => GetAndIncrementIdleCycles();
+        internal int Busy() => GetAndIncrementBusyCycles();
+        internal void ResetIdle() => ResetIdleCycles();
+        internal void ResetBusy() => ResetBusyCycles();
+        internal int Channels() => GetNumOfRegisteredChannels();
+        internal bool SupportsSuspension() => IsSuspensionSupported();
     }
 
     [Fact]
@@ -76,41 +76,41 @@ public class SingleThreadMetricsContractTest
     {
         var executor = new ManualExecutor();
         int calls = 0;
-        for (int i = 0; i < 100; i++) executor.execute(Runnables.Create(() => { ++calls; executor.clock.advance(5); }));
-        Assert.True(executor.drain(0));
+        for (int i = 0; i < 100; i++) executor.Execute(Runnables.Create(() => { ++calls; executor.clock.Advance(5); }));
+        Assert.True(executor.Drain(0));
         Assert.Equal(64, calls);
-        Assert.Equal(320, executor.resetActive());
-        Assert.Equal(320, executor.lastActivity());
-        Assert.Equal(0, executor.resetActive());
-        Assert.True(executor.drain(long.MaxValue));
+        Assert.Equal(320, executor.ResetActive());
+        Assert.Equal(320, executor.LastActivity());
+        Assert.Equal(0, executor.ResetActive());
+        Assert.True(executor.Drain(long.MaxValue));
         Assert.Equal(100, calls);
-        Assert.Equal(180, executor.resetActive());
-        Assert.Equal(500, executor.lastActivity());
-        Assert.False(executor.drain(0));
-        Assert.Equal(0, executor.resetActive());
-        Assert.Equal(500, executor.lastActivity());
+        Assert.Equal(180, executor.ResetActive());
+        Assert.Equal(500, executor.LastActivity());
+        Assert.False(executor.Drain(0));
+        Assert.Equal(0, executor.ResetActive());
+        Assert.Equal(500, executor.LastActivity());
     }
 
     [Fact]
     public void PositiveIoReportsUpdateActiveTimeAndIgnoreNonpositiveDurations()
     {
         var executor = new ManualExecutor(true);
-        executor.clock.advance(100);
-        executor.io(12);
-        Assert.Equal(12, executor.resetActive());
-        Assert.Equal(100, executor.lastActivity());
-        executor.clock.advance(100);
-        executor.io(0);
-        executor.io(-1);
-        Assert.Equal(0, executor.resetActive());
-        Assert.Equal(100, executor.lastActivity());
-        executor.io(10);
-        executor.io(20);
-        Assert.Equal(30, executor.resetActive());
-        Assert.Equal(200, executor.lastActivity());
-        Assert.Equal(-1, executor.channels());
-        Assert.True(executor.supportsSuspension());
-        Assert.False(new ManualExecutor().supportsSuspension());
+        executor.clock.Advance(100);
+        executor.Io(12);
+        Assert.Equal(12, executor.ResetActive());
+        Assert.Equal(100, executor.LastActivity());
+        executor.clock.Advance(100);
+        executor.Io(0);
+        executor.Io(-1);
+        Assert.Equal(0, executor.ResetActive());
+        Assert.Equal(100, executor.LastActivity());
+        executor.Io(10);
+        executor.Io(20);
+        Assert.Equal(30, executor.ResetActive());
+        Assert.Equal(200, executor.LastActivity());
+        Assert.Equal(-1, executor.Channels());
+        Assert.True(executor.SupportsSuspension());
+        Assert.False(new ManualExecutor().SupportsSuspension());
     }
 
     [Fact]
@@ -119,15 +119,15 @@ public class SingleThreadMetricsContractTest
         var executor = new ManualExecutor();
         var idle = new ConcurrentBag<int>();
         var busy = new ConcurrentBag<int>();
-        Parallel.For(0, 256, _ => { idle.Add(executor.idle()); busy.Add(executor.busy()); });
+        Parallel.For(0, 256, _ => { idle.Add(executor.Idle()); busy.Add(executor.Busy()); });
         Assert.Equal(Enumerable.Range(0, 256), idle.Order());
         Assert.Equal(Enumerable.Range(0, 256), busy.Order());
-        executor.resetIdle();
-        Assert.Equal(0, executor.idle());
-        Assert.Equal(256, executor.busy());
-        executor.resetBusy();
-        Assert.Equal(0, executor.busy());
-        Assert.Equal(1, executor.idle());
+        executor.ResetIdle();
+        Assert.Equal(0, executor.Idle());
+        Assert.Equal(256, executor.Busy());
+        executor.ResetBusy();
+        Assert.Equal(0, executor.Busy());
+        Assert.Equal(1, executor.Idle());
     }
 
     [Fact]
@@ -135,22 +135,22 @@ public class SingleThreadMetricsContractTest
     {
         var executor = new ManualExecutor();
         int calls = 0;
-        executor.execute(Runnables.Create(() => { executor.clock.advance(12); throw new InvalidOperationException(); }));
-        executor.execute(Runnables.Create(() => { executor.clock.advance(5); ++calls; }));
-        Assert.True(executor.drain(long.MaxValue));
+        executor.Execute(Runnables.Create(() => { executor.clock.Advance(12); throw new InvalidOperationException(); }));
+        executor.Execute(Runnables.Create(() => { executor.clock.Advance(5); ++calls; }));
+        Assert.True(executor.Drain(long.MaxValue));
         Assert.Equal(1, calls);
-        Assert.Equal(17, executor.resetActive());
-        Assert.Equal(17, executor.lastActivity());
+        Assert.Equal(17, executor.ResetActive());
+        Assert.Equal(17, executor.LastActivity());
     }
 
     private sealed class CountingStartExecutor : SingleThreadEventExecutor
     {
         internal CountingStartExecutor(IExecutor executor)
-            : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.reject()) { }
-        protected override void run() => throw new Exception("must not run");
-        public override bool inEventLoop(Thread thread) => false;
-        internal int idle() => getAndIncrementIdleCycles();
-        internal int busy() => getAndIncrementBusyCycles();
+            : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
+        protected override void Run() => throw new Exception("must not run");
+        public override bool InEventLoop(Thread thread) => false;
+        internal int Idle() => GetAndIncrementIdleCycles();
+        internal int Busy() => GetAndIncrementBusyCycles();
     }
 
     [Fact]
@@ -158,15 +158,15 @@ public class SingleThreadMetricsContractTest
     {
         int starts = 0;
         var executor = new CountingStartExecutor(new AnonymousExecutor(_ => ++starts));
-        Assert.True(executor.trySuspend());
-        Assert.True(executor.isSuspended());
-        Assert.Equal(0, executor.idle());
-        Assert.Equal(0, executor.busy());
-        executor.execute(Runnables.Empty);
+        Assert.True(executor.TrySuspend());
+        Assert.True(executor.IsSuspended());
+        Assert.Equal(0, executor.Idle());
+        Assert.Equal(0, executor.Busy());
+        executor.Execute(Runnables.Empty);
         Assert.Equal(1, starts);
-        Assert.False(executor.isSuspended());
-        Assert.Equal(0, executor.idle());
-        Assert.Equal(0, executor.busy());
+        Assert.False(executor.IsSuspended());
+        Assert.Equal(0, executor.Idle());
+        Assert.Equal(0, executor.Busy());
     }
 
     [Fact]
@@ -176,11 +176,11 @@ public class SingleThreadMetricsContractTest
         var properties = new DefaultThreadProperties(thread);
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
-        Assert.False(properties.isAlive());
-        Assert.Equal(ThreadPriority.BelowNormal, properties.priority());
-        Assert.True(properties.isDaemon());
-        Assert.Equal("properties", properties.name());
-        Assert.Equal(thread.ManagedThreadId, properties.id());
-        Assert.Throws<NotSupportedException>(() => properties.isInterrupted());
+        Assert.False(properties.IsAlive());
+        Assert.Equal(ThreadPriority.BelowNormal, properties.Priority());
+        Assert.True(properties.IsDaemon());
+        Assert.Equal("properties", properties.Name());
+        Assert.Equal(thread.ManagedThreadId, properties.Id());
+        Assert.Throws<NotSupportedException>(() => properties.IsInterrupted());
     }
 }

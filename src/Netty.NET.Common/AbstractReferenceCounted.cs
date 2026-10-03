@@ -25,7 +25,7 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
 {
     private int _refCnt = 1;
 
-    public int refCnt()
+    public int RefCnt()
     {
         return ReferenceCountUpdater.GetCount(ref _refCnt);
     }
@@ -33,39 +33,39 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
     /**
      * An unsafe operation intended for use by a subclass that sets the reference count of the object directly
      */
-    protected internal void setRefCnt(int refCnt)
+    protected internal void SetRefCnt(int refCnt)
     {
         ReferenceCountUpdater.SetCount(ref _refCnt, refCnt);
     }
 
-    public IReferenceCounted retain()
+    public IReferenceCounted Retain()
     {
-        return retain(1);
+        return Retain(1);
     }
 
-    public virtual IReferenceCounted retain(int increment)
+    public virtual IReferenceCounted Retain(int increment)
     {
         ReferenceCountUpdater.Retain(ref _refCnt, increment);
         return this;
     }
 
-    public IReferenceCounted touch()
+    public IReferenceCounted Touch()
     {
-        return touch(null);
+        return Touch(null);
     }
 
-    public abstract IReferenceCounted touch(object hint);
+    public abstract IReferenceCounted Touch(object hint);
 
-    public bool release()
+    public bool Release()
     {
-        return release(1);
+        return Release(1);
     }
 
-    public bool release(int decrement)
+    public bool Release(int decrement)
     {
         if (ReferenceCountUpdater.Release(ref _refCnt, decrement))
         {
-            deallocate();
+            Deallocate();
             return true;
         }
         return false;
@@ -74,5 +74,5 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
     /**
      * Called once {@link #refCnt()} is equals 0.
      */
-    protected abstract void deallocate();
+    protected abstract void Deallocate();
 }

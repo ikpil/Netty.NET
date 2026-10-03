@@ -116,7 +116,7 @@ public static class NetUtil
     /**
      * {@code true} if IPv4 should be used even if the system supports both IPv4 and IPv6.
      */
-    private static readonly bool IPV4_PREFERRED = SystemPropertyUtil.getBoolean("java.net.preferIPv4Stack", false);
+    private static readonly bool IPV4_PREFERRED = SystemPropertyUtil.GetBoolean("java.net.preferIPv4Stack", false);
 
     /**
      * {@code true} if an IPv6 address should be preferred when a host has both an IPv4 address and an IPv6 address.
@@ -126,11 +126,11 @@ public static class NetUtil
     /**
      * The logger being used by this class
      */
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(NetUtil));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(NetUtil));
 
     static NetUtil()
     {
-        string prefer = SystemPropertyUtil.get("java.net.preferIPv6Addresses", "false");
+        string prefer = SystemPropertyUtil.Get("java.net.preferIPv6Addresses", "false");
         if (string.Equals("true", prefer.Trim(), StringComparison.OrdinalIgnoreCase))
         {
             IPV6_ADDRESSES_PREFERRED = true;
@@ -141,27 +141,27 @@ public static class NetUtil
             IPV6_ADDRESSES_PREFERRED = false;
         }
 
-        logger.debug("-Djava.net.preferIPv4Stack: {}", IPV4_PREFERRED);
-        logger.debug("-Djava.net.preferIPv6Addresses: {}", prefer);
+        logger.Debug("-Djava.net.preferIPv4Stack: {}", IPV4_PREFERRED);
+        logger.Debug("-Djava.net.preferIPv6Addresses: {}", prefer);
 
         NETWORK_INTERFACES = new System.Collections.ObjectModel.ReadOnlyCollection<NetworkInterface>(
-            NetUtilInitializations.networkInterfaces().ToArray());
+            NetUtilInitializations.NetworkInterfaces().ToArray());
 
         // Create IPv4 loopback address.
-        LOCALHOST4 = NetUtilInitializations.createLocalhost4();
+        LOCALHOST4 = NetUtilInitializations.CreateLocalhost4();
 
         // Create IPv6 loopback address.
-        LOCALHOST6 = NetUtilInitializations.createLocalhost6();
+        LOCALHOST6 = NetUtilInitializations.CreateLocalhost6();
 
         NetworkIfaceAndInetAddress loopback =
-            NetUtilInitializations.determineLoopback(NETWORK_INTERFACES, LOCALHOST4, LOCALHOST6);
+            NetUtilInitializations.DetermineLoopback(NETWORK_INTERFACES, LOCALHOST4, LOCALHOST6);
         LOOPBACK_IF = loopback.Iface;
         LOCALHOST = loopback.Address;
 
         // As a SecurityManager may prevent reading the somaxconn file we wrap this in a privileged block.
         //
         // See https://github.com/netty/netty/issues/3680
-        SOMAXCONN = SoMaxConnAction.run();
+        SOMAXCONN = SoMaxConnAction.Run();
     }
 
     /**
@@ -170,7 +170,7 @@ public static class NetUtil
      * @param sysctlKey The key which the return value corresponds to.
      * @return The <a href ="https://www.freebsd.org/cgi/man.cgi?sysctl(8)">sysctl</a> value for {@code sysctlKey}.
      */
-    public static int sysctlGetInt(string sysctlKey)
+    public static int SysctlGetInt(string sysctlKey)
     {
         var processInfo = new ProcessStartInfo
         {
@@ -223,7 +223,7 @@ public static class NetUtil
      * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Java SE
      *      networking properties</a>
      */
-    public static bool isIpV4StackPreferred()
+    public static bool IsIpV4StackPreferred()
     {
         return IPV4_PREFERRED;
     }
@@ -235,7 +235,7 @@ public static class NetUtil
      * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Java SE
      *      networking properties</a>
      */
-    public static bool isIpV6AddressesPreferred()
+    public static bool IsIpV6AddressesPreferred()
     {
         return IPV6_ADDRESSES_PREFERRED;
     }
@@ -243,14 +243,14 @@ public static class NetUtil
     /**
      * Creates an byte[] based on an ipAddressString. No error handling is performed here.
      */
-    public static byte[] createByteArrayFromIpAddressString(string ipAddressString)
+    public static byte[] CreateByteArrayFromIpAddressString(string ipAddressString)
     {
-        if (isValidIpV4Address(ipAddressString))
+        if (IsValidIpV4Address(ipAddressString))
         {
-            return validIpV4ToBytes(ipAddressString);
+            return ValidIpV4ToBytes(ipAddressString);
         }
 
-        if (isValidIpV6Address(ipAddressString))
+        if (IsValidIpV6Address(ipAddressString))
         {
             if (ipAddressString[0] == '[')
             {
@@ -263,7 +263,7 @@ public static class NetUtil
                 ipAddressString = ipAddressString.Substring(0, percentPos);
             }
 
-            return getIPv6ByName(ipAddressString, true);
+            return GetIPv6ByName(ipAddressString, true);
         }
 
         return null;
@@ -273,17 +273,17 @@ public static class NetUtil
      * Creates an {@link InetAddress} based on an ipAddressString or might return null if it can't be parsed.
      * No error handling is performed here.
      */
-    public static IPAddress createInetAddressFromIpAddressString(string ipAddressString)
+    public static IPAddress CreateInetAddressFromIpAddressString(string ipAddressString)
     {
-        if (isValidIpV4Address(ipAddressString))
+        if (IsValidIpV4Address(ipAddressString))
         {
-            byte[] bytes = validIpV4ToBytes(ipAddressString);
+            byte[] bytes = ValidIpV4ToBytes(ipAddressString);
             // Should never happen!
             // CLR IPAddress(byte[]) has no UnknownHostException for a validated four-byte array.
             return new IPAddress(bytes);
         }
 
-        if (isValidIpV6Address(ipAddressString))
+        if (IsValidIpV6Address(ipAddressString))
         {
             if (ipAddressString[0] == '[')
             {
@@ -295,7 +295,7 @@ public static class NetUtil
             {
                 int scopeId = int.Parse(ipAddressString[(percentPos + 1)..]);
                 ipAddressString = ipAddressString[0..percentPos];
-                byte[] bytes = getIPv6ByName(ipAddressString, true);
+                byte[] bytes = GetIPv6ByName(ipAddressString, true);
                 if (bytes == null)
                 {
                     return null;
@@ -307,7 +307,7 @@ public static class NetUtil
             }
 
             {
-                byte[] bytes = getIPv6ByName(ipAddressString, true);
+                byte[] bytes = GetIPv6ByName(ipAddressString, true);
                 if (bytes == null)
                 {
                     return null;
@@ -321,47 +321,47 @@ public static class NetUtil
         return null;
     }
 
-    private static int decimalDigit(string str, int pos)
+    private static int DecimalDigit(string str, int pos)
     {
         return str[pos] - '0';
     }
 
-    private static byte ipv4WordToByte(string ip, int from, int toExclusive)
+    private static byte Ipv4WordToByte(string ip, int from, int toExclusive)
     {
-        int ret = decimalDigit(ip, from);
+        int ret = DecimalDigit(ip, from);
         from++;
         if (from == toExclusive)
         {
             return (byte)ret;
         }
 
-        ret = ret * 10 + decimalDigit(ip, from);
+        ret = ret * 10 + DecimalDigit(ip, from);
         from++;
         if (from == toExclusive)
         {
             return (byte)ret;
         }
 
-        return (byte)(ret * 10 + decimalDigit(ip, from));
+        return (byte)(ret * 10 + DecimalDigit(ip, from));
     }
 
     // visible for tests
-    public static byte[] validIpV4ToBytes(string ip)
+    public static byte[] ValidIpV4ToBytes(string ip)
     {
         int i;
         return new byte[]
         {
-            ipv4WordToByte(ip, 0, i = ip.IndexOf('.', 1)),
-            ipv4WordToByte(ip, i + 1, i = ip.IndexOf('.', i + 2)),
-            ipv4WordToByte(ip, i + 1, i = ip.IndexOf('.', i + 2)),
-            ipv4WordToByte(ip, i + 1, ip.Length)
+            Ipv4WordToByte(ip, 0, i = ip.IndexOf('.', 1)),
+            Ipv4WordToByte(ip, i + 1, i = ip.IndexOf('.', i + 2)),
+            Ipv4WordToByte(ip, i + 1, i = ip.IndexOf('.', i + 2)),
+            Ipv4WordToByte(ip, i + 1, ip.Length)
         };
     }
 
     /**
      * Convert {@link Inet4Address} into {@code int}
      */
-    public static int ipv4AddressToInt(IPAddress ipAddress)
+    public static int Ipv4AddressToInt(IPAddress ipAddress)
     {
         if (ipAddress.AddressFamily != AddressFamily.InterNetwork)
             throw new ArgumentException("An IPv4 address is required.", nameof(ipAddress));
@@ -376,7 +376,7 @@ public static class NetUtil
     /**
      * Converts a 32-bit integer into an IPv4 address.
      */
-    public static string intToIpAddress(int i)
+    public static string IntToIpAddress(int i)
     {
         StringBuilder buf = new StringBuilder(15);
         buf.Append(i >> 24 & 0xff);
@@ -395,9 +395,9 @@ public static class NetUtil
      * @throws IllegalArgumentException
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
-    public static string bytesToIpAddress(byte[] bytes)
+    public static string BytesToIpAddress(byte[] bytes)
     {
-        return bytesToIpAddress(bytes, 0, bytes.Length);
+        return BytesToIpAddress(bytes, 0, bytes.Length);
     }
 
     /**
@@ -406,7 +406,7 @@ public static class NetUtil
      * @throws IllegalArgumentException
      *         if {@code length} is not {@code 4} nor {@code 16}
      */
-    public static string bytesToIpAddress(byte[] bytes, int offset, int length)
+    public static string BytesToIpAddress(byte[] bytes, int offset, int length)
     {
         switch (length)
         {
@@ -422,15 +422,15 @@ public static class NetUtil
                     .Append(bytes[offset + 3] & 0xff).ToString();
             }
             case 16:
-                return toAddressString(bytes, offset, false);
+                return ToAddressString(bytes, offset, false);
             default:
                 throw new ArgumentException("length: " + length + " (expected: 4 or 16)");
         }
     }
 
-    public static bool isValidIpV6Address(ICharSequence ip) => isValidIpV6Address(ip.ToString());
+    public static bool IsValidIpV6Address(ICharSequence ip) => IsValidIpV6Address(ip.ToString());
 
-    public static bool isValidIpV6Address(string ip)
+    public static bool IsValidIpV6Address(string ip)
     {
         int end = ip.Length;
         if (end < 2)
@@ -482,7 +482,7 @@ public static class NetUtil
         for (int i = start; i < end; i++)
         {
             c = ip[i];
-            if (isValidHexChar(c))
+            if (IsValidHexChar(c))
             {
                 if (wordLen < 4)
                 {
@@ -534,11 +534,11 @@ public static class NetUtil
                     // (see https://tools.ietf.org/html/rfc4291#section-2.5.5).
                     int ipv4Start = i - wordLen;
                     int j = ipv4Start - 2; // index of character before the previous ':'.
-                    if (isValidIPv4MappedChar(ip[j]))
+                    if (IsValidIPv4MappedChar(ip[j]))
                     {
-                        if (!isValidIPv4MappedChar(ip[j - 1]) ||
-                            !isValidIPv4MappedChar(ip[j - 2]) ||
-                            !isValidIPv4MappedChar(ip[j - 3]))
+                        if (!IsValidIPv4MappedChar(ip[j - 1]) ||
+                            !IsValidIPv4MappedChar(ip[j - 2]) ||
+                            !IsValidIPv4MappedChar(ip[j - 3]))
                         {
                             return false;
                         }
@@ -564,7 +564,7 @@ public static class NetUtil
                         ipv4End = end;
                     }
 
-                    return isValidIpV4Address(ip, ipv4Start, ipv4End);
+                    return IsValidIpV4Address(ip, ipv4Start, ipv4End);
                 case '%':
                     // strip the interface name/index after the percent sign
                     end = i;
@@ -586,7 +586,7 @@ public static class NetUtil
                wordLen > 0 && (colons < 8 || compressBegin <= start);
     }
 
-    private static bool isValidIpV4Word(string word, int from, int toExclusive)
+    private static bool IsValidIpV4Word(string word, int from, int toExclusive)
     {
         int len = toExclusive - from;
         char c0, c1, c2;
@@ -603,25 +603,25 @@ public static class NetUtil
                     c0 == '2' && c1 <= '5' && (c2 <= '5' || c1 < '5' && c2 <= '9'));
         }
 
-        return c0 <= '9' && (len == 1 || isValidNumericChar(word[from + 1]));
+        return c0 <= '9' && (len == 1 || IsValidNumericChar(word[from + 1]));
     }
 
-    private static bool isValidHexChar(char c)
+    private static bool IsValidHexChar(char c)
     {
         return c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f';
     }
 
-    private static bool isValidNumericChar(char c)
+    private static bool IsValidNumericChar(char c)
     {
         return c >= '0' && c <= '9';
     }
 
-    private static bool isValidIPv4MappedChar(char c)
+    private static bool IsValidIPv4MappedChar(char c)
     {
         return c == 'f' || c == 'F';
     }
 
-    private static bool isValidIPv4MappedSeparators(byte b0, byte b1, bool mustBeZero)
+    private static bool IsValidIPv4MappedSeparators(byte b0, byte b1, bool mustBeZero)
     {
         // We allow IPv4 Mapped (https://tools.ietf.org/html/rfc4291#section-2.5.5.1)
         // and IPv4 compatible (https://tools.ietf.org/html/rfc4291#section-2.5.5.1).
@@ -630,12 +630,12 @@ public static class NetUtil
         return b0 == b1 && (b0 == 0 || !mustBeZero && b1 == 0xff);
     }
 
-    private static bool isValidIPv4Mapped(byte[] bytes, int currentIndex, int compressBegin, int compressLength)
+    private static bool IsValidIPv4Mapped(byte[] bytes, int currentIndex, int compressBegin, int compressLength)
     {
         bool mustBeZero = compressBegin + compressLength >= 14;
         return currentIndex <= 12 && currentIndex >= 2 && (!mustBeZero || compressBegin < 12) &&
-               isValidIPv4MappedSeparators(bytes[currentIndex - 1], bytes[currentIndex - 2], mustBeZero) &&
-               PlatformDependent.isZero(bytes, 0, currentIndex - 3);
+               IsValidIPv4MappedSeparators(bytes[currentIndex - 1], bytes[currentIndex - 2], mustBeZero) &&
+               PlatformDependent.IsZero(bytes, 0, currentIndex - 3);
     }
 
     /**
@@ -644,7 +644,7 @@ public static class NetUtil
      * @return true, if the string represents an IPV4 address in dotted
      *         notation, false otherwise
      */
-    public static bool isValidIpV4Address(ICharSequence ip) => isValidIpV4Address(ip.ToString());
+    public static bool IsValidIpV4Address(ICharSequence ip) => IsValidIpV4Address(ip.ToString());
 
     /**
      * Takes a {@link String} and parses it to see if it is a valid IPV4 address.
@@ -652,13 +652,13 @@ public static class NetUtil
      * @return true, if the string represents an IPV4 address in dotted
      *         notation, false otherwise
      */
-    public static bool isValidIpV4Address(string ip)
+    public static bool IsValidIpV4Address(string ip)
     {
-        return isValidIpV4Address(ip, 0, ip.Length);
+        return IsValidIpV4Address(ip, 0, ip.Length);
     }
 
     //@SuppressWarnings("DuplicateBooleanBranch")
-    private static bool isValidIpV4Address(string ip, int from, int toExcluded)
+    private static bool IsValidIpV4Address(string ip, int from, int toExcluded)
     {
         int FindDot(int start)
         {
@@ -674,10 +674,10 @@ public static class NetUtil
         int len = toExcluded - from;
         int i;
         return len <= 15 && len >= 7 &&
-               (i = FindDot(from + 1)) > 0 && isValidIpV4Word(ip, from, i) &&
-               (i = FindDot(from = i + 2)) > 0 && isValidIpV4Word(ip, from - 1, i) &&
-               (i = FindDot(from = i + 2)) > 0 && isValidIpV4Word(ip, from - 1, i) &&
-               isValidIpV4Word(ip, i + 1, toExcluded);
+               (i = FindDot(from + 1)) > 0 && IsValidIpV4Word(ip, from, i) &&
+               (i = FindDot(from = i + 2)) > 0 && IsValidIpV4Word(ip, from - 1, i) &&
+               (i = FindDot(from = i + 2)) > 0 && IsValidIpV4Word(ip, from - 1, i) &&
+               IsValidIpV4Word(ip, i + 1, toExcluded);
     }
 
     /**
@@ -687,11 +687,11 @@ public static class NetUtil
      * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
-    public static IPAddress getByName(ICharSequence ip) => getByName(ip.ToString());
+    public static IPAddress GetByName(ICharSequence ip) => GetByName(ip.ToString());
 
-    public static IPAddress getByName(string ip)
+    public static IPAddress GetByName(string ip)
     {
-        return getByName(ip, true);
+        return GetByName(ip, true);
     }
 
     /**
@@ -708,11 +708,11 @@ public static class NetUtil
      * </ul>
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
-    public static IPAddress getByName(ICharSequence ip, bool ipv4Mapped) => getByName(ip.ToString(), ipv4Mapped);
+    public static IPAddress GetByName(ICharSequence ip, bool ipv4Mapped) => GetByName(ip.ToString(), ipv4Mapped);
 
-    public static IPAddress getByName(string ip, bool ipv4Mapped)
+    public static IPAddress GetByName(string ip, bool ipv4Mapped)
     {
-        byte[] bytes = getIPv6ByName(ip, ipv4Mapped);
+        byte[] bytes = GetIPv6ByName(ip, ipv4Mapped);
         if (bytes == null)
         {
             return null;
@@ -738,9 +738,9 @@ public static class NetUtil
      * @return byte array representation of the {@code ip} or {@code null} if not a valid IP address.
      */
     // visible for test
-    public static byte[] getIPv6ByName(ICharSequence ip, bool ipv4Mapped) => getIPv6ByName(ip.ToString(), ipv4Mapped);
+    public static byte[] GetIPv6ByName(ICharSequence ip, bool ipv4Mapped) => GetIPv6ByName(ip.ToString(), ipv4Mapped);
 
-    public static byte[] getIPv6ByName(string ip, bool ipv4Mapped)
+    public static byte[] GetIPv6ByName(string ip, bool ipv4Mapped)
     {
         byte[] bytes = new byte[IPV6_BYTE_COUNT];
         int ipLength = ip.Length;
@@ -808,14 +808,14 @@ public static class NetUtil
                         || currentIndex >= bytes.Length
                         || ipv4Separators == 1 &&
                         // We also parse pure IPv4 addresses as IPv4-Mapped for ease of use.
-                        ((!ipv4Mapped || currentIndex != 0 && !isValidIPv4Mapped(bytes, currentIndex,
+                        ((!ipv4Mapped || currentIndex != 0 && !IsValidIPv4Mapped(bytes, currentIndex,
                              compressBegin, compressLength)) ||
-                         (tmp == 3 && (!isValidNumericChar(ip[i - 1]) ||
-                                       !isValidNumericChar(ip[i - 2]) ||
-                                       !isValidNumericChar(ip[i - 3])) ||
-                          tmp == 2 && (!isValidNumericChar(ip[i - 1]) ||
-                                       !isValidNumericChar(ip[i - 2])) ||
-                          tmp == 1 && !isValidNumericChar(ip[i - 1]))))
+                         (tmp == 3 && (!IsValidNumericChar(ip[i - 1]) ||
+                                       !IsValidNumericChar(ip[i - 2]) ||
+                                       !IsValidNumericChar(ip[i - 3])) ||
+                          tmp == 2 && (!IsValidNumericChar(ip[i - 1]) ||
+                                       !IsValidNumericChar(ip[i - 2])) ||
+                          tmp == 1 && !IsValidNumericChar(ip[i - 1]))))
                     {
                         return null;
                     }
@@ -836,7 +836,7 @@ public static class NetUtil
                     begin = -1;
                     break;
                 default:
-                    if (!isValidHexChar(c) || (ipv4Separators > 0 && !isValidNumericChar(c)))
+                    if (!IsValidHexChar(c) || (ipv4Separators > 0 && !IsValidNumericChar(c)))
                     {
                         return null;
                     }
@@ -854,7 +854,7 @@ public static class NetUtil
                     // at most 4 consecutive bytes we can use bit shifting to accomplish this.
                     // The most significant byte will be encountered first, and reside in the right most
                     // position of the following integer
-                    value += StringUtil.decodeHexNibble(c) << ((i - begin) << 2);
+                    value += StringUtil.DecodeHexNibble(c) << ((i - begin) << 2);
                     break;
             }
         }
@@ -925,9 +925,9 @@ public static class NetUtil
         {
             int toBeCopiedLength = currentIndex - compressBegin;
             int targetIndex = bytes.Length - toBeCopiedLength;
-            Arrays.arraycopy(bytes, compressBegin, bytes, targetIndex, toBeCopiedLength);
+            Arrays.Arraycopy(bytes, compressBegin, bytes, targetIndex, toBeCopiedLength);
             // targetIndex is also the `toIndex` to fill 0
-            Arrays.fill(bytes, compressBegin, targetIndex, (byte)0);
+            Arrays.Fill(bytes, compressBegin, targetIndex, (byte)0);
         }
 
         if (ipv4Separators > 0)
@@ -948,29 +948,29 @@ public static class NetUtil
      * @param addr {@link InetSocketAddress} to be converted to an address string
      * @return {@code String} containing the text-formatted IP address
      */
-    public static string toSocketAddressString(IPEndPoint addr)
+    public static string ToSocketAddressString(IPEndPoint addr)
     {
         string port = addr.Port.ToString();
         StringBuilder sb;
 
         // CLR adaptation: IPEndPoint always contains a resolved address; formatting needs no DNS lookup.
         IPAddress address = addr.Address;
-        string hostString = toAddressString(address);
-        sb = newSocketAddressStringBuilder(hostString, port, address.AddressFamily == AddressFamily.InterNetwork);
+        string hostString = ToAddressString(address);
+        sb = NewSocketAddressStringBuilder(hostString, port, address.AddressFamily == AddressFamily.InterNetwork);
         return sb.Append(':').Append(port).ToString();
     }
 
     /**
      * Returns the {@link String} representation of a host port combo.
      */
-    public static string toSocketAddressString(string host, int port)
+    public static string ToSocketAddressString(string host, int port)
     {
         string portStr = port.ToString();
-        return newSocketAddressStringBuilder(
-            host, portStr, !isValidIpV6Address(host)).Append(':').Append(portStr).ToString();
+        return NewSocketAddressStringBuilder(
+            host, portStr, !IsValidIpV6Address(host)).Append(':').Append(portStr).ToString();
     }
 
-    private static StringBuilder newSocketAddressStringBuilder(string host, string port, bool ipv4)
+    private static StringBuilder NewSocketAddressStringBuilder(string host, string port, bool ipv4)
     {
         int hostLen = host.Length;
         if (ipv4)
@@ -1001,9 +1001,9 @@ public static class NetUtil
      * @param ip {@link InetAddress} to be converted to an address string
      * @return {@code String} containing the text-formatted IP address
      */
-    public static string toAddressString(IPAddress ip)
+    public static string ToAddressString(IPAddress ip)
     {
-        return toAddressString(ip, false);
+        return ToAddressString(ip, false);
     }
 
     /**
@@ -1030,7 +1030,7 @@ public static class NetUtil
      * </ul>
      * @return {@code String} containing the text-formatted IP address
      */
-    public static string toAddressString(IPAddress ip, bool ipv4Mapped)
+    public static string ToAddressString(IPAddress ip, bool ipv4Mapped)
     {
         if (ip.AddressFamily == AddressFamily.InterNetwork)
             return ip.ToString();
@@ -1040,10 +1040,10 @@ public static class NetUtil
             throw new ArgumentException("Unhandled type: " + ip);
         }
 
-        return toAddressString(ip.GetAddressBytes(), 0, ipv4Mapped);
+        return ToAddressString(ip.GetAddressBytes(), 0, ipv4Mapped);
     }
 
-    private static string toAddressString(byte[] bytes, int offset, bool ipv4Mapped)
+    private static string ToAddressString(byte[] bytes, int offset, bool ipv4Mapped)
     {
         int[] words = new int[IPV6_WORD_COUNT];
         for (int i = 0; i < words.Length; ++i)
@@ -1116,7 +1116,7 @@ public static class NetUtil
             // General case that can handle compressing (and not compressing)
             // Loop unroll the first index (so we don't constantly check i==0 cases in loop)
             bool isIpv4Mapped;
-            if (inRangeEndExclusive(0, shortestStart, shortestEnd))
+            if (InRangeEndExclusive(0, shortestStart, shortestEnd))
             {
                 b.Append("::");
                 isIpv4Mapped = ipv4Mapped && (shortestEnd == 5 && words[5] == 0xffff);
@@ -1129,9 +1129,9 @@ public static class NetUtil
 
             for (int i = 1; i < words.Length; ++i)
             {
-                if (!inRangeEndExclusive(i, shortestStart, shortestEnd))
+                if (!InRangeEndExclusive(i, shortestStart, shortestEnd))
                 {
-                    if (!inRangeEndExclusive(i - 1, shortestStart, shortestEnd))
+                    if (!InRangeEndExclusive(i - 1, shortestStart, shortestEnd))
                     {
                         // If the last index was not part of the shortened sequence
                         if (!isIpv4Mapped || i == 6)
@@ -1155,7 +1155,7 @@ public static class NetUtil
                         b.Append(words[i].ToString("x"));
                     }
                 }
-                else if (!inRangeEndExclusive(i - 1, shortestStart, shortestEnd))
+                else if (!InRangeEndExclusive(i - 1, shortestStart, shortestEnd))
                 {
                     // If we are in the shortened sequence and the last index was not
                     b.Append("::");
@@ -1171,7 +1171,7 @@ public static class NetUtil
      * @param addr The address
      * @return the host string
      */
-    public static string getHostname(IPEndPoint addr)
+    public static string GetHostname(IPEndPoint addr)
     {
         return addr.Address.ToString();
     }
@@ -1187,7 +1187,7 @@ public static class NetUtil
      * <li>{@code false} otherwise</li>
      * </ul>
      */
-    private static bool inRangeEndExclusive(int value, int start, int end)
+    private static bool InRangeEndExclusive(int value, int start, int end)
     {
         return value >= start && value < end;
     }
@@ -1195,9 +1195,9 @@ public static class NetUtil
 
 internal static class SoMaxConnAction
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(SoMaxConnAction));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SoMaxConnAction));
 
-    public static int run()
+    public static int Run()
     {
         // Determine the default somaxconn (server socket backlog) value of the platform.
         // The known defaults:
@@ -1205,11 +1205,11 @@ internal static class SoMaxConnAction
         // - Mac OS X: 128
         // - Linux kernel > 5.4 : 4096
         int somaxconn;
-        if (PlatformDependent.isWindows())
+        if (PlatformDependent.IsWindows())
         {
             somaxconn = 200;
         }
-        else if (PlatformDependent.isOsx())
+        else if (PlatformDependent.IsOsx())
         {
             somaxconn = 128;
         }
@@ -1231,21 +1231,21 @@ internal static class SoMaxConnAction
                 using var reader = new StreamReader(new BoundedStream(fs));
                 var line = reader.ReadLine();
                 somaxconn = int.Parse(line);
-                if (logger.isDebugEnabled())
+                if (logger.IsDebugEnabled())
                 {
-                    logger.debug("{}: {}", fs, somaxconn);
+                    logger.Debug("{}: {}", fs, somaxconn);
                 }
             }
             else
             {
                 // Try to get from sysctl
                 int tmp = 0;
-                if (SystemPropertyUtil.getBoolean("io.netty.net.somaxconn.trySysctl", false))
+                if (SystemPropertyUtil.GetBoolean("io.netty.net.somaxconn.trySysctl", false))
                 {
-                    tmp = NetUtil.sysctlGetInt("kern.ipc.somaxconn");
+                    tmp = NetUtil.SysctlGetInt("kern.ipc.somaxconn");
                     if (tmp == 0)
                     {
-                        tmp = NetUtil.sysctlGetInt("kern.ipc.soacceptqueue");
+                        tmp = NetUtil.SysctlGetInt("kern.ipc.soacceptqueue");
                         if (tmp != 0)
                         {
                             somaxconn = tmp;
@@ -1259,15 +1259,15 @@ internal static class SoMaxConnAction
 
                 if (tmp == 0)
                 {
-                    logger.debug($"Failed to get SOMAXCONN from sysctl and file {file}. Default: {somaxconn}");
+                    logger.Debug($"Failed to get SOMAXCONN from sysctl and file {file}. Default: {somaxconn}");
                 }
             }
         }
         catch (Exception e)
         {
-            if (logger.isDebugEnabled())
+            if (logger.IsDebugEnabled())
             {
-                logger.debug($"Failed to get SOMAXCONN from sysctl and file {file}. Default: {somaxconn}", e);
+                logger.Debug($"Failed to get SOMAXCONN from sysctl and file {file}. Default: {somaxconn}", e);
             }
         }
 

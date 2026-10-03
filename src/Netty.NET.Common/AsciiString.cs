@@ -102,7 +102,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public AsciiString(byte[] value, int start, int length, bool copy)
     {
         ArgumentNullException.ThrowIfNull(value);
-        if (isOutOfBounds(start, length, value.Length))
+        if (IsOutOfBounds(start, length, value.Length))
         {
             throw new ArgumentOutOfRangeException(nameof(start));
         }
@@ -157,7 +157,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         ReadOnlyMemory<byte> slice = value.Slice(start, length);
         if (!copy && MemoryMarshal.TryGetArray(slice, out ArraySegment<byte> segment))
         {
-            _value = segment.Array ?? Array.Empty<byte>();
+            _value = segment.Array ?? global::System.Array.Empty<byte>();
             _offset = segment.Offset;
         }
         else
@@ -176,7 +176,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         _value = new byte[value.Length];
         for (int i = 0; i < value.Length; i++)
         {
-            _value[i] = c2b(value[i]);
+            _value[i] = C2b(value[i]);
         }
         _offset = 0;
         _length = value.Length;
@@ -234,7 +234,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public AsciiString(char[] value, int start, int length)
     {
-        if (isOutOfBounds(start, length, value.Length))
+        if (IsOutOfBounds(start, length, value.Length))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
                                                   + ") <= " + "value.length(" + value.Length + ')');
@@ -243,7 +243,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         _value = GC.AllocateUninitializedArray<byte>(length);
         for (int i = 0, j = start; i < length; i++, j++)
         {
-            _value[i] = c2b(value[j]);
+            _value[i] = C2b(value[j]);
         }
 
         _offset = 0;
@@ -271,7 +271,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * Create a copy of {@code value} into this instance assuming ASCII encoding.
      */
     public AsciiString(ICharSequence value)
-        : this(value, 0, value.length())
+        : this(value, 0, value.Length())
     {
     }
 
@@ -281,16 +281,16 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public AsciiString(ICharSequence value, int start, int length)
     {
-        if (isOutOfBounds(start, length, value.length()))
+        if (IsOutOfBounds(start, length, value.Length()))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= start + length(" + length
-                                                  + ") <= " + "value.length(" + value.length() + ')');
+                                                  + ") <= " + "value.length(" + value.Length() + ')');
         }
 
         _value = GC.AllocateUninitializedArray<byte>(length);
         for (int i = 0, j = start; i < length; i++, j++)
         {
-            _value[i] = c2b(value.charAt(j));
+            _value[i] = C2b(value.CharAt(j));
         }
 
         _offset = 0;
@@ -301,7 +301,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * Create a copy of {@code value} into this instance using the encoding type of {@code charset}.
      */
     public AsciiString(ICharSequence value, Encoding encoding)
-        : this(value, encoding, 0, value.length())
+        : this(value, encoding, 0, value.Length())
     {
     }
 
@@ -314,7 +314,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
     }
 
-    public char this[int index] => b2c(byteAt(index));
+    public char this[int index] => B2c(ByteAt(index));
 
     /**
      * Iterates over the readable bytes of this buffer with the specified {@code processor} in ascending order.
@@ -322,9 +322,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code -1} if the processor iterated to or beyond the end of the readable bytes.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
-    public int forEachByte(IByteProcessor visitor)
+    public int ForEachByte(IByteProcessor visitor)
     {
-        return forEachByte0(0, length(), visitor);
+        return ForEachByte0(0, Length(), visitor);
     }
 
     /**
@@ -334,23 +334,23 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code -1} if the processor iterated to or beyond the end of the specified area.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
-    public int forEachByte(int index, int length, IByteProcessor visitor)
+    public int ForEachByte(int index, int length, IByteProcessor visitor)
     {
-        if (isOutOfBounds(index, length, this.length()))
+        if (IsOutOfBounds(index, length, this.Length()))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
-                                                  + ") <= " + "length(" + this.length() + ')');
+                                                  + ") <= " + "length(" + this.Length() + ')');
         }
 
-        return forEachByte0(index, length, visitor);
+        return ForEachByte0(index, length, visitor);
     }
 
-    private int forEachByte0(int index, int length, IByteProcessor visitor)
+    private int ForEachByte0(int index, int length, IByteProcessor visitor)
     {
         int len = _offset + index + length;
         for (int i = _offset + index; i < len; ++i)
         {
-            if (!visitor.process(_value[i]))
+            if (!visitor.Process(_value[i]))
             {
                 return i - _offset;
             }
@@ -365,9 +365,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code -1} if the processor iterated to or beyond the beginning of the readable bytes.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
-    public int forEachByteDesc(IByteProcessor visitor)
+    public int ForEachByteDesc(IByteProcessor visitor)
     {
-        return forEachByteDesc0(0, length(), visitor);
+        return ForEachByteDesc0(0, Length(), visitor);
     }
 
     /**
@@ -377,23 +377,23 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code -1} if the processor iterated to or beyond the beginning of the specified area.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
-    public int forEachByteDesc(int index, int length, IByteProcessor visitor)
+    public int ForEachByteDesc(int index, int length, IByteProcessor visitor)
     {
-        if (isOutOfBounds(index, length, this.length()))
+        if (IsOutOfBounds(index, length, this.Length()))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= index(" + index + ") <= start + length(" + length
-                                                  + ") <= " + "length(" + this.length() + ')');
+                                                  + ") <= " + "length(" + this.Length() + ')');
         }
 
-        return forEachByteDesc0(index, length, visitor);
+        return ForEachByteDesc0(index, length, visitor);
     }
 
-    private int forEachByteDesc0(int index, int length, IByteProcessor visitor)
+    private int ForEachByteDesc0(int index, int length, IByteProcessor visitor)
     {
         int end = _offset + index;
         for (int i = _offset + index + length - 1; i >= end; --i)
         {
-            if (!visitor.process(_value[i]))
+            if (!visitor.Process(_value[i]))
             {
                 return i - _offset;
             }
@@ -402,7 +402,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return -1;
     }
 
-    public byte byteAt(int index)
+    public byte ByteAt(int index)
     {
         // We must do a range check here to enforce the access does not go outside our sub region of the array.
         // We rely on the array access itself to pick up the array out of bounds conditions
@@ -412,9 +412,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         // Try to use unsafe to avoid double checking the index bounds
-        if (PlatformDependent.hasUnsafe())
+        if (PlatformDependent.HasUnsafe())
         {
-            return PlatformDependent.getByte(_value, index + _offset);
+            return PlatformDependent.GetByte(_value, index + _offset);
         }
 
         return _value[index + _offset];
@@ -423,7 +423,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     /**
      * Determine if this instance has 0 length.
      */
-    public bool isEmpty()
+    public bool IsEmpty()
     {
         return _length == 0;
     }
@@ -431,7 +431,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     /**
      * The length in bytes of this instance.
      */
-    public int length()
+    public int Length()
     {
         return _length;
     }
@@ -440,7 +440,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * During normal use cases the {@link AsciiString} should be immutable, but if the underlying array is shared,
      * and changes then this needs to be called.
      */
-    public void arrayChanged()
+    public void ArrayChanged()
     {
         _string = null;
         _hash = 0;
@@ -453,7 +453,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @see #arrayOffset()
      * @see #isEntireArrayUsed()
      */
-    public byte[] array()
+    public byte[] Array()
     {
         return _value;
     }
@@ -463,7 +463,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @see #array()
      * @see #isEntireArrayUsed()
      */
-    public int arrayOffset()
+    public int ArrayOffset()
     {
         return _offset;
     }
@@ -472,7 +472,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * Determine if the storage represented by {@link #array()} is entirely used.
      * @see #array()
      */
-    public bool isEntireArrayUsed()
+    public bool IsEntireArrayUsed()
     {
         return _offset == 0 && _length == _value.Length;
     }
@@ -480,18 +480,18 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     /**
      * Converts this string to a byte array.
      */
-    public byte[] toByteArray()
+    public byte[] ToByteArray()
     {
-        return toByteArray(0, length());
+        return ToByteArray(0, Length());
     }
 
     /**
      * Converts a subset of this string to a byte array.
      * The subset is defined by the range [{@code start}, {@code end}).
      */
-    public byte[] toByteArray(int start, int end)
+    public byte[] ToByteArray(int start, int end)
     {
-        return Arrays.copyOfRange(_value, start + _offset, end + _offset);
+        return Arrays.CopyOfRange(_value, start + _offset, end + _offset);
     }
 
     /**
@@ -502,20 +502,20 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param dstIdx the starting offset in the destination byte array.
      * @param length the number of characters to copy.
      */
-    public void copy(int srcIdx, byte[] dst, int dstIdx, int length)
+    public void Copy(int srcIdx, byte[] dst, int dstIdx, int length)
     {
-        if (isOutOfBounds(srcIdx, length, this.length()))
+        if (IsOutOfBounds(srcIdx, length, this.Length()))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= srcIdx(" + srcIdx + ") <= srcIdx + length("
-                                                  + length + ") <= srcLen(" + this.length() + ')');
+                                                  + length + ") <= srcLen(" + this.Length() + ')');
         }
 
-        Arrays.arraycopy(_value, srcIdx + _offset, checkNotNull(dst, "dst"), dstIdx, length);
+        Arrays.Arraycopy(_value, srcIdx + _offset, CheckNotNull(dst, "dst"), dstIdx, length);
     }
 
-    public char charAt(int index)
+    public char CharAt(int index)
     {
-        return b2c(byteAt(index));
+        return B2c(ByteAt(index));
     }
 
     /**
@@ -539,12 +539,12 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         int result;
-        int length1 = length();
-        int length2 = str.length();
+        int length1 = Length();
+        int length2 = str.Length();
         int minLength = Math.Min(length1, length2);
-        for (int i = 0, j = arrayOffset(); i < minLength; i++, j++)
+        for (int i = 0, j = ArrayOffset(); i < minLength; i++, j++)
         {
-            result = b2c(_value[j]) - str.charAt(i);
+            result = B2c(_value[j]) - str.CharAt(i);
             if (result != 0)
             {
                 return result;
@@ -565,10 +565,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param string the string to concatenate
      * @return a new string which is the concatenation of this string and the specified string.
      */
-    public AsciiString concat(ICharSequence str)
+    public AsciiString Concat(ICharSequence str)
     {
-        int thisLen = length();
-        int thatLen = str.length();
+        int thisLen = Length();
+        int thatLen = str.Length();
         if (thatLen == 0)
         {
             return this;
@@ -577,28 +577,28 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         if (str is AsciiString)
         {
             AsciiString that = (AsciiString)str;
-            if (isEmpty())
+            if (IsEmpty())
             {
                 return that;
             }
 
             byte[] newValue = GC.AllocateUninitializedArray<byte>(thisLen + thatLen);
-            Arrays.arraycopy(_value, arrayOffset(), newValue, 0, thisLen);
-            Arrays.arraycopy(that._value, that.arrayOffset(), newValue, thisLen, thatLen);
+            Arrays.Arraycopy(_value, ArrayOffset(), newValue, 0, thisLen);
+            Arrays.Arraycopy(that._value, that.ArrayOffset(), newValue, thisLen, thatLen);
             return new AsciiString(newValue, false);
         }
 
-        if (isEmpty())
+        if (IsEmpty())
         {
             return new AsciiString(str);
         }
 
         {
             byte[] newValue = GC.AllocateUninitializedArray<byte>(thisLen + thatLen);
-            Arrays.arraycopy(_value, arrayOffset(), newValue, 0, thisLen);
+            Arrays.Arraycopy(_value, ArrayOffset(), newValue, 0, thisLen);
             for (int i = thisLen, j = 0; i < newValue.Length; i++, j++)
             {
-                newValue[i] = c2b(str.charAt(j));
+                newValue[i] = C2b(str.CharAt(j));
             }
 
             return new AsciiString(newValue, false);
@@ -612,10 +612,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code true} if the specified string is a suffix of this string, {@code false} otherwise.
      * @throws NullPointerException if {@code suffix} is {@code null}.
      */
-    public bool endsWith(ICharSequence suffix)
+    public bool EndsWith(ICharSequence suffix)
     {
-        int suffixLen = suffix.length();
-        return regionMatches(length() - suffixLen, suffix, 0, suffixLen);
+        int suffixLen = suffix.Length();
+        return RegionMatches(Length() - suffixLen, suffix, 0, suffixLen);
     }
 
     /**
@@ -625,14 +625,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param string the string to compare.
      * @return {@code true} if the specified string is equal to this string, {@code false} otherwise.
      */
-    public bool contentEqualsIgnoreCase(ICharSequence str)
+    public bool ContentEqualsIgnoreCase(ICharSequence str)
     {
         if (this == str)
         {
             return true;
         }
 
-        if (str == null || str.length() != length())
+        if (str == null || str.Length() != Length())
         {
             return false;
         }
@@ -646,7 +646,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 byte[] otherValue = other._value;
                 for (int i = 0; i < value.Length; ++i)
                 {
-                    if (!equalsIgnoreCase(value[i], otherValue[i]))
+                    if (!EqualsIgnoreCase(value[i], otherValue[i]))
                     {
                         return false;
                     }
@@ -655,14 +655,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 return true;
             }
 
-            return misalignedEqualsIgnoreCase(other);
+            return MisalignedEqualsIgnoreCase(other);
         }
 
         {
             byte[] value = _value;
-            for (int i = _offset, j = 0; j < str.length(); ++i, ++j)
+            for (int i = _offset, j = 0; j < str.Length(); ++i, ++j)
             {
-                if (!equalsIgnoreCase(b2c(value[i]), str.charAt(j)))
+                if (!EqualsIgnoreCase(B2c(value[i]), str.CharAt(j)))
                 {
                     return false;
                 }
@@ -673,20 +673,20 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     }
 
 
-    public int hashCode(bool ignoreCase)
+    public int HashCode(bool ignoreCase)
     {
         return ignoreCase
             ? CASE_INSENSITIVE_HASHER.GetHashCode(this)
             : GetHashCode();
     }
 
-    private bool misalignedEqualsIgnoreCase(AsciiString other)
+    private bool MisalignedEqualsIgnoreCase(AsciiString other)
     {
         byte[] value = _value;
         byte[] otherValue = other._value;
         for (int i = _offset, j = other._offset, end = _offset + _length; i < end; ++i, ++j)
         {
-            if (!equalsIgnoreCase(value[i], otherValue[j]))
+            if (!EqualsIgnoreCase(value[i], otherValue[j]))
             {
                 return false;
             }
@@ -700,9 +700,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *
      * @return a character array containing the characters of this string.
      */
-    public char[] toCharArray()
+    public char[] ToCharArray()
     {
-        return toCharArray(0, length());
+        return ToCharArray(0, Length());
     }
 
     /**
@@ -710,7 +710,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *
      * @return a character array containing the characters of this string.
      */
-    public char[] toCharArray(int start, int end)
+    public char[] ToCharArray(int start, int end)
     {
         int length = end - start;
         if (length == 0)
@@ -718,16 +718,16 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             return EmptyArrays.EMPTY_CHARS;
         }
 
-        if (isOutOfBounds(start, length, this.length()))
+        if (IsOutOfBounds(start, length, this.Length()))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= srcIdx + length("
-                                                  + length + ") <= srcLen(" + this.length() + ')');
+                                                  + length + ") <= srcLen(" + this.Length() + ')');
         }
 
         char[] buffer = new char[length];
-        for (int i = 0, j = start + arrayOffset(); i < length; i++, j++)
+        for (int i = 0, j = start + ArrayOffset(); i < length; i++, j++)
         {
-            buffer[i] = b2c(_value[j]);
+            buffer[i] = B2c(_value[j]);
         }
 
         return buffer;
@@ -741,20 +741,20 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param dstIdx the starting offset in the destination byte array.
      * @param length the number of characters to copy.
      */
-    public void copy(int srcIdx, char[] dst, int dstIdx, int length)
+    public void Copy(int srcIdx, char[] dst, int dstIdx, int length)
     {
-        ObjectUtil.checkNotNull(dst, "dst");
+        ObjectUtil.CheckNotNull(dst, "dst");
 
-        if (isOutOfBounds(srcIdx, length, this.length()))
+        if (IsOutOfBounds(srcIdx, length, this.Length()))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= srcIdx(" + srcIdx + ") <= srcIdx + length("
-                                                  + length + ") <= srcLen(" + this.length() + ')');
+                                                  + length + ") <= srcLen(" + this.Length() + ')');
         }
 
         int dstEnd = dstIdx + length;
-        for (int i = dstIdx, j = srcIdx + arrayOffset(); i < dstEnd; i++, j++)
+        for (int i = dstIdx, j = srcIdx + ArrayOffset(); i < dstEnd; i++, j++)
         {
-            dst[i] = b2c(_value[j]);
+            dst[i] = B2c(_value[j]);
         }
     }
 
@@ -764,9 +764,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return a new string containing the characters from start to the end of the string.
      * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
      */
-    public ICharSequence subSequence(int start)
+    public ICharSequence SubSequence(int start)
     {
-        return subSequence(start, length());
+        return SubSequence(start, Length());
     }
 
     /**
@@ -776,9 +776,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return a new string containing the characters from start to the end of the string.
      * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
      */
-    public ICharSequence subSequence(int start, int end)
+    public ICharSequence SubSequence(int start, int end)
     {
-        return subSequence(start, end, true);
+        return SubSequence(start, end, true);
     }
 
     /**
@@ -790,7 +790,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return a new string containing the characters from start to the end of the string.
      * @throws IndexOutOfBoundsException if {@code start < 0} or {@code start > length()}.
      */
-    public AsciiString subSequence(int start, int end, bool copy)
+    public AsciiString SubSequence(int start, int end, bool copy)
     {
         // Validate endpoints before subtraction, including in checked builds.
         if (start < 0 || start > _length)
@@ -802,7 +802,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             throw new ArgumentOutOfRangeException(nameof(end));
         }
 
-        if (start == 0 && end == length())
+        if (start == 0 && end == Length())
         {
             return this;
         }
@@ -824,7 +824,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return the index of the first occurrence of the specified char {@code ch} in this string,
      * -1 if found no occurrence.
      */
-    public int indexOf(char ch, int start)
+    public int IndexOf(char ch, int start)
     {
         start = Math.Max(0, start);
         if (ch > MAX_CHAR_VALUE || start >= _length)
@@ -848,16 +848,16 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise
      * @throws NullPointerException if {@code string} is {@code null}.
      */
-    public bool regionMatches(int thisStart, ICharSequence str, int start, int length)
+    public bool RegionMatches(int thisStart, ICharSequence str, int start, int length)
     {
-        ObjectUtil.checkNotNull(str, "string");
+        ObjectUtil.CheckNotNull(str, "string");
 
-        if (start < 0 || str.length() - start < length)
+        if (start < 0 || str.Length() - start < length)
         {
             return false;
         }
 
-        int thisLen = this.length();
+        int thisLen = this.Length();
         if (thisStart < 0 || thisLen - thisStart < length)
         {
             return false;
@@ -870,14 +870,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         if (str is AsciiString asciiString)
         {
-            return PlatformDependent.equals(_value, thisStart + _offset, asciiString._value,
+            return PlatformDependent.Equals(_value, thisStart + _offset, asciiString._value,
                 start + asciiString._offset, length);
         }
 
         int thatEnd = start + length;
-        for (int i = start, j = thisStart + arrayOffset(); i < thatEnd; i++, j++)
+        for (int i = start, j = thisStart + ArrayOffset(); i < thatEnd; i++, j++)
         {
-            if (b2c(_value[j]) != str.charAt(i))
+            if (B2c(_value[j]) != str.CharAt(i))
             {
                 return false;
             }
@@ -886,7 +886,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return true;
     }
 
-    public bool regionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int count)
+    public bool RegionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int count)
     {
         Contract.Requires(seq != null);
 
@@ -905,7 +905,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         int thisEnd = thisStart + count;
         while (thisStart < thisEnd)
         {
-            if (!equalsIgnoreCase(b2c(_value[thisStart++]), seq[start++]))
+            if (!EqualsIgnoreCase(B2c(_value[thisStart++]), seq[start++]))
             {
                 return false;
             }
@@ -926,27 +926,27 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
      * @throws NullPointerException if {@code string} is {@code null}.
      */
-    public bool regionMatches(bool ignoreCase, int thisStart, ICharSequence str, int start, int length)
+    public bool RegionMatches(bool ignoreCase, int thisStart, ICharSequence str, int start, int length)
     {
         if (!ignoreCase)
         {
-            return regionMatches(thisStart, str, start, length);
+            return RegionMatches(thisStart, str, start, length);
         }
 
-        ObjectUtil.checkNotNull(str, "string");
+        ObjectUtil.CheckNotNull(str, "string");
 
-        int thisLen = this.length();
+        int thisLen = this.Length();
         if (thisStart < 0 || length > thisLen - thisStart)
         {
             return false;
         }
 
-        if (start < 0 || length > str.length() - start)
+        if (start < 0 || length > str.Length() - start)
         {
             return false;
         }
 
-        thisStart += arrayOffset();
+        thisStart += ArrayOffset();
         int thisEnd = thisStart + length;
         if (str is AsciiString asciiString)
         {
@@ -955,7 +955,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             start += asciiString._offset;
             while (thisStart < thisEnd)
             {
-                if (!equalsIgnoreCase(value[thisStart++], otherValue[start++]))
+                if (!EqualsIgnoreCase(value[thisStart++], otherValue[start++]))
                 {
                     return false;
                 }
@@ -966,7 +966,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         while (thisStart < thisEnd)
         {
-            if (!equalsIgnoreCase(b2c(_value[thisStart++]), str.charAt(start++)))
+            if (!EqualsIgnoreCase(B2c(_value[thisStart++]), str.CharAt(start++)))
             {
                 return false;
             }
@@ -982,22 +982,22 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param newChar the replacement character.
      * @return a new string with occurrences of oldChar replaced by newChar.
      */
-    public AsciiString replace(char oldChar, char newChar)
+    public AsciiString Replace(char oldChar, char newChar)
     {
         if (oldChar > MAX_CHAR_VALUE)
         {
             return this;
         }
 
-        byte oldCharAsByte = c2b0(oldChar);
-        byte newCharAsByte = c2b(newChar);
+        byte oldCharAsByte = C2b0(oldChar);
+        byte newCharAsByte = C2b(newChar);
         int len = _offset + _length;
         for (int i = _offset; i < len; ++i)
         {
             if (_value[i] == oldCharAsByte)
             {
-                byte[] buffer = GC.AllocateUninitializedArray<byte>(length());
-                Arrays.arraycopy(_value, _offset, buffer, 0, i - _offset);
+                byte[] buffer = GC.AllocateUninitializedArray<byte>(Length());
+                Arrays.Arraycopy(_value, _offset, buffer, 0, i - _offset);
                 buffer[i - _offset] = newCharAsByte;
                 ++i;
                 for (; i < len; ++i)
@@ -1037,7 +1037,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public bool StartsWith(ICharSequence prefix, int start)
     {
-        return regionMatches(start, prefix, 0, prefix.length());
+        return RegionMatches(start, prefix, 0, prefix.Length());
     }
 
     /**
@@ -1045,10 +1045,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *
      * @return a new string containing the lowercase characters equivalent to the characters in this string.
      */
-    public AsciiString toLowerCase()
+    public AsciiString ToLowerCase()
     {
         // The protocol conversion folds only A-Z, independently of culture.
-        return AsciiStringUtil.toLowerCase(this);
+        return AsciiStringUtil.ToLowerCase(this);
     }
 
     /**
@@ -1056,10 +1056,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *
      * @return a new string containing the uppercase characters equivalent to the characters in this string.
      */
-    public AsciiString toUpperCase()
+    public AsciiString ToUpperCase()
     {
         // The protocol conversion folds only a-z, independently of culture.
-        return AsciiStringUtil.toUpperCase(this);
+        return AsciiStringUtil.ToUpperCase(this);
     }
 
     /**
@@ -1069,15 +1069,15 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param c The {@link CharSequence} to trim.
      * @return a new string with characters {@code <= \\u0020} removed from the beginning and the end.
      */
-    public static ICharSequence trim(ICharSequence c)
+    public static ICharSequence Trim(ICharSequence c)
     {
         ArgumentNullException.ThrowIfNull(c);
         if (c is AsciiString asciiString)
         {
-            return asciiString.trim();
+            return asciiString.Trim();
         }
 
-        int length = c.length();
+        int length = c.Length();
         int start = 0, end = length;
         if (c is StringCharSequence || c is AppendableCharSequence)
         {
@@ -1096,12 +1096,12 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
         else
         {
-            while (start < end && c.charAt(start) <= ' ') start++;
-            while (end > start && c.charAt(end - 1) <= ' ') end--;
+            while (start < end && c.CharAt(start) <= ' ') start++;
+            while (end > start && c.CharAt(end - 1) <= ' ') end--;
         }
 
         // subSequence has an exclusive end; retain the final non-control char.
-        return start == 0 && end == length ? c : c.subSequence(start, end);
+        return start == 0 && end == length ? c : c.SubSequence(start, end);
     }
 
     /**
@@ -1110,20 +1110,20 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *
      * @return a new string with characters {@code <= \\u0020} removed from the beginning and the end.
      */
-    public AsciiString trim()
+    public AsciiString Trim()
     {
         ReadOnlySpan<byte> bytes = AsSpan();
         int start = bytes.IndexOfAnyExceptInRange((byte)0, (byte)' ');
         if (start < 0)
         {
-            return bytes.IsEmpty ? this : new AsciiString(_value, arrayOffset() + bytes.Length, 0, false);
+            return bytes.IsEmpty ? this : new AsciiString(_value, ArrayOffset() + bytes.Length, 0, false);
         }
 
         int end = bytes.LastIndexOfAnyExceptInRange((byte)0, (byte)' ') + 1;
         // CLR bytes are unsigned: keep 0x80-0xff and unchanged logical views.
         return start == 0 && end == bytes.Length
             ? this
-            : new AsciiString(_value, arrayOffset() + start, end - start, false);
+            : new AsciiString(_value, ArrayOffset() + start, end - start, false);
     }
 
     /**
@@ -1132,14 +1132,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param a the character sequence to compare to.
      * @return {@code true} if equal, otherwise {@code false}
      */
-    public bool contentEquals(ICharSequence a)
+    public bool ContentEquals(ICharSequence a)
     {
         if (this == a)
         {
             return true;
         }
 
-        if (a == null || a.length() != length())
+        if (a == null || a.Length() != Length())
         {
             return false;
         }
@@ -1149,9 +1149,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             return Equals(a);
         }
 
-        for (int i = arrayOffset(), j = 0; j < a.length(); ++i, ++j)
+        for (int i = ArrayOffset(), j = 0; j < a.Length(); ++i, ++j)
         {
-            if (b2c(_value[i]) != a.charAt(j))
+            if (B2c(_value[i]) != a.CharAt(j))
             {
                 return false;
             }
@@ -1170,7 +1170,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         int h = _hash;
         if (h == 0)
         {
-            h = PlatformDependent.hashCodeAscii(_value, _offset, _length);
+            h = PlatformDependent.HashCodeAscii(_value, _offset, _length);
             _hash = h;
         }
 
@@ -1187,9 +1187,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             return true;
         }
 
-        return length() == other.length() &&
+        return Length() == other.Length() &&
                GetHashCode() == other.GetHashCode() &&
-               PlatformDependent.equals(array(), arrayOffset(), other.array(), other.arrayOffset(), length());
+               PlatformDependent.Equals(Array(), ArrayOffset(), other.Array(), other.ArrayOffset(), Length());
     }
 
 
@@ -1238,7 +1238,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public string ToString(int start)
     {
-        return ToString(start, length());
+        return ToString(start, Length());
     }
 
     /**
@@ -1252,10 +1252,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             return "";
         }
 
-        if (isOutOfBounds(start, length, this.length()))
+        if (IsOutOfBounds(start, length, this.Length()))
         {
             throw new ArgumentOutOfRangeException("expected: " + "0 <= start(" + start + ") <= srcIdx + length("
-                                                  + length + ") <= srcLen(" + this.length() + ')');
+                                                  + length + ") <= srcLen(" + this.Length() + ')');
         }
 
         //@SuppressWarnings("deprecation")
@@ -1264,26 +1264,26 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return Encoding.Latin1.GetString(_value, _offset + start, length);
     }
 
-    public bool parseBoolean()
+    public bool ParseBoolean()
     {
         return _length >= 1 && _value[_offset] != 0;
     }
 
-    public char parseChar()
+    public char ParseChar()
     {
-        return parseChar(0);
+        return ParseChar(0);
     }
 
-    public char parseChar(int start)
+    public char ParseChar(int start)
     {
-        if (start + 1 >= length())
+        if (start + 1 >= Length())
         {
             throw new ArgumentOutOfRangeException("2 bytes required to convert to character. index " +
                                                   start + " would go out of bounds.");
         }
 
         int startWithOffset = start + _offset;
-        return (char)((b2c(_value[startWithOffset]) << 8) | b2c(_value[startWithOffset + 1]));
+        return (char)((B2c(_value[startWithOffset]) << 8) | B2c(_value[startWithOffset + 1]));
     }
 
     // CLR adaptation: parse logical byte spans without allocating a string. Keep
@@ -1656,7 +1656,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * Returns an {@link AsciiString} containing the given character sequence. If the given string is already a
      * {@link AsciiString}, just returns the same instance.
      */
-    public static AsciiString of(ICharSequence str)
+    public static AsciiString Of(ICharSequence str)
     {
         return str is AsciiString ? (AsciiString)str : new AsciiString(str);
     }
@@ -1681,7 +1681,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         for (int i = 0; i < bytes.Length; i++)
         {
             char c = value[i];
-            bytes[i] = c2b(c);
+            bytes[i] = C2b(c);
             allLatin1 &= c <= MAX_CHAR_VALUE;
         }
 
@@ -1695,7 +1695,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * algorithm with {@link #hashCode()} so that you can put both {@link AsciiString}s and arbitrary
      * {@link CharSequence}s into the same headers.
      */
-    public static int hashCode(ICharSequence value)
+    public static int HashCode(ICharSequence value)
     {
         if (value == null)
         {
@@ -1707,30 +1707,30 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             return value.GetHashCode();
         }
 
-        return PlatformDependent.hashCodeAscii(value);
+        return PlatformDependent.HashCodeAscii(value);
     }
 
     /**
      * Determine if {@code a} contains {@code b} in a case sensitive manner.
      */
-    public static bool contains(ICharSequence a, ICharSequence b)
+    public static bool Contains(ICharSequence a, ICharSequence b)
     {
-        return contains(a, b, DefaultCharEqualityComparator.INSTANCE);
+        return Contains(a, b, DefaultCharEqualityComparator.INSTANCE);
     }
 
     /**
      * Determine if {@code a} contains {@code b} in a case insensitive manner.
      */
-    public static bool containsIgnoreCase(ICharSequence a, ICharSequence b)
+    public static bool ContainsIgnoreCase(ICharSequence a, ICharSequence b)
     {
-        return contains(a, b, AsciiCaseInsensitiveCharEqualityComparator.INSTANCE);
+        return Contains(a, b, AsciiCaseInsensitiveCharEqualityComparator.INSTANCE);
     }
 
     /**
      * Returns {@code true} if both {@link CharSequence}'s are equals when ignore the case. This only supports 8-bit
      * ASCII.
      */
-    public static bool contentEqualsIgnoreCase(ICharSequence a, ICharSequence b)
+    public static bool ContentEqualsIgnoreCase(ICharSequence a, ICharSequence b)
     {
         if (a == null || b == null)
         {
@@ -1739,22 +1739,22 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         if (a is AsciiString)
         {
-            return ((AsciiString)a).contentEqualsIgnoreCase(b);
+            return ((AsciiString)a).ContentEqualsIgnoreCase(b);
         }
 
         if (b is AsciiString)
         {
-            return ((AsciiString)b).contentEqualsIgnoreCase(a);
+            return ((AsciiString)b).ContentEqualsIgnoreCase(a);
         }
 
-        if (a.length() != b.length())
+        if (a.Length() != b.Length())
         {
             return false;
         }
 
-        for (int i = 0; i < a.length(); ++i)
+        for (int i = 0; i < a.Length(); ++i)
         {
-            if (!equalsIgnoreCase(a.charAt(i), b.charAt(i)))
+            if (!EqualsIgnoreCase(a.CharAt(i), b.CharAt(i)))
             {
                 return false;
             }
@@ -1772,11 +1772,11 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * {@link #contentEqualsIgnoreCase(CharSequence, CharSequence)}. {@code false} otherwise.
      * @see #contentEqualsIgnoreCase(CharSequence, CharSequence)
      */
-    public static bool containsContentEqualsIgnoreCase(ICollection<ICharSequence> collection, ICharSequence value)
+    public static bool ContainsContentEqualsIgnoreCase(ICollection<ICharSequence> collection, ICharSequence value)
     {
         foreach (ICharSequence v in collection)
         {
-            if (contentEqualsIgnoreCase(value, v))
+            if (ContentEqualsIgnoreCase(value, v))
             {
                 return true;
             }
@@ -1794,11 +1794,11 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * {@link #contentEqualsIgnoreCase(CharSequence, CharSequence)} to compare values. {@code false} otherwise.
      * @see #contentEqualsIgnoreCase(CharSequence, CharSequence)
      */
-    public static bool containsAllContentEqualsIgnoreCase(ICollection<ICharSequence> a, ICollection<ICharSequence> b)
+    public static bool ContainsAllContentEqualsIgnoreCase(ICollection<ICharSequence> a, ICollection<ICharSequence> b)
     {
         foreach (ICharSequence v in b)
         {
-            if (!containsContentEqualsIgnoreCase(a, v))
+            if (!ContainsContentEqualsIgnoreCase(a, v))
             {
                 return false;
             }
@@ -1810,7 +1810,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     /**
      * Returns {@code true} if the content of both {@link CharSequence}'s are equals. This only supports 8-bit ASCII.
      */
-    public static bool contentEquals(ICharSequence a, ICharSequence b)
+    public static bool ContentEquals(ICharSequence a, ICharSequence b)
     {
         if (a == null || b == null)
         {
@@ -1819,22 +1819,22 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         if (a is AsciiString)
         {
-            return ((AsciiString)a).contentEquals(b);
+            return ((AsciiString)a).ContentEquals(b);
         }
 
         if (b is AsciiString)
         {
-            return ((AsciiString)b).contentEquals(a);
+            return ((AsciiString)b).ContentEquals(a);
         }
 
-        if (a.length() != b.length())
+        if (a.Length() != b.Length())
         {
             return false;
         }
 
-        for (int i = 0; i < a.length(); ++i)
+        for (int i = 0; i < a.Length(); ++i)
         {
-            if (a.charAt(i) != b.charAt(i))
+            if (a.CharAt(i) != b.CharAt(i))
             {
                 return false;
             }
@@ -1843,7 +1843,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return true;
     }
 
-    private static AsciiString[] toAsciiStringArray(string[] jdkResult)
+    private static AsciiString[] ToAsciiStringArray(string[] jdkResult)
     {
         AsciiString[] res = new AsciiString[jdkResult.Length];
         for (int i = 0; i < jdkResult.Length; i++)
@@ -1855,30 +1855,30 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     }
 
 
-    private static bool contains(ICharSequence a, ICharSequence b, ICharEqualityComparator cmp)
+    private static bool Contains(ICharSequence a, ICharSequence b, ICharEqualityComparator cmp)
     {
-        if (a == null || b == null || a.length() < b.length())
+        if (a == null || b == null || a.Length() < b.Length())
         {
             return false;
         }
 
-        if (b.length() == 0)
+        if (b.Length() == 0)
         {
             return true;
         }
 
         int bStart = 0;
-        for (int i = 0; i < a.length(); ++i)
+        for (int i = 0; i < a.Length(); ++i)
         {
-            if (cmp.equals(b.charAt(bStart), a.charAt(i)))
+            if (cmp.Equals(b.CharAt(bStart), a.CharAt(i)))
             {
                 // If b is consumed then true.
-                if (++bStart == b.length())
+                if (++bStart == b.Length())
                 {
                     return true;
                 }
             }
-            else if (a.length() - i < b.length())
+            else if (a.Length() - i < b.Length())
             {
                 // If there are not enough characters left in a for b to be contained, then false.
                 return false;
@@ -1892,17 +1892,17 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return false;
     }
 
-    private static bool regionMatchesCharSequences(ICharSequence cs, int csStart,
+    private static bool RegionMatchesCharSequences(ICharSequence cs, int csStart,
         ICharSequence str, int start, int length,
         ICharEqualityComparator charEqualityComparator)
     {
         //general purpose implementation for CharSequences
-        if (csStart < 0 || length > cs.length() - csStart)
+        if (csStart < 0 || length > cs.Length() - csStart)
         {
             return false;
         }
 
-        if (start < 0 || length > str.length() - start)
+        if (start < 0 || length > str.Length() - start)
         {
             return false;
         }
@@ -1913,10 +1913,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         while (csIndex < csEnd)
         {
-            char c1 = cs.charAt(csIndex++);
-            char c2 = str.charAt(stringIndex++);
+            char c1 = cs.CharAt(csIndex++);
+            char c2 = str.CharAt(stringIndex++);
 
-            if (!charEqualityComparator.equals(c1, c2))
+            if (!charEqualityComparator.Equals(c1, c2))
             {
                 return false;
             }
@@ -1935,7 +1935,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param length the number of characters to compare.
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
      */
-    public static bool regionMatches(ICharSequence cs, bool ignoreCase, int csStart,
+    public static bool RegionMatches(ICharSequence cs, bool ignoreCase, int csStart,
         ICharSequence str, int start, int length)
     {
         if (cs == null || str == null)
@@ -1945,7 +1945,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         if (cs is AsciiString)
         {
-            return ((AsciiString)cs).regionMatches(ignoreCase, csStart, str, start, length);
+            return ((AsciiString)cs).RegionMatches(ignoreCase, csStart, str, start, length);
         }
 
         return ignoreCase
@@ -1963,7 +1963,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @param length the number of characters to compare.
      * @return {@code true} if the ranges of characters are equal, {@code false} otherwise.
      */
-    public static bool regionMatchesAscii(ICharSequence cs, bool ignoreCase, int csStart,
+    public static bool RegionMatchesAscii(ICharSequence cs, bool ignoreCase, int csStart,
         ICharSequence str, int start, int length)
     {
         if (cs == null || str == null)
@@ -1976,15 +1976,15 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             //we don't call regionMatches from String for ignoreCase==true. It's a general purpose method,
             //which make complex comparison in case of ignoreCase==true, which is useless for ASCII-only strings.
             //To avoid applying this complex ignore-case comparison, we will use regionMatchesCharSequences
-            return ((StringCharSequence)cs).regionMatches(false, csStart, str, start, length);
+            return ((StringCharSequence)cs).RegionMatches(false, csStart, str, start, length);
         }
 
         if (cs is AsciiString)
         {
-            return ((AsciiString)cs).regionMatches(ignoreCase, csStart, str, start, length);
+            return ((AsciiString)cs).RegionMatches(ignoreCase, csStart, str, start, length);
         }
 
-        return regionMatchesCharSequences(cs, csStart, str, start, length,
+        return RegionMatchesCharSequences(cs, csStart, str, start, length,
             ignoreCase ? AsciiCaseInsensitiveCharEqualityComparator.INSTANCE : DefaultCharEqualityComparator.INSTANCE);
     }
 
@@ -2018,7 +2018,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return the first index of the search CharSequence (always &ge; startPos),
      *  -1 if no match or {@code null} string input
      */
-    public static int indexOfIgnoreCase(ICharSequence str, ICharSequence searchStr, int startPos)
+    public static int IndexOfIgnoreCase(ICharSequence str, ICharSequence searchStr, int startPos)
     {
         if (str == null || searchStr == null)
         {
@@ -2030,8 +2030,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             startPos = 0;
         }
 
-        int searchStrLen = searchStr.length();
-        int endLimit = str.length() - searchStrLen + 1;
+        int searchStrLen = searchStr.Length();
+        int endLimit = str.Length() - searchStrLen + 1;
         if (startPos > endLimit)
         {
             return INDEX_NOT_FOUND;
@@ -2044,7 +2044,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         for (int i = startPos; i < endLimit; i++)
         {
-            if (regionMatches(str, true, i, searchStr, 0, searchStrLen))
+            if (RegionMatches(str, true, i, searchStr, 0, searchStrLen))
             {
                 return i;
             }
@@ -2083,7 +2083,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return the first index of the search CharSequence (always &ge; startPos),
      *  -1 if no match or {@code null} string input
      */
-    public static int indexOfIgnoreCaseAscii(ICharSequence str, ICharSequence searchStr, int startPos)
+    public static int IndexOfIgnoreCaseAscii(ICharSequence str, ICharSequence searchStr, int startPos)
     {
         if (str == null || searchStr == null)
         {
@@ -2095,8 +2095,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             startPos = 0;
         }
 
-        int searchStrLen = searchStr.length();
-        int endLimit = str.length() - searchStrLen + 1;
+        int searchStrLen = searchStr.Length();
+        int endLimit = str.Length() - searchStrLen + 1;
         if (startPos > endLimit)
         {
             return INDEX_NOT_FOUND;
@@ -2109,7 +2109,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         for (int i = startPos; i < endLimit; i++)
         {
-            if (regionMatchesAscii(str, true, i, searchStr, 0, searchStrLen))
+            if (RegionMatchesAscii(str, true, i, searchStr, 0, searchStrLen))
             {
                 return i;
             }
@@ -2129,15 +2129,15 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * -1 if char {@code searchChar} is not found or {@code cs == null}
      */
     //-----------------------------------------------------------------------
-    public static int indexOf(ICharSequence cs, char searchChar, int start)
+    public static int IndexOf(ICharSequence cs, char searchChar, int start)
     {
         if (cs is StringCharSequence)
         {
-            return ((StringCharSequence)cs).indexOf(searchChar, start);
+            return ((StringCharSequence)cs).IndexOf(searchChar, start);
         }
         else if (cs is AsciiString)
         {
-            return ((AsciiString)cs).indexOf(searchChar, start);
+            return ((AsciiString)cs).IndexOf(searchChar, start);
         }
 
         if (cs == null)
@@ -2145,10 +2145,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             return INDEX_NOT_FOUND;
         }
 
-        int sz = cs.length();
+        int sz = cs.Length();
         for (int i = start < 0 ? 0 : start; i < sz; i++)
         {
-            if (cs.charAt(i) == searchChar)
+            if (cs.CharAt(i) == searchChar)
             {
                 return i;
             }
@@ -2157,14 +2157,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return INDEX_NOT_FOUND;
     }
 
-    private static bool equalsIgnoreCase(byte a, byte b)
+    private static bool EqualsIgnoreCase(byte a, byte b)
     {
-        return a == b || AsciiStringUtil.toLowerCase(a) == AsciiStringUtil.toLowerCase(b);
+        return a == b || AsciiStringUtil.ToLowerCase(a) == AsciiStringUtil.ToLowerCase(b);
     }
 
-    private static bool equalsIgnoreCase(char a, char b)
+    private static bool EqualsIgnoreCase(char a, char b)
     {
-        return a == b || toLowerCase(a) == toLowerCase(b);
+        return a == b || ToLowerCase(a) == ToLowerCase(b);
     }
 
     /**
@@ -2173,37 +2173,37 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      *
      * @return lowercase ASCII character equivalent
      */
-    public static char toLowerCase(char c)
+    public static char ToLowerCase(char c)
     {
-        return isUpperCase(c) ? (char)(c + 32) : c;
+        return IsUpperCase(c) ? (char)(c + 32) : c;
     }
 
-    private static byte toUpperCase(byte b)
+    private static byte ToUpperCase(byte b)
     {
-        return AsciiStringUtil.toUpperCase(b);
+        return AsciiStringUtil.ToUpperCase(b);
     }
 
-    public static bool isUpperCase(byte value)
+    public static bool IsUpperCase(byte value)
     {
-        return AsciiStringUtil.isUpperCase(value);
+        return AsciiStringUtil.IsUpperCase(value);
     }
 
-    public static bool isUpperCase(char value)
+    public static bool IsUpperCase(char value)
     {
         return value >= 'A' && value <= 'Z';
     }
 
-    public static byte c2b(char c)
+    public static byte C2b(char c)
     {
         return (byte)((c > MAX_CHAR_VALUE) ? '?' : c);
     }
 
-    private static byte c2b0(char c)
+    private static byte C2b0(char c)
     {
         return (byte)c;
     }
 
-    public static char b2c(byte b)
+    public static char B2c(byte b)
     {
         return (char)(b & 0xFF);
     }

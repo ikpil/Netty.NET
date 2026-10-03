@@ -12,20 +12,20 @@ public class AttributeKeyContractTest
     public void DifferentValueTypesShareUniqueIdsAndGlobalNames()
     {
         string name = Guid.NewGuid().ToString();
-        var textKey = AttributeKey.valueOf<string>(name);
-        var valueKey = AttributeKey.valueOf<Value>(Guid.NewGuid().ToString());
-        Assert.NotEqual(textKey.id(), valueKey.id());
-        Assert.True(AttributeKey.exists<Value>(name));
-        Assert.Throws<ArgumentException>(() => AttributeKey.newInstance<Value>(name));
-        Assert.Throws<ArgumentException>(() => AttributeKey.valueOf<Value>(name));
+        var textKey = AttributeKey.ValueOf<string>(name);
+        var valueKey = AttributeKey.ValueOf<Value>(Guid.NewGuid().ToString());
+        Assert.NotEqual(textKey.Id(), valueKey.Id());
+        Assert.True(AttributeKey.Exists<Value>(name));
+        Assert.Throws<ArgumentException>(() => AttributeKey.NewInstance<Value>(name));
+        Assert.Throws<ArgumentException>(() => AttributeKey.ValueOf<Value>(name));
 
         var map = new DefaultAttributeMap();
         string text = "value";
         var value = new Value();
-        map.attr(textKey).set(text);
-        map.attr(valueKey).set(value);
-        Assert.Same(text, map.attr(textKey).get());
-        Assert.Same(value, map.attr(valueKey).get());
+        map.Attr(textKey).Set(text);
+        map.Attr(valueKey).Set(value);
+        Assert.Same(text, map.Attr(textKey).Get());
+        Assert.Same(value, map.Attr(valueKey).Get());
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class AttributeKeyContractTest
     {
         string name = Guid.NewGuid().ToString();
         var keys = await Task.WhenAll(Enumerable.Range(0, 32)
-            .Select(_ => Task.Run(() => AttributeKey.valueOf<Value>(name))));
+            .Select(_ => Task.Run(() => AttributeKey.ValueOf<Value>(name))));
         Assert.All(keys, key => Assert.Same(keys[0], key));
     }
 }

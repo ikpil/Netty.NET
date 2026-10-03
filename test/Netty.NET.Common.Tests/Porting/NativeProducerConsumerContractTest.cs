@@ -52,7 +52,7 @@ public class NativeProducerConsumerContractTest
             using var registration = observation.Register(task =>
             {
                 observed = task;
-                onLoop = executor.inEventLoop();
+                onLoop = executor.InEventLoop();
             });
             if (outcome == 1)
             {
@@ -94,7 +94,7 @@ public class NativeProducerConsumerContractTest
         int callerAcquired = -1, callerPending = -1;
         using var released = backendObservation.Register(_ =>
         {
-            releaseOnLoop = executor.inEventLoop();
+            releaseOnLoop = executor.InEventLoop();
             --acquired;
             events.Add("release slot");
             --pending;
@@ -104,7 +104,7 @@ public class NativeProducerConsumerContractTest
         });
         using var completed = callerObservation.Register(_ =>
         {
-            callerOnLoop = executor.inEventLoop();
+            callerOnLoop = executor.InEventLoop();
             callerAcquired = acquired;
             callerPending = pending;
             events.Add("caller completed");

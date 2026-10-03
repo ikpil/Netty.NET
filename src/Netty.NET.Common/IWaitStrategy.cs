@@ -2,5 +2,5 @@ namespace Netty.NET.Common;
 
 public interface IWaitStrategy
 {
-    int idle(int var1);
+    int Idle(int var1);
 }

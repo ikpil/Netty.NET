@@ -34,7 +34,7 @@ namespace Netty.NET.Common.Concurrent;
 /// </remarks>
 public sealed class ExecutorCompletion : IDisposable
 {
-    private static readonly IInternalLogger Logger = InternalLoggerFactory.getInstance(typeof(ExecutorCompletion));
+    private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(ExecutorCompletion));
     private const int MaxInlineDepth = 8;
     [ThreadStatic] private static int _inlineDepth;
     private readonly object _gate = new();
@@ -116,8 +116,8 @@ public sealed class ExecutorCompletion : IDisposable
         {
             // The shared CLR thread counter also bounds chains between different observations.
             // Like DefaultPromise, an executor must bound reentrant execute() at the dispatch boundary.
-            if (executor.inEventLoop() && _inlineDepth < MaxInlineDepth) reservation.run();
-            else executor.execute(reservation);
+            if (executor.InEventLoop() && _inlineDepth < MaxInlineDepth) reservation.Run();
+            else executor.Execute(reservation);
         }
         catch (Exception error) { reservation.Reject(error); }
     }
@@ -161,7 +161,7 @@ public sealed class ExecutorCompletion : IDisposable
                             ExecutionContext.Run(NativeScheduledWork<object>.CaptureExecutorContext(),
                                 _ => callback(operation), null);
                         }
-                        catch (Exception error) { Logger.warn("An exception was thrown by a completion observer.", error); }
+                        catch (Exception error) { Logger.Warn("An exception was thrown by a completion observer.", error); }
                     }
                     registration.Finish(null, false);
                 }
@@ -219,7 +219,7 @@ public sealed class ExecutorCompletion : IDisposable
         private readonly WeakReference<ExecutorCompletion> _owner = new(owner);
         private int _claim;
         public bool IsCanceled => Volatile.Read(ref _claim) == 2;
-        public void run()
+        public void Run()
         {
             if (Interlocked.CompareExchange(ref _claim, 1, 0) == 0 && _owner.TryGetTarget(out var target))
                 target.Drain(this);

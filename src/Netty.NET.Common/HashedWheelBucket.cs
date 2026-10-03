@@ -33,7 +33,7 @@ internal sealed class HashedWheelBucket
     /**
          * Add {@link HashedWheelTimeout} to this bucket.
          */
-    public void addTimeout(HashedWheelTimeout timeout)
+    public void AddTimeout(HashedWheelTimeout timeout)
     {
         Debug.Assert(timeout._bucket == null);
         timeout._bucket = this;
@@ -52,7 +52,7 @@ internal sealed class HashedWheelBucket
     /**
          * Expire all {@link HashedWheelTimeout}s for the given {@code deadline}.
          */
-    public void expireTimeouts(long deadline)
+    public void ExpireTimeouts(long deadline)
     {
         HashedWheelTimeout timeout = _head;
 
@@ -64,7 +64,7 @@ internal sealed class HashedWheelBucket
             {
                 if (timeout._deadline <= deadline)
                 {
-                    timeout.expire();
+                    timeout.Expire();
                 }
                 else
                 {
@@ -72,7 +72,7 @@ internal sealed class HashedWheelBucket
                     throw new InvalidOperationException($"timeout.deadline ({timeout._deadline}) > deadline ({deadline})");
                 }
             }
-            else if (!timeout.isCancelled())
+            else if (!timeout.IsCancelled())
             {
                 timeout._remainingRounds--;
             }
@@ -81,7 +81,7 @@ internal sealed class HashedWheelBucket
         }
     }
 
-    public HashedWheelTimeout remove(HashedWheelTimeout timeout)
+    public HashedWheelTimeout Remove(HashedWheelTimeout timeout)
     {
         HashedWheelTimeout next = timeout._next;
         // remove timeout that was either processed or cancelled by updating the linked-list
@@ -124,17 +124,17 @@ internal sealed class HashedWheelBucket
     /**
          * Clear this bucket and return all not expired / cancelled {@link Timeout}s.
          */
-    public void clearTimeouts(ISet<ITimeout> set)
+    public void ClearTimeouts(ISet<ITimeout> set)
     {
         for (;;)
         {
-            HashedWheelTimeout timeout = pollTimeout();
+            HashedWheelTimeout timeout = PollTimeout();
             if (timeout == null)
             {
                 return;
             }
 
-            if (timeout.isExpired() || timeout.isCancelled())
+            if (timeout.IsExpired() || timeout.IsCancelled())
             {
                 continue;
             }
@@ -143,7 +143,7 @@ internal sealed class HashedWheelBucket
         }
     }
 
-    private HashedWheelTimeout pollTimeout()
+    private HashedWheelTimeout PollTimeout()
     {
         HashedWheelTimeout head = this._head;
         if (head == null)

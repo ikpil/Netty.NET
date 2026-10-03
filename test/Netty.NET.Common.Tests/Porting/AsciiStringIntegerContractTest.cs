@@ -149,7 +149,7 @@ public class AsciiStringIntegerContractTest
     [Fact]
     public void EmptySliceAndNegativeZeroRespectTheLogicalView()
     {
-        var value = new AsciiString("!-0!").subSequence(1, 3, false);
+        var value = new AsciiString("!-0!").SubSequence(1, 3, false);
         Assert.Equal((short)0, value.ParseInt16());
         Assert.Equal(0, value.ParseInt32());
         Assert.Equal(0L, value.ParseInt64());

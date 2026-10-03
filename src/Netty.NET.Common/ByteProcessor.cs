@@ -80,7 +80,7 @@ public sealed class ByteProcessor : IByteProcessor
         _handler = handler;
     }
 
-    public bool process(byte value)
+    public bool Process(byte value)
     {
         return _handler.Invoke(value);
     }

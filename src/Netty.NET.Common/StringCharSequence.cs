@@ -16,15 +16,15 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
 
     public StringCharSequence(string value)
     {
-        _value = ObjectUtil.checkNotNull(value, nameof(value));
+        _value = ObjectUtil.CheckNotNull(value, nameof(value));
         _offset = 0;
         _count = _value.Length;
     }
 
     public StringCharSequence(string value, int offset, int count)
     {
-        ObjectUtil.checkNotNull(value, nameof(value));
-        if (MathUtil.isOutOfBounds(offset, count, value.Length))
+        ObjectUtil.CheckNotNull(value, nameof(value));
+        if (MathUtil.IsOutOfBounds(offset, count, value.Length))
         {
             throw new ArgumentOutOfRangeException(nameof(offset));
         }
@@ -55,19 +55,19 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         return value.Length > 0 ? new StringCharSequence(value) : Empty;
     }
 
-    public ICharSequence subSequence(int start) => subSequence(start, _count);
+    public ICharSequence SubSequence(int start) => SubSequence(start, _count);
 
-    public char charAt(int index)
+    public char CharAt(int index)
     {
         return this[index];
     }
 
-    public int length()
+    public int Length()
     {
         return _count;
     }
 
-    public ICharSequence subSequence(int start, int end)
+    public ICharSequence SubSequence(int start, int end)
     {
         if (start < 0 || end < start || end > _count)
         {
@@ -91,17 +91,17 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         }
     }
 
-    public bool regionMatches(bool ignoreCase, int thisStart, ICharSequence seq, int start, int length) => ignoreCase
-        ? regionMatchesIgnoreCase(thisStart, seq, start, length)
-        : regionMatches(thisStart, seq, start, length);
+    public bool RegionMatches(bool ignoreCase, int thisStart, ICharSequence seq, int start, int length) => ignoreCase
+        ? RegionMatchesIgnoreCase(thisStart, seq, start, length)
+        : RegionMatches(thisStart, seq, start, length);
 
-    public bool regionMatches(int thisStart, ICharSequence seq, int start, int length) =>
+    public bool RegionMatches(int thisStart, ICharSequence seq, int start, int length) =>
         CharUtil.RegionMatches(this, thisStart, seq, start, length);
 
-    public bool regionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length) =>
+    public bool RegionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length) =>
         CharUtil.RegionMatchesIgnoreCase(this, thisStart, seq, start, length);
 
-    public int indexOf(char ch, int start = 0)
+    public int IndexOf(char ch, int start = 0)
     {
         start = Math.Max(0, start);
         if (start >= _count) return -1;
@@ -161,14 +161,14 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         return false;
     }
 
-    public int hashCode(bool ignoreCase) =>
+    public int HashCode(bool ignoreCase) =>
         string.GetHashCode(AsSpan(), ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
-    public override int GetHashCode() => hashCode(false);
+    public override int GetHashCode() => HashCode(false);
 
-    public bool contentEquals(ICharSequence other) => CharUtil.ContentEquals(this, other);
+    public bool ContentEquals(ICharSequence other) => CharUtil.ContentEquals(this, other);
 
-    public bool contentEqualsIgnoreCase(ICharSequence other) => CharUtil.ContentEqualsIgnoreCase(this, other);
+    public bool ContentEqualsIgnoreCase(ICharSequence other) => CharUtil.ContentEqualsIgnoreCase(this, other);
 
     public IEnumerator<char> GetEnumerator() => new CharSequenceEnumerator(this);
 

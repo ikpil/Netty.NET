@@ -13,7 +13,7 @@ public class ThreadFactoryContractTest
     public void GlobalWorkerDoesNotInheritCallerExecutionContext()
     {
         var executor = GlobalEventExecutor.INSTANCE;
-        if (executor._thread != null) Assert.True(executor.awaitInactivity(TimeSpan.FromSeconds(5)));
+        if (executor._thread != null) Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         var local = new AsyncLocal<object>();
         var marker = new object();
         object observed = marker;
@@ -21,7 +21,7 @@ public class ThreadFactoryContractTest
         try
         {
             using var finished = new CountdownEvent(1);
-            executor.execute(Runnables.Create(() => { observed = local.Value; finished.Signal(); }));
+            executor.Execute(Runnables.Create(() => { observed = local.Value; finished.Signal(); }));
             Assert.True(finished.Wait(TimeSpan.FromSeconds(5)));
             Assert.Null(observed);
             Assert.Same(marker, local.Value);
@@ -37,10 +37,10 @@ public class ThreadFactoryContractTest
         {
             var group = new ThreadGroup(name);
             Thread child = null;
-            var creator = group.newThread(Runnables.Create(() => child = factory.newThread(Runnables.Empty)));
+            var creator = group.NewThread(Runnables.Create(() => child = factory.NewThread(Runnables.Empty)));
             creator.Start();
             Assert.True(creator.Join(TimeSpan.FromSeconds(5)));
-            Assert.Same(group, ThreadGroup.getThreadGroup(child));
+            Assert.Same(group, ThreadGroup.GetThreadGroup(child));
             Assert.True(child.IsBackground);
         }
     }
@@ -51,8 +51,8 @@ public class ThreadFactoryContractTest
         var assigned = new ThreadGroup("assigned");
         var factory = new DefaultThreadFactory("explicit", true, ThreadPriority.Normal, assigned);
         ThreadGroup observed = null;
-        var child = factory.newThread(Runnables.Create(() => observed = ThreadGroup.currentThreadGroup()));
-        Assert.Same(assigned, ThreadGroup.getThreadGroup(child));
+        var child = factory.NewThread(Runnables.Create(() => observed = ThreadGroup.CurrentThreadGroup()));
+        Assert.Same(assigned, ThreadGroup.GetThreadGroup(child));
         Assert.Equal(ThreadPriority.Normal, child.Priority);
         child.Start();
         Assert.True(child.Join(TimeSpan.FromSeconds(5)));

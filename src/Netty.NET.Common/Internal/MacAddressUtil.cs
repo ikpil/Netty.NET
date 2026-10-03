@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Internal;
 
 public static class MacAddressUtil
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(MacAddressUtil));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(MacAddressUtil));
 
     private static readonly int EUI64_MAC_ADDRESS_LENGTH = 8;
     private static readonly int EUI48_MAC_ADDRESS_LENGTH = 6;
@@ -38,7 +38,7 @@ public static class MacAddressUtil
      *
      * @return byte array containing a MAC. null if no MAC can be found.
      */
-    public static byte[] bestAvailableMac()
+    public static byte[] BestAvailableMac()
     {
         // Find the best MAC address available.
         byte[] bestMacAddr = EmptyArrays.EMPTY_BYTES;
@@ -49,7 +49,7 @@ public static class MacAddressUtil
         foreach (NetworkInterface iface in NetUtil.NETWORK_INTERFACES)
         {
             // Use the interface with proper INET addresses only.
-            List<IPAddress> addrs = SocketUtils.addressesFromNetworkInterface(iface);
+            List<IPAddress> addrs = SocketUtils.AddressesFromNetworkInterface(iface);
             if (0 < addrs.Count)
             {
                 IPAddress a = addrs[0];
@@ -73,16 +73,16 @@ public static class MacAddressUtil
             byte[] macAddr;
             try
             {
-                macAddr = SocketUtils.hardwareAddressFromNetworkInterface(iface);
+                macAddr = SocketUtils.HardwareAddressFromNetworkInterface(iface);
             }
             catch (SocketException e)
             {
-                logger.debug("Failed to get the hardware address of a network interface: {}", iface, e);
+                logger.Debug("Failed to get the hardware address of a network interface: {}", iface, e);
                 continue;
             }
 
             bool replace = false;
-            int res = compareAddresses(bestMacAddr, macAddr);
+            int res = CompareAddresses(bestMacAddr, macAddr);
             if (res < 0)
             {
                 // Found a better MAC address.
@@ -91,7 +91,7 @@ public static class MacAddressUtil
             else if (res == 0)
             {
                 // Two MAC addresses are of pretty much same quality.
-                res = compareAddresses(bestInetAddr, inetAddr);
+                res = CompareAddresses(bestInetAddr, inetAddr);
                 if (res < 0)
                 {
                     // Found a MAC address with better INET address.
@@ -123,16 +123,16 @@ public static class MacAddressUtil
         {
             // EUI-48 - convert to EUI-64
             byte[] newAddr = new byte[EUI64_MAC_ADDRESS_LENGTH];
-            Arrays.arraycopy(bestMacAddr, 0, newAddr, 0, 3);
+            Arrays.Arraycopy(bestMacAddr, 0, newAddr, 0, 3);
             newAddr[3] = (byte)0xFF;
             newAddr[4] = (byte)0xFE;
-            Arrays.arraycopy(bestMacAddr, 3, newAddr, 5, 3);
+            Arrays.Arraycopy(bestMacAddr, 3, newAddr, 5, 3);
             bestMacAddr = newAddr;
         }
         else
         {
             // Unknown
-            bestMacAddr = Arrays.copyOf(bestMacAddr, EUI64_MAC_ADDRESS_LENGTH);
+            bestMacAddr = Arrays.CopyOf(bestMacAddr, EUI64_MAC_ADDRESS_LENGTH);
         }
 
         return bestMacAddr;
@@ -142,16 +142,16 @@ public static class MacAddressUtil
      * Returns the result of {@link #bestAvailableMac()} if non-{@code null} otherwise returns a random EUI-64 MAC
      * address.
      */
-    public static byte[] defaultMachineId()
+    public static byte[] DefaultMachineId()
     {
-        byte[] bestMacAddr = bestAvailableMac();
+        byte[] bestMacAddr = BestAvailableMac();
         if (bestMacAddr == null)
         {
             bestMacAddr = new byte[EUI64_MAC_ADDRESS_LENGTH];
-            ThreadLocalRandom.current().nextBytes(bestMacAddr);
-            logger.warn(
+            ThreadLocalRandom.Current().NextBytes(bestMacAddr);
+            logger.Warn(
                 "Failed to find a usable hardware address from the network interfaces; using random bytes: {}",
-                formatAddress(bestMacAddr));
+                FormatAddress(bestMacAddr));
         }
 
         return bestMacAddr;
@@ -162,7 +162,7 @@ public static class MacAddressUtil
      * @param value The string representation of the MAC address.
      * @return The byte representation of the MAC address.
      */
-    public static byte[] parseMAC(string value)
+    public static byte[] ParseMAC(string value)
     {
         byte[] machineId;
         char separator;
@@ -170,12 +170,12 @@ public static class MacAddressUtil
         {
             case 17:
                 separator = value[2];
-                validateMacSeparator(separator);
+                ValidateMacSeparator(separator);
                 machineId = new byte[EUI48_MAC_ADDRESS_LENGTH];
                 break;
             case 23:
                 separator = value[2];
-                validateMacSeparator(separator);
+                ValidateMacSeparator(separator);
                 machineId = new byte[EUI64_MAC_ADDRESS_LENGTH];
                 break;
             default:
@@ -187,7 +187,7 @@ public static class MacAddressUtil
         for (int i = 0; i < end; ++i, j += 3)
         {
             int sIndex = j + 2;
-            machineId[i] = StringUtil.decodeHexByte(value, j);
+            machineId[i] = StringUtil.DecodeHexByte(value, j);
             if (value[sIndex] != separator)
             {
                 throw new ArgumentException("expected separator '" + separator + " but got '" +
@@ -195,12 +195,12 @@ public static class MacAddressUtil
             }
         }
 
-        machineId[end] = StringUtil.decodeHexByte(value, j);
+        machineId[end] = StringUtil.DecodeHexByte(value, j);
 
         return machineId;
     }
 
-    private static void validateMacSeparator(char separator)
+    private static void ValidateMacSeparator(char separator)
     {
         if (separator != ':' && separator != '-')
         {
@@ -212,7 +212,7 @@ public static class MacAddressUtil
      * @param addr byte array of a MAC address.
      * @return hex formatted MAC address.
      */
-    public static string formatAddress(byte[] addr)
+    public static string FormatAddress(byte[] addr)
     {
         var buf = new StringBuilder(24);
         foreach (byte b in addr)
@@ -227,7 +227,7 @@ public static class MacAddressUtil
      * @return positive - current is better, 0 - cannot tell from MAC addr, negative - candidate is better.
      */
     // visible for testing
-    public static int compareAddresses(byte[] current, byte[] candidate)
+    public static int CompareAddresses(byte[] current, byte[] candidate)
     {
         if (candidate == null || candidate.Length < EUI48_MAC_ADDRESS_LENGTH)
         {
@@ -288,12 +288,12 @@ public static class MacAddressUtil
     /**
      * @return positive - current is better, 0 - cannot tell, negative - candidate is better
      */
-    private static int compareAddresses(IPAddress current, IPAddress candidate)
+    private static int CompareAddresses(IPAddress current, IPAddress candidate)
     {
-        return scoreAddress(current) - scoreAddress(candidate);
+        return ScoreAddress(current) - ScoreAddress(candidate);
     }
 
-    private static int scoreAddress(IPAddress addr)
+    private static int ScoreAddress(IPAddress addr)
     {
         if (addr.IsAny() || IPAddress.IsLoopback(addr))
         {

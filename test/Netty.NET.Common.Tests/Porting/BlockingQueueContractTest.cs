@@ -13,30 +13,30 @@ public class BlockingQueueContractTest
     public void PeekRetainsTheHeadAndRemovalPreservesRemainingFifoOrder()
     {
         var queue = new LinkedBlockingQueue<string>(3);
-        Assert.True(queue.tryEnqueue("first"));
-        Assert.True(queue.tryEnqueue("middle"));
-        Assert.True(queue.tryEnqueue("last"));
-        Assert.True(queue.tryPeek(out var head));
+        Assert.True(queue.TryEnqueue("first"));
+        Assert.True(queue.TryEnqueue("middle"));
+        Assert.True(queue.TryEnqueue("last"));
+        Assert.True(queue.TryPeek(out var head));
         Assert.Equal("first", head);
         Assert.Equal(3, queue.Count);
-        Assert.True(queue.tryRemove("middle"));
-        Assert.False(queue.tryRemove("missing"));
-        Assert.Equal("first", queue.take());
-        Assert.Equal("last", queue.take());
-        Assert.True(queue.isEmpty());
+        Assert.True(queue.TryRemove("middle"));
+        Assert.False(queue.TryRemove("missing"));
+        Assert.Equal("first", queue.Take());
+        Assert.Equal("last", queue.Take());
+        Assert.True(queue.IsEmpty());
     }
 
     [Fact]
     public void RemovingAnElementFreesCapacityAndRemovesOnlyItsFirstOccurrence()
     {
         var queue = new LinkedBlockingQueue<int>(2);
-        Assert.True(queue.tryEnqueue(1));
-        Assert.True(queue.tryEnqueue(1));
-        Assert.False(queue.tryEnqueue(2));
-        Assert.True(queue.tryRemove(1));
-        Assert.True(queue.tryEnqueue(2));
-        Assert.Equal(1, queue.take());
-        Assert.Equal(2, queue.take());
+        Assert.True(queue.TryEnqueue(1));
+        Assert.True(queue.TryEnqueue(1));
+        Assert.False(queue.TryEnqueue(2));
+        Assert.True(queue.TryRemove(1));
+        Assert.True(queue.TryEnqueue(2));
+        Assert.Equal(1, queue.Take());
+        Assert.Equal(2, queue.Take());
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class BlockingQueueContractTest
         Exception failure = null;
         var waiter = new Thread(() =>
         {
-            try { queue.tryTake(out _, TimeSpan.MaxValue); }
+            try { queue.TryTake(out _, TimeSpan.MaxValue); }
             catch (Exception error) { failure = error; }
         }) { IsBackground = true };
         waiter.Start();
@@ -66,24 +66,24 @@ public class BlockingQueueContractTest
             var next = new int[producers];
             for (int i = 0; i < producers * items; i++)
             {
-                var item = queue.take();
+                var item = queue.Take();
                 Assert.Equal(next[item.producer]++, item.sequence);
             }
             Assert.All(next, count => Assert.Equal(items, count));
         });
         Parallel.For(0, producers, producer =>
         {
-            for (int sequence = 0; sequence < items; sequence++) Assert.True(queue.tryEnqueue((producer, sequence)));
+            for (int sequence = 0; sequence < items; sequence++) Assert.True(queue.TryEnqueue((producer, sequence)));
         });
         consumer.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
-        Assert.True(queue.isEmpty());
+        Assert.True(queue.IsEmpty());
     }
 
     [Fact]
     public void InterruptDuringNonblockingLockContentionIsRestoredAfterAcquisition()
     {
         var queue = new LinkedBlockingQueue<string>(1);
-        Assert.True(queue.tryEnqueue("head"));
+        Assert.True(queue.TryEnqueue("head"));
         object gate = typeof(LinkedBlockingQueue<string>).GetField("gate", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(queue);
         string head = null;
         Exception failure = null;
@@ -92,7 +92,7 @@ public class BlockingQueueContractTest
         {
             try
             {
-                Assert.True(queue.tryPeek(out head));
+                Assert.True(queue.TryPeek(out head));
                 try { Thread.Sleep(0); }
                 catch (ThreadInterruptedException) { restored = true; }
             }

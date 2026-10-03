@@ -28,559 +28,559 @@ public class StringUtilTest
     }
 
     [Fact]
-    public void ensureNewlineExists()
+    public void EnsureNewlineExists()
     {
         Assert.NotNull(NEWLINE);
     }
 
     [Fact]
-    public void testToHexString()
+    public void TestToHexString()
     {
-        Assert.Equal("0", toHexString(new byte[] { 0 }));
-        Assert.Equal("1", toHexString(new byte[] { 1 }));
-        Assert.Equal("0", toHexString(new byte[] { 0, 0 }));
-        Assert.Equal("100", toHexString(new byte[] { 1, 0 }));
-        Assert.Equal("", toHexString(EmptyArrays.EMPTY_BYTES));
+        Assert.Equal("0", ToHexString(new byte[] { 0 }));
+        Assert.Equal("1", ToHexString(new byte[] { 1 }));
+        Assert.Equal("0", ToHexString(new byte[] { 0, 0 }));
+        Assert.Equal("100", ToHexString(new byte[] { 1, 0 }));
+        Assert.Equal("", ToHexString(EmptyArrays.EMPTY_BYTES));
     }
 
     [Fact]
-    public void testToHexStringPadded()
+    public void TestToHexStringPadded()
     {
-        Assert.Equal("00", toHexStringPadded(new byte[] { 0 }));
-        Assert.Equal("01", toHexStringPadded(new byte[] { 1 }));
-        Assert.Equal("0000", toHexStringPadded(new byte[] { 0, 0 }));
-        Assert.Equal("0100", toHexStringPadded(new byte[] { 1, 0 }));
-        Assert.Equal("", toHexStringPadded(EmptyArrays.EMPTY_BYTES));
+        Assert.Equal("00", ToHexStringPadded(new byte[] { 0 }));
+        Assert.Equal("01", ToHexStringPadded(new byte[] { 1 }));
+        Assert.Equal("0000", ToHexStringPadded(new byte[] { 0, 0 }));
+        Assert.Equal("0100", ToHexStringPadded(new byte[] { 1, 0 }));
+        Assert.Equal("", ToHexStringPadded(EmptyArrays.EMPTY_BYTES));
     }
 
     [Fact]
-    public void splitSimple()
+    public void SplitSimple()
     {
         Assert.Equal(new string[] { "foo", "bar" }, "foo:bar".Split(':'));
     }
 
     [Fact]
-    public void splitWithTrailingDelimiter()
+    public void SplitWithTrailingDelimiter()
     {
         Assert.Equal(new string[] { "foo", "bar" }, "foo,bar,".TrimEnd(',').Split(','));
     }
 
     [Fact]
-    public void splitWithTrailingDelimiters()
+    public void SplitWithTrailingDelimiters()
     {
         Assert.Equal(new string[] { "foo", "bar" }, "foo!bar!!".TrimEnd('!').Split('!'));
     }
 
     [Fact]
-    public void splitWithTrailingDelimitersDot()
+    public void SplitWithTrailingDelimitersDot()
     {
         Assert.Equal(new string[] { "foo", "bar" }, "foo.bar..".TrimEnd('.').Split('.'));
     }
 
     [Fact]
-    public void splitWithTrailingDelimitersEq()
+    public void SplitWithTrailingDelimitersEq()
     {
         Assert.Equal(new string[] { "foo", "bar" }, "foo=bar==".TrimEnd('=').Split('='));
     }
 
     [Fact]
-    public void splitWithTrailingDelimitersSpace()
+    public void SplitWithTrailingDelimitersSpace()
     {
         Assert.Equal(new string[] { "foo", "bar" }, "foo bar  ".TrimEnd(' ').Split(' '));
     }
 
     [Fact]
-    public void splitWithConsecutiveDelimiters()
+    public void SplitWithConsecutiveDelimiters()
     {
         Assert.Equal(new string[] { "foo", "", "bar" }, "foo$$bar".Split('$'));
     }
 
     [Fact]
-    public void splitWithDelimiterAtBeginning()
+    public void SplitWithDelimiterAtBeginning()
     {
         Assert.Equal(new string[] { "", "foo", "bar" }, "#foo#bar".Split('#'));
     }
 
     [Fact]
-    public void splitMaxPart()
+    public void SplitMaxPart()
     {
         Assert.Equal(new string[] { "foo", "bar:bar2" }, "foo:bar:bar2".Split(':', 2, StringSplitOptions.None));
         Assert.Equal(new string[] { "foo", "bar", "bar2" }, "foo:bar:bar2".Split(':', 3, StringSplitOptions.None));
     }
 
     [Fact]
-    public void substringAfterTest()
+    public void SubstringAfterTest()
     {
-        Assert.Equal("bar:bar2", substringAfter("foo:bar:bar2", ':'));
+        Assert.Equal("bar:bar2", SubstringAfter("foo:bar:bar2", ':'));
     }
 
     [Fact]
-    public void commonSuffixOfLengthTest()
+    public void CommonSuffixOfLengthTest()
     {
         // negative length suffixes are never common
-        checkNotCommonSuffix("abc", "abc", -1);
+        CheckNotCommonSuffix("abc", "abc", -1);
 
         // null has no suffix
-        checkNotCommonSuffix("abc", null, 0);
-        checkNotCommonSuffix(null, null, 0);
+        CheckNotCommonSuffix("abc", null, 0);
+        CheckNotCommonSuffix(null, null, 0);
 
         // any non-null string has 0-length suffix
-        checkCommonSuffix("abc", "xx", 0);
+        CheckCommonSuffix("abc", "xx", 0);
 
-        checkCommonSuffix("abc", "abc", 0);
-        checkCommonSuffix("abc", "abc", 1);
-        checkCommonSuffix("abc", "abc", 2);
-        checkCommonSuffix("abc", "abc", 3);
-        checkNotCommonSuffix("abc", "abc", 4);
+        CheckCommonSuffix("abc", "abc", 0);
+        CheckCommonSuffix("abc", "abc", 1);
+        CheckCommonSuffix("abc", "abc", 2);
+        CheckCommonSuffix("abc", "abc", 3);
+        CheckNotCommonSuffix("abc", "abc", 4);
 
-        checkCommonSuffix("abcd", "cd", 1);
-        checkCommonSuffix("abcd", "cd", 2);
-        checkNotCommonSuffix("abcd", "cd", 3);
+        CheckCommonSuffix("abcd", "cd", 1);
+        CheckCommonSuffix("abcd", "cd", 2);
+        CheckNotCommonSuffix("abcd", "cd", 3);
 
-        checkCommonSuffix("abcd", "axcd", 1);
-        checkCommonSuffix("abcd", "axcd", 2);
-        checkNotCommonSuffix("abcd", "axcd", 3);
+        CheckCommonSuffix("abcd", "axcd", 1);
+        CheckCommonSuffix("abcd", "axcd", 2);
+        CheckNotCommonSuffix("abcd", "axcd", 3);
 
-        checkNotCommonSuffix("abcx", "abcy", 1);
+        CheckNotCommonSuffix("abcx", "abcy", 1);
     }
 
-    private static void checkNotCommonSuffix(string s, string p, int len)
+    private static void CheckNotCommonSuffix(string s, string p, int len)
     {
-        Assert.False(checkCommonSuffixSymmetric(s, p, len));
+        Assert.False(CheckCommonSuffixSymmetric(s, p, len));
     }
 
-    private static void checkCommonSuffix(string s, string p, int len)
+    private static void CheckCommonSuffix(string s, string p, int len)
     {
-        Assert.True(checkCommonSuffixSymmetric(s, p, len));
+        Assert.True(CheckCommonSuffixSymmetric(s, p, len));
     }
 
-    private static bool checkCommonSuffixSymmetric(string s, string p, int len)
+    private static bool CheckCommonSuffixSymmetric(string s, string p, int len)
     {
-        bool sp = commonSuffixOfLength(s, p, len);
-        bool ps = commonSuffixOfLength(p, s, len);
+        bool sp = CommonSuffixOfLength(s, p, len);
+        bool ps = CommonSuffixOfLength(p, s, len);
         Assert.Equal(sp, ps);
         return sp;
     }
 
     [Fact]
-    public void escapeCsvNull()
+    public void EscapeCsvNull()
     {
         Assert.Throws<ArgumentNullException>(() =>
         {
-            StringUtil.escapeCsv(null);
+            StringUtil.EscapeCsv(null);
         });
     }
 
     [Fact]
-    public void escapeCsvEmpty()
+    public void EscapeCsvEmpty()
     {
         string value = "";
-        escapeCsv(value, value);
+        EscapeCsv(value, value);
     }
 
     [Fact]
-    public void escapeCsvUnquoted()
+    public void EscapeCsvUnquoted()
     {
         string value = "something";
-        escapeCsv(value, value);
+        EscapeCsv(value, value);
     }
 
     [Fact]
-    public void escapeCsvAlreadyQuoted()
+    public void EscapeCsvAlreadyQuoted()
     {
         string value = "\"something\"";
         string expected = "\"something\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithQuote()
+    public void EscapeCsvWithQuote()
     {
         string value = "s\"";
         string expected = "\"s\"\"\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithQuoteInMiddle()
+    public void EscapeCsvWithQuoteInMiddle()
     {
         string value = "some text\"and more text";
         string expected = "\"some text\"\"and more text\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithQuoteInMiddleAlreadyQuoted()
+    public void EscapeCsvWithQuoteInMiddleAlreadyQuoted()
     {
         string value = "\"some text\"and more text\"";
         string expected = "\"some text\"\"and more text\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithQuotedWords()
+    public void EscapeCsvWithQuotedWords()
     {
         string value = "\"foo\"\"goo\"";
         string expected = "\"foo\"\"goo\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithAlreadyEscapedQuote()
+    public void EscapeCsvWithAlreadyEscapedQuote()
     {
         string value = "foo\"\"goo";
         string expected = "foo\"\"goo";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvEndingWithQuote()
+    public void EscapeCsvEndingWithQuote()
     {
         string value = "some\"";
         string expected = "\"some\"\"\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithSingleQuote()
+    public void EscapeCsvWithSingleQuote()
     {
         string value = "\"";
         string expected = "\"\"\"\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithSingleQuoteAndCharacter()
+    public void EscapeCsvWithSingleQuoteAndCharacter()
     {
         string value = "\"f";
         string expected = "\"\"\"f\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvAlreadyEscapedQuote()
+    public void EscapeCsvAlreadyEscapedQuote()
     {
         string value = "\"some\"\"";
         string expected = "\"some\"\"\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvQuoted()
+    public void EscapeCsvQuoted()
     {
         string value = "\"foo,goo\"";
-        escapeCsv(value, value);
+        EscapeCsv(value, value);
     }
 
     [Fact]
-    public void escapeCsvWithLineFeed()
+    public void EscapeCsvWithLineFeed()
     {
         string value = "some text\n more text";
         string expected = "\"some text\n more text\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithSingleLineFeedCharacter()
+    public void EscapeCsvWithSingleLineFeedCharacter()
     {
         string value = "\n";
         string expected = "\"\n\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithMultipleLineFeedCharacter()
+    public void EscapeCsvWithMultipleLineFeedCharacter()
     {
         string value = "\n\n";
         string expected = "\"\n\n\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithQuotedAndLineFeedCharacter()
+    public void EscapeCsvWithQuotedAndLineFeedCharacter()
     {
         string value = " \" \n ";
         string expected = "\" \"\" \n \"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithLineFeedAtEnd()
+    public void EscapeCsvWithLineFeedAtEnd()
     {
         string value = "testing\n";
         string expected = "\"testing\n\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithComma()
+    public void EscapeCsvWithComma()
     {
         string value = "test,ing";
         string expected = "\"test,ing\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithSingleComma()
+    public void EscapeCsvWithSingleComma()
     {
         string value = ",";
         string expected = "\",\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithSingleCarriageReturn()
+    public void EscapeCsvWithSingleCarriageReturn()
     {
         string value = "\r";
         string expected = "\"\r\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithMultipleCarriageReturn()
+    public void EscapeCsvWithMultipleCarriageReturn()
     {
         string value = "\r\r";
         string expected = "\"\r\r\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithCarriageReturn()
+    public void EscapeCsvWithCarriageReturn()
     {
         string value = "some text\r more text";
         string expected = "\"some text\r more text\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithQuotedAndCarriageReturnCharacter()
+    public void EscapeCsvWithQuotedAndCarriageReturnCharacter()
     {
         string value = "\"\r";
         string expected = "\"\"\"\r\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithCarriageReturnAtEnd()
+    public void EscapeCsvWithCarriageReturnAtEnd()
     {
         string value = "testing\r";
         string expected = "\"testing\r\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
     [Fact]
-    public void escapeCsvWithCRLFCharacter()
+    public void EscapeCsvWithCRLFCharacter()
     {
         string value = "\r\n";
         string expected = "\"\r\n\"";
-        escapeCsv(value, expected);
+        EscapeCsv(value, expected);
     }
 
-    private static void escapeCsv(string value, string expected)
+    private static void EscapeCsv(string value, string expected)
     {
-        escapeCsv(value, expected, false);
+        EscapeCsv(value, expected, false);
     }
 
-    private static void escapeCsvWithTrimming(string value, string expected)
+    private static void EscapeCsvWithTrimming(string value, string expected)
     {
-        escapeCsv(value, expected, true);
+        EscapeCsv(value, expected, true);
     }
 
-    private static void escapeCsv(string value, string expected, bool trimOws)
+    private static void EscapeCsv(string value, string expected, bool trimOws)
     {
         string escapedValue = value;
         for (int i = 0; i < 10; ++i)
         {
-            escapedValue = StringUtil.escapeCsv(escapedValue, trimOws);
+            escapedValue = StringUtil.EscapeCsv(escapedValue, trimOws);
             Assert.Equal(expected, escapedValue.ToString());
         }
     }
 
     [Fact]
-    public void testEscapeCsvWithTrimming()
+    public void TestEscapeCsvWithTrimming()
     {
-        Assert.Same("", StringUtil.escapeCsv("", true));
-        Assert.Same("ab", StringUtil.escapeCsv("ab", true));
+        Assert.Same("", StringUtil.EscapeCsv("", true));
+        Assert.Same("ab", StringUtil.EscapeCsv("ab", true));
 
-        escapeCsvWithTrimming("", "");
-        escapeCsvWithTrimming(" \t ", "");
-        escapeCsvWithTrimming("ab", "ab");
-        escapeCsvWithTrimming("a b", "a b");
-        escapeCsvWithTrimming(" \ta \tb", "a \tb");
-        escapeCsvWithTrimming("a \tb \t", "a \tb");
-        escapeCsvWithTrimming("\t a \tb \t", "a \tb");
-        escapeCsvWithTrimming("\"\t a b \"", "\"\t a b \"");
-        escapeCsvWithTrimming(" \"\t a b \"\t", "\"\t a b \"");
-        escapeCsvWithTrimming(" testing\t\n ", "\"testing\t\n\"");
-        escapeCsvWithTrimming("\ttest,ing ", "\"test,ing\"");
+        EscapeCsvWithTrimming("", "");
+        EscapeCsvWithTrimming(" \t ", "");
+        EscapeCsvWithTrimming("ab", "ab");
+        EscapeCsvWithTrimming("a b", "a b");
+        EscapeCsvWithTrimming(" \ta \tb", "a \tb");
+        EscapeCsvWithTrimming("a \tb \t", "a \tb");
+        EscapeCsvWithTrimming("\t a \tb \t", "a \tb");
+        EscapeCsvWithTrimming("\"\t a b \"", "\"\t a b \"");
+        EscapeCsvWithTrimming(" \"\t a b \"\t", "\"\t a b \"");
+        EscapeCsvWithTrimming(" testing\t\n ", "\"testing\t\n\"");
+        EscapeCsvWithTrimming("\ttest,ing ", "\"test,ing\"");
     }
 
     [Fact]
-    public void testEscapeCsvGarbageFree()
+    public void TestEscapeCsvGarbageFree()
     {
         // 'StringUtil#escapeCsv()' should return same string object if string didn't changing.
-        Assert.Same("1", StringUtil.escapeCsv("1", true));
-        Assert.Same(" 123 ", StringUtil.escapeCsv(" 123 ", false));
-        Assert.Same("\" 123 \"", StringUtil.escapeCsv("\" 123 \"", true));
-        Assert.Same("\"\"", StringUtil.escapeCsv("\"\"", true));
-        Assert.Same("123 \"\"", StringUtil.escapeCsv("123 \"\"", true));
-        Assert.Same("123\"\"321", StringUtil.escapeCsv("123\"\"321", true));
-        Assert.Same("\"123\"\"321\"", StringUtil.escapeCsv("\"123\"\"321\"", true));
+        Assert.Same("1", StringUtil.EscapeCsv("1", true));
+        Assert.Same(" 123 ", StringUtil.EscapeCsv(" 123 ", false));
+        Assert.Same("\" 123 \"", StringUtil.EscapeCsv("\" 123 \"", true));
+        Assert.Same("\"\"", StringUtil.EscapeCsv("\"\"", true));
+        Assert.Same("123 \"\"", StringUtil.EscapeCsv("123 \"\"", true));
+        Assert.Same("123\"\"321", StringUtil.EscapeCsv("123\"\"321", true));
+        Assert.Same("\"123\"\"321\"", StringUtil.EscapeCsv("\"123\"\"321\"", true));
     }
 
     [Fact]
-    public void testUnescapeCsv()
+    public void TestUnescapeCsv()
     {
-        Assert.Equal("", unescapeCsv(""));
-        Assert.Equal("\"", unescapeCsv("\"\"\"\""));
-        Assert.Equal("\"\"", unescapeCsv("\"\"\"\"\"\""));
-        Assert.Equal("\"\"\"", unescapeCsv("\"\"\"\"\"\"\"\""));
-        Assert.Equal("\"netty\"", unescapeCsv("\"\"\"netty\"\"\""));
-        Assert.Equal("netty", unescapeCsv("netty"));
-        Assert.Equal("netty", unescapeCsv("\"netty\""));
-        Assert.Equal("\r", unescapeCsv("\"\r\""));
-        Assert.Equal("\n", unescapeCsv("\"\n\""));
-        Assert.Equal("hello,netty", unescapeCsv("\"hello,netty\""));
+        Assert.Equal("", UnescapeCsv(""));
+        Assert.Equal("\"", UnescapeCsv("\"\"\"\""));
+        Assert.Equal("\"\"", UnescapeCsv("\"\"\"\"\"\""));
+        Assert.Equal("\"\"\"", UnescapeCsv("\"\"\"\"\"\"\"\""));
+        Assert.Equal("\"netty\"", UnescapeCsv("\"\"\"netty\"\"\""));
+        Assert.Equal("netty", UnescapeCsv("netty"));
+        Assert.Equal("netty", UnescapeCsv("\"netty\""));
+        Assert.Equal("\r", UnescapeCsv("\"\r\""));
+        Assert.Equal("\n", UnescapeCsv("\"\n\""));
+        Assert.Equal("hello,netty", UnescapeCsv("\"hello,netty\""));
     }
 
     [Fact]
-    public void unescapeCsvWithSingleQuote()
+    public void UnescapeCsvWithSingleQuote()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsv("\"");
+            UnescapeCsv("\"");
         });
     }
 
     [Fact]
-    public void unescapeCsvWithOddQuote()
+    public void UnescapeCsvWithOddQuote()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsv("\"\"\"");
+            UnescapeCsv("\"\"\"");
         });
     }
 
     [Fact]
-    public void unescapeCsvWithCRAndWithoutQuote()
+    public void UnescapeCsvWithCRAndWithoutQuote()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsv("\r");
+            UnescapeCsv("\r");
         });
     }
 
     [Fact]
-    public void unescapeCsvWithLFAndWithoutQuote()
+    public void UnescapeCsvWithLFAndWithoutQuote()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsv("\n");
+            UnescapeCsv("\n");
         });
     }
 
     [Fact]
-    public void unescapeCsvWithCommaAndWithoutQuote()
+    public void UnescapeCsvWithCommaAndWithoutQuote()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsv(",");
+            UnescapeCsv(",");
         });
     }
 
     [Fact]
-    public void escapeCsvAndUnEscapeCsv()
+    public void EscapeCsvAndUnEscapeCsv()
     {
-        assertEscapeCsvAndUnEscapeCsv("");
-        assertEscapeCsvAndUnEscapeCsv("netty");
-        assertEscapeCsvAndUnEscapeCsv("hello,netty");
-        assertEscapeCsvAndUnEscapeCsv("hello,\"netty\"");
-        assertEscapeCsvAndUnEscapeCsv("\"");
-        assertEscapeCsvAndUnEscapeCsv(",");
-        assertEscapeCsvAndUnEscapeCsv("\r");
-        assertEscapeCsvAndUnEscapeCsv("\n");
+        AssertEscapeCsvAndUnEscapeCsv("");
+        AssertEscapeCsvAndUnEscapeCsv("netty");
+        AssertEscapeCsvAndUnEscapeCsv("hello,netty");
+        AssertEscapeCsvAndUnEscapeCsv("hello,\"netty\"");
+        AssertEscapeCsvAndUnEscapeCsv("\"");
+        AssertEscapeCsvAndUnEscapeCsv(",");
+        AssertEscapeCsvAndUnEscapeCsv("\r");
+        AssertEscapeCsvAndUnEscapeCsv("\n");
     }
 
-    private static void assertEscapeCsvAndUnEscapeCsv(string value)
+    private static void AssertEscapeCsvAndUnEscapeCsv(string value)
     {
-        Assert.Equal(value, unescapeCsv(StringUtil.escapeCsv(value)));
-    }
-
-    [Fact]
-    public void testUnescapeCsvFields()
-    {
-        Assert.Equal(Collectives.singletonList(""), unescapeCsvFields(""));
-        Assert.Equal(Collectives.asList("", ""), unescapeCsvFields(","));
-        Assert.Equal(Collectives.asList("a", ""), unescapeCsvFields("a,"));
-        Assert.Equal(Collectives.asList("", "a"), unescapeCsvFields(",a"));
-        Assert.Equal(Collectives.singletonList("\""), unescapeCsvFields("\"\"\"\""));
-        Assert.Equal(Collectives.asList("\"", "\""), unescapeCsvFields("\"\"\"\",\"\"\"\""));
-        Assert.Equal(Collectives.singletonList("netty"), unescapeCsvFields("netty"));
-        Assert.Equal(Collectives.asList("hello", "netty"), unescapeCsvFields("hello,netty"));
-        Assert.Equal(Collectives.singletonList("hello,netty"), unescapeCsvFields("\"hello,netty\""));
-        Assert.Equal(Collectives.asList("hello", "netty"), unescapeCsvFields("\"hello\",\"netty\""));
-        Assert.Equal(Collectives.asList("a\"b", "c\"d"), unescapeCsvFields("\"a\"\"b\",\"c\"\"d\""));
-        Assert.Equal(Collectives.asList("a\rb", "c\nd"), unescapeCsvFields("\"a\rb\",\"c\nd\""));
+        Assert.Equal(value, UnescapeCsv(StringUtil.EscapeCsv(value)));
     }
 
     [Fact]
-    public void unescapeCsvFieldsWithCRWithoutQuote()
+    public void TestUnescapeCsvFields()
+    {
+        Assert.Equal(Collectives.SingletonList(""), UnescapeCsvFields(""));
+        Assert.Equal(Collectives.AsList("", ""), UnescapeCsvFields(","));
+        Assert.Equal(Collectives.AsList("a", ""), UnescapeCsvFields("a,"));
+        Assert.Equal(Collectives.AsList("", "a"), UnescapeCsvFields(",a"));
+        Assert.Equal(Collectives.SingletonList("\""), UnescapeCsvFields("\"\"\"\""));
+        Assert.Equal(Collectives.AsList("\"", "\""), UnescapeCsvFields("\"\"\"\",\"\"\"\""));
+        Assert.Equal(Collectives.SingletonList("netty"), UnescapeCsvFields("netty"));
+        Assert.Equal(Collectives.AsList("hello", "netty"), UnescapeCsvFields("hello,netty"));
+        Assert.Equal(Collectives.SingletonList("hello,netty"), UnescapeCsvFields("\"hello,netty\""));
+        Assert.Equal(Collectives.AsList("hello", "netty"), UnescapeCsvFields("\"hello\",\"netty\""));
+        Assert.Equal(Collectives.AsList("a\"b", "c\"d"), UnescapeCsvFields("\"a\"\"b\",\"c\"\"d\""));
+        Assert.Equal(Collectives.AsList("a\rb", "c\nd"), UnescapeCsvFields("\"a\rb\",\"c\nd\""));
+    }
+
+    [Fact]
+    public void UnescapeCsvFieldsWithCRWithoutQuote()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsvFields("a,\r");
+            UnescapeCsvFields("a,\r");
         });
     }
 
     [Fact]
-    public void unescapeCsvFieldsWithLFWithoutQuote()
+    public void UnescapeCsvFieldsWithLFWithoutQuote()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsvFields("a,\r");
+            UnescapeCsvFields("a,\r");
         });
     }
 
     [Fact]
-    public void unescapeCsvFieldsWithQuote()
+    public void UnescapeCsvFieldsWithQuote()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsvFields("a,\"");
+            UnescapeCsvFields("a,\"");
         });
     }
 
     [Fact]
-    public void unescapeCsvFieldsWithQuote2()
+    public void UnescapeCsvFieldsWithQuote2()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsvFields("\",a");
+            UnescapeCsvFields("\",a");
         });
     }
 
     [Fact]
-    public void unescapeCsvFieldsWithQuote3()
+    public void UnescapeCsvFieldsWithQuote3()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            unescapeCsvFields("a\"b,a");
+            UnescapeCsvFields("a\"b,a");
         });
     }
 
     [Fact]
-    public void testSimpleClassName()
+    public void TestSimpleClassName()
     {
-        testSimpleClassName0(typeof(string));
+        TestSimpleClassName0(typeof(string));
     }
 
     [Fact]
-    public void testSimpleInnerClassName()
+    public void TestSimpleInnerClassName()
     {
-        testSimpleClassName0(typeof(TestClass));
+        TestSimpleClassName0(typeof(TestClass));
     }
 
-    private static void testSimpleClassName0(Type clazz)
+    private static void TestSimpleClassName0(Type clazz)
     {
         var pkg = clazz.Namespace;
         string name;
@@ -593,93 +593,93 @@ public class StringUtilTest
             name = clazz.Name;
         }
 
-        Assert.Equal(name, simpleClassName(clazz));
+        Assert.Equal(name, SimpleClassName(clazz));
     }
 
 
     [Fact]
-    public void testEndsWith()
+    public void TestEndsWith()
     {
-        Assert.False(StringUtil.endsWith("", 'u'));
-        Assert.True(StringUtil.endsWith("u", 'u'));
-        Assert.True(StringUtil.endsWith("-u", 'u'));
-        Assert.False(StringUtil.endsWith("-", 'u'));
-        Assert.False(StringUtil.endsWith("u-", 'u'));
+        Assert.False(StringUtil.EndsWith("", 'u'));
+        Assert.True(StringUtil.EndsWith("u", 'u'));
+        Assert.True(StringUtil.EndsWith("-u", 'u'));
+        Assert.False(StringUtil.EndsWith("-", 'u'));
+        Assert.False(StringUtil.EndsWith("u-", 'u'));
     }
 
     [Fact]
-    public void trimOws()
+    public void TrimOws()
     {
-        Assert.Same("", StringUtil.trimOws(""));
-        Assert.Equal("", StringUtil.trimOws(" \t "));
-        Assert.Same("a", StringUtil.trimOws("a"));
-        Assert.Equal("a", StringUtil.trimOws(" a"));
-        Assert.Equal("a", StringUtil.trimOws("a "));
-        Assert.Equal("a", StringUtil.trimOws(" a "));
-        Assert.Same("abc", StringUtil.trimOws("abc"));
-        Assert.Equal("abc", StringUtil.trimOws("\tabc"));
-        Assert.Equal("abc", StringUtil.trimOws("abc\t"));
-        Assert.Equal("abc", StringUtil.trimOws("\tabc\t"));
-        Assert.Same("a\t b", StringUtil.trimOws("a\t b"));
-        Assert.Equal("", StringUtil.trimOws("\t ").ToString());
-        Assert.Equal("a b", StringUtil.trimOws("\ta b \t").ToString());
+        Assert.Same("", StringUtil.TrimOws(""));
+        Assert.Equal("", StringUtil.TrimOws(" \t "));
+        Assert.Same("a", StringUtil.TrimOws("a"));
+        Assert.Equal("a", StringUtil.TrimOws(" a"));
+        Assert.Equal("a", StringUtil.TrimOws("a "));
+        Assert.Equal("a", StringUtil.TrimOws(" a "));
+        Assert.Same("abc", StringUtil.TrimOws("abc"));
+        Assert.Equal("abc", StringUtil.TrimOws("\tabc"));
+        Assert.Equal("abc", StringUtil.TrimOws("abc\t"));
+        Assert.Equal("abc", StringUtil.TrimOws("\tabc\t"));
+        Assert.Same("a\t b", StringUtil.TrimOws("a\t b"));
+        Assert.Equal("", StringUtil.TrimOws("\t ").ToString());
+        Assert.Equal("a b", StringUtil.TrimOws("\ta b \t").ToString());
     }
 
     [Fact]
-    public void testJoin()
+    public void TestJoin()
     {
         Assert.Equal("",
-            StringUtil.join(",", Collectives.emptyList<string>()).ToString());
+            StringUtil.Join(",", Collectives.EmptyList<string>()).ToString());
         Assert.Equal("a",
-            StringUtil.join(",", Collectives.singletonList("a")).ToString());
+            StringUtil.Join(",", Collectives.SingletonList("a")).ToString());
         Assert.Equal("a,b",
-            StringUtil.join(",", Collectives.asList("a", "b")).ToString());
+            StringUtil.Join(",", Collectives.AsList("a", "b")).ToString());
         Assert.Equal("a,b,c",
-            StringUtil.join(",", Collectives.asList("a", "b", "c")).ToString());
+            StringUtil.Join(",", Collectives.AsList("a", "b", "c")).ToString());
         Assert.Equal("a,b,c,null,d",
-            StringUtil.join(",", Collectives.asList("a", "b", "c", null, "d")).ToString());
+            StringUtil.Join(",", Collectives.AsList("a", "b", "c", null, "d")).ToString());
     }
 
     [Fact]
-    public void testIsNullOrEmpty()
+    public void TestIsNullOrEmpty()
     {
-        Assert.True(isNullOrEmpty(null));
-        Assert.True(isNullOrEmpty(""));
-        Assert.True(isNullOrEmpty(string.Empty));
-        Assert.False(isNullOrEmpty(" "));
-        Assert.False(isNullOrEmpty("\t"));
-        Assert.False(isNullOrEmpty("\n"));
-        Assert.False(isNullOrEmpty("foo"));
-        Assert.False(isNullOrEmpty(NEWLINE));
+        Assert.True(IsNullOrEmpty(null));
+        Assert.True(IsNullOrEmpty(""));
+        Assert.True(IsNullOrEmpty(string.Empty));
+        Assert.False(IsNullOrEmpty(" "));
+        Assert.False(IsNullOrEmpty("\t"));
+        Assert.False(IsNullOrEmpty("\n"));
+        Assert.False(IsNullOrEmpty("foo"));
+        Assert.False(IsNullOrEmpty(NEWLINE));
     }
 
     [Fact]
-    public void testIndexOfWhiteSpace()
+    public void TestIndexOfWhiteSpace()
     {
-        Assert.Equal(-1, indexOfWhiteSpace("", 0));
-        Assert.Equal(0, indexOfWhiteSpace(" ", 0));
-        Assert.Equal(-1, indexOfWhiteSpace(" ", 1));
-        Assert.Equal(0, indexOfWhiteSpace("\n", 0));
-        Assert.Equal(-1, indexOfWhiteSpace("\n", 1));
-        Assert.Equal(0, indexOfWhiteSpace("\t", 0));
-        Assert.Equal(-1, indexOfWhiteSpace("\t", 1));
-        Assert.Equal(3, indexOfWhiteSpace("foo\r\nbar", 1));
-        Assert.Equal(-1, indexOfWhiteSpace("foo\r\nbar", 10));
-        Assert.Equal(7, indexOfWhiteSpace("foo\tbar\r\n", 6));
-        Assert.Equal(-1, indexOfWhiteSpace("foo\tbar\r\n", int.MaxValue));
+        Assert.Equal(-1, IndexOfWhiteSpace("", 0));
+        Assert.Equal(0, IndexOfWhiteSpace(" ", 0));
+        Assert.Equal(-1, IndexOfWhiteSpace(" ", 1));
+        Assert.Equal(0, IndexOfWhiteSpace("\n", 0));
+        Assert.Equal(-1, IndexOfWhiteSpace("\n", 1));
+        Assert.Equal(0, IndexOfWhiteSpace("\t", 0));
+        Assert.Equal(-1, IndexOfWhiteSpace("\t", 1));
+        Assert.Equal(3, IndexOfWhiteSpace("foo\r\nbar", 1));
+        Assert.Equal(-1, IndexOfWhiteSpace("foo\r\nbar", 10));
+        Assert.Equal(7, IndexOfWhiteSpace("foo\tbar\r\n", 6));
+        Assert.Equal(-1, IndexOfWhiteSpace("foo\tbar\r\n", int.MaxValue));
     }
 
     [Fact]
-    public void testIndexOfNonWhiteSpace()
+    public void TestIndexOfNonWhiteSpace()
     {
-        Assert.Equal(-1, indexOfNonWhiteSpace("", 0));
-        Assert.Equal(-1, indexOfNonWhiteSpace(" ", 0));
-        Assert.Equal(-1, indexOfNonWhiteSpace(" \t", 0));
-        Assert.Equal(-1, indexOfNonWhiteSpace(" \t\r\n", 0));
-        Assert.Equal(2, indexOfNonWhiteSpace(" \tfoo\r\n", 0));
-        Assert.Equal(2, indexOfNonWhiteSpace(" \tfoo\r\n", 1));
-        Assert.Equal(4, indexOfNonWhiteSpace(" \tfoo\r\n", 4));
-        Assert.Equal(-1, indexOfNonWhiteSpace(" \tfoo\r\n", 10));
-        Assert.Equal(-1, indexOfNonWhiteSpace(" \tfoo\r\n", int.MaxValue));
+        Assert.Equal(-1, IndexOfNonWhiteSpace("", 0));
+        Assert.Equal(-1, IndexOfNonWhiteSpace(" ", 0));
+        Assert.Equal(-1, IndexOfNonWhiteSpace(" \t", 0));
+        Assert.Equal(-1, IndexOfNonWhiteSpace(" \t\r\n", 0));
+        Assert.Equal(2, IndexOfNonWhiteSpace(" \tfoo\r\n", 0));
+        Assert.Equal(2, IndexOfNonWhiteSpace(" \tfoo\r\n", 1));
+        Assert.Equal(4, IndexOfNonWhiteSpace(" \tfoo\r\n", 4));
+        Assert.Equal(-1, IndexOfNonWhiteSpace(" \tfoo\r\n", 10));
+        Assert.Equal(-1, IndexOfNonWhiteSpace(" \tfoo\r\n", int.MaxValue));
     }
 }

@@ -14,22 +14,22 @@ public class LeakPresenceDetectorContractTest
 {
     private sealed class Scoped<T>(ResourceScope scope) : LeakPresenceDetector<T>(typeof(T)) where T : class
     {
-        protected override ResourceScope currentScope() => scope;
+        protected override ResourceScope CurrentScope() => scope;
     }
     private sealed class ScopedFactory(ResourceScope scope) : ResourceLeakDetectorFactory
     {
-        public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive)
+        public override ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive)
             => new Scoped<T>(scope);
     }
-    private static void withFactory(ResourceLeakDetectorFactory factory, Action action)
+    private static void WithFactory(ResourceLeakDetectorFactory factory, Action action)
     {
-        var previous = ResourceLeakDetectorFactory.instance();
-        try { ResourceLeakDetectorFactory.setResourceLeakDetectorFactory(factory); action(); }
-        finally { ResourceLeakDetectorFactory.setResourceLeakDetectorFactory(previous); }
+        var previous = ResourceLeakDetectorFactory.Instance();
+        try { ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(factory); action(); }
+        finally { ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(previous); }
     }
     private sealed class ThrowingHint : IResourceLeakHint
     {
-        public string toHintString() => throw new InvalidOperationException("record should be a no-op");
+        public string ToHintString() => throw new InvalidOperationException("record should be a no-op");
     }
 
     [Fact]
@@ -37,38 +37,38 @@ public class LeakPresenceDetectorContractTest
     {
         var objectDetector = new LeakPresenceDetector<object>(typeof(object));
         var stringDetector = new LeakPresenceDetector<string>(typeof(string));
-        Assert.Same(objectDetector.scopeForCheck(), stringDetector.scopeForCheck());
+        Assert.Same(objectDetector.ScopeForCheck(), stringDetector.ScopeForCheck());
         object resource = new();
-        var tracker = objectDetector.track(resource);
-        Assert.True(stringDetector.scopeForCheck().hasOpenResources());
-        Assert.True(tracker.close(resource));
-        stringDetector.scopeForCheck().check();
+        var tracker = objectDetector.Track(resource);
+        Assert.True(stringDetector.ScopeForCheck().HasOpenResources());
+        Assert.True(tracker.Close(resource));
+        stringDetector.ScopeForCheck().Check();
     }
 
     [Fact]
     public void DisabledLevelAndSamplingDoNotDisablePresenceCountingOrEnableRecording()
     {
-        var previous = ResourceLeakDetector.getLevel();
+        var previous = ResourceLeakDetector.GetLevel();
         using var scope = new ResourceScope("count-all");
         var detector = new Scoped<object>(scope);
         try
         {
-            ResourceLeakDetector.setLevel(ResourceLeakDetectorLevel.DISABLED);
+            ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.DISABLED);
             object resource = new();
-            var tracker = detector.track(resource);
+            var tracker = detector.Track(resource);
             Assert.NotNull(tracker);
-            Assert.True(scope.hasOpenResources());
-            Assert.False(detector.isRecordEnabled());
-            tracker.record(); tracker.record(new ThrowingHint());
-            Assert.Null(tracker.getCloseStackTraceIfAny());
-            Assert.True(tracker.close(null));
-            Assert.False(tracker.close(resource));
+            Assert.True(scope.HasOpenResources());
+            Assert.False(detector.IsRecordEnabled());
+            tracker.Record(); tracker.Record(new ThrowingHint());
+            Assert.Null(tracker.GetCloseStackTraceIfAny());
+            Assert.True(tracker.Close(null));
+            Assert.False(tracker.Close(resource));
             // This implementation counts trackers; it need not dereference the object.
-            var nullTracker = detector.trackForcibly(null);
-            Assert.True(nullTracker.close(null));
-            scope.check();
+            var nullTracker = detector.TrackForcibly(null);
+            Assert.True(nullTracker.Close(null));
+            scope.Check();
         }
-        finally { ResourceLeakDetector.setLevel(previous); }
+        finally { ResourceLeakDetector.SetLevel(previous); }
     }
 
     [Fact]
@@ -77,14 +77,14 @@ public class LeakPresenceDetectorContractTest
         using var scope = new ResourceScope("live-resource");
         var detector = new Scoped<object>(scope);
         object resource = new();
-        var tracker = detector.track(resource);
-        var leak = Assert.Throws<InvalidOperationException>(scope.check);
+        var tracker = detector.Track(resource);
+        var leak = Assert.Throws<InvalidOperationException>(scope.Check);
         Assert.Contains("live-resource", leak.Message);
-        Assert.False(scope.hasOpenResources());
-        Assert.True(tracker.close(resource));
-        var late = Assert.Throws<InvalidOperationException>(scope.check);
+        Assert.False(scope.HasOpenResources());
+        Assert.True(tracker.Close(resource));
+        var late = Assert.Throws<InvalidOperationException>(scope.Check);
         Assert.Contains("Resource count was negative", late.Message);
-        scope.check();
+        scope.Check();
         GC.KeepAlive(resource);
     }
 
@@ -92,11 +92,11 @@ public class LeakPresenceDetectorContractTest
     public void DisposeIsIdempotentAndNeverReopensAScope()
     {
         var scope = new ResourceScope("closed");
-        scope.Dispose(); scope.close(); scope.Dispose();
+        scope.Dispose(); scope.Close(); scope.Dispose();
         var detector = new Scoped<object>(scope);
-        var failure = Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => detector.track(new object()));
+        var failure = Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => detector.Track(new object()));
         Assert.Contains("already closed", failure.Message);
-        Assert.False(scope.hasOpenResources());
+        Assert.False(scope.HasOpenResources());
     }
 
     [Fact]
@@ -105,13 +105,13 @@ public class LeakPresenceDetectorContractTest
         var scope = new ResourceScope("closing-leak");
         var detector = new Scoped<object>(scope);
         object resource = new();
-        var tracker = detector.track(resource);
-        Assert.Throws<InvalidOperationException>(scope.close);
+        var tracker = detector.Track(resource);
+        Assert.Throws<InvalidOperationException>(scope.Close);
         scope.Dispose();
-        Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => detector.track(resource));
-        Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => tracker.close(resource));
-        Assert.False(tracker.close(resource));
-        Assert.Throws<InvalidOperationException>(scope.check);
+        Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => detector.Track(resource));
+        Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => tracker.Close(resource));
+        Assert.False(tracker.Close(resource));
+        Assert.Throws<InvalidOperationException>(scope.Check);
     }
 
     [Fact]
@@ -119,11 +119,11 @@ public class LeakPresenceDetectorContractTest
     {
         using var first = new ResourceScope("first");
         using var second = new ResourceScope("second");
-        var tracker = new Scoped<object>(first).track(new object());
-        withFactory(new ScopedFactory(second), LeakPresenceDetector.check);
-        withFactory(new ScopedFactory(first), () => Assert.Throws<InvalidOperationException>(LeakPresenceDetector.check));
-        Assert.True(tracker.close(null));
-        Assert.Throws<InvalidOperationException>(first.check);
+        var tracker = new Scoped<object>(first).Track(new object());
+        WithFactory(new ScopedFactory(second), LeakPresenceDetector.Check);
+        WithFactory(new ScopedFactory(first), () => Assert.Throws<InvalidOperationException>(LeakPresenceDetector.Check));
+        Assert.True(tracker.Close(null));
+        Assert.Throws<InvalidOperationException>(first.Check);
     }
 
     [Fact]
@@ -134,12 +134,12 @@ public class LeakPresenceDetectorContractTest
         try
         {
             Environment.SetEnvironmentVariable(key, null);
-            withFactory(new DefaultResourceLeakDetectorFactory(), () => Assert.Throws<InvalidOperationException>(LeakPresenceDetector.check));
+            WithFactory(new DefaultResourceLeakDetectorFactory(), () => Assert.Throws<InvalidOperationException>(LeakPresenceDetector.Check));
             Environment.SetEnvironmentVariable(key, typeof(LeakPresenceDetector<>).AssemblyQualifiedName);
             var factory = new DefaultResourceLeakDetectorFactory();
-            Assert.IsType<LeakPresenceDetector<object>>(factory.newResourceLeakDetector<object>(typeof(object), -1));
-            Assert.IsType<LeakPresenceDetector<string>>(factory.newResourceLeakDetector<string>(typeof(string), 0, -1));
-            withFactory(factory, LeakPresenceDetector.check);
+            Assert.IsType<LeakPresenceDetector<object>>(factory.NewResourceLeakDetector<object>(typeof(object), -1));
+            Assert.IsType<LeakPresenceDetector<string>>(factory.NewResourceLeakDetector<string>(typeof(string), 0, -1));
+            WithFactory(factory, LeakPresenceDetector.Check);
         }
         finally { Environment.SetEnvironmentVariable(key, previous); }
     }
@@ -154,21 +154,21 @@ public class LeakPresenceDetectorContractTest
             for (int i = 0; i < 10000; i++)
             {
                 object resource = new();
-                Assert.True(detector.track(resource).close(resource));
+                Assert.True(detector.Track(resource).Close(resource));
             }
         });
         object shared = new();
-        var tracker = detector.track(shared);
+        var tracker = detector.Track(shared);
         int successes = 0;
-        Parallel.For(0, 32, _ => { if (tracker.close(shared)) Interlocked.Increment(ref successes); });
+        Parallel.For(0, 32, _ => { if (tracker.Close(shared)) Interlocked.Increment(ref successes); });
         Assert.Equal(1, successes);
-        scope.check();
-        Assert.False(scope.hasOpenResources());
+        scope.Check();
+        Assert.False(scope.HasOpenResources());
     }
 
     [Fact]
     public void StaticInitializerWrapperRejectsOrdinaryCallers()
-        => Assert.Throws<InvalidOperationException>(() => LeakPresenceDetector.staticInitializer(() => new object()));
+        => Assert.Throws<InvalidOperationException>(() => LeakPresenceDetector.StaticInitializer(() => new object()));
 
     private static ResourceScope initializerScope;
     private static IResourceLeakTracker<object> concurrentTracker;
@@ -179,17 +179,17 @@ public class LeakPresenceDetectorContractTest
         static InitializerProbe()
         {
             var detector = new Scoped<object>(initializerScope);
-            Skipped = LeakPresenceDetector.staticInitializer(() =>
+            Skipped = LeakPresenceDetector.StaticInitializer(() =>
             {
-                Assert.Null(detector.track(new object()));
-                var forced = detector.trackForcibly(new object());
-                Assert.True(forced.close(null));
-                var other = new Thread(() => concurrentTracker = detector.track(new object()));
+                Assert.Null(detector.Track(new object()));
+                var forced = detector.TrackForcibly(new object());
+                Assert.True(forced.Close(null));
+                var other = new Thread(() => concurrentTracker = detector.Track(new object()));
                 other.Start(); Assert.True(other.Join(TimeSpan.FromSeconds(5)));
                 return true;
             });
-            Forced = LeakPresenceDetector.staticInitializer(() => LeakPresenceDetector.staticInitializer(() => true));
-            Assert.Throws<InvalidOperationException>(() => LeakPresenceDetector.staticInitializer<object>(() => throw new InvalidOperationException("supplier")));
+            Forced = LeakPresenceDetector.StaticInitializer(() => LeakPresenceDetector.StaticInitializer(() => true));
+            Assert.Throws<InvalidOperationException>(() => LeakPresenceDetector.StaticInitializer<object>(() => throw new InvalidOperationException("supplier")));
         }
     }
     [Fact]
@@ -200,23 +200,23 @@ public class LeakPresenceDetectorContractTest
         Assert.True(InitializerProbe.Skipped);
         Assert.True(InitializerProbe.Forced);
         Assert.NotNull(concurrentTracker);
-        Assert.True(concurrentTracker.close(null));
-        var tracker = new Scoped<object>(scope).track(new object());
+        Assert.True(concurrentTracker.Close(null));
+        var tracker = new Scoped<object>(scope).Track(new object());
         Assert.NotNull(tracker);
-        Assert.True(tracker.close(null));
-        scope.check();
-        Assert.False(LeakPresenceDetector.inStaticInitializerFast());
+        Assert.True(tracker.Close(null));
+        scope.Check();
+        Assert.False(LeakPresenceDetector.InStaticInitializerFast());
         initializerScope = null; concurrentTracker = null;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static IResourceLeakTracker<object> createDiagnostic(Scoped<object> detector) => detector.track(new object());
+    private static IResourceLeakTracker<object> CreateDiagnostic(Scoped<object> detector) => detector.Track(new object());
 
     private static ResourceScope diagnosticInitializerScope;
     private static class UnwrappedInitializer
     {
         internal static readonly IResourceLeakTracker<object> Tracker;
-        static UnwrappedInitializer() => Tracker = new Scoped<object>(diagnosticInitializerScope).track(new object());
+        static UnwrappedInitializer() => Tracker = new Scoped<object>(diagnosticInitializerScope).Track(new object());
     }
     [Fact]
     public void OptionalDiagnosticsIdentifyAnUnwrappedStaticInitializer()
@@ -225,8 +225,8 @@ public class LeakPresenceDetectorContractTest
         diagnosticInitializerScope = scope;
         var tracker = UnwrappedInitializer.Tracker;
         Assert.NotNull(tracker);
-        var failure = Assert.Throws<InvalidOperationException>(scope.check);
-        Exception[] creation = ThrowableUtil.getSuppressed(failure);
+        var failure = Assert.Throws<InvalidOperationException>(scope.Check);
+        Exception[] creation = ThrowableUtil.GetSuppressed(failure);
         if (LeakPresenceDetector.TRACK_CREATION_STACK)
         {
             Assert.Single(creation);
@@ -234,8 +234,8 @@ public class LeakPresenceDetectorContractTest
             Assert.Contains("LeakPresenceDetector.staticInitializer", creation[0].Message);
         }
         else Assert.Empty(creation);
-        Assert.True(tracker.close(null));
-        Assert.Throws<InvalidOperationException>(scope.check);
+        Assert.True(tracker.Close(null));
+        Assert.Throws<InvalidOperationException>(scope.Check);
         diagnosticInitializerScope = null;
     }
 
@@ -245,15 +245,15 @@ public class LeakPresenceDetectorContractTest
         using var scope = new ResourceScope("diagnostic");
         var detector = new Scoped<object>(scope);
         var trackers = new List<IResourceLeakTracker<object>>();
-        for (int i = 0; i < 10; i++) trackers.Add(createDiagnostic(detector));
-        var leak = Assert.Throws<InvalidOperationException>(scope.check);
-        Exception[] creation = ThrowableUtil.getSuppressed(leak);
+        for (int i = 0; i < 10; i++) trackers.Add(CreateDiagnostic(detector));
+        var leak = Assert.Throws<InvalidOperationException>(scope.Check);
+        Exception[] creation = ThrowableUtil.GetSuppressed(leak);
         if (LeakPresenceDetector.TRACK_CREATION_STACK)
         {
             Assert.Equal(7, creation.Length);
             Assert.All(creation, entry =>
             {
-                Assert.Contains(nameof(createDiagnostic), entry.StackTrace);
+                Assert.Contains(nameof(CreateDiagnostic), entry.StackTrace);
                 Assert.Contains("Resource created outside static initializer", entry.Message);
             });
         }
@@ -262,7 +262,7 @@ public class LeakPresenceDetectorContractTest
             Assert.Empty(creation);
             Assert.Contains("trackCreationStack=true", leak.Message);
         }
-        foreach (var tracker in trackers) Assert.True(tracker.close(null));
-        Assert.Throws<InvalidOperationException>(scope.check);
+        foreach (var tracker in trackers) Assert.True(tracker.Close(null));
+        Assert.Throws<InvalidOperationException>(scope.Check);
     }
 }

@@ -24,5 +24,5 @@ public interface IMapping<in TIn, out TOut>
     /**
      * Returns mapped value of the specified input.
      */
-    TOut map(TIn input);
+    TOut Map(TIn input);
 }

@@ -31,13 +31,13 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         // be collected via the WeakReference.
         trackedHash = RuntimeHelpers.GetHashCode(referent);
         allLeaks.Add(this);
-        registration = CollectedObjectWatch.register(referent, () => refQueue.Enqueue(this));
+        registration = CollectedObjectWatch.Register(referent, () => refQueue.Enqueue(this));
         // Create a new Record so we always have the creation stacktrace included.
         try { head = initialHint == null ? new TraceRecord(TraceRecord.BOTTOM) : new TraceRecord(TraceRecord.BOTTOM, initialHint); }
         finally { GC.KeepAlive(referent); }
     }
-    public void record() => record0(null);
-    public void record(object hint) => record0(hint);
+    public void Record() => Record0(null);
+    public void Record(object hint) => Record0(hint);
     /**
          * This method works by exponentially backing off as more records are present in the stack. Each record has a
          * 1 / 2^n chance of dropping the top most record and replacing it with itself. This has a number of convenient
@@ -64,7 +64,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
          * object isn't shared! If this is a problem, the loop can be aborted and the record dropped, because another
          * thread won the race.
          */
-    private void record0(object hint)
+    private void Record0(object hint)
     {
         // Check TARGET_RECORDS > 0 here to avoid similar check before remove from and add to lastRecords
         if (TARGET_RECORDS <= 0) return;
@@ -73,33 +73,33 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         do
         {
             previous = Volatile.Read(ref head);
-            if (previous == null || previous.pos() == TraceRecord.CLOSE_MARK_POS)
+            if (previous == null || previous.Pos() == TraceRecord.CLOSE_MARK_POS)
             {
                 // already closed.
                 return;
             }
             TraceRecord prior = previous;
-            int count = previous.pos() + 1;
-            dropped = count >= TARGET_RECORDS && ThreadLocalRandom.current().Next(1 << Math.Min(count - TARGET_RECORDS, 30)) != 0;
-            if (dropped) prior = previous.next();
+            int count = previous.Pos() + 1;
+            dropped = count >= TARGET_RECORDS && ThreadLocalRandom.Current().Next(1 << Math.Min(count - TARGET_RECORDS, 30)) != 0;
+            if (dropped) prior = previous.Next();
             next = hint == null ? new TraceRecord(prior) : new TraceRecord(prior, hint);
         } while (!ReferenceEquals(Interlocked.CompareExchange(ref head, next, previous), previous));
         if (dropped) Interlocked.Increment(ref droppedRecords);
     }
-    internal bool dispose() { registration.cancel(); return allLeaks.Remove(this); }
-    public bool close()
+    internal bool Dispose() { registration.Cancel(); return allLeaks.Remove(this); }
+    public bool Close()
     {
         if (!allLeaks.Remove(this)) return false;
         // Call clear so the reference is not even enqueued.
-        registration.cancel();
+        registration.Cancel();
         Volatile.Write(ref head, TRACK_CLOSE ? new TraceRecord(true) : null);
         return true;
     }
-    public bool close(T trackedObject)
+    public bool Close(T trackedObject)
     {
         // Ensure that the object that was tracked is the same as the one that was passed to close(...).
         Debug.Assert(trackedHash == RuntimeHelpers.GetHashCode(trackedObject));
-        try { return close(); }
+        try { return Close(); }
         finally
         {
             // This method will do `synchronized(trackedObject)` and we should be sure this will not cause deadlock.
@@ -107,7 +107,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
             // therefore it is unreasonable that anyone else, anywhere, is holding a lock on the trackedObject.
             // (Unreasonable but possible, unfortunately.)
             // CLR GC.KeepAlive supplies the reachability fence without a resource monitor.
-            reachabilityFence0(trackedObject);
+            ReachabilityFence0(trackedObject);
         }
     }
     /**
@@ -129,20 +129,20 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
          * @param ref the reference. If {@code null}, this method has no effect.
          * @see java.lang.ref.Reference#reachabilityFence
          */
-    private static void reachabilityFence0(object referent)
+    private static void ReachabilityFence0(object referent)
     {
         // Empty synchronized is ok: https://stackoverflow.com/a/31933260/1151521
         // The original synchronization is replaced by the CLR's explicit lifetime fence.
         GC.KeepAlive(referent);
     }
-    public Exception getCloseStackTraceIfAny()
+    public Exception GetCloseStackTraceIfAny()
     {
         TraceRecord current = Volatile.Read(ref head);
-        return current?.pos() == TraceRecord.CLOSE_MARK_POS ? current : null;
+        return current?.Pos() == TraceRecord.CLOSE_MARK_POS ? current : null;
     }
-    public override string ToString() => generateReport(Volatile.Read(ref head));
-    internal string getReportAndClearRecords() => generateReport(Interlocked.Exchange(ref head, null));
-    private string generateReport(TraceRecord current)
+    public override string ToString() => GenerateReport(Volatile.Read(ref head));
+    internal string GetReportAndClearRecords() => GenerateReport(Interlocked.Exchange(ref head, null));
+    private string GenerateReport(TraceRecord current)
     {
         if (current == null)
         {
@@ -150,17 +150,17 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
             return StringUtil.EMPTY_STRING;
         }
         int dropped = Volatile.Read(ref droppedRecords), duped = 0;
-        int present = current.pos() + 1;
+        int present = current.Pos() + 1;
         // Guess about 2 kilobytes per stack trace
         var buffer = new StringBuilder(present * 2048).Append(StringUtil.NEWLINE);
         buffer.Append("Recent access records: ").Append(StringUtil.NEWLINE);
         int index = 1;
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        for (; current != TraceRecord.BOTTOM; current = current.next())
+        for (; current != TraceRecord.BOTTOM; current = current.Next())
         {
             string record = current.ToString();
             if (!seen.Add(record)) { duped++; continue; }
-            if (current.next() == TraceRecord.BOTTOM) buffer.Append("Created at:").Append(StringUtil.NEWLINE).Append(record);
+            if (current.Next() == TraceRecord.BOTTOM) buffer.Append("Created at:").Append(StringUtil.NEWLINE).Append(record);
             else buffer.Append('#').Append(index++).Append(':').Append(StringUtil.NEWLINE).Append(record);
         }
         if (duped > 0) buffer.Append(": ").Append(duped).Append(" leak records were discarded because they were duplicates").Append(StringUtil.NEWLINE);

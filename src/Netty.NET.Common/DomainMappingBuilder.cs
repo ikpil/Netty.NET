@@ -61,9 +61,9 @@ public class DomainMappingBuilder<T> where T : class
      * @param output   the output value that will be returned by {@link DomainNameMapping#map(string)}
      *                 when the specified host name matches the specified input host name
      */
-    public DomainMappingBuilder<T> add(string hostname, T output)
+    public DomainMappingBuilder<T> Add(string hostname, T output)
     {
-        builder.add(hostname, output);
+        builder.Add(hostname, output);
         return this;
     }
 
@@ -73,8 +73,8 @@ public class DomainMappingBuilder<T> where T : class
      *
      * @return new {@link DomainNameMapping} instance
      */
-    public DomainNameMapping<T> build()
+    public DomainNameMapping<T> Build()
     {
-        return builder.build();
+        return builder.Build();
     }
 }

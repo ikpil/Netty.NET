@@ -31,27 +31,27 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
     /**
      * Return the {@link EventExecutorGroup} which is the parent of this {@link EventExecutor},
      */
-    IEventExecutorGroup parent();
+    IEventExecutorGroup Parent();
 
-    bool isExecutorThread(Thread thread);
+    bool IsExecutorThread(Thread thread);
 
     /**
      * Calls {@link #inEventLoop(Thread)} with {@link Thread#currentThread()} as argument
      */
-    bool inEventLoop();
+    bool InEventLoop();
 
     /**
      * Return {@code true} if the given {@link Thread} is executed in the event loop,
      * {@code false} otherwise.
      */
-    bool inEventLoop(Thread thread);
+    bool InEventLoop(Thread thread);
 
     /**
      * Returns {@code true} if the {@link EventExecutor} is considered suspended.
      *
      * @return {@code true} if suspended, {@code false} otherwise.
      */
-    bool isSuspended();
+    bool IsSuspended();
 
     /**
      * Try to suspend this {@link EventExecutor} and return {@code true} if suspension was successful.
@@ -71,5 +71,5 @@ public interface IEventExecutor : IEventExecutorGroup, IThreadAwareExecutor
      *
      * @return {@code true} if suspension was successful, otherwise {@code false}.
      */
-    bool trySuspend();
+    bool TrySuspend();
 }

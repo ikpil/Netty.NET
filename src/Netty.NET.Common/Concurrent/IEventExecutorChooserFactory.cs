@@ -24,5 +24,5 @@ public interface IEventExecutorChooserFactory
     /**
      * Returns a new {@link EventExecutorChooser}.
      */
-    IEventExecutorChooser newChooser(IEventExecutor[] executors);
+    IEventExecutorChooser NewChooser(IEventExecutor[] executors);
 }

@@ -25,9 +25,9 @@ public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFa
 
     private DefaultEventExecutorChooserFactory() { }
 
-    public IEventExecutorChooser newChooser(IEventExecutor[] executors)
+    public IEventExecutorChooser NewChooser(IEventExecutor[] executors)
     {
-        if (isPowerOfTwo(executors.Length))
+        if (IsPowerOfTwo(executors.Length))
         {
             return new PowerOfTwoEventExecutorChooser(executors);
         }
@@ -37,7 +37,7 @@ public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFa
         }
     }
 
-    private static bool isPowerOfTwo(int val)
+    private static bool IsPowerOfTwo(int val)
     {
         return (val & -val) == val;
     }

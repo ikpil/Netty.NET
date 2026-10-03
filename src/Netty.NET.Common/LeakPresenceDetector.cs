@@ -26,11 +26,11 @@ namespace Netty.NET.Common;
 public static class LeakPresenceDetector
 {
     internal const string TRACK_CREATION_STACK_PROPERTY = "io.netty.util.LeakPresenceDetector.trackCreationStack";
-    internal static readonly bool TRACK_CREATION_STACK = SystemPropertyUtil.getBoolean(TRACK_CREATION_STACK_PROPERTY, false);
+    internal static readonly bool TRACK_CREATION_STACK = SystemPropertyUtil.GetBoolean(TRACK_CREATION_STACK_PROPERTY, false);
     internal static readonly ResourceScope GLOBAL = new("global");
     private static int staticInitializerCount;
 
-    internal static bool inStaticInitializerSlow(StackTrace trace)
+    internal static bool InStaticInitializerSlow(StackTrace trace)
     {
         foreach (StackFrame frame in trace.GetFrames())
         {
@@ -41,10 +41,10 @@ public static class LeakPresenceDetector
         }
         return false;
     }
-    internal static bool inStaticInitializerFast()
+    internal static bool InStaticInitializerFast()
     {
         // This plain field access is safe. The worst that can happen is that we see non-zero where we shouldn't.
-        return Volatile.Read(ref staticInitializerCount) != 0 && inStaticInitializerSlow(new StackTrace());
+        return Volatile.Read(ref staticInitializerCount) != 0 && InStaticInitializerSlow(new StackTrace());
     }
     /**
      * Wrap a static initializer so that any resources created inside the block will not be tracked. Example:
@@ -63,9 +63,9 @@ public static class LeakPresenceDetector
      * @param <R> The supplier return type
      */
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static R staticInitializer<R>(Func<R> supplier)
+    public static R StaticInitializer<R>(Func<R> supplier)
     {
-        if (!inStaticInitializerSlow(new StackTrace())) throw new InvalidOperationException("Not in static initializer.");
+        if (!InStaticInitializerSlow(new StackTrace())) throw new InvalidOperationException("Not in static initializer.");
         Interlocked.Increment(ref staticInitializerCount);
         try { return supplier(); }
         finally { Interlocked.Decrement(ref staticInitializerCount); }
@@ -76,15 +76,15 @@ public static class LeakPresenceDetector
      *
      * @throws IllegalStateException If there is a leak, or if the leak detector is not a {@link LeakPresenceDetector}.
      */
-    public static void check()
+    public static void Check()
     {
         // for LeakPresenceDetector, this is cheap.
-        ResourceLeakDetector<object> detector = ResourceLeakDetectorFactory.instance().newResourceLeakDetector<object>(typeof(object));
+        ResourceLeakDetector<object> detector = ResourceLeakDetectorFactory.Instance().NewResourceLeakDetector<object>(typeof(object));
         if (detector is not LeakPresenceDetector<object> presence)
             throw new InvalidOperationException("LeakPresenceDetector not in use. Please register it using " +
                 "environment property io.netty.customResourceLeakDetector=" + typeof(LeakPresenceDetector<>).AssemblyQualifiedName);
         //noinspection resource
-        presence.scopeForCheck().check();
+        presence.ScopeForCheck().Check();
     }
     /**
      * A resource scope keeps track of the resources for a particular set of threads. Different scopes can be checked
@@ -102,24 +102,24 @@ public static class LeakPresenceDetector
          * @param name The scope name, used for error reporting
          */
         public ResourceScope(string name) => this.name = name;
-        internal void checkOpen()
+        internal void CheckOpen()
         {
             if (Volatile.Read(ref open) == 0)
                 throw new AllocationProhibitedException("Resource scope '" + (name ?? "null") + "' already closed");
         }
-        internal void track(object tracker)
+        internal void Track(object tracker)
         {
-            checkOpen();
+            CheckOpen();
             Interlocked.Increment(ref openResourceCounter);
             if (TRACK_CREATION_STACK) creationStacks.TryAdd(tracker, new LeakCreation());
         }
-        internal void release(object tracker)
+        internal void Release(object tracker)
         {
             Interlocked.Decrement(ref openResourceCounter);
             if (TRACK_CREATION_STACK) creationStacks.TryRemove(tracker, out _);
-            checkOpen();
+            CheckOpen();
         }
-        internal void check()
+        internal void Check()
         {
             // Interlocked replaces LongAdder; checks still require quiescent producers.
             long count = Interlocked.Exchange(ref openResourceCounter, 0);
@@ -134,7 +134,7 @@ public static class LeakPresenceDetector
                 int index = 0;
                 foreach (Exception creation in creationStacks.Values)
                 {
-                    ThrowableUtil.addSuppressed(failure, creation);
+                    ThrowableUtil.AddSuppressed(failure, creation);
                     if (index++ > 5) break;
                 }
                 creationStacks.Clear();
@@ -148,18 +148,18 @@ public static class LeakPresenceDetector
          *
          * @return {@code true} if there are open resources
          */
-        public bool hasOpenResources() => Volatile.Read(ref openResourceCounter) > 0;
+        public bool HasOpenResources() => Volatile.Read(ref openResourceCounter) > 0;
         /**
          * Close this scope. Closing a scope will prevent new resources from being allocated (or released) in this
          * scope. The call also throws an exception if there are any resources left open.
          */
-        public void close()
+        public void Close()
         {
             // CLR IDisposable repeats must leave the scope closed. The pinned
             // Java decrement can become negative and accidentally allow reuse.
-            if (Interlocked.Exchange(ref open, 0) != 0) check();
+            if (Interlocked.Exchange(ref open, 0) != 0) Check();
         }
-        public void Dispose() => close();
+        public void Dispose() => Close();
     }
     private sealed class LeakCreation : Exception
     {
@@ -171,10 +171,10 @@ public static class LeakPresenceDetector
         {
             get
             {
-                using var held = UninterruptibleMonitor.enter(this);
+                using var held = UninterruptibleMonitor.Enter(this);
                 if (message == null)
                 {
-                    if (inStaticInitializerSlow(trace))
+                    if (InStaticInitializerSlow(trace))
                         message = "Resource created in static initializer. Please wrap the static initializer in " +
                             "LeakPresenceDetector.staticInitializer so that this resource is excluded.";
                     else
@@ -282,12 +282,12 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
      *
      * @return The resource scope to use
      */
-    protected virtual LeakPresenceDetector.ResourceScope currentScope() => LeakPresenceDetector.GLOBAL;
-    internal LeakPresenceDetector.ResourceScope scopeForCheck() => currentScope();
-    public sealed override IResourceLeakTracker<T> track(T obj)
-        => LeakPresenceDetector.inStaticInitializerFast() ? null : trackForcibly(obj);
-    public sealed override IResourceLeakTracker<T> trackForcibly(T obj) => new PresenceTracker(currentScope());
-    public sealed override bool isRecordEnabled() => false;
+    protected virtual LeakPresenceDetector.ResourceScope CurrentScope() => LeakPresenceDetector.GLOBAL;
+    internal LeakPresenceDetector.ResourceScope ScopeForCheck() => CurrentScope();
+    public sealed override IResourceLeakTracker<T> Track(T obj)
+        => LeakPresenceDetector.InStaticInitializerFast() ? null : TrackForcibly(obj);
+    public sealed override IResourceLeakTracker<T> TrackForcibly(T obj) => new PresenceTracker(CurrentScope());
+    public sealed override bool IsRecordEnabled() => false;
     private sealed class PresenceTracker : IResourceLeakTracker<T>
     {
         private readonly LeakPresenceDetector.ResourceScope scope;
@@ -295,14 +295,14 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
         internal PresenceTracker(LeakPresenceDetector.ResourceScope scope)
         {
             this.scope = scope;
-            scope.track(this);
+            scope.Track(this);
         }
-        public void record() { }
-        public void record(object hint) { }
-        public bool close(T trackedObject)
+        public void Record() { }
+        public void Record(object hint) { }
+        public bool Close(T trackedObject)
         {
             if (Interlocked.CompareExchange(ref closed, 1, 0) != 0) return false;
-            scope.release(this);
+            scope.Release(this);
             return true;
         }
     }

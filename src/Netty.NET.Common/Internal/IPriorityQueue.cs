@@ -24,19 +24,19 @@ public interface IPriorityQueue<T> : IQueue<T>, IEnumerable<T>
     /**
      * Same as {@link #remove(Object)} but typed using generics.
      */
-    bool remove(T node);
+    bool Remove(T node);
 
     /**
      * Same as {@link #contains(Object)} but typed using generics.
      */
-    bool contains(T node);
+    bool Contains(T node);
 
     /**
      * Notify the queue that the priority for {@code node} has changed. The queue will adjust to ensure the priority
      * queue properties are maintained.
      * @param node An object which is in this queue and the priority may have changed.
      */
-    void priorityChanged(T node);
+    void PriorityChanged(T node);
 
     /**
      * Removes all of the elements from this {@link PriorityQueue} without calling
@@ -45,7 +45,7 @@ public interface IPriorityQueue<T> : IQueue<T>, IEnumerable<T>
      * re-inserted into this or any other {@link PriorityQueue} and it is known that the {@link PriorityQueue} itself
      * will be garbage collected after this call.
      */
-    void clearIgnoringIndexes();
+    void ClearIgnoringIndexes();
 
-    T[] toArray();
+    T[] ToArray();
 }

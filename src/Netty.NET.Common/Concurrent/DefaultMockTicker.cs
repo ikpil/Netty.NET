@@ -47,15 +47,15 @@ public sealed class DefaultMockTicker : MockTicker
     {
     }
 
-    public override long nanoTime()
+    public override long NanoTime()
     {
         return Interlocked.Read(ref _nanoTime);
     }
 
     // nano time
-    public override void sleep(long delayNanos)
+    public override void Sleep(long delayNanos)
     {
-        checkPositiveOrZero(delayNanos, "delayNanos");
+        CheckPositiveOrZero(delayNanos, "delayNanos");
 
         if (delayNanos == 0)
         {
@@ -71,14 +71,14 @@ public sealed class DefaultMockTicker : MockTicker
             var registration = registered.AddLast(sleeper);
             try
             {
-                long startTimeNanos = nanoTime();
+                long startTimeNanos = NanoTime();
                 sleepers.Add(Thread.CurrentThread);
                 Monitor.PulseAll(_lock);
                 while (true)
                 {
                     while (pendingTicks.First != sleeper.Tick) Monitor.Wait(_lock);
                     pendingTicks.RemoveFirst();
-                    if (unchecked(nanoTime() - startTimeNanos) >= delayNanos) return;
+                    if (unchecked(NanoTime() - startTimeNanos) >= delayNanos) return;
                     Monitor.PulseAll(_lock);
                 }
             }
@@ -95,7 +95,7 @@ public sealed class DefaultMockTicker : MockTicker
     /**
      * Wait for the given thread to enter the {@link #sleep(long, TimeUnit)} method, and block.
      */
-    public void awaitSleepingThread(Thread thread)
+    public void AwaitSleepingThread(Thread thread)
     {
         lock (_lock)
         {
@@ -106,9 +106,9 @@ public sealed class DefaultMockTicker : MockTicker
         }
     }
 
-    public override void advance(long amountNanos)
+    public override void Advance(long amountNanos)
     {
-        checkPositiveOrZero(amountNanos, "amountNanos");
+        CheckPositiveOrZero(amountNanos, "amountNanos");
 
         if (amountNanos == 0)
         {
@@ -120,7 +120,7 @@ public sealed class DefaultMockTicker : MockTicker
         {
             // Java lock.lock is noninterruptible, while sleep/observation entry
             // is interruptible. Preserve that distinction with native monitors.
-            using (UninterruptibleMonitor.enter(_lock))
+            using (UninterruptibleMonitor.Enter(_lock))
             {
                 while (pendingTicks.Count != 0)
                 {

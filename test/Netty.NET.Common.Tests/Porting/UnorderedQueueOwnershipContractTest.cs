@@ -13,7 +13,7 @@ public class UnorderedQueueOwnershipContractTest
 {
     private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
     {
-        public Thread newThread(IRunnable task) => create(task);
+        public Thread NewThread(IRunnable task) => create(task);
     }
 
     [Fact]
@@ -24,12 +24,12 @@ public class UnorderedQueueOwnershipContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(task =>
         {
             if (++attempts == 1) throw expected;
-            return new Thread(task.run) { IsBackground = true };
+            return new Thread(task.Run) { IsBackground = true };
         }));
         try
         {
             Assert.Same(expected, Assert.Throws<InvalidOperationException>(() =>
-                executor.execute(Runnables.Create(() => ++calls))));
+                executor.Execute(Runnables.Create(() => ++calls))));
             Assert.Equal(0, executor.WorkerCount);
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.Equal(7, executor.ScheduleAsync(() => 7, TimeSpan.Zero)
@@ -39,8 +39,8 @@ public class UnorderedQueueOwnershipContractTest
         }
         finally
         {
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
@@ -65,10 +65,10 @@ public class UnorderedQueueOwnershipContractTest
         }
         finally
         {
-            owner.shutdownNow();
-            other.shutdownNow();
-            Assert.True(owner.awaitTermination(TimeSpan.FromSeconds(5)));
-            Assert.True(other.awaitTermination(TimeSpan.FromSeconds(5)));
+            owner.ShutdownNow();
+            other.ShutdownNow();
+            Assert.True(owner.AwaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.True(other.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
@@ -79,23 +79,23 @@ public class UnorderedQueueOwnershipContractTest
         int calls = 0;
         try
         {
-            executor.execute(Runnables.Create(() => ++calls));
-            executor.execute(Runnables.Create(() => ++calls));
-            var removed = executor.shutdownNow();
+            executor.Execute(Runnables.Create(() => ++calls));
+            executor.Execute(Runnables.Create(() => ++calls));
+            var removed = executor.ShutdownNow();
             Assert.Equal(2, removed.Count);
             foreach (IRunnable handle in removed)
             {
                 Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(handle);
-                handle.run();
-                handle.run();
+                handle.Run();
+                handle.Run();
             }
             Assert.Equal(0, calls);
             Assert.Equal(0, executor.PendingTaskCount);
         }
         finally
         {
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
@@ -127,7 +127,7 @@ public class UnorderedQueueOwnershipContractTest
         }
         finally
         {
-            executor.shutdownNow();
+            executor.ShutdownNow();
             await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
         }
     }

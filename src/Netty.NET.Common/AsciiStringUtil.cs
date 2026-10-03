@@ -36,28 +36,28 @@ public static class AsciiStringUtil
      * @param string the {@link AsciiString} to convert
      * @return the new {@link AsciiString} in lower case
      */
-    public static AsciiString toLowerCase(AsciiString str)
+    public static AsciiString ToLowerCase(AsciiString str)
     {
-        byte[] byteArray = str.array();
-        int offset = str.arrayOffset();
-        int length = str.length();
-        if (!containsUpperCase(byteArray, offset, length))
+        byte[] byteArray = str.Array();
+        int offset = str.ArrayOffset();
+        int length = str.Length();
+        if (!ContainsUpperCase(byteArray, offset, length))
         {
             return str;
         }
 
         byte[] newByteArray = GC.AllocateUninitializedArray<byte>(length);
-        toLowerCase(byteArray, offset, newByteArray);
+        ToLowerCase(byteArray, offset, newByteArray);
         return new AsciiString(newByteArray, false);
     }
 
-    private static bool containsUpperCase(byte[] byteArray, int offset, int length)
+    private static bool ContainsUpperCase(byte[] byteArray, int offset, int length)
     {
         int longCount = length >>> 3;
         for (int i = 0; i < longCount; ++i)
         {
             long word = MemoryMarshal.Read<long>(byteArray.AsSpan(offset, sizeof(long)));
-            if (SWARUtil.containsUpperCase(word))
+            if (SWARUtil.ContainsUpperCase(word))
             {
                 return true;
             }
@@ -65,16 +65,16 @@ public static class AsciiStringUtil
             offset += sizeof(long);
         }
 
-        return unrolledContainsUpperCase(byteArray, offset, length & 7);
+        return UnrolledContainsUpperCase(byteArray, offset, length & 7);
     }
 
-    private static bool unrolledContainsUpperCase(byte[] byteArray, int offset, int byteCount)
+    private static bool UnrolledContainsUpperCase(byte[] byteArray, int offset, int byteCount)
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
         if ((byteCount & sizeof(int)) != 0)
         {
             int word = MemoryMarshal.Read<int>(byteArray.AsSpan(offset, sizeof(int)));
-            if (SWARUtil.containsUpperCase(word))
+            if (SWARUtil.ContainsUpperCase(word))
             {
                 return true;
             }
@@ -84,12 +84,12 @@ public static class AsciiStringUtil
 
         if ((byteCount & sizeof(short)) != 0)
         {
-            if (isUpperCase(byteArray[offset]))
+            if (IsUpperCase(byteArray[offset]))
             {
                 return true;
             }
 
-            if (isUpperCase(byteArray[offset + 1]))
+            if (IsUpperCase(byteArray[offset + 1]))
             {
                 return true;
             }
@@ -99,13 +99,13 @@ public static class AsciiStringUtil
 
         if ((byteCount & sizeof(byte)) != 0)
         {
-            return isUpperCase(byteArray[offset]);
+            return IsUpperCase(byteArray[offset]);
         }
 
         return false;
     }
 
-    private static void toLowerCase(byte[] src, int srcOffset, byte[] dst)
+    private static void ToLowerCase(byte[] src, int srcOffset, byte[] dst)
     {
         int length = dst.Length;
         int longCount = length >>> 3;
@@ -113,14 +113,14 @@ public static class AsciiStringUtil
         for (int i = 0; i < longCount; ++i)
         {
             long word = MemoryMarshal.Read<long>(src.AsSpan(srcOffset + offset, sizeof(long)));
-            MemoryMarshal.Write(dst.AsSpan(offset, sizeof(long)), SWARUtil.toLowerCase(word));
+            MemoryMarshal.Write(dst.AsSpan(offset, sizeof(long)), SWARUtil.ToLowerCase(word));
             offset += sizeof(long);
         }
 
-        unrolledToLowerCase(src, srcOffset + offset, dst, offset, length & 7);
+        UnrolledToLowerCase(src, srcOffset + offset, dst, offset, length & 7);
     }
 
-    private static void unrolledToLowerCase(byte[] src, int srcPos,
+    private static void UnrolledToLowerCase(byte[] src, int srcPos,
         byte[] dst, int dstOffset, int byteCount)
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
@@ -128,14 +128,14 @@ public static class AsciiStringUtil
         if ((byteCount & sizeof(int)) != 0)
         {
             int word = MemoryMarshal.Read<int>(src.AsSpan(srcPos + offset, sizeof(int)));
-            MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(int)), SWARUtil.toLowerCase(word));
+            MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(int)), SWARUtil.ToLowerCase(word));
             offset += sizeof(int);
         }
 
         if ((byteCount & sizeof(short)) != 0)
         {
             short word = MemoryMarshal.Read<short>(src.AsSpan(srcPos + offset, sizeof(short)));
-            short result = unchecked((short)((toLowerCase((byte)(word >>> 8)) << 8) | toLowerCase((byte)word)));
+            short result = unchecked((short)((ToLowerCase((byte)(word >>> 8)) << 8) | ToLowerCase((byte)word)));
             MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(short)), result);
             offset += sizeof(short);
         }
@@ -144,7 +144,7 @@ public static class AsciiStringUtil
         // CLR note: the mask tests the low bit (oddness), not byteCount's magnitude.
         if ((byteCount & sizeof(byte)) != 0)
         {
-            dst[dstOffset + offset] = toLowerCase(src[srcPos + offset]);
+            dst[dstOffset + offset] = ToLowerCase(src[srcPos + offset]);
         }
     }
 
@@ -154,28 +154,28 @@ public static class AsciiStringUtil
      * @param string the {@link AsciiString} to convert
      * @return the {@link AsciiString} in upper case
      */
-    public static AsciiString toUpperCase(AsciiString str)
+    public static AsciiString ToUpperCase(AsciiString str)
     {
-        byte[] byteArray = str.array();
-        int offset = str.arrayOffset();
-        int length = str.length();
-        if (!containsLowerCase(byteArray, offset, length))
+        byte[] byteArray = str.Array();
+        int offset = str.ArrayOffset();
+        int length = str.Length();
+        if (!ContainsLowerCase(byteArray, offset, length))
         {
             return str;
         }
 
         byte[] newByteArray = GC.AllocateUninitializedArray<byte>(length);
-        toUpperCase(byteArray, offset, newByteArray);
+        ToUpperCase(byteArray, offset, newByteArray);
         return new AsciiString(newByteArray, false);
     }
 
-    private static bool containsLowerCase(byte[] byteArray, int offset, int length)
+    private static bool ContainsLowerCase(byte[] byteArray, int offset, int length)
     {
         int longCount = length >>> 3;
         for (int i = 0; i < longCount; ++i)
         {
             long word = MemoryMarshal.Read<long>(byteArray.AsSpan(offset, sizeof(long)));
-            if (SWARUtil.containsLowerCase(word))
+            if (SWARUtil.ContainsLowerCase(word))
             {
                 return true;
             }
@@ -183,16 +183,16 @@ public static class AsciiStringUtil
             offset += sizeof(long);
         }
 
-        return unrolledContainsLowerCase(byteArray, offset, length & 7);
+        return UnrolledContainsLowerCase(byteArray, offset, length & 7);
     }
 
-    private static bool unrolledContainsLowerCase(byte[] byteArray, int offset, int byteCount)
+    private static bool UnrolledContainsLowerCase(byte[] byteArray, int offset, int byteCount)
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
         if ((byteCount & sizeof(int)) != 0)
         {
             int word = MemoryMarshal.Read<int>(byteArray.AsSpan(offset, sizeof(int)));
-            if (SWARUtil.containsLowerCase(word))
+            if (SWARUtil.ContainsLowerCase(word))
             {
                 return true;
             }
@@ -202,12 +202,12 @@ public static class AsciiStringUtil
 
         if ((byteCount & sizeof(short)) != 0)
         {
-            if (isLowerCase(byteArray[offset]))
+            if (IsLowerCase(byteArray[offset]))
             {
                 return true;
             }
 
-            if (isLowerCase(byteArray[offset + 1]))
+            if (IsLowerCase(byteArray[offset + 1]))
             {
                 return true;
             }
@@ -217,13 +217,13 @@ public static class AsciiStringUtil
 
         if ((byteCount & sizeof(byte)) != 0)
         {
-            return isLowerCase(byteArray[offset]);
+            return IsLowerCase(byteArray[offset]);
         }
 
         return false;
     }
 
-    private static void toUpperCase(byte[] src, int srcOffset, byte[] dst)
+    private static void ToUpperCase(byte[] src, int srcOffset, byte[] dst)
     {
         int length = dst.Length;
         int longCount = length >>> 3;
@@ -231,14 +231,14 @@ public static class AsciiStringUtil
         for (int i = 0; i < longCount; ++i)
         {
             long word = MemoryMarshal.Read<long>(src.AsSpan(srcOffset + offset, sizeof(long)));
-            MemoryMarshal.Write(dst.AsSpan(offset, sizeof(long)), SWARUtil.toUpperCase(word));
+            MemoryMarshal.Write(dst.AsSpan(offset, sizeof(long)), SWARUtil.ToUpperCase(word));
             offset += sizeof(long);
         }
 
-        unrolledToUpperCase(src, srcOffset + offset, dst, offset, length & 7);
+        UnrolledToUpperCase(src, srcOffset + offset, dst, offset, length & 7);
     }
 
-    private static void unrolledToUpperCase(byte[] src, int srcOffset,
+    private static void UnrolledToUpperCase(byte[] src, int srcOffset,
         byte[] dst, int dstOffset, int byteCount)
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
@@ -246,25 +246,25 @@ public static class AsciiStringUtil
         if ((byteCount & sizeof(int)) != 0)
         {
             int word = MemoryMarshal.Read<int>(src.AsSpan(srcOffset + offset, sizeof(int)));
-            MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(int)), SWARUtil.toUpperCase(word));
+            MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(int)), SWARUtil.ToUpperCase(word));
             offset += sizeof(int);
         }
 
         if ((byteCount & sizeof(short)) != 0)
         {
             short word = MemoryMarshal.Read<short>(src.AsSpan(srcOffset + offset, sizeof(short)));
-            short result = unchecked((short)((toUpperCase((byte)(word >>> 8)) << 8) | toUpperCase((byte)word)));
+            short result = unchecked((short)((ToUpperCase((byte)(word >>> 8)) << 8) | ToUpperCase((byte)word)));
             MemoryMarshal.Write(dst.AsSpan(dstOffset + offset, sizeof(short)), result);
             offset += sizeof(short);
         }
 
         if ((byteCount & sizeof(byte)) != 0)
         {
-            dst[dstOffset + offset] = toUpperCase(src[srcOffset + offset]);
+            dst[dstOffset + offset] = ToUpperCase(src[srcOffset + offset]);
         }
     }
 
-    private static bool isLowerCase(byte value)
+    private static bool IsLowerCase(byte value)
     {
         return value >= 'a' && value <= 'z';
     }
@@ -275,7 +275,7 @@ public static class AsciiStringUtil
      * @param value the byte to check
      * @return {@code true} if the byte is upper case, {@code false} otherwise.
      */
-    public static bool isUpperCase(byte value)
+    public static bool IsUpperCase(byte value)
     {
         return value >= 'A' && value <= 'Z';
     }
@@ -286,9 +286,9 @@ public static class AsciiStringUtil
      * @param value the byte to convert
      * @return the lower case byte
      */
-    public static byte toLowerCase(byte value)
+    public static byte ToLowerCase(byte value)
     {
-        return isUpperCase(value) ? (byte)(value + 32) : value;
+        return IsUpperCase(value) ? (byte)(value + 32) : value;
     }
 
     /**
@@ -297,8 +297,8 @@ public static class AsciiStringUtil
      * @param value the byte to convert
      * @return the upper case byte
      */
-    public static byte toUpperCase(byte value)
+    public static byte ToUpperCase(byte value)
     {
-        return isLowerCase(value) ? (byte)(value - 32) : value;
+        return IsLowerCase(value) ? (byte)(value - 32) : value;
     }
 }

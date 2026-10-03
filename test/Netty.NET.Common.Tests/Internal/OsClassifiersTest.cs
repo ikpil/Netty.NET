@@ -40,64 +40,64 @@ public class OsClassifiersTest : IDisposable
     }
 
     [Fact]
-    void testOsClassifiersPropertyAbsent()
+    void TestOsClassifiersPropertyAbsent()
     {
         ISet<string> available = new LinkedHashSet<string>(2);
-        bool added = PlatformDependent.addPropertyOsClassifiers(available);
+        bool added = PlatformDependent.AddPropertyOsClassifiers(available);
         Assert.False(added);
         Assert.True(available.IsEmpty());
     }
 
     [Fact]
-    void testOsClassifiersPropertyEmpty()
+    void TestOsClassifiersPropertyEmpty()
     {
         // empty property -Dio.netty.osClassifiers
         Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, "");
         ISet<string> available = new LinkedHashSet<string>(2);
-        bool added = PlatformDependent.addPropertyOsClassifiers(available);
+        bool added = PlatformDependent.AddPropertyOsClassifiers(available);
         Assert.True(added);
         Assert.True(available.IsEmpty());
     }
 
     [Fact]
-    void testOsClassifiersPropertyNotEmptyNoClassifiers()
+    void TestOsClassifiersPropertyNotEmptyNoClassifiers()
     {
         // ID
         Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, ",");
         ISet<string> available = new LinkedHashSet<string>(2);
-        Assert.Throws<ArgumentException>(() => PlatformDependent.addPropertyOsClassifiers(available));
+        Assert.Throws<ArgumentException>(() => PlatformDependent.AddPropertyOsClassifiers(available));
     }
 
     [Fact]
-    void testOsClassifiersPropertySingle()
+    void TestOsClassifiersPropertySingle()
     {
         // ID
         Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, "fedora");
         ISet<string> available = new LinkedHashSet<string>(2);
-        bool added = PlatformDependent.addPropertyOsClassifiers(available);
+        bool added = PlatformDependent.AddPropertyOsClassifiers(available);
         Assert.True(added);
         Assert.Equal(1, available.Count);
         Assert.Equal("fedora", available.First());
     }
 
     [Fact]
-    void testOsClassifiersPropertyPair()
+    void TestOsClassifiersPropertyPair()
     {
         // ID, ID_LIKE
         Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, "manjaro,arch");
         ISet<string> available = new LinkedHashSet<string>(2);
-        bool added = PlatformDependent.addPropertyOsClassifiers(available);
+        bool added = PlatformDependent.AddPropertyOsClassifiers(available);
         Assert.True(added);
         Assert.Equal(1, available.Count);
         Assert.Equal("arch", available.First());
     }
 
     [Fact]
-    void testOsClassifiersPropertyExcessive()
+    void TestOsClassifiersPropertyExcessive()
     {
         // ID, ID_LIKE, excessive
         Environment.SetEnvironmentVariable(OS_CLASSIFIERS_PROPERTY, "manjaro,arch,slackware");
         ISet<string> available = new LinkedHashSet<string>(2);
-        Assert.Throws<ArgumentException>(() => PlatformDependent.addPropertyOsClassifiers(available));
+        Assert.Throws<ArgumentException>(() => PlatformDependent.AddPropertyOsClassifiers(available));
     }
 }

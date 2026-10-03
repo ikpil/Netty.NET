@@ -53,7 +53,7 @@ public interface IInternalLogger
      *
      * @return name of this logger instance
      */
-    string name();
+    string Name();
 
     /**
      * Is the logger instance enabled for the TRACE level?
@@ -61,14 +61,14 @@ public interface IInternalLogger
      * @return True if this Logger is enabled for the TRACE level,
      *         false otherwise.
      */
-    bool isTraceEnabled();
+    bool IsTraceEnabled();
 
     /**
      * Log a message at the TRACE level.
      *
      * @param msg the message string to be logged
      */
-    void trace(string msg);
+    void Trace(string msg);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -80,7 +80,7 @@ public interface IInternalLogger
      * @param format the format string
      * @param arg    the argument
      */
-    void trace(string format, object arg);
+    void Trace(string format, object arg);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -93,7 +93,7 @@ public interface IInternalLogger
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void trace(string format, object argA, object argB);
+    void Trace(string format, object argA, object argB);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -108,7 +108,7 @@ public interface IInternalLogger
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void trace(string format, params object[] arguments);
+    void Trace(string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the TRACE level with an
@@ -117,14 +117,14 @@ public interface IInternalLogger
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void trace(string msg, Exception t);
+    void Trace(string msg, Exception t);
 
     /**
      * Log an exception (throwable) at the TRACE level.
      *
      * @param t   the exception (throwable) to log
      */
-    void trace(Exception t);
+    void Trace(Exception t);
 
     /**
      * Is the logger instance enabled for the DEBUG level?
@@ -132,14 +132,14 @@ public interface IInternalLogger
      * @return True if this Logger is enabled for the DEBUG level,
      *         false otherwise.
      */
-    bool isDebugEnabled();
+    bool IsDebugEnabled();
 
     /**
      * Log a message at the DEBUG level.
      *
      * @param msg the message string to be logged
      */
-    void debug(string msg);
+    void Debug(string msg);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -151,7 +151,7 @@ public interface IInternalLogger
      * @param format the format string
      * @param arg    the argument
      */
-    void debug(string format, object arg);
+    void Debug(string format, object arg);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -164,7 +164,7 @@ public interface IInternalLogger
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void debug(string format, object argA, object argB);
+    void Debug(string format, object argA, object argB);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -180,7 +180,7 @@ public interface IInternalLogger
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void debug(string format, params object[] arguments);
+    void Debug(string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the DEBUG level with an
@@ -189,14 +189,14 @@ public interface IInternalLogger
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void debug(string msg, Exception t);
+    void Debug(string msg, Exception t);
 
     /**
      * Log an exception (throwable) at the DEBUG level.
      *
      * @param t   the exception (throwable) to log
      */
-    void debug(Exception t);
+    void Debug(Exception t);
 
     /**
      * Is the logger instance enabled for the INFO level?
@@ -204,14 +204,14 @@ public interface IInternalLogger
      * @return True if this Logger is enabled for the INFO level,
      *         false otherwise.
      */
-    bool isInfoEnabled();
+    bool IsInfoEnabled();
 
     /**
      * Log a message at the INFO level.
      *
      * @param msg the message string to be logged
      */
-    void info(string msg);
+    void Info(string msg);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -223,7 +223,7 @@ public interface IInternalLogger
      * @param format the format string
      * @param arg    the argument
      */
-    void info(string format, object arg);
+    void Info(string format, object arg);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -236,7 +236,7 @@ public interface IInternalLogger
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void info(string format, object argA, object argB);
+    void Info(string format, object argA, object argB);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -252,7 +252,7 @@ public interface IInternalLogger
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void info(string format, params object[] arguments);
+    void Info(string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the INFO level with an
@@ -261,14 +261,14 @@ public interface IInternalLogger
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void info(string msg, Exception t);
+    void Info(string msg, Exception t);
 
     /**
      * Log an exception (throwable) at the INFO level.
      *
      * @param t   the exception (throwable) to log
      */
-    void info(Exception t);
+    void Info(Exception t);
 
     /**
      * Is the logger instance enabled for the WARN level?
@@ -276,14 +276,14 @@ public interface IInternalLogger
      * @return True if this Logger is enabled for the WARN level,
      *         false otherwise.
      */
-    bool isWarnEnabled();
+    bool IsWarnEnabled();
 
     /**
      * Log a message at the WARN level.
      *
      * @param msg the message string to be logged
      */
-    void warn(string msg);
+    void Warn(string msg);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -295,7 +295,7 @@ public interface IInternalLogger
      * @param format the format string
      * @param arg    the argument
      */
-    void warn(string format, object arg);
+    void Warn(string format, object arg);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -311,7 +311,7 @@ public interface IInternalLogger
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void warn(string format, params object[] arguments);
+    void Warn(string format, params object[] arguments);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -324,7 +324,7 @@ public interface IInternalLogger
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void warn(string format, object argA, object argB);
+    void Warn(string format, object argA, object argB);
 
     /**
      * Log an exception (throwable) at the WARN level with an
@@ -333,14 +333,14 @@ public interface IInternalLogger
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void warn(string msg, Exception t);
+    void Warn(string msg, Exception t);
 
     /**
      * Log an exception (throwable) at the WARN level.
      *
      * @param t   the exception (throwable) to log
      */
-    void warn(Exception t);
+    void Warn(Exception t);
 
     /**
      * Is the logger instance enabled for the ERROR level?
@@ -348,14 +348,14 @@ public interface IInternalLogger
      * @return True if this Logger is enabled for the ERROR level,
      *         false otherwise.
      */
-    bool isErrorEnabled();
+    bool IsErrorEnabled();
 
     /**
      * Log a message at the ERROR level.
      *
      * @param msg the message string to be logged
      */
-    void error(string msg);
+    void Error(string msg);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -367,7 +367,7 @@ public interface IInternalLogger
      * @param format the format string
      * @param arg    the argument
      */
-    void error(string format, object arg);
+    void Error(string format, object arg);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -380,7 +380,7 @@ public interface IInternalLogger
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void error(string format, object argA, object argB);
+    void Error(string format, object argA, object argB);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -396,7 +396,7 @@ public interface IInternalLogger
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void error(string format, params object[] arguments);
+    void Error(string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the ERROR level with an
@@ -405,14 +405,14 @@ public interface IInternalLogger
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void error(string msg, Exception t);
+    void Error(string msg, Exception t);
 
     /**
      * Log an exception (throwable) at the ERROR level.
      *
      * @param t   the exception (throwable) to log
      */
-    void error(Exception t);
+    void Error(Exception t);
 
     /**
      * Is the logger instance enabled for the specified {@code level}?
@@ -420,14 +420,14 @@ public interface IInternalLogger
      * @return True if this Logger is enabled for the specified {@code level},
      *         false otherwise.
      */
-    bool isEnabled(InternalLogLevel level);
+    bool IsEnabled(InternalLogLevel level);
 
     /**
      * Log a message at the specified {@code level}.
      *
      * @param msg the message string to be logged
      */
-    void log(InternalLogLevel level, string msg);
+    void Log(InternalLogLevel level, string msg);
 
     /**
      * Log a message at the specified {@code level} according to the specified format
@@ -439,7 +439,7 @@ public interface IInternalLogger
      * @param format the format string
      * @param arg    the argument
      */
-    void log(InternalLogLevel level, string format, object arg);
+    void Log(InternalLogLevel level, string format, object arg);
 
     /**
      * Log a message at the specified {@code level} according to the specified format
@@ -452,7 +452,7 @@ public interface IInternalLogger
      * @param argA   the first argument
      * @param argB   the second argument
      */
-    void log(InternalLogLevel level, string format, object argA, object argB);
+    void Log(InternalLogLevel level, string format, object argA, object argB);
 
     /**
      * Log a message at the specified {@code level} according to the specified format
@@ -469,7 +469,7 @@ public interface IInternalLogger
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    void log(InternalLogLevel level, string format, params object[] arguments);
+    void Log(InternalLogLevel level, string format, params object[] arguments);
 
     /**
      * Log an exception (throwable) at the specified {@code level} with an
@@ -478,12 +478,12 @@ public interface IInternalLogger
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    void log(InternalLogLevel level, string msg, Exception t);
+    void Log(InternalLogLevel level, string msg, Exception t);
 
     /**
      * Log an exception (throwable) at the specified {@code level}.
      *
      * @param t   the exception (throwable) to log
      */
-    void log(InternalLogLevel level, Exception t);
+    void Log(InternalLogLevel level, Exception t);
 }

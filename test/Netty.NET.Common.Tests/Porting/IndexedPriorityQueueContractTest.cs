@@ -11,8 +11,8 @@ public class IndexedPriorityQueueContractTest
     {
         private readonly Dictionary<DefaultPriorityQueue<Node>, int> indices = new();
         internal int Priority = priority;
-        public int priorityQueueIndex(DefaultPriorityQueue<Node> queue) => indices.GetValueOrDefault(queue, -1);
-        public void priorityQueueIndex(DefaultPriorityQueue<Node> queue, int index) => indices[queue] = index;
+        public int PriorityQueueIndex(DefaultPriorityQueue<Node> queue) => indices.GetValueOrDefault(queue, -1);
+        public void PriorityQueueIndex(DefaultPriorityQueue<Node> queue, int index) => indices[queue] = index;
         public override bool Equals(object other) => other is Node node && node.Priority == Priority;
         public override int GetHashCode() => Priority;
     }
@@ -26,23 +26,23 @@ public class IndexedPriorityQueueContractTest
         var ascending = Create();
         var descending = Create(true);
         Node[] nodes = [new(1), new(2), new(3)];
-        foreach (Node node in nodes) { ascending.offer(node); descending.offer(node); }
+        foreach (Node node in nodes) { ascending.Offer(node); descending.Offer(node); }
         nodes[1].Priority = 0;
-        ascending.priorityChanged(nodes[1]);
-        descending.priorityChanged(nodes[1]);
-        Assert.Same(nodes[1], ascending.peek());
-        Assert.Same(nodes[2], descending.peek());
-        Assert.True(ascending.remove(nodes[1]));
-        Assert.Equal(-1, nodes[1].priorityQueueIndex(ascending));
-        Assert.True(descending.contains(nodes[1]));
-        ascending.clear();
-        Assert.Same(nodes[2], descending.poll());
-        Assert.Same(nodes[0], descending.poll());
-        Assert.Same(nodes[1], descending.poll());
+        ascending.PriorityChanged(nodes[1]);
+        descending.PriorityChanged(nodes[1]);
+        Assert.Same(nodes[1], ascending.Peek());
+        Assert.Same(nodes[2], descending.Peek());
+        Assert.True(ascending.Remove(nodes[1]));
+        Assert.Equal(-1, nodes[1].PriorityQueueIndex(ascending));
+        Assert.True(descending.Contains(nodes[1]));
+        ascending.Clear();
+        Assert.Same(nodes[2], descending.Poll());
+        Assert.Same(nodes[0], descending.Poll());
+        Assert.Same(nodes[1], descending.Poll());
         foreach (Node node in nodes)
         {
-            Assert.Equal(-1, node.priorityQueueIndex(ascending));
-            Assert.Equal(-1, node.priorityQueueIndex(descending));
+            Assert.Equal(-1, node.PriorityQueueIndex(ascending));
+            Assert.Equal(-1, node.PriorityQueueIndex(descending));
         }
     }
 
@@ -52,22 +52,22 @@ public class IndexedPriorityQueueContractTest
         var queue = Create();
         var stale = new Node(1);
         var replacement = new Node(1);
-        queue.offer(stale);
-        queue.clearIgnoringIndexes();
-        queue.offer(replacement);
+        queue.Offer(stale);
+        queue.ClearIgnoringIndexes();
+        queue.Offer(replacement);
         Assert.True(stale.Equals(replacement));
-        Assert.False(queue.contains(stale));
-        Assert.False(queue.remove(stale));
-        queue.priorityChanged(stale);
-        Assert.Same(replacement, queue.poll());
-        Assert.Equal(-1, replacement.priorityQueueIndex(queue));
+        Assert.False(queue.Contains(stale));
+        Assert.False(queue.Remove(stale));
+        queue.PriorityChanged(stale);
+        Assert.Same(replacement, queue.Poll());
+        Assert.Equal(-1, replacement.PriorityQueueIndex(queue));
     }
 
     [Fact]
     public void QueueRequiresReferenceNodesInsteadOfProvidingAGeneralLinearScanFallback()
     {
         var queue = new DefaultPriorityQueue<object>(Comparer<object>.Create((_, _) => 0), 0);
-        Assert.Throws<ArgumentException>(() => queue.offer(new object()));
+        Assert.Throws<ArgumentException>(() => queue.Offer(new object()));
         Assert.Equal(0, queue.Count);
     }
 
@@ -83,29 +83,29 @@ public class IndexedPriorityQueueContractTest
         var queue = Create();
         var alive = new List<Node>();
         var random = new Random(42);
-        for (int i = 0; i < 256; ++i) { var node = new Node(i); alive.Add(node); queue.offer(node); }
+        for (int i = 0; i < 256; ++i) { var node = new Node(i); alive.Add(node); queue.Offer(node); }
         for (int step = 0; step < 1024; ++step)
         {
             Node node = alive[random.Next(alive.Count)];
             if (step % 3 == 0)
             {
-                Assert.True(queue.remove(node));
+                Assert.True(queue.Remove(node));
                 alive.RemoveAll(item => ReferenceEquals(item, node));
-                Assert.Equal(-1, node.priorityQueueIndex(queue));
+                Assert.Equal(-1, node.PriorityQueueIndex(queue));
                 node = new Node(10000 + step);
                 alive.Add(node);
-                queue.offer(node);
+                queue.Offer(node);
             }
-            else { node.Priority = -10000 - step; queue.priorityChanged(node); }
+            else { node.Priority = -10000 - step; queue.PriorityChanged(node); }
             Node expected = alive.MinBy(item => item.Priority);
-            Assert.Same(expected, queue.peek());
-            Node[] snapshot = queue.toArray();
+            Assert.Same(expected, queue.Peek());
+            Node[] snapshot = queue.ToArray();
             Assert.Equal(alive.Count, snapshot.Length);
             for (int index = 0; index < snapshot.Length; ++index)
-                Assert.Equal(index, snapshot[index].priorityQueueIndex(queue));
+                Assert.Equal(index, snapshot[index].PriorityQueueIndex(queue));
         }
         alive.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-        foreach (Node expected in alive) Assert.Same(expected, queue.poll());
-        Assert.False(queue.tryDequeue(out _));
+        foreach (Node expected in alive) Assert.Same(expected, queue.Poll());
+        Assert.False(queue.TryDequeue(out _));
     }
 }

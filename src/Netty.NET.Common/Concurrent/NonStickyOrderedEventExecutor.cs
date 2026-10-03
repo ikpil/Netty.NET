@@ -68,7 +68,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                         if (_stopped || !ReferenceEquals(_reservation, reservation)) return;
                         if (!tasks.TryDequeue(out task)) break;
                     }
-                    safeExecute(task);
+                    SafeExecute(task);
                 }
 
                 RunnerReservation next;
@@ -148,14 +148,14 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         finally { lock (_gate) ClearExecuting(reservation); }
     }
 
-    public override bool inEventLoop(Thread thread)
+    public override bool InEventLoop(Thread thread)
     {
         return thread != null && ReferenceEquals(Volatile.Read(ref _executingThread), thread);
     }
 
-    public override bool isShuttingDown()
+    public override bool IsShuttingDown()
     {
-        return _executor.isShutdown();
+        return _executor.IsShutdown();
     }
 
     public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
@@ -166,27 +166,27 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
     public override Task Termination => _executor.Termination;
     public override Task StopAsync() => _executor.StopAsync();
 
-    public override void shutdown()
+    public override void Shutdown()
     {
-        _executor.shutdown();
+        _executor.Shutdown();
     }
 
-    public override bool isShutdown()
+    public override bool IsShutdown()
     {
-        return _executor.isShutdown();
+        return _executor.IsShutdown();
     }
 
-    public override bool isTerminated()
+    public override bool IsTerminated()
     {
-        return _executor.isTerminated();
+        return _executor.IsTerminated();
     }
 
-    public override bool awaitTermination(TimeSpan timeout)
+    public override bool AwaitTermination(TimeSpan timeout)
     {
-        return _executor.awaitTermination(timeout);
+        return _executor.AwaitTermination(timeout);
     }
 
-    public override void execute(IRunnable command)
+    public override void Execute(IRunnable command)
     {
         ArgumentNullException.ThrowIfNull(command);
         RunnerReservation reservation;
@@ -220,7 +220,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         try
         {
             // A native reservation owns only admission, never a result Task.
-            _executor.execute(reservation);
+            _executor.Execute(reservation);
         }
         finally { _inlineDispatchOwner = previous; }
         return reservation.Inline;
@@ -274,7 +274,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         {
             if (Invalidate()) owner.FinishPending(this, error, false);
         }
-        public void run()
+        public void Run()
         {
             if (Interlocked.CompareExchange(ref _claim, 1, 0) != 0) return;
             if (ReferenceEquals(_inlineDispatchOwner, owner)) Inline = true;

@@ -27,7 +27,7 @@ public class UnorderedThreadPoolEventExecutorTest
 {
     // See https://github.com/netty/netty/issues/6507
     [Fact]
-    public void testNotEndlessExecute()
+    public void TestNotEndlessExecute()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         try
@@ -39,7 +39,7 @@ public class UnorderedThreadPoolEventExecutorTest
             // CLR Barrier retains the two-party rendezvous; the exchanged Void value is always null.
             using var exchanger = new Barrier(2);
             using var latch = new CountdownEvent(3);
-            executor.execute(Runnables.Create(() =>
+            executor.Execute(Runnables.Create(() =>
             {
                 try { Assert.True(exchanger.SignalAndWait(TimeSpan.FromSeconds(5))); }
                 catch (ThreadInterruptedException e) { throw new InvalidOperationException("interrupted", e); }
@@ -57,11 +57,11 @@ public class UnorderedThreadPoolEventExecutorTest
             // by DefaultPromise may happen in an async fashion
             for (int i = 0; i < 10000; i++) Assert.Equal(0, executor.PendingTaskCount);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact(Timeout = 10000)]
-    public void scheduledAtFixedRateMustRunTaskRepeatedly()
+    public void ScheduledAtFixedRateMustRunTaskRepeatedly()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var latch = new CountdownEvent(3);
@@ -72,11 +72,11 @@ public class UnorderedThreadPoolEventExecutorTest
             if (!latch.IsSet) latch.Signal();
         }, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1), cancellation.Token);
         try { Assert.True(latch.Wait(TimeSpan.FromSeconds(5))); }
-        finally { cancellation.Cancel(); stop(executor); }
+        finally { cancellation.Cancel(); Stop(executor); }
     }
 
     [Fact]
-    public void testGetReturnsCorrectValueOnSuccess()
+    public void TestGetReturnsCorrectValueOnSuccess()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         try
@@ -85,11 +85,11 @@ public class UnorderedThreadPoolEventExecutorTest
             var future = executor.SubmitAsync<string>(() => expected);
             Assert.Equal(expected, future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
-    public void testGetReturnsCorrectValueOnFailure()
+    public void TestGetReturnsCorrectValueOnFailure()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         try
@@ -99,25 +99,25 @@ public class UnorderedThreadPoolEventExecutorTest
             Assert.Same(cause, Assert.Throws<InvalidOperationException>(() =>
                 future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
-    public void tasksRunningInUnorderedExecutorAreInEventLoop()
+    public void TasksRunningInUnorderedExecutorAreInEventLoop()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         try
         {
-            var future = executor.SubmitAsync<bool>(() => executor.inEventLoop());
+            var future = executor.SubmitAsync<bool>(() => executor.InEventLoop());
             Assert.True(future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
-    private static void stop(UnorderedThreadPoolEventExecutor executor)
+    private static void Stop(UnorderedThreadPoolEventExecutor executor)
     {
         executor.ShutdownGracefullyAsync();
-        if (!executor.awaitTermination(TimeSpan.FromSeconds(5))) executor.shutdownNow();
-        Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+        if (!executor.AwaitTermination(TimeSpan.FromSeconds(5))) executor.ShutdownNow();
+        Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 }

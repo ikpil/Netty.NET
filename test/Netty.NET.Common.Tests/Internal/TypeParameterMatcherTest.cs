@@ -52,90 +52,90 @@ public class TypeParameterMatcherTest
     private sealed class X<T, E> : W<E> { private T t; }
 
     [Fact]
-    public void testConcreteClass()
+    public void TestConcreteClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>(), typeof(TypeX<,,>), "A");
-        Assert.False(m.match(new object()));
-        Assert.False(m.match(new A()));
-        Assert.False(m.match(new AA()));
-        Assert.True(m.match(new AAA()));
-        Assert.False(m.match(new B()));
-        Assert.False(m.match(new BB()));
-        Assert.False(m.match(new BBB()));
-        Assert.False(m.match(new C()));
-        Assert.False(m.match(new CC()));
+        TypeParameterMatcher m = TypeParameterMatcher.Find(new TypeQ<BBB>(), typeof(TypeX<,,>), "A");
+        Assert.False(m.Match(new object()));
+        Assert.False(m.Match(new A()));
+        Assert.False(m.Match(new AA()));
+        Assert.True(m.Match(new AAA()));
+        Assert.False(m.Match(new B()));
+        Assert.False(m.Match(new BB()));
+        Assert.False(m.Match(new BBB()));
+        Assert.False(m.Match(new C()));
+        Assert.False(m.Match(new CC()));
     }
 
     [Fact(Skip = "JVM type erasure leaves this parameter unresolved; CLR retains BBB.")]
-    public void testUnsolvedParameter() => Assert.Throws<InvalidOperationException>(() =>
-        TypeParameterMatcher.find(new TypeQ<BBB>(), typeof(TypeX<,,>), "B"));
+    public void TestUnsolvedParameter() => Assert.Throws<InvalidOperationException>(() =>
+        TypeParameterMatcher.Find(new TypeQ<BBB>(), typeof(TypeX<,,>), "B"));
 
     [Fact]
-    public void testAnonymousClass()
+    public void TestAnonymousClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new AnonymousQ(), typeof(TypeX<,,>), "B");
-        Assert.False(m.match(new object()));
-        Assert.False(m.match(new A()));
-        Assert.False(m.match(new AA()));
-        Assert.False(m.match(new AAA()));
-        Assert.False(m.match(new B()));
-        Assert.False(m.match(new BB()));
-        Assert.True(m.match(new BBB()));
-        Assert.False(m.match(new C()));
-        Assert.False(m.match(new CC()));
+        TypeParameterMatcher m = TypeParameterMatcher.Find(new AnonymousQ(), typeof(TypeX<,,>), "B");
+        Assert.False(m.Match(new object()));
+        Assert.False(m.Match(new A()));
+        Assert.False(m.Match(new AA()));
+        Assert.False(m.Match(new AAA()));
+        Assert.False(m.Match(new B()));
+        Assert.False(m.Match(new BB()));
+        Assert.True(m.Match(new BBB()));
+        Assert.False(m.Match(new C()));
+        Assert.False(m.Match(new CC()));
     }
 
     [Fact]
-    public void testAbstractClass()
+    public void TestAbstractClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new TypeQ<BBB>(), typeof(TypeX<,,>), "C");
-        Assert.False(m.match(new object()));
-        Assert.False(m.match(new A()));
-        Assert.False(m.match(new AA()));
-        Assert.False(m.match(new AAA()));
-        Assert.False(m.match(new B()));
-        Assert.False(m.match(new BB()));
-        Assert.False(m.match(new BBB()));
-        Assert.False(m.match(new C()));
-        Assert.True(m.match(new CC()));
+        TypeParameterMatcher m = TypeParameterMatcher.Find(new TypeQ<BBB>(), typeof(TypeX<,,>), "C");
+        Assert.False(m.Match(new object()));
+        Assert.False(m.Match(new A()));
+        Assert.False(m.Match(new AA()));
+        Assert.False(m.Match(new AAA()));
+        Assert.False(m.Match(new B()));
+        Assert.False(m.Match(new BB()));
+        Assert.False(m.Match(new BBB()));
+        Assert.False(m.Match(new C()));
+        Assert.True(m.Match(new CC()));
     }
 
     [Fact]
-    public void testInaccessibleClass()
+    public void TestInaccessibleClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new AnonymousPrivateU(), typeof(U<>), "E");
-        Assert.False(m.match(new object()));
-        Assert.True(m.match(new T()));
+        TypeParameterMatcher m = TypeParameterMatcher.Find(new AnonymousPrivateU(), typeof(U<>), "E");
+        Assert.False(m.Match(new object()));
+        Assert.True(m.Match(new T()));
     }
 
     [Fact]
-    public void testArrayAsTypeParam()
+    public void TestArrayAsTypeParam()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new AnonymousArrayU(), typeof(U<>), "E");
-        Assert.False(m.match(new object()));
-        Assert.True(m.match(new byte[1]));
+        TypeParameterMatcher m = TypeParameterMatcher.Find(new AnonymousArrayU(), typeof(U<>), "E");
+        Assert.False(m.Match(new object()));
+        Assert.True(m.Match(new byte[1]));
     }
 
     [Fact]
-    public void testRawType()
+    public void TestRawType()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new RawU(), typeof(U<>), "E");
-        Assert.True(m.match(new object()));
+        TypeParameterMatcher m = TypeParameterMatcher.Find(new RawU(), typeof(U<>), "E");
+        Assert.True(m.Match(new object()));
     }
 
     [Fact]
-    public void testInnerClass()
+    public void TestInnerClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new V<string>().u, typeof(U<>), "E");
-        Assert.False(m.match(new object()));
-        Assert.True(m.match("value"));
+        TypeParameterMatcher m = TypeParameterMatcher.Find(new V<string>().u, typeof(U<>), "E");
+        Assert.False(m.Match(new object()));
+        Assert.True(m.Match("value"));
     }
 
     [Fact(Skip = "JVM type erasure is not applicable to constructed CLR generic types.")]
-    public void testErasure() => Assert.Throws<InvalidOperationException>(() =>
+    public void TestErasure() => Assert.Throws<InvalidOperationException>(() =>
     {
-        TypeParameterMatcher m = TypeParameterMatcher.find(new X<string, DateTime>(), typeof(W<>), "E");
-        Assert.True(m.match(new DateTime()));
-        Assert.False(m.match(new object()));
+        TypeParameterMatcher m = TypeParameterMatcher.Find(new X<string, DateTime>(), typeof(W<>), "E");
+        Assert.True(m.Match(new DateTime()));
+        Assert.False(m.Match(new object()));
     });
 }

@@ -27,101 +27,101 @@ public class DefaultAttributeMapTest {
     }
 
     [Fact]
-    public void testMapExists() {
+    public void TestMapExists() {
         Assert.NotNull(map);
     }
 
     [Fact]
-    public void testGetSetString() {
-        AttributeKey<string> key = AttributeKey.valueOf<string>("Nothing");
-        IAttribute<string> one = map.attr(key);
+    public void TestGetSetString() {
+        AttributeKey<string> key = AttributeKey.ValueOf<string>("Nothing");
+        IAttribute<string> one = map.Attr(key);
 
-        Assert.Same(one, map.attr(key));
+        Assert.Same(one, map.Attr(key));
 
-        one.setIfAbsent("Whoohoo");
-        Assert.Same("Whoohoo", one.get());
+        one.SetIfAbsent("Whoohoo");
+        Assert.Same("Whoohoo", one.Get());
 
-        one.setIfAbsent("What");
-        Assert.NotSame("What", one.get());
+        one.SetIfAbsent("What");
+        Assert.NotSame("What", one.Get());
 
-        one.remove();
-        Assert.Null(one.get());
+        one.Remove();
+        Assert.Null(one.Get());
     }
 
     [Fact]
-    public void testGetSetInt() {
-        AttributeKey<object> key = AttributeKey.valueOf<object>("Nada");
-        IAttribute<object> one = map.attr(key);
+    public void TestGetSetInt() {
+        AttributeKey<object> key = AttributeKey.ValueOf<object>("Nada");
+        IAttribute<object> one = map.Attr(key);
 
-        Assert.Same(one, map.attr(key));
+        Assert.Same(one, map.Attr(key));
 
-        one.setIfAbsent(3653);
-        Assert.Equal(3653, (int)one.get());
+        one.SetIfAbsent(3653);
+        Assert.Equal(3653, (int)one.Get());
 
-        one.setIfAbsent(1);
-        Assert.NotSame(1, one.get());
+        one.SetIfAbsent(1);
+        Assert.NotSame(1, one.Get());
 
-        one.remove();
-        Assert.Null(one.get());
+        one.Remove();
+        Assert.Null(one.Get());
     }
 
     // See https://github.com/netty/netty/issues/2523
     [Fact]
-    public void testSetRemove() {
-        AttributeKey<object> key = AttributeKey.valueOf<object>("key");
+    public void TestSetRemove() {
+        AttributeKey<object> key = AttributeKey.ValueOf<object>("key");
 
-        IAttribute<object> attr = map.attr(key);
+        IAttribute<object> attr = map.Attr(key);
         object one = 1;
-        attr.set(one);
-        Assert.Same(one, attr.getAndRemove());
+        attr.Set(one);
+        Assert.Same(one, attr.GetAndRemove());
 
-        IAttribute<object> attr2 = map.attr(key);
+        IAttribute<object> attr2 = map.Attr(key);
         object two = 2;
-        attr2.set(two);
-        Assert.Same(two, attr2.get());
+        attr2.Set(two);
+        Assert.Same(two, attr2.Get());
         Assert.NotSame(attr, attr2);
     }
 
     [Fact]
-    public void testHasAttrRemoved() {
+    public void TestHasAttrRemoved() {
         AttributeKey<object>[] keys = new AttributeKey<object>[20];
         for (int i = 0; i < 20; i++) {
-            keys[i] = AttributeKey.valueOf<object>(i.ToString());
+            keys[i] = AttributeKey.ValueOf<object>(i.ToString());
         }
         for (int i = 10; i < 20; i++) {
-            map.attr(keys[i]);
+            map.Attr(keys[i]);
         }
         for (int i = 0; i < 10; i++) {
-            map.attr(keys[i]);
+            map.Attr(keys[i]);
         }
         for (int i = 10; i < 20; i++) {
-            AttributeKey<object> key = AttributeKey.valueOf<object>(i.ToString());
-            Assert.True(map.hasAttr(key));
-            map.attr(key).remove();
-            Assert.False(map.hasAttr(key));
+            AttributeKey<object> key = AttributeKey.ValueOf<object>(i.ToString());
+            Assert.True(map.HasAttr(key));
+            map.Attr(key).Remove();
+            Assert.False(map.HasAttr(key));
         }
         for (int i = 0; i < 10; i++) {
-            AttributeKey<object> key = AttributeKey.valueOf<object>(i.ToString());
-            Assert.True(map.hasAttr(key));
-            map.attr(key).remove();
-            Assert.False(map.hasAttr(key));
+            AttributeKey<object> key = AttributeKey.ValueOf<object>(i.ToString());
+            Assert.True(map.HasAttr(key));
+            map.Attr(key).Remove();
+            Assert.False(map.HasAttr(key));
         }
     }
 
     [Fact]
-    public void testGetAndSetWithNull() {
-        AttributeKey<object> key = AttributeKey.valueOf<object>("key");
+    public void TestGetAndSetWithNull() {
+        AttributeKey<object> key = AttributeKey.ValueOf<object>("key");
 
-        IAttribute<object> attr = map.attr(key);
+        IAttribute<object> attr = map.Attr(key);
         object one = 1;
-        attr.set(one);
-        Assert.Same(one, attr.getAndSet(null));
-        Assert.Null(attr.get());
+        attr.Set(one);
+        Assert.Same(one, attr.GetAndSet(null));
+        Assert.Null(attr.Get());
 
-        IAttribute<object> attr2 = map.attr(key);
+        IAttribute<object> attr2 = map.Attr(key);
         object two = 2;
-        attr2.set(two);
-        Assert.Same(two, attr2.get());
+        attr2.Set(two);
+        Assert.Same(two, attr2.Get());
         Assert.Same(attr, attr2);
     }
 }

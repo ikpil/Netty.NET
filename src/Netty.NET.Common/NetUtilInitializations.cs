@@ -30,9 +30,9 @@ internal static class NetUtilInitializations
     /**
      * The logger being used by this class
      */
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(NetUtilInitializations));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(NetUtilInitializations));
 
-    public static IPAddress createLocalhost4()
+    public static IPAddress CreateLocalhost4()
     {
         byte[] LOCALHOST4_BYTES = { 127, 0, 0, 1 };
 
@@ -41,7 +41,7 @@ internal static class NetUtilInitializations
         return localhost4;
     }
 
-    public static IPAddress createLocalhost6()
+    public static IPAddress CreateLocalhost6()
     {
         byte[] LOCALHOST6_BYTES = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
 
@@ -50,7 +50,7 @@ internal static class NetUtilInitializations
         return localhost6;
     }
 
-    public static List<NetworkInterface> networkInterfaces()
+    public static List<NetworkInterface> NetworkInterfaces()
     {
         List<NetworkInterface> networkInterfaces = new List<NetworkInterface>();
         try
@@ -64,14 +64,14 @@ internal static class NetUtilInitializations
         }
         catch (Exception e)
         {
-            logger.warn("Failed to retrieve the list of available network interfaces", e);
+            logger.Warn("Failed to retrieve the list of available network interfaces", e);
             throw;
         }
 
         return networkInterfaces;
     }
 
-    public static NetworkIfaceAndInetAddress determineLoopback(
+    public static NetworkIfaceAndInetAddress DetermineLoopback(
         IReadOnlyList<NetworkInterface> networkInterfaces, IPAddress localhost4, IPAddress localhost6)
     {
         // Retrieve the list of available network interfaces.
@@ -79,7 +79,7 @@ internal static class NetUtilInitializations
         foreach (NetworkInterface iface in networkInterfaces)
         {
             // Use the interface with proper INET addresses only.
-            if (SocketUtils.addressesFromNetworkInterface(iface).Count != 0)
+            if (SocketUtils.AddressesFromNetworkInterface(iface).Count != 0)
             {
                 ifaces.Add(iface);
             }
@@ -92,7 +92,7 @@ internal static class NetUtilInitializations
         IPAddress loopbackAddr = null;
         foreach (NetworkInterface iface in ifaces)
         {
-            var addrs = SocketUtils.addressesFromNetworkInterface(iface);
+            var addrs = SocketUtils.AddressesFromNetworkInterface(iface);
             foreach (IPAddress addr in addrs)
             {
                 if (IPAddress.IsLoopback(addr))
@@ -117,7 +117,7 @@ internal static class NetUtilInitializations
                 {
                     if (iface.NetworkInterfaceType == NetworkInterfaceType.Loopback)
                     {
-                        var addrs = SocketUtils.addressesFromNetworkInterface(iface);
+                        var addrs = SocketUtils.AddressesFromNetworkInterface(iface);
                         foreach (IPAddress addr in addrs)
                         {
                             // Found the one with INET address.
@@ -133,19 +133,19 @@ internal static class NetUtilInitializations
 
                 if (loopbackIface == null)
                 {
-                    logger.warn("Failed to find the loopback interface");
+                    logger.Warn("Failed to find the loopback interface");
                 }
             }
             catch (SocketException e)
             {
-                logger.warn("Failed to find the loopback interface", e);
+                logger.Warn("Failed to find the loopback interface", e);
             }
         }
 
         if (loopbackIface != null)
         {
             // Found the loopback interface with an INET address.
-            logger.debug($"Loopback interface: {loopbackIface.Name} ({loopbackIface.Description}, {loopbackAddr})");
+            logger.Debug($"Loopback interface: {loopbackIface.Name} ({loopbackIface.Description}, {loopbackAddr})");
         }
         else
         {
@@ -160,7 +160,7 @@ internal static class NetUtilInitializations
                         .Any(x => x.Address.Equals(localhost6));
                     if (same)
                     {
-                        logger.debug($"Using hard-coded IPv6 localhost address: {localhost6}");
+                        logger.Debug($"Using hard-coded IPv6 localhost address: {localhost6}");
                         loopbackAddr = localhost6;
                     }
                 }
@@ -172,7 +172,7 @@ internal static class NetUtilInitializations
                 {
                     if (loopbackAddr == null)
                     {
-                        logger.debug($"Using hard-coded IPv4 localhost address: {localhost4}");
+                        logger.Debug($"Using hard-coded IPv4 localhost address: {localhost4}");
                         loopbackAddr = localhost4;
                     }
                 }

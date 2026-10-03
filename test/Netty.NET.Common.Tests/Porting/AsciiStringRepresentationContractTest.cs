@@ -29,7 +29,7 @@ public class AsciiStringRepresentationContractTest
     {
         char[] input = { '\0', 'A', '\u0080', '\u00e9', '\u00ff', '\u0100', '\ud83d', '\ude00' };
         AsciiString value = new AsciiString(input);
-        Assert.Equal(new byte[] { 0, 65, 128, 233, 255, 63, 63, 63 }, value.toByteArray());
+        Assert.Equal(new byte[] { 0, 65, 128, 233, 255, 63, 63, 63 }, value.ToByteArray());
         Assert.Equal("\0A\u0080\u00e9\u00ff???", value.ToString());
     }
 
@@ -44,7 +44,7 @@ public class AsciiStringRepresentationContractTest
 
         backing[1] = 128;
         Assert.Equal("éÿ", view.ToString());
-        view.arrayChanged();
+        view.ArrayChanged();
         Assert.Equal("\u0080ÿ", view.ToString());
         Assert.Equal(new AsciiString(new byte[] { 128, 255 }).GetHashCode(), view.GetHashCode());
         Assert.Equal("éÿ", copy.ToString());

@@ -32,7 +32,7 @@ public static class MathUtil
      * @param value from which to search for next power of 2
      * @return The next power of 2 or the value itself if it is a power of 2
      */
-    public static int findNextPositivePowerOfTwo(int value)
+    public static int FindNextPositivePowerOfTwo(int value)
     {
         uint adjusted = unchecked((uint)(value - 1));
         int leadingZeros = BitOperations.LeadingZeroCount(adjusted);
@@ -51,9 +51,9 @@ public static class MathUtil
      *     <li>{@code >= 2^30} -> 2^30</li>
      * </ul>
      */
-    public static int safeFindNextPositivePowerOfTwo(int value)
+    public static int SafeFindNextPositivePowerOfTwo(int value)
     {
-        return value <= 0 ? 1 : value >= 0x40000000 ? 0x40000000 : findNextPositivePowerOfTwo(value);
+        return value <= 0 ? 1 : value >= 0x40000000 ? 0x40000000 : FindNextPositivePowerOfTwo(value);
     }
 
     /**
@@ -64,12 +64,12 @@ public static class MathUtil
      * @return {@code false} if the requested {@code index} and {@code length} will fit within {@code capacity}.
      * {@code true} if this would result in an index out of bounds exception.
      */
-    public static bool isOutOfBounds(long index, long length, long capacity)
+    public static bool IsOutOfBounds(long index, long length, long capacity)
     {
         return (index | length | capacity | (index + length) | (capacity - (index + length))) < 0;
     }
 
-    public static bool isOutOfBounds(int index, int length, int capacity)
+    public static bool IsOutOfBounds(int index, int length, int capacity)
     {
         int end = unchecked(index + length);
         return (index | length | capacity | end) < 0 || end > capacity;
@@ -87,7 +87,7 @@ public static class MathUtil
      */
     [Obsolete("Use int.CompareTo instead.")]
     // do not subtract for comparison, it could overflow
-    public static int compare(int x, int y) => x.CompareTo(y);
+    public static int Compare(int x, int y) => x.CompareTo(y);
 
     /**
      * @deprecated not used anymore. User Long.compare() instead. For removal.
@@ -102,5 +102,5 @@ public static class MathUtil
      * </ul>
      */
     [Obsolete("Use long.CompareTo instead.")]
-    public static int compare(long x, long y) => x.CompareTo(y);
+    public static int Compare(long x, long y) => x.CompareTo(y);
 }

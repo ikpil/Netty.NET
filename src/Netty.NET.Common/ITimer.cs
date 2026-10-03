@@ -35,7 +35,7 @@ public interface ITimer
      * @throws RejectedExecutionException if the pending timeouts are too many and creating new timeout
      *                                    can cause instability in the system.
      */
-    ITimeout newTimeout(ITimerTask task, TimeSpan delay);
+    ITimeout NewTimeout(ITimerTask task, TimeSpan delay);
 
     /**
      * Releases all resources acquired by this {@link Timer} and cancels all
@@ -44,5 +44,5 @@ public interface ITimer
      * @return the handles associated with the tasks which were canceled by
      *         this method
      */
-    ISet<ITimeout> stop();
+    ISet<ITimeout> Stop();
 }

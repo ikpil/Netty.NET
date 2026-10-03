@@ -25,50 +25,50 @@ namespace Netty.NET.Common.Tests.Concurrent;
 public class DefaultMockTickerTest
 {
     [Fact]
-    void newMockTickerShouldReturnDefaultMockTicker()
+    void NewMockTickerShouldReturnDefaultMockTicker()
     {
-        Assert.True(Ticker.newMockTicker() is DefaultMockTicker);
+        Assert.True(Ticker.NewMockTicker() is DefaultMockTicker);
     }
 
     [Fact]
-    void defaultValues()
+    void DefaultValues()
     {
-        MockTicker ticker = Ticker.newMockTicker();
-        Assert.Equal(0, ticker.initialNanoTime());
-        Assert.Equal(0, ticker.nanoTime());
+        MockTicker ticker = Ticker.NewMockTicker();
+        Assert.Equal(0, ticker.InitialNanoTime());
+        Assert.Equal(0, ticker.NanoTime());
     }
 
     [Fact]
-    void advanceWithoutWaiters()
+    void AdvanceWithoutWaiters()
     {
-        MockTicker ticker = Ticker.newMockTicker();
-        ticker.advance(42);
-        Assert.Equal(0, ticker.initialNanoTime());
-        Assert.Equal(42, ticker.nanoTime());
+        MockTicker ticker = Ticker.NewMockTicker();
+        ticker.Advance(42);
+        Assert.Equal(0, ticker.InitialNanoTime());
+        Assert.Equal(42, ticker.NanoTime());
 
-        ticker.advanceMillis(42);
-        Assert.Equal(42_000_042, ticker.nanoTime());
+        ticker.AdvanceMillis(42);
+        Assert.Equal(42_000_042, ticker.NanoTime());
     }
 
     [Fact]
-    void advanceWithNegativeAmount()
+    void AdvanceWithNegativeAmount()
     {
-        MockTicker ticker = Ticker.newMockTicker();
+        MockTicker ticker = Ticker.NewMockTicker();
         Assert.Throws<ArgumentException>(() => {
-            ticker.advance(-1);
+            ticker.Advance(-1);
         });
 
         Assert.Throws<ArgumentException>(() => {
-            ticker.advanceMillis(-1);
+            ticker.AdvanceMillis(-1);
         });
     }
 
     [Fact(Timeout = 60000)]
-    public async Task advanceWithWaiters()
+    public async Task AdvanceWithWaiters()
     {
         var threads = new List<Thread>();
         var futures = new List<Task>();
-        var ticker = (DefaultMockTicker)Ticker.newMockTicker();
+        var ticker = (DefaultMockTicker)Ticker.NewMockTicker();
         try
         {
             for (int i = 0; i < 4; i++)
@@ -76,7 +76,7 @@ public class DefaultMockTickerTest
                 var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 var thread = new Thread(() =>
                 {
-                    try { ticker.sleep(TimeSpan.FromMilliseconds(1)); completion.SetResult(); }
+                    try { ticker.Sleep(TimeSpan.FromMilliseconds(1)); completion.SetResult(); }
                     catch (Exception cause) { completion.TrySetException(cause); }
                 }) { IsBackground = true };
                 threads.Add(thread);
@@ -84,17 +84,17 @@ public class DefaultMockTickerTest
                 thread.Start();
             }
             // Wait for all threads to be sleeping.
-            foreach (Thread thread in threads) ticker.awaitSleepingThread(thread);
+            foreach (Thread thread in threads) ticker.AwaitSleepingThread(thread);
             // Time did not advance at all, and thus future will not complete.
             foreach (Task future in futures) Assert.False(future.Wait(TimeSpan.FromMilliseconds(1)));
             // Advance just one nanosecond before completion.
-            ticker.advance(999_999);
+            ticker.Advance(999_999);
             // All threads should still be sleeping.
-            foreach (Thread thread in threads) ticker.awaitSleepingThread(thread);
+            foreach (Thread thread in threads) ticker.AwaitSleepingThread(thread);
             // Still needs one more nanosecond for our futures.
             foreach (Task future in futures) Assert.False(future.Wait(TimeSpan.FromMilliseconds(1)));
             // Reach at the 1 millisecond mark and ensure the future is complete.
-            ticker.advance(1);
+            ticker.Advance(1);
             await Task.WhenAll(futures).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         }
         finally
@@ -107,12 +107,12 @@ public class DefaultMockTickerTest
         }
     }
     [Fact]
-    void sleepZero()
+    void SleepZero()
     {
-        MockTicker ticker = Ticker.newMockTicker();
+        MockTicker ticker = Ticker.NewMockTicker();
         // All sleep calls with 0 delay should return immediately.
-        ticker.sleep(0);
-        ticker.sleepMillis(0);
-        Assert.Equal(0, ticker.nanoTime());
+        ticker.Sleep(0);
+        ticker.SleepMillis(0);
+        Assert.Equal(0, ticker.NanoTime());
     }
 }

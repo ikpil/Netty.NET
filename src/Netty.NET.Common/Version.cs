@@ -45,9 +45,9 @@ public sealed class Version
      *
      * @return A {@link Map} whose keys are Maven artifact IDs and whose values are {@link Version}s
      */
-    public static IDictionary<string, Version> identify()
+    public static IDictionary<string, Version> Identify()
     {
-        return identify(null);
+        return Identify(null);
     }
 
     /**
@@ -55,7 +55,7 @@ public sealed class Version
      *
      * @return A {@link Map} whose keys are Maven artifact IDs and whose values are {@link Version}s
      */
-    public static IDictionary<string, Version> identify(Assembly classLoader)
+    public static IDictionary<string, Version> Identify(Assembly classLoader)
     {
         if (classLoader == null)
         {
@@ -119,25 +119,25 @@ public sealed class Version
                 artifactId,
                 new Version(
                     artifactId,
-                    getProperty(props, artifactId + PROP_VERSION),
-                    parseIso8601(getProperty(props, artifactId + PROP_BUILD_DATE)),
-                    parseIso8601(getProperty(props, artifactId + PROP_COMMIT_DATE)),
-                    getProperty(props, artifactId + PROP_SHORT_COMMIT_HASH),
-                    getProperty(props, artifactId + PROP_LONG_COMMIT_HASH),
-                    getProperty(props, artifactId + PROP_REPO_STATUS)));
+                    GetProperty(props, artifactId + PROP_VERSION),
+                    ParseIso8601(GetProperty(props, artifactId + PROP_BUILD_DATE)),
+                    ParseIso8601(GetProperty(props, artifactId + PROP_COMMIT_DATE)),
+                    GetProperty(props, artifactId + PROP_SHORT_COMMIT_HASH),
+                    GetProperty(props, artifactId + PROP_LONG_COMMIT_HASH),
+                    GetProperty(props, artifactId + PROP_REPO_STATUS)));
         }
 
         return versions;
     }
 
-    private static string getProperty(IDictionary<string, string> props, string key)
+    private static string GetProperty(IDictionary<string, string> props, string key)
     {
         return props.TryGetValue(key, out var value)
             ? value
             : "";
     }
 
-    private static long parseIso8601(string value)
+    private static long ParseIso8601(string value)
     {
         try
         {
@@ -162,7 +162,7 @@ public sealed class Version
      */
     public static void Main(string[] args)
     {
-        foreach (Version v in identify().Values)
+        foreach (Version v in Identify().Values)
         {
             Console.Error.WriteLine(v);
         }
@@ -190,37 +190,37 @@ public sealed class Version
         _repositoryStatus = repositoryStatus;
     }
 
-    public string artifactId()
+    public string ArtifactId()
     {
         return _artifactId;
     }
 
-    public string artifactVersion()
+    public string ArtifactVersion()
     {
         return _artifactVersion;
     }
 
-    public long buildTimeMillis()
+    public long BuildTimeMillis()
     {
         return _buildTimeMillis;
     }
 
-    public long commitTimeMillis()
+    public long CommitTimeMillis()
     {
         return _commitTimeMillis;
     }
 
-    public string shortCommitHash()
+    public string ShortCommitHash()
     {
         return _shortCommitHash;
     }
 
-    public string longCommitHash()
+    public string LongCommitHash()
     {
         return _longCommitHash;
     }
 
-    public string repositoryStatus()
+    public string RepositoryStatus()
     {
         return _repositoryStatus;
     }

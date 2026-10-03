@@ -25,11 +25,11 @@ public class ThreadPerTaskExecutor : IExecutor
 
     public ThreadPerTaskExecutor(IThreadFactory threadFactory)
     {
-        _threadFactory = ObjectUtil.checkNotNull(threadFactory, "threadFactory");
+        _threadFactory = ObjectUtil.CheckNotNull(threadFactory, "threadFactory");
     }
 
-    public void execute(IRunnable command)
+    public void Execute(IRunnable command)
     {
-        _threadFactory.newThread(command).Start();
+        _threadFactory.NewThread(command).Start();
     }
 }

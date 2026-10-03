@@ -34,7 +34,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public sealed class ImmediateEventExecutor : AbstractEventExecutor
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ImmediateEventExecutor));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(ImmediateEventExecutor));
     public static readonly ImmediateEventExecutor INSTANCE = new ImmediateEventExecutor();
 
     /**
@@ -55,12 +55,12 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
 
     private ImmediateEventExecutor() { }
 
-    public override bool inEventLoop()
+    public override bool InEventLoop()
     {
         return true;
     }
 
-    public override bool inEventLoop(Thread thread)
+    public override bool InEventLoop(Thread thread)
     {
         return true;
     }
@@ -74,66 +74,66 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
     public override Task StopAsync() => Termination;
 
     [Obsolete]
-    public override void shutdown()
+    public override void Shutdown()
     {
     }
 
-    public override bool isShuttingDown()
+    public override bool IsShuttingDown()
     {
         return false;
     }
 
-    public override bool isShutdown()
+    public override bool IsShutdown()
     {
         return false;
     }
 
-    public override bool isTerminated()
+    public override bool IsTerminated()
     {
         return false;
     }
 
-    public override bool awaitTermination(TimeSpan timeout)
+    public override bool AwaitTermination(TimeSpan timeout)
     {
         return false;
     }
 
-    public override void execute(IRunnable command)
+    public override void Execute(IRunnable command)
     {
-        ObjectUtil.checkNotNull(command, "command");
-        if (StrongFalse == RUNNING.get())
+        ObjectUtil.CheckNotNull(command, "command");
+        if (StrongFalse == RUNNING.Get())
         {
-            RUNNING.set(StrongTrue);
+            RUNNING.Set(StrongTrue);
             try
             {
-                command.run();
+                command.Run();
             }
             catch (Exception cause)
             {
-                logger.info("Throwable caught while executing Runnable {}", command, cause);
+                logger.Info("Throwable caught while executing Runnable {}", command, cause);
             }
             finally
             {
-                var delayedRunnables = DELAYED_RUNNABLES.get();
+                var delayedRunnables = DELAYED_RUNNABLES.Get();
                 IRunnable runnable;
                 while (delayedRunnables.TryDequeue(out runnable) && null != runnable)
                 {
                     try
                     {
-                        runnable.run();
+                        runnable.Run();
                     }
                     catch (Exception cause)
                     {
-                        logger.info("Throwable caught while executing Runnable {}", runnable, cause);
+                        logger.Info("Throwable caught while executing Runnable {}", runnable, cause);
                     }
                 }
 
-                RUNNING.set(StrongFalse);
+                RUNNING.Set(StrongFalse);
             }
         }
         else
         {
-            DELAYED_RUNNABLES.get().Enqueue(command);
+            DELAYED_RUNNABLES.Get().Enqueue(command);
         }
     }
 

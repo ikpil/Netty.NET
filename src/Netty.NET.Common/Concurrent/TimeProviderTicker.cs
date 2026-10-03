@@ -24,9 +24,9 @@ internal sealed class TimeProviderTicker : Ticker
             SystemTimer.NanosecondsPerSecond / frequency : 0;
     }
 
-    public override long initialNanoTime() => initialNanos;
+    public override long InitialNanoTime() => initialNanos;
 
-    public override long nanoTime()
+    public override long NanoTime()
     {
         // Subtract native ticks before conversion. This preserves native clock
         // wrap and avoids rounding a fractional frequency's absolute origin twice.
@@ -35,6 +35,6 @@ internal sealed class TimeProviderTicker : Ticker
             SystemTimer.ScaleTimestamp(elapsed, SystemTimer.NanosecondsPerSecond, frequency);
     }
 
-    public override void sleep(long delayNanos) => throw new NotSupportedException(
+    public override void Sleep(long delayNanos) => throw new NotSupportedException(
         "A timestamp provider does not supply synchronous sleep. Drive the executor or use an explicit wait policy.");
 }

@@ -29,7 +29,7 @@ public static class RejectedExecutionHandlers
     /**
      * Returns a {@link IRejectedExecutionHandler} that will always just throw a {@link RejectedExecutionException}.
      */
-    public static IRejectedExecutionHandler reject()
+    public static IRejectedExecutionHandler Reject()
     {
         return REJECT;
     }
@@ -39,9 +39,9 @@ public static class RejectedExecutionHandlers
      * is only done if the task was added from outside of the event loop which means
      * {@link IEventExecutor#inEventLoop()} returns {@code false}.
      */
-    public static IRejectedExecutionHandler backoff(int retries, TimeSpan backoffAmount)
+    public static IRejectedExecutionHandler Backoff(int retries, TimeSpan backoffAmount)
     {
-        ObjectUtil.checkPositive(retries, "retries");
+        ObjectUtil.CheckPositive(retries, "retries");
         return new RejectedBackOffExecutionHandler(retries, backoffAmount);
     }
 }

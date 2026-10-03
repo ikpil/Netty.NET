@@ -16,24 +16,24 @@ public class ExecutorSubmissionContractTest
     {
         internal readonly BlockingCollection<IRunnable> tasks = new();
         private bool running;
-        public override bool inEventLoop(Thread thread) => running && thread == Thread.CurrentThread;
-        public override void execute(IRunnable task) => tasks.Add(task);
-        internal IRunnable take()
+        public override bool InEventLoop(Thread thread) => running && thread == Thread.CurrentThread;
+        public override void Execute(IRunnable task) => tasks.Add(task);
+        internal IRunnable Take()
         {
             Assert.True(tasks.TryTake(out var task, TimeSpan.FromSeconds(5)));
             return task;
         }
-        internal void run(IRunnable task)
+        internal void Run(IRunnable task)
         {
             running = true;
-            try { task.run(); }
+            try { task.Run(); }
             finally { running = false; }
         }
-        public override void shutdown() { }
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override bool isShuttingDown() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
+        public override void Shutdown() { }
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override bool IsShuttingDown() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
     }
@@ -46,12 +46,12 @@ public class ExecutorSubmissionContractTest
         using var observation = new ExecutorCompletion(executor, operation);
         bool onLoop = false;
         Task observed = null;
-        using var registration = observation.Register(task => { onLoop = executor.inEventLoop(); observed = task; });
+        using var registration = observation.Register(task => { onLoop = executor.InEventLoop(); observed = task; });
         Assert.False(operation.IsCompleted);
         Assert.IsAssignableFrom<INativeSubmission>(executor.tasks.First());
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.Same(result, operation.GetAwaiter().GetResult());
-        while (!registration.NotificationCompleted.IsCompleted) executor.run(executor.take());
+        while (!registration.NotificationCompleted.IsCompleted) executor.Run(executor.Take());
         registration.NotificationCompleted.GetAwaiter().GetResult();
         Assert.True(onLoop);
         Assert.Same(operation, observed);
@@ -65,8 +65,8 @@ public class ExecutorSubmissionContractTest
         var result = new object();
         var supplied = executor.SubmitAsync(() => { ++calls; return result; });
         Task empty = executor.SubmitAsync(() => { ++calls; });
-        executor.run(executor.take());
-        executor.run(executor.take());
+        executor.Run(executor.Take());
+        executor.Run(executor.Take());
         Assert.Same(result, supplied.GetAwaiter().GetResult());
         empty.GetAwaiter().GetResult();
         Assert.True(empty.IsCompletedSuccessfully);
@@ -82,7 +82,7 @@ public class ExecutorSubmissionContractTest
         var operation = executor.SubmitAsync(() => ++calls, cancellation.Token);
         cancellation.Cancel();
         Assert.True(operation.IsCanceled);
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.Equal(0, calls);
         var error = Assert.ThrowsAny<OperationCanceledException>(() => operation.GetAwaiter().GetResult());
         Assert.Equal(cancellation.Token, error.CancellationToken);
@@ -99,7 +99,7 @@ public class ExecutorSubmissionContractTest
             cancellation.Cancel();
             throw cause;
         }, cancellation.Token);
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.True(operation.IsFaulted);
         Assert.False(operation.IsCanceled);
         Assert.Same(cause, Assert.Throws<InvalidOperationException>(() => operation.GetAwaiter().GetResult()));
@@ -154,7 +154,7 @@ public class ExecutorSubmissionContractTest
             _ = Task.WhenAll(operation).WaitAsync(TimeSpan.FromMilliseconds(-2));
         });
         Assert.False(operation.IsCompleted);
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.Equal(42, operation.GetAwaiter().GetResult());
     }
 
@@ -167,7 +167,7 @@ public class ExecutorSubmissionContractTest
         Task<int> operation = executor.SubmitAsync(() => 42);
         await Assert.ThrowsAsync<TimeoutException>(() => Task.WhenAll(operation).WaitAsync(TimeSpan.FromTicks(ticks)));
         Assert.False(operation.IsCompleted);
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.Equal(42, await operation);
     }
 
@@ -186,7 +186,7 @@ public class ExecutorSubmissionContractTest
         }
         finally { owner.Cancel(); }
         Assert.All(operations, task => Assert.True(task.IsCanceled));
-        while (executor.tasks.TryTake(out var task)) executor.run(task);
+        while (executor.tasks.TryTake(out var task)) executor.Run(task);
         Assert.Equal(0, calls);
     }
 
@@ -199,7 +199,7 @@ public class ExecutorSubmissionContractTest
         try { Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<int>)null, owner.Token)); }
         finally { owner.Cancel(); }
         Assert.True(first.IsCanceled);
-        executor.run(executor.take());
+        executor.Run(executor.Take());
     }
 
     [Fact]
@@ -229,12 +229,12 @@ public class ExecutorSubmissionContractTest
             finally { owner.Cancel(); }
         }
         Task<int> result = FindSuccessAsync();
-        executor.run(executor.take());
-        executor.run(executor.take());
+        executor.Run(executor.Take());
+        executor.Run(executor.Take());
         Assert.Equal(42, await result.WaitAsync(TimeSpan.FromSeconds(5)));
         Assert.Same(cause, operations[0].Exception.InnerException);
         Assert.True(operations[2].IsCanceled);
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.Equal(0, lateCalls);
     }
 
@@ -245,11 +245,11 @@ public class ExecutorSubmissionContractTest
         var cause = new InvalidOperationException("first");
         Task<int>[] operations = { executor.SubmitAsync(int () => throw cause), executor.SubmitAsync(() => 42) };
         Task<Task<int>> winner = Task.WhenAny(operations);
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.Same(operations[0], await winner);
         Assert.Same(cause, await Assert.ThrowsAsync<InvalidOperationException>(() => operations[0]));
         Assert.False(operations[1].IsCompleted);
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.Equal(42, await operations[1]);
     }
 
@@ -266,7 +266,7 @@ public class ExecutorSubmissionContractTest
             Assert.False(operation.IsCompleted);
         }
         finally { owner.Cancel(); }
-        executor.run(executor.take());
+        executor.Run(executor.Take());
         Assert.True(operation.IsCanceled);
         Assert.Equal(0, calls);
     }
@@ -295,8 +295,8 @@ public class ExecutorSubmissionContractTest
         observer.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait);
         Assert.All(operations, task => Assert.False(task.IsCompleted));
-        executor.run(executor.take());
-        executor.run(executor.take());
+        executor.Run(executor.Take());
+        executor.Run(executor.Take());
         Assert.Equal(new[] { 1, 2 }, await Task.WhenAll(operations));
         Assert.Equal(2, calls);
     }

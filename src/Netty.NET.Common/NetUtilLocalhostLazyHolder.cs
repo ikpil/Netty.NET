@@ -5,7 +5,7 @@ namespace Netty.NET.Common;
 internal static class NetUtilLocalhostLazyHolder
 {
     internal static readonly IPAddress LOCALHOST = NetUtilInitializations
-        .determineLoopback(
+        .DetermineLoopback(
             NetUtilNetworkInterfacesLazyHolder.NETWORK_INTERFACES,
             NetUtilLocalhost4LazyHolder.LOCALHOST4,
             NetUtilLocalhost6LazyHolder.LOCALHOST6

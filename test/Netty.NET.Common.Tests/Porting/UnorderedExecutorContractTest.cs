@@ -14,9 +14,9 @@ public class UnorderedExecutorContractTest
     private sealed class Factory : IThreadFactory
     {
         internal readonly ConcurrentBag<Thread> threads = new();
-        public Thread newThread(IRunnable task)
+        public Thread NewThread(IRunnable task)
         {
-            var thread = new Thread(task.run) { IsBackground = true };
+            var thread = new Thread(task.Run) { IsBackground = true };
             threads.Add(thread);
             return thread;
         }
@@ -26,13 +26,13 @@ public class UnorderedExecutorContractTest
     {
         private readonly Func<IRunnable, Thread> create;
         internal LambdaFactory(Func<IRunnable, Thread> create) => this.create = create;
-        public Thread newThread(IRunnable task) => create(task);
+        public Thread NewThread(IRunnable task) => create(task);
     }
 
-    private static void stop(UnorderedThreadPoolEventExecutor executor)
+    private static void Stop(UnorderedThreadPoolEventExecutor executor)
     {
-        executor.shutdownNow();
-        Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+        executor.ShutdownNow();
+        Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 
     [Fact]
@@ -44,25 +44,25 @@ public class UnorderedExecutorContractTest
         using var release = new CountdownEvent(1);
         try
         {
-            Assert.Same(executor, executor.parent());
-            Assert.Same(executor, executor.next());
-            Assert.Same(executor, Assert.Single(executor.iterator()));
-            Assert.False(executor.inEventLoop());
+            Assert.Same(executor, executor.Parent());
+            Assert.Same(executor, executor.Next());
+            Assert.Same(executor, Assert.Single(executor.Iterator()));
+            Assert.False(executor.InEventLoop());
             var futures = Enumerable.Range(0, 2).Select(_ => executor.SubmitAsync<Thread>(() =>
             {
-                Assert.True(executor.inEventLoop());
+                Assert.True(executor.InEventLoop());
                 entered.Signal();
                 Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
                 return Thread.CurrentThread;
             })).ToArray();
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Assert.Equal(2, factory.threads.Count);
-            Assert.All(factory.threads, thread => Assert.True(executor.inEventLoop(thread)));
+            Assert.All(factory.threads, thread => Assert.True(executor.InEventLoop(thread)));
             release.Signal();
             Assert.NotSame(futures[0].WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult(), futures[1].WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
-        Assert.True(SpinWait.SpinUntil(() => factory.threads.All(thread => !executor.inEventLoop(thread)), TimeSpan.FromSeconds(5)));
+        finally { if (!release.IsSet) release.Signal(); Stop(executor); }
+        Assert.True(SpinWait.SpinUntil(() => factory.threads.All(thread => !executor.InEventLoop(thread)), TimeSpan.FromSeconds(5)));
     }
 
     [Fact]
@@ -78,18 +78,18 @@ public class UnorderedExecutorContractTest
             var future = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             Assert.Same(executor.Termination, future);
             Assert.False(future.IsCompleted);
-            Assert.True(executor.isShutdown());
-            Assert.True(executor.isShuttingDown());
-            Assert.False(executor.isTerminated());
-            Assert.False(executor.awaitTermination(TimeSpan.FromMilliseconds(1)));
-            Assert.Throws<RejectedExecutionException>(() => executor.execute(Runnables.Empty));
+            Assert.True(executor.IsShutdown());
+            Assert.True(executor.IsShuttingDown());
+            Assert.False(executor.IsTerminated());
+            Assert.False(executor.AwaitTermination(TimeSpan.FromMilliseconds(1)));
+            Assert.Throws<RejectedExecutionException>(() => executor.Execute(Runnables.Empty));
             release.Signal();
             Assert.Equal(17, work.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
-            Assert.True(executor.awaitTermination(TimeSpan.MaxValue));
-            Assert.True(executor.awaitTermination(TimeSpan.MinValue));
+            Assert.True(executor.AwaitTermination(TimeSpan.MaxValue));
+            Assert.True(executor.AwaitTermination(TimeSpan.MinValue));
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { if (!release.IsSet) release.Signal(); Stop(executor); }
     }
 
     [Fact]
@@ -102,18 +102,18 @@ public class UnorderedExecutorContractTest
         {
             // Keep the one-shot work pending across shutdown independently of
             // machine scheduling; a 100ms deadline can expire before the assertion.
-            executor.execute(new AnonymousRunnable(() => { entered.Set(); release.Wait(); }));
+            executor.Execute(new AnonymousRunnable(() => { entered.Set(); release.Wait(); }));
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 42, TimeSpan.FromMilliseconds(100));
             var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.FromDays(1), TimeSpan.FromSeconds(1));
-            executor.shutdown();
+            executor.Shutdown();
             Assert.True(periodic.IsCanceled);
             Assert.False(delayed.IsCompleted);
             release.Set();
             Assert.Equal(42, delayed.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
-        finally { release.Set(); stop(executor); }
+        finally { release.Set(); Stop(executor); }
     }
 
     [Fact]
@@ -132,15 +132,15 @@ public class UnorderedExecutorContractTest
             }, executor.StopToken);
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1));
-            IRunnable reservation = Assert.Single(executor.shutdownNow());
+            IRunnable reservation = Assert.Single(executor.ShutdownNow());
             Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(reservation);
-            reservation.run();
+            reservation.Run();
             Assert.ThrowsAny<OperationCanceledException>(() => running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.True(running.IsCanceled);
             Assert.True(delayed.IsCanceled);
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
-        finally { release.Set(); stop(executor); }
+        finally { release.Set(); Stop(executor); }
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public class UnorderedExecutorContractTest
             Assert.Same(expected, Assert.Throws<InvalidOperationException>(() =>
                 failure.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -171,7 +171,7 @@ public class UnorderedExecutorContractTest
                 future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
             Assert.True(future.IsFaulted);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.True(future.IsFaulted);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -216,7 +216,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.ThrowsAny<OperationCanceledException>(() => future.GetAwaiter().GetResult());
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -236,7 +236,7 @@ public class UnorderedExecutorContractTest
                 source.SetResult(2);
             }).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public class UnorderedExecutorContractTest
             Assert.NotSame(first, second);
             Assert.Equal(2, factory.threads.Count);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -261,8 +261,8 @@ public class UnorderedExecutorContractTest
         IRunnable rejected = null;
         UnorderedThreadPoolEventExecutor observed = null;
         var executor = new UnorderedThreadPoolEventExecutor(1, (task, owner) => { rejected = task; observed = owner; });
-        stop(executor);
-        executor.execute(Runnables.Empty);
+        Stop(executor);
+        executor.Execute(Runnables.Empty);
         Assert.NotNull(rejected);
         Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(rejected);
         Assert.Same(executor, observed);
@@ -288,7 +288,7 @@ public class UnorderedExecutorContractTest
             cancellation.Cancel();
             Assert.True(delayed.IsCanceled);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public class UnorderedExecutorContractTest
             cancellation.Cancel();
             Assert.True(periodic.IsCanceled);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -338,7 +338,7 @@ public class UnorderedExecutorContractTest
             Assert.True(finished.IsSet);
             Assert.True(operation.IsCanceled);
         }
-        finally { owner.Cancel(); stop(executor); }
+        finally { owner.Cancel(); Stop(executor); }
     }
 
     [Fact]
@@ -370,7 +370,7 @@ public class UnorderedExecutorContractTest
             Assert.True(other.IsCanceled);
             Assert.True(winner.IsCompletedSuccessfully);
         }
-        finally { owner.Cancel(); stop(executor); }
+        finally { owner.Cancel(); Stop(executor); }
     }
 
     [Fact]
@@ -381,17 +381,17 @@ public class UnorderedExecutorContractTest
         {
             Task<int> outer = executor.SubmitAsync(async () =>
             {
-                Assert.True(executor.inEventLoop());
+                Assert.True(executor.InEventLoop());
                 Task<int> child = executor.SubmitAsync(() =>
                 {
-                    Assert.True(executor.inEventLoop());
+                    Assert.True(executor.InEventLoop());
                     return 7;
                 });
                 return (await Task.WhenAll(child).ConfigureAwait(false))[0];
             });
             Assert.Equal(7, await outer.WaitAsync(TimeSpan.FromSeconds(5)));
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
     [Fact]
     public void ClosingAdmissionStopsPeriodicReentryAfterItsRunningInvocation()
@@ -421,7 +421,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal(1, calls);
             Assert.False(interrupted);
         }
-        finally { release.Set(); stop(executor); }
+        finally { release.Set(); Stop(executor); }
     }
 
     [Fact]
@@ -434,15 +434,15 @@ public class UnorderedExecutorContractTest
         {
             Task repeating = executor.ScheduleAtFixedRateAsync(() => ++calls,
                 TimeSpan.FromDays(1), TimeSpan.FromDays(1), cancellation.Token);
-            executor.shutdown();
+            executor.Shutdown();
             Assert.True(repeating.IsCanceled);
             Assert.False(cancellation.IsCancellationRequested);
             cancellation.Cancel();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);
             Assert.Equal(0, executor.PendingTaskCount);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -459,15 +459,15 @@ public class UnorderedExecutorContractTest
             var due = executor.SubmitAsync<int>(() => 2);
             var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1), cancellation.Token);
             cancellation.Cancel();
-            executor.shutdown();
+            executor.Shutdown();
             Assert.True(future.IsCanceled);
             Assert.False(due.IsCompleted);
             release.Signal();
             Assert.Equal(1, running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(2, due.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { if (!release.IsSet) release.Signal(); Stop(executor); }
     }
 
     [Fact]
@@ -478,15 +478,15 @@ public class UnorderedExecutorContractTest
         try
         {
             var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1), cancellation.Token);
-            executor.shutdown();
+            executor.Shutdown();
             Assert.False(future.IsCanceled);
             Assert.False(executor.Termination.IsCompleted);
             cancellation.Cancel();
             Assert.True(future.IsCanceled);
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
             Assert.True(executor.Termination.IsCompletedSuccessfully);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -514,7 +514,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal(1, running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(0, executions);
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { if (!release.IsSet) release.Signal(); Stop(executor); }
     }
 
     [Fact]
@@ -544,7 +544,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal(8, queued.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(0, interrupted);
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { if (!release.IsSet) release.Signal(); Stop(executor); }
     }
 
     [Fact]
@@ -562,12 +562,12 @@ public class UnorderedExecutorContractTest
             Assert.True(SpinWait.SpinUntil(() => executor.ActiveWorkerCount == 0, TimeSpan.FromSeconds(5)));
             Assert.False(factory.threads.Single().Join(TimeSpan.FromMilliseconds(30)));
             Assert.Equal(1, executor.WorkerCount);
-            executor.shutdown();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.Shutdown();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
             Assert.True(factory.threads.Single().Join(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, executor.WorkerCount);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -586,7 +586,7 @@ public class UnorderedExecutorContractTest
             Assert.True(SpinWait.SpinUntil(() => executor.WorkerCount == 0, TimeSpan.FromSeconds(5)));
             Assert.Equal(8, executor.SubmitAsync(() => 8).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -611,27 +611,27 @@ public class UnorderedExecutorContractTest
             Assert.Equal(1, running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(7, queued.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { if (!release.IsSet) release.Signal(); Stop(executor); }
     }
 
     [Fact]
     public void StatefulConstructorFactoryCreatesSuccessiveNativeWorkers()
     {
         int creations = 0;
-        var factory = new LambdaFactory(task => new Thread(task.run)
+        var factory = new LambdaFactory(task => new Thread(task.Run)
             { IsBackground = true, Name = "native-worker-" + Interlocked.Increment(ref creations) });
         var executor = new UnorderedThreadPoolEventExecutor(0, factory);
         try
         {
             var first = executor.SubmitAsync<Thread>(() =>
             {
-                Assert.True(executor.inEventLoop());
+                Assert.True(executor.InEventLoop());
                 return Thread.CurrentThread;
             }).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             Assert.True(first.Join(TimeSpan.FromSeconds(5)));
             var second = executor.SubmitAsync<Thread>(() =>
             {
-                Assert.True(executor.inEventLoop());
+                Assert.True(executor.InEventLoop());
                 return Thread.CurrentThread;
             }).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             Assert.NotSame(first, second);
@@ -639,7 +639,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal("native-worker-2", second.Name);
             Assert.True(second.Join(TimeSpan.FromSeconds(5)));
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -650,7 +650,7 @@ public class UnorderedExecutorContractTest
         using var release = new CountdownEvent(1);
         try
         {
-            executor.execute(Runnables.Create(() => { entered.Signal(); release.Wait(); }));
+            executor.Execute(Runnables.Create(() => { entered.Signal(); release.Wait(); }));
             var submitted = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 7; });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var queued = executor.SubmitAsync<int>(() => 8);
@@ -662,7 +662,7 @@ public class UnorderedExecutorContractTest
             Assert.True(SpinWait.SpinUntil(() => executor.ActiveWorkerCount == 0, TimeSpan.FromSeconds(5)));
             Assert.Equal(0, executor.PendingTaskCount);
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { if (!release.IsSet) release.Signal(); Stop(executor); }
     }
 
     [Fact]
@@ -691,7 +691,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal(7, future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.True(future.IsCompletedSuccessfully);
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { if (!release.IsSet) release.Signal(); Stop(executor); }
     }
 
     [Fact]
@@ -723,7 +723,7 @@ public class UnorderedExecutorContractTest
                 Assert.Equal(7, future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             }
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -735,8 +735,8 @@ public class UnorderedExecutorContractTest
         var factory = new LambdaFactory(task =>
         {
             Assert.Equal(1, ++creations);
-            executor.execute(Runnables.Create(() => ++reentrantExecutions));
-            return new Thread(task.run) { IsBackground = true };
+            executor.Execute(Runnables.Create(() => ++reentrantExecutions));
+            return new Thread(task.Run) { IsBackground = true };
         });
         executor = new UnorderedThreadPoolEventExecutor(1, factory);
         try
@@ -746,7 +746,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal(1, reentrantExecutions);
             Assert.Equal(1, creations);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -758,7 +758,7 @@ public class UnorderedExecutorContractTest
         var factory = new LambdaFactory(task =>
         {
             if (++attempts == 1) throw expected;
-            return new Thread(task.run) { IsBackground = true };
+            return new Thread(task.Run) { IsBackground = true };
         });
         var executor = new UnorderedThreadPoolEventExecutor(1, factory);
         try
@@ -772,7 +772,7 @@ public class UnorderedExecutorContractTest
             Assert.Equal(2, attempts);
             Assert.Equal(0, executions);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -784,14 +784,14 @@ public class UnorderedExecutorContractTest
             var operation = executor.SubmitAsync<int>(() => 7);
             Assert.Equal(0, executor.WorkerCount);
             Assert.False(operation.IsCompleted);
-            executor.shutdown();
-            Assert.False(executor.awaitTermination(TimeSpan.FromMilliseconds(1)));
-            executor.shutdownNow();
+            executor.Shutdown();
+            Assert.False(executor.AwaitTermination(TimeSpan.FromMilliseconds(1)));
+            executor.ShutdownNow();
             Assert.True(operation.IsCanceled);
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, executor.WorkerCount);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -807,7 +807,7 @@ public class UnorderedExecutorContractTest
         {
             Assert.Equal(7, executor.SubmitAsync(() => 7).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 
     [Fact]
@@ -818,11 +818,11 @@ public class UnorderedExecutorContractTest
         {
             Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Action)null));
             Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<int>)null));
-            Assert.Throws<ArgumentNullException>(() => executor.execute(null));
+            Assert.Throws<ArgumentNullException>(() => executor.Execute(null));
             Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.Zero));
             Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(-1)));
             Assert.Equal(0, executor.PendingTaskCount);
         }
-        finally { stop(executor); }
+        finally { Stop(executor); }
     }
 }

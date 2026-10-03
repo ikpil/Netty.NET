@@ -33,7 +33,7 @@ public interface IPriorityQueueNode<T> where T : class
      * <p>
      * Throwing exceptions from this method will result in undefined behavior.
      */
-    int priorityQueueIndex(DefaultPriorityQueue<T> queue);
+    int PriorityQueueIndex(DefaultPriorityQueue<T> queue);
 
     /**
      * Used by {@link DefaultPriorityQueue} to maintain state for an element in the queue.
@@ -42,5 +42,5 @@ public interface IPriorityQueueNode<T> where T : class
      * @param queue The queue for which the index is being set.
      * @param i The index as used by {@link DefaultPriorityQueue}.
      */
-    void priorityQueueIndex(DefaultPriorityQueue<T> queue, int i);
+    void PriorityQueueIndex(DefaultPriorityQueue<T> queue, int i);
 }

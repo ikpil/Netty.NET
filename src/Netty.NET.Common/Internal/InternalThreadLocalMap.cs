@@ -35,7 +35,7 @@ public sealed class InternalThreadLocalMap
     private static readonly AtomicInteger nextIndex = new AtomicInteger();
 
     // Internal use only.
-    public static readonly int VARIABLES_TO_REMOVE_INDEX = nextVariableIndex();
+    public static readonly int VARIABLES_TO_REMOVE_INDEX = NextVariableIndex();
 
     private static readonly int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
 
@@ -77,41 +77,41 @@ public sealed class InternalThreadLocalMap
     static InternalThreadLocalMap()
     {
         STRING_BUILDER_INITIAL_SIZE =
-            SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.initialSize", 1024);
+            SystemPropertyUtil.GetInt("io.netty.threadLocalMap.stringBuilder.initialSize", 1024);
         STRING_BUILDER_MAX_SIZE =
-            SystemPropertyUtil.getInt("io.netty.threadLocalMap.stringBuilder.maxSize", 1024 * 4);
+            SystemPropertyUtil.GetInt("io.netty.threadLocalMap.stringBuilder.maxSize", 1024 * 4);
 
         // Ensure the InternalLogger is initialized as last field in this class as InternalThreadLocalMap might be used
         // by the InternalLogger itself. For this its important that all the other static fields are correctly
         // initialized.
         //
         // See https://github.com/netty/netty/issues/12931.
-        logger = InternalLoggerFactory.getInstance(typeof(InternalThreadLocalMap));
-        logger.debug("-Dio.netty.threadLocalMap.stringBuilder.initialSize: {}", STRING_BUILDER_INITIAL_SIZE);
-        logger.debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
+        logger = InternalLoggerFactory.GetInstance(typeof(InternalThreadLocalMap));
+        logger.Debug("-Dio.netty.threadLocalMap.stringBuilder.initialSize: {}", STRING_BUILDER_INITIAL_SIZE);
+        logger.Debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
     }
 
     private InternalThreadLocalMap()
     {
-        indexedVariables = newIndexedVariableTable();
+        indexedVariables = NewIndexedVariableTable();
     }
 
-    public static InternalThreadLocalMap getIfSet()
+    public static InternalThreadLocalMap GetIfSet()
     {
-        var thread = FastThreadLocalThread.currentFastThreadLocalThread();
-        return thread == null ? _slowThreadLocalMap : thread.threadLocalMap();
+        var thread = FastThreadLocalThread.CurrentFastThreadLocalThread();
+        return thread == null ? _slowThreadLocalMap : thread.ThreadLocalMap();
     }
 
-    public static InternalThreadLocalMap get()
+    public static InternalThreadLocalMap Get()
     {
-        var thread = FastThreadLocalThread.currentFastThreadLocalThread();
-        if (thread == null) return slowGet();
-        var map = thread.threadLocalMap();
-        if (map == null) thread.setThreadLocalMap(map = new InternalThreadLocalMap());
+        var thread = FastThreadLocalThread.CurrentFastThreadLocalThread();
+        if (thread == null) return SlowGet();
+        var map = thread.ThreadLocalMap();
+        if (map == null) thread.SetThreadLocalMap(map = new InternalThreadLocalMap());
         return map;
     }
 
-    private static InternalThreadLocalMap slowGet()
+    private static InternalThreadLocalMap SlowGet()
     {
         InternalThreadLocalMap ret = _slowThreadLocalMap;
         if (ret == null)
@@ -123,44 +123,44 @@ public sealed class InternalThreadLocalMap
         return ret;
     }
 
-    public static void remove()
+    public static void Remove()
     {
-        var thread = FastThreadLocalThread.currentFastThreadLocalThread();
+        var thread = FastThreadLocalThread.CurrentFastThreadLocalThread();
         if (thread == null) _slowThreadLocalMap = null;
-        else thread.setThreadLocalMap(null);
+        else thread.SetThreadLocalMap(null);
     }
 
-    public static void destroy()
+    public static void Destroy()
     {
         _slowThreadLocalMap = null;
     }
 
-    public static int nextVariableIndex()
+    public static int NextVariableIndex()
     {
-        int index = nextIndex.getAndIncrement();
+        int index = nextIndex.GetAndIncrement();
         if (index >= ARRAY_LIST_CAPACITY_MAX_SIZE || index < 0)
         {
-            nextIndex.set(ARRAY_LIST_CAPACITY_MAX_SIZE);
+            nextIndex.Set(ARRAY_LIST_CAPACITY_MAX_SIZE);
             throw new InvalidOperationException("too many thread-local indexed variables");
         }
 
         return index;
     }
 
-    public static int lastVariableIndex()
+    public static int LastVariableIndex()
     {
-        return nextIndex.get() - 1;
+        return nextIndex.Get() - 1;
     }
 
 
-    private static object[] newIndexedVariableTable()
+    private static object[] NewIndexedVariableTable()
     {
         object[] array = new object[INDEXED_VARIABLE_TABLE_INITIAL_SIZE];
-        Arrays.fill(array, UNSET);
+        Arrays.Fill(array, UNSET);
         return array;
     }
 
-    public int size()
+    public int Size()
     {
         int count = 0;
 
@@ -199,7 +199,7 @@ public sealed class InternalThreadLocalMap
             count++;
         }
 
-        object v = indexedVariable(VARIABLES_TO_REMOVE_INDEX);
+        object v = IndexedVariable(VARIABLES_TO_REMOVE_INDEX);
         if (v != null && v != UNSET)
         {
             //@SuppressWarnings("unchecked")
@@ -210,7 +210,7 @@ public sealed class InternalThreadLocalMap
         return count;
     }
 
-    public StringBuilder stringBuilder()
+    public StringBuilder StringBuilder()
     {
         StringBuilder sb = _stringBuilder;
         if (sb == null)
@@ -228,13 +228,13 @@ public sealed class InternalThreadLocalMap
         return sb;
     }
 
-    public List<E> arrayList<E>()
+    public List<E> ArrayList<E>()
     {
-        return arrayList<E>(DEFAULT_ARRAY_LIST_INITIAL_CAPACITY);
+        return ArrayList<E>(DEFAULT_ARRAY_LIST_INITIAL_CAPACITY);
     }
 
     //@SuppressWarnings("unchecked")
-    public List<E> arrayList<E>(int minCapacity)
+    public List<E> ArrayList<E>(int minCapacity)
     {
         // CLR generic lists cannot share storage across different element types.
         // Clear the old list before replacing it so cached objects are released.
@@ -250,7 +250,7 @@ public sealed class InternalThreadLocalMap
         return list;
     }
 
-    public int futureListenerStackDepth()
+    public int FutureListenerStackDepth()
     {
         return _futureListenerStackDepth;
     }
@@ -258,21 +258,21 @@ public sealed class InternalThreadLocalMap
     /**
      * @deprecated Use {@link java.util.concurrent.ThreadLocalRandom#current()} instead.
      */
-    public Random random() => ThreadLocalRandom.current();
+    public Random Random() => ThreadLocalRandom.Current();
 
-    public IntegerHolder counterHashCode() => new IntegerHolder();
+    public IntegerHolder CounterHashCode() => new IntegerHolder();
 
-    public void setCounterHashCode(IntegerHolder counterHashCode)
+    public void SetCounterHashCode(IntegerHolder counterHashCode)
     {
         // No-op.
     }
 
-    public void setFutureListenerStackDepth(int futureListenerStackDepth)
+    public void SetFutureListenerStackDepth(int futureListenerStackDepth)
     {
         _futureListenerStackDepth = futureListenerStackDepth;
     }
 
-    public IDictionary<Type, TypeParameterMatcher> typeParameterMatcherGetCache()
+    public IDictionary<Type, TypeParameterMatcher> TypeParameterMatcherGetCache()
     {
         var cache = _typeParameterMatcherGetCache;
         if (cache == null)
@@ -283,7 +283,7 @@ public sealed class InternalThreadLocalMap
         return cache;
     }
 
-    public IDictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> typeParameterMatcherFindCache()
+    public IDictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> TypeParameterMatcherFindCache()
     {
         var cache = _typeParameterMatcherFindCache;
         if (cache == null)
@@ -294,7 +294,7 @@ public sealed class InternalThreadLocalMap
         return cache;
     }
 
-    public IDictionary<Type, bool> handlerSharableCache()
+    public IDictionary<Type, bool> HandlerSharableCache()
     {
         var cache = _handlerSharableCache;
         if (cache == null)
@@ -306,17 +306,17 @@ public sealed class InternalThreadLocalMap
         return cache;
     }
 
-    public int localChannelReaderStackDepth()
+    public int LocalChannelReaderStackDepth()
     {
         return _localChannelReaderStackDepth;
     }
 
-    public void setLocalChannelReaderStackDepth(int localChannelReaderStackDepth)
+    public void SetLocalChannelReaderStackDepth(int localChannelReaderStackDepth)
     {
         _localChannelReaderStackDepth = localChannelReaderStackDepth;
     }
 
-    public object indexedVariable(int index)
+    public object IndexedVariable(int index)
     {
         object[] lookup = indexedVariables;
         return index < lookup.Length ? lookup[index] : UNSET;
@@ -325,15 +325,15 @@ public sealed class InternalThreadLocalMap
     /**
      * @return {@code true} if and only if a new thread-local variable has been created
      */
-    public bool setIndexedVariable(int index, object value)
+    public bool SetIndexedVariable(int index, object value)
     {
-        return getAndSetIndexedVariable(index, value) == UNSET;
+        return GetAndSetIndexedVariable(index, value) == UNSET;
     }
 
     /**
      * @return {@link InternalThreadLocalMap#UNSET} if and only if a new thread-local variable has been created.
      */
-    public object getAndSetIndexedVariable(int index, object value)
+    public object GetAndSetIndexedVariable(int index, object value)
     {
         object[] lookup = indexedVariables;
         if (index < lookup.Length)
@@ -343,11 +343,11 @@ public sealed class InternalThreadLocalMap
             return oldValue;
         }
 
-        expandIndexedVariableTableAndSet(index, value);
+        ExpandIndexedVariableTableAndSet(index, value);
         return UNSET;
     }
 
-    private void expandIndexedVariableTableAndSet(int index, object value)
+    private void ExpandIndexedVariableTableAndSet(int index, object value)
     {
         object[] oldArray = indexedVariables;
         int oldCapacity = oldArray.Length;
@@ -367,13 +367,13 @@ public sealed class InternalThreadLocalMap
             newCapacity = ARRAY_LIST_CAPACITY_MAX_SIZE;
         }
 
-        object[] newArray = Arrays.copyOf(oldArray, newCapacity);
-        Arrays.fill(newArray, oldCapacity, newArray.Length, UNSET);
+        object[] newArray = Arrays.CopyOf(oldArray, newCapacity);
+        Arrays.Fill(newArray, oldCapacity, newArray.Length, UNSET);
         newArray[index] = value;
         indexedVariables = newArray;
     }
 
-    public object removeIndexedVariable(int index)
+    public object RemoveIndexedVariable(int index)
     {
         object[] lookup = indexedVariables;
         if (index < lookup.Length)
@@ -388,7 +388,7 @@ public sealed class InternalThreadLocalMap
         }
     }
 
-    public bool isIndexedVariableSet(int index)
+    public bool IsIndexedVariableSet(int index)
     {
         object[] lookup = indexedVariables;
         return index < lookup.Length && lookup[index] != UNSET;

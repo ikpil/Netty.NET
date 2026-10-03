@@ -11,7 +11,7 @@ public class UnorderedTerminationContractTest
 {
     private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
     {
-        public Thread newThread(IRunnable task) => create(task);
+        public Thread NewThread(IRunnable task) => create(task);
     }
 
     [Theory]
@@ -39,9 +39,9 @@ public class UnorderedTerminationContractTest
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task termination = executor.Termination;
-            if (immediate) Assert.Empty(executor.shutdownNow());
+            if (immediate) Assert.Empty(executor.ShutdownNow());
             else Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
-            Assert.True(executor.isShutdown());
+            Assert.True(executor.IsShutdown());
             Assert.False(termination.IsCompleted);
             firstRelease.Set();
             await first.WaitAsync(TimeSpan.FromSeconds(5));
@@ -54,7 +54,7 @@ public class UnorderedTerminationContractTest
             lastRelease.Set();
             await last.WaitAsync(TimeSpan.FromSeconds(5));
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(executor.isTerminated());
+            Assert.True(executor.IsTerminated());
             Assert.Equal(0, executor.WorkerCount);
             Assert.Same(termination, executor.ShutdownGracefullyAsync());
         }
@@ -62,8 +62,8 @@ public class UnorderedTerminationContractTest
         {
             firstRelease.Set();
             lastRelease.Set();
-            executor.shutdownNow();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            executor.ShutdownNow();
+            Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
@@ -83,9 +83,9 @@ public class UnorderedTerminationContractTest
             cancellation.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => work);
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(executor.isTerminated());
+            Assert.True(executor.IsTerminated());
         }
-        finally { executor.shutdownNow(); }
+        finally { executor.ShutdownNow(); }
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class UnorderedTerminationContractTest
         bool completedInsideFactory = false;
         executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ =>
         {
-            executor.shutdownNow();
+            executor.ShutdownNow();
             completedInsideFactory = executor.Termination.IsCompleted;
             return null;
         }));
@@ -103,7 +103,7 @@ public class UnorderedTerminationContractTest
         Assert.False(completedInsideFactory);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => work);
         await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
-        Assert.True(executor.isTerminated());
+        Assert.True(executor.IsTerminated());
     }
 
     [Fact]
@@ -115,12 +115,12 @@ public class UnorderedTerminationContractTest
         {
             Task termination = executor.ShutdownGracefullyAsync();
             Assert.False(termination.IsCompleted);
-            executor.shutdownNow();
+            executor.ShutdownNow();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => work);
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
-            Assert.True(executor.isTerminated());
+            Assert.True(executor.IsTerminated());
         }
-        finally { executor.shutdownNow(); }
+        finally { executor.ShutdownNow(); }
     }
 
     [Fact]
@@ -138,9 +138,9 @@ public class UnorderedTerminationContractTest
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(submitted.IsCanceled);
             Assert.True(scheduled.IsCanceled);
-            Assert.True(executor.isTerminated());
+            Assert.True(executor.IsTerminated());
         }
-        finally { executor.shutdownNow(); }
+        finally { executor.ShutdownNow(); }
     }
 
     [Fact]
@@ -148,11 +148,11 @@ public class UnorderedTerminationContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
         var scheduled = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
-        IRunnable saved = Assert.Single(executor.shutdownNow());
+        IRunnable saved = Assert.Single(executor.ShutdownNow());
         Assert.True(executor.Termination.IsCompletedSuccessfully);
-        Assert.Throws<RejectedExecutionException>(() => executor.execute(Runnables.Empty));
-        saved.run();
-        Assert.True(executor.isTerminated());
+        Assert.Throws<RejectedExecutionException>(() => executor.Execute(Runnables.Empty));
+        saved.Run();
+        Assert.True(executor.IsTerminated());
         Assert.Equal(0, executor.PendingTaskCount);
         Assert.True(scheduled.IsCanceled);
     }

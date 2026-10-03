@@ -30,7 +30,7 @@ public static class ObjectUtil
     private static readonly int INT_ZERO = 0;
     private static readonly short SHORT_ZERO = 0;
 
-    public static T requireNonNull<T>(T obj, string message) where T : class
+    public static T RequireNonNull<T>(T obj, string message) where T : class
     {
         if (obj == null)
             throw new NullReferenceException(message);
@@ -42,7 +42,7 @@ public static class ObjectUtil
      * Checks that the given argument is not null. If it is, throws {@link NullPointerException}.
      * Otherwise, returns the argument.
      */
-    public static T checkNotNull<T>(T arg, string text) where T : class
+    public static T CheckNotNull<T>(T arg, string text) where T : class
     {
         if (arg == null)
         {
@@ -52,7 +52,7 @@ public static class ObjectUtil
         return arg;
     }
     
-    public static IEnumerable<T> checkNotNull<T>(IEnumerable<T> args, string text)
+    public static IEnumerable<T> CheckNotNull<T>(IEnumerable<T> args, string text)
     {
         if (args == null)
         {
@@ -69,7 +69,7 @@ public static class ObjectUtil
      * If it is, throws {@link NullPointerException}.
      * Otherwise, returns the argument.
      */
-    public static T[] deepCheckNotNull<T>(string text, params T[] varargs)
+    public static T[] DeepCheckNotNull<T>(string text, params T[] varargs)
     {
         if (varargs == null)
         {
@@ -91,7 +91,7 @@ public static class ObjectUtil
      * Checks that the given argument is not null. If it is, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static T checkNotNullWithIAE<T>(T arg, string paramName)
+    public static T CheckNotNullWithIAE<T>(T arg, string paramName)
     {
         if (arg == null)
         {
@@ -112,7 +112,7 @@ public static class ObjectUtil
      * @return the given argument value.
      * @throws IllegalArgumentException if value is null.
      */
-    public static T checkNotNullArrayParam<T>(T value, int index, string name)
+    public static T CheckNotNullArrayParam<T>(T value, int index, string name)
     {
         if (value == null)
         {
@@ -127,7 +127,7 @@ public static class ObjectUtil
      * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkPositive(int i, string name)
+    public static int CheckPositive(int i, string name)
     {
         if (i <= INT_ZERO)
         {
@@ -137,7 +137,7 @@ public static class ObjectUtil
         return i;
     }
     
-    public static TimeSpan checkPositive(TimeSpan span, string name)
+    public static TimeSpan CheckPositive(TimeSpan span, string name)
     {
         if (span.Ticks <= INT_ZERO)
         {
@@ -152,7 +152,7 @@ public static class ObjectUtil
      * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkPositive(long l, string name)
+    public static long CheckPositive(long l, string name)
     {
         if (l <= LONG_ZERO)
         {
@@ -166,7 +166,7 @@ public static class ObjectUtil
      * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static double checkPositive(double d, string name)
+    public static double CheckPositive(double d, string name)
     {
         if (d <= DOUBLE_ZERO)
         {
@@ -180,7 +180,7 @@ public static class ObjectUtil
      * Checks that the given argument is strictly positive. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static float checkPositive(float f, string name)
+    public static float CheckPositive(float f, string name)
     {
         if (f <= FLOAT_ZERO)
         {
@@ -194,7 +194,7 @@ public static class ObjectUtil
      * Checks that the given argument is positive or zero. If it is not , throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static short checkPositive(short s, string name)
+    public static short CheckPositive(short s, string name)
     {
         if (s <= SHORT_ZERO)
         {
@@ -204,7 +204,7 @@ public static class ObjectUtil
         return s;
     }
 
-    public static TimeSpan checkPositiveOrZero(TimeSpan span, string name)
+    public static TimeSpan CheckPositiveOrZero(TimeSpan span, string name)
     {
         if (span.Ticks < LONG_ZERO)
         {
@@ -218,7 +218,7 @@ public static class ObjectUtil
      * Checks that the given argument is positive or zero. If it is not , throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkPositiveOrZero(int i, string name)
+    public static int CheckPositiveOrZero(int i, string name)
     {
         if (i < INT_ZERO)
         {
@@ -232,7 +232,7 @@ public static class ObjectUtil
      * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkPositiveOrZero(long l, string name)
+    public static long CheckPositiveOrZero(long l, string name)
     {
         if (l < LONG_ZERO)
         {
@@ -246,7 +246,7 @@ public static class ObjectUtil
      * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static double checkPositiveOrZero(double d, string name)
+    public static double CheckPositiveOrZero(double d, string name)
     {
         if (d < DOUBLE_ZERO)
         {
@@ -260,7 +260,7 @@ public static class ObjectUtil
      * Checks that the given argument is positive or zero. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static float checkPositiveOrZero(float f, string name)
+    public static float CheckPositiveOrZero(float f, string name)
     {
         if (f < FLOAT_ZERO)
         {
@@ -274,7 +274,7 @@ public static class ObjectUtil
      * Checks that the given argument is in range. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static int checkInRange(int i, int start, int end, string name)
+    public static int CheckInRange(int i, int start, int end, string name)
     {
         if (i < start || i > end)
         {
@@ -288,7 +288,7 @@ public static class ObjectUtil
      * Checks that the given argument is in range. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static long checkInRange(long l, long start, long end, string name)
+    public static long CheckInRange(long l, long start, long end, string name)
     {
         if (l < start || l > end)
         {
@@ -302,7 +302,7 @@ public static class ObjectUtil
      * Checks that the given argument is in range. If it is not, throws {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static double checkInRange(double value, double start, double end, string name)
+    public static double CheckInRange(double value, double start, double end, string name)
     {
         if (value < start || value > end)
             throw new ArgumentException(name + ": " + value + " (expected: " + start + "-" + end + ")");
@@ -314,10 +314,10 @@ public static class ObjectUtil
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static T[] checkNonEmpty<T>(T[] array, string name)
+    public static T[] CheckNonEmpty<T>(T[] array, string name)
     {
         //No String concatenation for check
-        if (checkNotNull(array, name).Length == 0)
+        if (CheckNotNull(array, name).Length == 0)
         {
             throw new ArgumentException("Param '" + name + "' must not be empty");
         }
@@ -330,10 +330,10 @@ public static class ObjectUtil
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static byte[] checkNonEmpty(byte[] array, string name)
+    public static byte[] CheckNonEmpty(byte[] array, string name)
     {
         //No String concatenation for check
-        if (checkNotNull(array, name).Length == 0)
+        if (CheckNotNull(array, name).Length == 0)
         {
             throw new ArgumentException("Param '" + name + "' must not be empty");
         }
@@ -346,10 +346,10 @@ public static class ObjectUtil
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static char[] checkNonEmpty(char[] array, string name)
+    public static char[] CheckNonEmpty(char[] array, string name)
     {
         //No String concatenation for check
-        if (checkNotNull(array, name).Length == 0)
+        if (CheckNotNull(array, name).Length == 0)
         {
             throw new ArgumentException("Param '" + name + "' must not be empty");
         }
@@ -362,10 +362,10 @@ public static class ObjectUtil
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static ICollection<T> checkNonEmpty<T>(ICollection<T> collection, string name)
+    public static ICollection<T> CheckNonEmpty<T>(ICollection<T> collection, string name)
     {
         //No String concatenation for check
-        if (checkNotNull<ICollection<T>>(collection, name).Count == 0)
+        if (CheckNotNull<ICollection<T>>(collection, name).Count == 0)
         {
             throw new ArgumentException("Param '" + name + "' must not be empty");
         }
@@ -378,9 +378,9 @@ public static class ObjectUtil
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static string checkNonEmpty(string value, string name)
+    public static string CheckNonEmpty(string value, string name)
     {
-        if (string.IsNullOrEmpty(checkNotNull(value, name)))
+        if (string.IsNullOrEmpty(CheckNotNull(value, name)))
         {
             throw new ArgumentException("Param '" + name + "' must not be empty");
         }
@@ -393,9 +393,9 @@ public static class ObjectUtil
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static IDictionary<K, V> checkNonEmpty<K, V>(IDictionary<K, V> value, string name)
+    public static IDictionary<K, V> CheckNonEmpty<K, V>(IDictionary<K, V> value, string name)
     {
-        if (checkNotNull(value, name).Count == 0)
+        if (CheckNotNull(value, name).Count == 0)
         {
             throw new ArgumentException("Param '" + name + "' must not be empty");
         }
@@ -408,9 +408,9 @@ public static class ObjectUtil
      * If it is, throws {@link NullPointerException} or {@link IllegalArgumentException}.
      * Otherwise, returns the argument.
      */
-    public static ICharSequence checkNonEmpty(ICharSequence value, string name)
+    public static ICharSequence CheckNonEmpty(ICharSequence value, string name)
     {
-        if (checkNotNull(value, name).Count == 0)
+        if (CheckNotNull(value, name).Count == 0)
         {
             throw new ArgumentException("Param '" + name + "' must not be empty");
         }
@@ -429,14 +429,14 @@ public static class ObjectUtil
      * @throws NullPointerException if value is null.
      * @throws IllegalArgumentException if the trimmed value is empty.
      */
-    public static string checkNonEmptyAfterTrim(string value, string name)
+    public static string CheckNonEmptyAfterTrim(string value, string name)
     {
-        checkNotNull(value, name);
+        CheckNotNull(value, name);
         int start = 0, end = value.Length;
         while (start < end && value[start] <= ' ') start++;
         while (start < end && value[end - 1] <= ' ') end--;
         string trimmed = value.Substring(start, end - start);
-        return checkNonEmpty(trimmed, name);
+        return CheckNonEmpty(trimmed, name);
     }
 
     /**
@@ -445,7 +445,7 @@ public static class ObjectUtil
      * @param defaultValue the default value
      * @return the primitive value
      */
-    public static int intValue(int? wrapper, int defaultValue)
+    public static int IntValue(int? wrapper, int defaultValue)
     {
         return wrapper ?? defaultValue;
     }
@@ -456,7 +456,7 @@ public static class ObjectUtil
      * @param defaultValue the default value
      * @return the primitive value
      */
-    public static long longValue(long? wrapper, long defaultValue)
+    public static long LongValue(long? wrapper, long defaultValue)
     {
         return wrapper ?? defaultValue;
     }

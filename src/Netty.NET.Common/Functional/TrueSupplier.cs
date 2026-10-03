@@ -11,7 +11,7 @@ public class TrueSupplier : ISupplier<bool>
     {
     }
 
-    public bool get()
+    public bool Get()
     {
         return true;
     }

@@ -172,14 +172,14 @@ public class TaskWhenAllPortTest
         var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Task forwarding = executor.SubmitAsync(async () =>
         {
-            Assert.True(executor.inEventLoop());
+            Assert.True(executor.InEventLoop());
             Task all = Task.WhenAll(new Task[] { first.Task, second.Task });
             ready.SetResult();
             try { await all.ConfigureAwait(false); }
             catch (Exception) { /* Transfer the complete native status, not the await exception alone. */ }
             await executor.SubmitAsync(() =>
             {
-                Assert.True(executor.inEventLoop());
+                Assert.True(executor.InEventLoop());
                 Assert.True(aggregate.TrySetFromTask(all));
             });
         });

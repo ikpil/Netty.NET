@@ -25,17 +25,17 @@ public class SWARUtilTest
     private readonly Random random = new Random();
 
     [Fact]
-    void containsUpperCaseLong()
+    void ContainsUpperCaseLong()
     {
         // given
-        byte[] asciiTable = getExtendedAsciiTable();
-        shuffleArray(asciiTable, random);
+        byte[] asciiTable = GetExtendedAsciiTable();
+        ShuffleArray(asciiTable, random);
 
         // when
         for (int idx = 0; idx < asciiTable.Length; idx += sizeof(long))
         {
-            long value = getLong(asciiTable, idx);
-            bool actual = SWARUtil.containsUpperCase(value);
+            long value = GetLong(asciiTable, idx);
+            bool actual = SWARUtil.ContainsUpperCase(value);
             bool expected = false;
             for (int i = 0; i < sizeof(long); i++)
             {
@@ -48,17 +48,17 @@ public class SWARUtilTest
     }
 
     [Fact]
-    void containsUpperCaseInt()
+    void ContainsUpperCaseInt()
     {
         // given
-        byte[] asciiTable = getExtendedAsciiTable();
-        shuffleArray(asciiTable, random);
+        byte[] asciiTable = GetExtendedAsciiTable();
+        ShuffleArray(asciiTable, random);
 
         // when
         for (int idx = 0; idx < asciiTable.Length; idx += sizeof(int))
         {
-            int value = getInt(asciiTable, idx);
-            bool containsUpperCase = SWARUtil.containsUpperCase(value);
+            int value = GetInt(asciiTable, idx);
+            bool containsUpperCase = SWARUtil.ContainsUpperCase(value);
             bool expectedContainsUpperCase = false;
             for (int i = 0; i < sizeof(int); i++)
             {
@@ -71,17 +71,17 @@ public class SWARUtilTest
     }
 
     [Fact]
-    void containsLowerCaseLong()
+    void ContainsLowerCaseLong()
     {
         // given
-        byte[] asciiTable = getExtendedAsciiTable();
-        shuffleArray(asciiTable, random);
+        byte[] asciiTable = GetExtendedAsciiTable();
+        ShuffleArray(asciiTable, random);
 
         // when
         for (int idx = 0; idx < asciiTable.Length; idx += sizeof(long))
         {
-            long value = getLong(asciiTable, idx);
-            bool actual = SWARUtil.containsLowerCase(value);
+            long value = GetLong(asciiTable, idx);
+            bool actual = SWARUtil.ContainsLowerCase(value);
             bool expected = false;
             for (int i = 0; i < sizeof(long); i++)
             {
@@ -94,17 +94,17 @@ public class SWARUtilTest
     }
 
     [Fact]
-    void containsLowerCaseInt()
+    void ContainsLowerCaseInt()
     {
         // given
-        byte[] asciiTable = getExtendedAsciiTable();
-        shuffleArray(asciiTable, random);
+        byte[] asciiTable = GetExtendedAsciiTable();
+        ShuffleArray(asciiTable, random);
 
         // when
         for (int idx = 0; idx < asciiTable.Length; idx += sizeof(int))
         {
-            int value = getInt(asciiTable, idx);
-            bool actual = SWARUtil.containsLowerCase(value);
+            int value = GetInt(asciiTable, idx);
+            bool actual = SWARUtil.ContainsLowerCase(value);
             bool expected = false;
             for (int i = 0; i < sizeof(int); i++)
             {
@@ -117,21 +117,21 @@ public class SWARUtilTest
     }
 
     [Fact]
-    void toUpperCaseLong()
+    void ToUpperCaseLong()
     {
         // given
-        byte[] asciiTable = getExtendedAsciiTable();
-        shuffleArray(asciiTable, random);
+        byte[] asciiTable = GetExtendedAsciiTable();
+        ShuffleArray(asciiTable, random);
 
         // when
         for (int idx = 0; idx < asciiTable.Length; idx += sizeof(long))
         {
-            long value = getLong(asciiTable, idx);
-            long actual = SWARUtil.toUpperCase(value);
+            long value = GetLong(asciiTable, idx);
+            long actual = SWARUtil.ToUpperCase(value);
             long expected = 0L;
             for (int i = 0; i < sizeof(long); i++)
             {
-                byte b = AsciiStringUtil.toUpperCase(asciiTable[idx + i]);
+                byte b = AsciiStringUtil.ToUpperCase(asciiTable[idx + i]);
                 expected |= (long)((b & 0xff)) << (56 - (sizeof(long) * i));
             }
 
@@ -141,21 +141,21 @@ public class SWARUtilTest
     }
 
     [Fact]
-    void toUpperCaseInt()
+    void ToUpperCaseInt()
     {
         // given
-        byte[] asciiTable = getExtendedAsciiTable();
-        shuffleArray(asciiTable, random);
+        byte[] asciiTable = GetExtendedAsciiTable();
+        ShuffleArray(asciiTable, random);
 
         // when
         for (int idx = 0; idx < asciiTable.Length; idx += sizeof(int))
         {
-            int value = getInt(asciiTable, idx);
-            int actual = SWARUtil.toUpperCase(value);
+            int value = GetInt(asciiTable, idx);
+            int actual = SWARUtil.ToUpperCase(value);
             int expected = 0;
             for (int i = 0; i < sizeof(int); i++)
             {
-                byte b = AsciiStringUtil.toUpperCase(asciiTable[idx + i]);
+                byte b = AsciiStringUtil.ToUpperCase(asciiTable[idx + i]);
                 expected |= (b & 0xff) << (24 - (8 * i));
             }
 
@@ -165,21 +165,21 @@ public class SWARUtilTest
     }
 
     [Fact]
-    void toLowerCaseLong()
+    void ToLowerCaseLong()
     {
         // given
-        byte[] asciiTable = getExtendedAsciiTable();
-        shuffleArray(asciiTable, random);
+        byte[] asciiTable = GetExtendedAsciiTable();
+        ShuffleArray(asciiTable, random);
 
         // when
         for (int idx = 0; idx < asciiTable.Length; idx += sizeof(long))
         {
-            long value = getLong(asciiTable, idx);
-            long actual = SWARUtil.toLowerCase(value);
+            long value = GetLong(asciiTable, idx);
+            long actual = SWARUtil.ToLowerCase(value);
             long expected = 0L;
             for (int i = 0; i < sizeof(long); i++)
             {
-                byte b = AsciiStringUtil.toLowerCase(asciiTable[idx + i]);
+                byte b = AsciiStringUtil.ToLowerCase(asciiTable[idx + i]);
                 expected |= (long)((b & 0xff)) << (56 - (8 * i));
             }
 
@@ -189,21 +189,21 @@ public class SWARUtilTest
     }
 
     [Fact]
-    void toLowerCaseInt()
+    void ToLowerCaseInt()
     {
         // given
-        byte[] asciiTable = getExtendedAsciiTable();
-        shuffleArray(asciiTable, random);
+        byte[] asciiTable = GetExtendedAsciiTable();
+        ShuffleArray(asciiTable, random);
 
         // when
         for (int idx = 0; idx < asciiTable.Length; idx += sizeof(int))
         {
-            int value = getInt(asciiTable, idx);
-            int actual = SWARUtil.toLowerCase(value);
+            int value = GetInt(asciiTable, idx);
+            int actual = SWARUtil.ToLowerCase(value);
             int expected = 0;
             for (int i = 0; i < sizeof(int); i++)
             {
-                byte b = AsciiStringUtil.toLowerCase(asciiTable[idx + i]);
+                byte b = AsciiStringUtil.ToLowerCase(asciiTable[idx + i]);
                 expected |= (b & 0xff) << (24 - (8 * i));
             }
 
@@ -212,7 +212,7 @@ public class SWARUtilTest
         }
     }
 
-    private static void shuffleArray(byte[] array, Random random)
+    private static void ShuffleArray(byte[] array, Random random)
     {
         for (int i = array.Length - 1; i > 0; i--)
         {
@@ -223,7 +223,7 @@ public class SWARUtilTest
         }
     }
 
-    private static byte[] getExtendedAsciiTable()
+    private static byte[] GetExtendedAsciiTable()
     {
         byte[] table = new byte[256];
         for (int i = 0; i < 256; i++)
@@ -234,7 +234,7 @@ public class SWARUtilTest
         return table;
     }
 
-    private static long getLong(byte[] bytes, int idx)
+    private static long GetLong(byte[] bytes, int idx)
     {
         Debug.Assert(idx >= 0 && bytes.Length >= idx + 8);
         return (long)bytes[idx] << 56 |
@@ -247,7 +247,7 @@ public class SWARUtilTest
                (long)bytes[idx + 7] & 0xff;
     }
 
-    private static int getInt(byte[] bytes, int idx)
+    private static int GetInt(byte[] bytes, int idx)
     {
         Debug.Assert(idx >= 0 && bytes.Length >= idx + 4);
         return bytes[idx] << 24 |

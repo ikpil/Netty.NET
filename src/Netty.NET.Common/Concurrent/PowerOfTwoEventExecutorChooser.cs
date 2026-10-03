@@ -10,8 +10,8 @@ public class PowerOfTwoEventExecutorChooser : IEventExecutorChooser
         this.executors = executors;
     }
 
-    public IEventExecutor next()
+    public IEventExecutor Next()
     {
-        return executors[idx.getAndIncrement() & executors.Length - 1];
+        return executors[idx.GetAndIncrement() & executors.Length - 1];
     }
 }

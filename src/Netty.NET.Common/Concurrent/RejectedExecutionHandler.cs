@@ -4,7 +4,7 @@ namespace Netty.NET.Common.Concurrent;
 
 public class RejectedExecutionHandler : IRejectedExecutionHandler
 {
-    public void rejected(IRunnable task, SingleThreadEventExecutor executor)
+    public void Rejected(IRunnable task, SingleThreadEventExecutor executor)
     {
         throw new RejectedExecutionException();
     }

@@ -11,28 +11,28 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Timer globals")]
 public class HashedWheelTimerContractTest
 {
-    private static IThreadFactory backgroundFactory() => new DefaultThreadFactory("wheel-contract", true);
+    private static IThreadFactory BackgroundFactory() => new DefaultThreadFactory("wheel-contract", true);
 
-    private static int instanceCount() => (int)typeof(HashedWheelTimer)
+    private static int InstanceCount() => (int)typeof(HashedWheelTimer)
         .GetField("INSTANCE_COUNTER", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
 
     [Fact]
     public void FailedConstructionFinalizesWithoutCorruptingTheInstanceCount()
     {
-        int initial = instanceCount();
+        int initial = InstanceCount();
         Assert.Throws<ArgumentNullException>(() => new HashedWheelTimer((IThreadFactory)null));
         Assert.Throws<ArgumentException>(() => new HashedWheelTimer(TimeSpan.Zero));
         Assert.Throws<ArgumentException>(() => new HashedWheelTimer(TimeSpan.FromTicks(-1)));
-        Assert.Throws<ArgumentException>(() => new HashedWheelTimer(backgroundFactory(), TimeSpan.MaxValue, 1));
-        Assert.Throws<ArgumentException>(() => new HashedWheelTimer(backgroundFactory(), TimeSpan.FromMilliseconds(1), 0));
-        Assert.Throws<ArgumentNullException>(() => new HashedWheelTimer(backgroundFactory(), TimeSpan.FromMilliseconds(1),
+        Assert.Throws<ArgumentException>(() => new HashedWheelTimer(BackgroundFactory(), TimeSpan.MaxValue, 1));
+        Assert.Throws<ArgumentException>(() => new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(1), 0));
+        Assert.Throws<ArgumentNullException>(() => new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(1),
             1, true, -1, null));
         GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
-        Assert.Equal(initial, instanceCount());
-        using var timer = new HashedWheelTimer(backgroundFactory());
-        Assert.Equal(initial + 1, instanceCount());
+        Assert.Equal(initial, InstanceCount());
+        using var timer = new HashedWheelTimer(BackgroundFactory());
+        Assert.Equal(initial + 1, InstanceCount());
         timer.Dispose(); timer.Dispose();
-        Assert.Equal(initial, instanceCount());
+        Assert.Equal(initial, InstanceCount());
     }
 
     [Fact]
@@ -40,48 +40,48 @@ public class HashedWheelTimerContractTest
     {
         var group = new ThreadGroup("timer-factory-creator");
         IThreadFactory factory = null;
-        Thread creator = group.newThread(Runnables.Create(() => factory = Executors.defaultThreadFactory()));
+        Thread creator = group.NewThread(Runnables.Create(() => factory = Executors.DefaultThreadFactory()));
         creator.Start(); Assert.True(creator.Join(TimeSpan.FromSeconds(5)));
         bool fastCleanup = true;
-        Thread worker = factory.newThread(Runnables.Create(() =>
-            fastCleanup = FastThreadLocalThread.currentThreadWillCleanupFastThreadLocals()));
-        Assert.Same(group, ThreadGroup.getThreadGroup(worker));
+        Thread worker = factory.NewThread(Runnables.Create(() =>
+            fastCleanup = FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()));
+        Assert.Same(group, ThreadGroup.GetThreadGroup(worker));
         Assert.False(worker.IsBackground);
         Assert.Equal(ThreadPriority.Normal, worker.Priority);
         Assert.Matches("^pool-[0-9]+-thread-1$", worker.Name);
         worker.Start(); Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
         Assert.False(fastCleanup);
-        Thread next = factory.newThread(Runnables.Empty);
+        Thread next = factory.NewThread(Runnables.Empty);
         Assert.EndsWith("-thread-2", next.Name);
     }
 
     [Fact]
     public void PendingCountRollsBackWhenStoppedOrWorkerStartupFails()
     {
-        using var stopped = new HashedWheelTimer(backgroundFactory());
-        Assert.Empty(stopped.stop());
-        Assert.Throws<ArgumentNullException>(() => stopped.newTimeout(null, TimeSpan.Zero));
+        using var stopped = new HashedWheelTimer(BackgroundFactory());
+        Assert.Empty(stopped.Stop());
+        Assert.Throws<ArgumentNullException>(() => stopped.NewTimeout(null, TimeSpan.Zero));
         for (int i = 0; i < 3; i++)
         {
-            Assert.Throws<InvalidOperationException>(() => stopped.newTimeout(TimerTask.Create(_ => { }), TimeSpan.Zero));
-            Assert.Equal(0, stopped.pendingTimeouts());
+            Assert.Throws<InvalidOperationException>(() => stopped.NewTimeout(TimerTask.Create(_ => { }), TimeSpan.Zero));
+            Assert.Equal(0, stopped.PendingTimeouts());
         }
 
         var deadThread = new Thread(() => { });
         deadThread.Start(); Assert.True(deadThread.Join(TimeSpan.FromSeconds(5)));
         using var failed = new HashedWheelTimer(new AnonymousThreadFactory(_ => deadThread));
-        Assert.Throws<ThreadStateException>(() => failed.newTimeout(TimerTask.Create(_ => { }), TimeSpan.Zero));
-        Assert.Equal(0, failed.pendingTimeouts());
+        Assert.Throws<ThreadStateException>(() => failed.NewTimeout(TimerTask.Create(_ => { }), TimeSpan.Zero));
+        Assert.Equal(0, failed.PendingTimeouts());
     }
 
     private sealed class PausingTimer : HashedWheelTimer
     {
         internal readonly ManualResetEventSlim Started = new();
         internal readonly ManualResetEventSlim Continue = new();
-        internal PausingTimer() : base(backgroundFactory(), TimeSpan.FromMilliseconds(1), 4) { }
-        public override void start()
+        internal PausingTimer() : base(BackgroundFactory(), TimeSpan.FromMilliseconds(1), 4) { }
+        public override void Start()
         {
-            base.start();
+            base.Start();
             Started.Set();
             if (!Continue.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException("Scheduling gate was not released.");
         }
@@ -95,54 +95,54 @@ public class HashedWheelTimerContractTest
         int runs = 0;
         Thread submitter = new(() =>
         {
-            try { timer.newTimeout(TimerTask.Create(_ => Interlocked.Increment(ref runs)), TimeSpan.Zero); }
+            try { timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref runs)), TimeSpan.Zero); }
             catch (Exception caught) { failure = caught; }
         }) { IsBackground = true };
         submitter.Start();
         try
         {
             Assert.True(timer.Started.Wait(TimeSpan.FromSeconds(5)));
-            Assert.Empty(timer.stop());
+            Assert.Empty(timer.Stop());
         }
         finally { timer.Continue.Set(); Assert.True(submitter.Join(TimeSpan.FromSeconds(5))); }
         Assert.IsType<InvalidOperationException>(failure);
         Assert.Equal("cannot be started once stopped", failure.Message);
-        Assert.Equal(0, timer.pendingTimeouts());
+        Assert.Equal(0, timer.PendingTimeouts());
         Assert.Equal(0, runs);
         timer.Started.Dispose(); timer.Continue.Dispose();
     }
 
     private sealed class RunOnlyTask(Action<ITimeout> action) : ITimerTask
     {
-        public void run(ITimeout timeout) => action(timeout);
+        public void Run(ITimeout timeout) => action(timeout);
     }
 
     [Fact]
     public void NativeDurationSaturationDoesNotExpireMaximumDelayAndClampsSubmillisecondTicks()
     {
-        using var timer = new HashedWheelTimer(backgroundFactory(), TimeSpan.FromTicks(1), 3);
+        using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromTicks(1), 3);
         Assert.Equal(1_000_000, timer._tickDuration);
         Assert.Equal(4, timer._wheel.Length);
         int maximumRuns = 0;
         using var ready = new CountdownEvent(2);
-        ITimeout maximum = timer.newTimeout(TimerTask.Create(_ => Interlocked.Increment(ref maximumRuns)), TimeSpan.MaxValue);
-        ITimeout minimum = timer.newTimeout(new RunOnlyTask(_ => ready.Signal()), TimeSpan.MinValue);
-        ITimeout immediate = timer.newTimeout(new RunOnlyTask(_ => ready.Signal()), TimeSpan.Zero);
+        ITimeout maximum = timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref maximumRuns)), TimeSpan.MaxValue);
+        ITimeout minimum = timer.NewTimeout(new RunOnlyTask(_ => ready.Signal()), TimeSpan.MinValue);
+        ITimeout immediate = timer.NewTimeout(new RunOnlyTask(_ => ready.Signal()), TimeSpan.Zero);
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
-        Assert.True(minimum.isExpired()); Assert.True(immediate.isExpired());
-        Assert.False(maximum.isExpired()); Assert.Equal(0, maximumRuns);
-        Assert.True(maximum.cancel());
-        Assert.False(maximum.cancel());
+        Assert.True(minimum.IsExpired()); Assert.True(immediate.IsExpired());
+        Assert.False(maximum.IsExpired()); Assert.Equal(0, maximumRuns);
+        Assert.True(maximum.Cancel());
+        Assert.False(maximum.Cancel());
     }
 
     [Fact]
     public void CancellationCallbacksRunOnceOnTheWorkerAndFailuresDoNotStopTheDrain()
     {
-        using var timer = new HashedWheelTimer(backgroundFactory(), TimeSpan.FromMilliseconds(10));
+        using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(10));
         using var ready = new ManualResetEventSlim();
         Thread callbackThread = null;
         int firstCalls = 0, runs = 0;
-        ITimeout first = timer.newTimeout(TimerTask.Create(_ => Interlocked.Increment(ref runs), _ =>
+        ITimeout first = timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref runs), _ =>
         {
             Interlocked.Increment(ref firstCalls);
             throw new InvalidOperationException("cancel failure");
@@ -152,49 +152,49 @@ public class HashedWheelTimerContractTest
             callbackThread = Thread.CurrentThread;
             ready.Set();
         });
-        ITimeout second = timer.newTimeout(secondTask, TimeSpan.FromMinutes(1));
-        Assert.Same(timer, second.timer()); Assert.Same(secondTask, second.task());
-        Assert.True(first.cancel()); Assert.False(first.cancel());
-        Assert.True(second.cancel());
+        ITimeout second = timer.NewTimeout(secondTask, TimeSpan.FromMinutes(1));
+        Assert.Same(timer, second.Timer()); Assert.Same(secondTask, second.Task());
+        Assert.True(first.Cancel()); Assert.False(first.Cancel());
+        Assert.True(second.Cancel());
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
         Assert.Equal(1, firstCalls); Assert.Equal(0, runs);
         Assert.NotSame(Thread.CurrentThread, callbackThread);
-        Assert.True(first.isCancelled()); Assert.False(first.isExpired());
-        Assert.Equal(0, timer.pendingTimeouts());
+        Assert.True(first.IsCancelled()); Assert.False(first.IsExpired());
+        Assert.Equal(0, timer.PendingTimeouts());
     }
 
     [Fact]
     public void WorkerStopIsRejectedAndTaskFailureDoesNotPreventTheNextTimeout()
     {
-        using var timer = new HashedWheelTimer(backgroundFactory(), TimeSpan.FromMilliseconds(1));
+        using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(1));
         using var ready = new ManualResetEventSlim();
         Exception stopFailure = null;
-        ITimeout first = timer.newTimeout(TimerTask.Create(_ => throw new InvalidOperationException("run failure")), TimeSpan.Zero);
-        ITimeout second = timer.newTimeout(TimerTask.Create(_ =>
+        ITimeout first = timer.NewTimeout(TimerTask.Create(_ => throw new InvalidOperationException("run failure")), TimeSpan.Zero);
+        ITimeout second = timer.NewTimeout(TimerTask.Create(_ =>
         {
-            try { timer.stop(); }
+            try { timer.Stop(); }
             catch (Exception caught) { stopFailure = caught; }
             ready.Set();
         }), TimeSpan.Zero);
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
         Assert.IsType<InvalidOperationException>(stopFailure);
-        Assert.True(first.isExpired()); Assert.True(second.isExpired());
-        Assert.False(first.cancel()); Assert.Equal(0, timer.pendingTimeouts());
+        Assert.True(first.IsExpired()); Assert.True(second.IsExpired());
+        Assert.False(first.Cancel()); Assert.Equal(0, timer.PendingTimeouts());
     }
 
     [Fact]
     public void ExpirationAndPendingCountPrecedeExecutionOnTheSuppliedExecutor()
     {
         using var submitted = new BlockingCollection<IRunnable>();
-        using var timer = new HashedWheelTimer(backgroundFactory(), TimeSpan.FromMilliseconds(1), 4, true, 1,
+        using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(1), 4, true, 1,
             new AnonymousExecutor(command => submitted.Add(command)));
         int runs = 0;
-        ITimeout timeout = timer.newTimeout(TimerTask.Create(_ => Interlocked.Increment(ref runs)), TimeSpan.Zero);
+        ITimeout timeout = timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref runs)), TimeSpan.Zero);
         Assert.True(submitted.TryTake(out IRunnable command, TimeSpan.FromSeconds(5)));
-        Assert.True(timeout.isExpired()); Assert.False(timeout.cancel());
-        Assert.Equal(0, timer.pendingTimeouts()); Assert.Equal(0, runs);
-        Assert.Empty(timer.stop());
-        command.run();
+        Assert.True(timeout.IsExpired()); Assert.False(timeout.Cancel());
+        Assert.Equal(0, timer.PendingTimeouts()); Assert.Equal(0, runs);
+        Assert.Empty(timer.Stop());
+        command.Run();
         Assert.Equal(1, runs);
     }
 
@@ -203,56 +203,56 @@ public class HashedWheelTimerContractTest
     {
         int submissions = 0, rejectedRuns = 0;
         using var ready = new ManualResetEventSlim();
-        using var timer = new HashedWheelTimer(backgroundFactory(), TimeSpan.FromMilliseconds(1), 4, true, 2,
+        using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(1), 4, true, 2,
             new AnonymousExecutor(command =>
             {
                 if (Interlocked.Increment(ref submissions) == 1) throw new RejectedExecutionException("executor rejected");
-                command.run();
+                command.Run();
             }));
-        ITimeout rejected = timer.newTimeout(TimerTask.Create(_ => Interlocked.Increment(ref rejectedRuns)), TimeSpan.Zero);
-        timer.newTimeout(TimerTask.Create(_ => ready.Set()), TimeSpan.Zero);
+        ITimeout rejected = timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref rejectedRuns)), TimeSpan.Zero);
+        timer.NewTimeout(TimerTask.Create(_ => ready.Set()), TimeSpan.Zero);
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
-        Assert.True(rejected.isExpired()); Assert.False(rejected.cancel());
-        Assert.Equal(0, rejectedRuns); Assert.Equal(0, timer.pendingTimeouts());
+        Assert.True(rejected.IsExpired()); Assert.False(rejected.Cancel());
+        Assert.Equal(0, rejectedRuns); Assert.Equal(0, timer.PendingTimeouts());
     }
 
     [Fact]
     public void StopRetainsThePinnedUnprocessedCountAndDoesNotDispatchPostShutdownCancellationCallbacks()
     {
-        using var timer = new HashedWheelTimer(backgroundFactory(), TimeSpan.FromMilliseconds(10));
+        using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(10));
         int cancellations = 0, runs = 0;
         ITimerTask task = TimerTask.Create(_ => Interlocked.Increment(ref runs), _ => Interlocked.Increment(ref cancellations));
-        ITimeout first = timer.newTimeout(task, TimeSpan.FromMinutes(1));
-        ITimeout second = timer.newTimeout(task, TimeSpan.FromMinutes(1));
-        var pending = timer.stop();
+        ITimeout first = timer.NewTimeout(task, TimeSpan.FromMinutes(1));
+        ITimeout second = timer.NewTimeout(task, TimeSpan.FromMinutes(1));
+        var pending = timer.Stop();
         Assert.Equal(2, pending.Count);
         Assert.Contains(first, pending); Assert.Contains(second, pending);
-        Assert.All(pending, timeout => Assert.True(timeout.isCancelled()));
-        Assert.Equal(2, timer.pendingTimeouts());
+        Assert.All(pending, timeout => Assert.True(timeout.IsCancelled()));
+        Assert.Equal(2, timer.PendingTimeouts());
         Assert.Equal(0, runs); Assert.Equal(0, cancellations);
-        Assert.Empty(timer.stop());
+        Assert.Empty(timer.Stop());
     }
 
     [Fact]
     public void ThirtyDayTickWaitIsChunkedAndStopRemainsPrompt()
     {
         Thread worker = null;
-        var factory = new AnonymousThreadFactory(runnable => worker = new Thread(runnable.run) { IsBackground = true });
+        var factory = new AnonymousThreadFactory(runnable => worker = new Thread(runnable.Run) { IsBackground = true });
         using var timer = new HashedWheelTimer(factory, TimeSpan.FromDays(30), 1);
-        timer.newTimeout(new RunOnlyTask(_ => throw new InvalidOperationException("early expiration")), TimeSpan.FromDays(31));
+        timer.NewTimeout(new RunOnlyTask(_ => throw new InvalidOperationException("early expiration")), TimeSpan.FromDays(31));
         Assert.True(SpinWait.SpinUntil(() => (worker.ThreadState & ThreadState.WaitSleepJoin) != 0, TimeSpan.FromSeconds(5)));
-        Assert.Single(timer.stop());
-        Assert.Throws<InvalidOperationException>(timer.start);
+        Assert.Single(timer.Stop());
+        Assert.Throws<InvalidOperationException>(timer.Start);
     }
 
     [Fact]
     public void StopConsumesInterruptWhileJoiningAndRestoresItToTheCaller()
     {
-        using var timer = new HashedWheelTimer(backgroundFactory(), TimeSpan.FromMilliseconds(1));
+        using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(1));
         using var entered = new ManualResetEventSlim();
         using var stopping = new ManualResetEventSlim();
         int release = 0;
-        timer.newTimeout(TimerTask.Create(_ =>
+        timer.NewTimeout(TimerTask.Create(_ =>
         {
             entered.Set();
             var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
@@ -266,7 +266,7 @@ public class HashedWheelTimerContractTest
             try
             {
                 stopping.Set();
-                timer.stop();
+                timer.Stop();
                 try { Thread.Sleep(0); }
                 catch (ThreadInterruptedException) { restored = true; }
             }

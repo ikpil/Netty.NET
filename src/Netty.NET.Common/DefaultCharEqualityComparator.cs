@@ -8,7 +8,7 @@ public class DefaultCharEqualityComparator : ICharEqualityComparator
     {
     }
 
-    public bool equals(char a, char b)
+    public bool Equals(char a, char b)
     {
         return a == b;
     }

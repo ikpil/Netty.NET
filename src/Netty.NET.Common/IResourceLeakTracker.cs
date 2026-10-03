@@ -25,13 +25,13 @@ public interface IResourceLeakTracker<T> : IResourceLeakTracker {
      * Records the caller's current stack trace so that the {@link ResourceLeakDetector} can tell where the leaked
      * resource was accessed lastly. This method is a shortcut to {@link #record(Object) record(null)}.
      */
-    void record();
+    void Record();
 
     /**
      * Records the caller's current stack trace and the specified additional arbitrary information
      * so that the {@link ResourceLeakDetector} can tell where the leaked resource was accessed lastly.
      */
-    void record(object hint);
+    void Record(object hint);
 
     /**
      * Close the leak so that {@link ResourceLeakTracker} does not warn about leaked resources.
@@ -39,7 +39,7 @@ public interface IResourceLeakTracker<T> : IResourceLeakTracker {
      *
      * @return {@code true} if called first time, {@code false} if called already
      */
-    bool close(T trackedObject);
+    bool Close(T trackedObject);
 
     /**
      * Get a {@link Throwable} representing the stack trace of the original {@link #close(Object)} call.
@@ -48,7 +48,7 @@ public interface IResourceLeakTracker<T> : IResourceLeakTracker {
      *
      * @return A throwable with the stack trace of the successful close call, or {@code null}.
      */
-    Exception getCloseStackTraceIfAny() {
+    Exception GetCloseStackTraceIfAny() {
         return null;
     }
 }

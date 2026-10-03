@@ -12,26 +12,26 @@ public sealed class DefaultAttribute<T> : AtomicReference<T>, IAttribute<T>, IDe
         _key = key;
     }
 
-    public AttributeKey<T> key()
+    public AttributeKey<T> Key()
     {
         return _key;
     }
 
-    IAttributeKey IDefaultAttribute.key()
+    IAttributeKey IDefaultAttribute.Key()
     {
-        return key();
+        return Key();
     }
 
-    public bool isRemoved()
+    public bool IsRemoved()
     {
-        return _attributeMap.get() == null;
+        return _attributeMap.Get() == null;
     }
 
-    public T setIfAbsent(T value)
+    public T SetIfAbsent(T value)
     {
-        while (!compareAndSet(null, value))
+        while (!CompareAndSet(null, value))
         {
-            T old = get();
+            T old = Get();
             if (old != null)
             {
                 return old;
@@ -41,27 +41,27 @@ public sealed class DefaultAttribute<T> : AtomicReference<T>, IAttribute<T>, IDe
         return null;
     }
 
-    public T getAndRemove()
+    public T GetAndRemove()
     {
-        DefaultAttributeMap attributeMap = _attributeMap.get();
-        bool removed = attributeMap != null && _attributeMap.compareAndSet(attributeMap, null);
-        T oldValue = getAndSet(null);
+        DefaultAttributeMap attributeMap = _attributeMap.Get();
+        bool removed = attributeMap != null && _attributeMap.CompareAndSet(attributeMap, null);
+        T oldValue = GetAndSet(null);
         if (removed)
         {
-            attributeMap.removeAttributeIfMatch(_key, this);
+            attributeMap.RemoveAttributeIfMatch(_key, this);
         }
 
         return oldValue;
     }
 
-    public void remove()
+    public void Remove()
     {
-        DefaultAttributeMap attributeMap = _attributeMap.get();
-        bool removed = attributeMap != null && _attributeMap.compareAndSet(attributeMap, null);
-        set(null);
+        DefaultAttributeMap attributeMap = _attributeMap.Get();
+        bool removed = attributeMap != null && _attributeMap.CompareAndSet(attributeMap, null);
+        Set(null);
         if (removed)
         {
-            attributeMap.removeAttributeIfMatch(_key, this);
+            attributeMap.RemoveAttributeIfMatch(_key, this);
         }
     }
 }

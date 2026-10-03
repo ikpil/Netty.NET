@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -15,18 +15,18 @@ public class AtomicBoolean
         _location = initialValue ? 1 : 0;
     }
     
-    public bool set(bool exchange)
+    public bool Set(bool exchange)
     {
         return 1 == Interlocked.Exchange(ref _location, exchange ? 1 : 0);
     }
 
-    public bool get()
+    public bool Get()
     {
         return _location != 0;
     }
 
     // true if successful, otherwise false if the witness value was not the same as the expectedValue.
-    public bool compareAndSet(bool expectedValue, bool newValue)
+    public bool CompareAndSet(bool expectedValue, bool newValue)
     {
         var expectedInt = expectedValue ? 1 : 0;
         var newInt = newValue ? 1 : 0;

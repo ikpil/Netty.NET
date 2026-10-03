@@ -10,5 +10,5 @@ public interface IObjectPoolHandle<T>
     /**
      * Recycle the {@link object} if possible and so make it ready to be reused.
      */
-    void recycle(T self);
+    void Recycle(T self);
 }

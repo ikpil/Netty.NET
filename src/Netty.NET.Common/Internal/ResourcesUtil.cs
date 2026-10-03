@@ -33,7 +33,7 @@ public static class ResourcesUtil
      * @param fileName The file name
      * @return The file named {@code fileName} associated with {@link Class} {@code resourceClass} .
      */
-    public static FileInfo getFile(Type resourceClass, string fileName)
+    public static FileInfo GetFile(Type resourceClass, string fileName)
     {
         Assembly assembly = resourceClass.Assembly;
 

@@ -26,9 +26,9 @@ public static class ReflectionUtil
      * {@link java.lang.reflect.InaccessibleObjectException} and return it.
      * The caller must check if it returns {@code null} and if not handle the returned exception.
      */
-    public static Exception trySetAccessible(object obj, bool checkAccessible)
+    public static Exception TrySetAccessible(object obj, bool checkAccessible)
     {
-        if (checkAccessible && !PlatformDependent0.isExplicitTryReflectionSetAccessible())
+        if (checkAccessible && !PlatformDependent0.IsExplicitTryReflectionSetAccessible())
         {
             return new NotSupportedException("Reflective setAccessible(true) disabled");
         }
@@ -44,11 +44,11 @@ public static class ReflectionUtil
         }
         catch (Exception e)
         {
-            return handleInaccessibleObjectException(e);
+            return HandleInaccessibleObjectException(e);
         }
     }
 
-    private static MemberAccessException handleInaccessibleObjectException(Exception e)
+    private static MemberAccessException HandleInaccessibleObjectException(Exception e)
     {
         // JDK 9 can throw an inaccessible object exception here; since Netty compiles
         // against JDK 7 and this exception was only added in JDK 9, we have to weakly
@@ -61,7 +61,7 @@ public static class ReflectionUtil
         throw e;
     }
 
-    private static Type fail(Type type, string typeParamName)
+    private static Type Fail(Type type, string typeParamName)
     {
         throw new InvalidOperationException(
             "cannot determine the type of the type parameter '" + typeParamName + "': " + type);
@@ -77,7 +77,7 @@ public static class ReflectionUtil
      * */
     // CLR adaptation: runtime generic arguments survive construction. Follow the
     // constructed superclass chain instead of reproducing JVM erasure failures.
-    public static Type resolveTypeParameter(object obj, Type parametrizedSuperclass, string typeParamName)
+    public static Type ResolveTypeParameter(object obj, Type parametrizedSuperclass, string typeParamName)
     {
         ArgumentNullException.ThrowIfNull(obj);
         ArgumentNullException.ThrowIfNull(parametrizedSuperclass);
@@ -100,11 +100,11 @@ public static class ReflectionUtil
             if (actualType.IsGenericParameter)
             {
                 // Resolved type parameter points to another type parameter.
-                return fail(thisClass, typeParamName);
+                return Fail(thisClass, typeParamName);
             }
-            if (actualType.ContainsGenericParameters) return fail(thisClass, typeParamName);
+            if (actualType.ContainsGenericParameters) return Fail(thisClass, typeParamName);
             return actualType;
         }
-        return fail(thisClass, typeParamName);
+        return Fail(thisClass, typeParamName);
     }
 }

@@ -5,7 +5,7 @@ namespace Netty.NET.Common.Concurrent;
 
 public static class Executors
 {
-    public static IThreadFactory defaultThreadFactory()
+    public static IThreadFactory DefaultThreadFactory()
     {
         return new NativeDefaultThreadFactory();
     }
@@ -17,12 +17,12 @@ public static class Executors
     {
         private static int poolNumber;
         private int threadNumber;
-        private readonly ThreadGroup group = ThreadGroup.currentThreadGroup();
+        private readonly ThreadGroup group = ThreadGroup.CurrentThreadGroup();
         private readonly string prefix = "pool-" + Interlocked.Increment(ref poolNumber) + "-thread-";
 
-        public Thread newThread(IRunnable runnable)
+        public Thread NewThread(IRunnable runnable)
         {
-            Thread thread = group.newThread(runnable);
+            Thread thread = group.NewThread(runnable);
             thread.Name = prefix + Interlocked.Increment(ref threadNumber);
             thread.IsBackground = false;
             thread.Priority = ThreadPriority.Normal;

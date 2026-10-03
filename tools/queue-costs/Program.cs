@@ -164,8 +164,8 @@ sealed class Entry(int id, int offset) : IPriorityQueueNode<Entry>
     internal (long Deadline, long Sequence) Priority => (unchecked(long.MaxValue - 1000 + offset), id);
     public override bool Equals(object other) => other is Entry;
     public override int GetHashCode() => 0;
-    public int priorityQueueIndex(DefaultPriorityQueue<Entry> queue) => index;
-    public void priorityQueueIndex(DefaultPriorityQueue<Entry> queue, int value) => index = value;
+    public int PriorityQueueIndex(DefaultPriorityQueue<Entry> queue) => index;
+    public void PriorityQueueIndex(DefaultPriorityQueue<Entry> queue, int value) => index = value;
 }
 interface IQueue
 {
@@ -197,9 +197,9 @@ sealed class IndexedHeap : IQueue
     readonly DefaultPriorityQueue<Entry> queue = new(
         Comparer<Entry>.Create((a, b) => PriorityComparer.Instance.Compare(a.Priority, b.Priority)), 0);
     public int Count => queue.Count;
-    public void Add(Entry entry) => queue.offer(entry);
-    public Entry Pop() => queue.poll();
-    public bool Remove(Entry entry) => queue.remove(entry);
+    public void Add(Entry entry) => queue.Offer(entry);
+    public Entry Pop() => queue.Poll();
+    public bool Remove(Entry entry) => queue.Remove(entry);
 }
 sealed class Tree : IQueue
 {
@@ -225,5 +225,5 @@ sealed class PriorityComparer : IComparer<(long Deadline, long Sequence)>
 }
 sealed class NoWorker : IThreadFactory
 {
-    public Thread newThread(IRunnable task) => null;
+    public Thread NewThread(IRunnable task) => null;
 }

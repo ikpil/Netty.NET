@@ -19,28 +19,28 @@ public class HeapMemoryContractTest
         byte[] expected = (byte[])data.Clone();
         const long value = unchecked((long)0x80ff0123fedcba98UL);
 
-        PlatformDependent.putLong(data, offset, value);
+        PlatformDependent.PutLong(data, offset, value);
         BitConverter.GetBytes(value).CopyTo(expected, offset);
         Assert.Equal(expected, data);
-        Assert.Equal(value, PlatformDependent.getLong(data, offset));
+        Assert.Equal(value, PlatformDependent.GetLong(data, offset));
 
         const int intValue = unchecked((int)0x80abcdef);
-        PlatformDependent.putInt(data, offset, intValue);
+        PlatformDependent.PutInt(data, offset, intValue);
         BitConverter.GetBytes(intValue).CopyTo(expected, offset);
         Assert.Equal(expected, data);
-        Assert.Equal(intValue, PlatformDependent.getInt(data, offset));
+        Assert.Equal(intValue, PlatformDependent.GetInt(data, offset));
 
         const short shortValue = unchecked((short)0x80ff);
-        PlatformDependent.putShort(data, offset, shortValue);
+        PlatformDependent.PutShort(data, offset, shortValue);
         BitConverter.GetBytes(shortValue).CopyTo(expected, offset);
         Assert.Equal(expected, data);
-        Assert.Equal(shortValue, PlatformDependent.getShort(data, offset));
+        Assert.Equal(shortValue, PlatformDependent.GetShort(data, offset));
 
-        PlatformDependent.putByte(data, offset, 0xfe);
+        PlatformDependent.PutByte(data, offset, 0xfe);
         expected[offset] = 0xfe;
         Assert.Equal(expected, data);
-        Assert.Equal((byte)0xfe, PlatformDependent.getByte(data, offset));
-        Assert.Equal((byte)0xfe, PlatformDependent.getByte(data, (long)offset));
+        Assert.Equal((byte)0xfe, PlatformDependent.GetByte(data, offset));
+        Assert.Equal((byte)0xfe, PlatformDependent.GetByte(data, (long)offset));
     }
 
     [Theory]
@@ -55,7 +55,7 @@ public class HeapMemoryContractTest
         byte[] snapshot = (byte[])data.Clone();
         for (int i = 0; i < count; i++)
             expected[destination + i] = snapshot[source + i];
-        PlatformDependent.copyMemory(data, source, data, destination, count);
+        PlatformDependent.CopyMemory(data, source, data, destination, count);
         Assert.Equal(expected, data);
     }
 
@@ -64,11 +64,11 @@ public class HeapMemoryContractTest
     {
         byte[] source = { 90, 91, 0x80, 0xff, 3, 92 };
         byte[] destination = { 9, 9, 9, 9, 9, 9 };
-        PlatformDependent.copyMemory(source, 2, destination, 1, 3);
+        PlatformDependent.CopyMemory(source, 2, destination, 1, 3);
         Assert.Equal(new byte[] { 9, 0x80, 0xff, 3, 9, 9 }, destination);
-        PlatformDependent.setMemory(destination, 2, 2, 0xab);
+        PlatformDependent.SetMemory(destination, 2, 2, 0xab);
         Assert.Equal(new byte[] { 9, 0x80, 0xab, 0xab, 9, 9 }, destination);
-        PlatformDependent.setMemory(destination, destination.Length, 0, 0);
+        PlatformDependent.SetMemory(destination, destination.Length, 0, 0);
         Assert.Equal(new byte[] { 90, 91, 0x80, 0xff, 3, 92 }, source);
     }
 
@@ -77,33 +77,33 @@ public class HeapMemoryContractTest
     {
         byte[] data = { 1, 2, 3, 4, 5, 6, 7, 8 };
         byte[] original = (byte[])data.Clone();
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.putLong(data, 1, 9));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.putShort(data, -1, 9));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.getInt(data, 6));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.copyMemory(data, 0, data, 1, 8));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.copyMemory(data, -1, data, 0, 1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.setMemory(data, 7, 2, 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.setMemory(data, 0, -1, 0));
-        Assert.Throws<OverflowException>(() => PlatformDependent.copyMemory(data, 0, data, 0, long.MaxValue));
-        Assert.Throws<OverflowException>(() => PlatformDependent.setMemory(data, 0, long.MaxValue, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.PutLong(data, 1, 9));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.PutShort(data, -1, 9));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.GetInt(data, 6));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.CopyMemory(data, 0, data, 1, 8));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.CopyMemory(data, -1, data, 0, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.SetMemory(data, 7, 2, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.SetMemory(data, 0, -1, 0));
+        Assert.Throws<OverflowException>(() => PlatformDependent.CopyMemory(data, 0, data, 0, long.MaxValue));
+        Assert.Throws<OverflowException>(() => PlatformDependent.SetMemory(data, 0, long.MaxValue, 0));
         Assert.Equal(original, data);
     }
 
     [Fact]
     public void NullArraysAreRejectedEvenForEmptyCopyAndFill()
     {
-        Assert.Throws<ArgumentNullException>(() => PlatformDependent.copyMemory(null, 0, Array.Empty<byte>(), 0, 0));
-        Assert.Throws<ArgumentNullException>(() => PlatformDependent.copyMemory(Array.Empty<byte>(), 0, null, 0, 0));
-        Assert.Throws<ArgumentNullException>(() => PlatformDependent.setMemory(null, 0, 0, 0));
+        Assert.Throws<ArgumentNullException>(() => PlatformDependent.CopyMemory(null, 0, Array.Empty<byte>(), 0, 0));
+        Assert.Throws<ArgumentNullException>(() => PlatformDependent.CopyMemory(Array.Empty<byte>(), 0, null, 0, 0));
+        Assert.Throws<ArgumentNullException>(() => PlatformDependent.SetMemory(null, 0, 0, 0));
     }
 
     [Fact]
     public void TypedArrayIndexesAreElementIndexesAndCannotTruncateLongs()
     {
-        Assert.Equal(-2, PlatformDependent.getInt(new[] { 1, -2 }, 1L));
-        Assert.Equal(long.MinValue, PlatformDependent.getLong(new[] { 1L, long.MinValue }, 1L));
-        Assert.Throws<OverflowException>(() => PlatformDependent.getByte(new byte[1], 1L << 32));
-        Assert.Throws<OverflowException>(() => PlatformDependent.getInt(new int[1], 1L << 32));
-        Assert.Throws<OverflowException>(() => PlatformDependent.getLong(new long[1], 1L << 32));
+        Assert.Equal(-2, PlatformDependent.GetInt(new[] { 1, -2 }, 1L));
+        Assert.Equal(long.MinValue, PlatformDependent.GetLong(new[] { 1L, long.MinValue }, 1L));
+        Assert.Throws<OverflowException>(() => PlatformDependent.GetByte(new byte[1], 1L << 32));
+        Assert.Throws<OverflowException>(() => PlatformDependent.GetInt(new int[1], 1L << 32));
+        Assert.Throws<OverflowException>(() => PlatformDependent.GetLong(new long[1], 1L << 32));
     }
 }

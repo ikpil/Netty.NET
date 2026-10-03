@@ -31,44 +31,44 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    public abstract void shutdown();
+    public abstract void Shutdown();
 
     /**
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    public virtual List<IRunnable> shutdownNow()
+    public virtual List<IRunnable> ShutdownNow()
     {
-        shutdown();
+        Shutdown();
         return new List<IRunnable>();
     }
-    public abstract bool isShutdown();
-    public abstract bool isShuttingDown();
-    public abstract bool isTerminated();
-    public abstract bool awaitTermination(TimeSpan timeout);
+    public abstract bool IsShutdown();
+    public abstract bool IsShuttingDown();
+    public abstract bool IsTerminated();
+    public abstract bool AwaitTermination(TimeSpan timeout);
     public abstract Task Termination { get; }
-    public abstract IEnumerable<IEventExecutor> iterator();
+    public abstract IEnumerable<IEventExecutor> Iterator();
 
-    public virtual Ticker ticker()
+    public virtual Ticker Ticker()
     {
-        return Ticker.systemTicker();
+        return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
     }
 
     public abstract Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
     public virtual Task StopAsync()
     {
-        shutdown();
+        Shutdown();
         return Termination;
     }
-    public abstract IEventExecutor next();
+    public abstract IEventExecutor Next();
 
     public virtual Task ShutdownGracefullyAsync()
     {
         return ShutdownGracefullyAsync(AbstractEventExecutor.DEFAULT_SHUTDOWN_QUIET_PERIOD, AbstractEventExecutor.DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
-    public virtual void execute(IRunnable command)
+    public virtual void Execute(IRunnable command)
     {
-        next().execute(command);
+        Next().Execute(command);
     }
 }

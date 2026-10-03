@@ -20,8 +20,8 @@ public class AsciiStringHashContractTest
                 bytes[i] = unchecked((byte)(i * 73 + length * 17 + 128));
             AsciiString view = new AsciiString(bytes, 11, length, false);
             Assert.Equal(expected[length], view.GetHashCode(), "length=" + length);
-            Assert.Equal(expected[length], PlatformDependent.hashCodeAsciiSafe(bytes, 11, length), "length=" + length);
-            Assert.Equal(expected[length], AsciiString.hashCode(new StringCharSequence(view.ToString())), "length=" + length);
+            Assert.Equal(expected[length], PlatformDependent.HashCodeAsciiSafe(bytes, 11, length), "length=" + length);
+            Assert.Equal(expected[length], AsciiString.HashCode(new StringCharSequence(view.ToString())), "length=" + length);
         }
     }
     private static readonly int[] LittleEndian =

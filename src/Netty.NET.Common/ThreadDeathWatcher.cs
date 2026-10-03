@@ -39,7 +39,7 @@ namespace Netty.NET.Common;
 [Obsolete]
 public static class ThreadDeathWatcher
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(ThreadDeathWatcher));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(ThreadDeathWatcher));
     // visible for testing
     internal static readonly IThreadFactory threadFactory;
     // Use a MPMC queue as we may end up checking isEmpty() from multiple threads which may not be allowed to do
@@ -52,7 +52,7 @@ public static class ThreadDeathWatcher
     static ThreadDeathWatcher()
     {
         string poolName = "threadDeathWatcher";
-        string prefix = SystemPropertyUtil.get("io.netty.serviceThreadPrefix");
+        string prefix = SystemPropertyUtil.Get("io.netty.serviceThreadPrefix");
         if (!string.IsNullOrEmpty(prefix)) poolName = prefix + poolName;
         // because the ThreadDeathWatcher is a singleton, tasks submitted to it can come from arbitrary threads and
         // this can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory
@@ -67,27 +67,27 @@ public static class ThreadDeathWatcher
      *
      * @throws IllegalArgumentException if the specified {@code thread} is not alive
      */
-    public static void watch(Thread thread, IRunnable task)
+    public static void Watch(Thread thread, IRunnable task)
     {
         ArgumentNullException.ThrowIfNull(thread);
         ArgumentNullException.ThrowIfNull(task);
         if (!thread.IsAlive) throw new ArgumentException("thread must be alive.", nameof(thread));
-        schedule(thread, task, true);
+        Schedule(thread, task, true);
     }
     /**
      * Cancels the task scheduled via {@link #watch(Thread, Runnable)}.
      */
-    public static void unwatch(Thread thread, IRunnable task)
+    public static void Unwatch(Thread thread, IRunnable task)
     {
         ArgumentNullException.ThrowIfNull(thread);
         ArgumentNullException.ThrowIfNull(task);
-        schedule(thread, task, false);
+        Schedule(thread, task, false);
     }
-    private static void schedule(Thread thread, IRunnable task, bool isWatch)
+    private static void Schedule(Thread thread, IRunnable task, bool isWatch)
     {
         pendingEntries.Enqueue(new Entry(thread, task, isWatch));
         if (Interlocked.CompareExchange(ref started, 1, 0) != 0) return;
-        Thread worker = threadFactory.newThread(watcher);
+        Thread worker = threadFactory.NewThread(watcher);
         // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
         // classloader.
         // See:
@@ -112,7 +112,7 @@ public static class ThreadDeathWatcher
      *
      * @return {@code true} if and only if the watcher thread has been terminated
      */
-    public static bool awaitInactivity(TimeSpan timeout)
+    public static bool AwaitInactivity(TimeSpan timeout)
     {
         Thread worker = Volatile.Read(ref watcherThread);
         if (worker == null) return true;
@@ -136,15 +136,15 @@ public static class ThreadDeathWatcher
     private sealed class Watcher : IRunnable
     {
         private readonly List<Entry> watchees = new();
-        public void run()
+        public void Run()
         {
             for (;;)
             {
-                fetchWatchees();
-                notifyWatchees();
+                FetchWatchees();
+                NotifyWatchees();
                 // Try once again just in case notifyWatchees() triggered watch() or unwatch().
-                fetchWatchees();
-                notifyWatchees();
+                FetchWatchees();
+                NotifyWatchees();
                 try { Thread.Sleep(1000); }
                 catch (ThreadInterruptedException)
                 {
@@ -179,21 +179,21 @@ public static class ThreadDeathWatcher
                 }
             }
         }
-        private void fetchWatchees()
+        private void FetchWatchees()
         {
             while (pendingEntries.TryDequeue(out Entry entry))
                 if (entry.isWatch) watchees.Add(entry);
                 else watchees.Remove(entry);
         }
-        private void notifyWatchees()
+        private void NotifyWatchees()
         {
             for (int index = 0; index < watchees.Count;)
             {
                 Entry entry = watchees[index];
                 if (entry.thread.IsAlive) { index++; continue; }
                 watchees.RemoveAt(index);
-                try { entry.task.run(); }
-                catch (Exception failure) { logger.warn("Thread death watcher task raised an exception:", failure); }
+                try { entry.task.Run(); }
+                catch (Exception failure) { logger.Warn("Thread death watcher task raised an exception:", failure); }
             }
         }
     }

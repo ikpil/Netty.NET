@@ -27,39 +27,39 @@ namespace Netty.NET.Common.Tests;
 public class AbstractReferenceCountedTest
 {
     [Fact]
-    public void testRetainOverflow()
+    public void TestRetainOverflow()
     {
-        AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        referenceCounted.setRefCnt(int.MaxValue);
-        Assert.Equal(int.MaxValue, referenceCounted.refCnt());
-        Assert.Throws<IllegalReferenceCountException>(referenceCounted.retain);
+        AbstractReferenceCounted referenceCounted = NewReferenceCounted();
+        referenceCounted.SetRefCnt(int.MaxValue);
+        Assert.Equal(int.MaxValue, referenceCounted.RefCnt());
+        Assert.Throws<IllegalReferenceCountException>(referenceCounted.Retain);
     }
 
     [Fact]
-    public void testRetainOverflow2()
+    public void TestRetainOverflow2()
     {
-        AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        Assert.Equal(1, referenceCounted.refCnt());
-        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.retain(int.MaxValue));
+        AbstractReferenceCounted referenceCounted = NewReferenceCounted();
+        Assert.Equal(1, referenceCounted.RefCnt());
+        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.Retain(int.MaxValue));
     }
 
     [Fact]
-    public void testReleaseOverflow()
+    public void TestReleaseOverflow()
     {
-        AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        referenceCounted.setRefCnt(0);
-        Assert.Equal(0, referenceCounted.refCnt());
-        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.release(int.MaxValue));
+        AbstractReferenceCounted referenceCounted = NewReferenceCounted();
+        referenceCounted.SetRefCnt(0);
+        Assert.Equal(0, referenceCounted.RefCnt());
+        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.Release(int.MaxValue));
     }
 
     [Fact]
-    public void testReleaseErrorMessage()
+    public void TestReleaseErrorMessage()
     {
-        AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        Assert.True(referenceCounted.release());
+        AbstractReferenceCounted referenceCounted = NewReferenceCounted();
+        Assert.True(referenceCounted.Release());
         try
         {
-            referenceCounted.release(1);
+            referenceCounted.Release(1);
             Assert.Fail("IllegalReferenceCountException didn't occur");
         }
         catch (IllegalReferenceCountException e)
@@ -69,25 +69,25 @@ public class AbstractReferenceCountedTest
     }
 
     [Fact]
-    public void testRetainResurrect()
+    public void TestRetainResurrect()
     {
-        AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        Assert.True(referenceCounted.release());
-        Assert.Equal(0, referenceCounted.refCnt());
-        Assert.Throws<IllegalReferenceCountException>(referenceCounted.retain);
+        AbstractReferenceCounted referenceCounted = NewReferenceCounted();
+        Assert.True(referenceCounted.Release());
+        Assert.Equal(0, referenceCounted.RefCnt());
+        Assert.Throws<IllegalReferenceCountException>(referenceCounted.Retain);
     }
 
     [Fact]
-    public void testRetainResurrect2()
+    public void TestRetainResurrect2()
     {
-        AbstractReferenceCounted referenceCounted = newReferenceCounted();
-        Assert.True(referenceCounted.release());
-        Assert.Equal(0, referenceCounted.refCnt());
-        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.retain(2));
+        AbstractReferenceCounted referenceCounted = NewReferenceCounted();
+        Assert.True(referenceCounted.Release());
+        Assert.Equal(0, referenceCounted.RefCnt());
+        Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.Retain(2));
     }
 
     [Fact(Timeout = 30000)]
-    public async Task testRetainFromMultipleThreadsThrowsReferenceCountException()
+    public async Task TestRetainFromMultipleThreadsThrowsReferenceCountException()
     {
         int threads = 4;
         Queue<Task> futures = new Queue<Task>(threads);
@@ -98,13 +98,13 @@ public class AbstractReferenceCountedTest
         {
             for (int i = 0; i < 10000; i++)
             {
-                AbstractReferenceCounted referenceCounted = newReferenceCounted();
+                AbstractReferenceCounted referenceCounted = NewReferenceCounted();
                 using CountdownEvent retainLatch = new CountdownEvent(1);
-                Assert.True(referenceCounted.release());
+                Assert.True(referenceCounted.Release());
 
                 for (int a = 0; a < threads; a++)
                 {
-                    int retainCnt = ThreadLocalRandom.current().Next(1, int.MaxValue);
+                    int retainCnt = ThreadLocalRandom.Current().Next(1, int.MaxValue);
                     futures.Enqueue(Task.Run(() =>
                     {
                         try
@@ -112,11 +112,11 @@ public class AbstractReferenceCountedTest
                             retainLatch.Wait();
                             try
                             {
-                                referenceCounted.retain(retainCnt);
+                                referenceCounted.Retain(retainCnt);
                             }
                             catch (IllegalReferenceCountException e)
                             {
-                                refCountExceptions.incrementAndGet();
+                                refCountExceptions.IncrementAndGet();
                             }
                         }
                         catch (ThreadInterruptedException e)
@@ -139,8 +139,8 @@ public class AbstractReferenceCountedTest
                     await f;
                 }
 
-                Assert.Equal(4, refCountExceptions.get());
-                refCountExceptions.set(0);
+                Assert.Equal(4, refCountExceptions.Get());
+                refCountExceptions.Set(0);
             }
         }
         finally
@@ -150,7 +150,7 @@ public class AbstractReferenceCountedTest
     }
 
     [Fact(Timeout = 30000)]
-    public async Task testReleaseFromMultipleThreadsThrowsReferenceCountException()
+    public async Task TestReleaseFromMultipleThreadsThrowsReferenceCountException()
     {
         int threads = 4;
         Queue<Task> futures = new Queue<Task>(threads);
@@ -161,7 +161,7 @@ public class AbstractReferenceCountedTest
         {
             for (int i = 0; i < 10000; i++)
             {
-                AbstractReferenceCounted referenceCounted = newReferenceCounted();
+                AbstractReferenceCounted referenceCounted = NewReferenceCounted();
                 using CountdownEvent releaseLatch = new CountdownEvent(1);
                 AtomicInteger releasedCount = new AtomicInteger();
 
@@ -176,14 +176,14 @@ public class AbstractReferenceCountedTest
                             releaseLatch.Wait();
                             try
                             {
-                                if (referenceCounted.release(releaseCnt.incrementAndGet()))
+                                if (referenceCounted.Release(releaseCnt.IncrementAndGet()))
                                 {
-                                    releasedCount.incrementAndGet();
+                                    releasedCount.IncrementAndGet();
                                 }
                             }
                             catch (IllegalReferenceCountException e)
                             {
-                                refCountExceptions.incrementAndGet();
+                                refCountExceptions.IncrementAndGet();
                             }
                         }
                         catch (ThreadInterruptedException e)
@@ -206,10 +206,10 @@ public class AbstractReferenceCountedTest
                     await f;
                 }
 
-                Assert.Equal(3, refCountExceptions.get());
-                Assert.Equal(1, releasedCount.get());
+                Assert.Equal(3, refCountExceptions.Get());
+                Assert.Equal(1, releasedCount.Get());
 
-                refCountExceptions.set(0);
+                refCountExceptions.Set(0);
             }
         }
         finally
@@ -220,18 +220,18 @@ public class AbstractReferenceCountedTest
 
     public class TestReferenceCounted : AbstractReferenceCounted
     {
-        protected override void deallocate()
+        protected override void Deallocate()
         {
             // NOOP
         }
 
-        public override IReferenceCounted touch(object hint)
+        public override IReferenceCounted Touch(object hint)
         {
             return this;
         }
     }
 
-    public static AbstractReferenceCounted newReferenceCounted()
+    public static AbstractReferenceCounted NewReferenceCounted()
     {
         return new TestReferenceCounted();
     }

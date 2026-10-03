@@ -29,7 +29,7 @@ public class ObjectCleanerTest
     private object temporaryObject;
 
     [Fact(Timeout = 5000)]
-    public async Task testCleanup()
+    public async Task TestCleanup()
     {
         int freeCalled = 0;
         using var latch = new CountdownEvent(1);
@@ -54,7 +54,7 @@ public class ObjectCleanerTest
     }
 
     [Fact(Timeout = 5000)]
-    public async Task testCleanupContinuesDespiteThrowing()
+    public async Task TestCleanupContinuesDespiteThrowing()
     {
         int freeCalledCount = 0;
         using var latch = new CountdownEvent(1);
@@ -90,7 +90,7 @@ public class ObjectCleanerTest
     }
 
     [Fact(Timeout = 5000)]
-    public async Task testCleanerThreadIsDaemon()
+    public async Task TestCleanerThreadIsDaemon()
     {
         var callbackThread = new TaskCompletionSource<(bool Background, bool ThreadPool)>(
             TaskCreationOptions.RunContinuationsAsynchronously);

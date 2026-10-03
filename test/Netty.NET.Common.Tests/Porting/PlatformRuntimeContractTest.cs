@@ -17,7 +17,7 @@ public class PlatformRuntimeContractTest
     public void AndroidDetectionUsesTheOperatingSystemRatherThanTheJvmName()
     {
         WithFreshPlatform(new() { ["java.vm.name"] = "Dalvik" }, platform =>
-            Assert.Equal(OperatingSystem.IsAndroid(), InvokeBoolean(platform, "isAndroid")));
+            Assert.Equal(OperatingSystem.IsAndroid(), InvokeBoolean(platform, nameof(PlatformDependent0.IsAndroid))));
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public class PlatformRuntimeContractTest
         {
             ["org.graalvm.nativeimage.imagecode"] = "runtime",
             ["io.netty.tryReflectionSetAccessible"] = null
-        }, platform => Assert.False(InvokeBoolean(platform, "isExplicitTryReflectionSetAccessible")));
+        }, platform => Assert.False(InvokeBoolean(platform, nameof(PlatformDependent0.IsExplicitTryReflectionSetAccessible))));
     }
 
     [Fact]
@@ -41,8 +41,8 @@ public class PlatformRuntimeContractTest
             ["org.jboss.netty.tryUnsafe"] = "true"
         }, platform =>
         {
-            Assert.False(InvokeBoolean(platform, "isExplicitNoUnsafe"));
-            Assert.False(InvokeBoolean(platform, "hasUnsafe"));
+            Assert.False(InvokeBoolean(platform, nameof(PlatformDependent0.IsExplicitNoUnsafe)));
+            Assert.False(InvokeBoolean(platform, nameof(PlatformDependent0.HasUnsafe)));
         });
     }
 
@@ -51,8 +51,8 @@ public class PlatformRuntimeContractTest
     {
         WithFreshPlatform(new() { ["io.netty.noUnsafe"] = "true" }, platform =>
         {
-            Assert.True(InvokeBoolean(platform, "isExplicitNoUnsafe"));
-            Assert.False(InvokeBoolean(platform, "hasUnsafe"));
+            Assert.True(InvokeBoolean(platform, nameof(PlatformDependent0.IsExplicitNoUnsafe)));
+            Assert.False(InvokeBoolean(platform, nameof(PlatformDependent0.HasUnsafe)));
         });
     }
 

@@ -34,8 +34,8 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         Comparer<IScheduledWork>.Create((o1, o2) =>
         {
             if (ReferenceEquals(o1, o2)) return 0;
-            long delta = unchecked(o1.deadlineNanos() - o2.deadlineNanos());
-            return delta == 0 ? o1.getId().CompareTo(o2.getId()) : delta < 0 ? -1 : 1;
+            long delta = unchecked(o1.DeadlineNanos() - o2.DeadlineNanos());
+            return delta == 0 ? o1.GetId().CompareTo(o2.GetId()) : delta < 0 ? -1 : 1;
         });
 
     protected static readonly IRunnable WAKEUP_TASK = Runnables.Empty; // Do nothing
@@ -58,10 +58,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     protected AbstractScheduledEventExecutor(IEventExecutorGroup parent, TimeProvider timeProvider)
         : base(parent)
     {
-        selectedTicker = Ticker.FromTimeProvider(timeProvider);
+        selectedTicker = global::Netty.NET.Common.Concurrent.Ticker.FromTimeProvider(timeProvider);
     }
 
-    public override Ticker ticker() => selectedTicker;
+    public override Ticker Ticker() => selectedTicker;
 
     /**
      * Get the current time in nanoseconds by this executor's clock. This is not the same as {@link System#nanoTime()}
@@ -77,30 +77,30 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * code may still call this method for compatibility.
      */
     [Obsolete]
-    public virtual long getCurrentTimeNanos()
+    public virtual long GetCurrentTimeNanos()
     {
-        return ticker().nanoTime();
+        return Ticker().NanoTime();
     }
 
     /**
      * @deprecated Use the non-static {@link #ticker()} instead.
      */
     [Obsolete]
-    protected static long nanoTime()
+    protected static long NanoTime()
     {
-        return Ticker.systemTicker().nanoTime();
+        return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker().NanoTime();
     }
 
     /**
      * @deprecated Use the non-static {@link #ticker()} instead.
      */
     [Obsolete]
-    internal static long defaultCurrentTimeNanos()
+    internal static long DefaultCurrentTimeNanos()
     {
-        return Ticker.systemTicker().nanoTime();
+        return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker().NanoTime();
     }
 
-    internal static long deadlineNanos(long nanoTime, long delay)
+    internal static long DeadlineNanos(long nanoTime, long delay)
     {
         long deadlineNanos = nanoTime + delay;
         // Guard against overflow
@@ -115,25 +115,25 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @deprecated Use {@link #ticker()} instead
      */
     [Obsolete]
-    protected static long deadlineToDelayNanos(long deadlineNanos)
+    protected static long DeadlineToDelayNanos(long deadlineNanos)
     {
-        return DeadlineToDelayNanos(defaultCurrentTimeNanos(), deadlineNanos);
+        return DeadlineToDelayNanos(DefaultCurrentTimeNanos(), deadlineNanos);
     }
 
     /**
      * Returns the amount of time left until the scheduled task with the closest dead line is executed.
      */
-    protected long delayNanos(long currentTimeNanos, long scheduledPurgeInterval)
+    protected long DelayNanos(long currentTimeNanos, long scheduledPurgeInterval)
     {
-        currentTimeNanos -= ticker().initialNanoTime();
+        currentTimeNanos -= Ticker().InitialNanoTime();
 
-        IScheduledWork scheduledTask = peekScheduledTask();
+        IScheduledWork scheduledTask = PeekScheduledTask();
         if (scheduledTask == null)
         {
             return scheduledPurgeInterval;
         }
 
-        return scheduledTask.delayNanos(currentTimeNanos);
+        return scheduledTask.DelayNanos(currentTimeNanos);
     }
 
     /**
@@ -142,12 +142,12 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @deprecated Use {@link #ticker()} instead
      */
     [Obsolete]
-    protected static long initialNanoTime()
+    protected static long InitialNanoTime()
     {
-        return Ticker.systemTicker().initialNanoTime();
+        return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker().InitialNanoTime();
     }
 
-    internal IPriorityQueue<IScheduledWork> scheduledTaskQueue()
+    internal IPriorityQueue<IScheduledWork> ScheduledTaskQueue()
     {
         if (_scheduledTaskQueue == null)
         {
@@ -160,9 +160,9 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         return _scheduledTaskQueue;
     }
 
-    private static bool isNullOrEmpty(IQueue<IScheduledWork> queue)
+    private static bool IsNullOrEmpty(IQueue<IScheduledWork> queue)
     {
-        return queue == null || queue.isEmpty();
+        return queue == null || queue.IsEmpty();
     }
 
     /**
@@ -170,16 +170,16 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      *
      * This method MUST be called only when {@link #inEventLoop()} is {@code true}.
      */
-    protected virtual void cancelScheduledTasks()
+    protected virtual void CancelScheduledTasks()
     {
-        Debug.Assert(inEventLoop());
+        Debug.Assert(InEventLoop());
         var scheduledTaskQueue = _scheduledTaskQueue;
-        if (isNullOrEmpty(scheduledTaskQueue))
+        if (IsNullOrEmpty(scheduledTaskQueue))
         {
             return;
         }
 
-        IScheduledWork[] scheduledTasks = scheduledTaskQueue.toArray();
+        IScheduledWork[] scheduledTasks = scheduledTaskQueue.ToArray();
 
         foreach (IScheduledWork task in scheduledTasks)
         {
@@ -188,15 +188,15 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
         // CLR: A terminated executor may remain reachable. Release queued work
         // and its membership instead of assuming this queue is about to be GC'd.
-        scheduledTaskQueue.clear();
+        scheduledTaskQueue.Clear();
     }
 
     /**
      * @see #pollScheduledTask(long)
      */
-    protected internal IRunnable pollScheduledTask()
+    protected internal IRunnable PollScheduledTask()
     {
-        return pollScheduledTask(getCurrentTimeNanos());
+        return PollScheduledTask(GetCurrentTimeNanos());
     }
 
     /**
@@ -206,19 +206,19 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @return {@code true} if we were able to transfer everything, {@code false} if we need to call this method again
      *         as soon as there is space again in {@code taskQueue}.
      */
-    protected virtual bool fetchFromScheduledTaskQueue(IQueue<IRunnable> taskQueue)
+    protected virtual bool FetchFromScheduledTaskQueue(IQueue<IRunnable> taskQueue)
     {
-        Debug.Assert(inEventLoop());
-        ObjectUtil.requireNonNull(taskQueue, "taskQueue");
-        if (_scheduledTaskQueue == null || _scheduledTaskQueue.isEmpty())
+        Debug.Assert(InEventLoop());
+        ObjectUtil.RequireNonNull(taskQueue, "taskQueue");
+        if (_scheduledTaskQueue == null || _scheduledTaskQueue.IsEmpty())
         {
             return true;
         }
 
-        long nanoTime = getCurrentTimeNanos();
+        long nanoTime = GetCurrentTimeNanos();
         for (;;)
         {
-            IRunnable scheduledTask = pollScheduledTask(nanoTime);
+            IRunnable scheduledTask = PollScheduledTask(nanoTime);
             if (scheduledTask == null)
             {
                 return true;
@@ -229,10 +229,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
                 continue;
             }
 
-            if (!taskQueue.tryEnqueue(scheduledTask))
+            if (!taskQueue.TryEnqueue(scheduledTask))
             {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
-                _scheduledTaskQueue.tryEnqueue((IScheduledWork)scheduledTask);
+                _scheduledTaskQueue.TryEnqueue((IScheduledWork)scheduledTask);
                 return false;
             }
         }
@@ -242,18 +242,18 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * Return the {@link Runnable} which is ready to be executed with the given {@code nanoTime}.
      * You should use {@link #getCurrentTimeNanos()} to retrieve the correct {@code nanoTime}.
      */
-    protected IRunnable pollScheduledTask(long nanoTime)
+    protected IRunnable PollScheduledTask(long nanoTime)
     {
-        Debug.Assert(inEventLoop());
+        Debug.Assert(InEventLoop());
 
-        IScheduledWork scheduledTask = peekScheduledTask();
-        if (scheduledTask == null || scheduledTask.deadlineNanos() - nanoTime > 0)
+        IScheduledWork scheduledTask = PeekScheduledTask();
+        if (scheduledTask == null || scheduledTask.DeadlineNanos() - nanoTime > 0)
         {
             return null;
         }
 
-        _scheduledTaskQueue.tryDequeue(out _);
-        scheduledTask.setConsumed();
+        _scheduledTaskQueue.TryDequeue(out _);
+        scheduledTask.SetConsumed();
         return scheduledTask;
     }
 
@@ -263,48 +263,48 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     internal static long DeadlineToDelayNanos(long now, long deadline) =>
         deadline == 0L ? 0L : Math.Max(0L, deadline - now);
 
-    protected long nextScheduledTaskNano()
+    protected long NextScheduledTaskNano()
     {
-        IScheduledWork scheduledTask = peekScheduledTask();
-        return scheduledTask != null ? scheduledTask.delayNanos() : -1;
+        IScheduledWork scheduledTask = PeekScheduledTask();
+        return scheduledTask != null ? scheduledTask.DelayNanos() : -1;
     }
 
     /**
      * Return the deadline (in nanoseconds) when the next scheduled task is ready to be run or {@code -1}
      * if no task is scheduled.
      */
-    protected long nextScheduledTaskDeadlineNanos()
+    protected long NextScheduledTaskDeadlineNanos()
     {
-        IScheduledWork scheduledTask = peekScheduledTask();
-        return scheduledTask != null ? scheduledTask.deadlineNanos() : -1;
+        IScheduledWork scheduledTask = PeekScheduledTask();
+        return scheduledTask != null ? scheduledTask.DeadlineNanos() : -1;
     }
 
-    protected IScheduledWork peekScheduledTask()
+    protected IScheduledWork PeekScheduledTask()
     {
         var scheduledTaskQueue = _scheduledTaskQueue;
         IScheduledWork task = null;
-        var peek = scheduledTaskQueue?.tryPeek(out task) ?? false;
+        var peek = scheduledTaskQueue?.TryPeek(out task) ?? false;
         return peek ? task : null;
     }
 
     /**
      * Returns {@code true} if a scheduled task is ready for processing.
      */
-    protected bool hasScheduledTasks()
+    protected bool HasScheduledTasks()
     {
-        var scheduledTask = peekScheduledTask();
-        return scheduledTask != null && scheduledTask.deadlineNanos() <= getCurrentTimeNanos();
+        var scheduledTask = PeekScheduledTask();
+        return scheduledTask != null && scheduledTask.DeadlineNanos() <= GetCurrentTimeNanos();
     }
 
     //@SuppressWarnings("deprecation")
-    private void validateScheduled0(TimeSpan amount)
+    private void ValidateScheduled0(TimeSpan amount)
     {
-        validateScheduled(amount);
+        ValidateScheduled(amount);
     }
 
     // CLR: TimeSpan stores 100 ns ticks. Saturate like Java TimeUnit.toNanos,
     // retaining integer precision and avoiding a floating-point overflow cast.
-    internal static long toNanos(TimeSpan amount) => TimeUtil.ToNanoseconds(amount);
+    internal static long ToNanos(TimeSpan amount) => TimeUtil.ToNanoseconds(amount);
 
     /**
      * Sub-classes may override this to restrict the maximal amount of time someone can use to schedule a task.
@@ -312,31 +312,31 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @deprecated will be removed in the future.
      */
     [Obsolete]
-    protected virtual void validateScheduled(TimeSpan amount)
+    protected virtual void ValidateScheduled(TimeSpan amount)
     {
         // NOOP
     }
 
-    internal void scheduleFromEventLoop(IScheduledWork task)
+    internal void ScheduleFromEventLoop(IScheduledWork task)
     {
         // nextTaskId a long and so there is no chance it will overflow back to 0
-        if (task.getId() == 0L)
+        if (task.GetId() == 0L)
         {
             task.AssignId(++nextTaskId);
         }
-        scheduledTaskQueue().tryEnqueue(task);
+        ScheduledTaskQueue().TryEnqueue(task);
     }
 
     internal Task<T> ScheduleNative<T>(Func<CancellationToken, T> function, TimeSpan delay, long period,
         CancellationToken token, bool captureContext = true)
     {
-        validateScheduled0(delay);
-        if (period != 0) validateScheduled0(TimeSpan.FromTicks(Math.Abs(period) / 100));
+        ValidateScheduled0(delay);
+        if (period != 0) ValidateScheduled0(TimeSpan.FromTicks(Math.Abs(period) / 100));
         if (token.IsCancellationRequested) return Task.FromCanceled<T>(token);
         var task = new NativeScheduledWork<T>(function, token,
-            deadlineNanos(getCurrentTimeNanos(), toNanos(delay)), period, getCurrentTimeNanos,
-            () => !isShutdown(), EnqueueNative, RemoveNative, captureContext);
-        try { if (!task.Completion.IsCompleted) submitScheduled(task); }
+            DeadlineNanos(GetCurrentTimeNanos(), ToNanos(delay)), period, GetCurrentTimeNanos,
+            () => !IsShutdown(), EnqueueNative, RemoveNative, captureContext);
+        try { if (!task.Completion.IsCompleted) SubmitScheduled(task); }
         catch (Exception error) { task.Reject(error); }
         task.Publish();
         return task.ResultTask;
@@ -345,62 +345,62 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     private void EnqueueNative(ITaskScheduledWork task)
     {
         if (task.Completion.IsCompleted) return;
-        if (isShutdown()) task.CancelForShutdown();
-        else scheduleFromEventLoop(task);
+        if (IsShutdown()) task.CancelForShutdown();
+        else ScheduleFromEventLoop(task);
     }
 
     private void RemoveNative(ITaskScheduledWork task)
     {
-        if (isTerminated()) return;
-        try { removeScheduled(task); }
-        catch (RejectedExecutionException) when (isShuttingDown()) { }
+        if (IsTerminated()) return;
+        try { RemoveScheduled(task); }
+        catch (RejectedExecutionException) when (IsShuttingDown()) { }
     }
 
-    private void submitScheduled(IScheduledWork task)
+    private void SubmitScheduled(IScheduledWork task)
     {
-        if (inEventLoop())
+        if (InEventLoop())
         {
-            scheduleFromEventLoop(task);
+            ScheduleFromEventLoop(task);
         }
         else
         {
-            long deadlineNanos = task.deadlineNanos();
+            long deadlineNanos = task.DeadlineNanos();
             // task will add itself to scheduled task queue when run if not expired
-            if (beforeScheduledTaskSubmitted(deadlineNanos))
+            if (BeforeScheduledTaskSubmitted(deadlineNanos))
             {
-                execute(task);
+                Execute(task);
             }
             else
             {
-                lazyExecute(task);
+                LazyExecute(task);
                 // Second hook after scheduling to facilitate race-avoidance
-                if (afterScheduledTaskSubmitted(deadlineNanos))
+                if (AfterScheduledTaskSubmitted(deadlineNanos))
                 {
-                    execute(WAKEUP_TASK);
+                    Execute(WAKEUP_TASK);
                 }
             }
         }
 
     }
 
-    public void removeScheduled(IScheduledWork task)
+    public void RemoveScheduled(IScheduledWork task)
     {
         Debug.Assert(task.IsCanceled);
-        if (inEventLoop())
+        if (InEventLoop())
         {
-            scheduledTaskQueue().tryRemove(task);
+            ScheduledTaskQueue().TryRemove(task);
         }
         else
         {
             // task will remove itself from scheduled task queue when it runs
-            scheduleRemoveScheduled(task);
+            ScheduleRemoveScheduled(task);
         }
     }
 
-    protected virtual void scheduleRemoveScheduled(IScheduledWork task)
+    protected virtual void ScheduleRemoveScheduled(IScheduledWork task)
     {
         // task will remove itself from scheduled task queue when it runs
-        lazyExecute(task);
+        LazyExecute(task);
     }
 
     /**
@@ -416,7 +416,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      *     relative to {@link AbstractScheduledEventExecutor#getCurrentTimeNanos()}
      * @return {@code true} if the {@link EventExecutor} thread should be woken, {@code false} otherwise
      */
-    protected virtual bool beforeScheduledTaskSubmitted(long deadlineNanos)
+    protected virtual bool BeforeScheduledTaskSubmitted(long deadlineNanos)
     {
         return true;
     }
@@ -427,7 +427,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @param deadlineNanos relative to {@link AbstractScheduledEventExecutor#getCurrentTimeNanos()}
      * @return  {@code true} if the {@link EventExecutor} thread should be woken, {@code false} otherwise
      */
-    protected virtual bool afterScheduledTaskSubmitted(long deadlineNanos)
+    protected virtual bool AfterScheduledTaskSubmitted(long deadlineNanos)
     {
         return true;
     }

@@ -28,10 +28,10 @@ public class BoundedInputStreamTest
 
     [Theory]
     [MemberData(nameof(Repetitions))]
-    public void testBoundEnforced(int repetition)
+    public void TestBoundEnforced(int repetition)
     {
         byte[] bytes = new byte[64];
-        ThreadLocalRandom.current().nextBytes(bytes);
+        ThreadLocalRandom.Current().NextBytes(bytes);
         using BoundedInputStream reader = new BoundedInputStream(new MemoryStream(bytes), bytes.Length - 1);
         Assert.Equal(bytes[0], (byte)reader.ReadByte());
 
@@ -48,7 +48,7 @@ public class BoundedInputStreamTest
     }
 
     [Fact]
-    public void testBoundEnforced256()
+    public void TestBoundEnforced256()
     {
         byte[] bytes = new byte[256];
         for (int i = 0; i < bytes.Length; i++)
@@ -70,14 +70,14 @@ public class BoundedInputStreamTest
 
     [Theory]
     [MemberData(nameof(Repetitions))]
-    public void testBigReadsPermittedIfUnderlyingStreamIsSmall(int repetition)
+    public void TestBigReadsPermittedIfUnderlyingStreamIsSmall(int repetition)
     {
         byte[] bytes = new byte[64];
-        ThreadLocalRandom.current().nextBytes(bytes);
+        ThreadLocalRandom.Current().NextBytes(bytes);
 
         using BoundedInputStream reader = new BoundedInputStream(new MemoryStream(bytes), 8192);
         byte[] buffer = new byte[10000];
         Assert.Equal(reader.Read(buffer, 0, 10000), 64);
-        Assert.Equal(bytes, Arrays.copyOfRange(buffer, 0, 64));
+        Assert.Equal(bytes, Arrays.CopyOfRange(buffer, 0, 64));
     }
 }

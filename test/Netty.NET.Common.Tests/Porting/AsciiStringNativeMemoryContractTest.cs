@@ -33,7 +33,7 @@ public class AsciiStringNativeMemoryContractTest
         }
 
         bytes[3] = 255;
-        value.arrayChanged();
+        value.ArrayChanged();
         Assert.Equal(copy ? "\u0080é" : "ÿé", value.ToString());
     }
 

@@ -14,7 +14,7 @@ public class AnonymousThreadFactory : IThreadFactory
         _factory = factory;
     }
 
-    public Thread newThread(IRunnable r)
+    public Thread NewThread(IRunnable r)
     {
         return _factory.Invoke(r);
     }

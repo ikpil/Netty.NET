@@ -23,11 +23,11 @@ public class CaseInsensitiveHashingStrategy : IEqualityComparer<ICharSequence>
 {
     public int GetHashCode(ICharSequence o)
     {
-        return AsciiString.hashCode(o);
+        return AsciiString.HashCode(o);
     }
 
     public bool Equals(ICharSequence a, ICharSequence b)
     {
-        return AsciiString.contentEqualsIgnoreCase(a, b);
+        return AsciiString.ContentEqualsIgnoreCase(a, b);
     }
 }

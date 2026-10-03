@@ -23,7 +23,7 @@ namespace Netty.NET.Common.Tests.Internal;
 public class ThreadLocalRandomTest
 {
     [Fact]
-    public async Task getInitialSeedUniquifierPreservesInterrupt()
+    public async Task GetInitialSeedUniquifierPreservesInterrupt()
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
@@ -33,7 +33,7 @@ public class ThreadLocalRandomTest
                 Thread.CurrentThread.Interrupt();
                 // CLR cannot inspect pending interruption without consuming it.
                 // Arrange it, initialize the random, and consume it only here.
-                ThreadLocalRandom.current();
+                ThreadLocalRandom.Current();
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(100), 
                     "Assert that thread is interrupted after invocation of getInitialSeedUniquifier()");
                 // clear interrupted status in order to not affect other tests

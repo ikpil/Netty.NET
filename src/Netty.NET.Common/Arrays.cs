@@ -5,24 +5,24 @@ namespace Netty.NET.Common;
 
 public static class Arrays
 {
-    public static void fill<T>(T[] src, T val)
+    public static void Fill<T>(T[] src, T val)
     {
         Array.Fill(src, val);
     }
 
-    public static void fill<T>(T[] src, int fromIndex, int toIndex, T val)
+    public static void Fill<T>(T[] src, int fromIndex, int toIndex, T val)
     {
         Array.Fill(src, val, fromIndex, toIndex - fromIndex);
     }
 
-    public static T[] copyOf<T>(T[] src, int size)
+    public static T[] CopyOf<T>(T[] src, int size)
     {
         var dest = new T[size];
         Array.Copy(src, dest, Math.Min(src.Length, size));
         return dest;
     }
 
-    public static T[] copyOfRange<T>(T[] array, int start, int end) where T : struct
+    public static T[] CopyOfRange<T>(T[] array, int start, int end) where T : struct
     {
         if (array == null)
             throw new ArgumentNullException(nameof(array));
@@ -42,7 +42,7 @@ public static class Arrays
         return result;
     }
 
-    public static void arraycopy<T>(T[] source, int sourceIndex, T[] destination, int destinationIndex, int length)
+    public static void Arraycopy<T>(T[] source, int sourceIndex, T[] destination, int destinationIndex, int length)
     {
         if (source == null)
             throw new ArgumentNullException(nameof(source));

@@ -34,7 +34,7 @@ public class DefaultAttributeMap : IAttributeMap
      * Similarly to {@code Arrays::binarySearch} it perform a binary search optimized for this use case, in order to
      * save polymorphic calls (on comparator side) and unnecessary class checks.
      */
-    private static int searchAttributeByKey(IDefaultAttribute[] sortedAttributes, IAttributeKey key)
+    private static int SearchAttributeByKey(IDefaultAttribute[] sortedAttributes, IAttributeKey key)
     {
         int low = 0;
         int high = sortedAttributes.Length - 1;
@@ -43,14 +43,14 @@ public class DefaultAttributeMap : IAttributeMap
         {
             int mid = low + high >>> 1;
             IDefaultAttribute midVal = sortedAttributes[mid];
-            IAttributeKey midValKey = midVal.key();
+            IAttributeKey midValKey = midVal.Key();
             if (midValKey == key)
             {
                 return mid;
             }
 
-            int midValKeyId = midValKey.id();
-            int keyId = key.id();
+            int midValKeyId = midValKey.Id();
+            int keyId = key.Id();
             Debug.Assert(midValKeyId != keyId);
             bool searchRight = midValKeyId < keyId;
             if (searchRight)
@@ -66,17 +66,17 @@ public class DefaultAttributeMap : IAttributeMap
         return -(low + 1);
     }
 
-    private static void orderedCopyOnInsert(IDefaultAttribute[] sortedSrc, int srcLength, IDefaultAttribute[] copy,
+    private static void OrderedCopyOnInsert(IDefaultAttribute[] sortedSrc, int srcLength, IDefaultAttribute[] copy,
         IDefaultAttribute toInsert)
     {
         // let's walk backward, because as a rule of thumb, toInsert.key.id() tends to be higher for new keys
-        int id = toInsert.key().id();
+        int id = toInsert.Key().Id();
         int i;
         for (i = srcLength - 1; i >= 0; i--)
         {
             IDefaultAttribute attribute = sortedSrc[i];
-            Debug.Assert(attribute.key().id() != id);
-            if (attribute.key().id() < id)
+            Debug.Assert(attribute.Key().Id() != id);
+            if (attribute.Key().Id() < id)
             {
                 break;
             }
@@ -88,26 +88,26 @@ public class DefaultAttributeMap : IAttributeMap
         int toCopy = i + 1;
         if (toCopy > 0)
         {
-            Arrays.arraycopy(sortedSrc, 0, copy, 0, toCopy);
+            Arrays.Arraycopy(sortedSrc, 0, copy, 0, toCopy);
         }
     }
 
 
     //@SuppressWarnings("unchecked")
-    public IAttribute<T> attr<T>(AttributeKey<T> key) where T : class
+    public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class
     {
-        ObjectUtil.checkNotNull(key, "key");
+        ObjectUtil.CheckNotNull(key, "key");
         DefaultAttribute<T> newAttribute = null;
         for (;;)
         {
-            IDefaultAttribute[] attributes = _attributes.get();
-            int index = searchAttributeByKey(attributes, key);
+            IDefaultAttribute[] attributes = _attributes.Get();
+            int index = SearchAttributeByKey(attributes, key);
             IDefaultAttribute[] newAttributes;
             if (index >= 0)
             {
                 DefaultAttribute<T> attribute = attributes[index] as DefaultAttribute<T>;
-                Debug.Assert(attribute.key() == key);
-                if (!attribute.isRemoved())
+                Debug.Assert(attribute.Key() == key);
+                if (!attribute.IsRemoved())
                 {
                     return attribute;
                 }
@@ -119,7 +119,7 @@ public class DefaultAttributeMap : IAttributeMap
                 }
 
                 int count = attributes.Length;
-                newAttributes = Arrays.copyOf(attributes, count);
+                newAttributes = Arrays.CopyOf(attributes, count);
                 newAttributes[index] = newAttribute;
             }
             else
@@ -131,35 +131,35 @@ public class DefaultAttributeMap : IAttributeMap
 
                 int count = attributes.Length;
                 newAttributes = new IDefaultAttribute[count + 1];
-                orderedCopyOnInsert(attributes, count, newAttributes, newAttribute);
+                OrderedCopyOnInsert(attributes, count, newAttributes, newAttribute);
             }
 
-            if (_attributes.compareAndSet(attributes, newAttributes))
+            if (_attributes.CompareAndSet(attributes, newAttributes))
             {
                 return newAttribute;
             }
         }
     }
 
-    public bool hasAttr<T>(AttributeKey<T> key) where T : class
+    public bool HasAttr<T>(AttributeKey<T> key) where T : class
     {
-        ObjectUtil.checkNotNull(key, "key");
-        return searchAttributeByKey(_attributes.get(), key) >= 0;
+        ObjectUtil.CheckNotNull(key, "key");
+        return SearchAttributeByKey(_attributes.Get(), key) >= 0;
     }
 
-    internal void removeAttributeIfMatch<T>(AttributeKey<T> key, DefaultAttribute<T> value) where T : class
+    internal void RemoveAttributeIfMatch<T>(AttributeKey<T> key, DefaultAttribute<T> value) where T : class
     {
         for (;;)
         {
-            IDefaultAttribute[] attributes = _attributes.get();
-            int index = searchAttributeByKey(attributes, key);
+            IDefaultAttribute[] attributes = _attributes.Get();
+            int index = SearchAttributeByKey(attributes, key);
             if (index < 0)
             {
                 return;
             }
 
             IDefaultAttribute attribute = attributes[index];
-            Debug.Assert(attribute.key() == key);
+            Debug.Assert(attribute.Key() == key);
             if (attribute != value)
             {
                 return;
@@ -171,14 +171,14 @@ public class DefaultAttributeMap : IAttributeMap
                 newCount == 0 ? EMPTY_ATTRIBUTES : new IDefaultAttribute[newCount];
 
             // perform 2 bulk copies
-            Arrays.arraycopy(attributes, 0, newAttributes, 0, index);
+            Arrays.Arraycopy(attributes, 0, newAttributes, 0, index);
             int remaining = count - index - 1;
             if (remaining > 0)
             {
-                Arrays.arraycopy(attributes, index + 1, newAttributes, index, remaining);
+                Arrays.Arraycopy(attributes, index + 1, newAttributes, index, remaining);
             }
 
-            if (_attributes.compareAndSet(attributes, newAttributes))
+            if (_attributes.CompareAndSet(attributes, newAttributes))
             {
                 return;
             }

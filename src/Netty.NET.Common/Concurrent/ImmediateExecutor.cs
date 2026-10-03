@@ -31,8 +31,8 @@ public sealed class ImmediateExecutor : IExecutor
         // use static instance
     }
 
-    public void execute(IRunnable command)
+    public void Execute(IRunnable command)
     {
-        ObjectUtil.checkNotNull(command, "command").run();
+        ObjectUtil.CheckNotNull(command, "command").Run();
     }
 }

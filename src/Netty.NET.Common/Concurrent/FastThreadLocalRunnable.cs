@@ -25,22 +25,22 @@ public class FastThreadLocalRunnable : IRunnable
 
     private FastThreadLocalRunnable(IRunnable runnable)
     {
-        _runnable = ObjectUtil.checkNotNull(runnable, "runnable");
+        _runnable = ObjectUtil.CheckNotNull(runnable, "runnable");
     }
 
-    public void run()
+    public void Run()
     {
         try
         {
-            _runnable.run();
+            _runnable.Run();
         }
         finally
         {
-            FastThreadLocal.removeAll();
+            FastThreadLocal.RemoveAll();
         }
     }
 
-    public static IRunnable wrap(IRunnable runnable)
+    public static IRunnable Wrap(IRunnable runnable)
     {
         return runnable is FastThreadLocalRunnable ? runnable : new FastThreadLocalRunnable(runnable);
     }

@@ -31,27 +31,27 @@ public class DefaultPromiseTest
 {
     // CLR adaptation: a StackOverflowException terminates the process and cannot be used to discover stack depth.
     // Both original chain shapes are exercised at 20,000 promises, inside and outside the executor thread.
-    private static int stackOverflowTestDepth() => 20000;
+    private static int StackOverflowTestDepth() => 20000;
     private static TaskCompletionSource<T> Source<T>() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     private sealed class RejectingEventExecutor : AbstractEventExecutor
     {
         public int submissions;
-        public override bool isShuttingDown() => false;
+        public override bool IsShuttingDown() => false;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override Task Termination => Task.CompletedTask;
-        public override void shutdown() { }
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
-        public override bool inEventLoop(Thread thread) => false;
-        public override void execute(IRunnable command)
+        public override void Shutdown() { }
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool InEventLoop(Thread thread) => false;
+        public override void Execute(IRunnable command)
         {
             Interlocked.Increment(ref submissions);
             throw new InvalidOperationException("Cannot schedule commands");
         }
     }
     [Fact]
-    public void testCancelDoesNotScheduleWhenNoListeners()
+    public void TestCancelDoesNotScheduleWhenNoListeners()
     {
         var executor = new RejectingEventExecutor();
         var source = Source<object>();
@@ -61,7 +61,7 @@ public class DefaultPromiseTest
         Assert.Equal(0, executor.submissions);
     }
     [Fact]
-    public void testSuccessDoesNotScheduleWhenNoListeners()
+    public void TestSuccessDoesNotScheduleWhenNoListeners()
     {
         var executor = new RejectingEventExecutor();
         object value = new();
@@ -72,7 +72,7 @@ public class DefaultPromiseTest
         Assert.Equal(0, executor.submissions);
     }
     [Fact]
-    public void testFailureDoesNotScheduleWhenNoListeners()
+    public void TestFailureDoesNotScheduleWhenNoListeners()
     {
         var executor = new RejectingEventExecutor();
         Exception cause = new Exception();
@@ -83,14 +83,14 @@ public class DefaultPromiseTest
         Assert.Equal(0, executor.submissions);
     }
     [Fact]
-    public void testCancellationExceptionIsThrownWhenBlockingGet()
+    public void TestCancellationExceptionIsThrownWhenBlockingGet()
     {
         var source = Source<object>();
         Assert.True(source.TrySetCanceled());
         Assert.ThrowsAny<OperationCanceledException>(() => source.Task.GetAwaiter().GetResult());
     }
     [Fact]
-    public async Task testCancellationExceptionIsThrownWhenBlockingGetWithTimeout()
+    public async Task TestCancellationExceptionIsThrownWhenBlockingGetWithTimeout()
     {
         var source = Source<object>();
         Assert.True(source.TrySetCanceled());
@@ -98,7 +98,7 @@ public class DefaultPromiseTest
             await source.Task.WaitAsync(TimeSpan.FromSeconds(1)));
     }
     [Fact]
-    public async Task testCancellationExceptionIsReturnedAsCause()
+    public async Task TestCancellationExceptionIsReturnedAsCause()
     {
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
@@ -110,43 +110,43 @@ public class DefaultPromiseTest
         Assert.Null(source.Task.Exception);
     }
     [Fact]
-    public void testStackOverflowWithImmediateEventExecutorA()
+    public void TestStackOverflowWithImmediateEventExecutorA()
     {
-        testStackOverFlowChainedFutures(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true, false);
-        testStackOverFlowChainedFutures(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false, false);
+        TestStackOverFlowChainedFutures(StackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true, false);
+        TestStackOverFlowChainedFutures(StackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false, false);
     }
     [Fact]
-    public void testNoStackOverflowWithDefaultEventExecutorA()
-    {
-        using var service = new TestSingleThreadExecutor();
-        IEventExecutor executor = new DefaultEventExecutor(service);
-        try
-        {
-            testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, true, false);
-            testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, false, false);
-        }
-        finally { shutdown(executor); }
-    }
-    [Fact]
-    public void testNoStackOverflowWithImmediateEventExecutorB()
-    {
-        testStackOverFlowChainedFutures(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true, true);
-        testStackOverFlowChainedFutures(stackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false, true);
-    }
-    [Fact]
-    public void testNoStackOverflowWithDefaultEventExecutorB()
+    public void TestNoStackOverflowWithDefaultEventExecutorA()
     {
         using var service = new TestSingleThreadExecutor();
         IEventExecutor executor = new DefaultEventExecutor(service);
         try
         {
-            testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, true, true);
-            testStackOverFlowChainedFutures(stackOverflowTestDepth(), executor, false, true);
+            TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, true, false);
+            TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, false, false);
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     [Fact]
-    public void testListenerNotifyOrder()
+    public void TestNoStackOverflowWithImmediateEventExecutorB()
+    {
+        TestStackOverFlowChainedFutures(StackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, true, true);
+        TestStackOverFlowChainedFutures(StackOverflowTestDepth(), ImmediateEventExecutor.INSTANCE, false, true);
+    }
+    [Fact]
+    public void TestNoStackOverflowWithDefaultEventExecutorB()
+    {
+        using var service = new TestSingleThreadExecutor();
+        IEventExecutor executor = new DefaultEventExecutor(service);
+        try
+        {
+            TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, true, true);
+            TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, false, true);
+        }
+        finally { Shutdown(executor); }
+    }
+    [Fact]
+    public void TestListenerNotifyOrder()
     {
         IEventExecutor executor = new TestEventExecutor();
         try
@@ -163,7 +163,7 @@ public class DefaultPromiseTest
                 listener2 = _ => listeners.Add(listener2);
                 listener4 = _ => listeners.Add(listener4);
                 listener3 = _ => { listeners.Add(listener3); fourth = observer.Register(listener4); };
-                GlobalEventExecutor.INSTANCE.execute(Runnables.Create(() => source.SetResult(null)));
+                GlobalEventExecutor.INSTANCE.Execute(Runnables.Create(() => source.SetResult(null)));
                 using var first = observer.Register(listener1);
                 using var second = observer.Register(listener2);
                 using var third = observer.Register(listener3);
@@ -181,26 +181,26 @@ public class DefaultPromiseTest
                 fourth.Dispose();
             }
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     [Fact]
-    public void testListenerNotifyLater()
+    public void TestListenerNotifyLater()
     {
         // Testing first execution path in DefaultPromise
-        runListenerNotifyLater(1);
+        RunListenerNotifyLater(1);
         // Testing second execution path in DefaultPromise
-        runListenerNotifyLater(2);
+        RunListenerNotifyLater(2);
     }
     [Fact]
-    public void testPromiseListenerAddWhenCompleteFailure() => testPromiseListenerAddWhenComplete(fakeException());
+    public void TestPromiseListenerAddWhenCompleteFailure() => TestPromiseListenerAddWhenComplete(FakeException());
     [Fact]
-    public void testPromiseListenerAddWhenCompleteSuccess() => testPromiseListenerAddWhenComplete(null);
+    public void TestPromiseListenerAddWhenCompleteSuccess() => TestPromiseListenerAddWhenComplete(null);
     [Fact]
-    public void testLateListenerIsOrderedCorrectlySuccess() => testLateListenerIsOrderedCorrectly(null);
+    public void TestLateListenerIsOrderedCorrectlySuccess() => TestLateListenerIsOrderedCorrectly(null);
     [Fact]
-    public void testLateListenerIsOrderedCorrectlyFailure() => testLateListenerIsOrderedCorrectly(fakeException());
+    public void TestLateListenerIsOrderedCorrectlyFailure() => TestLateListenerIsOrderedCorrectly(FakeException());
     [Fact]
-    public void testSignalRace()
+    public void TestSignalRace()
     {
         TimeSpan wait = TimeSpan.FromSeconds(10);
         IEventExecutor executor = new TestEventExecutor();
@@ -223,30 +223,30 @@ public class DefaultPromiseTest
                 Assert.True(pair.Key.Join(wait));
             }
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     [Fact]
-    public void signalUncancellableCompletionValue()
+    public void SignalUncancellableCompletionValue()
     {
         var source = Source<Signal>();
-        var value = Signal.valueOf(typeof(DefaultPromiseTest), "UNCANCELLABLE");
+        var value = Signal.ValueOf(typeof(DefaultPromiseTest), "UNCANCELLABLE");
         source.SetResult(value);
         Assert.True(source.Task.IsCompleted);
         Assert.True(source.Task.IsCompletedSuccessfully);
         Assert.Same(value, source.Task.GetAwaiter().GetResult());
     }
     [Fact]
-    public void signalSuccessCompletionValue()
+    public void SignalSuccessCompletionValue()
     {
         var source = Source<Signal>();
-        var value = Signal.valueOf(typeof(DefaultPromiseTest), "SUCCESS");
+        var value = Signal.ValueOf(typeof(DefaultPromiseTest), "SUCCESS");
         source.SetResult(value);
         Assert.True(source.Task.IsCompleted);
         Assert.True(source.Task.IsCompletedSuccessfully);
         Assert.Same(value, source.Task.GetAwaiter().GetResult());
     }
     [Fact]
-    public async Task setUncancellableGetNow()
+    public async Task SetUncancellableGetNow()
     {
         IEventExecutor executor = new TestEventExecutor();
         using var cancellation = new CancellationTokenSource();
@@ -270,14 +270,14 @@ public class DefaultPromiseTest
             Assert.Equal("success", await operation.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.True(operation.IsCompletedSuccessfully);
         }
-        finally { release.Set(); shutdown(executor); }
+        finally { release.Set(); Shutdown(executor); }
     }
-    private static void testStackOverFlowChainedFutures(int promiseChainLength, IEventExecutor executor, bool runTestInExecutorThread, bool lateListener)
+    private static void TestStackOverFlowChainedFutures(int promiseChainLength, IEventExecutor executor, bool runTestInExecutorThread, bool lateListener)
     {
         var sources = new TaskCompletionSource<object>[promiseChainLength];
         var observations = new ExecutorCompletion[promiseChainLength];
         using var latch = new CountdownEvent(promiseChainLength);
-        void initialize()
+        void Initialize()
         {
             for (int i = 0; i < sources.Length; i++)
             {
@@ -301,8 +301,8 @@ public class DefaultPromiseTest
         }
         try
         {
-            if (runTestInExecutorThread) executor.execute(Runnables.Create(initialize));
-            else initialize();
+            if (runTestInExecutorThread) executor.Execute(Runnables.Create(Initialize));
+            else Initialize();
             Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
             foreach (var source in sources) Assert.True(source.Task.IsCompletedSuccessfully);
         }
@@ -318,7 +318,7 @@ public class DefaultPromiseTest
      * <li>The write operation</li>
      * </ol>
      */
-    private static void testLateListenerIsOrderedCorrectly(Exception cause)
+    private static void TestLateListenerIsOrderedCorrectly(Exception cause)
     {
         IEventExecutor executor = new TestEventExecutor();
         try
@@ -340,13 +340,13 @@ public class DefaultPromiseTest
             Assert.Equal(2, Volatile.Read(ref state));
             // This is the important listener. A late listener that is added after all late listeners
             // have completed, and needs to update state before a read operation (on the same executor).
-            executor.execute(Runnables.Create(() => observer.Register(_ =>
+            executor.Execute(Runnables.Create(() => observer.Register(_ =>
             {
                 Assert.Equal(2, Interlocked.CompareExchange(ref state, 3, 2));
                 latch2.Signal();
             })));
             // Simulate a read operation being queued up in the executor.
-            executor.execute(Runnables.Create(() =>
+            executor.Execute(Runnables.Create(() =>
             {
                 // This is the key, we depend upon the state being set in the next listener.
                 Assert.Equal(3, Volatile.Read(ref state));
@@ -354,9 +354,9 @@ public class DefaultPromiseTest
             }));
             Assert.True(latch2.Wait(TimeSpan.FromSeconds(2)));
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
-    private static void testPromiseListenerAddWhenComplete(Exception cause)
+    private static void TestPromiseListenerAddWhenComplete(Exception cause)
     {
         using var latch = new CountdownEvent(1);
         var source = Source<object>();
@@ -366,7 +366,7 @@ public class DefaultPromiseTest
         else source.SetException(cause);
         Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
     }
-    private static void runListenerNotifyLater(int numListenersBefore)
+    private static void RunListenerNotifyLater(int numListenersBefore)
     {
         IEventExecutor executor = new TestEventExecutor();
         try
@@ -376,27 +376,27 @@ public class DefaultPromiseTest
             Action<Task> listener = _ => latch.Signal();
             var source = Source<object>();
             using var observer = new ExecutorCompletion(executor, source.Task);
-            executor.execute(Runnables.Create(() =>
+            executor.Execute(Runnables.Create(() =>
             {
                 for (int i = 0; i < numListenersBefore; i++) observer.Register(listener);
                 source.SetResult(null);
-                GlobalEventExecutor.INSTANCE.execute(Runnables.Create(() => observer.Register(listener)));
+                GlobalEventExecutor.INSTANCE.Execute(Runnables.Create(() => observer.Register(listener)));
                 observer.Register(listener);
             }));
             Assert.True(latch.Wait(TimeSpan.FromSeconds(5)), "Should have notified " + expectedCount + " listeners");
         }
-        finally { shutdown(executor); }
+        finally { Shutdown(executor); }
     }
     private sealed class TestEventExecutor : SingleThreadEventExecutor
     {
-        internal TestEventExecutor() : base(null, new AnonymousThreadFactory(task => new Thread(task.run) { IsBackground = true }), true) { }
-        protected override void run()
+        internal TestEventExecutor() : base(null, new AnonymousThreadFactory(task => new Thread(task.Run) { IsBackground = true }), true) { }
+        protected override void Run()
         {
             for (;;)
             {
-                IRunnable task = takeTask();
-                if (task != null) { task.run(); updateLastExecutionTime(); }
-                if (confirmShutdown()) break;
+                IRunnable task = TakeTask();
+                if (task != null) { task.Run(); UpdateLastExecutionTime(); }
+                if (ConfirmShutdown()) break;
             }
         }
     }
@@ -407,10 +407,10 @@ public class DefaultPromiseTest
         private readonly Thread thread;
         internal TestSingleThreadExecutor()
         {
-            thread = new Thread(() => { foreach (var task in tasks.GetConsumingEnumerable()) task.run(); }) { IsBackground = true };
+            thread = new Thread(() => { foreach (var task in tasks.GetConsumingEnumerable()) task.Run(); }) { IsBackground = true };
             thread.Start();
         }
-        public void execute(IRunnable task) => tasks.Add(task);
+        public void Execute(IRunnable task) => tasks.Add(task);
         public void Dispose()
         {
             tasks.CompleteAdding();
@@ -418,9 +418,9 @@ public class DefaultPromiseTest
             tasks.Dispose();
         }
     }
-    private static void shutdown(IEventExecutor executor)
+    private static void Shutdown(IEventExecutor executor)
     {
         Assert.True(executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
     }
-    private static Exception fakeException() => new Exception("fake exception");
+    private static Exception FakeException() => new Exception("fake exception");
 }

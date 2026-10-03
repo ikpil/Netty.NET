@@ -22,8 +22,8 @@ namespace Netty.NET.Common.Tests;
 
 public class RecyclerFastThreadLocalTest : RecyclerTest
 {
-    protected override void runTest(Action invocation) => RunInFastThreadLocalThreadExtension.run(invocation);
-    protected override Thread newThread(Action invocation)
+    protected override void RunTest(Action invocation) => RunInFastThreadLocalThreadExtension.Run(invocation);
+    protected override Thread NewThread(Action invocation)
     {
         var owner = new FastThreadLocalThread(Runnables.Create(invocation));
         owner.Thread.IsBackground = true;
@@ -38,7 +38,7 @@ public class RecyclerFastThreadLocalTest : RecyclerTest
     // Loop until the Thread was collected. If we can not collect it the Test will fail due of a timeout.
     // Now call recycle after the Thread was collected to ensure this still works...
     [Theory]
-    [MemberData(nameof(ownerTypeAndUnguarded))]
-    public override void testThreadCanBeCollectedEvenIfHandledObjectIsReferenced(OwnerType ownerType, bool unguarded)
-        => base.testThreadCanBeCollectedEvenIfHandledObjectIsReferenced(ownerType, unguarded);
+    [MemberData(nameof(OwnerTypeAndUnguarded))]
+    public override void TestThreadCanBeCollectedEvenIfHandledObjectIsReferenced(OwnerType ownerType, bool unguarded)
+        => base.TestThreadCanBeCollectedEvenIfHandledObjectIsReferenced(ownerType, unguarded);
 }

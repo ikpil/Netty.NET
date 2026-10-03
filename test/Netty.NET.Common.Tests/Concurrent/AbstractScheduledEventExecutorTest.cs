@@ -30,78 +30,78 @@ public class AbstractScheduledEventExecutorTest
     private static readonly Func<object> TEST_CALLABLE = () => { TEST_RUNNABLE(); return null; };
 
     [Fact]
-    public void testScheduleRunnableZero()
+    public void TestScheduleRunnableZero()
     {
         var executor = new TestScheduledEventExecutor();
         var future = executor.ScheduleAsync(TEST_RUNNABLE, TimeSpan.Zero);
-        Assert.Equal(0, executor.Head.delayNanos());
-        var ready = executor.pollScheduledTask();
+        Assert.Equal(0, executor.Head.DelayNanos());
+        var ready = executor.PollScheduledTask();
         Assert.NotNull(ready);
         Assert.False((object)ready is System.Threading.Tasks.Task);
-        ready.run();
+        ready.Run();
         Assert.True(future.IsCompletedSuccessfully);
-        Assert.Null(executor.pollScheduledTask());
+        Assert.Null(executor.PollScheduledTask());
     }
 
     [Fact]
-    public void testScheduleRunnableNegative()
+    public void TestScheduleRunnableNegative()
     {
         var executor = new TestScheduledEventExecutor();
         // CLR: the smallest negative TimeSpan is -100 ns; both inputs clamp to zero.
         var future = executor.ScheduleAsync(TEST_RUNNABLE, TimeSpan.FromTicks(-1));
-        Assert.Equal(0, executor.Head.delayNanos());
-        var ready = executor.pollScheduledTask();
+        Assert.Equal(0, executor.Head.DelayNanos());
+        var ready = executor.PollScheduledTask();
         Assert.NotNull(ready);
         Assert.False((object)ready is System.Threading.Tasks.Task);
-        ready.run();
+        ready.Run();
         Assert.True(future.IsCompletedSuccessfully);
-        Assert.Null(executor.pollScheduledTask());
+        Assert.Null(executor.PollScheduledTask());
     }
 
     [Fact]
-    public void testScheduleCallableZero()
+    public void TestScheduleCallableZero()
     {
         var executor = new TestScheduledEventExecutor();
         var future = executor.ScheduleAsync(TEST_CALLABLE, TimeSpan.Zero);
-        Assert.Equal(0, executor.Head.delayNanos());
-        var ready = executor.pollScheduledTask();
+        Assert.Equal(0, executor.Head.DelayNanos());
+        var ready = executor.PollScheduledTask();
         Assert.NotNull(ready);
         Assert.False((object)ready is System.Threading.Tasks.Task);
-        ready.run();
+        ready.Run();
         Assert.True(future.IsCompletedSuccessfully);
-        Assert.Null(executor.pollScheduledTask());
+        Assert.Null(executor.PollScheduledTask());
     }
 
     [Fact]
-    public void testScheduleCallableNegative()
+    public void TestScheduleCallableNegative()
     {
         var executor = new TestScheduledEventExecutor();
         var future = executor.ScheduleAsync(TEST_CALLABLE, TimeSpan.FromTicks(-1));
-        Assert.Equal(0, executor.Head.delayNanos());
-        var ready = executor.pollScheduledTask();
+        Assert.Equal(0, executor.Head.DelayNanos());
+        var ready = executor.PollScheduledTask();
         Assert.NotNull(ready);
         Assert.False((object)ready is System.Threading.Tasks.Task);
-        ready.run();
+        ready.Run();
         Assert.True(future.IsCompletedSuccessfully);
-        Assert.Null(executor.pollScheduledTask());
+        Assert.Null(executor.PollScheduledTask());
     }
 
     [Fact]
-    public void testScheduleAtFixedRateRunnableZero()
+    public void TestScheduleAtFixedRateRunnableZero()
     {
         var executor = new TestScheduledEventExecutor();
         Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.Zero));
     }
 
     [Fact]
-    public void testScheduleAtFixedRateRunnableNegative()
+    public void TestScheduleAtFixedRateRunnableNegative()
     {
         var executor = new TestScheduledEventExecutor();
         Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleAtFixedRateAsync(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.FromDays(-1)));
     }
 
     [Fact]
-    public void testScheduleWithFixedDelayZero()
+    public void TestScheduleWithFixedDelayZero()
     {
         var executor = new TestScheduledEventExecutor();
         // CLR: retain the pinned upstream's -1 operand despite the method name.
@@ -109,30 +109,30 @@ public class AbstractScheduledEventExecutorTest
     }
 
     [Fact]
-    public void testScheduleWithFixedDelayNegative()
+    public void TestScheduleWithFixedDelayNegative()
     {
         var executor = new TestScheduledEventExecutor();
         Assert.Throws<ArgumentOutOfRangeException>(() => executor.ScheduleWithFixedDelayAsync(TEST_RUNNABLE, TimeSpan.Zero, TimeSpan.FromDays(-1)));
     }
 
     [Fact]
-    public void testDeadlineNanosNotOverflow() =>
-        Assert.Equal(long.MaxValue, AbstractScheduledEventExecutor.deadlineNanos(Ticker.systemTicker().nanoTime(), long.MaxValue));
+    public void TestDeadlineNanosNotOverflow() =>
+        Assert.Equal(long.MaxValue, AbstractScheduledEventExecutor.DeadlineNanos(Ticker.SystemTicker().NanoTime(), long.MaxValue));
 
     private sealed class TestScheduledEventExecutor : AbstractScheduledEventExecutor
     {
-        internal IScheduledWork Head => peekScheduledTask();
-        public override bool isShuttingDown() => false;
-        public override bool inEventLoop(Thread thread) => true;
-        public override void shutdown()
+        internal IScheduledWork Head => PeekScheduledTask();
+        public override bool IsShuttingDown() => false;
+        public override bool InEventLoop(Thread thread) => true;
+        public override void Shutdown()
         {
             // NOOP
         }
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
         public override Task Termination => throw new NotSupportedException();
-        public override bool isShutdown() => false;
-        public override bool isTerminated() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
-        public override void execute(IRunnable command) => throw new NotSupportedException();
+        public override bool IsShutdown() => false;
+        public override bool IsTerminated() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override void Execute(IRunnable command) => throw new NotSupportedException();
     }
 }

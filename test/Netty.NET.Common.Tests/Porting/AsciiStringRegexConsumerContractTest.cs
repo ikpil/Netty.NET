@@ -41,7 +41,7 @@ public class AsciiStringRegexConsumerContractTest
         var regex = new Regex("\\Aab\\z", RegexOptions.CultureInvariant);
         Assert.False(regex.IsMatch(value.ToString()));
         backing[2] = (byte)'b';
-        value.arrayChanged();
+        value.ArrayChanged();
         Assert.True(regex.IsMatch(value.ToString()));
     }
 
@@ -59,7 +59,7 @@ public class AsciiStringRegexConsumerContractTest
     [Fact]
     public void ZeroWidthSplittingUsesNativeRegexSemantics()
     {
-        var value = new AsciiString("!ab!").subSequence(1, 3, false);
+        var value = new AsciiString("!ab!").SubSequence(1, 3, false);
         Assert.Equal(new[] { "", "a", "b", "" }, new Regex("").Split(value.ToString()));
     }
 

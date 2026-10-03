@@ -24,167 +24,167 @@ namespace Netty.NET.Common.Tests.Internal;
 public class MacAddressUtilTest
 {
     [Fact]
-    public void testCompareAddresses()
+    public void TestCompareAddresses()
     {
         // should not prefer empty address when candidate is not globally unique
         Assert.Equal(
             0,
-            MacAddressUtil.compareAddresses(
+            MacAddressUtil.CompareAddresses(
                 EMPTY_BYTES,
                 new byte[] { (byte)0x52, (byte)0x54, (byte)0x00, (byte)0xf9, (byte)0x32, (byte)0xbd }));
 
         // only candidate is globally unique
         Assert.Equal(
             -1,
-            MacAddressUtil.compareAddresses(
+            MacAddressUtil.CompareAddresses(
                 EMPTY_BYTES,
                 new byte[] { (byte)0x50, (byte)0x54, (byte)0x00, (byte)0xf9, (byte)0x32, (byte)0xbd }));
 
         // only candidate is globally unique
         Assert.Equal(
             -1,
-            MacAddressUtil.compareAddresses(
+            MacAddressUtil.CompareAddresses(
                 new byte[] { (byte)0x52, (byte)0x54, (byte)0x00, (byte)0xf9, (byte)0x32, (byte)0xbd },
                 new byte[] { (byte)0x50, (byte)0x54, (byte)0x00, (byte)0xf9, (byte)0x32, (byte)0xbd }));
 
         // only current is globally unique
         Assert.Equal(
             1,
-            MacAddressUtil.compareAddresses(
+            MacAddressUtil.CompareAddresses(
                 new byte[] { (byte)0x52, (byte)0x54, (byte)0x00, (byte)0xf9, (byte)0x32, (byte)0xbd },
                 EMPTY_BYTES));
 
         // only current is globally unique
         Assert.Equal(
             1,
-            MacAddressUtil.compareAddresses(
+            MacAddressUtil.CompareAddresses(
                 new byte[] { (byte)0x50, (byte)0x54, (byte)0x00, (byte)0xf9, (byte)0x32, (byte)0xbd },
                 new byte[] { (byte)0x52, (byte)0x54, (byte)0x00, (byte)0xf9, (byte)0x32, (byte)0xbd }));
 
         // both are globally unique
         Assert.Equal(
             0,
-            MacAddressUtil.compareAddresses(
+            MacAddressUtil.CompareAddresses(
                 new byte[] { (byte)0x50, (byte)0x54, (byte)0x00, (byte)0xf9, (byte)0x32, (byte)0xbd },
                 new byte[] { (byte)0x50, (byte)0x55, (byte)0x01, (byte)0xfa, (byte)0x33, (byte)0xbe }));
     }
 
     [Fact]
-    public void testParseMacEUI48()
+    public void TestParseMacEUI48()
     {
         Assert.Equal(new byte[] { 0, (byte)0xaa, 0x11, (byte)0xbb, 0x22, (byte)0xcc },
-            parseMAC("00-AA-11-BB-22-CC"));
+            ParseMAC("00-AA-11-BB-22-CC"));
         Assert.Equal(new byte[] { 0, (byte)0xaa, 0x11, (byte)0xbb, 0x22, (byte)0xcc },
-            parseMAC("00:AA:11:BB:22:CC"));
+            ParseMAC("00:AA:11:BB:22:CC"));
     }
 
     [Fact]
-    public void testParseMacMAC48ToEUI64()
+    public void TestParseMacMAC48ToEUI64()
     {
         // MAC-48 into an EUI-64
         Assert.Equal(new byte[] { 0, (byte)0xaa, 0x11, (byte)0xff, (byte)0xff, (byte)0xbb, 0x22, (byte)0xcc },
-            parseMAC("00-AA-11-FF-FF-BB-22-CC"));
+            ParseMAC("00-AA-11-FF-FF-BB-22-CC"));
         Assert.Equal(new byte[] { 0, (byte)0xaa, 0x11, (byte)0xff, (byte)0xff, (byte)0xbb, 0x22, (byte)0xcc },
-            parseMAC("00:AA:11:FF:FF:BB:22:CC"));
+            ParseMAC("00:AA:11:FF:FF:BB:22:CC"));
     }
 
     [Fact]
-    public void testParseMacEUI48ToEUI64()
+    public void TestParseMacEUI48ToEUI64()
     {
         // EUI-48 into an EUI-64
         Assert.Equal(new byte[] { 0, (byte)0xaa, 0x11, (byte)0xff, (byte)0xfe, (byte)0xbb, 0x22, (byte)0xcc },
-            parseMAC("00-AA-11-FF-FE-BB-22-CC"));
+            ParseMAC("00-AA-11-FF-FE-BB-22-CC"));
         Assert.Equal(new byte[] { 0, (byte)0xaa, 0x11, (byte)0xff, (byte)0xfe, (byte)0xbb, 0x22, (byte)0xcc },
-            parseMAC("00:AA:11:FF:FE:BB:22:CC"));
+            ParseMAC("00:AA:11:FF:FE:BB:22:CC"));
     }
 
     [Fact]
-    public void testParseMacInvalid7HexGroupsA()
+    public void TestParseMacInvalid7HexGroupsA()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00-AA-11-BB-22-CC-FF");
+            ParseMAC("00-AA-11-BB-22-CC-FF");
         });
     }
 
     [Fact]
-    public void testParseMacInvalid7HexGroupsB()
+    public void TestParseMacInvalid7HexGroupsB()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00:AA:11:BB:22:CC:FF");
+            ParseMAC("00:AA:11:BB:22:CC:FF");
         });
     }
 
     [Fact]
-    public void testParseMacInvalidEUI48MixedSeparatorA()
+    public void TestParseMacInvalidEUI48MixedSeparatorA()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00-AA:11-BB-22-CC");
+            ParseMAC("00-AA:11-BB-22-CC");
         });
     }
 
     [Fact]
-    public void testParseMacInvalidEUI48MixedSeparatorB()
+    public void TestParseMacInvalidEUI48MixedSeparatorB()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00:AA-11:BB:22:CC");
+            ParseMAC("00:AA-11:BB:22:CC");
         });
     }
 
     [Fact]
-    public void testParseMacInvalidEUI64MixedSeparatorA()
+    public void TestParseMacInvalidEUI64MixedSeparatorA()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00-AA-11-FF-FE-BB-22:CC");
+            ParseMAC("00-AA-11-FF-FE-BB-22:CC");
         });
     }
 
     [Fact]
-    public void testParseMacInvalidEUI64MixedSeparatorB()
+    public void TestParseMacInvalidEUI64MixedSeparatorB()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00:AA:11:FF:FE:BB:22-CC");
+            ParseMAC("00:AA:11:FF:FE:BB:22-CC");
         });
     }
 
     [Fact]
-    public void testParseMacInvalidEUI48TrailingSeparatorA()
+    public void TestParseMacInvalidEUI48TrailingSeparatorA()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00-AA-11-BB-22-CC-");
+            ParseMAC("00-AA-11-BB-22-CC-");
         });
     }
 
     [Fact]
-    public void testParseMacInvalidEUI48TrailingSeparatorB()
+    public void TestParseMacInvalidEUI48TrailingSeparatorB()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00:AA:11:BB:22:CC:");
+            ParseMAC("00:AA:11:BB:22:CC:");
         });
     }
 
     [Fact]
-    public void testParseMacInvalidEUI64TrailingSeparatorA()
+    public void TestParseMacInvalidEUI64TrailingSeparatorA()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00-AA-11-FF-FE-BB-22-CC-");
+            ParseMAC("00-AA-11-FF-FE-BB-22-CC-");
         });
     }
 
     [Fact]
-    public void testParseMacInvalidEUI64TrailingSeparatorB()
+    public void TestParseMacInvalidEUI64TrailingSeparatorB()
     {
         Assert.Throws<ArgumentException>(() =>
         {
-            parseMAC("00:AA:11:FF:FE:BB:22:CC:");
+            ParseMAC("00:AA:11:FF:FE:BB:22:CC:");
         });
     }
 }

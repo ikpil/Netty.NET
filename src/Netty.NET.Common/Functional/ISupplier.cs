@@ -26,5 +26,5 @@ public interface ISupplier<out T>
      * @return a bool value.
      * @throws Exception If an exception occurs.
      */
-    T get();
+    T Get();
 }

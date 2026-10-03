@@ -29,7 +29,7 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class AbstractEventExecutor : IEventExecutor
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(AbstractEventExecutor));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(AbstractEventExecutor));
 
     public static readonly TimeSpan DEFAULT_SHUTDOWN_QUIET_PERIOD = TimeSpan.FromSeconds(2);
     public static readonly TimeSpan DEFAULT_SHUTDOWN_TIMEOUT = TimeSpan.FromSeconds(15);
@@ -47,40 +47,40 @@ public abstract class AbstractEventExecutor : IEventExecutor
         _parent = parent;
     }
 
-    public virtual IEventExecutorGroup parent()
+    public virtual IEventExecutorGroup Parent()
     {
         return _parent;
     }
 
-    public virtual Ticker ticker()
+    public virtual Ticker Ticker()
     {
-        return Ticker.systemTicker();
+        return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
     }
 
-    public virtual bool isExecutorThread(Thread thread)
+    public virtual bool IsExecutorThread(Thread thread)
     {
-        return inEventLoop(thread);
+        return InEventLoop(thread);
     }
 
-    public virtual bool inEventLoop()
+    public virtual bool InEventLoop()
     {
-        return inEventLoop(Thread.CurrentThread);
+        return InEventLoop(Thread.CurrentThread);
     }
 
-    public abstract bool inEventLoop(Thread thread);
+    public abstract bool InEventLoop(Thread thread);
 
-    public abstract void execute(IRunnable task);
-    public abstract bool isShutdown();
-    public abstract bool isTerminated();
-    public abstract bool awaitTermination(TimeSpan timeout);
+    public abstract void Execute(IRunnable task);
+    public abstract bool IsShutdown();
+    public abstract bool IsTerminated();
+    public abstract bool AwaitTermination(TimeSpan timeout);
     public abstract Task Termination { get; }
 
-    public virtual IEventExecutor next()
+    public virtual IEventExecutor Next()
     {
         return this;
     }
 
-    public virtual IEnumerable<IEventExecutor> iterator()
+    public virtual IEnumerable<IEventExecutor> Iterator()
     {
         return _selfCollection;
     }
@@ -96,7 +96,7 @@ public abstract class AbstractEventExecutor : IEventExecutor
     // native shutdown policy directly. No additional lifecycle result is created.
     public virtual Task StopAsync()
     {
-        shutdown();
+        Shutdown();
         return Termination;
     }
 
@@ -104,9 +104,9 @@ public abstract class AbstractEventExecutor : IEventExecutor
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    public virtual List<IRunnable> shutdownNow()
+    public virtual List<IRunnable> ShutdownNow()
     {
-        shutdown();
+        Shutdown();
         return new List<IRunnable>();
     }
 
@@ -114,16 +114,16 @@ public abstract class AbstractEventExecutor : IEventExecutor
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    public abstract void shutdown();
+    public abstract void Shutdown();
 
-    public abstract bool isShuttingDown();
+    public abstract bool IsShuttingDown();
 
-    public virtual bool isSuspended()
+    public virtual bool IsSuspended()
     {
         return false;
     }
 
-    public virtual bool trySuspend()
+    public virtual bool TrySuspend()
     {
         return false;
     }
@@ -131,21 +131,21 @@ public abstract class AbstractEventExecutor : IEventExecutor
     /**
      * Try to execute the given {@link Runnable} and just log if it throws a {@link Throwable}.
      */
-    protected static void safeExecute(IRunnable task)
+    protected static void SafeExecute(IRunnable task)
     {
         try
         {
-            runTask(task);
+            RunTask(task);
         }
         catch (Exception t)
         {
-            logger.warn("A task raised an exception. Task: {}", task, t);
+            logger.Warn("A task raised an exception. Task: {}", task, t);
         }
     }
 
-    protected static void runTask(IRunnable task)
+    protected static void RunTask(IRunnable task)
     {
-        task.run();
+        task.Run();
     }
 
     /**
@@ -156,9 +156,9 @@ public abstract class AbstractEventExecutor : IEventExecutor
      * </p>
      */
     [UnstableApi]
-    public virtual void lazyExecute(IRunnable task)
+    public virtual void LazyExecute(IRunnable task)
     {
-        execute(task);
+        Execute(task);
     }
 
     /**

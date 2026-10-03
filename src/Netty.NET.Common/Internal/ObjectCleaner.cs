@@ -54,7 +54,7 @@ public static class ObjectCleaner
         Interlocked.Increment(ref _pending);
         try
         {
-            CollectedObjectWatch.register(target, () => QueueCleanup(cleanup));
+            CollectedObjectWatch.Register(target, () => QueueCleanup(cleanup));
         }
         catch
         {

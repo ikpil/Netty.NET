@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Internal.Logging
             }
         }
 
-        public IInternalLogger newInstance(string categoryName)
+        public IInternalLogger NewInstance(string categoryName)
         {
             if (CheckDisposed())
             {

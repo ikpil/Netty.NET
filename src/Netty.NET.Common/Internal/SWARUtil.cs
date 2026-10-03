@@ -28,7 +28,7 @@ public static class SWARUtil
     /**
      * Compiles given byte into a long pattern suitable for SWAR operations.
      */
-    public static long compilePattern(byte byteToFind) {
+    public static long CompilePattern(byte byteToFind) {
         return unchecked((byteToFind & 0xFFL) * 0x101010101010101L);
     }
 
@@ -40,7 +40,7 @@ public static class SWARUtil
      * @param pattern the pattern to apply
      * @return a word where each byte that matches the pattern has the highest bit set
      */
-    public static long applyPattern(long word, long pattern) {
+    public static long ApplyPattern(long word, long pattern) {
         long input = word ^ pattern;
         long tmp = unchecked((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL);
         return ~(tmp | input | 0x7F7F7F7F7F7F7F7FL);
@@ -56,7 +56,7 @@ public static class SWARUtil
      * @return the index of the first occurrence of the specified pattern in the specified word.
      * If no pattern is found, returns 8.
      */
-    public static int getIndex(long word, bool isBigEndian) {
+    public static int GetIndex(long word, bool isBigEndian) {
         ulong bits = unchecked((ulong)word);
         int zeros = isBigEndian ? BitOperations.LeadingZeroCount(bits) : BitOperations.TrailingZeroCount(bits);
         return zeros >>> 3;
@@ -65,7 +65,7 @@ public static class SWARUtil
     /**
      * Returns a word where each ASCII uppercase byte has the highest bit set.
      */
-    private static long applyUpperCasePattern(long word) {
+    private static long ApplyUpperCasePattern(long word) {
         // Inspired by https://github.com/facebook/folly/blob/add4049dd6c2371eac05b92b6fd120fd6dd74df5/folly/String.cpp
         long rotated = word & 0x7F7F7F7F7F7F7F7FL;
         rotated = unchecked(rotated + 0x2525252525252525L);
@@ -80,7 +80,7 @@ public static class SWARUtil
     /**
      * Returns a word where each ASCII uppercase byte has the highest bit set.
      */
-    private static int applyUpperCasePattern(int word) {
+    private static int ApplyUpperCasePattern(int word) {
         int rotated = word & 0x7F7F7F7F;
         rotated = unchecked(rotated + 0x25252525);
         rotated &= 0x7F7F7F7F;
@@ -94,7 +94,7 @@ public static class SWARUtil
     /**
      * Returns a word where each ASCII lowercase byte has the highest bit set.
      */
-    private static long applyLowerCasePattern(long word) {
+    private static long ApplyLowerCasePattern(long word) {
         long rotated = word & 0x7F7F7F7F7F7F7F7FL;
         rotated = unchecked(rotated + 0x0505050505050505L);
         rotated &= 0x7F7F7F7F7F7F7F7FL;
@@ -108,7 +108,7 @@ public static class SWARUtil
     /**
      * Returns a word where each lowercase ASCII byte has the highest bit set.
      */
-    private static int applyLowerCasePattern(int word) {
+    private static int ApplyLowerCasePattern(int word) {
         int rotated = word & 0x7F7F7F7F;
         rotated = unchecked(rotated + 0x05050505);
         rotated &= 0x7F7F7F7F;
@@ -122,60 +122,60 @@ public static class SWARUtil
     /**
      * Returns true if the given word contains at least one ASCII uppercase byte.
      */
-    public static bool containsUpperCase(long word) {
-        return applyUpperCasePattern(word) != 0;
+    public static bool ContainsUpperCase(long word) {
+        return ApplyUpperCasePattern(word) != 0;
     }
 
     /**
      * Returns true if the given word contains at least one ASCII uppercase byte.
      */
-    public static bool containsUpperCase(int word) {
-        return applyUpperCasePattern(word) != 0;
+    public static bool ContainsUpperCase(int word) {
+        return ApplyUpperCasePattern(word) != 0;
     }
 
     /**
      * Returns true if the given word contains at least one ASCII lowercase byte.
      */
-    public static bool containsLowerCase(long word) {
-        return applyLowerCasePattern(word) != 0;
+    public static bool ContainsLowerCase(long word) {
+        return ApplyLowerCasePattern(word) != 0;
     }
 
     /**
      * Returns true if the given word contains at least one ASCII lowercase byte.
      */
-    public static bool containsLowerCase(int word) {
-        return applyLowerCasePattern(word) != 0;
+    public static bool ContainsLowerCase(int word) {
+        return ApplyLowerCasePattern(word) != 0;
     }
 
     /**
      * Returns a word with all bytes converted to lowercase ASCII.
      */
-    public static long toLowerCase(long word) {
-        long mask = applyUpperCasePattern(word) >>> 2;
+    public static long ToLowerCase(long word) {
+        long mask = ApplyUpperCasePattern(word) >>> 2;
         return word | mask;
     }
 
     /**
      * Returns a word with all bytes converted to lowercase ASCII.
      */
-    public static int toLowerCase(int word) {
-        int mask = applyUpperCasePattern(word) >>> 2;
+    public static int ToLowerCase(int word) {
+        int mask = ApplyUpperCasePattern(word) >>> 2;
         return word | mask;
     }
 
     /**
      * Returns a word with all bytes converted to uppercase ASCII.
      */
-    public static long toUpperCase(long word) {
-        long mask = applyLowerCasePattern(word) >>> 2;
+    public static long ToUpperCase(long word) {
+        long mask = ApplyLowerCasePattern(word) >>> 2;
         return word & ~mask;
     }
 
     /**
      * Returns a word with all bytes converted to uppercase ASCII.
      */
-    public static int toUpperCase(int word) {
-        int mask = applyLowerCasePattern(word) >>> 2;
+    public static int ToUpperCase(int word) {
+        int mask = ApplyLowerCasePattern(word) >>> 2;
         return word & ~mask;
     }
 }

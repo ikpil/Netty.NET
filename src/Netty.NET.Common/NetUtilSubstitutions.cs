@@ -22,8 +22,8 @@ namespace Netty.NET.Common;
 
 public static class NetUtilSubstitutions
 {
-    public static IPAddress LOCALHOST4 => NetUtilLocalhost4Accessor.get();
-    public static IPAddress LOCALHOST6 => NetUtilLocalhost6Accessor.get();
-    public static IPAddress LOCALHOST => NetUtilLocalhostAccessor.get();
-    public static IReadOnlyList<NetworkInterface> NETWORK_INTERFACES => NetUtilNetworkInterfacesAccessor.get();
+    public static IPAddress LOCALHOST4 => NetUtilLocalhost4Accessor.Get();
+    public static IPAddress LOCALHOST6 => NetUtilLocalhost6Accessor.Get();
+    public static IPAddress LOCALHOST => NetUtilLocalhostAccessor.Get();
+    public static IReadOnlyList<NetworkInterface> NETWORK_INTERFACES => NetUtilNetworkInterfacesAccessor.Get();
 }

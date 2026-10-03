@@ -33,9 +33,9 @@ public class GlobalEventExecutorTest
 {
     private static readonly GlobalEventExecutor e = GlobalEventExecutor.INSTANCE;
 
-    public GlobalEventExecutorTest() => setUp();
+    public GlobalEventExecutorTest() => SetUp();
 
-    public void setUp()
+    public void SetUp()
     {
         // Wait until the global executor is stopped (just in case there is a task running due to previous test cases)
         var wait = Stopwatch.StartNew();
@@ -48,10 +48,10 @@ public class GlobalEventExecutorTest
     }
 
     [Fact]
-    public void testAutomaticStartStop()
+    public void TestAutomaticStartStop()
     {
         var task = new TestRunnable(500);
-        e.execute(task);
+        e.Execute(task);
 
         // Ensure the new thread has started.
         Thread thread = e._thread;
@@ -63,7 +63,7 @@ public class GlobalEventExecutorTest
 
         // Ensure another new thread starts again.
         task.ran = false;
-        e.execute(task);
+        e.Execute(task);
         Assert.NotSame(e._thread, thread);
         thread = e._thread;
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -71,11 +71,11 @@ public class GlobalEventExecutorTest
     }
 
     [Fact]
-    public void testScheduledTasks()
+    public void TestScheduledTasks()
     {
         var task = new TestRunnable(0);
-        var f = e.ScheduleAsync(task.run, TimeSpan.FromMilliseconds(1500));
-        sync(f);
+        var f = e.ScheduleAsync(task.Run, TimeSpan.FromMilliseconds(1500));
+        Sync(f);
         Assert.True(task.ran);
 
         // Ensure the thread is still running.
@@ -88,15 +88,15 @@ public class GlobalEventExecutorTest
     // ensure that when a task submission causes a new thread to be created, the thread inherits the thread group of the
     // submitting thread
     [Fact]
-    public void testThreadGroup()
+    public void TestThreadGroup()
     {
         var group = new ThreadGroup("group");
         ThreadGroup capturedGroup = null;
         // CLR groups preserve Netty thread identity through weak metadata.
-        var thread = group.newThread(Runnables.Create(() =>
+        var thread = group.NewThread(Runnables.Create(() =>
         {
-            Thread t = e._threadFactory.newThread(Runnables.Create(() => { }));
-            capturedGroup = ThreadGroup.getThreadGroup(t);
+            Thread t = e._threadFactory.NewThread(Runnables.Create(() => { }));
+            capturedGroup = ThreadGroup.GetThreadGroup(t);
         }));
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(2)));
@@ -104,20 +104,20 @@ public class GlobalEventExecutorTest
     }
 
     [Fact]
-    public void testTakeTask()
+    public void TestTakeTask()
     {
         //add task
         var beforeTask = new TestRunnable(0);
-        e.execute(beforeTask);
+        e.Execute(beforeTask);
 
         //add scheduled task
         var scheduledTask = new TestRunnable(0);
-        var f = e.ScheduleAsync(scheduledTask.run, TimeSpan.FromMilliseconds(1500));
+        var f = e.ScheduleAsync(scheduledTask.Run, TimeSpan.FromMilliseconds(1500));
 
         //add task
         var afterTask = new TestRunnable(0);
-        e.execute(afterTask);
-        sync(f);
+        e.Execute(afterTask);
+        Sync(f);
 
         Assert.True(beforeTask.ran);
         Assert.True(scheduledTask.ran);
@@ -125,27 +125,27 @@ public class GlobalEventExecutorTest
     }
 
     [Fact]
-    public void testTakeTaskAlwaysHasTask()
+    public void TestTakeTaskAlwaysHasTask()
     {
         //for https://github.com/netty/netty/issues/1614
         //add scheduled task
         var t = new TestRunnable(0);
-        var f = e.ScheduleAsync(t.run, TimeSpan.FromMilliseconds(1500));
+        var f = e.ScheduleAsync(t.Run, TimeSpan.FromMilliseconds(1500));
 
         //ensure always has at least one task in taskQueue
         //check if scheduled tasks are triggered
         IRunnable repeat = null;
         repeat = Runnables.Create(() =>
         {
-            if (!f.IsCompleted) e.execute(repeat);
+            if (!f.IsCompleted) e.Execute(repeat);
         });
-        e.execute(repeat);
-        sync(f);
+        e.Execute(repeat);
+        Sync(f);
         Assert.True(t.ran);
     }
 
     [Fact]
-    public void testTerminationFutureFailureDoesNotFillInStackTrace()
+    public void TestTerminationFutureFailureDoesNotFillInStackTrace()
     {
         // The GlobalEventExecutor.INSTANCE is a singleton that lives for the lifetime of the Classloader that
         // loaded it. It holds on to the failure of its terminationFuture forever, so that failure must not
@@ -166,7 +166,7 @@ public class GlobalEventExecutorTest
         Assert.Equal(before, cause.StackTrace);
     }
 
-    private static void sync(Task future)
+    private static void Sync(Task future)
     {
         // CLR: bound original unbounded waits to expose a stalled executor.
         future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
@@ -177,7 +177,7 @@ public class GlobalEventExecutorTest
         internal volatile bool ran;
         private readonly int delay;
         internal TestRunnable(int delay) => this.delay = delay;
-        public void run()
+        public void Run()
         {
             try
             {

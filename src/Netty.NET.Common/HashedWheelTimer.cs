@@ -69,15 +69,15 @@ namespace Netty.NET.Common;
  */
 public class HashedWheelTimer : ITimer, IDisposable
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(HashedWheelTimer));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(HashedWheelTimer));
 
     private static int INSTANCE_COUNTER;
     private static int WARNED_TOO_MANY_INSTANCES;
     private static readonly int INSTANCE_COUNT_LIMIT = 64;
     private static readonly long MILLISECOND_NANOS = TimeSpan.FromMilliseconds(1).Ticks * TimeSpan.NanosecondsPerTick;
 
-    private static readonly ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.instance()
-        .newResourceLeakDetector<HashedWheelTimer>(typeof(HashedWheelTimer), 1);
+    private static readonly ResourceLeakDetector<HashedWheelTimer> leakDetector = ResourceLeakDetectorFactory.Instance()
+        .NewResourceLeakDetector<HashedWheelTimer>(typeof(HashedWheelTimer), 1);
 
     private readonly IResourceLeakTracker<HashedWheelTimer> _leak;
     private readonly HashedWheelWorker _worker;
@@ -108,7 +108,7 @@ public class HashedWheelTimer : ITimer, IDisposable
      * default number of ticks per wheel.
      */
     public HashedWheelTimer()
-        : this(Executors.defaultThreadFactory())
+        : this(Executors.DefaultThreadFactory())
     {
     }
 
@@ -123,7 +123,7 @@ public class HashedWheelTimer : ITimer, IDisposable
      * @throws IllegalArgumentException if {@code tickDuration} is &lt;= 0
      */
     public HashedWheelTimer(TimeSpan tickDuration)
-        : this(Executors.defaultThreadFactory(), tickDuration)
+        : this(Executors.DefaultThreadFactory(), tickDuration)
     {
     }
 
@@ -138,7 +138,7 @@ public class HashedWheelTimer : ITimer, IDisposable
      * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
     public HashedWheelTimer(TimeSpan tickDuration, int ticksPerWheel)
-        : this(Executors.defaultThreadFactory(), tickDuration, ticksPerWheel)
+        : this(Executors.DefaultThreadFactory(), tickDuration, ticksPerWheel)
     {
     }
 
@@ -270,17 +270,17 @@ public class HashedWheelTimer : ITimer, IDisposable
         TimeSpan tickDuration, int ticksPerWheel, bool leakDetection,
         long maxPendingTimeouts, IExecutor taskExecutor)
     {
-        checkNotNull(threadFactory, "threadFactory");
-        checkPositive(tickDuration, "tickDuration");
-        checkPositive(ticksPerWheel, "ticksPerWheel");
-        _taskExecutor = checkNotNull(taskExecutor, "taskExecutor");
+        CheckNotNull(threadFactory, "threadFactory");
+        CheckPositive(tickDuration, "tickDuration");
+        CheckPositive(ticksPerWheel, "ticksPerWheel");
+        _taskExecutor = CheckNotNull(taskExecutor, "taskExecutor");
 
         // Normalize ticksPerWheel to power of two and initialize the wheel.
-        _wheel = createWheel(ticksPerWheel);
+        _wheel = CreateWheel(ticksPerWheel);
         _mask = _wheel.Length - 1;
 
         // Convert tickDuration to nanos.
-        long duration = AbstractScheduledEventExecutor.toNanos(tickDuration);
+        long duration = AbstractScheduledEventExecutor.ToNanos(tickDuration);
 
         // Prevent overflow.
         if (duration >= long.MaxValue / _wheel.Length)
@@ -290,7 +290,7 @@ public class HashedWheelTimer : ITimer, IDisposable
 
         if (duration < MILLISECOND_NANOS)
         {
-            logger.warn("Configured tickDuration {} smaller than {}, using 1ms.",
+            logger.Warn("Configured tickDuration {} smaller than {}, using 1ms.",
                 tickDuration, MILLISECOND_NANOS);
             _tickDuration = MILLISECOND_NANOS;
         }
@@ -300,9 +300,9 @@ public class HashedWheelTimer : ITimer, IDisposable
         }
 
         _worker = new HashedWheelWorker(this);
-        _workerThread = threadFactory.newThread(_worker);
+        _workerThread = threadFactory.NewThread(_worker);
 
-        _leak = leakDetection || !_workerThread.IsBackground ? leakDetector.track(this) : null;
+        _leak = leakDetection || !_workerThread.IsBackground ? leakDetector.Track(this) : null;
 
         _maxPendingTimeouts = maxPendingTimeouts;
 
@@ -311,7 +311,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         if (instances > INSTANCE_COUNT_LIMIT &&
             Interlocked.CompareExchange(ref WARNED_TOO_MANY_INSTANCES, 1, 0) == 0)
         {
-            reportTooManyInstances();
+            ReportTooManyInstances();
         }
     }
 
@@ -323,11 +323,11 @@ public class HashedWheelTimer : ITimer, IDisposable
         // the instance count if construction actually registered this timer.
         if (Interlocked.Exchange(ref _workerState, WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
         {
-            decrementInstanceCount();
+            DecrementInstanceCount();
         }
     }
 
-    private void decrementInstanceCount()
+    private void DecrementInstanceCount()
     {
         if (Interlocked.Exchange(ref _instanceCounted, 0) != 0) Interlocked.Decrement(ref INSTANCE_COUNTER);
     }
@@ -335,13 +335,13 @@ public class HashedWheelTimer : ITimer, IDisposable
     // CLR callers can give the timer an explicit using/IDisposable lifetime.
     public void Dispose()
     {
-        stop();
+        Stop();
         GC.SuppressFinalize(this);
     }
 
-    private static HashedWheelBucket[] createWheel(int ticksPerWheel)
+    private static HashedWheelBucket[] CreateWheel(int ticksPerWheel)
     {
-        ticksPerWheel = MathUtil.findNextPositivePowerOfTwo(ticksPerWheel);
+        ticksPerWheel = MathUtil.FindNextPositivePowerOfTwo(ticksPerWheel);
 
         HashedWheelBucket[] wheel = new HashedWheelBucket[ticksPerWheel];
         for (int i = 0; i < wheel.Length; i++)
@@ -359,7 +359,7 @@ public class HashedWheelTimer : ITimer, IDisposable
      * @throws IllegalStateException if this timer has been
      *                               {@linkplain #stop() stopped} already
      */
-    public virtual void start()
+    public virtual void Start()
     {
         switch (Volatile.Read(ref _workerState))
         {
@@ -392,7 +392,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         }
     }
 
-    public virtual ISet<ITimeout> stop()
+    public virtual ISet<ITimeout> Stop()
     {
         if (Thread.CurrentThread == _workerThread)
         {
@@ -407,10 +407,10 @@ public class HashedWheelTimer : ITimer, IDisposable
             // workerState can be 0 or 2 at this moment - let it always be 2.
             if (Interlocked.Exchange(ref _workerState, WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
             {
-                decrementInstanceCount();
+                DecrementInstanceCount();
                 if (_leak != null)
                 {
-                    bool closed = _leak.close(this);
+                    bool closed = _leak.Close(this);
                     Debug.Assert(closed);
                 }
             }
@@ -444,19 +444,19 @@ public class HashedWheelTimer : ITimer, IDisposable
         }
         finally
         {
-            decrementInstanceCount();
+            DecrementInstanceCount();
             if (_leak != null)
             {
-                bool closed = _leak.close(this);
+                bool closed = _leak.Close(this);
                 Debug.Assert(closed);
             }
         }
 
-        var unprocessed = _worker.unprocessedTimeouts();
+        var unprocessed = _worker.UnprocessedTimeouts();
         var cancelled = new HashSet<ITimeout>(unprocessed.Count);
         foreach (ITimeout timeout in unprocessed)
         {
-            if (timeout.cancel())
+            if (timeout.Cancel())
             {
                 cancelled.Add(timeout);
             }
@@ -465,9 +465,9 @@ public class HashedWheelTimer : ITimer, IDisposable
         return cancelled;
     }
 
-    public virtual ITimeout newTimeout(ITimerTask task, TimeSpan delay)
+    public virtual ITimeout NewTimeout(ITimerTask task, TimeSpan delay)
     {
-        checkNotNull(task, "task");
+        CheckNotNull(task, "task");
 
         long pendingTimeoutsCount = Interlocked.Increment(ref _pendingTimeouts);
 
@@ -479,7 +479,7 @@ public class HashedWheelTimer : ITimer, IDisposable
                                                  + "timeouts (" + _maxPendingTimeouts + ")");
         }
 
-        try { start(); }
+        try { Start(); }
         catch
         {
             Interlocked.Decrement(ref _pendingTimeouts);
@@ -488,8 +488,8 @@ public class HashedWheelTimer : ITimer, IDisposable
 
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
-        long delayNano = AbstractScheduledEventExecutor.toNanos(delay);
-        long deadline = SystemTimer.nanoTime() + delayNano - Volatile.Read(ref _startTime);
+        long delayNano = AbstractScheduledEventExecutor.ToNanos(delay);
+        long deadline = SystemTimer.NanoTime() + delayNano - Volatile.Read(ref _startTime);
 
         // Guard against overflow.
         if (delay.Ticks > 0 && deadline < 0)
@@ -504,7 +504,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         // the timeouts queue for the last time. If we can still cancel the timeout it was neither expired nor returned
         // by stop(), so reject it as if start() had failed.
         if (Volatile.Read(ref _workerState) == WORKER_STATE_SHUTDOWN &&
-            timeout.compareAndSetState(HashedWheelTimeout.ST_INIT, HashedWheelTimeout.ST_CANCELLED))
+            timeout.CompareAndSetState(HashedWheelTimeout.ST_INIT, HashedWheelTimeout.ST_CANCELLED))
         {
             Interlocked.Decrement(ref _pendingTimeouts);
             throw new InvalidOperationException("cannot be started once stopped");
@@ -515,17 +515,17 @@ public class HashedWheelTimer : ITimer, IDisposable
     /**
      * Returns the number of pending timeouts of this {@link Timer}.
      */
-    public virtual long pendingTimeouts()
+    public virtual long PendingTimeouts()
     {
         return Volatile.Read(ref _pendingTimeouts);
     }
 
-    private static void reportTooManyInstances()
+    private static void ReportTooManyInstances()
     {
-        if (logger.isErrorEnabled())
+        if (logger.IsErrorEnabled())
         {
-            string resourceType = StringUtil.simpleClassName(typeof(HashedWheelTimer));
-            logger.error("You are creating too many " + resourceType + " instances. " +
+            string resourceType = StringUtil.SimpleClassName(typeof(HashedWheelTimer));
+            logger.Error("You are creating too many " + resourceType + " instances. " +
                          resourceType + " is a shared resource that must be reused across the JVM, " +
                          "so that only a few instances are created.");
         }

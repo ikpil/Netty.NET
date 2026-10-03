@@ -34,13 +34,13 @@ public sealed class AutoScalingUtilizationMetric
      * Returns the most recently calculated utilization for the associated executor.
      * @return a value from 0.0 to 1.0.
      */
-    public double utilization() => BitConverter.Int64BitsToDouble(Volatile.Read(ref utilizationBits));
+    public double Utilization() => BitConverter.Int64BitsToDouble(Volatile.Read(ref utilizationBits));
 
     /**
      * Returns the {@link EventExecutor} this metric belongs too.
      * @return the executor.
      */
-    public IEventExecutor executor() => associatedExecutor;
+    public IEventExecutor Executor() => associatedExecutor;
 
-    internal void setUtilization(double utilization) => Volatile.Write(ref utilizationBits, BitConverter.DoubleToInt64Bits(utilization));
+    internal void SetUtilization(double utilization) => Volatile.Write(ref utilizationBits, BitConverter.DoubleToInt64Bits(utilization));
 }

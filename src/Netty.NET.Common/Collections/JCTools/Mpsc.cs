@@ -6,7 +6,7 @@ namespace Netty.NET.Common.Collections.JCTools;
 
 public static class Mpsc
 {
-    private static readonly IInternalLogger logger = InternalLoggerFactory.getInstance(typeof(Mpsc));
+    private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(Mpsc));
 
     private static readonly bool USE_MPSC_CHUNKED_ARRAY_QUEUE;
 
@@ -37,16 +37,16 @@ public static class Mpsc
         // }
     }
 
-    public static IQueue<T> newMpscQueue<T>(int maxCapacity)
+    public static IQueue<T> NewMpscQueue<T>(int maxCapacity)
     {
         // Calculate the max capacity which can not be bigger than MAX_ALLOWED_MPSC_CAPACITY.
         // This is forced by the MpscChunkedArrayQueue implementation as will try to round it
         // up to the next power of two and so will overflow otherwise.
         int capacity = Math.Max(Math.Min(maxCapacity, PlatformDependent.MAX_ALLOWED_MPSC_CAPACITY), PlatformDependent.MIN_MAX_MPSC_CAPACITY);
-        return newChunkedMpscQueue<T>(PlatformDependent.MPSC_CHUNK_SIZE, capacity);
+        return NewChunkedMpscQueue<T>(PlatformDependent.MPSC_CHUNK_SIZE, capacity);
     }
 
-    public static IQueue<T> newChunkedMpscQueue<T>(int chunkSize, int capacity)
+    public static IQueue<T> NewChunkedMpscQueue<T>(int chunkSize, int capacity)
     {
         throw new NotImplementedException();
         // return USE_MPSC_CHUNKED_ARRAY_QUEUE
@@ -54,7 +54,7 @@ public static class Mpsc
         //     : new MpscChunkedAtomicArrayQueue<T>(chunkSize, capacity);
     }
 
-    public static IQueue<T> newMpscQueue<T>()
+    public static IQueue<T> NewMpscQueue<T>()
     {
         return new ConcurrentQueueAdapter<T>();
         // return USE_MPSC_CHUNKED_ARRAY_QUEUE

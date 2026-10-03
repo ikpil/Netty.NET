@@ -19,16 +19,16 @@ public class NativeSubmissionConsumerContractTest
             try { action(); }
             finally { _running = false; }
         }
-        internal void RunAll() => RunOwned(() => { while (_queue.TryDequeue(out var task)) task.run(); });
-        public override void execute(IRunnable task) => _queue.Enqueue(task);
-        public override bool inEventLoop(Thread thread) => _running && thread == Thread.CurrentThread;
+        internal void RunAll() => RunOwned(() => { while (_queue.TryDequeue(out var task)) task.Run(); });
+        public override void Execute(IRunnable task) => _queue.Enqueue(task);
+        public override bool InEventLoop(Thread thread) => _running && thread == Thread.CurrentThread;
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
-        public override void shutdown() { }
-        public override bool isShutdown() => false;
-        public override bool isShuttingDown() => false;
-        public override bool isTerminated() => false;
-        public override bool awaitTermination(TimeSpan timeout) => false;
+        public override void Shutdown() { }
+        public override bool IsShutdown() => false;
+        public override bool IsShuttingDown() => false;
+        public override bool IsTerminated() => false;
+        public override bool AwaitTermination(TimeSpan timeout) => false;
     }
 
     [Theory]
@@ -79,11 +79,11 @@ public class NativeSubmissionConsumerContractTest
 
     private sealed class GatedFactory(ManualResetEventSlim entered, ManualResetEventSlim release) : IThreadFactory
     {
-        public Thread newThread(IRunnable task) => new(() =>
+        public Thread NewThread(IRunnable task) => new(() =>
         {
             entered.Set();
             release.Wait();
-            task.run();
+            task.Run();
         }) { IsBackground = true };
     }
 
@@ -100,7 +100,7 @@ public class NativeSubmissionConsumerContractTest
             try
             {
                 Thread.CurrentThread.Interrupt();
-                observed = executor.threadProperties();
+                observed = executor.ThreadProperties();
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(0));
                 Thread.Sleep(0);
             }
@@ -116,8 +116,8 @@ public class NativeSubmissionConsumerContractTest
             Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
             Assert.Null(failure);
             Assert.NotNull(observed);
-            Assert.Same(observed, executor.threadProperties());
-            Assert.True(observed.isAlive());
+            Assert.Same(observed, executor.ThreadProperties());
+            Assert.True(observed.IsAlive());
         }
         finally
         {
@@ -129,10 +129,10 @@ public class NativeSubmissionConsumerContractTest
     private sealed class FailingFactory(Exception failure) : IThreadFactory
     {
         private int _attempts;
-        public Thread newThread(IRunnable task)
+        public Thread NewThread(IRunnable task)
         {
             if (Interlocked.Increment(ref _attempts) == 1) throw failure;
-            return new Thread(task.run) { IsBackground = true };
+            return new Thread(task.Run) { IsBackground = true };
         }
     }
 
@@ -141,7 +141,7 @@ public class NativeSubmissionConsumerContractTest
     {
         var failure = new ThreadInterruptedException("worker creation failed");
         var executor = new DefaultEventExecutor(new FailingFactory(failure));
-        try { Assert.Same(failure, Assert.Throws<ThreadInterruptedException>(() => executor.threadProperties())); }
+        try { Assert.Same(failure, Assert.Throws<ThreadInterruptedException>(() => executor.ThreadProperties())); }
         finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
     }
 }

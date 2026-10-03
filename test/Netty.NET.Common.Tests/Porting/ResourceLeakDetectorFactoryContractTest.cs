@@ -8,8 +8,8 @@ namespace Netty.NET.Common.Tests.Porting;
 public class ResourceLeakDetectorFactoryContractTest
 {
     private const string Property = "io.netty.customResourceLeakDetector";
-    private static DefaultResourceLeakDetectorFactory createFactory(Type type) => createFactory(type?.AssemblyQualifiedName);
-    private static DefaultResourceLeakDetectorFactory createFactory(string typeName)
+    private static DefaultResourceLeakDetectorFactory CreateFactory(Type type) => CreateFactory(type?.AssemblyQualifiedName);
+    private static DefaultResourceLeakDetectorFactory CreateFactory(string typeName)
     {
         string previous = Environment.GetEnvironmentVariable(Property);
         try
@@ -63,62 +63,62 @@ public class ResourceLeakDetectorFactoryContractTest
     [Fact]
     public void OpenGenericProviderClosesForEachClrResourceTypeAndPreservesConstructorArguments()
     {
-        var factory = createFactory(typeof(Custom<>));
-        var modern = Assert.IsType<Custom<object>>(factory.newResourceLeakDetector<object>(typeof(object), 7));
+        var factory = CreateFactory(typeof(Custom<>));
+        var modern = Assert.IsType<Custom<object>>(factory.NewResourceLeakDetector<object>(typeof(object), 7));
         Assert.Same(typeof(object), modern.Resource);
         Assert.Equal(7, modern.Sampling);
         Assert.Null(modern.MaxActive);
-        var legacy = Assert.IsType<Custom<string>>(factory.newResourceLeakDetector<string>(typeof(string), 13, 123));
+        var legacy = Assert.IsType<Custom<string>>(factory.NewResourceLeakDetector<string>(typeof(string), 13, 123));
         Assert.Same(typeof(string), legacy.Resource);
         Assert.Equal(13, legacy.Sampling);
         Assert.Equal(123, legacy.MaxActive);
-        var defaults = Assert.IsType<Custom<object>>(factory.newResourceLeakDetector<object>(typeof(object)));
+        var defaults = Assert.IsType<Custom<object>>(factory.NewResourceLeakDetector<object>(typeof(object)));
         Assert.Equal(ResourceLeakDetector.SAMPLING_INTERVAL, defaults.Sampling);
     }
 
     [Fact]
     public void ClosedProviderUsesMatchingGenericTypeAndFallsBackForIncompatibleTypes()
     {
-        var factory = createFactory(typeof(ClosedCustom));
-        Assert.IsType<ClosedCustom>(factory.newResourceLeakDetector<object>(typeof(object), 1));
-        Assert.IsType<ClosedCustom>(factory.newResourceLeakDetector<object>(typeof(object), 1, 0));
-        Assert.IsType<ResourceLeakDetector<string>>(factory.newResourceLeakDetector<string>(typeof(string), 1));
+        var factory = CreateFactory(typeof(ClosedCustom));
+        Assert.IsType<ClosedCustom>(factory.NewResourceLeakDetector<object>(typeof(object), 1));
+        Assert.IsType<ClosedCustom>(factory.NewResourceLeakDetector<object>(typeof(object), 1, 0));
+        Assert.IsType<ResourceLeakDetector<string>>(factory.NewResourceLeakDetector<string>(typeof(string), 1));
     }
 
     [Fact]
     public void ModernAndDeprecatedConstructorsAreIndependent()
     {
-        var modern = createFactory(typeof(ModernOnly<>));
-        Assert.IsType<ModernOnly<object>>(modern.newResourceLeakDetector<object>(typeof(object), 1));
-        Assert.IsType<ResourceLeakDetector<object>>(modern.newResourceLeakDetector<object>(typeof(object), 1, 0));
-        var legacy = createFactory(typeof(LegacyOnly<>));
-        Assert.IsType<ResourceLeakDetector<object>>(legacy.newResourceLeakDetector<object>(typeof(object), 1));
-        Assert.IsType<LegacyOnly<object>>(legacy.newResourceLeakDetector<object>(typeof(object), 1, 0));
+        var modern = CreateFactory(typeof(ModernOnly<>));
+        Assert.IsType<ModernOnly<object>>(modern.NewResourceLeakDetector<object>(typeof(object), 1));
+        Assert.IsType<ResourceLeakDetector<object>>(modern.NewResourceLeakDetector<object>(typeof(object), 1, 0));
+        var legacy = CreateFactory(typeof(LegacyOnly<>));
+        Assert.IsType<ResourceLeakDetector<object>>(legacy.NewResourceLeakDetector<object>(typeof(object), 1));
+        Assert.IsType<LegacyOnly<object>>(legacy.NewResourceLeakDetector<object>(typeof(object), 1, 0));
     }
 
     [Fact]
     public void CustomConstructorFailuresFallBackForBothEntryPoints()
     {
-        var factory = createFactory(typeof(Throwing<>));
-        Assert.IsType<ResourceLeakDetector<object>>(factory.newResourceLeakDetector<object>(typeof(object), 1));
-        Assert.IsType<ResourceLeakDetector<object>>(factory.newResourceLeakDetector<object>(typeof(object), 1, 0));
+        var factory = CreateFactory(typeof(Throwing<>));
+        Assert.IsType<ResourceLeakDetector<object>>(factory.NewResourceLeakDetector<object>(typeof(object), 1));
+        Assert.IsType<ResourceLeakDetector<object>>(factory.NewResourceLeakDetector<object>(typeof(object), 1, 0));
     }
 
     [Fact]
     public void GenericConstraintsAreCheckedPerRequestedType()
     {
-        var factory = createFactory(typeof(StreamOnly<>));
-        Assert.IsType<ResourceLeakDetector<object>>(factory.newResourceLeakDetector<object>(typeof(object), 1));
-        Assert.IsType<StreamOnly<MemoryStream>>(factory.newResourceLeakDetector<MemoryStream>(typeof(MemoryStream), 1));
+        var factory = CreateFactory(typeof(StreamOnly<>));
+        Assert.IsType<ResourceLeakDetector<object>>(factory.NewResourceLeakDetector<object>(typeof(object), 1));
+        Assert.IsType<StreamOnly<MemoryStream>>(factory.NewResourceLeakDetector<MemoryStream>(typeof(MemoryStream), 1));
     }
 
     [Fact]
     public void MissingUnrelatedInvalidArityAndInitializationFailuresFallBack()
     {
         foreach (var type in new[] { typeof(object), typeof(InvalidArity<,>), typeof(InitializationFailure) })
-            Assert.IsType<ResourceLeakDetector<object>>(createFactory(type).newResourceLeakDetector<object>(typeof(object), 1));
-        Assert.IsType<ResourceLeakDetector<object>>(createFactory("Missing.Detector, Missing.Assembly").newResourceLeakDetector<object>(typeof(object), 1));
-        Assert.IsType<ResourceLeakDetector<object>>(createFactory((string)null).newResourceLeakDetector<object>(typeof(object), 1));
+            Assert.IsType<ResourceLeakDetector<object>>(CreateFactory(type).NewResourceLeakDetector<object>(typeof(object), 1));
+        Assert.IsType<ResourceLeakDetector<object>>(CreateFactory("Missing.Detector, Missing.Assembly").NewResourceLeakDetector<object>(typeof(object), 1));
+        Assert.IsType<ResourceLeakDetector<object>>(CreateFactory((string)null).NewResourceLeakDetector<object>(typeof(object), 1));
     }
 
     private sealed class LegacyFactory : ResourceLeakDetectorFactory
@@ -126,7 +126,7 @@ public class ResourceLeakDetectorFactoryContractTest
         internal Type Resource;
         internal int Sampling;
         internal long MaxActive;
-        public override ResourceLeakDetector<T> newResourceLeakDetector<T>(Type resource, int sampling, long maxActive)
+        public override ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int sampling, long maxActive)
         {
             Resource = resource; Sampling = sampling; MaxActive = maxActive;
             return new ResourceLeakDetector<T>(resource, sampling, maxActive);
@@ -136,29 +136,29 @@ public class ResourceLeakDetectorFactoryContractTest
     public void BaseAdapterValidatesSamplingAndDelegatesToLegacyFactory()
     {
         var factory = new LegacyFactory();
-        factory.newResourceLeakDetector<object>(typeof(object), 3);
+        factory.NewResourceLeakDetector<object>(typeof(object), 3);
         Assert.Same(typeof(object), factory.Resource);
         Assert.Equal(3, factory.Sampling);
         Assert.Equal(long.MaxValue, factory.MaxActive);
-        Assert.Throws<ArgumentException>(() => factory.newResourceLeakDetector<object>(typeof(object), 0));
-        Assert.Throws<ArgumentException>(() => factory.newResourceLeakDetector<object>(typeof(object), -1));
+        Assert.Throws<ArgumentException>(() => factory.NewResourceLeakDetector<object>(typeof(object), 0));
+        Assert.Throws<ArgumentException>(() => factory.NewResourceLeakDetector<object>(typeof(object), -1));
         // The default override deliberately does not use the base adapter's validation.
-        var defaults = createFactory((string)null);
-        Assert.IsType<ResourceLeakDetector<object>>(defaults.newResourceLeakDetector<object>(typeof(object), 0));
+        var defaults = CreateFactory((string)null);
+        Assert.IsType<ResourceLeakDetector<object>>(defaults.NewResourceLeakDetector<object>(typeof(object), 0));
     }
 
     [Fact]
     public void SingletonReplacementRejectsNullAndIsRestoredAfterUse()
     {
-        var previous = ResourceLeakDetectorFactory.instance();
+        var previous = ResourceLeakDetectorFactory.Instance();
         var replacement = new LegacyFactory();
         try
         {
-            ResourceLeakDetectorFactory.setResourceLeakDetectorFactory(replacement);
-            Assert.Same(replacement, ResourceLeakDetectorFactory.instance());
-            Assert.Throws<ArgumentNullException>(() => ResourceLeakDetectorFactory.setResourceLeakDetectorFactory(null));
-            Assert.Same(replacement, ResourceLeakDetectorFactory.instance());
+            ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(replacement);
+            Assert.Same(replacement, ResourceLeakDetectorFactory.Instance());
+            Assert.Throws<ArgumentNullException>(() => ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(null));
+            Assert.Same(replacement, ResourceLeakDetectorFactory.Instance());
         }
-        finally { ResourceLeakDetectorFactory.setResourceLeakDetectorFactory(previous); }
+        finally { ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(previous); }
     }
 }

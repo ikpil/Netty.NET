@@ -11,7 +11,7 @@ public class AnonymousObjectCreator<T> : IObjectCreator<T>
         _factory = factory;
     }
 
-    public T newObject(IObjectPoolHandle<T> handle)
+    public T NewObject(IObjectPoolHandle<T> handle)
     {
         return _factory.Invoke(handle);
     }

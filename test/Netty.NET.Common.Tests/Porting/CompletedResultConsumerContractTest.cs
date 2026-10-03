@@ -34,7 +34,7 @@ public class CompletedResultConsumerContractTest
         int calls = 0;
         Action<Task> consume = task =>
         {
-            onLoop = executor.inEventLoop();
+            onLoop = executor.InEventLoop();
             ++calls;
             Assert.Same(operation, task);
             try { selected = ((Task<IPEndPoint>)task).GetAwaiter().GetResult(); }
@@ -53,7 +53,7 @@ public class CompletedResultConsumerContractTest
             }
             else
             {
-                awaitStartBlocker();
+                AwaitStartBlocker();
                 registration = observation.Register(consume);
                 Assert.False(registration.NotificationCompleted.IsCompleted);
                 Assert.Equal(0, calls);
@@ -72,7 +72,7 @@ public class CompletedResultConsumerContractTest
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
         }
 
-        void awaitStartBlocker()
+        void AwaitStartBlocker()
         {
             executor.SubmitAsync(() => { entered.Set(); release.Wait(); });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -146,13 +146,13 @@ public class CompletedResultConsumerContractTest
             {
                 observedFirst = firstChannel;
                 observedFirstTask = task;
-                firstAffinity = firstLoop.inEventLoop() && !secondLoop.inEventLoop();
+                firstAffinity = firstLoop.InEventLoop() && !secondLoop.InEventLoop();
             });
             using var second = secondObservation.Register(task =>
             {
                 observedSecond = secondChannel;
                 observedSecondTask = task;
-                secondAffinity = secondLoop.inEventLoop() && !firstLoop.inEventLoop();
+                secondAffinity = secondLoop.InEventLoop() && !firstLoop.InEventLoop();
             });
             await Task.WhenAll(first.NotificationCompleted, second.NotificationCompleted).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Same(firstChannel, observedFirst);

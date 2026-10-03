@@ -38,7 +38,7 @@ public sealed unsafe class NativeMemoryAllocator
         internal static readonly NativeMemoryAllocator Instance = Create();
         private static NativeMemoryAllocator Create()
         {
-            long limit = SystemPropertyUtil.getLong("io.netty.maxDirectMemory", -1);
+            long limit = SystemPropertyUtil.GetLong("io.netty.maxDirectMemory", -1);
             return new NativeMemoryAllocator(limit > 0 ? limit : long.MaxValue);
         }
     }

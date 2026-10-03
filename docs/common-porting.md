@@ -125,10 +125,14 @@ The current default suite executes **1861 cases** on Windows/net10.0:
 **1847 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`reference-count-field-full-debug.trx` and `reference-count-field-full-release.trx`;
-checked Release passes all 75 related cases, including the unchanged original
-reference-count fixture. Native typed ref-int counters replace the unused JVM
-field-updater adapter and its five original counter/provider inventory decisions.
+`method-casing-final-full-debug.trx` and `method-casing-full-release.trx`;
+the naming pass also builds the queue-cost consumer and passes 85 targeted cases.
+All 1861 existing cases and outcomes are retained under explicit method-name
+mapping, with the same 14 skips. Every tracked C# method/local-function declaration
+starts uppercase, and all existing C# comment text remains unchanged.
+The prior reference-count checkpoint passes 75 related checked Release cases.
+Native typed ref-int counters replace the unused JVM field-updater adapter and
+its five original counter/provider inventory decisions.
 Nonpositive direct counts are released, final release remains unique, and full
 positive Int32 counts and failure diagnostics have explicit native policy.
 Managed field-offset stubs are removed; raw native addresses remain in progress.
@@ -714,6 +718,36 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### C# method casing checkpoint
+
+User-directed naming pass: capitalize the first character of all 2464
+lowercase C# method/local-function declarations (including two explicit interface
+implementations), with callers, method groups, nameof, interfaces and overrides.
+Roslyn semantic inspection includes both solution projects and the queue-cost
+consumer. Native parameter/field names and Java provenance comments stay intact.
+Reflective logger/platform probes, ReferenceCountUtil Touch exclusions and Track0
+stack-frame filtering follow the new names; declaration-only renaming is not enough.
+Type-qualified expressions resolve name hiding. Identical EmptyPriorityQueue
+toArray/ToArray methods coalesce into one implementation. No lowercase method
+compatibility aliases remain, and no new feature MD was added.
+
+Full Debug/Release each discover 1861 / pass 1847 / fail zero / retain 14 skips.
+All prior cases/outcomes map exactly by capitalizing the method-name segment;
+718 displayed case identities change names, with no cases added/removed.
+All 759 non-Porting cases remain under that mapping. Targeted reflection/leak/
+reference-count/platform Debug passes 85, and the queue-cost consumer builds.
+Final semantic declaration scan finds zero lowercase methods/local functions.
+All comments in 333 changed C# files compare exactly with the prior commit;
+all 271 pinned comment-audit totals/missing counts and source/test decisions remain
+unchanged. Existing compiler/analyzer warnings remain. Windows/net10.0 only.
+
+Evidence: method-casing-final-full-debug.trx, method-casing-full-release.trx,
+method-casing-final-targeted-debug.trx, method-casing-comment-audit.json and
+method-casing-identity-and-source-audit.json. Semantic rename/declaration reports
+and build logs remain in ignored artifacts/method-casing-validation. Earlier
+checkpoint names are historical; Java comments/examples retain original spelling.
+Common remains in progress; next porting unit stays raw native-address operations.
 
 ### Native reference-count fields checkpoint
 

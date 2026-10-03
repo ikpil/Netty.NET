@@ -33,7 +33,7 @@ public static class ConstantTimeUtils
      * @param y the second value.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(int x, int y)
+    public static int EqualsConstantTime(int x, int y)
     {
         int z = ~(x ^ y);
         z &= z >> 16;
@@ -59,7 +59,7 @@ public static class ConstantTimeUtils
      * @param y the second value.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(long x, long y)
+    public static int EqualsConstantTime(long x, long y)
     {
         long z = ~(x ^ y);
         z &= z >> 32;
@@ -92,7 +92,7 @@ public static class ConstantTimeUtils
      * by the caller.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(byte[] bytes1, int startPos1,
+    public static int EqualsConstantTime(byte[] bytes1, int startPos1,
         byte[] bytes2, int startPos2, int length)
     {
         // Benchmarking demonstrates that using an int to accumulate is faster than other data types.
@@ -103,7 +103,7 @@ public static class ConstantTimeUtils
             b |= bytes1[startPos1] ^ bytes2[startPos2];
         }
 
-        return equalsConstantTime(b, 0);
+        return EqualsConstantTime(b, 0);
     }
 
     /**
@@ -121,7 +121,7 @@ public static class ConstantTimeUtils
      * @param s2 the second value.
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
-    public static int equalsConstantTime(ICharSequence s1, ICharSequence s2)
+    public static int EqualsConstantTime(ICharSequence s1, ICharSequence s2)
     {
         if (s1.Count != s2.Count)
         {
@@ -135,6 +135,6 @@ public static class ConstantTimeUtils
             c |= s1[i] ^ s2[i];
         }
 
-        return equalsConstantTime(c, 0);
+        return EqualsConstantTime(c, 0);
     }
 }
