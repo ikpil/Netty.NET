@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -1543,39 +1544,39 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
     // start is inclusive and end is exclusive, relative to this logical view.
     public short ParseInt16(int start, int end, int radix = 10) =>
-        ParseInteger<short>(IntegerSlice(start, end), radix);
+        ParseInteger<short>(NumericSlice(start, end), radix);
 
     public bool TryParseInt16(out short result, int radix = 10) =>
         TryParseInteger(AsSpan(), radix, out result);
 
     public bool TryParseInt16(int start, int end, out short result, int radix = 10) =>
-        TryParseInteger(IntegerSlice(start, end), radix, out result);
+        TryParseInteger(NumericSlice(start, end), radix, out result);
 
     public int ParseInt32(int radix = 10) => ParseInteger<int>(AsSpan(), radix);
 
     // start is inclusive and end is exclusive, relative to this logical view.
     public int ParseInt32(int start, int end, int radix = 10) =>
-        ParseInteger<int>(IntegerSlice(start, end), radix);
+        ParseInteger<int>(NumericSlice(start, end), radix);
 
     public bool TryParseInt32(out int result, int radix = 10) =>
         TryParseInteger(AsSpan(), radix, out result);
 
     public bool TryParseInt32(int start, int end, out int result, int radix = 10) =>
-        TryParseInteger(IntegerSlice(start, end), radix, out result);
+        TryParseInteger(NumericSlice(start, end), radix, out result);
 
     public long ParseInt64(int radix = 10) => ParseInteger<long>(AsSpan(), radix);
 
     // start is inclusive and end is exclusive, relative to this logical view.
     public long ParseInt64(int start, int end, int radix = 10) =>
-        ParseInteger<long>(IntegerSlice(start, end), radix);
+        ParseInteger<long>(NumericSlice(start, end), radix);
 
     public bool TryParseInt64(out long result, int radix = 10) =>
         TryParseInteger(AsSpan(), radix, out result);
 
     public bool TryParseInt64(int start, int end, out long result, int radix = 10) =>
-        TryParseInteger(IntegerSlice(start, end), radix, out result);
+        TryParseInteger(NumericSlice(start, end), radix, out result);
 
-    private ReadOnlySpan<byte> IntegerSlice(int start, int end)
+    private ReadOnlySpan<byte> NumericSlice(int start, int end)
     {
         if (start < 0 || start > _length)
         {
@@ -1677,25 +1678,227 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return IntegerParseResult.Success;
     }
 
-    public float parseFloat()
+    // CLR adaptation: retain Java's floating-point input grammar, using invariant
+    // BCL byte-span conversion for decimals and exact binary rounding for hex.
+    // Parse throws FormatException for numeric failure; TryParse returns false
+    // and zero. Overflow/underflow produce signed infinity/zero, as in Java.
+    public float ParseSingle() => ParseFloatingPoint<float>(AsSpan());
+
+    // Logical [start,end) bounds are checked even for empty input.
+    public float ParseSingle(int start, int end) => ParseFloatingPoint<float>(NumericSlice(start, end));
+
+    public bool TryParseSingle(out float result) => TryParseFloatingPoint(AsSpan(), out result);
+
+    public bool TryParseSingle(int start, int end, out float result) =>
+        TryParseFloatingPoint(NumericSlice(start, end), out result);
+
+    public double ParseDouble() => ParseFloatingPoint<double>(AsSpan());
+
+    public double ParseDouble(int start, int end) => ParseFloatingPoint<double>(NumericSlice(start, end));
+
+    public bool TryParseDouble(out double result) => TryParseFloatingPoint(AsSpan(), out result);
+
+    public bool TryParseDouble(int start, int end, out double result) =>
+        TryParseFloatingPoint(NumericSlice(start, end), out result);
+
+    private static T ParseFloatingPoint<T>(ReadOnlySpan<byte> bytes) where T : IFloatingPointIeee754<T>
     {
-        return parseFloat(0, length());
+        if (TryParseFloatingPoint(bytes, out T result)) return result;
+        throw new FormatException("Input is not a valid floating-point number.");
     }
 
-    public float parseFloat(int start, int end)
+    private static bool TryParseFloatingPoint<T>(ReadOnlySpan<byte> bytes, out T result)
+        where T : IFloatingPointIeee754<T>
     {
-        return float.Parse(ToString(start, end));
+        result = T.Zero;
+        // String.trim() removes every code unit <= U+0020, including NUL.
+        int start = 0;
+        int end = bytes.Length;
+        while (start < end && bytes[start] <= 0x20) start++;
+        while (end > start && bytes[end - 1] <= 0x20) end--;
+        bytes = bytes.Slice(start, end - start);
+        if (bytes.IsEmpty) return false;
+
+        bool negative = bytes[0] == '-';
+        int signLength = negative || bytes[0] == '+' ? 1 : 0;
+        ReadOnlySpan<byte> unsigned = bytes[signLength..];
+        if (unsigned.IsEmpty) return false;
+        if (unsigned.SequenceEqual("NaN"u8))
+        {
+            // Use the native canonical NaN; NaN payload/sign is not a text contract.
+            result = T.NaN;
+            return true;
+        }
+        if (unsigned.SequenceEqual("Infinity"u8))
+        {
+            result = negative ? T.NegativeInfinity : T.PositiveInfinity;
+            return true;
+        }
+
+        if (unsigned[^1] is (byte)'f' or (byte)'F' or (byte)'d' or (byte)'D')
+        {
+            bytes = bytes[..^1];
+            unsigned = bytes[signLength..];
+            if (unsigned.IsEmpty) return false;
+        }
+
+        if (unsigned.Length >= 2 && unsigned[0] == '0' && unsigned[1] is (byte)'x' or (byte)'X')
+        {
+            return TryParseHexFloatingPoint(unsigned, negative, out result);
+        }
+
+        if (!IsDecimalFloatingPoint(unsigned)) return false;
+        const NumberStyles styles = NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint |
+                                    NumberStyles.AllowExponent;
+        if (T.TryParse(bytes, styles, CultureInfo.InvariantCulture, out T parsed))
+        {
+            result = parsed;
+            return true;
+        }
+        return false;
     }
 
-    public double parseDouble()
+    private static bool IsDecimalFloatingPoint(ReadOnlySpan<byte> bytes)
     {
-        return parseDouble(0, length());
+        int i = 0;
+        int digits = 0;
+        while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9') { i++; digits++; }
+        if (i < bytes.Length && bytes[i] == '.')
+        {
+            i++;
+            while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9') { i++; digits++; }
+        }
+        if (digits == 0) return false;
+        if (i < bytes.Length && bytes[i] is (byte)'e' or (byte)'E')
+        {
+            i++;
+            if (i < bytes.Length && bytes[i] is (byte)'+' or (byte)'-') i++;
+            int exponentStart = i;
+            while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9') i++;
+            if (i == exponentStart) return false;
+        }
+        return i == bytes.Length;
     }
 
-    public double parseDouble(int start, int end)
+    private static bool TryParseHexFloatingPoint<T>(ReadOnlySpan<byte> bytes, bool negative, out T result)
+        where T : IFloatingPointIeee754<T>
     {
-        return double.Parse(ToString(start, end));
+        result = T.Zero;
+        bool single = typeof(T) == typeof(float);
+        int precision = single ? 24 : 53;
+        int bias = single ? 127 : 1023;
+        int minNormal = 1 - bias;
+        int minSubnormal = minNormal - (precision - 1);
+        ulong sign = negative ? 1UL << (single ? 31 : 63) : 0;
+        ulong leading = 0;
+        int captured = 0;
+        long significantBits = 0;
+        int digits = 0;
+        int fractionalDigits = 0;
+        bool point = false;
+        bool sticky = false;
+        int i = 2;
+        for (; i < bytes.Length && bytes[i] is not ((byte)'p' or (byte)'P'); i++)
+        {
+            byte b = bytes[i];
+            if (b == '.')
+            {
+                if (point) return false;
+                point = true;
+                continue;
+            }
+            int digit = b switch
+            {
+                >= (byte)'0' and <= (byte)'9' => b - '0',
+                >= (byte)'a' and <= (byte)'f' => b - 'a' + 10,
+                >= (byte)'A' and <= (byte)'F' => b - 'A' + 10,
+                _ => -1
+            };
+            if (digit < 0) return false;
+            digits++;
+            if (point) fractionalDigits++;
+            if (significantBits == 0 && digit == 0) continue;
+            int width = significantBits == 0 ? BitOperations.Log2((uint)digit) + 1 : 4;
+            significantBits += width;
+            // Only precision+1 leading bits and a sticky tail are needed. Storage
+            // stays bounded even for arbitrarily long mantissas.
+            int take = Math.Min(width, precision + 1 - captured);
+            leading = (leading << take) | (ulong)(digit >> (width - take));
+            if ((digit & ((1 << (width - take)) - 1)) != 0) sticky = true;
+            captured += take;
+        }
+        if (digits == 0 || i == bytes.Length) return false;
+        i++; // A hexadecimal literal requires a binary exponent.
+        bool exponentNegative = i < bytes.Length && bytes[i] == '-';
+        if (i < bytes.Length && bytes[i] is (byte)'+' or (byte)'-') i++;
+        if (i == bytes.Length) return false;
+        long exponent = 0;
+        const long exponentLimit = 1L << 60;
+        for (; i < bytes.Length; i++)
+        {
+            int digit = bytes[i] - '0';
+            if (digit < 0 || digit > 9) return false;
+            // Saturation is far beyond any offset possible in an Int32-sized span;
+            // it avoids exponent overflow without imposing an input length limit.
+            exponent = exponent <= (exponentLimit - digit) / 10 ? exponent * 10 + digit : exponentLimit;
+        }
+        if (exponentNegative) exponent = -exponent;
+        long binaryExponent = significantBits - 1 + exponent - 4L * fractionalDigits;
+        if (significantBits == 0 || binaryExponent < minSubnormal - 1)
+        {
+            result = FloatingPointFromBits<T>(sign);
+            return true;
+        }
+        if (binaryExponent > bias)
+        {
+            result = negative ? T.NegativeInfinity : T.PositiveInfinity;
+            return true;
+        }
+
+        int keep = binaryExponent < minNormal ? (int)(binaryExponent - minSubnormal + 1) : precision;
+        ulong rounded;
+        if (significantBits <= keep)
+        {
+            rounded = leading << (keep - captured);
+        }
+        else
+        {
+            int shift = captured - keep;
+            rounded = leading >> shift;
+            bool guard = ((leading >> (shift - 1)) & 1) != 0;
+            bool tail = sticky || (leading & ((1UL << (shift - 1)) - 1)) != 0;
+            // Round once to nearest, ties to even, including subnormal/zero ties.
+            if (guard && (tail || (rounded & 1) != 0)) rounded++;
+        }
+        ulong bits;
+        if (binaryExponent < minNormal)
+        {
+            // Carry into bit precision-1 is exactly the smallest normal value.
+            bits = rounded;
+        }
+        else
+        {
+            if (rounded == 1UL << precision)
+            {
+                rounded >>= 1;
+                binaryExponent++;
+            }
+            if (binaryExponent > bias)
+            {
+                result = negative ? T.NegativeInfinity : T.PositiveInfinity;
+                return true;
+            }
+            bits = ((ulong)(binaryExponent + bias) << (precision - 1)) |
+                   (rounded & ((1UL << (precision - 1)) - 1));
+        }
+        result = FloatingPointFromBits<T>(sign | bits);
+        return true;
     }
+
+    private static T FloatingPointFromBits<T>(ulong bits) where T : IFloatingPointIeee754<T> =>
+        typeof(T) == typeof(float)
+            ? T.CreateChecked(BitConverter.Int32BitsToSingle(unchecked((int)(uint)bits)))
+            : T.CreateChecked(BitConverter.Int64BitsToDouble(unchecked((long)bits)));
 
 
     /**

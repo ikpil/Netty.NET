@@ -121,15 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1563 cases** on Windows/net10.0:
-**1549 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1659 cases** on Windows/net10.0:
+**1645 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`ascii-integer-full-debug.trx` and `ascii-integer-full-release.trx`;
-the affected boundary is covered by `ascii-integer-affected-debug.trx` and
-`ascii-integer-checked-release.trx`. Native byte-string integer parsing now bounds
-logical ranges and checks overflow before arithmetic. The earlier auto-scaling
-repair and its finite timing evidence remain recorded below.
+`ascii-floating-full-debug.trx` and `ascii-floating-full-release.trx`;
+the affected boundary is covered by `ascii-floating-affected-debug.trx` and
+`ascii-floating-checked-release.trx`. Native Single/Double parsing retains Java
+grammar and exact non-NaN IEEE bits while using invariant BCL decimal spans.
+The earlier integer and auto-scaling repairs remain recorded below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
@@ -584,6 +584,59 @@ Next: review AsciiString floating-point parsing against Java lexical/culture
 contracts and actual value-converter consumers. AsciiString and common remain
 in progress; numeric correctness does not complete sequence/regex or transport
 integration review.
+
+### Native AsciiString floating-point parsing checkpoint
+
+Pinned AsciiString.java:1338-1351, common character/memory fixtures,
+CharSequenceValueConverter.java:136-148 and DefaultHeaders float/double scenarios
+reviewed. ParseSingle/ParseDouble and matching TryParse APIs replace Java names;
+no current C# consumers require adapters. Decimal conversion uses invariant BCL
+byte spans after lexical validation. Hex conversion uses bounded leading/guard/
+sticky bits with one target-format rounding. Logical ranges share NumericSlice
+with integer APIs. Input grammar, CLR exceptions, saturation and intentional
+native NaN canonical-bit differences are recorded in common-clr-design.md.
+All 99 AsciiString comments remain; the replaced four methods have no comments.
+
+Before repair, nine of ten initial culture/grammar/range cases fail; the lowercase
+infinity rejection already passes on this machine. The final 96 cases cover
+decimal/hex/suffix/control grammar, culture independence, slices, malformed
+input, normal/subnormal/overflow and zero ties, direct Single rounding rather
+than an intermediate Double, signs, long mantissas/exponents, native NaN and
+zero-on-failure TryParse. Affected Debug selection passes 302; checked Release
+passes all 96 new and 72 existing integer cases (168), with no failures/skips.
+
+An isolated harness executes the exact four pinned Java methods, stubbing only
+storage/byte-widening dependencies, on Corretto 21.0.11. All 46435 input rows match
+Single/Double grammar outcomes and exact non-NaN bits; whole/view slices and
+Parse/TryParse agree. This includes randomized decimal/hex literals, a sweep of
+binary exponent/rounding boundaries, Latin-1 mutations, IEEE round-trip inputs
+and long mantissas/exponents. 204 NaN result bit differences are deliberate native
+canonical representations, not numerical mismatches. No arbitrary-input proof
+or other runtime/OS compatibility claim is made.
+
+Full Debug/Release each pass 1645 / fail zero / skip the same 14 (1659 discovered).
+All prior 1563 identities/outcomes and all 759 non-Porting cases are retained;
+only the 96 floating-point cases are added. Comment missing counts match the
+previous audit for all 271 entries; existing pending/unreviewed gaps remain open.
+All pinned inventory paths match. Evidence: ascii-floating-before.trx,
+ascii-floating-affected-debug.trx, ascii-floating-checked-release.trx,
+ascii-floating-full-debug.trx, ascii-floating-full-release.trx,
+ascii-floating-identity-comparison.json, ascii-floating-comment-audit.json,
+ascii-floating-inventory-summary.json, ascii-floating-java-clr-oracle.txt.
+
+Warmed allocation regression: zero bytes over 8000 decimal/hex Parse/TryParse
+calls. An isolated Release smoke comparison uses four decimal inputs, three
+rounds of 200000 parses and disabled tiered compilation. The old string-copy
+path allocates 7200000 bytes per batch; the new decimal/hex paths allocate zero.
+Checksums and actual timings remain in ascii-floating-benchmark.txt; this bounded
+measurement is not a general throughput guarantee. Validation uses
+--artifacts-path artifacts/ascii-floating-validation/build, Windows/net10.0,
+SDK 10.0.203/runtime 10.0.7. Harness sources remain in ignored artifacts;
+no new feature MD. Source decisions remain 49 verified / 36 CLR replacements /
+13 exclusions / 86 pending / 21 in progress; tests remain 56 verified / ten exclusions.
+Next: review AsciiString regex matching/splitting against pinned full-match,
+trailing-empty and actual consumer requirements, then the native sequence API.
+AsciiString and common remain in progress.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already

@@ -31,7 +31,7 @@ These decisions do not claim that every method of a listed component is complete
 | Indexed priority queue | `DefaultPriorityQueue.java`, scheduled-task removal; `codec-http2/.../WeightedFairQueueByteDistributor.java` priority updates | Retain the indexed reference-node heap for mutable priorities and independent queue membership. Ordinary value/immutable entries use BCL PriorityQueue. Stopped scheduler queues clear references and indices. | Core source/interfaces reviewed; bounded indexed/BCL/tree costs below. Remaining scheduler/runtime review stays open. |
 | Thread-local state | `FastThreadLocal.java`, `InternalThreadLocalMap.java`; allocator caches and event-loop workers | Physical-worker caches remain thread-local. AsyncLocal describes logical execution context and is a separate purpose. A sealed CLR Thread may be owned/wrapped where cleanup policy requires it. | Remove unnecessary ThreadGroup/JDK facade surface after caller review; keep cleanup/ownership behavior. |
 | Resource lifetime | `AbstractReferenceCounted.java`, `ReferenceCountUtil.java`, `Recycler.java`; `buffer/.../AbstractReferenceCountedByteBuf.java` | GC does not decide when shared pooled/native storage is reusable. Retain/release must deallocate exactly once and never resurrect returned storage. Dispose alone does not define shared ownership. | Native owners, borrowed views and pin leases are implemented; integrate them with future pooled retain/release consumers. Ordinary CLR object cleanup and shared storage ownership must remain distinct. |
-| Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. CharsetUtil is replaced by native Encoding/fallback policies and operation-owned codecs; explicit Java/CLR framing and replacement differences are recorded below. Integer parsing uses bounded byte spans, native Parse/TryParse APIs and checked-safe generic math; see the integer parsing decision below. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Full native sequence API, floating-point lexical/culture parsing, regex and future protocol framing/streaming integration remain. Raw platform addresses and pooled-buffer integration remain separate reviews. |
+| Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. CharsetUtil is replaced by native Encoding/fallback policies and operation-owned codecs; explicit Java/CLR framing and replacement differences are recorded below. Integer parsing uses bounded byte spans, native Parse/TryParse APIs and checked-safe generic math. Floating-point parsing uses invariant BCL span conversion plus Java grammar and hexadecimal rounding; see the numeric decisions below. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Full native sequence API, regex and future protocol framing/streaming integration remain. Raw platform addresses and pooled-buffer integration remain separate reviews. |
 | Runtime selection | `PlatformDependent.java`, `PlatformDependent0.java`; buffer/transport/TLS/resolver consumers | JDK-version facades and JVM reflective array allocation are removed. CLR consumers use Environment.Version and GC directly. Android detection uses the actual OS; JVM/Graal properties do not select CLR features. See common-platform-runtime.md. | NativeMemory owners/views replace the JVM cleaner hierarchy; managed words and copy/fill use CLR spans. Raw address/object-offset APIs remain in progress. See common-native-memory.md and common-heap-memory.md. |
 | Ordinary object GC fallback | Deprecated `ObjectCleaner.java`; no production registration consumer in the pinned tree | ConditionalWeakTable lifetime notification and CLR pool dispatch replace the Java live-set/weak-queue/worker loop. Action registration, diagnostic count and concurrent/context-isolated cleanup are verified. See common-object-cleanup.md. | This runtime replacement does not define pooled/native storage ownership or deterministic resource disposal. |
 
@@ -793,8 +793,47 @@ for a reversed range; executing the extracted methods reproduces both. Rejecting
 those accidental outcomes preserves byte-view boundaries. All 99 original
 AsciiString comments remain; the replaced integer block contains no comments.
 Validation and bounded allocation/throughput evidence: common-porting.md.
-Floating-point grammar, regex/sequence APIs and future protocol consumers remain
-open; this decision does not establish complete AsciiString equivalence.
+The following decision covers floating-point grammar. Regex/sequence APIs and
+future protocol consumers remain open; neither numeric decision establishes
+complete AsciiString equivalence.
+
+## Native byte-string floating-point parsing
+
+Pinned AsciiString.java:1338-1351 delegates to Float/Double.parseFloat/parseDouble;
+codec-base's CharSequenceValueConverter.java:136-148 is the actual consumer.
+DefaultHeadersTest.java:241-247/300-304 checks float/double header values, while
+the original common character/memory fixtures have no floating-point cases.
+The [Java 21 parsing contract](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Double.html#valueOf(java.lang.String))
+accepts signed decimal/hex literals, f/F/d/D suffixes, exact-case NaN/Infinity and
+outer control/space bytes <=0x20. It rejects grouping separators, underscores,
+internal whitespace, missing hex binary exponents and non-ASCII bytes.
+Signed zero, overflow to infinity, underflow and nearest-even rounding are retained.
+
+Native ParseSingle/ParseDouble and TryParse methods replace Java numeric names;
+whole input and logical [start,end) slices share bounded byte-span parsing.
+The private NumericSlice guard is shared with the already-reviewed integer APIs.
+Decimals use [BCL UTF-8 span TryParse](https://learn.microsoft.com/en-us/dotnet/api/system.single.tryparse?view=net-10.0)
+with explicit invariant culture and leading-sign/decimal-point/exponent styles;
+a lexical scan prevents broader CLR-only acceptance. No text copy is needed.
+Both suffix types are grammar markers, not intermediate conversion instructions:
+Single rounds directly to Single, and Double directly to Double.
+
+BCL decimal parsing cannot consume hexadecimal literals. A bounded private
+converter retains precision+1 leading bits and a sticky tail, then rounds once
+to the target IEEE format. It handles normal/subnormal boundaries, zero/overflow
+ties and carries without double-to-float rounding. Exponent saturation at +/-2^60
+is beyond any mantissa offset in an Int32-length span; all exponent characters
+are still validated. Long mantissas/exponents need no growing arithmetic storage.
+
+Invalid ranges throw ArgumentOutOfRangeException, including out-of-view empty
+ranges that pinned toString bypasses. Malformed input throws FormatException or
+TryParse returns false and positive zero. Range overflow is a successful infinity
+result. NaN intentionally uses the native canonical NaN, whose raw sign bit differs
+from Java's positive canonical NaN on this runtime; no Java NaN payload is invented.
+The actual converter consumers observe numeric values, not NaN raw bits.
+All 99 original AsciiString comments remain; the replaced four methods have none.
+Independent Java raw-bit comparisons, controlled rounding tests, checked-build
+validation and measured allocation/throughput evidence are in common-porting.md.
 
 ## Native encoding and codec ownership
 
