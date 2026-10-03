@@ -123,17 +123,16 @@ Optimization follows behavioral verification and measured performance.
 
 The current default suite executes **1906 cases** on Windows/net10.0:
 **1892 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: clr-platform-access-full-debug.trx and clr-platform-access-full-release.trx.
-All 1895 prior case identities/outcomes remain, including 759 original non-Porting
-cases and every skip. Eleven new initialization/exception cases pass; the corrected
-before-repair run fails ten and passes one against the last committed library.
-Targeted Debug passes 35 cases; affected checked Release passes 277, with five
-unchanged skips among 282 discovered cases. Exact pinned Java initialization
-confirms the portable purpose; CLR type identity/generic state and failure types
-are deliberate runtime adaptations. Both platform classes/common remain unfinished.
-All tracked C# methods/local functions start uppercase; original comments and the
-pinned 271-file inventory remain checked. Library/full test builds have zero errors;
-existing warnings remain. Results are in the ignored TestResults directory.
+Evidence: version-metadata-full-debug.trx and version-metadata-full-release.trx.
+All 1906 prior identities/outcomes remain, including 759 original non-Porting cases
+and every skip; no new fixture tests standard BCL internals. Version diagnostics
+now use the SDK's actual assembly name/informational version/Git metadata, with
+explicit Assembly/AssemblyLoadContext scope. The unused Java-shaped Version DTO,
+property-file parser and launcher retire. Build/consumer checks verify both actual
+DLLs; optional provenance is absent rather than invented. Original Java comments
+and the pinned 271-file inventory remain checked. Library/full test builds have
+zero errors; existing warnings remain. Both platform classes/common remain open.
+Results remain in ignored TestResults and artifacts/version-metadata-validation.
 Full suites compile every portable test source without PortingBatch and do not
 establish module completion. Decisions and original comment provenance are in
 [common-clr-design.md](common-clr-design.md).
@@ -714,6 +713,32 @@ Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
 
+### Native version metadata checkpoint
+
+Replace the unused Java Version class with standard assembly metadata already
+emitted by the SDK. Pinned source/consumer evidence and native mappings, including
+explicit differences for Maven IDs, resource merging and optional provenance, are
+in common-clr-design.md. All ten source comments are preserved there; the original
+has no common test source. The two reproduced pre-retirement defects are reading
+a working-directory spoof and ignoring the selected assembly. A numeric-offset
+date hypothesis was not reproduced and is not counted as a defect.
+
+The unchanged pinned Java source runs with a context-loader dependency shim on
+Corretto 21.0.11. A native consumer reads actual net10.0 Debug/Release DLLs and
+checks identity, informational version, expected full SourceRevisionId, explicit/
+contextual scope, missing optional provenance, no working-directory lookup and no
+retired facade. No new runtime/parser or permanent BCL fixture is added. Whole
+default Debug/Release each discover 1906/pass 1892/fail zero/retain 14 skips, with
+all 1906 previous identities/outcomes and 759 non-Porting cases unchanged. The
+pinned 271-file inventory/path/comment audit remains valid; Version moves from
+pending to clr-replacement. Common/platform completion remains open. Next review:
+VarHandleFactory's endian byte views and ordered-publication requirements.
+
+Evidence: version-metadata-full-debug.trx, version-metadata-full-release.trx,
+version-metadata-comment-audit.json and version-metadata-identity-and-inventory.json;
+unchanged Java oracle, before-corrected.log, Debug/Release CLR consumer logs and
+SDK target evidence in ignored artifacts/version-metadata-validation.
+
 ### CLR initialization/reflection/exception checkpoint
 
 Pinned ClassInitializerUtil initializes classes before native bootstrap; exact CLR
@@ -733,7 +758,8 @@ passes 277/skips five unchanged cases. Original ClassInitializerUtil's five and
 ReflectionUtil's seven comments are preserved, including exact replacement
 provenance; remaining audit counts do not regress. Source review becomes verified
 for those two entries; platform/source-module completion remains open. No new
-exclusion or skip. Version resource discovery is a subsequent review candidate.
+exclusion or skip. Version resources were the next review candidate at this
+checkpoint; the subsequent standard metadata replacement is recorded above.
 
 The unchanged pinned initializer runs with a minimal same-loader dependency shim
 on Corretto 21.0.11. It verifies synchronous/once-only/64-concurrent initialization,

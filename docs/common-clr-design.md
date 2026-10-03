@@ -14,6 +14,176 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## Native assembly version diagnostics
+
+Pinned Version.java:49-153 discovers META-INF/io.netty.versions.properties through
+an explicit/current Java class loader, merges later resource properties, skips
+incomplete six-field artifacts, sorts Maven IDs and prints version/hash/status.
+The all-module pinned search finds no import, construction or identify call
+outside Version itself; its main method is the standalone diagnostic entry point.
+There is no common Version test source. The purpose is useful diagnostics, not a
+requirement to retain a Java property-file parser or a Netty-specific DTO.
+
+Retire Netty.NET.Common.Version. CLR already exposes Assembly.GetName and
+AssemblyInformationalVersionAttribute; the net10.0 SDK emits both, with the Git
+SourceRevisionId included in the informational version for this repository.
+Reading the caller-selected Assembly preserves its actual identity. Select an
+explicit AssemblyLoadContext, or explicitly honor CurrentContextualReflectionContext,
+when listing loaded modules. Enumerate that context's Assemblies and sort with
+StringComparer.Ordinal if a stable diagnostic order is wanted. Retain context
+identity in the report rather than silently overwriting assemblies with the same
+short name. Discovery covers loaded CLR assemblies, not every unloaded resource
+on a Java class path; it does not load plugins or enumerate all contexts implicitly.
+
+For an explicitly selected assembly, a native diagnostic consumer can use:
+
+```csharp
+Assembly assembly = typeof(PlatformDependent).Assembly;
+string name = assembly.GetName().Name;
+string version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+    ?? assembly.GetName().Version?.ToString()
+    ?? "unknown";
+Console.Error.WriteLine($"{name}: {version}");
+```
+
+This is a consumer example using System.Reflection, not a replacement facade.
+InformationalVersion is descriptive text and may contain semantic-version build
+metadata; do not parse it as System.Version or promise arbitrary '+' suffixes are
+commit hashes. The executed build's full informational version is compared to
+the known SourceRevisionId. PackageId/Maven artifact ID, assembly short name,
+assembly identity version and informational product version are distinct values.
+The CLR report uses the actual assembly name and informational version.
+
+BuildDate, CommitDate and RepositoryStatus are not supplied by ordinary SDK builds.
+A packaging pipeline needing them can explicitly provide AssemblyMetadata items
+with those keys and read AssemblyMetadataAttribute from that assembly. Absent
+metadata remains absent/unknown: do not infer a build time from file modification
+times, substitute the current clock, or claim the repository was clean. The
+original six-required-properties filter, zero timestamp sentinel, Java date parser,
+seven-character hash and combined toString formatting are deliberately retired;
+basic CLR version diagnostics remain available even without optional provenance.
+Metadata/reflection failures should be handled at the diagnostic caller's boundary;
+there is no generic catch that invents a successful report.
+
+Before retirement, a consumer of the committed DLL reproduces two real defects:
+a working-directory property file creates an invented artifact, and Identify on
+both common and corelib returns that same artifact while ignoring the Assembly.
+An initial hypothesis that the Java numeric timezone offsets would fail parsing
+was rejected by execution: both dates match the pinned Java epoch milliseconds.
+It is not counted as a defect. The unchanged pinned Version, with only the context
+loader dependency shim, confirms resource scope/overwrite, ordering, required
+fields, numeric dates/invalid=0 and clean/dirty text on Corretto 21.0.11.
+
+An isolated native consumer reads the actual new Debug/Release common DLLs in a
+collectible context, checks the emitted name/version/full Git revision, explicit
+and contextual scope, absence of invented optional provenance, independence from
+the spoofed working-directory file and absence of the retired facade. These are
+build/consumer checks, not new permanent tests of BCL internals. Whole default
+Debug/Release compile all existing consumers/fixtures; none is removed or skipped.
+Trimming/AOT, custom packaging metadata and unloaded-plugin discovery are outside
+this verification. No throughput or complete common-port claim is made.
+
+Framework contracts: [SDK assembly attributes and SourceRevisionId](https://learn.microsoft.com/dotnet/standard/assembly/set-attributes-project-file),
+[AssemblyLoadContext.Assemblies](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.loader.assemblyloadcontext.assemblies?view=net-10.0),
+and [AssemblyMetadataAttribute](https://learn.microsoft.com/en-us/dotnet/api/system.reflection.assemblymetadataattribute?view=net-10.0).
+The installed 10.0.203 Microsoft.NET.GenerateAssemblyInfo.targets and the executed
+net10.0 consumer independently establish the SDK metadata behavior. All ten
+original comments, including the removed source license, follow verbatim.
+
+Source: common/src/main/java/io/netty/util/Version.java at the pinned commit.
+
+Line 1:
+
+```java
+/*
+ * Copyright 2013 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+```
+
+Line 32:
+
+```java
+/**
+ * Retrieves the version information of available Netty artifacts.
+ * <p>
+ * This class retrieves the version information from {@code META-INF/io.netty.versions.properties}, which is
+ * generated in build time.  Note that it may not be possible to retrieve the information completely, depending on
+ * your environment, such as the specified {@link ClassLoader}, the current {@link SecurityManager}.
+ * </p>
+ */
+```
+
+Line 49:
+
+```java
+/**
+     * Retrieves the version information of Netty artifacts using the current
+     * {@linkplain Thread#getContextClassLoader() context class loader}.
+     *
+     * @return A {@link Map} whose keys are Maven artifact IDs and whose values are {@link Version}s
+     */
+```
+
+Line 59:
+
+```java
+/**
+     * Retrieves the version information of Netty artifacts using the specified {@link ClassLoader}.
+     *
+     * @return A {@link Map} whose keys are Maven artifact IDs and whose values are {@link Version}s
+     */
+```
+
+Line 69:
+
+```java
+// Collect all properties.
+```
+
+Line 82:
+
+```java
+// Ignore.
+```
+
+Line 87:
+
+```java
+// Not critical. Just ignore.
+```
+
+Line 90:
+
+```java
+// Collect all artifactIds.
+```
+
+Line 102:
+
+```java
+// Skip the entries without required information.
+```
+
+Line 140:
+
+```java
+/**
+     * Prints the version information to {@link System#err}.
+     */
+```
+
 ## CLR initialization, reflection and exception origins
 
 Pinned ClassInitializerUtil.java calls Class.forName(name, true, loader): it
@@ -55,8 +225,9 @@ ClassResolvers uses contextual/owner loading for serialization. Future CLR modul
 work must choose explicit Assembly resource ownership and AssemblyLoadContext or
 contextual-reflection policy for each purpose. The native custom leak factory and
 NativeLibraryUtil already use real CLR reflection/loading; their existing tests
-remain. Version's current working-directory property file and ignored Assembly
-argument still need migration; retiring misleading loader names does not fix that.
+remain. The Version working-directory file/ignored Assembly defect was still
+open at this checkpoint; it is subsequently resolved by the standard assembly
+metadata replacement above, without a Java resource-loader facade.
 
 Retire the no-op ReflectionUtil.TrySetAccessible, its unreachable JDK access-error
 translator and the platform reflective-access flag. JVM AccessibleObject has a
