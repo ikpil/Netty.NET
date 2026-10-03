@@ -26,6 +26,8 @@ public class ExecutorLifecycleContractTest
         internal bool completeOnShutdown;
         internal TimeSpan quietPeriod;
         internal TimeSpan timeout;
+        internal int stopRequests;
+        internal Exception stopFailure;
         internal readonly List<TimeSpan> waits = new();
         private bool running;
         internal Child(IEventExecutorGroup parent = null) : base(parent) { }
@@ -54,6 +56,13 @@ public class ExecutorLifecycleContractTest
             return termination.Task;
         }
         public override void shutdown() { shuttingDown = stopped = true; }
+        public override Task StopAsync()
+        {
+            ++stopRequests;
+            shutdown();
+            if (stopFailure != null) throw stopFailure;
+            return Termination;
+        }
         public override bool isShuttingDown() => shuttingDown;
         public override bool isShutdown() => stopped;
         public override bool isTerminated() => termination.Task.IsCompleted;
@@ -372,6 +381,7 @@ public class ExecutorLifecycleContractTest
             Assert.Same(future, executor.ShutdownGracefullyAsync());
             Assert.Same(future, executor.ShutdownGracefullyAsync(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(-2)));
             Assert.Same(future, executor.Termination);
+            Assert.Same(future, executor.StopAsync());
             Assert.False(executor.isShuttingDown());
             Assert.False(executor.isShutdown());
             Assert.False(executor.isTerminated());
@@ -397,6 +407,119 @@ public class ExecutorLifecycleContractTest
         Assert.True(termination.IsCompletedSuccessfully);
         Assert.True(group.isTerminated());
         Assert.Same(termination, group.Termination);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task NativeOrderedStopClosesAdmissionAndDrainsAcceptedInvocations(bool gracefulFirst)
+    {
+        IEventExecutorGroup executor = new DefaultEventExecutor();
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        Task<int> running = executor.SubmitAsync(() => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); return 7; });
+        try
+        {
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+            Task<int> queued = executor.SubmitAsync(() => 8);
+            Task delayed = executor.ScheduleAsync(() => Assert.Fail("Stopped schedule ran"), TimeSpan.FromDays(1));
+            if (gracefulFirst)
+            {
+                executor.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
+                Assert.False(executor.isShutdown());
+            }
+            Task stopping = executor.StopAsync();
+            Assert.Same(executor.Termination, stopping);
+            Assert.Same(stopping, executor.StopAsync());
+            Assert.True(executor.isShutdown());
+            Assert.Same(stopping, executor.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2)));
+            Assert.True(executor.isShutdown());
+            Assert.False(stopping.IsCompleted);
+            await Assert.ThrowsAsync<RejectedExecutionException>(() => executor.SubmitAsync(() => 9));
+            using var observer = new CancellationTokenSource();
+            observer.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => stopping.WaitAsync(observer.Token));
+            Assert.False(stopping.IsCompleted);
+            release.Set();
+            Assert.Equal(7, await running.WaitAsync(TimeSpan.FromSeconds(5)));
+            Assert.Equal(8, await queued.WaitAsync(TimeSpan.FromSeconds(5)));
+            await stopping.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(delayed.IsCanceled);
+        }
+        finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task NativeNonStickyStopPreservesUnderlyingWithdrawalAndLifecycle(bool selectedChild)
+    {
+        var underlying = new UnorderedThreadPoolEventExecutor(1);
+        IEventExecutorGroup group = new NonStickyEventExecutorGroup(underlying);
+        IEventExecutorGroup surface = selectedChild ? group.next() : group;
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        Task running = underlying.SubmitAsync(() => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); });
+        try
+        {
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+            Task queued = surface.SubmitAsync(() => Assert.Fail("Withdrawn nonsticky work ran"));
+            Task stopping = surface.StopAsync();
+            Assert.Same(underlying.Termination, stopping);
+            Assert.Same(stopping, group.StopAsync());
+            Assert.True(underlying.StopToken.IsCancellationRequested);
+            Assert.True(queued.IsCanceled);
+            Assert.False(stopping.IsCompleted);
+            release.Set();
+            await running.WaitAsync(TimeSpan.FromSeconds(5));
+            await stopping.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        finally { release.Set(); await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+    }
+
+    [Fact]
+    public async Task NativeGroupStopRequestsEveryChildAndPreservesCompletionCounting()
+    {
+        var first = new Child();
+        var second = new Child();
+        IEventExecutorGroup group = new ManualGroup(first, second);
+        Task stopping = group.StopAsync();
+        Assert.Same(group.Termination, stopping);
+        Assert.Equal(1, first.stopRequests);
+        Assert.Equal(1, second.stopRequests);
+        Assert.True(group.isShutdown());
+        first.termination.SetException(new InvalidOperationException("child failed"));
+        Assert.False(stopping.IsCompleted);
+        second.termination.SetResult();
+        await stopping.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(stopping.IsCompletedSuccessfully);
+    }
+
+    [Fact]
+    public async Task NativeGroupStopRequestFailuresStillReachEveryOtherChild()
+    {
+        var first = new Child { stopFailure = new InvalidOperationException("first stop failed") };
+        var second = new Child();
+        var third = new Child { stopFailure = new ArgumentException("third stop failed") };
+        var group = new ManualGroup(first, second, third);
+        AggregateException failure = Assert.Throws<AggregateException>(() => group.StopAsync());
+        Assert.Equal(new[] { first.stopFailure, third.stopFailure }, failure.InnerExceptions);
+        Assert.All(new[] { first, second, third }, child => Assert.Equal(1, child.stopRequests));
+        Assert.False(group.Termination.IsCompleted);
+        foreach (Child child in new[] { first, second, third }) child.termination.SetResult();
+        await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task NativeStopCanBeAwaitedFromItsYieldedOrderedInvocation()
+    {
+        IEventExecutorGroup executor = new DefaultEventExecutor();
+        try
+        {
+            await executor.SubmitAsync(async () => await executor.StopAsync()).WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(executor.Termination.IsCompletedSuccessfully);
+        }
+        finally { await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
     }
 
     [Fact]

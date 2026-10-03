@@ -827,9 +827,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return ran;
     }
 
-    private void shutdown0(long quietPeriod, long timeout, int shutdownState)
+    private void shutdown0(long quietPeriod, long timeout, int shutdownState, bool escalate = false)
     {
-        if (isShuttingDown())
+        if (escalate ? isShutdown() : isShuttingDown())
         {
             return;
         }
@@ -839,14 +839,16 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         int oldState;
         for (;;)
         {
-            if (isShuttingDown())
+            oldState = _state.get();
+            // Check the same state snapshot used by CAS. A concurrent native
+            // stop must not be downgraded back into graceful admission.
+            if (oldState >= (escalate ? ST_SHUTDOWN : ST_SHUTTING_DOWN))
             {
                 return;
             }
 
             int newState;
             wakeup = true;
-            oldState = _state.get();
             if (inEventLoop)
             {
                 newState = shutdownState;
@@ -855,6 +857,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             {
                 switch (oldState)
                 {
+                    case ST_SHUTTING_DOWN when escalate:
                     case ST_NOT_STARTED:
                     case ST_STARTED:
                     case ST_SUSPENDING:
@@ -914,6 +917,15 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     public override Task Termination => _terminationSource.Task;
+
+    public override Task StopAsync()
+    {
+        // Native stop closes admission even during an existing graceful quiet
+        // period. Preserve ordered accepted-work drain and scheduled cancellation;
+        // legacy shutdown entry points retain their pinned non-escalating behavior.
+        shutdown0(-1, -1, ST_SHUTDOWN, true);
+        return Termination;
+    }
 
     [Obsolete]
     public override void shutdown()

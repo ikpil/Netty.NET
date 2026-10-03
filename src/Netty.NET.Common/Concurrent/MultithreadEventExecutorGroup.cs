@@ -210,6 +210,21 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 
     public override Task Termination => _terminationSource.Task;
 
+    /// <exception cref="AggregateException">A child stop request threw; every other child was still requested.</exception>
+    public override Task StopAsync()
+    {
+        List<Exception> failures = null;
+        foreach (IEventExecutor child in children)
+        {
+            try { child.StopAsync(); }
+            catch (Exception error) { (failures ??= new List<Exception>()).Add(error); }
+        }
+        // Request failures are distinct from the existing all-child completion
+        // signal. Do not strand later children or invent a second termination Task.
+        if (failures != null) throw new AggregateException("Executor stop requests failed.", failures);
+        return Termination;
+    }
+
     [Obsolete]
     public override void shutdown()
     {

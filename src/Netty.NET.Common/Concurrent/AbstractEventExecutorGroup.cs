@@ -55,6 +55,11 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
     }
 
     public abstract Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
+    public virtual Task StopAsync()
+    {
+        shutdown();
+        return Termination;
+    }
     public abstract IEventExecutor next();
 
     public virtual Task ShutdownGracefullyAsync()

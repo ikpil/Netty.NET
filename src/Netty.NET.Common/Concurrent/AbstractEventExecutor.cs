@@ -92,6 +92,14 @@ public abstract class AbstractEventExecutor : IEventExecutor
 
     public abstract Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
 
+    // Default for custom backends; concrete workers and wrappers select their
+    // native shutdown policy directly. No additional lifecycle result is created.
+    public virtual Task StopAsync()
+    {
+        shutdown();
+        return Termination;
+    }
+
     /**
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */

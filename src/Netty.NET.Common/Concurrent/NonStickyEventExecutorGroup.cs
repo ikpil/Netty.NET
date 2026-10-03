@@ -93,6 +93,7 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
     }
 
     public Task Termination => _group.Termination;
+    public Task StopAsync() => _group.StopAsync();
 
     //@SuppressWarnings("deprecation")
     public void shutdown()

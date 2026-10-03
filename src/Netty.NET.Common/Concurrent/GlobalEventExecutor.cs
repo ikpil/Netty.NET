@@ -196,6 +196,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     }
 
     public override Task Termination => _terminationTask;
+    public override Task StopAsync() => Termination;
 
     [Obsolete]
     public override void shutdown()

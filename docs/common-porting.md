@@ -121,69 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default, non-batch suite executes **1412 cases** on Windows/net10.0:
-**1398 passed / 0 failed / 14 skipped** in final Debug and Release.
+The current default suite executes **1419 cases** on Windows/net10.0:
+**1405 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
-and analyzer warnings are not claimed resolved. Evidence:
-`native-completion-final-contracts.trx`,
-`native-completion-accounting-final-contracts.trx`,
-`native-completion-termination-contracts.trx`,
-`progress-subscriptions-final-contracts-debug.trx`,
-`native-producer-final-contracts-debug.trx`,
-`native-producer-full-debug.trx`,
-`native-producer-full-release.trx`,
-`native-submit-final-contracts-debug-after.trx`,
-`native-submit-full-debug.trx`,
-`native-submit-full-release.trx`,
-`unordered-termination-final-contracts-v2.trx`,
-`unordered-termination-full-debug.trx`,
-`unordered-termination-full-release.trx`,
-`native-bulk-final-contracts-debug.trx`,
-`native-bulk-full-debug.trx`,
-`native-bulk-full-release.trx`,
-`native-ordered-schedule-final-contracts-debug.trx`,
-`native-ordered-schedule-full-debug.trx`,
-`native-ordered-schedule-full-release.trx`,
-`unordered-worker-identity-before.trx`,
-`unordered-worker-identity-final-contracts-debug.trx`,
-`unordered-worker-identity-full-debug.trx`,
-`unordered-worker-identity-full-release.trx`,
-`native-unordered-schedule-contracts-debug.trx`,
-`native-unordered-schedule-final-contracts-debug.trx`,
-`native-unordered-schedule-full-debug.trx`,
-`native-unordered-schedule-full-release.trx`,
-`native-submission-wrapper-cleanup-contracts-debug.trx`,
-`native-submission-wrapper-cleanup-full-debug.trx`,
-`native-submission-wrapper-cleanup-full-release.trx`,
-`native-future-retirement-final-contracts-debug.trx`,
-`native-future-retirement-chain-contracts-debug.trx`,
-`native-future-retirement-final-full-debug.trx`,
-`native-future-retirement-final-full-release.trx`,
-`unordered-graceful-final-contracts-v3-debug.trx`,
-`unordered-graceful-final-full-debug.trx`,
-`unordered-graceful-final-full-release.trx`,
-`unordered-native-queue-final-contracts-v2-debug.trx`,
-`unordered-native-queue-full-debug.trx`,
-`unordered-native-queue-final-full-release.trx`,
-`autoscaling-window-phase-contracts-debug.trx`,
-`autoscaling-window-full-debug.trx`,
-`autoscaling-window-full-release.trx`,
-`unordered-native-configuration-final-contracts-debug.trx`,
-`unordered-native-configuration-full-debug.trx`,
-`unordered-native-configuration-full-release.trx`,
-`unordered-worker-failure-final-contracts-debug.trx`,
-`unordered-worker-failure-final-full-debug.trx`,
-`unordered-worker-failure-final-full-release.trx`,
-`unordered-stop-final-contracts-debug.trx`,
-`unordered-stop-full-debug.trx`,
-`unordered-stop-full-release.trx`,
-`unordered-queue-remove-final-contracts-debug.trx`,
-`unordered-queue-remove-full-debug.trx` and
-`unordered-queue-remove-full-release.trx` in the ignored TestResults directory.
-Whole-suite files use the full default common test project, without PortingBatch.
-Files named contracts record focused execution; the worker-identity before file
-retains the expected failing regression run. The newest unordered-queue-remove full
-files establish the current Debug/Release counts above.
+and analyzer warnings are not claimed resolved. Current evidence is
+`group-stop-full-debug.trx` and `group-stop-full-release.trx`; the escalation before-run is
+`group-stop-escalation-before.trx`. Results remain in the ignored TestResults
+directory. Older checkpoint evidence is referenced by its corresponding records
+below and the manifest rather than repeated here. Full suites compile every
+portable test source without PortingBatch and do not establish module completion.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.
@@ -268,8 +214,8 @@ Debug DLL. Existing compiler/analyzer warnings remain; only Windows/net10.0 is v
 Source decisions remain 42 verified, 29 CLR replacements, 13 exclusions, 99 pending and
 22 in progress; all 66 original test files have decisions (56 verified, ten exclusions).
 These counts do not measure remaining effort or establish native design completion.
-The subsequent private queue cost review is recorded below. Next: review shared/group
-immediate APIs against pinned consumers. Remaining
+The subsequent private queue cost and shared/group stop reviews are recorded below.
+Remaining
 collections, strings/encoding, platform and ownership reviews stay within the full goal.
 
 The unordered private membership path now uses net10.0 PriorityQueue.Remove with
@@ -291,8 +237,34 @@ the 21 unordered source/eight original fixture/ten group comments have zero miss
 all 271 pinned inventory entries and implementation paths match
 (unordered-queue-remove-comment-audit.json). Separate --artifacts-path
 artifacts/queue-removal-validation preserves Rider's DLL ownership. Existing warnings
-remain. This local queue decision leaves shared/group immediate API, other queue
-consumers, workload contention and the remaining 99 pending/22 in-progress sources open.
+remain. Shared/group immediate API is subsequently implemented below; other queue
+consumers, workload contention and the remaining 99 pending/22 in-progress sources stay open.
+
+Shared `IEventExecutorGroup.StopAsync` now requests the native stop policy and
+returns persistent Termination. Ordered workers close admission and drain accepted
+invocations, including escalation from graceful quiet admission; unordered workers
+withdraw waiting work and signal their explicit StopToken. NonSticky groups and
+selected children forward the owner's policy. Multithread groups request every
+child despite synchronous request failures and retain the pinned all-child
+completion count. Global/Immediate return their existing failed lifecycle Task.
+See [native stop decisions](common-clr-design.md#native-stop-across-executors-and-groups).
+Disabling only native escalation reproduces one admission-closure failure among
+two theory rows; the direct-stop row passes, and both pass after restoration.
+Initial affected Debug passes 92 cases. Final full Debug/Release each pass 1405 /
+fail zero / skip the same 14. All 759 non-Porting identities remain; only seven
+CLR rows are added, with matching configuration names/outcomes
+(group-stop-identity-comparison.json). All 98 verified comment entries plus the
+affected source entries (101 distinct entries) have zero missing, and all 271
+pinned inventory entries and implementation paths match
+(group-stop-comment-audit.json and group-stop-inventory-summary.json). Both full
+runs use --artifacts-path artifacts/group-stop-validation to preserve Rider's DLL
+ownership. Existing warnings remain, with Windows/net10.0 as the verified scope;
+no original Java fixture/comment, test source exclusion or skip is added/changed.
+Source decisions remain 42 verified / 29 CLR replacements / 13 exclusions /
+99 pending / 22 in progress; original test files remain 56 verified / ten exclusions.
+Next: review ordered scheduler priority-queue membership/index lifetime and its
+pinned consumers before selecting a CLR collection or retaining necessary indexed
+removal. Remaining strings/encoding, platform and resource ownership review is open.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already

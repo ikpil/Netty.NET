@@ -64,6 +64,17 @@ public interface IEventExecutorGroup : IExecutorService
     /// </remarks>
     Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout);
 
+    /// <summary>Requests shutdown without a quiet admission period and returns <see cref="Termination"/>.</summary>
+    /// <remarks>
+    /// Ordered workers drain accepted invocations and cancel outstanding schedules.
+    /// Unordered workers withdraw queued work and request their explicit StopToken.
+    /// Running work is cooperative; yielded asynchronous bodies remain caller-owned.
+    /// Groups request every child and retain their documented all-child completion policy.
+    /// Nonterminable executors return their persistent failed lifecycle task.
+    /// Canceling a WaitAsync observer does not cancel shutdown.
+    /// </remarks>
+    Task StopAsync();
+
     /**
      * Returns the {@link Future} which is notified when all {@link EventExecutor}s managed by this
      * {@link EventExecutorGroup} have been terminated.

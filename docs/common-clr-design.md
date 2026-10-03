@@ -275,7 +275,39 @@ reference identity instead of copying/clearing/reinserting the whole heap. Measu
 capacity reuse and public cancellation support keeping the BCL heap; SortedSet is
 faster for large scattered removal but allocates nodes on reusable insertion.
 See common-unordered-queue-costs.md for conditions, extrema and the remaining
-contention/cancellation-heavy workload limits. Shared/group immediate APIs remain open.
+contention/cancellation-heavy workload limits. Shared/group immediate APIs are
+subsequently implemented below.
+
+## Native stop across executors and groups
+
+`IEventExecutorGroup.StopAsync()` requests the backend's stop policy and returns
+its persistent `Termination` Task. Ordered workers close admission, drain accepted
+invocations and cancel outstanding schedules; unordered workers withdraw waiting
+work and request their explicit cooperative `StopToken`. No thread interruption
+is injected. Yielded asynchronous bodies remain caller-owned, and canceling an
+observer's `WaitAsync` does not cancel shutdown. NonSticky groups and selected
+children forward to the underlying executor. Global/Immediate executors return
+their existing failed lifecycle Task because they cannot terminate.
+
+The pinned AbstractEventExecutor.java:85 delegates shutdownNow to shutdown;
+SingleThreadEventExecutor.java:923 drains accepted invocations. The producer loop
+in transport/NioEventLoopTest.java:204-238 needs admission closure and actual
+termination, not withdrawal of every accepted ordered invocation. Native ordered
+stop additionally escalates an existing graceful quiet period into admission
+closure. This is an explicit CLR API decision: the pinned shutdown0 at line 782
+ignores requests after graceful shutdown starts. Legacy entry points retain that
+non-escalating policy. Checking the CAS state snapshot prevents a concurrent
+graceful request from reopening admission after native stop.
+
+Multithread groups request every child and retain the pinned termination counting
+policy (MultithreadEventExecutorGroup.java:114-123): the group completes successfully
+after every child signal completes, including failed children. A synchronous stop
+request exception is collected independently; later children are still requested,
+then an AggregateException reports those request failures. No second lifecycle
+Task or Task.WhenAll replaces the original completion signal. Abstract custom
+backends default to their shutdown primitive and may override the native policy.
+ExecutorLifecycleContractTest covers these distinctions; current results and
+remaining backend/API work are in common-porting.md.
 
 Relevant CLR specifications:
 
