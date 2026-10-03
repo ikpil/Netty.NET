@@ -131,7 +131,7 @@ public static class NetUtil
     static NetUtil()
     {
         string prefer = SystemPropertyUtil.get("java.net.preferIPv6Addresses", "false");
-        if ("true".EqualsIgnoreCase(prefer.Trim()))
+        if (string.Equals("true", prefer.Trim(), StringComparison.OrdinalIgnoreCase))
         {
             IPV6_ADDRESSES_PREFERRED = true;
         }
@@ -252,9 +252,9 @@ public static class NetUtil
 
         if (isValidIpV6Address(ipAddressString))
         {
-            if (ipAddressString.charAt(0) == '[')
+            if (ipAddressString[0] == '[')
             {
-                ipAddressString = ipAddressString.substring(1, ipAddressString.Length - 1);
+                ipAddressString = ipAddressString[1..(ipAddressString.Length - 1)];
             }
 
             int percentPos = ipAddressString.IndexOf('%');
@@ -285,16 +285,16 @@ public static class NetUtil
 
         if (isValidIpV6Address(ipAddressString))
         {
-            if (ipAddressString.charAt(0) == '[')
+            if (ipAddressString[0] == '[')
             {
-                ipAddressString = ipAddressString.substring(1, ipAddressString.length() - 1);
+                ipAddressString = ipAddressString[1..(ipAddressString.Length - 1)];
             }
 
-            int percentPos = ipAddressString.indexOf('%');
+            int percentPos = ipAddressString.IndexOf('%');
             if (percentPos >= 0)
             {
-                int scopeId = int.Parse(ipAddressString.substring(percentPos + 1));
-                ipAddressString = ipAddressString.substring(0, percentPos);
+                int scopeId = int.Parse(ipAddressString[(percentPos + 1)..]);
+                ipAddressString = ipAddressString[0..percentPos];
                 byte[] bytes = getIPv6ByName(ipAddressString, true);
                 if (bytes == null)
                 {
@@ -323,7 +323,7 @@ public static class NetUtil
 
     private static int decimalDigit(string str, int pos)
     {
-        return str.charAt(pos) - '0';
+        return str[pos] - '0';
     }
 
     private static byte ipv4WordToByte(string ip, int from, int toExclusive)
@@ -432,7 +432,7 @@ public static class NetUtil
 
     public static bool isValidIpV6Address(string ip)
     {
-        int end = ip.length();
+        int end = ip.Length;
         if (end < 2)
         {
             return false;
@@ -440,18 +440,18 @@ public static class NetUtil
 
         // strip "[]"
         int start;
-        char c = ip.charAt(0);
+        char c = ip[0];
         if (c == '[')
         {
             end--;
-            if (ip.charAt(end) != ']')
+            if (ip[end] != ']')
             {
                 // must have a close ]
                 return false;
             }
 
             start = 1;
-            c = ip.charAt(1);
+            c = ip[1];
         }
         else
         {
@@ -463,7 +463,7 @@ public static class NetUtil
         if (c == ':')
         {
             // an IPv6 address can start with "::" or with a number
-            if (ip.charAt(start + 1) != ':')
+            if (ip[start + 1] != ':')
             {
                 return false;
             }
@@ -481,7 +481,7 @@ public static class NetUtil
         int wordLen = 0;
         for (int i = start; i < end; i++)
         {
-            c = ip.charAt(i);
+            c = ip[i];
             if (isValidHexChar(c))
             {
                 if (wordLen < 4)
@@ -501,7 +501,7 @@ public static class NetUtil
                         return false;
                     }
 
-                    if (ip.charAt(i - 1) == ':')
+                    if (ip[i - 1] == ':')
                     {
                         if (compressBegin >= 0)
                         {
@@ -534,11 +534,11 @@ public static class NetUtil
                     // (see https://tools.ietf.org/html/rfc4291#section-2.5.5).
                     int ipv4Start = i - wordLen;
                     int j = ipv4Start - 2; // index of character before the previous ':'.
-                    if (isValidIPv4MappedChar(ip.charAt(j)))
+                    if (isValidIPv4MappedChar(ip[j]))
                     {
-                        if (!isValidIPv4MappedChar(ip.charAt(j - 1)) ||
-                            !isValidIPv4MappedChar(ip.charAt(j - 2)) ||
-                            !isValidIPv4MappedChar(ip.charAt(j - 3)))
+                        if (!isValidIPv4MappedChar(ip[j - 1]) ||
+                            !isValidIPv4MappedChar(ip[j - 2]) ||
+                            !isValidIPv4MappedChar(ip[j - 3]))
                         {
                             return false;
                         }
@@ -548,7 +548,7 @@ public static class NetUtil
 
                     for (; j >= start; --j)
                     {
-                        char tmpChar = ip.charAt(j);
+                        char tmpChar = ip[j];
                         if (tmpChar != '0' && tmpChar != ':')
                         {
                             return false;
@@ -556,7 +556,9 @@ public static class NetUtil
                     }
 
                     // 7 - is minimum IPv4 address length
-                    int ipv4End = ip.indexOf('%', ipv4Start + 7);
+                    int scopeStart = Math.Min(ipv4Start + 7, ip.Length);
+                    int scopeIndex = ip.AsSpan(scopeStart).IndexOf('%');
+                    int ipv4End = scopeIndex < 0 ? -1 : scopeStart + scopeIndex;
                     if (ipv4End < 0)
                     {
                         ipv4End = end;
@@ -652,18 +654,29 @@ public static class NetUtil
      */
     public static bool isValidIpV4Address(string ip)
     {
-        return isValidIpV4Address(ip, 0, ip.length());
+        return isValidIpV4Address(ip, 0, ip.Length);
     }
 
     //@SuppressWarnings("DuplicateBooleanBranch")
     private static bool isValidIpV4Address(string ip, int from, int toExcluded)
     {
+        int FindDot(int start)
+        {
+            if (start >= ip.Length)
+            {
+                return -1;
+            }
+
+            int relative = ip.AsSpan(start).IndexOf('.');
+            return relative < 0 ? -1 : start + relative;
+        }
+
         int len = toExcluded - from;
         int i;
         return len <= 15 && len >= 7 &&
-               (i = ip.indexOf('.', from + 1)) > 0 && isValidIpV4Word(ip, from, i) &&
-               (i = ip.indexOf('.', from = i + 2)) > 0 && isValidIpV4Word(ip, from - 1, i) &&
-               (i = ip.indexOf('.', from = i + 2)) > 0 && isValidIpV4Word(ip, from - 1, i) &&
+               (i = FindDot(from + 1)) > 0 && isValidIpV4Word(ip, from, i) &&
+               (i = FindDot(from = i + 2)) > 0 && isValidIpV4Word(ip, from - 1, i) &&
+               (i = FindDot(from = i + 2)) > 0 && isValidIpV4Word(ip, from - 1, i) &&
                isValidIpV4Word(ip, i + 1, toExcluded);
     }
 
@@ -730,7 +743,7 @@ public static class NetUtil
     public static byte[] getIPv6ByName(string ip, bool ipv4Mapped)
     {
         byte[] bytes = new byte[IPV6_BYTE_COUNT];
-        int ipLength = ip.length();
+        int ipLength = ip.Length;
         int compressBegin = 0;
         int compressLength = 0;
         int currentIndex = 0;
@@ -742,7 +755,7 @@ public static class NetUtil
         int tmp;
         for (; i < ipLength; ++i)
         {
-            char c = ip.charAt(i);
+            char c = ip[i];
             switch (c)
             {
                 case ':':
@@ -767,10 +780,10 @@ public static class NetUtil
                     bytes[currentIndex++] = (byte)(((value & 0xf) << 4) | ((value >> 4) & 0xf));
                     bytes[currentIndex++] = (byte)((((value >> 8) & 0xf) << 4) | ((value >> 12) & 0xf));
                     tmp = i + 1;
-                    if (tmp < ipLength && ip.charAt(tmp) == ':')
+                    if (tmp < ipLength && ip[tmp] == ':')
                     {
                         ++tmp;
-                        if (compressBegin != 0 || (tmp < ipLength && ip.charAt(tmp) == ':'))
+                        if (compressBegin != 0 || (tmp < ipLength && ip[tmp] == ':'))
                         {
                             return null;
                         }
@@ -797,12 +810,12 @@ public static class NetUtil
                         // We also parse pure IPv4 addresses as IPv4-Mapped for ease of use.
                         ((!ipv4Mapped || currentIndex != 0 && !isValidIPv4Mapped(bytes, currentIndex,
                              compressBegin, compressLength)) ||
-                         (tmp == 3 && (!isValidNumericChar(ip.charAt(i - 1)) ||
-                                       !isValidNumericChar(ip.charAt(i - 2)) ||
-                                       !isValidNumericChar(ip.charAt(i - 3))) ||
-                          tmp == 2 && (!isValidNumericChar(ip.charAt(i - 1)) ||
-                                       !isValidNumericChar(ip.charAt(i - 2))) ||
-                          tmp == 1 && !isValidNumericChar(ip.charAt(i - 1)))))
+                         (tmp == 3 && (!isValidNumericChar(ip[i - 1]) ||
+                                       !isValidNumericChar(ip[i - 2]) ||
+                                       !isValidNumericChar(ip[i - 3])) ||
+                          tmp == 2 && (!isValidNumericChar(ip[i - 1]) ||
+                                       !isValidNumericChar(ip[i - 2])) ||
+                          tmp == 1 && !isValidNumericChar(ip[i - 1]))))
                     {
                         return null;
                     }
@@ -858,9 +871,9 @@ public static class NetUtil
             }
 
             if (!(ipv6Separators == 0 || ipv6Separators >= IPV6_MIN_SEPARATORS &&
-                    (!isCompressed && (ipv6Separators == 6 && ip.charAt(0) != ':') ||
+                    (!isCompressed && (ipv6Separators == 6 && ip[0] != ':') ||
                      isCompressed && (ipv6Separators < IPV6_MAX_SEPARATORS &&
-                                      (ip.charAt(0) != ':' || compressBegin <= 2)))))
+                                      (ip[0] != ':' || compressBegin <= 2)))))
             {
                 return null;
             }
@@ -884,14 +897,14 @@ public static class NetUtil
             if (begin > 0 && i - begin > IPV6_MAX_CHAR_BETWEEN_SEPARATOR ||
                 ipv6Separators < IPV6_MIN_SEPARATORS ||
                 !isCompressed && (ipv6Separators + 1 != IPV6_MAX_SEPARATORS ||
-                                  ip.charAt(0) == ':' || ip.charAt(tmp) == ':') ||
+                                  ip[0] == ':' || ip[tmp] == ':') ||
                 isCompressed && (ipv6Separators > IPV6_MAX_SEPARATORS ||
                                  (ipv6Separators == IPV6_MAX_SEPARATORS &&
-                                  (compressBegin <= 2 && ip.charAt(0) != ':' ||
-                                   compressBegin >= 14 && ip.charAt(tmp) != ':'))) ||
+                                  (compressBegin <= 2 && ip[0] != ':' ||
+                                   compressBegin >= 14 && ip[tmp] != ':'))) ||
                 currentIndex + 1 >= bytes.Length ||
-                begin < 0 && ip.charAt(tmp - 1) != ':' ||
-                compressBegin > 2 && ip.charAt(0) == ':')
+                begin < 0 && ip[tmp - 1] != ':' ||
+                compressBegin > 2 && ip[0] == ':')
             {
                 return null;
             }
@@ -959,16 +972,16 @@ public static class NetUtil
 
     private static StringBuilder newSocketAddressStringBuilder(string host, string port, bool ipv4)
     {
-        int hostLen = host.length();
+        int hostLen = host.Length;
         if (ipv4)
         {
             // Need to include enough space for hostString:port.
-            return new StringBuilder(hostLen + 1 + port.length()).Append(host);
+            return new StringBuilder(hostLen + 1 + port.Length).Append(host);
         }
 
         // Need to include enough space for [hostString]:port.
-        StringBuilder stringBuilder = new StringBuilder(hostLen + 3 + port.length());
-        if (hostLen > 1 && host.charAt(0) == '[' && host.charAt(hostLen - 1) == ']')
+        StringBuilder stringBuilder = new StringBuilder(hostLen + 3 + port.Length);
+        if (hostLen > 1 && host[0] == '[' && host[hostLen - 1] == ']')
         {
             return stringBuilder.Append(host);
         }

@@ -9,9 +9,9 @@ public class CharacterSequenceContractTest
     [Fact]
     public void JavaSubstringUsesAnExclusiveEnd()
     {
-        Assert.Equal("bc", "abcd".substring(1, 3));
-        Assert.Equal("", "abcd".substring(2, 2));
-        Assert.Equal("cd", "abcd".substring(2));
+        Assert.Equal("bc", "abcd"[1..3]);
+        Assert.Equal("", "abcd"[2..2]);
+        Assert.Equal("cd", "abcd"[2..]);
     }
 
     [Fact]

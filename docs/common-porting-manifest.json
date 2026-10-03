@@ -78,7 +78,7 @@
         "Unused split(char) replaced by native byte span Split ranges with explicit native trailing-empty/shared-memory/copy policy. All four original delimiter comments archived in existing docs/common-clr-design.md (93 source + six archived = 99). Actual character-search consumers use bounded native IndexOf via the mixed-sequence bridge; StringCharSequence adds logical UTF-16 AsSpan/AsMemory. Four old overflow cases fail baseline; 24 native cases and checked Release pass. Executed pinned methods: 20640 rows, 16528 ordinary search matches, 2048 Java overflow exceptions intentionally return -1, 2057 split matches/seven native trailing-policy differences. Original two search test bodies retain all 21 assertions. Full Debug/Release each 1682 passed/zero failed/14 unchanged skips, all prior 1672 identities and 759 non-Porting cases retained. Comment/inventory audits unchanged; zero allocation in bounded warm native smoke. Evidence: docs/common-porting.md Native delimiter ranges/character search checkpoint and ascii-delimiter-* outputs. Full sequence API remains in progress.",
         "Unused instance contains and forward/reverse pattern facades replaced by native byte/ordinal UTF-16 span windows after all-module consumer review. Eight original comments archived in existing common-clr-design.md; all 99 remain (85 source + 14 archived). Actual slicing bridge checks endpoints before subtraction in checked builds, retaining partial copy/shared storage and full/empty identity. Four checked baseline regressions fail with OverflowException; native ArgumentOutOfRangeException now passes. Exact Java methods/MathUtil on 1964 unique rows agree in search and slice content/identity/sharing/error outcomes after native exception mapping. Original 50 pattern assertions retained; 24 new native cases. Full Debug/Release each 1706 passed/zero failed/14 unchanged skips; all prior 1696 identities and 759 non-Porting cases retained. Checked Release 29 passes; comment/inventory missing counts unchanged. Decision: common-clr-design.md Native pattern windows and sequence slicing. Evidence: common-porting.md Native pattern windows/slicing checkpoint and ascii-sequence-* outputs. Full mixed-sequence public API review remains in progress."
       ],
-      "adaptation": "Native string/ReadOnlySpan<char> input, ReadOnlyMemory<byte> replaces MemoryStream/ByteBuffer facades, logical AsSpan/AsMemory views, lossless byte widening and Cached(string) identity/sanitization. Original comments preserved beside the implementation, including the split comparator. Encoding uses explicit CLR fallback/no-preamble policy. Integer parsing now uses native bounded Parse/TryParse APIs and checked-safe generic math; CharsetUtil replacement is complete for actual one-shot consumers. Floating-point parsing now uses native Single/Double Parse/TryParse, invariant BCL byte spans and bounded hex rounding with explicit native NaN provenance. Unused regex facades are replaced by standard Regex/String.Split; original regex comments are archived in docs/common-clr-design.md. Unused delimiter facade is replaced by standard byte span Split ranges; actual character search uses bounded native spans. StringCharSequence exposes logical UTF-16 span/memory views. Unused instance pattern-search facades are replaced by standard byte/ordinal UTF-16 span windows. The actual slicing bridge guards endpoints before subtraction while preserving copy/shared storage and full/empty identity. The coordinated ICharSequence/StringExtensions native public API still requires review. See docs/common-ascii-memory.md. Native runtime/allocation review removes JDK-version facades and Unsafe array-allocation helpers; actual AsciiString callers use GC.AllocateUninitializedArray<byte>. Android is an OS probe. Remaining native-memory/SWAR/public API work is not verified by this change.",
+      "adaptation": "Native string/ReadOnlySpan<char> input, ReadOnlyMemory<byte> replaces MemoryStream/ByteBuffer facades, logical AsSpan/AsMemory views, lossless byte widening and Cached(string) identity/sanitization. Original comments preserved beside the implementation, including the split comparator. Encoding uses explicit CLR fallback/no-preamble policy. Integer parsing now uses native bounded Parse/TryParse APIs and checked-safe generic math; CharsetUtil replacement is complete for actual one-shot consumers. Floating-point parsing now uses native Single/Double Parse/TryParse, invariant BCL byte spans and bounded hex rounding with explicit native NaN provenance. Unused regex facades are replaced by standard Regex/String.Split; original regex comments are archived in docs/common-clr-design.md. Unused delimiter facade is replaced by standard byte span Split ranges; actual character search uses bounded native spans. StringCharSequence exposes logical UTF-16 span/memory views. Unused instance pattern-search facades are replaced by standard byte/ordinal UTF-16 span windows. The actual slicing bridge guards endpoints before subtraction while preserving copy/shared storage and full/empty identity. StringExtensions is removed after actual strings move to native UTF-16 APIs with bounded ordinal domain/suffix comparison and parser-local IP search windows. The coordinated ICharSequence native public API still requires review. See docs/common-ascii-memory.md. Native runtime/allocation review removes JDK-version facades and Unsafe array-allocation helpers; actual AsciiString callers use GC.AllocateUninitializedArray<byte>. Android is an OS probe. Remaining native-memory/SWAR/public API work is not verified by this change.",
       "comments": {
         "upstreamCount": 99,
         "required": true,
@@ -369,7 +369,8 @@
         "src/Netty.NET.Common/DomainNameMapping.cs"
       ],
       "evidence": [
-        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
+        "Actual string wildcard comparison uses explicit Ordinal prefix and bounded UTF-16 span equality; pinned short-host/empty prefix and raw suffix rules retained. 160 executed pinned Java domain rows agree including null/range outcomes. IDNA/full mapping API review remains open. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
       "comments": {
@@ -557,7 +558,8 @@
         "src/Netty.NET.Common/NetUtil.cs"
       ],
       "evidence": [
-        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
+        "String facade calls replaced by native Length/indexers/ranges/char searches. Parser-local native dot lookup keeps -1 at/past string end; embedded-IPv4 scope search clamps its span without changing full-string search windows. 22649 executed pinned Java IP rows agree; eight truncated-tail consumer cases pass. Mixed-sequence conversion/native borrowed-view and complete networking API review remain open. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
       "comments": {
@@ -1503,7 +1505,8 @@
         "src/Netty.NET.Common/Concurrent/DefaultThreadFactory.cs"
       ],
       "evidence": [
-        "Historical earlier checkpoint: Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+        "Historical earlier checkpoint: Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics.",
+        "Native string Length/indexers/ranges replace Java forwarding calls for pool naming; creator/group/thread policies unchanged. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "Weak CLR ThreadGroup metadata retains explicit group and creator inheritance. Native CLR ThreadPriority enum replaces Java integer priorities. CLR has no SecurityManager or JVM group permission policy.",
       "comments": {
@@ -3451,7 +3454,8 @@
         "Historical runtime checkpoint (superseded): Debug and Release each 1087 cases, 1068 passed, 5 unresolved native-memory/platform failures, 14 skipped. All 18 native runtime/allocation cases and 11 ObjectCleaner cases pass in both. Evidence: platform-runtime-final-full-debug.trx, platform-runtime-final-full-release.trx and docs/common-porting.md.",
         "Native-memory ownership review: pinned PoolArena, unpooled reallocation, external-address buffers and native I/O consumers; 26 NativeMemoryContractTest cases, shared-limit runtime case and all nine original platform cases pass. Previous complete native checkpoint: native-memory-full-debug.trx and native-memory-full-release.trx, each 1100 passed / 0 failed / 14 skipped, Windows/net10.0. See docs/common-native-memory.md.",
         "Historical default managed-byte checkpoint: Debug/Release each 1132 passed / 0 failed / 14 skipped (1146 total), builds 415 warnings / 0 errors, Windows/net10.0. heap-memory-full-debug.trx, heap-memory-full-release.trx; targeted Debug 146 passed. Heap writes/copy/fill reproduce 11 pre-repair failures. No performance-equivalence claim.",
-        "Historical default ordered-multimap checkpoint: Debug/Release each 1161 passed / 0 failed / 14 skipped (1175 total), Windows/net10.0. ordered-multimap-full-debug.trx, ordered-multimap-full-release.trx. All 29 ordered-map cases execute, including gated mixed publish/take; builds 338 emitted test warnings / 0 errors, library up to date (earlier complete heap-memory builds 415 warnings). Original source public API review remains in progress; no performance-equivalence claim."
+        "Historical default ordered-multimap checkpoint: Debug/Release each 1161 passed / 0 failed / 14 skipped (1175 total), Windows/net10.0. ordered-multimap-full-debug.trx, ordered-multimap-full-release.trx. All 29 ordered-map cases execute, including gated mixed publish/take; builds 338 emitted test warnings / 0 errors, library up to date (earlier complete heap-memory builds 415 warnings). Original source public API review remains in progress; no performance-equivalence claim.",
+        "Native string Length/indexers/ranges and explicit OrdinalIgnoreCase replace Java string forwarding calls for OS probes/normalization. Runtime/probe policies unchanged. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Native runtime/allocation review removes JDK-version facades and Unsafe array-allocation helpers; actual AsciiString callers use GC.AllocateUninitializedArray<byte>. Android is an OS probe. Remaining native-memory/SWAR/public API work is not verified by this change. Native ownership/view/provider migration is implemented. Byte-array read/write/copy/fill use bounded CLR operations, while AsciiStringUtil directly uses MemoryMarshal independently of JVM Unsafe/unaligned probes. Raw native-address and object-field-offset APIs and remaining JVM surfaces still require review.",
       "comments": {
@@ -3738,7 +3742,8 @@
         "src/Netty.NET.Common/Internal/StringUtil.cs"
       ],
       "evidence": [
-        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
+        "Actual string calls use native UTF-16 Length/indexers/ranges/char searches. commonSuffixOfLength guards null/negative/oversize before subtraction and compares span suffixes without temporary substrings. 1764 executed pinned Java rows agree; 14 boundary/code-unit cases pass in checked Release. Warm partial suffix 20000 calls allocate zero vs 1280000 bytes for the old facade; no general throughput claim. Remaining mixed-sequence casing/API review is separate. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
       "comments": {
@@ -4880,7 +4885,8 @@
         "test/Netty.NET.Common.Tests/NetUtilTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "Fixture string calls migrate to native Length/indexers/exclusive-end ranges; original identities, assertions, inputs and Java comments retained in full Debug/Release. No new skips. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {
@@ -5484,7 +5490,8 @@
         "test/Netty.NET.Common.Tests/Internal/AppendableCharSequenceTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "Fixture string calls migrate to native Length/indexers/exclusive-end ranges; original identities, assertions, inputs and Java comments retained in full Debug/Release. No new skips. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {
@@ -5809,7 +5816,8 @@
       ],
       "evidence": [
         "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
-        "Nine inherited JDK String.split scenarios migrated to native String.Split literal chars/count and explicit trailing-only trimming; all names, input literals, expected arrays, ten assertions and five original comments retained. JavaStringTestExtensions removed. Exact nine original Java bodies executed and pass. All prior 759 non-Porting identities/outcomes remain unchanged in final full Debug/Release; thirteen native regex consumer examples added separately. Validation and framework decision: docs/common-porting.md Native regex/framework splitting checkpoint and docs/common-clr-design.md."
+        "Nine inherited JDK String.split scenarios migrated to native String.Split literal chars/count and explicit trailing-only trimming; all names, input literals, expected arrays, ten assertions and five original comments retained. JavaStringTestExtensions removed. Exact nine original Java bodies executed and pass. All prior 759 non-Porting identities/outcomes remain unchanged in final full Debug/Release; thirteen native regex consumer examples added separately. Validation and framework decision: docs/common-porting.md Native regex/framework splitting checkpoint and docs/common-clr-design.md.",
+        "Fixture string calls migrate to native Length/indexers/exclusive-end ranges; original identities, assertions, inputs and Java comments retained in full Debug/Release. No new skips. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {
@@ -5935,7 +5943,8 @@
         "test/Netty.NET.Common.Tests/Internal/Logging/AbstractInternalLoggerTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "Fixture string calls migrate to native Length/indexers/exclusive-end ranges; original identities, assertions, inputs and Java comments retained in full Debug/Release. No new skips. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {

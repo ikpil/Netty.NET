@@ -642,7 +642,7 @@ public class NetUtilTest
         foreach (string host in validIpV6Hosts.Keys)
         {
             Assert.True(isValidIpV6Address(host), host);
-            if (host.charAt(0) != '[' && !host.Contains("%"))
+            if (host[0] != '[' && !host.Contains("%"))
             {
                 Assert.NotNull(getByName(host, true), host);
 
@@ -865,7 +865,7 @@ public class NetUtilTest
         foreach (byte b in value)
         {
             string hex = StringUtil.byteToHexString(b);
-            if (hex.length() == 1)
+            if (hex.Length == 1)
             {
                 buf.Append('0');
             }

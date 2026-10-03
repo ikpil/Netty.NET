@@ -43,7 +43,7 @@ public class AppendableCharSequenceTest
         seq.append(seq2);
 
         Assert.Equal(text, seq.ToString());
-        Assert.Equal(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
+        Assert.Equal(text[1..(text.Length - 2)], seq.substring(1, text.Length - 2));
 
         AssertEqualChars(text, seq);
     }
@@ -82,13 +82,13 @@ public class AppendableCharSequenceTest
     private static void testSimpleAppend0(AppendableCharSequence seq)
     {
         string text = "testdata";
-        for (int i = 0; i < text.length(); i++)
+        for (int i = 0; i < text.Length; i++)
         {
-            seq.append(text.charAt(i));
+            seq.append(text[i]);
         }
 
         Assert.Equal(text, seq.ToString());
-        Assert.Equal(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
+        Assert.Equal(text[1..(text.Length - 2)], seq.substring(1, text.Length - 2));
 
         AssertEqualChars(text, seq);
 
@@ -102,7 +102,7 @@ public class AppendableCharSequenceTest
         seq.append(text);
 
         Assert.Equal(text, seq.ToString());
-        Assert.Equal(text.substring(1, text.length() - 2), seq.substring(1, text.length() - 2));
+        Assert.Equal(text[1..(text.Length - 2)], seq.substring(1, text.Length - 2));
 
         AssertEqualChars(text, seq);
 
@@ -112,10 +112,10 @@ public class AppendableCharSequenceTest
 
     private static void AssertEqualChars(string seq1, ICharSequence seq2)
     {
-        Assert.Equal(seq1.length(), seq2.length());
-        for (int i = 0; i < seq1.length(); i++)
+        Assert.Equal(seq1.Length, seq2.length());
+        for (int i = 0; i < seq1.Length; i++)
         {
-            Assert.Equal(seq1.charAt(i), seq2.charAt(i));
+            Assert.Equal(seq1[i], seq2.charAt(i));
         }
     }
 }

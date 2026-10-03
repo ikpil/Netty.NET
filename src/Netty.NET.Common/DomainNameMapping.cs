@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -94,9 +95,10 @@ public class DomainNameMapping<T> : IMapping<string, T> where T : class
      */
     public static bool matches(string template, string hostName)
     {
-        if (template.StartsWith("*."))
+        if (template.StartsWith("*.", StringComparison.Ordinal))
         {
-            return template.regionMatches(2, hostName, 0, hostName.Length)
+            return hostName.Length <= template.Length - 2 &&
+                   template.AsSpan(2, hostName.Length).SequenceEqual(hostName.AsSpan())
                    || StringUtil.commonSuffixOfLength(hostName, template, template.Length - 1);
         }
 

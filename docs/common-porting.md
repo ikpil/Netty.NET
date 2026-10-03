@@ -121,15 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1720 cases** on Windows/net10.0:
-**1706 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1754 cases** on Windows/net10.0:
+**1740 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`ascii-sequence-full-debug.trx` and `ascii-sequence-full-release.trx`;
-affected Debug passes 436 and checked Release passes 29 relevant cases.
-Unused instance pattern-search facades are replaced by native span windows;
-the actual slicing bridge validates endpoints before subtraction in checked builds.
-The earlier delimiter, regex, numeric and auto-scaling work remains recorded below.
+`native-string-full-debug.trx` and `native-string-full-release.trx`;
+affected Debug passes 153 with one existing skip, and checked Release passes 40.
+The CLR-only StringExtensions facade is removed; actual string consumers now use
+native UTF-16 APIs with ordinal domain/suffix comparison and explicit IP search bounds.
+The earlier pattern, delimiter, regex, numeric and scheduling work remains below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
@@ -710,6 +710,44 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### Native string consumer checkpoint
+
+Remove StringExtensions.cs, a CLR-only Java string facade without an upstream
+class, after migrating all compiler-confirmed string calls in default source/test
+projects. Native Length/indexers/ranges and char searches replace forwarding
+methods; string equality uses explicit OrdinalIgnoreCase. ICharSequence calls
+remain for the coordinated mixed byte/char API review. Suffix comparison uses
+bounded UTF-16 SequenceEqual without temporary substrings; domain wildcard prefix
+uses Ordinal and retains the pinned short-host prefix and raw suffix rules.
+IPv4 parser-local native dot search preserves -1 beyond the string; embedded-IPv4
+scope lookup clamps the native window. Full-string search limits are unchanged.
+All original comments, fixture identities, inputs and assertions remain.
+
+The initial soft-hyphen culture hypothesis did not reproduce (two baseline cases
+pass); do not count this as a proven defect repair. Exact pinned Java methods
+execute on Corretto 21.0.11: 24573 unique rows, zero outcome differences after
+null/range exception mapping (1764 suffix, 160 domain, 22649 IP rows). Inputs
+include null, extreme lengths, NUL/surrogates, wildcard prefix/suffix, valid and
+invalid IPv4/IPv6, embedded tails, scopes/brackets, original fixture literals and
+deterministic malformed strings. Native partial-suffix warm smoke: 20000 calls,
+old substring facade allocates 1280000 bytes; actual span consumer allocates zero.
+This is allocation evidence for that input, not universal performance evidence.
+
+Affected Debug: 153 passed / zero failed / one existing skip. Checked Release:
+40 passed (34 new cases and six existing). Full Debug/Release each discover 1754,
+pass 1740, fail zero and keep the same 14 skips. All prior 1720 identities/outcomes
+and 759 non-Porting cases remain; only 34 NativeStringConsumerContractTest cases
+are added. All 271 pinned inventory paths and missing-comment counts are unchanged.
+Evidence: native-string-before.trx, native-string-affected-debug.trx,
+native-string-checked-release.trx, native-string-full-debug.trx,
+native-string-full-release.trx, native-string-identity-comparison.json,
+native-string-comment-audit.json, native-string-inventory-summary.json,
+native-string-java-clr-oracle.json. Harnesses/corpus/allocation log remain in
+ignored artifacts/native-string-validation; no feature MD is added.
+Windows/net10.0 SDK 10.0.203/runtime 10.0.7. Source/test decision counts remain
+unchanged; mixed-sequence casing, borrowed views/ownership and the ICharSequence
+public API need further review. Common remains in progress.
 
 ### Native pattern windows/slicing checkpoint
 

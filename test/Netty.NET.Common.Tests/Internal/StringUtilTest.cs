@@ -586,7 +586,7 @@ public class StringUtilTest
         string name;
         if (pkg != null)
         {
-            name = clazz.FullName.substring(pkg.length() + 1);
+            name = clazz.FullName[(pkg.Length + 1)..];
         }
         else
         {

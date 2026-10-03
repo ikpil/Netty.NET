@@ -57,16 +57,16 @@ public class DefaultThreadFactory : IThreadFactory
         ObjectUtil.checkNotNull(poolType, "poolType");
 
         string poolName = StringUtil.simpleClassName(poolType);
-        switch (poolName.length())
+        switch (poolName.Length)
         {
             case 0:
                 return "unknown";
             case 1:
                 return poolName.ToLowerInvariant();
             default:
-                if (char.IsUpper(poolName.charAt(0)) && char.IsLower(poolName.charAt(1)))
+                if (char.IsUpper(poolName[0]) && char.IsLower(poolName[1]))
                 {
-                    return char.ToLowerInvariant(poolName.charAt(0)) + poolName.substring(1);
+                    return char.ToLowerInvariant(poolName[0]) + poolName[1..];
                 }
                 else
                 {

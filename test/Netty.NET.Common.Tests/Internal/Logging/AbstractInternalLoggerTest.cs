@@ -70,7 +70,7 @@ public abstract class AbstractInternalLoggerTest<T>
         Type clazz = typeof(IInternalLogger);
         string levelName = level.ToString(), logMethod = levelName.ToLower();
         var isXXEnabled = clazz
-            .GetMethod("is" + levelName.charAt(0) + levelName.substring(1).ToLower() + "Enabled")!;
+            .GetMethod("is" + levelName[0] + levelName[1..].ToLower() + "Enabled")!;
 
         // when level log is disabled
         setLevelEnable(level, false);

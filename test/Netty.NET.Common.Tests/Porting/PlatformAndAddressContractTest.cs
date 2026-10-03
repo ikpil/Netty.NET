@@ -46,8 +46,8 @@ public class PlatformAndAddressContractTest
         Assert.Equal(42, scoped.ScopeId);
         Assert.Equal("[fe80::1]:0", NetUtil.toSocketAddressString(new IPEndPoint(scoped, 0)));
         Assert.Throws<ArgumentException>(() => NetUtil.ipv4AddressToInt(IPAddress.IPv6Loopback));
-        Assert.Equal(-1, "value".indexOf('e', 100));
-        Assert.Equal(0, "value".indexOf('v', -1));
+        Assert.Equal(-1, "value".AsSpan(Math.Min(100, "value".Length)).IndexOf('e'));
+        Assert.Equal(0, "value".AsSpan(Math.Max(0, -1)).IndexOf('v'));
         Assert.Equal("null_object", StringUtil.className(null));
     }
 }

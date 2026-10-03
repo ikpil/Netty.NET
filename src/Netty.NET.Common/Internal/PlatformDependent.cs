@@ -103,12 +103,12 @@ public static class PlatformDependent
                     {
                         if (line.StartsWith(LINUX_ID_PREFIX))
                         {
-                            string id = normalizeOsReleaseVariableValue(line.substring(LINUX_ID_PREFIX.length()));
+                            string id = normalizeOsReleaseVariableValue(line[LINUX_ID_PREFIX.Length..]);
                             addClassifier(availableClassifiers, id);
                         }
                         else if (line.StartsWith(LINUX_ID_LIKE_PREFIX))
                         {
-                            line = normalizeOsReleaseVariableValue(line.substring(LINUX_ID_LIKE_PREFIX.length()));
+                            line = normalizeOsReleaseVariableValue(line[LINUX_ID_LIKE_PREFIX.Length..]);
                             addClassifier(availableClassifiers, line.Split(" "));
                         }
                     }
@@ -833,7 +833,7 @@ public static class PlatformDependent
 
     private static bool isWindows0()
     {
-        bool windows = "windows".EqualsIgnoreCase(NORMALIZED_OS);
+        bool windows = string.Equals("windows", NORMALIZED_OS, StringComparison.OrdinalIgnoreCase);
         if (windows) {
             logger.debug("Platform: Windows");
         }
@@ -841,7 +841,7 @@ public static class PlatformDependent
     }
 
     private static bool isOsx0() {
-        bool osx = "osx".EqualsIgnoreCase(NORMALIZED_OS);
+        bool osx = string.Equals("osx", NORMALIZED_OS, StringComparison.OrdinalIgnoreCase);
         if (osx) {
             logger.debug("Platform: MacOS");
         }
@@ -1168,9 +1168,9 @@ public static class PlatformDependent
     //replaces value.trim().replaceAll("[\"']", "") to avoid regexp overhead
     private static string normalizeOsReleaseVariableValue(string value) {
         string trimmed = value.Trim();
-        StringBuilder sb = new StringBuilder(trimmed.length());
-        for (int i = 0; i < trimmed.length(); i++) {
-            char c = trimmed.charAt(i);
+        StringBuilder sb = new StringBuilder(trimmed.Length);
+        for (int i = 0; i < trimmed.Length; i++) {
+            char c = trimmed[i];
             if (c != '"' && c != '\'') {
                 sb.Append(c);
             }
@@ -1180,9 +1180,9 @@ public static class PlatformDependent
 
     //replaces value.toLowerCase(CultureInfo.GetCultureInfo("en-US")).replaceAll("[^a-z0-9]+", "") to avoid regexp overhead
     private static string normalize(string value) {
-        StringBuilder sb = new StringBuilder(value.length());
-        for (int i = 0; i < value.length(); i++) {
-            char c = char.ToLowerInvariant(value.charAt(i));
+        StringBuilder sb = new StringBuilder(value.Length);
+        for (int i = 0; i < value.Length; i++) {
+            char c = char.ToLowerInvariant(value[i]);
             if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
                 sb.Append(c);
             }
@@ -1291,7 +1291,7 @@ public static class PlatformDependent
         }
         if (value.StartsWith("os400")) {
             // Avoid the names such as os4000
-            if (value.length() <= 5 || !Char.IsDigit(value.charAt(5))) {
+            if (value.Length <= 5 || !Char.IsDigit(value[5])) {
                 return "os400";
             }
         }

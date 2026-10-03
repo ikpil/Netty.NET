@@ -999,6 +999,45 @@ Original AsciiString.java delimiter facade and all four original comments:
     }
 ```
 
+## Native string consumers
+
+Remove the CLR-only StringExtensions facade after migrating every compiler-confirmed
+string call in the default production/test projects. Strings use Length, the UTF-16
+indexer, native exclusive-end ranges, char IndexOf/LastIndexOf and explicit
+OrdinalIgnoreCase equality. Existing ICharSequence calls remain separate; this
+change does not remove its mixed byte/char contract or finish its public API review.
+No original Java class or comment is represented by StringExtensions.cs itself.
+The original comments remain in each affected Netty class and fixture.
+
+StringUtil.commonSuffixOfLength compares bounded UTF-16 spans with SequenceEqual,
+without allocating two temporary substrings. Null inputs, negative lengths and
+lengths beyond either input return false; zero length matches two non-null inputs.
+Validate before subtraction, including checked int.MinValue/int.MaxValue inputs.
+DomainNameMapping.matches recognizes the literal wildcard prefix with Ordinal
+StartsWith and compares raw UTF-16 spans. Preserve the pinned regionMatches rule:
+a host shorter than the template tail can match its prefix, including an empty
+host. Do not silently tighten that behavior to equal lengths. Suffix matching
+remains case-sensitive; hostname normalization/IDNA is outside this change.
+The initial soft-hyphen culture hypothesis did not reproduce on this runtime;
+the two culture cases are preservation checks, not a demonstrated defect repair.
+
+Native String.IndexOf(char,startIndex) rejects starts beyond the string. NetUtil's
+IPv4 dot search instead uses a parser-local FindDot over a native suffix span and
+returns -1 at/past the end. Its IPv6 embedded-IPv4 scope search clamps the suffix
+window to the string end before native IndexOf. Preserve the original full-string
+search window, including scope/bracket suffixes, rather than changing parser bounds.
+These are Netty parser decisions, not public Java string compatibility extensions.
+The mixed-sequence NetUtil entry points still convert their input to strings; a
+native borrowed-view/ownership redesign is not claimed here.
+
+Existing fixtures retain identities, assertions, inputs and original comments.
+The two CLR-only extension boundary assertions use explicit native span windows;
+eight new actual IP consumer cases cover truncated tails. Comparison with exact
+pinned Java methods, checked/full runs and warm allocation evidence are recorded
+in common-porting.md. The suffix allocation measurement is input-specific, with
+no general throughput claim. Common and the remaining mixed-sequence API work
+remain in progress.
+
 ## Native pattern windows and sequence slicing
 
 Pinned all-module call/member-reference review finds no consumers of AsciiString's

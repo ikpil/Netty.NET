@@ -99,10 +99,10 @@ public static class StringUtil
      */
     public static string substringAfter(string value, char delim)
     {
-        int pos = value.indexOf(delim);
+        int pos = value.IndexOf(delim);
         if (pos >= 0)
         {
-            return value.substring(pos + 1);
+            return value[(pos + 1)..];
         }
 
         return null;
@@ -115,10 +115,10 @@ public static class StringUtil
      */
     public static string substringBefore(string value, char delim)
     {
-        int pos = value.indexOf(delim);
+        int pos = value.IndexOf(delim);
         if (pos >= 0)
         {
-            return value.substring(0, pos);
+            return value[0..pos];
         }
 
         return null;
@@ -134,7 +134,8 @@ public static class StringUtil
      */
     public static bool commonSuffixOfLength(string s, string p, int len)
     {
-        return s != null && p != null && len >= 0 && s.regionMatches(s.length() - len, p, p.length() - len, len);
+        return s != null && p != null && len >= 0 && len <= s.Length && len <= p.Length &&
+               s.AsSpan(s.Length - len).SequenceEqual(p.AsSpan(p.Length - len));
     }
 
     /**
@@ -450,7 +451,7 @@ public static class StringUtil
      */
     public static string escapeCsv(string value, bool trimWhiteSpace)
     {
-        int length = ObjectUtil.checkNotNull(value, "value").length();
+        int length = ObjectUtil.checkNotNull(value, "value").Length;
         int start;
         int last;
         if (trimWhiteSpace)
@@ -471,9 +472,9 @@ public static class StringUtil
 
         int firstUnescapedSpecial = -1;
         bool quoted = false;
-        if (isDoubleQuote(value.charAt(start)))
+        if (isDoubleQuote(value[start]))
         {
-            quoted = isDoubleQuote(value.charAt(last)) && last > start;
+            quoted = isDoubleQuote(value[last]) && last > start;
             if (quoted)
             {
                 start++;
@@ -491,9 +492,9 @@ public static class StringUtil
             {
                 for (int i = start; i <= last; i++)
                 {
-                    if (isDoubleQuote(value.charAt(i)))
+                    if (isDoubleQuote(value[i]))
                     {
-                        if (i == last || !isDoubleQuote(value.charAt(i + 1)))
+                        if (i == last || !isDoubleQuote(value[i + 1]))
                         {
                             firstUnescapedSpecial = i;
                             break;
@@ -507,7 +508,7 @@ public static class StringUtil
             {
                 for (int i = start; i <= last; i++)
                 {
-                    char c = value.charAt(i);
+                    char c = value[i];
                     if (c == LINE_FEED || c == CARRIAGE_RETURN || c == COMMA)
                     {
                         firstUnescapedSpecial = i;
@@ -516,7 +517,7 @@ public static class StringUtil
 
                     if (isDoubleQuote(c))
                     {
-                        if (i == last || !isDoubleQuote(value.charAt(i + 1)))
+                        if (i == last || !isDoubleQuote(value[i + 1]))
                         {
                             firstUnescapedSpecial = i;
                             break;
@@ -532,7 +533,7 @@ public static class StringUtil
                 // Special characters is not found or all of them already escaped.
                 // In the most cases returns a same string. New string will be instantiated (via StringBuilder)
                 // only if it really needed. It's important to prevent GC extra load.
-                return quoted ? value.substring(start - 1, last + 2) : value.substring(start, last + 1);
+                return quoted ? value[(start - 1)..(last + 2)] : value[start..(last + 1)];
             }
         }
 
@@ -540,11 +541,11 @@ public static class StringUtil
         result.Append(DOUBLE_QUOTE).Append(value, start, firstUnescapedSpecial - start);
         for (int i = firstUnescapedSpecial; i <= last; i++)
         {
-            char c = value.charAt(i);
+            char c = value[i];
             if (isDoubleQuote(c))
             {
                 result.Append(DOUBLE_QUOTE);
-                if (i < last && isDoubleQuote(value.charAt(i + 1)))
+                if (i < last && isDoubleQuote(value[i + 1]))
                 {
                     i++;
                 }
@@ -566,14 +567,14 @@ public static class StringUtil
      */
     public static string unescapeCsv(string value)
     {
-        int length = ObjectUtil.checkNotNull(value, "value").length();
+        int length = ObjectUtil.checkNotNull(value, "value").Length;
         if (length == 0)
         {
             return value;
         }
 
         int last = length - 1;
-        bool quoted = isDoubleQuote(value.charAt(0)) && isDoubleQuote(value.charAt(last)) && length != 1;
+        bool quoted = isDoubleQuote(value[0]) && isDoubleQuote(value[last]) && length != 1;
         if (!quoted)
         {
             validateCsvFormat(value);
@@ -583,10 +584,10 @@ public static class StringUtil
         StringBuilder unescaped = InternalThreadLocalMap.get().stringBuilder();
         for (int i = 1; i < last; i++)
         {
-            char current = value.charAt(i);
+            char current = value[i];
             if (current == DOUBLE_QUOTE)
             {
-                if (isDoubleQuote(value.charAt(i + 1)) && (i + 1) != last)
+                if (isDoubleQuote(value[i + 1]) && (i + 1) != last)
                 {
                     // Followed by a double-quote but not the last character
                     // Just skip the next double-quote
@@ -618,10 +619,10 @@ public static class StringUtil
         List<string> unescaped = new List<string>(2);
         StringBuilder current = InternalThreadLocalMap.get().stringBuilder();
         bool quoted = false;
-        int last = value.length() - 1;
+        int last = value.Length - 1;
         for (int i = 0; i <= last; i++)
         {
-            char c = value.charAt(i);
+            char c = value[i];
             if (quoted)
             {
                 switch (c)
@@ -634,7 +635,7 @@ public static class StringUtil
                             return unescaped;
                         }
 
-                        char next = value.charAt(++i);
+                        char next = value[++i];
                         if (next == DOUBLE_QUOTE)
                         {
                             // 2 double-quotes should be unescaped to one
@@ -704,10 +705,10 @@ public static class StringUtil
      */
     private static void validateCsvFormat(string value)
     {
-        int length = value.length();
+        int length = value.Length;
         for (int i = 0; i < length; i++)
         {
-            switch (value.charAt(i))
+            switch (value[i])
             {
                 case DOUBLE_QUOTE:
                 case LINE_FEED:
@@ -731,7 +732,7 @@ public static class StringUtil
      */
     public static int length(string s)
     {
-        return s == null ? 0 : s.length();
+        return s == null ? 0 : s.Length;
     }
 
     /**
@@ -751,9 +752,9 @@ public static class StringUtil
      */
     public static int indexOfNonWhiteSpace(string seq, int offset)
     {
-        for (; offset < seq.length(); ++offset)
+        for (; offset < seq.Length; ++offset)
         {
-            if (!char.IsWhiteSpace(seq.charAt(offset)))
+            if (!char.IsWhiteSpace(seq[offset]))
             {
                 return offset;
             }
@@ -771,9 +772,9 @@ public static class StringUtil
      */
     public static int indexOfWhiteSpace(string seq, int offset)
     {
-        for (; offset < seq.length(); ++offset)
+        for (; offset < seq.Length; ++offset)
         {
-            if (char.IsWhiteSpace(seq.charAt(offset)))
+            if (char.IsWhiteSpace(seq[offset]))
             {
                 return offset;
             }
@@ -809,8 +810,8 @@ public static class StringUtil
      */
     public static bool endsWith(string s, char c)
     {
-        int len = s.length();
-        return len > 0 && s.charAt(len - 1) == c;
+        int len = s.Length;
+        return len > 0 && s[len - 1] == c;
     }
 
     /**
@@ -822,7 +823,7 @@ public static class StringUtil
      */
     public static string trimOws(string value)
     {
-        int length = value.length();
+        int length = value.Length;
         if (length == 0)
         {
             return value;
@@ -830,7 +831,7 @@ public static class StringUtil
 
         int start = indexOfFirstNonOwsChar(value, length);
         int end = indexOfLastNonOwsChar(value, start, length);
-        return start == 0 && end == length - 1 ? value : value.substring(start, end + 1);
+        return start == 0 && end == length - 1 ? value : value[start..(end + 1)];
     }
 
     /**
@@ -854,7 +855,7 @@ public static class StringUtil
     private static int indexOfFirstNonOwsChar(string value, int length)
     {
         int i = 0;
-        while (i < length && isOws(value.charAt(i)))
+        while (i < length && isOws(value[i]))
         {
             i++;
         }
@@ -868,7 +869,7 @@ public static class StringUtil
     private static int indexOfLastNonOwsChar(string value, int start, int length)
     {
         int i = length - 1;
-        while (i > start && isOws(value.charAt(i)))
+        while (i > start && isOws(value[i]))
         {
             i--;
         }
