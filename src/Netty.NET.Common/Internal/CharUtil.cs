@@ -222,190 +222,105 @@ public static class CharUtil
         return result.Count == 0 ? new[] { sequence } : result.ToArray();
     }
 
-    internal static bool ContentEquals(ICharSequence left, ICharSequence right)
-    {
-        if (left == null || right == null)
-        {
-            return ReferenceEquals(left, right);
-        }
+    internal static bool ContentEquals(ICharSequence left, ICharSequence right) =>
+        ContentEquals(left, right, false);
 
+    internal static bool ContentEqualsIgnoreCase(ICharSequence left, ICharSequence right) =>
+        ContentEquals(left, right, true);
+
+    private static bool ContentEquals(ICharSequence left, ICharSequence right, bool ignoreCase)
+    {
         if (ReferenceEquals(left, right))
         {
             return true;
         }
 
-        if (left.Count != right.Count)
+        return left != null && right != null && left.Count == right.Count &&
+               CompareRegions(left, 0, right, 0, left.Count, ignoreCase);
+    }
+
+    public static bool RegionMatches(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length) =>
+        RegionMatches(value, thisStart, other, start, length, false);
+
+    public static bool RegionMatchesIgnoreCase(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length) =>
+        RegionMatches(value, thisStart, other, start, length, true);
+
+    private static bool RegionMatches(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length,
+        bool ignoreCase)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(other);
+        if (thisStart < 0 || start < 0 || length > value.Count - thisStart || length > other.Count - start)
         {
             return false;
         }
 
-        for (int i = 0; i < left.Count; i++)
-        {
-            char c1 = left[i];
-            char c2 = right[i];
-            if (c1 != c2
-                && char.ToUpper(c1).CompareTo(char.ToUpper(c2)) != 0
-                && char.ToLower(c1).CompareTo(char.ToLower(c2)) != 0)
-            {
-                return false;
-            }
-        }
-
-        return true;
+        // Preserve the bridge's empty/negative region rule without adding offsets.
+        return length <= 0 || CompareRegions(value, thisStart, other, start, length, ignoreCase);
     }
 
-    internal static bool ContentEqualsIgnoreCase(ICharSequence left, ICharSequence right)
+    private static bool TryGetSpan(IReadOnlyList<char> value, out ReadOnlySpan<char> span)
     {
-        if (left == null || right == null)
+        switch (value)
         {
-            return ReferenceEquals(left, right);
+            case StringCharSequence text:
+                span = text.AsSpan();
+                return true;
+            case AppendableCharSequence builder:
+                span = builder.AsSpan();
+                return true;
+            case char[] chars:
+                span = chars;
+                return true;
+            default:
+                span = default;
+                return false;
+        }
+    }
+
+    private static bool CompareRegions(IReadOnlyList<char> left, int leftStart, IReadOnlyList<char> right, int rightStart,
+        int length, bool ignoreCase)
+    {
+        if (TryGetSpan(left, out ReadOnlySpan<char> leftSpan) && TryGetSpan(right, out ReadOnlySpan<char> rightSpan))
+        {
+            return leftSpan.Slice(leftStart, length).Equals(rightSpan.Slice(rightStart, length),
+                ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
-        if (ReferenceEquals(left, right))
+        if (!ignoreCase)
         {
+            for (int i = 0; i < length; i++)
+            {
+                if (left[leftStart + i] != right[rightStart + i])
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
-        if (left.Count != right.Count)
+        // Compare complete surrogate pairs with the BCL; never truncate UTF-16 to bytes.
+        Span<char> leftUnit = stackalloc char[2];
+        Span<char> rightUnit = stackalloc char[2];
+        for (int i = 0; i < length;)
         {
-            return false;
-        }
+            leftUnit[0] = left[leftStart + i];
+            rightUnit[0] = right[rightStart + i];
+            int width = 1;
+            if (i < length - 1 && char.IsHighSurrogate(leftUnit[0]) && char.IsLowSurrogate(left[leftStart + i + 1]))
+            {
+                width = 2;
+                leftUnit[1] = left[leftStart + i + 1];
+                rightUnit[1] = right[rightStart + i + 1];
+            }
 
-        for (int i = 0; i < left.Count; i++)
-        {
-            char c1 = left[i];
-            char c2 = right[i];
-            if (char.ToLower(c1).CompareTo(char.ToLower(c2)) != 0)
+            if (!((ReadOnlySpan<char>)leftUnit[..width]).Equals(rightUnit[..width], StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
-        }
 
-        return true;
-    }
-
-    public static bool RegionMatches(string value, int thisStart, ICharSequence other, int start, int length)
-    {
-        Contract.Requires(value != null && other != null);
-
-        if (start < 0
-            || other.Count - start < length)
-        {
-            return false;
-        }
-
-        if (thisStart < 0
-            || value.Length - thisStart < length)
-        {
-            return false;
-        }
-
-        if (length <= 0)
-        {
-            return true;
-        }
-
-        int o1 = thisStart;
-        int o2 = start;
-        for (int i = 0; i < length; ++i)
-        {
-            if (value[o1 + i] != other[o2 + i])
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static bool RegionMatchesIgnoreCase(string value, int thisStart, ICharSequence other, int start, int length)
-    {
-        Contract.Requires(value != null && other != null);
-
-        if (thisStart < 0
-            || length > value.Length - thisStart)
-        {
-            return false;
-        }
-
-        if (start < 0 || length > other.Count - start)
-        {
-            return false;
-        }
-
-        int end = thisStart + length;
-        while (thisStart < end)
-        {
-            char c1 = value[thisStart++];
-            char c2 = other[start++];
-            if (c1 != c2
-                && char.ToUpper(c1).CompareTo(char.ToUpper(c2)) != 0
-                && char.ToLower(c1).CompareTo(char.ToLower(c2)) != 0)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static bool RegionMatches(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length)
-    {
-        Contract.Requires(value != null && other != null);
-
-        if (start < 0 || other.Count - start < length)
-        {
-            return false;
-        }
-
-        if (thisStart < 0 || value.Count - thisStart < length)
-        {
-            return false;
-        }
-
-        if (length <= 0)
-        {
-            return true;
-        }
-
-        int o1 = thisStart;
-        int o2 = start;
-        for (int i = 0; i < length; ++i)
-        {
-            if (value[o1 + i] != other[o2 + i])
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static bool RegionMatchesIgnoreCase(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length)
-    {
-        Contract.Requires(value != null && other != null);
-
-        if (thisStart < 0 || length > value.Count - thisStart)
-        {
-            return false;
-        }
-
-        if (start < 0 || length > other.Count - start)
-        {
-            return false;
-        }
-
-        int end = thisStart + length;
-        while (thisStart < end)
-        {
-            char c1 = value[thisStart++];
-            char c2 = other[start++];
-            if (c1 != c2
-                && char.ToUpper(c1).CompareTo(char.ToUpper(c2)) != 0
-                && char.ToLower(c1).CompareTo(char.ToLower(c2)) != 0)
-            {
-                return false;
-            }
+            i += width;
         }
 
         return true;

@@ -447,9 +447,9 @@ public static class PlatformDependent
 
     private static short getShortSafe(byte[] bytes, int offset) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
-            return (short) (bytes[offset] << 8 | (bytes[offset + 1] & 0xff));
+            return unchecked((short) (bytes[offset] << 8 | (bytes[offset + 1] & 0xff)));
         }
-        return (short) (bytes[offset] & 0xff | (bytes[offset + 1] << 8));
+        return unchecked((short) (bytes[offset] & 0xff | (bytes[offset + 1] << 8)));
     }
 
     /**
@@ -457,17 +457,17 @@ public static class PlatformDependent
      */
     private static int hashCodeAsciiCompute(ICharSequence value, int offset, int hash) {
         if (BIG_ENDIAN_NATIVE_ORDER) {
-            return hash * HASH_CODE_C1 +
+            return unchecked(hash * HASH_CODE_C1 +
                     // Low order int
                     hashCodeAsciiSanitizeInt(value, offset + 4) * HASH_CODE_C2 +
                     // High order int
-                    hashCodeAsciiSanitizeInt(value, offset);
+                    hashCodeAsciiSanitizeInt(value, offset));
         }
-        return hash * HASH_CODE_C1 +
+        return unchecked(hash * HASH_CODE_C1 +
                 // Low order int
                 hashCodeAsciiSanitizeInt(value, offset) * HASH_CODE_C2 +
                 // High order int
-                hashCodeAsciiSanitizeInt(value, offset + 4);
+                hashCodeAsciiSanitizeInt(value, offset + 4));
     }
 
     /**
@@ -714,17 +714,17 @@ public static class PlatformDependent
         }
         int offset = 0;
         if (remainingBytes != 2 & remainingBytes != 4 & remainingBytes != 6) { // 1, 3, 5, 7
-            hash = hash * HASH_CODE_C1 + hashCodeAsciiSanitizeByte(bytes.charAt(0));
+            hash = unchecked(hash * HASH_CODE_C1 + hashCodeAsciiSanitizeByte(bytes.charAt(0)));
             offset = 1;
         }
         if (remainingBytes != 1 & remainingBytes != 4 & remainingBytes != 5) { // 2, 3, 6, 7
-            hash = hash * (offset == 0 ? HASH_CODE_C1 : HASH_CODE_C2)
-                    + hashCodeAsciiSanitize(hashCodeAsciiSanitizeShort(bytes, offset));
+            hash = unchecked(hash * (offset == 0 ? HASH_CODE_C1 : HASH_CODE_C2)
+                    + hashCodeAsciiSanitize(hashCodeAsciiSanitizeShort(bytes, offset)));
             offset += 2;
         }
         if (remainingBytes >= 4) { // 4, 5, 6, 7
-            return hash * ((offset == 0 | offset == 3) ? HASH_CODE_C1 : HASH_CODE_C2)
-                    + hashCodeAsciiSanitizeInt(bytes, offset);
+            return unchecked(hash * ((offset == 0 | offset == 3) ? HASH_CODE_C1 : HASH_CODE_C2)
+                    + hashCodeAsciiSanitizeInt(bytes, offset));
         }
         return hash;
     }
@@ -1091,24 +1091,24 @@ public static class PlatformDependent
         }
         switch(remainingBytes) {
         case 7:
-            return ((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
+            return unchecked(((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
                           * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1)))
-                          * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 3));
+                          * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 3)));
         case 6:
-            return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos)))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 2));
+            return unchecked((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos)))
+                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 2)));
         case 5:
-            return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 1));
+            return unchecked((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
+                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos + 1)));
         case 4:
-            return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos));
+            return unchecked(hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getIntSafe(bytes, startPos)));
         case 3:
-            return (hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
-                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1));
+            return unchecked((hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]))
+                         * HASH_CODE_C2 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos + 1)));
         case 2:
-            return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos));
+            return unchecked(hash * HASH_CODE_C1 + hashCodeAsciiSanitize(getShortSafe(bytes, startPos)));
         case 1:
-            return hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]);
+            return unchecked(hash * HASH_CODE_C1 + hashCodeAsciiSanitize(bytes[startPos]));
         default:
             return hash;
         }

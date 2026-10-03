@@ -1944,18 +1944,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             return false;
         }
 
-        if (cs is StringCharSequence && str is StringCharSequence)
-        {
-            return ((StringCharSequence)cs).regionMatches(ignoreCase, csStart, str, start, length);
-        }
-
         if (cs is AsciiString)
         {
             return ((AsciiString)cs).regionMatches(ignoreCase, csStart, str, start, length);
         }
 
-        return regionMatchesCharSequences(cs, csStart, str, start, length,
-            ignoreCase ? GeneralCaseInsensitiveCharEqualityComparator.INSTANCE : DefaultCharEqualityComparator.INSTANCE);
+        return ignoreCase
+            ? CharUtil.RegionMatchesIgnoreCase(cs, csStart, str, start, length)
+            : CharUtil.RegionMatches(cs, csStart, str, start, length);
     }
 
     /**

@@ -27,6 +27,10 @@ public sealed class AppendableCharSequence : ICharSequence
     private int pos;
     public int Count => pos;
 
+    /// <summary>Returns a synchronous borrowed view of the current logical characters.</summary>
+    /// <remarks>Consume before append, reset or setLength; the view does not track later length or buffer changes.</remarks>
+    public ReadOnlySpan<char> AsSpan() => chars.AsSpan(0, pos);
+
     public AppendableCharSequence(int length)
     {
         chars = new char[checkPositive(length, "length")];
@@ -109,7 +113,7 @@ public sealed class AppendableCharSequence : ICharSequence
 
     public int hashCode(bool ignoreCase)
     {
-        return (ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal).GetHashCode(ToString());
+        return string.GetHashCode(AsSpan(), ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
     }
 
     public string ToString(int start)

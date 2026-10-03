@@ -7,6 +7,6 @@ public class AsciiCaseInsensitiveCharEqualityComparator : ICharEqualityComparato
 
     public bool equals(char a, char b)
     {
-        return char.ToLowerInvariant(a) == char.ToLowerInvariant(b);
+        return a == b || AsciiString.toLowerCase(a) == AsciiString.toLowerCase(b);
     }
 }

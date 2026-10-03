@@ -999,6 +999,84 @@ Original AsciiString.java delimiter facade and all four original comments:
     }
 ```
 
+## Native UTF-16 comparison and ASCII protocol comparison
+
+StringCharSequence and AppendableCharSequence contentEquals now compares exact
+UTF-16 content. The previous CLR-only CharUtil helper incorrectly ignored case.
+General ignore-case content/region comparisons use native OrdinalIgnoreCase,
+independent of CurrentCulture, with one policy for strings, builders and indexed
+fallback sequences. Known logical char views use MemoryExtensions.Equals directly.
+The indexed fallback compares complete surrogate pairs with the BCL using two
+stack-allocated code units, without converting the sequence to a string or bytes.
+This explicitly chooses CLR Unicode casing rather than reproducing Java Character
+tables: dotted/dotless I and supplementary case pairs may differ from Java's generic
+per-char comparator. No normalization, culture comparison or multi-character case
+expansion is added. A selected region never reads outside its logical bounds.
+
+Preserve AsciiString's byte-oriented instance comparison and the explicitly ASCII
+static content/region/contains APIs: only A-Z fold to a-z; non-ASCII bytes/code units
+must match exactly. Correct the CLR ASCII comparator which used Unicode lowercasing.
+General AsciiString.regionMatches keeps the pinned byte-receiver dispatch, but
+routes other receiver representations through native general comparison. The
+original general per-char comparator is replaced by BCL comparison and its comment
+is archived below. The remaining ASCII comparator still has actual protocol use.
+
+The bridge keeps false for invalid region bounds and its original nonpositive
+length rule after bounds checks; no Java range wrapper is introduced for native
+Span slicing. Instance region null arguments throw ArgumentNullException;
+the static region dispatcher retains false for null inputs. Two unused CLR-only
+CharUtil string overloads are removed after caller review. Remaining numeric,
+split/trim/search helpers and the whole ICharSequence public API remain separate.
+
+StringCharSequence object equality is confined to immutable StringCharSequence
+values, using exact content and matching native hashes. Cross-type content remains
+an explicit contentEquals/comparer operation; default object equality must not
+claim equality with a byte string or mutable builder that returns false in reverse
+or has a different hash policy. The existing ASCII IEqualityComparer fields remain
+the explicit shared-header collection policy. Native string.GetHashCode over a
+logical span replaces allocating ToString in StringCharSequence/Appendable hashing;
+hashes are runtime/process values, not persistent or Java-compatible identifiers.
+
+AppendableCharSequence.AsSpan exposes only the current logical length as a
+synchronous borrowed view. Consume before append/reset/setLength. A previously
+returned view does not track later length, mutations or replacement buffers, and
+does not acquire an ownership lease or become safe for concurrent mutation.
+No asynchronous memory view is introduced. Mutable builder hashes must not be
+used as stable resident collection keys while contents change.
+
+Checked validation also exposes missing wrap annotations in the existing ASCII
+hash path. Keep the pinned Netty hash/collection algorithm: mark only hash multiply/
+add expressions and 16-bit signed word reinterpretation as unchecked. Offsets and
+range arithmetic are not globally unchecked. The native general string span hash
+remains separate from Netty's explicitly ASCII hash. Exact Java hash methods on
+540 deterministic byte/slice inputs agree on Windows little-endian order; this
+does not claim execution on a big-endian CLR host. The original 1000-length hash
+fixture and shared-comparer collection cases pass checked Release without changing
+their assertions, workloads or inputs.
+
+Framework APIs: [MemoryExtensions.Equals](https://learn.microsoft.com/en-us/dotnet/api/system.memoryextensions.equals?view=net-10.0)
+and [String.GetHashCode(ReadOnlySpan<char>, StringComparison)](https://learn.microsoft.com/en-us/dotnet/api/system.string.gethashcode?view=net-10.0).
+Executed source/native comparisons, regressions, full test outcomes and input-specific
+allocation measurements are recorded in common-porting.md. This completes this
+comparison unit, not the whole common port or memory ownership/API redesign.
+
+Original AsciiString.java:1567-1578 nested general comparator provenance:
+
+```java
+    private static final class GeneralCaseInsensitiveCharEqualityComparator implements CharEqualityComparator {
+        static final GeneralCaseInsensitiveCharEqualityComparator
+                INSTANCE = new GeneralCaseInsensitiveCharEqualityComparator();
+        private GeneralCaseInsensitiveCharEqualityComparator() { }
+
+        @Override
+        public boolean equals(char a, char b) {
+            //For motivation, why we need two checks, see comment in String#regionMatches
+            return Character.toUpperCase(a) == Character.toUpperCase(b) ||
+                Character.toLowerCase(a) == Character.toLowerCase(b);
+        }
+    }
+```
+
 ## Native string consumers
 
 Remove the CLR-only StringExtensions facade after migrating every compiler-confirmed

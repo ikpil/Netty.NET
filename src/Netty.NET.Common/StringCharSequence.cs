@@ -158,17 +158,11 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
             return Equals(other);
         }
 
-        if (obj is ICharSequence seq)
-        {
-            return contentEquals(seq);
-        }
-
         return false;
     }
 
-    public int hashCode(bool ignoreCase) => ignoreCase
-        ? StringComparer.OrdinalIgnoreCase.GetHashCode(ToString())
-        : StringComparer.Ordinal.GetHashCode(ToString());
+    public int hashCode(bool ignoreCase) =>
+        string.GetHashCode(AsSpan(), ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
     public override int GetHashCode() => hashCode(false);
 

@@ -121,15 +121,16 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1754 cases** on Windows/net10.0:
-**1740 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1804 cases** on Windows/net10.0:
+**1790 passed / 0 failed / 14 skipped** in final Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`native-string-full-debug.trx` and `native-string-full-release.trx`;
-affected Debug passes 153 with one existing skip, and checked Release passes 40.
-The CLR-only StringExtensions facade is removed; actual string consumers now use
-native UTF-16 APIs with ordinal domain/suffix comparison and explicit IP search bounds.
-The earlier pattern, delimiter, regex, numeric and scheduling work remains below.
+`sequence-comparison-final-full-debug.trx` and `sequence-comparison-final-full-release.trx`;
+affected Debug passes 114, and checked Release passes 66 relevant cases.
+General UTF-16 comparison uses native ordinal rules; ASCII protocol comparisons
+retain A-Z folding. Content/object equality and checked ASCII hash arithmetic are
+corrected, and native logical span comparison/hashing avoid string materialization.
+The earlier string, pattern, delimiter, numeric and scheduling work remains below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
@@ -710,6 +711,58 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### Native sequence comparison/hash checkpoint
+
+Fix CLR CharUtil.contentEquals incorrectly ignoring case, culture-dependent
+ignore-case equality/regions and incomplete final-sigma handling. Use native
+Ordinal/OrdinalIgnoreCase over logical UTF-16 spans; indexed fallback consumes
+complete surrogate pairs through BCL comparison without string/byte conversion.
+StringCharSequence object equality now stays within its immutable type, preserving
+symmetry and hash contracts; explicit mixed content/comparer operations remain.
+StringCharSequence and Appendable hashes use native string.GetHashCode over spans;
+Appendable exposes a bounded synchronous borrowed AsSpan, without async ownership.
+Remove two unused CLR-only string region overloads and the unused general per-char
+comparator; archive its original comment in existing common-clr-design.md.
+All 99 AsciiString original comments remain (one additional archived comparator).
+
+Keep byte-receiver dispatch and ASCII-only content/region/contains comparison.
+Correct the CLR ASCII comparator's accidental Unicode folding; every 65536 byte
+pair is checked against independent A-Z folding. Existing explicit header comparer
+collection/Unicode/hash contracts remain unchanged. Checked validation exposes
+11 existing ASCII hash/collection failures; explicit unchecked hash expressions
+fix those. The added original 1000-length hash fixture then exposes one signed
+word narrowing failure; explicit unchecked bit reinterpretation fixes it. No
+global unchecked range policy, test skip or weakened assertion is added.
+
+Seven pre-repair regressions all fail, then pass. Final affected Debug passes 114;
+checked Release passes 66 (all 50 new plus 16 existing). Exact pinned Java region/
+comparator methods on Corretto 21.0.11 execute 77760 unique rows: ASCII results
+match; native general results match the BCL reference with zero differences.
+There are 34 deliberate Java-to-native general differences: nine dotted-I,
+nine dotless-I and sixteen supplementary case-pair regions. These follow the
+documented native Unicode policy, not an assertion of universal Java equivalence.
+Exact pinned Java hash methods on 540 deterministic byte/slice inputs agree with
+actual checked CLR byte/text/AsciiString hashes (native little-endian Windows).
+Warm 20000 comparison/hash iterations allocate zero for the chosen span/indexed
+inputs; no general throughput claim or stable cross-process hash guarantee.
+
+Final full Debug/Release each discover 1804 / pass 1790 / fail zero / retain the
+same 14 skips. All prior 1754 identities/outcomes and 759 non-Porting cases remain;
+only 50 SequenceComparisonContractTest cases are added. All 271 inventory paths
+and missing-comment counts are unchanged. Earlier normal full runs also pass;
+final full runs follow the checked-hash repair. Failed runs remain separate:
+sequence-comparison-before.trx, sequence-comparison-hash-before-checked.trx and
+sequence-comparison-word-before-checked.trx. Passing evidence:
+sequence-comparison-affected-debug.trx, sequence-comparison-checked-release.trx,
+sequence-comparison-final-full-debug.trx, sequence-comparison-final-full-release.trx,
+sequence-comparison-identity-comparison.json, sequence-comparison-comment-audit.json,
+sequence-comparison-inventory-summary.json, sequence-comparison-java-clr-oracle.json.
+Ignored artifacts/sequence-comparison-validation retains harnesses, corpora and
+allocation/old-comparator probe; no feature MD is added. Windows/net10.0 SDK
+10.0.203/runtime 10.0.7. Source/test decision counts stay unchanged. Remaining
+numeric/split/trim/search scaffolding, memory/SWAR and the coordinated ICharSequence
+public API still require review; common remains in progress.
 
 ### Native string consumer checkpoint
 
