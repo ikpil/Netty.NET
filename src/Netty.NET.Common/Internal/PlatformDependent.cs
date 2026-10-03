@@ -334,18 +334,6 @@ public static class PlatformDependent
 
 
 
-    public static object getObject(object obj, long fieldOffset) {
-        return PlatformDependent0.getObject(obj, fieldOffset);
-    }
-
-    public static int getInt(object obj, long fieldOffset) {
-        return PlatformDependent0.getInt(obj, fieldOffset);
-    }
-
-    public static void safeConstructPutInt(object obj, long fieldOffset, int value) {
-        PlatformDependent0.safeConstructPutInt(obj, fieldOffset, value);
-    }
-
     public static void putShortOrdered(long adddress, short newValue) {
         PlatformDependent0.putShortOrdered(adddress, newValue);
     }
@@ -527,10 +515,6 @@ public static class PlatformDependent
         data[index] = value;
     }
 
-    public static void putByte(object data, long offset, byte value) {
-        PlatformDependent0.putByte(data, offset, value);
-    }
-
     public static void putShort(byte[] data, int index, short value) {
         MemoryMarshal.Write(data.AsSpan(index, sizeof(short)), in value);
     }
@@ -541,14 +525,6 @@ public static class PlatformDependent
 
     public static void putLong(byte[] data, int index, long value) {
         MemoryMarshal.Write(data.AsSpan(index, sizeof(long)), in value);
-    }
-
-    public static void putObject(object o, long offset, object x) {
-        PlatformDependent0.putObject(o, offset, x);
-    }
-
-    public static long objectFieldOffset(MemberInfo field) {
-        return PlatformDependent0.objectFieldOffset(field);
     }
 
     public static void copyMemory(long srcAddr, long dstAddr, long length) {

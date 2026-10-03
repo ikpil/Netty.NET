@@ -6,7 +6,8 @@ namespace Netty.NET.Common.Internal;
 
 public static class ThreadLocalRandom
 {
-    private static int _seed = (int)(Stopwatch.GetTimestamp() & 0xFFFFFFFF);
+    // The seed deliberately keeps the low 32 timestamp bits, including the sign bit.
+    private static int _seed = unchecked((int)(Stopwatch.GetTimestamp() & 0xFFFFFFFF));
 
     [ThreadStatic]
     private static Random _rnd;

@@ -611,41 +611,6 @@ public class PlatformDependent0
         return BYTE_ARRAY_BASE_OFFSET;
     }
 
-    public static object getObject(object obj, long fieldOffset)
-    {
-        throwException(new NotImplementedException());
-        return null;
-        //return UNSAFE.getObject(obj, fieldOffset);
-    }
-
-    public static int getInt(object obj, long fieldOffset)
-    {
-        throwException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.getInt(obj, fieldOffset);
-    }
-
-    public static void safeConstructPutInt(object obj, long fieldOffset, int value)
-    {
-        throwException(new NotImplementedException());
-        // UNSAFE.putInt(obj, fieldOffset, value);
-        // UNSAFE.storeFence();
-    }
-
-    private static long getLong(object obj, long fieldOffset)
-    {
-        throwException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.getLong(obj, fieldOffset);
-    }
-
-    public static long objectFieldOffset(MemberInfo field)
-    {
-        throwException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.objectFieldOffset(field);
-    }
-
     public static byte getByte(long address)
     {
         throwException(new NotImplementedException());
@@ -716,18 +681,6 @@ public class PlatformDependent0
     {
         throwException(new NotImplementedException());
         //UNSAFE.putLong(address, value);
-    }
-
-    public static void putByte(object data, long offset, byte value)
-    {
-        throwException(new NotImplementedException());
-        //UNSAFE.putByte(data, offset, value);
-    }
-
-    public static void putObject(object o, long offset, object x)
-    {
-        throwException(new NotImplementedException());
-        //UNSAFE.putObject(o, offset, x);
     }
 
     public static void copyMemory(long srcAddr, long dstAddr, long length)

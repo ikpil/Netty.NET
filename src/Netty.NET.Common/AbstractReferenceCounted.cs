@@ -14,8 +14,6 @@
  * under the License.
  */
 
-using System.Runtime.CompilerServices;
-using System.Threading;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common;
@@ -29,7 +27,7 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
 
     public int refCnt()
     {
-        return Volatile.Read(ref _refCnt);
+        return ReferenceCountUpdater.GetCount(ref _refCnt);
     }
 
     /**
@@ -37,7 +35,7 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
      */
     protected internal void setRefCnt(int refCnt)
     {
-        Interlocked.Exchange(ref _refCnt, refCnt);
+        ReferenceCountUpdater.SetCount(ref _refCnt, refCnt);
     }
 
     public IReferenceCounted retain()
@@ -47,22 +45,7 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
 
     public virtual IReferenceCounted retain(int increment)
     {
-        ObjectUtil.checkPositive(increment, nameof(increment));
-        while (true)
-        {
-            int count = Volatile.Read(ref _refCnt);
-            if (count == 0 || count > int.MaxValue - increment)
-            {
-                ThrowIllegalReferenceCountException(count, increment);
-            }
-
-            int nextCount = count + increment;
-            if (Interlocked.CompareExchange(ref _refCnt, nextCount, count) == count)
-            {
-                break;
-            }
-        }
-
+        ReferenceCountUpdater.Retain(ref _refCnt, increment);
         return this;
     }
 
@@ -80,43 +63,16 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
 
     public bool release(int decrement)
     {
-        ObjectUtil.checkPositive(decrement, nameof(decrement));
-        while (true)
+        if (ReferenceCountUpdater.Release(ref _refCnt, decrement))
         {
-            int count = Volatile.Read(ref _refCnt);
-            if (count < decrement)
-            {
-                ThrowIllegalReferenceCountException(count, -decrement);
-            }
-
-            if (Interlocked.CompareExchange(ref _refCnt, count - decrement, count) != count)
-            {
-                continue;
-            }
-
-            if (count == decrement)
-            {
-                deallocate();
-                return true;
-            }
-
-            return false;
+            deallocate();
+            return true;
         }
+        return false;
     }
 
     /**
      * Called once {@link #refCnt()} is equals 0.
      */
     protected abstract void deallocate();
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowIllegalReferenceCountException(int count, int increment)
-    {
-        throw GetIllegalReferenceCountException();
-
-        IllegalReferenceCountException GetIllegalReferenceCountException()
-        {
-            return new IllegalReferenceCountException(count, increment);
-        }
-    }
 }

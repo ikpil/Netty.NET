@@ -30,9 +30,9 @@ These decisions do not claim that every method of a listed component is complete
 | Specialized integer queue | `MpscIntQueue.java`; `buffer/.../AdaptivePoolingAllocator.java` free lists | Fixed capacity, integer empty sentinel, fill/drain and weak reduction have actual allocator consumers. These requirements justify an adapter; generic CLR integers require no boxing specialization. | Compare the current ring with CLR collection alternatives against those operations; performance has not been measured. |
 | Indexed priority queue | `DefaultPriorityQueue.java`, scheduled-task removal; `codec-http2/.../WeightedFairQueueByteDistributor.java` priority updates | Retain the indexed reference-node heap for mutable priorities and independent queue membership. Ordinary value/immutable entries use BCL PriorityQueue. Stopped scheduler queues clear references and indices. | Core source/interfaces reviewed; bounded indexed/BCL/tree costs below. Remaining scheduler/runtime review stays open. |
 | Thread-local state | `FastThreadLocal.java`, `InternalThreadLocalMap.java`; allocator caches and event-loop workers | Physical-worker caches remain thread-local. AsyncLocal describes logical execution context and is a separate purpose. A sealed CLR Thread may be owned/wrapped where cleanup policy requires it. | Remove unnecessary ThreadGroup/JDK facade surface after caller review; keep cleanup/ownership behavior. |
-| Resource lifetime | `AbstractReferenceCounted.java`, `ReferenceCountUtil.java`, `Recycler.java`; `buffer/.../AbstractReferenceCountedByteBuf.java` | GC does not decide when shared pooled/native storage is reusable. Retain/release must deallocate exactly once and never resurrect returned storage. Dispose alone does not define shared ownership. | Native owners, borrowed views and pin leases are implemented; integrate them with future pooled retain/release consumers. Ordinary CLR object cleanup and shared storage ownership must remain distinct. |
+| Resource lifetime | `AbstractReferenceCounted.java`, `ReferenceCountUtil.java`, `Recycler.java`; `buffer/.../AbstractReferenceCountedByteBuf.java` | GC does not decide when shared pooled/native storage is reusable. Retain/release must deallocate exactly once and never resurrect returned storage. Native typed ref-int counter operations replace the JVM RefCnt/updater providers; see CLR reference-count fields below. Dispose alone does not define shared ownership. | Native owners, borrowed views and pin leases are implemented; integrate them with future pooled retain/release consumers. Ordinary CLR object cleanup and shared storage ownership must remain distinct. |
 | Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. CharsetUtil is replaced by native Encoding/fallback policies and operation-owned codecs; explicit Java/CLR framing and replacement differences are recorded below. Integer parsing uses bounded byte spans, native Parse/TryParse APIs and checked-safe generic math. Floating-point parsing uses invariant BCL span conversion plus Java grammar and hexadecimal rounding; see the numeric decisions below. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Unused regex facades are replaced by native Regex/literal string splitting. Native delimiter ranges/character search are reviewed below. Full native sequence API and future protocol framing/streaming integration remain. Raw platform addresses and pooled-buffer integration remain separate reviews. |
-| Runtime selection | `PlatformDependent.java`, `PlatformDependent0.java`; buffer/transport/TLS/resolver consumers | JDK-version facades and JVM reflective array allocation are removed. CLR consumers use Environment.Version and GC directly. Android detection uses the actual OS; JVM/Graal properties do not select CLR features. See common-platform-runtime.md. | NativeMemory owners/views replace the JVM cleaner hierarchy; managed words and copy/fill use CLR spans. Raw address/object-offset APIs remain in progress. See common-native-memory.md and common-heap-memory.md. |
+| Runtime selection | `PlatformDependent.java`, `PlatformDependent0.java`; buffer/transport/TLS/resolver consumers | JDK-version facades and JVM reflective array allocation are removed. CLR consumers use Environment.Version and GC directly. Android detection uses the actual OS; JVM/Graal properties do not select CLR features. See common-platform-runtime.md. | NativeMemory owners/views replace the JVM cleaner hierarchy; managed words and copy/fill use CLR spans. Managed field-offset stubs are removed after typed ref-int counter migration; raw native-address APIs remain in progress. See common-native-memory.md and common-heap-memory.md. |
 | Ordinary object GC fallback | Deprecated `ObjectCleaner.java`; no production registration consumer in the pinned tree | ConditionalWeakTable lifetime notification and CLR pool dispatch replace the Java live-set/weak-queue/worker loop. Action registration, diagnostic count and concurrent/context-isolated cleanup are verified. See common-object-cleanup.md. | This runtime replacement does not define pooled/native storage ownership or deterministic resource disposal. |
 
 ## Implemented Task completion boundary
@@ -997,6 +997,305 @@ Original AsciiString.java delimiter facade and all four original comments:
 
         return res.toArray(EmptyArrays.EMPTY_ASCII_STRINGS);
     }
+```
+
+## CLR reference-count fields and JVM field access
+
+Pinned AbstractReferenceCounted.java delegates to RefCnt, whose Atomic, VarHandle
+and Unsafe providers implement one shared-storage lifetime contract. The current
+C# AbstractReferenceCounted already uses a real int with Volatile/Interlocked;
+there is no separately ported RefCnt object. Its duplicate generic
+ReferenceCountUpdater/AtomicIntegerFieldUpdater adapter is unused, stale relative
+to the pinned algorithm, and contains five unimplemented field-update operations.
+Replace it with static typed ref-int operations, and route AbstractReferenceCounted
+through those operations. This purpose is also required by actual original
+buffer/AbstractReferenceCountedByteBuf.java:27-88 and
+buffer/AdaptivePoolingAllocator.java:1595/1669-1673: accessibility checks,
+quiescent resets, retain/release and final-release deallocation. The reusable helper
+is justified by those distinct owners; no buffer implementation is claimed here.
+
+Initialize a caller-owned int field to one; always pass that same field by ref.
+CLR managed interior references need no reflected byte offsets or pinning for
+Interlocked. GetCount/IsLive use acquire reads; SetCount/Reset use release writes,
+with direct mutation restricted to a quiescent state. IsLive remains a best-effort
+guard and does not acquire a storage lease. CAS applies each accepted retain or
+release exactly once. Release returns true only for the live-to-zero transition;
+the storage owner invokes deallocation. Even a throwing deallocator leaves zero
+terminal. Ordinary managed GC, native ownership, pins, and shared reference counts
+retain their distinct roles. A NativeMemoryOwner integration case validates final
+shared release, without claiming a production pool/buffer lease implementation.
+Framework contracts: [Interlocked.CompareExchange](https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked.compareexchange?view=net-10.0)
+and [Volatile](https://learn.microsoft.com/en-us/dotnet/api/system.threading.volatile?view=net-10.0).
+
+Use the full positive CLR Int32 range, keeping the existing C# count contract.
+Zero is the released value; nonpositive direct settings now normalize to zero,
+matching the original externally visible released state. Positive direct reset is
+an explicit quiescent owner operation. Invalid/nonpositive increments/decrements,
+overflow, excessive release and retain-after-release fail without changing the
+count. Exception diagnostics report the actual observed native count. Do not copy
+Java's doubled raw integer encoding, provider probes or transient get-and-add with
+rollback: at 2^30 boundaries the pinned Java branches reject valid native counts
+or wrap large decrements; its overflow-retain diagnostic always reports zero.
+Those intentional language/runtime decisions are separated from ordinary behavior
+in the executed Java/CLR oracle. The former C# negative setter defect has two
+reproduced failures. Existing tests remain unchanged. Checked validation also
+exposes an unchanged ThreadLocalRandom timestamp-seed narrowing overflow; make
+that single conversion explicitly unchecked to retain its intended low-bit seed
+in checked builds. The random adapter's broader native API review is separate.
+
+Remove managed object-field-offset getObject/getInt/safeConstructPutInt/putObject/
+objectFieldOffset and object-offset byte-write stubs from PlatformDependent and
+PlatformDependent0 after replacing their only C# dependent adapter. Original
+Java uses additionally include transport/NioIoHandler.java:192-200 (replacing JDK
+Selector key sets) and handler/ssl/OpenSslX509TrustManagerWrapper.java:105-116,
+179-181 (accessing private JDK SSLContext/trust-manager fields). Neither JVM
+object layout exists on CLR. Future transport must use native socket completion
+APIs and explicit queues; TLS must use its selected CLR/native provider's public
+certificate-validation contract. Their behavior is still future module work,
+not an implemented CLR Selector/SSLContext facade. No reflective GetValue fallback,
+Marshal.OffsetOf on managed reference types, fixed GC field-layout assumptions,
+or unsafe object-offset emulation is introduced. Raw native-address allocation,
+word access, ordered native writes and mixed address copying remain a separate
+pending review against NativeMemoryAllocator/Owner/View and real buffer consumers.
+VarHandleFactory also supplies endian byte-memory views and remains pending.
+
+### Original replaced counter/provider comments
+
+All pinned comments are retained below, including implementation notes about
+Java's doubled raw value and its provider optimizations. They are provenance;
+the CLR field stores the actual count, as described above.
+
+RefCnt.java:
+
+```java
+/*
+ * Copyright 2025 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Monomorphic reference counter implementation that always use the most efficient available atomic updater.
+ * This implementation is easier for the JIT compiler to optimize,
+ * compared to when {@link ReferenceCountUpdater} is used.
+ */
+
+/*
+     * Implementation notes:
+     *
+     * For the updated int field:
+     *   Even => "real" refcount is (refCnt >>> 1)
+     *   Odd  => "real" refcount is 0
+     *
+     * This field is package-private so that the AtomicRefCnt implementation can reach it, even on native-image.
+     */
+
+/**
+     * Returns the current reference count of the given {@code RefCnt} instance with a load acquire semantic.
+     *
+     * @param ref the target RefCnt instance
+     * @return the reference count
+     */
+
+/**
+     * Increases the reference count of the given {@code RefCnt} instance by 1.
+     *
+     * @param ref the target RefCnt instance
+     */
+
+/**
+     * Increases the reference count of the given {@code RefCnt} instance by the specified increment.
+     *
+     * @param ref       the target RefCnt instance
+     * @param increment the amount to increase the reference count by
+     * @throws IllegalArgumentException if increment is not positive
+     */
+
+/**
+     * Decreases the reference count of the given {@code RefCnt} instance by 1.
+     *
+     * @param ref the target RefCnt instance
+     * @return true if the reference count became 0 and the object should be deallocated
+     */
+
+/**
+     * Decreases the reference count of the given {@code RefCnt} instance by the specified decrement.
+     *
+     * @param ref       the target RefCnt instance
+     * @param decrement the amount to decrease the reference count by
+     * @return true if the reference count became 0 and the object should be deallocated
+     * @throws IllegalArgumentException if decrement is not positive
+     */
+
+/**
+     * Returns {@code true} if and only if the given reference counter is alive.
+     * This method is useful to check if the object is alive without incurring the cost of a volatile read.
+     *
+     * @param ref the target RefCnt instance
+     * @return {@code true} if alive
+     */
+
+/**
+     * <strong>WARNING:</strong>
+     * An unsafe operation that sets the reference count of the given {@code RefCnt} instance directly.
+     *
+     * @param ref    the target RefCnt instance
+     * @param refCnt new reference count
+     */
+
+/**
+     * Resets the reference count of the given {@code RefCnt} instance to 1.
+     * <p>
+     * <strong>Warning:</strong> This method uses release memory semantics, meaning the change may not be
+     * immediately visible to other threads. It should only be used in quiescent states where no other
+     * threads are accessing the reference count.
+     *
+     * @param ref the target RefCnt instance
+     */
+
+// oldRef & 0x80000001 stands for oldRef < 0 || oldRef is odd
+
+// NOTE: we're optimizing for inlined and constant folded increment here -> which will make
+
+// Integer.MAX_VALUE - increment to be computed at compile time
+
+// oldRef & 0x80000001 stands for oldRef < 0 || oldRef is odd
+
+// NOTE: we're optimizing for inlined and constant folded increment here -> which will make
+
+// Integer.MAX_VALUE - increment to be computed at compile time
+
+// fall-back
+
+// oldRef & 0x80000001 stands for oldRef < 0 || oldRef is odd
+
+// NOTE: we're optimizing for inlined and constant folded increment here -> which will make
+
+// Integer.MAX_VALUE - increment to be computed at compile time
+```
+
+ReferenceCountUpdater.java:
+
+```java
+/*
+ * Copyright 2019 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Common logic for {@link ReferenceCounted} implementations
+ * @deprecated Instead of extending this class, prefer instead to include a {@link RefCnt} field and delegate to that.
+ * This approach has better compatibility with Graal Native Image.
+ */
+
+/*
+     * Implementation notes:
+     *
+     * For the updated int field:
+     *   Even => "real" refcount is (refCnt >>> 1)
+     *   Odd  => "real" refcount is 0
+     */
+
+/**
+     * An unsafe operation that sets the reference count directly
+     */
+
+// overflow OK here
+
+/**
+     * Resets the reference count to 1
+     */
+
+// no need of a volatile set, it should happen in a quiescent state
+
+// oldRef & 0x80000001 stands for oldRef < 0 || oldRef is odd
+
+// NOTE: we're optimizing for inlined and constant folded increment here -> which will make
+
+// Integer.MAX_VALUE - increment to be computed at compile time
+
+// fall-back
+```
+
+AtomicReferenceCountUpdater.java:
+
+```java
+/*
+ * Copyright 2025 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+```
+
+UnsafeReferenceCountUpdater.java:
+
+```java
+/*
+ * Copyright 2025 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+```
+
+VarHandleReferenceCountUpdater.java:
+
+```java
+/*
+ * Copyright 2025 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 ```
 
 ## ASCII trim and word conversion

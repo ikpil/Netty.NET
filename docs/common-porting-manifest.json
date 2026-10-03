@@ -35,12 +35,15 @@
         "src/Netty.NET.Common/AbstractReferenceCounted.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/AbstractReferenceCounted.cs"
+        "src/Netty.NET.Common/AbstractReferenceCounted.cs",
+        "src/Netty.NET.Common/Internal/ReferenceCountUpdater.cs"
       ],
       "evidence": [
-        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved.",
+        "Native shared ref-int updater replaces duplicate JVM field-updater adapter; nonpositive direct settings normalize to zero (two reproduced failures). Existing original fixture unchanged, plus native composition/lifetime/overflow/publication races. See reference-count-field checkpoint.",
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "adaptation": "Typed caller-owned ref int counters use native Volatile/Interlocked CAS through ReferenceCountUpdater. Full positive Int32 range and actual observed overflow diagnostics retain the existing CLR policy; nonpositive direct settings normalize to released zero. Final live-to-zero Release invokes deallocation once, even if its callback throws. Direct count reset is only for quiescent owner reuse; IsLive does not acquire ownership. Original public fixtures and all four original comments remain unchanged; future buffer/native storage integration remains separate.",
       "comments": {
         "upstreamCount": 4,
         "required": true,
@@ -2805,16 +2808,23 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/AtomicReferenceCountUpdater.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Internal/ReferenceCountUpdater.cs",
+        "src/Netty.NET.Common/AbstractReferenceCounted.cs",
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Pinned RefCnt and deprecated updater families compared with AbstractReferenceCounted, AbstractReferenceCountedByteBuf and AdaptivePoolingAllocator consumers; two pre-repair negative-setter regression failures. Exact Java Atomic/VarHandle providers, RefCnt, generic updater and AbstractReferenceCounted execute 10672 inputs per counter path: 32016 rows per provider, all provider/path results agree. Native independent reference agrees on all 10672; Java 10561 exact matches, 76 doubled-raw boundary and 35 overflow-error-count intentional differences. See common-clr-design.md and the reference-count-field checkpoint.",
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
+      ],
+      "adaptation": "Typed caller-owned ref int fields with native Volatile/Interlocked CAS replace RefCnt allocation, generic field updaters and JVM provider selection. Initialize to one; count zero is terminal until explicit quiescent reset. Full positive Int32 native range and actual overflow diagnostics preserve the existing CLR count policy. Nonpositive direct counts normalize to released zero. IsLive does not acquire ownership; final Release transfers deallocation responsibility to its caller. Actual future buffer/pool consumers justify reusable operations; their integration remains future work. All exact original comments archived in existing common-clr-design.md.",
       "comments": {
         "upstreamCount": 1,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 1
+        "required": false,
+        "preservedCount": 1,
+        "missingCount": 0
       }
     },
     {
@@ -3459,9 +3469,11 @@
         "Historical default managed-byte checkpoint: Debug/Release each 1132 passed / 0 failed / 14 skipped (1146 total), builds 415 warnings / 0 errors, Windows/net10.0. heap-memory-full-debug.trx, heap-memory-full-release.trx; targeted Debug 146 passed. Heap writes/copy/fill reproduce 11 pre-repair failures. No performance-equivalence claim.",
         "Historical default ordered-multimap checkpoint: Debug/Release each 1161 passed / 0 failed / 14 skipped (1175 total), Windows/net10.0. ordered-multimap-full-debug.trx, ordered-multimap-full-release.trx. All 29 ordered-map cases execute, including gated mixed publish/take; builds 338 emitted test warnings / 0 errors, library up to date (earlier complete heap-memory builds 415 warnings). Original source public API review remains in progress; no performance-equivalence claim.",
         "Native string Length/indexers/ranges and explicit OrdinalIgnoreCase replace Java string forwarding calls for OS probes/normalization. Runtime/probe policies unchanged. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips.",
-        "Checked hash/collection selection exposes 11 overflow failures, then the original 1000-length hash fixture exposes one signed-word narrowing failure. Hash multiply/add expressions and 16-bit bit reinterpretation now explicitly unchecked; offset/range arithmetic remains checked. Exact pinned Java hash methods on 540 byte/slice inputs agree with actual checked CLR byte/text/AsciiString hashes on little-endian Windows. Original assertions/workloads/comments unchanged. Decision/evidence: common-clr-design.md Native UTF-16 comparison and ASCII protocol comparison; common-porting.md Native sequence comparison/hash checkpoint and sequence-comparison-* evidence. Final full Debug/Release each 1790 passed/zero failed/14 unchanged skips; checked Release 66 passes. Full module/API review remains open."
+        "Checked hash/collection selection exposes 11 overflow failures, then the original 1000-length hash fixture exposes one signed-word narrowing failure. Hash multiply/add expressions and 16-bit bit reinterpretation now explicitly unchecked; offset/range arithmetic remains checked. Exact pinned Java hash methods on 540 byte/slice inputs agree with actual checked CLR byte/text/AsciiString hashes on little-endian Windows. Original assertions/workloads/comments unchanged. Decision/evidence: common-clr-design.md Native UTF-16 comparison and ASCII protocol comparison; common-porting.md Native sequence comparison/hash checkpoint and sequence-comparison-* evidence. Final full Debug/Release each 1790 passed/zero failed/14 unchanged skips; checked Release 66 passes. Full module/API review remains open.",
+        "Managed object-field-offset stubs removed after native typed ref-int counter migration. Real Java NIO Selector and SSLContext private-field consumers reviewed; CLR module replacements remain future work. Raw native addresses/mixed copies/other platform surfaces remain in progress. See common-clr-design.md CLR reference-count fields and JVM field access.",
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Native runtime/allocation review removes JDK-version facades and Unsafe array-allocation helpers; actual AsciiString callers use GC.AllocateUninitializedArray<byte>. Android is an OS probe. Remaining native-memory/SWAR/public API work is not verified by this change. Native ownership/view/provider migration is implemented. Byte-array read/write/copy/fill use bounded CLR operations, while AsciiStringUtil directly uses MemoryMarshal independently of JVM Unsafe/unaligned probes. Raw native-address and object-field-offset APIs and remaining JVM surfaces still require review.",
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Native runtime/allocation review removes JDK-version facades and Unsafe array-allocation helpers; actual AsciiString callers use GC.AllocateUninitializedArray<byte>. Android is an OS probe. Remaining native-memory/SWAR/public API work is not verified by this change. Native ownership/view/provider migration is implemented. Byte-array read/write/copy/fill use bounded CLR operations, while AsciiStringUtil directly uses MemoryMarshal independently of JVM Unsafe/unaligned probes. Raw native-address APIs and remaining JVM surfaces still require review. Managed object-field-offset access is retired: counters use typed ref int, and JVM Selector/SSLContext internals have no CLR layout counterpart. This does not complete raw native-address APIs or future transport/TLS integration.",
       "comments": {
         "upstreamCount": 129,
         "required": true,
@@ -3492,9 +3504,11 @@
         "Historical runtime checkpoint (superseded): Debug and Release each 1087 cases, 1068 passed, 5 unresolved native-memory/platform failures, 14 skipped. All 18 native runtime/allocation cases and 11 ObjectCleaner cases pass in both. Evidence: platform-runtime-final-full-debug.trx, platform-runtime-final-full-release.trx and docs/common-porting.md.",
         "Native-memory ownership review: pinned PoolArena, unpooled reallocation, external-address buffers and native I/O consumers; 26 NativeMemoryContractTest cases, shared-limit runtime case and all nine original platform cases pass. Previous complete native checkpoint: native-memory-full-debug.trx and native-memory-full-release.trx, each 1100 passed / 0 failed / 14 skipped, Windows/net10.0. See docs/common-native-memory.md.",
         "Historical default managed-byte checkpoint: Debug/Release each 1132 passed / 0 failed / 14 skipped (1146 total), builds 415 warnings / 0 errors, Windows/net10.0. heap-memory-full-debug.trx, heap-memory-full-release.trx; targeted Debug 146 passed. Heap writes/copy/fill reproduce 11 pre-repair failures. No performance-equivalence claim.",
-        "Historical default ordered-multimap checkpoint: Debug/Release each 1161 passed / 0 failed / 14 skipped (1175 total), Windows/net10.0. ordered-multimap-full-debug.trx, ordered-multimap-full-release.trx. All 29 ordered-map cases execute, including gated mixed publish/take; builds 338 emitted test warnings / 0 errors, library up to date (earlier complete heap-memory builds 415 warnings). Original source public API review remains in progress; no performance-equivalence claim."
+        "Historical default ordered-multimap checkpoint: Debug/Release each 1161 passed / 0 failed / 14 skipped (1175 total), Windows/net10.0. ordered-multimap-full-debug.trx, ordered-multimap-full-release.trx. All 29 ordered-map cases execute, including gated mixed publish/take; builds 338 emitted test warnings / 0 errors, library up to date (earlier complete heap-memory builds 415 warnings). Original source public API review remains in progress; no performance-equivalence claim.",
+        "Managed object-field-offset stubs removed after native typed ref-int counter migration. Real Java NIO Selector and SSLContext private-field consumers reviewed; CLR module replacements remain future work. Raw native addresses/mixed copies/other platform surfaces remain in progress. See common-clr-design.md CLR reference-count fields and JVM field access.",
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Native runtime/allocation review removes JDK-version facades and Unsafe array-allocation helpers; actual AsciiString callers use GC.AllocateUninitializedArray<byte>. Android is an OS probe. Remaining native-memory/SWAR/public API work is not verified by this change. Native ownership/view/provider migration is implemented. Byte-array read/write/copy/fill use bounded CLR operations, while AsciiStringUtil directly uses MemoryMarshal independently of JVM Unsafe/unaligned probes. Raw native-address and object-field-offset APIs and remaining JVM surfaces still require review.",
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Native runtime/allocation review removes JDK-version facades and Unsafe array-allocation helpers; actual AsciiString callers use GC.AllocateUninitializedArray<byte>. Android is an OS probe. Remaining native-memory/SWAR/public API work is not verified by this change. Native ownership/view/provider migration is implemented. Byte-array read/write/copy/fill use bounded CLR operations, while AsciiStringUtil directly uses MemoryMarshal independently of JVM Unsafe/unaligned probes. Raw native-address APIs and remaining JVM surfaces still require review. Managed object-field-offset access is retired: counters use typed ref int, and JVM Selector/SSLContext internals have no CLR layout counterpart. This does not complete raw native-address APIs or future transport/TLS integration.",
       "comments": {
         "upstreamCount": 81,
         "required": true,
@@ -3617,33 +3631,45 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/RefCnt.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Internal/ReferenceCountUpdater.cs",
+        "src/Netty.NET.Common/AbstractReferenceCounted.cs",
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Pinned RefCnt and deprecated updater families compared with AbstractReferenceCounted, AbstractReferenceCountedByteBuf and AdaptivePoolingAllocator consumers; two pre-repair negative-setter regression failures. Exact Java Atomic/VarHandle providers, RefCnt, generic updater and AbstractReferenceCounted execute 10672 inputs per counter path: 32016 rows per provider, all provider/path results agree. Native independent reference agrees on all 10672; Java 10561 exact matches, 76 doubled-raw boundary and 35 overflow-error-count intentional differences. See common-clr-design.md and the reference-count-field checkpoint.",
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
+      ],
+      "adaptation": "Typed caller-owned ref int fields with native Volatile/Interlocked CAS replace RefCnt allocation, generic field updaters and JVM provider selection. Initialize to one; count zero is terminal until explicit quiescent reset. Full positive Int32 native range and actual overflow diagnostics preserve the existing CLR count policy. Nonpositive direct counts normalize to released zero. IsLive does not acquire ownership; final Release transfers deallocation responsibility to its caller. Actual future buffer/pool consumers justify reusable operations; their integration remains future work. All exact original comments archived in existing common-clr-design.md.",
       "comments": {
         "upstreamCount": 21,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 21
+        "required": false,
+        "preservedCount": 21,
+        "missingCount": 0
       }
     },
     {
       "upstream": "common/src/main/java/io/netty/util/internal/ReferenceCountUpdater.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Internal/ReferenceCountUpdater.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/ReferenceCountUpdater.cs",
+        "src/Netty.NET.Common/AbstractReferenceCounted.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned RefCnt and deprecated updater families compared with AbstractReferenceCounted, AbstractReferenceCountedByteBuf and AdaptivePoolingAllocator consumers; two pre-repair negative-setter regression failures. Exact Java Atomic/VarHandle providers, RefCnt, generic updater and AbstractReferenceCounted execute 10672 inputs per counter path: 32016 rows per provider, all provider/path results agree. Native independent reference agrees on all 10672; Java 10561 exact matches, 76 doubled-raw boundary and 35 overflow-error-count intentional differences. See common-clr-design.md and the reference-count-field checkpoint.",
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
+      ],
+      "adaptation": "Typed caller-owned ref int fields with native Volatile/Interlocked CAS replace RefCnt allocation, generic field updaters and JVM provider selection. Initialize to one; count zero is terminal until explicit quiescent reset. Full positive Int32 native range and actual overflow diagnostics preserve the existing CLR count policy. Nonpositive direct counts normalize to released zero. IsLive does not acquire ownership; final Release transfers deallocation responsibility to its caller. Actual future buffer/pool consumers justify reusable operations; their integration remains future work. All exact original comments archived in existing common-clr-design.md.",
       "comments": {
         "upstreamCount": 11,
-        "required": true,
-        "preservedCount": 6,
-        "missingCount": 5
+        "required": false,
+        "preservedCount": 11,
+        "missingCount": 0
       }
     },
     {
@@ -3909,16 +3935,23 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/UnsafeReferenceCountUpdater.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Internal/ReferenceCountUpdater.cs",
+        "src/Netty.NET.Common/AbstractReferenceCounted.cs",
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Pinned RefCnt and deprecated updater families compared with AbstractReferenceCounted, AbstractReferenceCountedByteBuf and AdaptivePoolingAllocator consumers; two pre-repair negative-setter regression failures. Exact Java Atomic/VarHandle providers, RefCnt, generic updater and AbstractReferenceCounted execute 10672 inputs per counter path: 32016 rows per provider, all provider/path results agree. Native independent reference agrees on all 10672; Java 10561 exact matches, 76 doubled-raw boundary and 35 overflow-error-count intentional differences. See common-clr-design.md and the reference-count-field checkpoint.",
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
+      ],
+      "adaptation": "Typed caller-owned ref int fields with native Volatile/Interlocked CAS replace RefCnt allocation, generic field updaters and JVM provider selection. Initialize to one; count zero is terminal until explicit quiescent reset. Full positive Int32 native range and actual overflow diagnostics preserve the existing CLR count policy. Nonpositive direct counts normalize to released zero. IsLive does not acquire ownership; final Release transfers deallocation responsibility to its caller. Actual future buffer/pool consumers justify reusable operations; their integration remains future work. All exact original comments archived in existing common-clr-design.md.",
       "comments": {
         "upstreamCount": 1,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 1
+        "required": false,
+        "preservedCount": 1,
+        "missingCount": 0
       }
     },
     {
@@ -3956,16 +3989,23 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/VarHandleReferenceCountUpdater.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Internal/ReferenceCountUpdater.cs",
+        "src/Netty.NET.Common/AbstractReferenceCounted.cs",
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Pinned RefCnt and deprecated updater families compared with AbstractReferenceCounted, AbstractReferenceCountedByteBuf and AdaptivePoolingAllocator consumers; two pre-repair negative-setter regression failures. Exact Java Atomic/VarHandle providers, RefCnt, generic updater and AbstractReferenceCounted execute 10672 inputs per counter path: 32016 rows per provider, all provider/path results agree. Native independent reference agrees on all 10672; Java 10561 exact matches, 76 doubled-raw boundary and 35 overflow-error-count intentional differences. See common-clr-design.md and the reference-count-field checkpoint.",
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
+      ],
+      "adaptation": "Typed caller-owned ref int fields with native Volatile/Interlocked CAS replace RefCnt allocation, generic field updaters and JVM provider selection. Initialize to one; count zero is terminal until explicit quiescent reset. Full positive Int32 native range and actual overflow diagnostics preserve the existing CLR count policy. Nonpositive direct counts normalize to released zero. IsLive does not acquire ownership; final Release transfers deallocation responsibility to its caller. Actual future buffer/pool consumers justify reusable operations; their integration remains future work. All exact original comments archived in existing common-clr-design.md.",
       "comments": {
         "upstreamCount": 1,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 1
+        "required": false,
+        "preservedCount": 1,
+        "missingCount": 0
       }
     },
     {

@@ -121,15 +121,18 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1845 cases** on Windows/net10.0:
-**1831 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1861 cases** on Windows/net10.0:
+**1847 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`ascii-transform-final-full-debug.trx` and `ascii-transform-final-full-release.trx`;
-checked Release passes 82 relevant cases. ASCII trim has correct exclusive ends,
-logical view identity and native control-range searches. SWAR word overflow is
-explicit and all 19 original comments are preserved; its behavioral source review
-is now verified. Earlier OWS, comparison and hash work remains in its checkpoint.
+`reference-count-field-full-debug.trx` and `reference-count-field-full-release.trx`;
+checked Release passes all 75 related cases, including the unchanged original
+reference-count fixture. Native typed ref-int counters replace the unused JVM
+field-updater adapter and its five original counter/provider inventory decisions.
+Nonpositive direct counts are released, final release remains unique, and full
+positive Int32 counts and failure diagnostics have explicit native policy.
+Managed field-offset stubs are removed; raw native addresses remain in progress.
+Earlier ASCII trim, word conversion, OWS, comparison and hash checkpoints remain.
 The earlier string, pattern, delimiter, numeric and scheduling work remains below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
@@ -711,6 +714,74 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### Native reference-count fields checkpoint
+
+Replace the stale, unused generic ReferenceCountUpdater/AtomicIntegerFieldUpdater
+adapter with native static ref-int operations and migrate AbstractReferenceCounted
+to them. Real pinned AbstractReferenceCountedByteBuf and AdaptivePoolingAllocator
+consumers justify reusable count/reset/accessibility/final-release operations.
+Remove managed object-field-offset stubs after reviewing counter, Java NIO Selector
+and Java SSLContext private-field consumers. CLR does not share those JVM layouts;
+future transport/TLS implementations remain outside this common unit. Raw native
+addresses/mixed copies and other platform surfaces remain pending. Design/native
+range/error policy and exact original comments are in common-clr-design.md CLR
+reference-count fields and JVM field access. Five source entries (RefCnt and the
+four deprecated updater/provider classes) become CLR replacements. VarHandleFactory
+also provides endian byte-memory views and remains pending.
+
+Nonpositive direct count setters previously exposed negative counts; two of three
+new baseline cases fail and all three pass after repair. Sixteen native cases cover
+independent composed fields/quiescent reset, invalid changes, full positive Int32
+boundaries and unchanged failure state, shared native owner disposal, throwing
+deallocation, 1000 retain/final-release races, 40000 contended balanced pairs,
+500 competing overflow-boundary races and 1000 payload-publication observations.
+No original input/assertion/comment/fixture was changed and no skip was added.
+The first checked selection passes 74/75: the unchanged ThreadLocalRandom seed
+narrows masked timestamp bits with a checked cast and throws during static init.
+Fix that existing adapter conversion with explicit unchecked narrowing (its normal
+build already truncates those same bits); all 75 checked cases then pass, including
+the original 10000-iteration multi-thread retain/release tests. The intermediate
+focused selection omitted that one failing dependency only for diagnosis; it is
+not the final validation or a new skip. The broader random-adapter/API review stays
+open. Earlier checked failure evidence is retained.
+
+Corretto 21.0.11 executes seven exact pinned Java files (RefCnt, AbstractReferenceCounted,
+generic updater, Atomic/VarHandle providers, ReferenceCounted and exception) with
+minimal platform-probe/checkPositive harnesses. Both Atomic and VarHandle runtime
+paths execute 32016 rows: 10672 inputs through each of three counter/owner paths.
+All Java provider and path outcomes agree. Native checked execution matches an
+independent integer state model for all 10672 inputs. Java/native match exactly on
+10561 inputs, including 10266 ordinary values. Intentional differences: 76 doubled
+raw-int boundary rows and 35 retain-overflow error-count rows. CLR uses the existing
+full positive Int32 range, fails without mutating the count, and reports the actual
+count; it does not reproduce Java's doubling wraparound or misleading zero count.
+This is behavioral/language evidence, not universal JVM Unsafe equivalence. Warm
+one-million single-thread retain/release pairs allocate zero bytes in the bounded
+native oracle. Its observed timing is a smoke measurement only; no cross-runtime,
+contention, pooling or storage-throughput equivalence is claimed.
+
+Final default Debug/Release each discover 1861 / pass 1847 / fail zero / retain 14
+skips. All prior 1845 identities/outcomes and all 759 non-Porting identities remain.
+All 271 pinned inventory paths and implementation paths remain valid. All 35 exact
+comments in the five replaced original counter/provider files are retained; missing
+counts improve by 29, with every other inventory missing count unchanged. The four
+AbstractReferenceCounted comments remain intact. Five pending decisions become CLR
+replacements: sources 50 verified / 41 CLR replacements / 13 exclusions / 80 pending /
+21 in progress; tests 56 verified / ten exclusions. Common is still in progress.
+
+Evidence: reference-count-field-before-debug.trx, reference-count-field-targeted-debug.trx,
+reference-count-field-checked-release.trx (initial failure),
+reference-count-field-focused-checked-release.trx (diagnosis only),
+reference-count-field-final-checked-release.trx, reference-count-field-full-debug.trx,
+reference-count-field-full-release.trx, reference-count-field-identity-comparison.json,
+reference-count-field-comment-audit.json, reference-count-field-inventory-summary.json,
+reference-count-field-java-clr-oracle.json. Native/JVM harness/corpus/logs remain in
+ignored artifacts/reference-count-field-validation, with no new feature MD.
+Windows/net10.0, SDK 10.0.203/runtime 10.0.7; no other OS/big-endian host run.
+Next: raw native-address allocation/word/ordered-write/mixed-copy stubs against
+bounded NativeMemoryAllocator/Owner/View contracts and actual buffer/native I/O
+consumers; then remaining mixed-sequence/public API/platform consumer review.
 
 ### ASCII transform checkpoint
 
