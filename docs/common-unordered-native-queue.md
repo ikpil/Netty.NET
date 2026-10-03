@@ -126,3 +126,9 @@ The original high-load/max-count expectation, waits and thresholds remain unchan
 
 The subsequent CLR worker replacement failure boundary is implemented in
 [common-unordered-worker-failure.md](common-unordered-worker-failure.md).
+
+The subsequent [queue cost review](common-unordered-queue-costs.md) replaces whole
+snapshot/rebuild removal with net10.0 PriorityQueue.Remove by reference identity.
+Measured insertion/earliest claim, scattered removal and public token cancellation
+support retaining the BCL heap in this scope. Large cancellation-heavy queues and
+gate contention remain workload-dependent follow-ups; shared/group API review stays open.

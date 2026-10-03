@@ -584,12 +584,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     }
     private bool remove(Work work)
     {
-        var items = queue.UnorderedItems.ToArray();
-        if (!items.Any(item => ReferenceEquals(item.Element, work))) return false;
-        queue.Clear();
-        foreach (var item in items)
-            if (!ReferenceEquals(item.Element, work)) queue.Enqueue(item.Element, item.Priority);
-        return true;
+        // CLR reservations have one membership each. Match reference identity and
+        // retain stored priorities; net10 Remove scans then repairs the existing heap
+        // without allocating a whole snapshot or reinserting every surviving entry.
+        return queue.Remove(work, out _, out _, ReferenceEqualityComparer.Instance);
     }
 
     // JDK deadlines wrap with nanoTime. Keep the distance from an already overdue

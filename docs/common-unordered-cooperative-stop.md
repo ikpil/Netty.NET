@@ -124,3 +124,7 @@ The concrete immediate interruption decision is implemented. Private queue costs
 shared/group immediate API review and the remaining common runtime/API and 99
 pending source decisions still prevent common completion. Verification does not
 prove unmeasured performance or additional OS/target framework support.
+
+The subsequent [queue cost review](common-unordered-queue-costs.md) measures local
+deadline membership and native cancellation, then removes whole-heap rebuilding.
+Those bounded measurements do not cover scheduler contention or transport throughput.

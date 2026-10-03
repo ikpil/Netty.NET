@@ -121,8 +121,8 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default, non-batch suite executes **1409 cases** on Windows/net10.0:
-**1395 passed / 0 failed / 14 skipped** in final Debug and Release.
+The current default, non-batch suite executes **1412 cases** on Windows/net10.0:
+**1398 passed / 0 failed / 14 skipped** in final Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Evidence:
 `native-completion-final-contracts.trx`,
@@ -175,11 +175,14 @@ and analyzer warnings are not claimed resolved. Evidence:
 `unordered-worker-failure-final-full-debug.trx`,
 `unordered-worker-failure-final-full-release.trx`,
 `unordered-stop-final-contracts-debug.trx`,
-`unordered-stop-full-debug.trx` and
-`unordered-stop-full-release.trx` in the ignored TestResults directory.
+`unordered-stop-full-debug.trx`,
+`unordered-stop-full-release.trx`,
+`unordered-queue-remove-final-contracts-debug.trx`,
+`unordered-queue-remove-full-debug.trx` and
+`unordered-queue-remove-full-release.trx` in the ignored TestResults directory.
 Whole-suite files use the full default common test project, without PortingBatch.
 Files named contracts record focused execution; the worker-identity before file
-retains the expected failing regression run. The newest unordered-stop full
+retains the expected failing regression run. The newest unordered-queue-remove full
 files establish the current Debug/Release counts above.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
@@ -265,9 +268,31 @@ Debug DLL. Existing compiler/analyzer warnings remain; only Windows/net10.0 is v
 Source decisions remain 42 verified, 29 CLR replacements, 13 exclusions, 99 pending and
 22 in progress; all 66 original test files have decisions (56 verified, ten exclusions).
 These counts do not measure remaining effort or establish native design completion.
-Next: measure private deadline queue insertion/claim/cancellation costs and compare BCL
-alternatives, then review shared/group immediate APIs against pinned consumers. Remaining
+The subsequent private queue cost review is recorded below. Next: review shared/group
+immediate APIs against pinned consumers. Remaining
 collections, strings/encoding, platform and ownership reviews stay within the full goal.
+
+The unordered private membership path now uses net10.0 PriorityQueue.Remove with
+ReferenceEqualityComparer.Instance. It preserves stored priorities and the owner gate,
+without copying/clearing/reinserting every survivor on cancellation. Independent
+candidate checks verify ties, compact signed-clock wrap, hostile value equality,
+repeated removal and survivor order. BCL heap and SortedSet tradeoffs are measured:
+the tree is faster for large scattered removals; heap capacity reuse avoids node
+allocation and retains the existing deadline model. Actual native cancellation among
+4096 pending schedules reduces current-thread allocation from 98180.8 to 80 bytes/entry.
+Two sequential series retain medians/extrema and timing variation; no scheduler-wide
+speedup, additional OS/TFM or contention claim is made. See
+[queue cost decisions](common-unordered-queue-costs.md) and common-unordered-queue-costs.csv.
+Final affected Debug passes 175 / fails zero / skips zero. Default whole Debug/Release
+each pass 1398 / fail zero / skip 14; all 759 non-Porting and 14 skip identities remain,
+only three CLR rows are added and both configurations' names/outcomes match
+(unordered-queue-remove-identity-comparison.json). All 98 verified comment entries and
+the 21 unordered source/eight original fixture/ten group comments have zero missing;
+all 271 pinned inventory entries and implementation paths match
+(unordered-queue-remove-comment-audit.json). Separate --artifacts-path
+artifacts/queue-removal-validation preserves Rider's DLL ownership. Existing warnings
+remain. This local queue decision leaves shared/group immediate API, other queue
+consumers, workload contention and the remaining 99 pending/22 in-progress sources open.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already

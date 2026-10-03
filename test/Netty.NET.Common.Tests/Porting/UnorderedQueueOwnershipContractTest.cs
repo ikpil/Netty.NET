@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
@@ -145,6 +147,94 @@ public class UnorderedQueueOwnershipContractTest
         Assert.False(retained.Pool.IsAlive);
         GC.KeepAlive(cancellation);
         GC.KeepAlive(retained.Operation);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ScatteredOwnerCancellationPreservesEveryOtherWaitingResult(bool scheduled)
+    {
+        const int count = 128;
+        var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
+        var owners = new CancellationTokenSource[count];
+        var operations = new Task[count];
+        var canceled = new bool[count];
+        try
+        {
+            for (int i = 0; i < count; ++i)
+            {
+                owners[i] = new CancellationTokenSource();
+                operations[i] = scheduled
+                    ? executor.ScheduleAsync(() => Assert.Fail("Workerless schedule ran"), TimeSpan.FromHours(1 + i % 7), owners[i].Token)
+                    : executor.SubmitAsync(() => Assert.Fail("Workerless submission ran"), owners[i].Token);
+            }
+            Assert.Equal(count, executor.PendingTaskCount);
+            for (int step = 0; step < count / 2; ++step)
+            {
+                // A permutation crosses heap positions and equal delay groups;
+                // results are checked by original operation identity, not heap layout.
+                int index = step * 73 % count;
+                owners[index].Cancel();
+                owners[index].Cancel();
+                canceled[index] = true;
+                Assert.Equal(count - step - 1, executor.PendingTaskCount);
+                for (int i = 0; i < count; ++i)
+                    Assert.Equal(canceled[i], operations[i].IsCompleted);
+                OperationCanceledException error = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => operations[index]);
+                Assert.Equal(owners[index].Token, error.CancellationToken);
+            }
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.All(operations, task => Assert.True(task.IsCanceled));
+            Assert.Equal(0, executor.PendingTaskCount);
+        }
+        finally
+        {
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            foreach (var owner in owners) owner?.Dispose();
+        }
+    }
+
+    [Fact]
+    public async Task RemovingQueuedReservationsRetainsSingleWorkerDeadlineOrderAndSuccessfulResults()
+    {
+        var executor = new UnorderedThreadPoolEventExecutor(1);
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        var owners = new CancellationTokenSource[32];
+        var operations = new Task<int>[32];
+        var executed = new ConcurrentQueue<int>();
+        Task blocker = executor.SubmitAsync(() => { entered.Set(); Assert.True(release.Wait(TimeSpan.FromSeconds(5))); });
+        try
+        {
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+            for (int i = 0; i < operations.Length; ++i)
+            {
+                int index = i;
+                owners[i] = new CancellationTokenSource();
+                Func<int> action = () => { executed.Enqueue(index); return index; };
+                operations[i] = i % 2 == 0
+                    ? executor.ScheduleAsync(action, TimeSpan.Zero, owners[i].Token)
+                    : executor.SubmitAsync(action, owners[i].Token);
+            }
+            int[] canceled = { 0, 31, 13, 7, 24, 16 };
+            foreach (int i in canceled) owners[i].Cancel();
+            Assert.Equal(operations.Length - canceled.Length, executor.PendingTaskCount);
+            release.Set();
+            await blocker.WaitAsync(TimeSpan.FromSeconds(5));
+            int[] remaining = Enumerable.Range(0, operations.Length).Except(canceled).ToArray();
+            foreach (int i in remaining) Assert.Equal(i, await operations[i].WaitAsync(TimeSpan.FromSeconds(5)));
+            foreach (int i in canceled) Assert.True(operations[i].IsCanceled);
+            // All deadlines were admitted sequentially with zero delay. This checks
+            // the existing deadline order on one worker, not ordering across a pool.
+            Assert.Equal(remaining, executed.ToArray());
+            Assert.Equal(0, executor.PendingTaskCount);
+        }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            foreach (var owner in owners) owner?.Dispose();
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

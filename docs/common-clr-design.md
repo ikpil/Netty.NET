@@ -24,7 +24,7 @@ These decisions do not claim that every method of a listed component is complete
 | Completion | `common/.../concurrent/DefaultPromise.java`, `PromiseTask.java`; `transport/.../channel/AbstractChannel.java`, `ChannelOutboundBuffer.java` | Task/TCS owns the result and terminal state. Keep a cancellation boundary for operations that have committed to execution. Published completion must agree with every observer. | Reduce public Future/Promise compatibility surfaces and migrate their actual callers; do not keep blocking/JDK methods merely for tests. |
 | Listeners and progress | `DefaultPromise.java`; resolver termination, channel-group close, SSL timeout, chunked-write and outbound-buffer consumers | Task owns the operation result. ExecutorProgress implements IProgress<TransferProgress> with unique detachable report/terminal registrations; ExecutorCompletion supplies ordered detachable Action<Task> registrations with independent notification Tasks. Both use native queue-removal policy and scoped executor context. The progressive hierarchy/factories are removed. See common-progress-subscriptions.md and common-native-completion.md. | Plain Future/Promise producers/callers and backend APIs still need migration. Combiners/notifiers use standard Task composition where callback affinity is unnecessary. |
 | Execution | `SingleThreadEventExecutor.java`, `AbstractScheduledEventExecutor.java`; `transport/.../channel/AbstractChannel.java` | Preserve serial invocation, executor-owned state, deadlines and shutdown. Native Task-based submission/scheduling use the executor's queues and one TCS result; lifecycle exposes Task termination. | Legacy scheduling/listener callers and the final executor backend still need migration. See common-executor-lifecycle.md and common-native-scheduling.md. |
-| Unordered execution | `UnorderedThreadPoolEventExecutor.java` and its inherited JDK scheduler | Dedicated workers, native Task results and private BCL deadline membership. PendingTaskCount replaces the inherited mutable queue; owner cancellation withdraws direct submissions and schedules. Termination waits for queue/worker/start reservations after quiet/timeout closure. Immutable constructor settings and native worker diagnostics replace inherited configuration/statistics. Concrete StopAsync/StopToken provide cooperative immediate stop with notification drain/failures; see common-unordered-cooperative-stop.md. | Shared/group immediate API and private queue costs remain open. Global ThreadPool settings do not configure a local executor pool. |
+| Unordered execution | `UnorderedThreadPoolEventExecutor.java` and its inherited JDK scheduler | Dedicated workers, native Task results and private BCL deadline membership. PendingTaskCount replaces the inherited mutable queue; owner cancellation withdraws direct submissions and schedules. Termination waits for queue/worker/start reservations after quiet/timeout closure. Immutable constructor settings and native worker diagnostics replace inherited configuration/statistics. Concrete StopAsync/StopToken provide cooperative immediate stop with notification drain/failures; see common-unordered-cooperative-stop.md. | Shared/group immediate API remains open; local queue costs are measured in common-unordered-queue-costs.md, with contention/cancellation-heavy workloads still unmeasured. Global ThreadPool settings do not configure a local executor pool. |
 | Constant registry | `common/.../ConstantPool.java`; `AttributeKey.java`, `Signal.java` and channel configuration constants | ConcurrentDictionary publishes one reference identity per name; Interlocked allocates IDs. Competing factories and ID gaps match the original. AbstractConstant now seals identity methods and uses a non-generic native uniquifier sequence; pools require reference constants. | Further registry/public API naming decisions are separate from the verified concurrency/reference/generic-static contracts. See common-task-composition.md for the repaired identity regressions. |
 | Ordinary queues and maps | `PlatformDependent.java`, executor queues, `Recycler.java`; `buffer/.../PoolChunk.java` | Prefer ConcurrentQueue/Dictionary with explicit capacity and ownership policy where needed. PoolChunk's LongLongHashMap can use Dictionary<long,long> with explicit missing-value and remove/put result handling at its callers. | Recheck each queue's compound operations, reservation publication, overload/backpressure and iteration. Do not infer completion from a collection's thread-safe label. |
 | Specialized integer queue | `MpscIntQueue.java`; `buffer/.../AdaptivePoolingAllocator.java` free lists | Fixed capacity, integer empty sentinel, fill/drain and weak reduction have actual allocator consumers. These requirements justify an adapter; generic CLR integers require no boxing specialization. | Compare the current ring with CLR collection alternatives against those operations; performance has not been measured. |
@@ -96,7 +96,9 @@ and PendingTaskCount supplies diagnostics; see common-unordered-native-queue.md.
 Immutable constructor configuration and native worker diagnostics replace inherited
 JDK settings; see common-unordered-native-configuration.md. Concrete immediate stop
 uses explicit cooperative cancellation; see common-unordered-cooperative-stop.md.
-Shared/group immediate API and private queue costs remain open. Worker replacement failure is implemented in
+Shared/group immediate API remains open. Local queue costs are measured in
+common-unordered-queue-costs.md; contention/cancellation-heavy workloads remain
+unmeasured. Worker replacement failure is implemented in
 common-unordered-worker-failure.md. Graceful quiet/timeout admission
 and actual drain are implemented; see common-unordered-graceful-shutdown.md. Detachable
 native completion observers are implemented in ExecutorCompletion. Plain Future/Promise
@@ -262,10 +264,18 @@ see common-native-future-retirement.md. Native queue ownership and graceful
 quiet/timeout admission and native constructor configuration are implemented.
 Concrete immediate stop uses StopToken/StopAsync and includes callback drain/failures;
 see common-unordered-cooperative-stop.md. Shared/group immediate API and private queue
-costs remain open; the concrete legacy scheduler/result backend has been removed.
+costs were open at that checkpoint; the subsequent local measurement is recorded
+below. The concrete legacy scheduler/result backend has been removed.
 The deprecated UnaryPromiseNotifier alias is also a standard Task/TCS replacement,
 with no pinned caller; see common-task-composition.md for transfer coverage and
 original comment provenance. No new result/listener facade is required.
+
+The unordered private removal path now uses net10.0 PriorityQueue.Remove with
+reference identity instead of copying/clearing/reinserting the whole heap. Measured
+capacity reuse and public cancellation support keeping the BCL heap; SortedSet is
+faster for large scattered removal but allocates nodes on reusable insertion.
+See common-unordered-queue-costs.md for conditions, extrema and the remaining
+contention/cancellation-heavy workload limits. Shared/group immediate APIs remain open.
 
 Relevant CLR specifications:
 

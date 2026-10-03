@@ -30,5 +30,6 @@ native token cancellation withdraws work without exporting mutable queue handles
 Its [native configuration](docs/common-unordered-native-configuration.md) fixes worker limits and shutdown policy at construction, with read-only worker diagnostics.
 Its [worker failure boundary](docs/common-unordered-worker-failure.md) faults waiting native work and termination after surviving workers drain if replacement creation fails.
 Its [cooperative immediate stop](docs/common-unordered-cooperative-stop.md) uses StopToken and StopAsync, with cancellation callback drain and failures included in termination.
+Its [deadline queue removal](docs/common-unordered-queue-costs.md) uses measured BCL identity removal instead of rebuilding the queue on cancellation.
 Auto-scaling [monitoring windows](docs/common-autoscaling-monitor-windows.md)
 coalesce catch-up callbacks while preserving fixed-rate cadence and actual elapsed utilization.
