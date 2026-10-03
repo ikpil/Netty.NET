@@ -190,18 +190,25 @@
     {
       "upstream": "common/src/main/java/io/netty/util/BooleanSupplier.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Functional/IBooleanSupplier.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned implementation and all-repository import consumers reviewed. Transport DefaultSelectStrategy.java:30-32 supplies lazy integer selection; receive allocator/native receive handles supply lazy boolean read decisions. No C# callers exist outside the four supplier/interface/constant-helper definitions, which are removed. JDK MpscIntQueue IntSupplier is a separate classpath type. See docs/common-clr-design.md native primitive supplier decision and original comments.",
+        "After deleting the four unused C# definitions, full Debug/Release each 1442 passed/zero failed/14 unchanged skips (1456 total); all identities/outcomes retained and no cases added/removed; supplier-identity-comparison.json. All thirteen original supplier comments preserved, all 110 reviewed comment entries have zero missing, and all 271 inventory paths match; supplier-comment-audit.json and supplier-inventory-summary.json. Windows/net10.0 only."
+      ],
+      "adaptation": "Use Func<bool> and static constant predicates. CLR has no checked/unchecked exception distinction; delegates can still throw and consumers retain short-circuit order/read budgets. Remove unused Java interface/unchecked subtype and singleton helper classes rather than adding a replacement facade. Future transport consumers are not claimed implemented.",
       "comments": {
         "upstreamCount": 5,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 5
+        "required": false,
+        "preservedCount": 5,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "CLR Func supplies the lazy callback contract without Java checked-exception interfaces or constant singleton helper classes. Current C# definitions are unused; actual pinned transport consumers and comment provenance are recorded. This is a framework replacement decision, not implementation of the transport/queue consumers."
       }
     },
     {
@@ -451,16 +458,25 @@
     {
       "upstream": "common/src/main/java/io/netty/util/IntSupplier.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Pinned implementation and all-repository import consumers reviewed. Transport DefaultSelectStrategy.java:30-32 supplies lazy integer selection; receive allocator/native receive handles supply lazy boolean read decisions. No C# callers exist outside the four supplier/interface/constant-helper definitions, which are removed. JDK MpscIntQueue IntSupplier is a separate classpath type. See docs/common-clr-design.md native primitive supplier decision and original comments.",
+        "After deleting the four unused C# definitions, full Debug/Release each 1442 passed/zero failed/14 unchanged skips (1456 total); all identities/outcomes retained and no cases added/removed; supplier-identity-comparison.json. All thirteen original supplier comments preserved, all 110 reviewed comment entries have zero missing, and all 271 inventory paths match; supplier-comment-audit.json and supplier-inventory-summary.json. Windows/net10.0 only."
+      ],
+      "adaptation": "Use Func<int> for lazy result/exception propagation, without a checked-exception wrapper. No current C# class/caller/test exists; future transport selectors retain branch-dependent invocation and I/O exception policy.",
       "comments": {
         "upstreamCount": 3,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 3
+        "required": false,
+        "preservedCount": 3,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "CLR Func supplies the lazy callback contract without Java checked-exception interfaces or constant singleton helper classes. Current C# definitions are unused; actual pinned transport consumers and comment provenance are recorded. This is a framework replacement decision, not implementation of the transport/queue consumers."
       }
     },
     {
@@ -917,18 +933,25 @@
     {
       "upstream": "common/src/main/java/io/netty/util/UncheckedBooleanSupplier.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/IUncheckedBooleanSupplier.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned implementation and all-repository import consumers reviewed. Transport DefaultSelectStrategy.java:30-32 supplies lazy integer selection; receive allocator/native receive handles supply lazy boolean read decisions. No C# callers exist outside the four supplier/interface/constant-helper definitions, which are removed. JDK MpscIntQueue IntSupplier is a separate classpath type. See docs/common-clr-design.md native primitive supplier decision and original comments.",
+        "After deleting the four unused C# definitions, full Debug/Release each 1442 passed/zero failed/14 unchanged skips (1456 total); all identities/outcomes retained and no cases added/removed; supplier-identity-comparison.json. All thirteen original supplier comments preserved, all 110 reviewed comment entries have zero missing, and all 271 inventory paths match; supplier-comment-audit.json and supplier-inventory-summary.json. Windows/net10.0 only."
+      ],
+      "adaptation": "Use Func<bool> and static constant predicates. CLR has no checked/unchecked exception distinction; delegates can still throw and consumers retain short-circuit order/read budgets. Remove unused Java interface/unchecked subtype and singleton helper classes rather than adding a replacement facade. Future transport consumers are not claimed implemented.",
       "comments": {
         "upstreamCount": 5,
-        "required": true,
-        "preservedCount": 1,
-        "missingCount": 4
+        "required": false,
+        "preservedCount": 5,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "CLR Func supplies the lazy callback contract without Java checked-exception interfaces or constant singleton helper classes. Current C# definitions are unused; actual pinned transport consumers and comment provenance are recorded. This is a framework replacement decision, not implementation of the transport/queue consumers."
       }
     },
     {

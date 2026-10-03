@@ -125,8 +125,8 @@ The current default suite executes **1456 cases** on Windows/net10.0:
 **1442 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`provider-clock-full-debug.trx` and `provider-clock-full-release.trx`; focused evidence is
-`provider-clock-affected-debug.trx`. Results remain in the ignored TestResults
+`supplier-full-debug.trx` and `supplier-full-release.trx`; the preceding provider
+boundary is covered by `provider-clock-affected-debug.trx`. Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
 portable test source without PortingBatch and do not establish module completion.
@@ -403,6 +403,31 @@ Source decisions remain 49 verified / 31 CLR replacements / 13 exclusions /
 91 pending / 21 in progress; original tests remain 56 verified / ten exclusions.
 Next: review primitive supplier interfaces against native Func delegates and actual
 transport consumers, then continue remaining collection/encoding/platform decisions.
+
+Primitive supplier contracts now use CLR Func<bool>/Func<int>. C# has no checked
+exception signature distinction; a delegate may still throw and consumers retain
+their lazy/short-circuit and exception boundaries. The two unused C# interfaces
+and two constant helper classes are removed. The three original Java types are
+recorded as framework replacements, with all thirteen original comment occurrences
+archived in common-clr-design.md. Transport selector/receive consumers were checked;
+their implementation is outside this common decision. The similarly named JDK
+supplier used by MpscIntQueue is a separate source/queue review. No additional
+supplier facade, BCL-only invocation test, source exclusion or skip is introduced.
+
+Following those four source deletions, full Debug/Release each pass 1442 / fail zero /
+skip the same 14 (1456 discovered); every test identity/outcome is retained from the
+provider checkpoint, with no additions/removals (supplier-identity-comparison.json).
+All 105 verified comment entries plus ScheduledFutureTask/SingleThreadEventExecutor
+and the three suppliers (110 distinct entries) have zero missing. All 271 original
+inventory entries and implementation paths match (supplier-comment-audit.json,
+supplier-inventory-summary.json). Both full runs use --artifacts-path
+artifacts/supplier-validation to preserve Rider's ordinary Debug DLL. Windows/net10.0
+remains the verified scope, and other compiler/analyzer warnings remain. Source
+decisions are 49 verified / 34 CLR replacements / 13 exclusions / 88 pending /
+21 in progress; original tests remain 56 verified / ten exclusions. Next: migrate
+the Java HashingStrategy alias/default helper to native IEqualityComparer<T>,
+preserving specialized ASCII comparison/hash and actual header/map consumer contracts.
+Overall common completion remains open.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already

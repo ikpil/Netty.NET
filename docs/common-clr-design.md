@@ -531,3 +531,135 @@ unsupported sleep and due/tie/affinity behavior on manual and actual dedicated
 executors. Their provider throws if wall time or provider timers are accessed.
 This reviews common ordered clock selection; it does not implement those transport
 event loops or add provider injection to the pinned fixed-system unordered backend.
+
+## Native primitive supplier delegates
+
+BooleanSupplier.java and UncheckedBooleanSupplier.java become Func<bool>;
+IntSupplier.java becomes Func<int>. CLR exceptions have no checked/unchecked
+signature distinction, so an unchecked sub-interface adds no contract. A Func
+can still throw; preserve the consumer's exception boundary rather than asserting
+that the delegate cannot fail. Constant predicates are static () => true/false
+at their consumer, without Java singleton implementation classes.
+
+Pinned transport DefaultSelectStrategy.java:30-32 invokes its IntSupplier only
+when hasTasks is true; preserve that lazy invocation and its result/exception.
+NioIoHandler, EpollIoHandler and KQueueIoHandler also supply selector/poll callbacks.
+RecvByteBufAllocator/DefaultMaxMessagesRecvByteBufAllocator and native receive
+handles use UncheckedBooleanSupplier for lazy continueReading decisions. Preserve
+short-circuit order, invocation counts and buffer/read budgets when those consumers
+are ported. No direct BooleanSupplier import consumer exists outside its own class;
+UncheckedBooleanSupplier is its meaningful subtype. The JDK java.util.function.
+IntSupplier in common MpscIntQueue is a separate source type and queue review.
+
+The four C# supplier/interface/constant-helper types have no callers in src/test
+outside their own definitions and are removed. No IntSupplier C# type exists to
+remove. Use native delegates when porting the actual transport consumers; their
+implementations are not claimed by this common replacement. No replacement facade,
+no-op, test exclusion or trivial test of BCL delegate invocation is added.
+Original comments from the three pinned common/src/main/java/io/netty/util files
+are preserved verbatim below, including licenses and constant-predicate contracts.
+
+BooleanSupplier.java original comments:
+
+```java
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Represents a supplier of {@code boolean}-valued results.
+ */
+
+/**
+     * Gets a boolean value.
+     * @return a boolean value.
+     * @throws Exception If an exception occurs.
+     */
+
+/**
+     * A supplier which always returns {@code false} and never throws.
+     */
+
+/**
+     * A supplier which always returns {@code true} and never throws.
+     */
+```
+
+UncheckedBooleanSupplier.java original comments:
+
+```java
+/*
+ * Copyright 2017 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Represents a supplier of {@code boolean}-valued results which doesn't throw any checked exceptions.
+ */
+
+/**
+     * Gets a boolean value.
+     * @return a boolean value.
+     */
+
+/**
+     * A supplier which always returns {@code false} and never throws.
+     */
+
+/**
+     * A supplier which always returns {@code true} and never throws.
+     */
+```
+
+IntSupplier.java original comments:
+
+```java
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Represents a supplier of {@code int}-valued results.
+ */
+
+/**
+     * Gets a result.
+     *
+     * @return a result
+     */
+```
