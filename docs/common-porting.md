@@ -121,15 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1659 cases** on Windows/net10.0:
-**1645 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1672 cases** on Windows/net10.0:
+**1658 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`ascii-floating-full-debug.trx` and `ascii-floating-full-release.trx`;
-the affected boundary is covered by `ascii-floating-affected-debug.trx` and
-`ascii-floating-checked-release.trx`. Native Single/Double parsing retains Java
-grammar and exact non-NaN IEEE bits while using invariant BCL decimal spans.
-The earlier integer and auto-scaling repairs remain recorded below.
+`ascii-regex-final-full-debug.trx` and `ascii-regex-full-release.trx`;
+the affected boundary is covered by `ascii-regex-affected-debug.trx`. Unused
+AsciiString regex facades and the JDK-only fixture adapter are removed in favor
+of native Regex/String.Split consumers. The earlier numeric and auto-scaling
+repairs remain recorded below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
@@ -636,6 +636,44 @@ no new feature MD. Source decisions remain 49 verified / 36 CLR replacements /
 13 exclusions / 86 pending / 21 in progress; tests remain 56 verified / ten exclusions.
 Next: review AsciiString regex matching/splitting against pinned full-match,
 trailing-empty and actual consumer requirements, then the native sequence API.
+AsciiString and common remain in progress.
+
+### Native regex/framework splitting checkpoint
+
+All-module pinned call/member-reference review finds no AsciiString regex-facade
+consumers; actual splits/matches use String/Pattern or unrelated IP-rule methods.
+Remove matches(String), incomplete split(String) and unused Regex/LINQ imports.
+Native consumers use Regex on lossless logical-view text with explicit anchors,
+options and field policy. Native grammar/capture/count/zero-width/Unicode/CR
+differences and both original comment blocks are in common-clr-design.md.
+AsciiString keeps 97 comments in source plus two archived blocks; all 99 are
+preserved. split(char) remains for the pending native sequence/lifetime review.
+
+StringUtilTest's nine inherited JDK split scenarios now use native char/count
+String.Split with explicit trailing-delimiter trimming where required. Every
+original name, literal input, expected array and assertion remains; all five
+fixture comments are preserved. Delete the unused JavaStringTestExtensions.
+Executing the original nine Java bodies retains all ten assertions and passes;
+the pinned AsciiString delegated methods demonstrate the recorded native engine
+differences (ascii-regex-java-decisions.txt). Four of eight baseline full-match
+cases fail; thirteen final native consumer cases cover view/caching and policies.
+Affected Debug selection passes 379. A final CR-policy assertion was added after
+the first full Debug run; final whole Debug/Release both include that assertion.
+
+Full Debug/Release each pass 1658 / fail zero / skip the same 14 (1672 discovered).
+All prior 1659 identities/outcomes and all 759 non-Porting cases are retained;
+only thirteen native consumer cases are added. All 271 pinned inventory paths
+match and missing-comment counts are unchanged from the previous audit.
+Evidence: ascii-regex-before.trx, ascii-regex-affected-debug.trx,
+ascii-regex-final-full-debug.trx, ascii-regex-full-release.trx,
+ascii-regex-identity-comparison.json, ascii-regex-comment-audit.json,
+ascii-regex-inventory-summary.json. Ignored artifacts retain the Java harness
+and typed call-site review; no new feature MD or performance claim.
+Windows/net10.0, SDK 10.0.203/runtime 10.0.7, Java oracle Corretto 21.0.11.
+Source decisions remain 49 verified / 36 CLR replacements / 13 exclusions /
+86 pending / 21 in progress; original tests remain 56 verified / ten exclusions.
+Next: review AsciiString delimiter byte views, sequence/search APIs and remaining
+ICharSequence/StringExtensions against native span/memory/string consumers.
 AsciiString and common remain in progress.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module

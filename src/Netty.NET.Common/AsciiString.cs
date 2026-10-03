@@ -19,11 +19,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Globalization;
-using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using Netty.NET.Common.Internal;
 using static Netty.NET.Common.Internal.MathUtil;
 using static Netty.NET.Common.Internal.ObjectUtil;
@@ -1316,39 +1314,6 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         return true;
-    }
-
-    /**
-     * Determines whether this string matches a given regular expression.
-     *
-     * @param expr the regular expression to be matched.
-     * @return {@code true} if the expression matches, otherwise {@code false}.
-     * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
-     * @throws NullPointerException if {@code expr} is {@code null}.
-     */
-    public bool matches(string expr)
-    {
-        return 0 < Regex.Matches(ToString(), expr).Count;
-    }
-
-    /**
-     * Splits this string using the supplied regular expression {@code expr}. The parameter {@code max} controls the
-     * behavior how many times the pattern is applied to the string.
-     *
-     * @param expr the regular expression used to divide the string.
-     * @param max the number of entries in the resulting array.
-     * @return an array of Strings created by separating the string along matches of the regular expression.
-     * @throws NullPointerException if {@code expr} is {@code null}.
-     * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
-     * @see Pattern#split(CharSequence, int)
-     */
-    public AsciiString[] split(string expr)
-    {
-        var splits = Regex.Split(ToString(), expr);
-        return splits
-            .Select(x => new StringCharSequence(x))
-            .Select(x => new AsciiString(x))
-            .ToArray();
     }
 
     /**

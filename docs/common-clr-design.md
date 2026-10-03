@@ -31,7 +31,7 @@ These decisions do not claim that every method of a listed component is complete
 | Indexed priority queue | `DefaultPriorityQueue.java`, scheduled-task removal; `codec-http2/.../WeightedFairQueueByteDistributor.java` priority updates | Retain the indexed reference-node heap for mutable priorities and independent queue membership. Ordinary value/immutable entries use BCL PriorityQueue. Stopped scheduler queues clear references and indices. | Core source/interfaces reviewed; bounded indexed/BCL/tree costs below. Remaining scheduler/runtime review stays open. |
 | Thread-local state | `FastThreadLocal.java`, `InternalThreadLocalMap.java`; allocator caches and event-loop workers | Physical-worker caches remain thread-local. AsyncLocal describes logical execution context and is a separate purpose. A sealed CLR Thread may be owned/wrapped where cleanup policy requires it. | Remove unnecessary ThreadGroup/JDK facade surface after caller review; keep cleanup/ownership behavior. |
 | Resource lifetime | `AbstractReferenceCounted.java`, `ReferenceCountUtil.java`, `Recycler.java`; `buffer/.../AbstractReferenceCountedByteBuf.java` | GC does not decide when shared pooled/native storage is reusable. Retain/release must deallocate exactly once and never resurrect returned storage. Dispose alone does not define shared ownership. | Native owners, borrowed views and pin leases are implemented; integrate them with future pooled retain/release consumers. Ordinary CLR object cleanup and shared storage ownership must remain distinct. |
-| Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. CharsetUtil is replaced by native Encoding/fallback policies and operation-owned codecs; explicit Java/CLR framing and replacement differences are recorded below. Integer parsing uses bounded byte spans, native Parse/TryParse APIs and checked-safe generic math. Floating-point parsing uses invariant BCL span conversion plus Java grammar and hexadecimal rounding; see the numeric decisions below. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Full native sequence API, regex and future protocol framing/streaming integration remain. Raw platform addresses and pooled-buffer integration remain separate reviews. |
+| Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. CharsetUtil is replaced by native Encoding/fallback policies and operation-owned codecs; explicit Java/CLR framing and replacement differences are recorded below. Integer parsing uses bounded byte spans, native Parse/TryParse APIs and checked-safe generic math. Floating-point parsing uses invariant BCL span conversion plus Java grammar and hexadecimal rounding; see the numeric decisions below. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Unused regex facades are replaced by native Regex/literal string splitting. Full native sequence API and future protocol framing/streaming integration remain. Raw platform addresses and pooled-buffer integration remain separate reviews. |
 | Runtime selection | `PlatformDependent.java`, `PlatformDependent0.java`; buffer/transport/TLS/resolver consumers | JDK-version facades and JVM reflective array allocation are removed. CLR consumers use Environment.Version and GC directly. Android detection uses the actual OS; JVM/Graal properties do not select CLR features. See common-platform-runtime.md. | NativeMemory owners/views replace the JVM cleaner hierarchy; managed words and copy/fill use CLR spans. Raw address/object-offset APIs remain in progress. See common-native-memory.md and common-heap-memory.md. |
 | Ordinary object GC fallback | Deprecated `ObjectCleaner.java`; no production registration consumer in the pinned tree | ConditionalWeakTable lifetime notification and CLR pool dispatch replace the Java live-set/weak-queue/worker loop. Action registration, diagnostic count and concurrent/context-isolated cleanup are verified. See common-object-cleanup.md. | This runtime replacement does not define pooled/native storage ownership or deterministic resource disposal. |
 
@@ -793,8 +793,8 @@ for a reversed range; executing the extracted methods reproduces both. Rejecting
 those accidental outcomes preserves byte-view boundaries. All 99 original
 AsciiString comments remain; the replaced integer block contains no comments.
 Validation and bounded allocation/throughput evidence: common-porting.md.
-The following decision covers floating-point grammar. Regex/sequence APIs and
-future protocol consumers remain open; neither numeric decision establishes
+The following decision covers floating-point grammar. The regex facade decision below and pending native sequence API/
+future protocol consumers are separate reviews; neither numeric decision establishes
 complete AsciiString equivalence.
 
 ## Native byte-string floating-point parsing
@@ -834,6 +834,75 @@ The actual converter consumers observe numeric values, not NaN raw bits.
 All 99 original AsciiString comments remain; the replaced four methods have none.
 Independent Java raw-bit comparisons, controlled rounding tests, checked-build
 validation and measured allocation/throughput evidence are in common-porting.md.
+
+## Native regular expressions and literal string splitting
+
+Pinned AsciiString.java:1048-1073 delegates matches(String) and split(String,int)
+to java.util.regex.Pattern. All-module Java call/member-reference review finds
+no consumers of these AsciiString facades. Actual calls use String/Pattern (HTTP,
+SSL, DNS, resolver and protocol examples); the IP-rule matches calls are unrelated.
+Current C# code likewise has no callers. The old C# matches searched for any
+substring; split omitted max and inherited CLR capture/trailing-empty semantics.
+Four of eight focused full-match inputs expose that incorrect compatibility claim.
+
+Remove these unused facades and use standard Regex on AsciiString.ToString().
+Callers choose native pattern syntax, options and failure/timeout policy. Whole
+matching uses absolute anchors \A(?:pattern)\z, preserving alternation and
+backtracking. Do not test the length of the first unanchored match. Byte protocol
+character classes should be explicit ASCII ranges; CLR \w is Unicode, and its
+default dot accepts CR where Java's does not. Native
+[Regex.Split](https://learn.microsoft.com/en-us/dotnet/api/system.text.regularexpressions.regex.split?view=net-10.0)
+retains captured delimiters and trailing empty fields, including zero-width-edge
+empties; captured fields are outside its count limit. This is an explicit native
+framework choice, not a Java Pattern compiler or general split-limit emulation.
+Future protocol consumers must select their actual field policy when ported.
+
+StringUtilTest.java:69-111's nine tests exercise inherited JDK String.split, not
+Netty StringUtil. Retain names, literal inputs and every expected array/assertion
+using native String.Split char separators/count. Where those cases drop trailing
+fields, TrimEnd explicitly removes only the trailing delimiters, preserving
+leading/interior empties. The escaped Java dot/dollar regexes are literal char
+separators in C#. Delete the otherwise unused test-only JavaStringTestExtensions.
+This preserves these scenarios; it is not an arbitrary-input Java splitting API.
+The separate AsciiString split(char) byte-view/lifetime policy remains for the
+native sequence API review. All other StringUtil methods remain unchanged.
+
+Thirteen native consumer cases verify full matching of logical views, lossless
+Latin-1, cache invalidation, reusable Regex, invariant case/ASCII policy and native
+capture/count/trailing/zero-width splitting. Executed Java decisions and validation
+results are recorded in common-porting.md. The two original comment blocks below
+complete AsciiString's 99-comment coverage with its remaining 97 source comments.
+
+Original AsciiString.java regex facade comments and delegated implementations:
+
+```java
+    /**
+     * Determines whether this string matches a given regular expression.
+     *
+     * @param expr the regular expression to be matched.
+     * @return {@code true} if the expression matches, otherwise {@code false}.
+     * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
+     * @throws NullPointerException if {@code expr} is {@code null}.
+     */
+    public boolean matches(String expr) {
+        return Pattern.matches(expr, this);
+    }
+
+    /**
+     * Splits this string using the supplied regular expression {@code expr}. The parameter {@code max} controls the
+     * behavior how many times the pattern is applied to the string.
+     *
+     * @param expr the regular expression used to divide the string.
+     * @param max the number of entries in the resulting array.
+     * @return an array of Strings created by separating the string along matches of the regular expression.
+     * @throws NullPointerException if {@code expr} is {@code null}.
+     * @throws PatternSyntaxException if the syntax of the supplied regular expression is not valid.
+     * @see Pattern#split(CharSequence, int)
+     */
+    public AsciiString[] split(String expr, int max) {
+        return toAsciiStringArray(Pattern.compile(expr).split(this, max));
+    }
+```
 
 ## Native encoding and codec ownership
 
