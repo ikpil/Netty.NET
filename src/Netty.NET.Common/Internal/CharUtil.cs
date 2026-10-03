@@ -103,7 +103,7 @@ public static class CharUtil
     {
         if (str is AsciiString asciiString)
         {
-            return asciiString.parseLong(radix);
+            return asciiString.ParseInt64(radix);
         }
 
         if (str == null

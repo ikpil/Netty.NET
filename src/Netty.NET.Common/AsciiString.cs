@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -45,9 +46,6 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     private static readonly char MAX_CHAR_VALUE = (char)255;
 
     public static readonly int INDEX_NOT_FOUND = -1;
-
-    public const int CHARACTER_MIN_RADIX = 2;
-    public const int CHARACTER_MAX_RADIX = 36;
 
     public static readonly IEqualityComparer<ICharSequence> CASE_INSENSITIVE_HASHER = new CaseInsensitiveHashingStrategy();
     public static readonly IEqualityComparer<ICharSequence> CASE_SENSITIVE_HASHER = new CaseSensitiveHashingStrategy();
@@ -1536,183 +1534,147 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return (char)((b2c(_value[startWithOffset]) << 8) | b2c(_value[startWithOffset + 1]));
     }
 
-    public short parseShort()
-    {
-        return parseShort(0, length(), 10);
-    }
+    // CLR adaptation: parse logical byte spans without allocating a string. Keep
+    // Netty's radix 2..36 grammar (optional '-', no '+', whitespace or prefixes).
+    // Invalid slices/radices are argument errors; malformed numbers are format
+    // errors and representable-range failures are overflow errors. TryParse leaves
+    // zero on numeric failure and still rejects invalid arguments.
+    public short ParseInt16(int radix = 10) => ParseInteger<short>(AsSpan(), radix);
 
-    public short parseShort(int radix)
-    {
-        return parseShort(0, length(), radix);
-    }
+    // start is inclusive and end is exclusive, relative to this logical view.
+    public short ParseInt16(int start, int end, int radix = 10) =>
+        ParseInteger<short>(IntegerSlice(start, end), radix);
 
-    public short parseShort(int start, int end)
-    {
-        return parseShort(start, end, 10);
-    }
+    public bool TryParseInt16(out short result, int radix = 10) =>
+        TryParseInteger(AsSpan(), radix, out result);
 
-    public short parseShort(int start, int end, int radix)
+    public bool TryParseInt16(int start, int end, out short result, int radix = 10) =>
+        TryParseInteger(IntegerSlice(start, end), radix, out result);
+
+    public int ParseInt32(int radix = 10) => ParseInteger<int>(AsSpan(), radix);
+
+    // start is inclusive and end is exclusive, relative to this logical view.
+    public int ParseInt32(int start, int end, int radix = 10) =>
+        ParseInteger<int>(IntegerSlice(start, end), radix);
+
+    public bool TryParseInt32(out int result, int radix = 10) =>
+        TryParseInteger(AsSpan(), radix, out result);
+
+    public bool TryParseInt32(int start, int end, out int result, int radix = 10) =>
+        TryParseInteger(IntegerSlice(start, end), radix, out result);
+
+    public long ParseInt64(int radix = 10) => ParseInteger<long>(AsSpan(), radix);
+
+    // start is inclusive and end is exclusive, relative to this logical view.
+    public long ParseInt64(int start, int end, int radix = 10) =>
+        ParseInteger<long>(IntegerSlice(start, end), radix);
+
+    public bool TryParseInt64(out long result, int radix = 10) =>
+        TryParseInteger(AsSpan(), radix, out result);
+
+    public bool TryParseInt64(int start, int end, out long result, int radix = 10) =>
+        TryParseInteger(IntegerSlice(start, end), radix, out result);
+
+    private ReadOnlySpan<byte> IntegerSlice(int start, int end)
     {
-        int intValue = parseInt(start, end, radix);
-        short result = (short)intValue;
-        if (result != intValue)
+        if (start < 0 || start > _length)
         {
-            throw new FormatException(subSequence(start, end, false).ToString());
+            throw new ArgumentOutOfRangeException(nameof(start));
         }
 
-        return result;
-    }
-
-    public int parseInt()
-    {
-        return parseInt(0, length(), 10);
-    }
-
-    public int parseInt(int radix)
-    {
-        return parseInt(0, length(), radix);
-    }
-
-    public int parseInt(int start, int end)
-    {
-        return parseInt(start, end, 10);
-    }
-
-    public int parseInt(int start, int end, int radix)
-    {
-        if (radix < CHARACTER_MIN_RADIX || radix > CHARACTER_MAX_RADIX)
+        if (end < start || end > _length)
         {
-            throw new FormatException();
+            throw new ArgumentOutOfRangeException(nameof(end));
         }
 
-        if (start == end)
-        {
-            throw new FormatException();
-        }
-
-        int i = start;
-        bool negative = byteAt(i) == '-';
-        if (negative && ++i == end)
-        {
-            throw new FormatException(subSequence(start, end, false).ToString());
-        }
-
-        return parseInt(i, end, radix, negative);
+        return AsSpan().Slice(start, end - start);
     }
 
-    private int parseInt(int start, int end, int radix, bool negative)
+    private enum IntegerParseResult { Success, Invalid, Overflow }
+
+    private static T ParseInteger<T>(ReadOnlySpan<byte> bytes, int radix)
+        where T : IBinaryInteger<T>, IMinMaxValue<T>
     {
-        int max = int.MinValue / radix;
-        int result = 0;
-        int currOffset = start;
-        while (currOffset < end)
+        ValidateIntegerRadix(radix);
+        IntegerParseResult status = ParseIntegerCore(bytes, radix, out T result);
+        return status switch
         {
-            int digit = CharUtil.Digit((char)(_value[currOffset++ + _offset] & 0xFF), radix);
-            if (digit == -1)
+            IntegerParseResult.Success => result,
+            IntegerParseResult.Overflow => throw new OverflowException("Value is outside the range of " + typeof(T).Name + "."),
+            _ => throw new FormatException("Input is not a valid integer.")
+        };
+    }
+
+    private static bool TryParseInteger<T>(ReadOnlySpan<byte> bytes, int radix, out T result)
+        where T : IBinaryInteger<T>, IMinMaxValue<T>
+    {
+        ValidateIntegerRadix(radix);
+        return ParseIntegerCore(bytes, radix, out result) == IntegerParseResult.Success;
+    }
+
+    private static void ValidateIntegerRadix(int radix)
+    {
+        if (radix < 2 || radix > 36)
+        {
+            throw new ArgumentOutOfRangeException(nameof(radix), radix, "Radix must be between 2 and 36.");
+        }
+    }
+
+    private static IntegerParseResult ParseIntegerCore<T>(ReadOnlySpan<byte> bytes, int radix, out T result)
+        where T : IBinaryInteger<T>, IMinMaxValue<T>
+    {
+        result = T.Zero;
+        if (bytes.IsEmpty)
+        {
+            return IntegerParseResult.Invalid;
+        }
+
+        bool negative = bytes[0] == '-';
+        int start = negative ? 1 : 0;
+        if (start == bytes.Length)
+        {
+            return IntegerParseResult.Invalid;
+        }
+
+        // Negative accumulation represents MinValue without taking its absolute
+        // value. Guard both operations before evaluating them, so checked and
+        // unchecked CLR builds have identical results and never wrap on overflow.
+        T limit = negative ? T.MinValue : -T.MaxValue;
+        T numberBase = T.CreateChecked(radix);
+        T multiplyLimit = limit / numberBase;
+        T accumulated = T.Zero;
+        for (int i = start; i < bytes.Length; i++)
+        {
+            byte b = bytes[i];
+            int digit = b switch
             {
-                throw new FormatException(subSequence(start, end, false).ToString());
+                >= (byte)'0' and <= (byte)'9' => b - '0',
+                >= (byte)'A' and <= (byte)'Z' => b - 'A' + 10,
+                >= (byte)'a' and <= (byte)'z' => b - 'a' + 10,
+                _ => -1
+            };
+            if (digit < 0 || digit >= radix)
+            {
+                return IntegerParseResult.Invalid;
             }
 
-            if (max > result)
+            if (accumulated < multiplyLimit)
             {
-                throw new FormatException(subSequence(start, end, false).ToString());
+                return IntegerParseResult.Overflow;
             }
 
-            int next = result * radix - digit;
-            if (next > result)
+            T next = accumulated * numberBase;
+            T numericDigit = T.CreateChecked(digit);
+            if (next < limit + numericDigit)
             {
-                throw new FormatException(subSequence(start, end, false).ToString());
+                return IntegerParseResult.Overflow;
             }
 
-            result = next;
+            accumulated = next - numericDigit;
         }
 
-        if (!negative)
-        {
-            result = -result;
-            if (result < 0)
-            {
-                throw new FormatException(subSequence(start, end, false).ToString());
-            }
-        }
-
-        return result;
-    }
-
-    public long parseLong()
-    {
-        return parseLong(0, length(), 10);
-    }
-
-    public long parseLong(int radix)
-    {
-        return parseLong(0, length(), radix);
-    }
-
-    public long parseLong(int start, int end)
-    {
-        return parseLong(start, end, 10);
-    }
-
-    public long parseLong(int start, int end, int radix)
-    {
-        if (radix < CharUtil.MIN_RADIX || radix > CharUtil.MAX_RADIX)
-        {
-            throw new FormatException();
-        }
-
-        if (start == end)
-        {
-            throw new FormatException();
-        }
-
-        int i = start;
-        bool negative = byteAt(i) == '-';
-        if (negative && ++i == end)
-        {
-            throw new FormatException(subSequence(start, end, false).ToString());
-        }
-
-        return parseLong(i, end, radix, negative);
-    }
-
-    private long parseLong(int start, int end, int radix, bool negative)
-    {
-        long max = long.MinValue / radix;
-        long result = 0;
-        int currOffset = start;
-        while (currOffset < end)
-        {
-            int digit = CharUtil.Digit((char)(_value[currOffset++ + _offset] & 0xFF), radix);
-            if (digit == -1)
-            {
-                throw new FormatException(subSequence(start, end, false).ToString());
-            }
-
-            if (max > result)
-            {
-                throw new FormatException(subSequence(start, end, false).ToString());
-            }
-
-            long next = result * radix - digit;
-            if (next > result)
-            {
-                throw new FormatException(subSequence(start, end, false).ToString());
-            }
-
-            result = next;
-        }
-
-        if (!negative)
-        {
-            result = -result;
-            if (result < 0)
-            {
-                throw new FormatException(subSequence(start, end, false).ToString());
-            }
-        }
-
-        return result;
+        result = negative ? accumulated : -accumulated;
+        return IntegerParseResult.Success;
     }
 
     public float parseFloat()

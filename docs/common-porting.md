@@ -121,15 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1491 cases** on Windows/net10.0:
-**1477 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1563 cases** on Windows/net10.0:
+**1549 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`autoscaling-resume-full-debug.trx` and `autoscaling-resume-full-release.trx`;
-the affected boundary is covered by `autoscaling-resume-affected-debug.trx`.
-An isolated traced reproduction identifies a premature post-resume sampling path,
-now repaired with six deterministic regressions. Earlier untraced failures cannot
-retrospectively be assigned that same cause; the finite timing evidence is detailed below.
+`ascii-integer-full-debug.trx` and `ascii-integer-full-release.trx`;
+the affected boundary is covered by `ascii-integer-affected-debug.trx` and
+`ascii-integer-checked-release.trx`. Native byte-string integer parsing now bounds
+logical ranges and checks overflow before arithmetic. The earlier auto-scaling
+repair and its finite timing evidence remain recorded below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
@@ -536,6 +536,54 @@ remain 49 verified / 36 CLR replacements / 13 exclusions / 86 pending /
 Next: continue AsciiString integer parsing, radix/sign/range and overflow review
 against pinned implementations and actual header/value-converter consumers.
 The remaining native common/runtime and future transport integration stay open.
+
+### Native AsciiString integer parsing checkpoint
+
+Pinned AsciiString.java:1203-1336, original common fixtures and actual
+CharSequenceValueConverter/HttpResponseStatus consumers reviewed. Native
+ParseInt16/32/64 and TryParse replace the Java-named numeric methods; the current
+CharUtil consumer uses ParseInt64. A single bounded byte-span/generic-math core
+retains radix 2..36, minus-only sign, ASCII digit grammar and exact signed limits.
+It rejects invalid logical ranges before reading and checks arithmetic bounds
+before multiplication/subtraction. CLR argument/format/overflow exception choices,
+Java's accidental invalid-range outcomes and the BCL-substitution decision are
+recorded once in common-clr-design.md. Integer methods have no original comments;
+all 99 original AsciiString comments remain beside their implementations.
+
+Six logical-range regressions fail before repair and pass afterwards. The 72 new
+contracts cover all radices and Latin-1 bytes, signed boundaries/overflow, empty
+and malformed text, nonzero backing offsets, current-culture independence,
+zero-on-failure TryParse and the existing native consumer. Affected Debug selection
+passes 206; Release with CheckForOverflowUnderflow=true passes all 72. An isolated
+Java harness executes the exact pinned parser methods with only storage/view
+dependencies stubbed: 60960 inputs match native numeric results/failure and TryParse
+outcomes. The separate invalid-range oracle records deliberate CLR differences.
+
+Full Debug/Release each pass 1549 / fail zero / skip the same 14 (1563 discovered).
+All prior 1491 identities/outcomes and all 759 non-Porting cases are retained;
+only the 72 native numeric cases are added. Comment missing counts match the
+previous audit for all 271 entries; pending/unreviewed comment gaps remain open.
+All pinned inventory entries and recorded candidate/implementation paths match.
+Evidence: ascii-integer-before.trx, ascii-integer-affected-debug.trx,
+ascii-integer-checked-release.trx, ascii-integer-full-debug.trx,
+ascii-integer-full-release.trx, ascii-integer-identity-comparison.json,
+ascii-integer-comment-audit.json, ascii-integer-inventory-summary.json,
+ascii-integer-java-clr-oracle.txt, ascii-integer-java-invalid-ranges.txt.
+
+Allocation regression: zero bytes across 6000 successful warmed Parse/TryParse
+calls. An isolated Release comparison to the prior parser (four decimal/hex
+inputs, three widths, three rounds of 3M parses, tiered compilation disabled)
+also records zero allocation for both implementations. Actual timings/checksums
+are retained in ascii-integer-benchmark.txt; this bounded smoke measurement is
+not a general performance guarantee. Validation uses --artifacts-path
+artifacts/ascii-integer-validation/build, Windows/net10.0, SDK 10.0.203/runtime
+10.0.7. Probe/harness sources stay in ignored artifacts; no new feature MD.
+Source decisions remain 49 verified / 36 CLR replacements / 13 exclusions /
+86 pending / 21 in progress; original tests remain 56 verified / ten exclusions.
+Next: review AsciiString floating-point parsing against Java lexical/culture
+contracts and actual value-converter consumers. AsciiString and common remain
+in progress; numeric correctness does not complete sequence/regex or transport
+integration review.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already
