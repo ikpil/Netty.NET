@@ -1330,18 +1330,23 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultMockTicker.java",
       "kind": "source",
-      "status": "pending",
+      "status": "in-progress",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/DefaultMockTicker.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/DefaultMockTicker.cs"
+      ],
+      "evidence": [
+        "Pinned time source, original DefaultMockTickerTest and scheduler/metrics/monitor consumers reviewed; transport EmbeddedEventLoop/ManualIoEventLoop clock selection and I/O raw-timestamp delay callers checked. Local Corretto 21.0.11 TimeUnit.java confirms saturated conversion and nonpositive sleep no-op. See docs/common-clr-design.md monotonic-time decision.",
+        "Initial CLR ticker regressions: seven failed/three passed before repair; expanded affected Debug passes 151. Whole Debug/Release each 1427 passed/zero failed/14 unchanged skips, with 759 original identities retained and 16 CLR rows added; ticker-identity-comparison.json. All 17 source/eight original test comments preserved; all 271 inventory paths match. Windows/net10.0 only."
+      ],
+      "adaptation": "Original four comments restored. Existing mock scenarios pass, but Monitor does not implement ReentrantLock(true) FIFO admission. Fair sleep-phase observation, native atomic/reference-set ownership and noninterruptible advance entry remain in progress; no equivalent fairness or completed native mock design claimed.",
       "comments": {
         "upstreamCount": 4,
         "required": true,
-        "preservedCount": 3,
-        "missingCount": 1
+        "preservedCount": 4,
+        "missingCount": 0
       }
     },
     {
@@ -1908,18 +1913,28 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/MockTicker.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/MockTicker.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/MockTicker.cs",
+        "src/Netty.NET.Common/Internal/TimeUtil.cs"
+      ],
+      "evidence": [
+        "Pinned time source, original DefaultMockTickerTest and scheduler/metrics/monitor consumers reviewed; transport EmbeddedEventLoop/ManualIoEventLoop clock selection and I/O raw-timestamp delay callers checked. Local Corretto 21.0.11 TimeUnit.java confirms saturated conversion and nonpositive sleep no-op. See docs/common-clr-design.md monotonic-time decision.",
+        "Initial CLR ticker regressions: seven failed/three passed before repair; expanded affected Debug passes 151. Whole Debug/Release each 1427 passed/zero failed/14 unchanged skips, with 759 original identities retained and 16 CLR rows added; ticker-identity-comparison.json. All 17 source/eight original test comments preserved; all 271 inventory paths match. Windows/net10.0 only."
+      ],
+      "adaptation": "Retain the executor elapsed-nanosecond/synchronous-wait policy without Java TimeUnit. Native TimeSpan and long millisecond durations use shared saturating integer conversion; accumulation remains wrapping. Preserve original comments verbatim with separate CLR notes. Native provider injection and final controlled-mock fairness review remain separate.",
       "comments": {
         "upstreamCount": 4,
         "required": true,
-        "preservedCount": 3,
-        "missingCount": 1
+        "preservedCount": 4,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "in-progress",
+        "evidence": "Integer native-duration and nanosecond clock contracts verified. Final controlled mock fairness, repeated phase observation and native clock selection surface remain part of the shared review; file-level verified is not full API/backend completion."
       }
     },
     {
@@ -2434,18 +2449,28 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/SystemTicker.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/SystemTicker.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/SystemTicker.cs",
+        "src/Netty.NET.Common/SystemTimer.cs"
+      ],
+      "evidence": [
+        "Pinned time source, original DefaultMockTickerTest and scheduler/metrics/monitor consumers reviewed; transport EmbeddedEventLoop/ManualIoEventLoop clock selection and I/O raw-timestamp delay callers checked. Local Corretto 21.0.11 TimeUnit.java confirms saturated conversion and nonpositive sleep no-op. See docs/common-clr-design.md monotonic-time decision.",
+        "Initial CLR ticker regressions: seven failed/three passed before repair; expanded affected Debug passes 151. Whole Debug/Release each 1427 passed/zero failed/14 unchanged skips, with 759 original identities retained and 16 CLR rows added; ticker-identity-comparison.json. All 17 source/eight original test comments preserved; all 271 inventory paths match. Windows/net10.0 only."
+      ],
+      "adaptation": "TimeProvider.System timestamp/frequency with integer scaling and signed wrap; fixed initial raw offset and relative elapsed clock retained. System waits ignore nonpositive durations, ceil positive fractional milliseconds without overflow, and chunk long interruptible sleeps. TimeSpan and long milliseconds retain their full wait horizon. Arbitrary provider injection and timer callback scheduling are not introduced.",
       "comments": {
         "upstreamCount": 1,
         "required": true,
         "preservedCount": 1,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "System monotonic timestamp conversion and CLR blocking-wait boundary reviewed. TimeProvider.System supplies raw timestamps; relative origin, precision, signed wrap, nonpositive interruption preservation and distant waits have contract coverage. Controlled custom-provider/mock API review is separate."
       }
     },
     {
@@ -2502,18 +2527,28 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/Ticker.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/Ticker.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/Ticker.cs",
+        "src/Netty.NET.Common/Internal/TimeUtil.cs"
+      ],
+      "evidence": [
+        "Pinned time source, original DefaultMockTickerTest and scheduler/metrics/monitor consumers reviewed; transport EmbeddedEventLoop/ManualIoEventLoop clock selection and I/O raw-timestamp delay callers checked. Local Corretto 21.0.11 TimeUnit.java confirms saturated conversion and nonpositive sleep no-op. See docs/common-clr-design.md monotonic-time decision.",
+        "Initial CLR ticker regressions: seven failed/three passed before repair; expanded affected Debug passes 151. Whole Debug/Release each 1427 passed/zero failed/14 unchanged skips, with 759 original identities retained and 16 CLR rows added; ticker-identity-comparison.json. All 17 source/eight original test comments preserved; all 271 inventory paths match. Windows/net10.0 only."
+      ],
+      "adaptation": "Retain the executor elapsed-nanosecond/synchronous-wait policy without Java TimeUnit. Native TimeSpan and long millisecond durations use shared saturating integer conversion; accumulation remains wrapping. Preserve original comments verbatim with separate CLR notes. Native provider injection and final controlled-mock fairness review remain separate.",
       "comments": {
         "upstreamCount": 8,
         "required": true,
-        "preservedCount": 7,
-        "missingCount": 1
+        "preservedCount": 8,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "in-progress",
+        "evidence": "Integer native-duration and nanosecond clock contracts verified. Final controlled mock fairness, repeated phase observation and native clock selection surface remain part of the shared review; file-level verified is not full API/backend completion."
       }
     },
     {

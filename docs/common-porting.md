@@ -121,12 +121,12 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1425 cases** on Windows/net10.0:
-**1411 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1441 cases** on Windows/net10.0:
+**1427 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`indexed-queue-full-debug.trx` and `indexed-queue-full-release.trx`; the before-run is
-`indexed-queue-before.trx`. Results remain in the ignored TestResults
+`ticker-full-debug.trx` and `ticker-full-release.trx`; the before-run is
+`ticker-before.trx`. Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
 portable test source without PortingBatch and do not establish module completion.
@@ -311,11 +311,41 @@ focused comment audits report 3/3 and 1/1 preserved occurrences (one identical
 license block is attributed to both originals), and all 271 inventory paths match
 (concurrent-set-comment-audit.json, readonly-iterator-comment-audit.json and
 collection-replacement-inventory-summary.json). No class, no-op, runtime test or
-source exclusion is added. Current source decisions are 45 verified / 31 CLR
-replacements / 13 exclusions / 95 pending / 21 in progress. Next: review the
+source exclusion is added. At this checkpoint source decisions were 45 verified / 31 CLR
+replacements / 13 exclusions / 95 pending / 21 in progress. The next review was the
 Ticker/SystemTicker/MockTicker time-source boundary against CLR timing/provider
 facilities and pinned scheduler consumers, then continue remaining collections,
 strings/encoding and platform/ownership review.
+
+The monotonic-time review repairs native duration precision/overflow, nonpositive
+system sleep consuming pending interrupts, and narrowing of long system waits.
+Seven of the ten initial CLR regression rows fail before repair. Shared integer
+conversion now saturates durations; raw TimeProvider.System timestamps scale with
+integer arithmetic and signed wrap. System TimeSpan/long-millisecond waits preserve
+their full duration and remain interruptible across Int32-millisecond chunks. See
+[the time-source decision](common-clr-design.md#monotonic-time-and-duration-conversion).
+The expanded affected Debug selection passes 151 cases. Whole Debug/Release each
+pass 1427 / fail zero / skip the same 14 (1441 discovered); all 759 non-Porting and
+skip identities remain, only 16 CLR ticker rows are added, and both configurations
+have matching identities/outcomes (ticker-identity-comparison.json). BigInteger
+oracles cover timestamp scaling/overflow independently. No original fixture,
+test exclusion or skip is changed.
+
+All 104 verified comment entries plus ScheduledFutureTask and DefaultMockTicker
+(106 distinct entries) have zero missing. Three altered documentation blocks are
+restored verbatim; all 17 ticker source and eight original mock-test comments remain.
+All 271 pinned source/test entries and implementation paths match
+(ticker-comment-audit.json, ticker-inventory-summary.json). Both full runs use
+--artifacts-path artifacts/ticker-validation to preserve Rider's ordinary Debug
+DLL. Existing compiler/analyzer warnings remain; Windows/net10.0 is the verified
+scope. Source decisions: 48 verified / 31 CLR replacements / 13 exclusions /
+91 pending / 22 in progress; original tests: 56 verified / ten exclusions.
+Ticker/MockTicker behavior is verified within this scope, while their native design
+review remains in progress with the controlled mock. This does not establish
+module completion or arbitrary TimeProvider injection. Next: resolve DefaultMockTicker
+FIFO/fairness and repeated sleep-phase observation, native atomic/reference-set
+ownership and noninterruptible advance lock entry, then finish the shared native
+clock-selection decision against the original embedded/manual event-loop consumers.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already

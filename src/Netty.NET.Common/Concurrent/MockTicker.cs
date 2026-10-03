@@ -15,6 +15,7 @@
  */
 
 using System;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -34,7 +35,7 @@ public abstract class MockTicker : Ticker
      * Advances the current {@link #nanoTime()} by the given amount of time.
      *
      * @param amount the amount of time to advance this ticker by.
-     * @param unit the {@link TimeSpan} of {@code amount}.
+     * @param unit the {@link TimeUnit} of {@code amount}.
      */
     public abstract void advance(long amountNanos);
 
@@ -45,11 +46,11 @@ public abstract class MockTicker : Ticker
      */
     public void advanceMillis(long amountMillis)
     {
-        advance(TimeSpan.FromMilliseconds(amountMillis));
+        advance(TimeUtil.MillisecondsToNanoseconds(amountMillis));
     }
 
     public void advance(TimeSpan amount)
     {
-        advance((long)amount.TotalNanoseconds);
+        advance(TimeUtil.ToNanoseconds(amount));
     }
 }

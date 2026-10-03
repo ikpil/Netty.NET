@@ -294,13 +294,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     // CLR: TimeSpan stores 100 ns ticks. Saturate like Java TimeUnit.toNanos,
     // retaining integer precision and avoiding a floating-point overflow cast.
-    internal static long toNanos(TimeSpan amount)
-    {
-        long ticks = amount.Ticks;
-        if (ticks > long.MaxValue / 100) return long.MaxValue;
-        if (ticks < long.MinValue / 100) return long.MinValue;
-        return ticks * 100;
-    }
+    internal static long toNanos(TimeSpan amount) => TimeUtil.ToNanoseconds(amount);
 
     /**
      * Sub-classes may override this to restrict the maximal amount of time someone can use to schedule a task.

@@ -440,3 +440,45 @@ constructor actually creates its own map; the source wording is archived as writ
      * Creates a new instance which wraps the specified {@code map}.
      */
 ```
+
+## Monotonic time and duration conversion
+
+Pinned Ticker.java:24-84, SystemTicker.java:21-43 and MockTicker.java:25-50
+separate elapsed nanoseconds from the raw initial timestamp. Scheduler deadlines,
+SingleThreadEventExecutor work metrics and AutoScalingEventExecutorChooserFactory
+consume elapsed time; transport I/O handlers pass raw System.nanoTime values to
+subtract the same initial offset. EmbeddedEventLoop and ManualIoEventLoop choose
+an executor clock. Preserve that boundary and signed long wrap instead of using
+UTC, DateTime or a TimeSpan wall-clock value.
+
+SystemTimer reads TimeProvider.System.GetTimestamp/TimestampFrequency. Integer
+scaling avoids floating-point precision loss; an integral nanosecond multiplier
+is cached for the ordinary clock path. Other ratios use integer division or Int128
+intermediate multiplication, wrapping only the final timestamp. Duration conversion
+is different: shared TimeUtil saturates TimeSpan's integer 100ns ticks and long
+milliseconds to signed nanoseconds, matching the local Corretto 21.0.11
+java.base/java/util/concurrent/TimeUnit.java toNanos contract. No double
+TotalNanoseconds or intermediate TimeSpan.FromMilliseconds(long) is needed.
+SystemTimer's existing public conversion constants remain available, but the
+clock no longer uses them for floating-point conversion.
+
+SystemTicker's positive waits round a submillisecond remainder up and split long
+waits into Int32-millisecond Thread.Sleep chunks. Nonpositive waits return without
+consuming a pending interrupt, matching TimeUnit.sleep. The native TimeSpan and
+millisecond overloads preserve their full duration rather than first saturating
+to the nanosecond horizon. Positive waits remain interruptible; timer resolution
+and OS scheduling are not nanosecond accuracy guarantees. MockTicker advancement
+saturates each converted duration, while accumulation still wraps as the original
+AtomicLong does. Original TimeUnit comments are retained verbatim beside CLR notes.
+
+Ticker remains the executor's elapsed-nanosecond and synchronous-wait policy.
+TimeProvider supplies the system timestamp source here; this does not introduce
+arbitrary TimeProvider injection or replace event-loop scheduling with CreateTimer
+callbacks. The existing controlled mock supplies nanosecond advancement and
+blocking sleeper observation that TimeProvider alone does not specify. Its
+ReentrantLock(true) fairness is still an open implementation contract: the current
+CLR Monitor has no FIFO admission guarantee. Keep DefaultMockTicker in progress;
+its original fairness comment is preserved and followed by an explicit CLR note,
+rather than asserting that Monitor implements it. Native atomic/set replacement,
+interruption on advance lock entry and repeated sleep-phase observation are part
+of that remaining review. The six original mock test scenarios remain unchanged.

@@ -15,6 +15,7 @@
  */
 
 using System;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -59,7 +60,7 @@ public abstract class Ticker
      * Waits until the given amount of time goes by.
      *
      * @param delay the amount of delay.
-     * @param unit the {@link TimeSpan} of {@code delay}.
+     * @param unit the {@link TimeUnit} of {@code delay}.
      *
      * @see Thread#sleep(long)
      */
@@ -72,13 +73,15 @@ public abstract class Ticker
      *
      * @see Thread#sleep(long)
      */
-    public void sleepMillis(long delayMillis)
+    public virtual void sleepMillis(long delayMillis)
     {
-        sleep(TimeSpan.FromMilliseconds(delayMillis));
+        sleep(TimeUtil.MillisecondsToNanoseconds(delayMillis));
     }
 
-    public void sleep(TimeSpan delay)
+    // CLR: the original TimeUnit comment is retained above. This overload accepts
+    // native durations, with saturated integer conversion to the nanosecond clock.
+    public virtual void sleep(TimeSpan delay)
     {
-        sleep((long)delay.TotalNanoseconds);
+        sleep(TimeUtil.ToNanoseconds(delay));
     }
 }

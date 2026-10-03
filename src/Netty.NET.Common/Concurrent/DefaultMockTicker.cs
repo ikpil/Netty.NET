@@ -27,6 +27,8 @@ namespace Netty.NET.Common.Concurrent;
 public sealed class DefaultMockTicker : MockTicker
 {
     // The lock is fair, so waiters get to process condition signals in the order they (the waiters) queued up.
+    // CLR review: the preceding original comment describes ReentrantLock(true).
+    // Monitor does not guarantee FIFO admission; that policy remains under review.
     private readonly object _lock = new object();
     private readonly AtomicLong _nanoTime = new AtomicLong();
     private readonly Dictionary<Thread, bool> sleepers = new Dictionary<Thread, bool>();
@@ -70,7 +72,7 @@ public sealed class DefaultMockTicker : MockTicker
     }
 
     /**
-     * Wait for the given thread to enter the {@link #sleep(long, TimeSpan)} method, and block.
+     * Wait for the given thread to enter the {@link #sleep(long, TimeUnit)} method, and block.
      */
     public void awaitSleepingThread(Thread thread)
     {
