@@ -999,6 +999,42 @@ Original AsciiString.java delimiter facade and all four original comments:
     }
 ```
 
+## ASCII trim and word conversion
+
+Retain AsciiString trim/case transforms: HttpHeaders.java:1616-1647 and
+HTTP/2 HttpConversionUtil.java:531-569 (HTTP/3:463-502) actually consume them for
+comma/header values, TE and connection tokens. Trim means code units 0-32,
+distinct from SP/HTAB-only StringUtil OWS. Native IndexOfAnyExceptInRange and
+LastIndexOfAnyExceptInRange select logical byte/known-char boundaries; indexed
+sequences retain bounded scanning. A subsequence end is exclusive. Correct the
+pinned generic trim's dropped final character/invalid all-control range and its
+nonzero-offset unchanged-view identity. Null maps to ArgumentNullException(c).
+Unsigned CLR bytes keep 0x80-0xff; the pinned signed-byte instance trim removes
+them incorrectly at edges. Character slices keep their representation's ownership:
+immutable string views share storage, builder subsequences copy, byte trim shares
+the same array even when empty. Mutation still requires caller cache/lifetime care.
+Framework searches: [range start](https://learn.microsoft.com/en-us/dotnet/api/system.memoryextensions.indexofanyexceptinrange?view=net-10.0),
+[range end](https://learn.microsoft.com/en-us/dotnet/api/system.memoryextensions.lastindexofanyexceptinrange?view=net-10.0).
+
+Case conversion is protocol A-Z/a-z only, culture-independent with unchanged input
+identity and detached changed arrays. System.Text.Ascii.ToLower stops on non-ASCII
+data (executed A/80/Z: InvalidData, one byte written), so it cannot directly replace
+the complete Latin-1 payload conversion. Retain bounded native MemoryMarshal word
+operations/SWAR, with explicitly unchecked modular word arithmetic and native
+BitOperations zero counts. No global unchecked index/range policy is added.
+Remove the now-unused CLR-only BitOperators facade after whole-workspace and
+pinned-module review; there is no upstream Netty class or original comment to archive.
+Pinned ByteBufUtil.java:601-607/742-749 consumes pattern/first-index kernels through
+indexed word reads; the future CLR buffer/search API remains separate. Kernel
+verification does not establish that buffer integration. The Java unaligned short
+tail sign-extends a negative low byte, corrupting its neighbor: 80 41 lowercases to
+80 FF; CLR gives 80 61 and agrees with the Java scalar path. Keep that existing CLR
+unsigned conversion rather than reproducing the optimized-path bug. Original locale
+comments remain with protocol notes. SWAR's exact Folly URL casing and Utility
+comment are restored; all 19 original SWAR comments are now present. Execution and
+bounded allocation/timing evidence are in the ASCII transform checkpoint.
+Native conversion reference: [Ascii.ToLower source](https://github.com/dotnet/dotnet/blob/e2c1e00b3d0f96afb892fb261d5921565b400246/src/runtime/src/libraries/System.Private.CoreLib/src/System/Text/Ascii.CaseConversion.cs).
+
 ## Native OWS and scaffolding
 
 StringUtil.java:664-675/707-731 trims only SP and HTAB, retains unchanged input

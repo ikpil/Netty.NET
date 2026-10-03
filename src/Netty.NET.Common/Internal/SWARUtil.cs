@@ -12,12 +12,16 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+using System.Numerics;
+
 namespace Netty.NET.Common.Internal;
 
 
 /**
  * Utility class for SWAR (SIMD within a register) operations.
  */
+// Utility
+// Word arithmetic deliberately wraps modulo 2^32/2^64, also in checked builds.
 public static class SWARUtil 
 {
 
@@ -25,7 +29,7 @@ public static class SWARUtil
      * Compiles given byte into a long pattern suitable for SWAR operations.
      */
     public static long compilePattern(byte byteToFind) {
-        return (byteToFind & 0xFFL) * 0x101010101010101L;
+        return unchecked((byteToFind & 0xFFL) * 0x101010101010101L);
     }
 
     /**
@@ -38,7 +42,7 @@ public static class SWARUtil
      */
     public static long applyPattern(long word, long pattern) {
         long input = word ^ pattern;
-        long tmp = (input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL;
+        long tmp = unchecked((input & 0x7F7F7F7F7F7F7F7FL) + 0x7F7F7F7F7F7F7F7FL);
         return ~(tmp | input | 0x7F7F7F7F7F7F7F7FL);
     }
 
@@ -53,7 +57,8 @@ public static class SWARUtil
      * If no pattern is found, returns 8.
      */
     public static int getIndex(long word, bool isBigEndian) {
-        int zeros = isBigEndian? BitOperators.NumberOfLeadingZeros(word) : BitOperators.NumberOfTrailingZeros(word);
+        ulong bits = unchecked((ulong)word);
+        int zeros = isBigEndian ? BitOperations.LeadingZeroCount(bits) : BitOperations.TrailingZeroCount(bits);
         return zeros >>> 3;
     }
 
@@ -61,11 +66,11 @@ public static class SWARUtil
      * Returns a word where each ASCII uppercase byte has the highest bit set.
      */
     private static long applyUpperCasePattern(long word) {
-        // Inspired by https://github.com/facebook/folly/blob/add4049dd6c2371eac05b92b6fd120fd6dd74df5/folly/string.cpp
+        // Inspired by https://github.com/facebook/folly/blob/add4049dd6c2371eac05b92b6fd120fd6dd74df5/folly/String.cpp
         long rotated = word & 0x7F7F7F7F7F7F7F7FL;
-        rotated += 0x2525252525252525L;
+        rotated = unchecked(rotated + 0x2525252525252525L);
         rotated &= 0x7F7F7F7F7F7F7F7FL;
-        rotated += 0x1A1A1A1A1A1A1A1AL;
+        rotated = unchecked(rotated + 0x1A1A1A1A1A1A1A1AL);
         rotated &= ~word;
         //rotated &= 0x8080808080808080L;
         rotated &= unchecked((long)0x8080808080808080UL); // ulong -> long casting
@@ -77,9 +82,9 @@ public static class SWARUtil
      */
     private static int applyUpperCasePattern(int word) {
         int rotated = word & 0x7F7F7F7F;
-        rotated += 0x25252525;
+        rotated = unchecked(rotated + 0x25252525);
         rotated &= 0x7F7F7F7F;
-        rotated += 0x1A1A1A1A;
+        rotated = unchecked(rotated + 0x1A1A1A1A);
         rotated &= ~word;
         //rotated &= 0x80808080;
         rotated &= unchecked((int)0x80808080); // 최상위 비트 방어용
@@ -91,9 +96,9 @@ public static class SWARUtil
      */
     private static long applyLowerCasePattern(long word) {
         long rotated = word & 0x7F7F7F7F7F7F7F7FL;
-        rotated += 0x0505050505050505L;
+        rotated = unchecked(rotated + 0x0505050505050505L);
         rotated &= 0x7F7F7F7F7F7F7F7FL;
-        rotated += 0x1A1A1A1A1A1A1A1AL;
+        rotated = unchecked(rotated + 0x1A1A1A1A1A1A1A1AL);
         rotated &= ~word;
         //rotated &= 0x8080808080808080L;
         rotated &= unchecked((long)0x8080808080808080UL); // ulong -> long casting
@@ -105,9 +110,9 @@ public static class SWARUtil
      */
     private static int applyLowerCasePattern(int word) {
         int rotated = word & 0x7F7F7F7F;
-        rotated += 0x05050505;
+        rotated = unchecked(rotated + 0x05050505);
         rotated &= 0x7F7F7F7F;
-        rotated += 0x1A1A1A1A;
+        rotated = unchecked(rotated + 0x1A1A1A1A);
         rotated &= ~word;
         //rotated &= 0x80808080;
         rotated &= unchecked((int)0x80808080);

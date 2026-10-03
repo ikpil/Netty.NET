@@ -121,15 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1833 cases** on Windows/net10.0:
-**1819 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1845 cases** on Windows/net10.0:
+**1831 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`charutil-ows-full-debug.trx` and `charutil-ows-full-release.trx`;
-affected Debug and checked Release each pass 239 relevant cases.
-Unused noncomparison CharUtil facades are removed; actual StringUtil OWS/CSV
-boundaries use native spans with SP/HTAB policy and unchanged-value identity.
-General UTF-16/ASCII comparison and checked hash work remain in their checkpoint.
+`ascii-transform-final-full-debug.trx` and `ascii-transform-final-full-release.trx`;
+checked Release passes 82 relevant cases. ASCII trim has correct exclusive ends,
+logical view identity and native control-range searches. SWAR word overflow is
+explicit and all 19 original comments are preserved; its behavioral source review
+is now verified. Earlier OWS, comparison and hash work remains in its checkpoint.
 The earlier string, pattern, delimiter, numeric and scheduling work remains below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
@@ -711,6 +711,56 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### ASCII transform checkpoint
+
+Actual HTTP/header consumers retain trim/case APIs. Correct generic exclusive-end
+trimming, unchanged byte-view identity and null mapping; use native logical span
+range searches. Preserve unsigned byte content and existing culture-independent
+ASCII conversion with detached changed bytes. SWAR's pattern/upper/lower arithmetic
+now explicitly wraps in checked builds; getIndex uses native BitOperations.
+The unused CLR-only BitOperators class is removed rather than retaining manual
+JDK zero-count implementations; this is a public source API removal in the port.
+Design/ownership and intentional upstream bug corrections are recorded in
+common-clr-design.md ASCII trim and word conversion. SWARUtil's source behavioral
+review is verified; this does not complete the future buffer/native public API.
+
+Before repair: new Debug regression selection fails 8/12; checked selection fails
+34/40 including original SWAR/case tests. After repair, checked Release passes 82
+(12 new, 20 existing case-conversion, eight original SWAR, 42 original character).
+Full default Debug/Release each discover 1845 / pass 1831 / fail zero / keep 14
+skips. All prior 1833 identities/outcomes and 759 non-Porting cases are retained.
+All 271 pinned inventory paths remain. SWAR missing comments improve from two to
+zero (19 original comments); all other missing counts stay unchanged, including
+99/99 AsciiString and 9/9 AsciiStringUtil original comments. Original fixtures
+retain every name/input/assertion/comment and were not edited.
+
+Corretto 21.0.11 executes exact SWAR/AsciiStringUtil files and four exact AsciiString
+methods with minimal array/sequence/native-order provider harnesses. 67584 word
+rows agree exactly, including both first-index bit orders; 66856 case rows agree
+with Java scalar conversion and an independent unsigned reference. Java's optimized
+short-tail branch differs in 6706 rows, including 80 41 -> 80 FF versus native
+80 61. 67096 trim rows agree with Java String.trim and the native reference.
+Intentional differences: generic trim 66702 rows; signed-byte content 1309 rows
+per offset; unchanged offset-three identity 46 more rows. These are recorded
+bug/native decisions, not universal original Java equivalence. Native BCL ASCII
+invalid-input behavior is also executed. No full JVM Unsafe or HTTP/buffer run is
+claimed. Warm 20000 unchanged slice conversion/trim iterations allocate zero.
+Three-round word/scalar smoke timings on 32/4096-byte mixed payloads remain in
+oracle.log; tiered-JIT/order/input sensitivity prevents a general throughput claim.
+
+Evidence: ascii-transform-before-debug.trx, ascii-transform-before-checked.trx,
+ascii-transform-final-checked-release.trx, ascii-transform-final-full-debug.trx,
+ascii-transform-final-full-release.trx, ascii-transform-identity-comparison.json,
+ascii-transform-comment-audit.json, ascii-transform-inventory-summary.json,
+ascii-transform-java-clr-oracle.json. Harnesses/corpora/timings remain in ignored
+artifacts/ascii-transform-validation; no new feature MD. Windows/net10.0,
+SDK 10.0.203/runtime 10.0.7, native little-endian host (no big-endian host claim).
+Source decisions: 50 verified / 36 CLR replacements / 13 exclusions / 85 pending /
+21 in progress; tests remain 56 verified / ten exclusions. AsciiString/common remain
+in progress. Next: remaining mixed-sequence/public API consumers and platform
+operations, starting with raw native-address/object-field-offset stubs and their
+actual original consumers before selecting CLR replacements or implementations.
 
 ### Native OWS/scaffolding checkpoint
 

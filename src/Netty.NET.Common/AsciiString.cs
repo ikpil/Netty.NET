@@ -1047,6 +1047,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public AsciiString toLowerCase()
     {
+        // The protocol conversion folds only A-Z, independently of culture.
         return AsciiStringUtil.toLowerCase(this);
     }
 
@@ -1057,6 +1058,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public AsciiString toUpperCase()
     {
+        // The protocol conversion folds only a-z, independently of culture.
         return AsciiStringUtil.toUpperCase(this);
     }
 
@@ -1069,34 +1071,37 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public static ICharSequence trim(ICharSequence c)
     {
+        ArgumentNullException.ThrowIfNull(c);
         if (c is AsciiString asciiString)
         {
             return asciiString.trim();
         }
 
-        // ..
-        // if (c is string) {
-        //     return ((string) c).trim();
-        // }
-
-        int start = 0, last = c.length() - 1;
-        int end = last;
-        while (start <= end && c.charAt(start) <= ' ')
+        int length = c.length();
+        int start = 0, end = length;
+        if (c is StringCharSequence || c is AppendableCharSequence)
         {
-            start++;
+            ReadOnlySpan<char> chars = c is StringCharSequence text
+                ? text.AsSpan()
+                : ((AppendableCharSequence)c).AsSpan();
+            start = chars.IndexOfAnyExceptInRange('\0', ' ');
+            if (start < 0)
+            {
+                start = end = length;
+            }
+            else
+            {
+                end = chars.LastIndexOfAnyExceptInRange('\0', ' ') + 1;
+            }
+        }
+        else
+        {
+            while (start < end && c.charAt(start) <= ' ') start++;
+            while (end > start && c.charAt(end - 1) <= ' ') end--;
         }
 
-        while (end >= start && c.charAt(end) <= ' ')
-        {
-            end--;
-        }
-
-        if (start == 0 && end == last)
-        {
-            return c;
-        }
-
-        return c.subSequence(start, end);
+        // subSequence has an exclusive end; retain the final non-control char.
+        return start == 0 && end == length ? c : c.subSequence(start, end);
     }
 
     /**
@@ -1107,24 +1112,18 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public AsciiString trim()
     {
-        int start = arrayOffset(), last = arrayOffset() + length() - 1;
-        int end = last;
-        while (start <= end && _value[start] <= ' ')
+        ReadOnlySpan<byte> bytes = AsSpan();
+        int start = bytes.IndexOfAnyExceptInRange((byte)0, (byte)' ');
+        if (start < 0)
         {
-            start++;
+            return bytes.IsEmpty ? this : new AsciiString(_value, arrayOffset() + bytes.Length, 0, false);
         }
 
-        while (end >= start && _value[end] <= ' ')
-        {
-            end--;
-        }
-
-        if (start == 0 && end == last)
-        {
-            return this;
-        }
-
-        return new AsciiString(_value, start, end - start + 1, false);
+        int end = bytes.LastIndexOfAnyExceptInRange((byte)0, (byte)' ') + 1;
+        // CLR bytes are unsigned: keep 0x80-0xff and unchanged logical views.
+        return start == 0 && end == bytes.Length
+            ? this
+            : new AsciiString(_value, arrayOffset() + start, end - start, false);
     }
 
     /**
