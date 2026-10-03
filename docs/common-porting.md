@@ -121,8 +121,8 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default, non-batch suite executes **1394 cases** on Windows/net10.0:
-**1380 passed / 0 failed / 14 skipped** in final Debug and Release.
+The current default, non-batch suite executes **1409 cases** on Windows/net10.0:
+**1395 passed / 0 failed / 14 skipped** in final Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Evidence:
 `native-completion-final-contracts.trx`,
@@ -172,11 +172,14 @@ and analyzer warnings are not claimed resolved. Evidence:
 `unordered-native-configuration-full-debug.trx`,
 `unordered-native-configuration-full-release.trx`,
 `unordered-worker-failure-final-contracts-debug.trx`,
-`unordered-worker-failure-final-full-debug.trx` and
-`unordered-worker-failure-final-full-release.trx` in the ignored TestResults directory.
+`unordered-worker-failure-final-full-debug.trx`,
+`unordered-worker-failure-final-full-release.trx`,
+`unordered-stop-final-contracts-debug.trx`,
+`unordered-stop-full-debug.trx` and
+`unordered-stop-full-release.trx` in the ignored TestResults directory.
 Whole-suite files use the full default common test project, without PortingBatch.
 Files named contracts record focused execution; the worker-identity before file
-retains the expected failing regression run. The newest unordered-worker-failure final-full
+retains the expected failing regression run. The newest unordered-stop full
 files establish the current Debug/Release counts above.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
@@ -212,9 +215,10 @@ and Release each pass 1372 / fail zero / skip 14, with all 759 original identiti
 and skip identities unchanged and matching outcomes between configurations
 (unordered-native-configuration-identity-comparison.json). All 98 verified comment
 entries have zero missing; all 271 pinned files are inventoried and implementation
-paths exist (unordered-native-configuration-comment-audit.json). Immediate worker
-interruption and private queue costs remain open; worker replacement failure is
-subsequently repaired in common-unordered-worker-failure.md.
+paths exist (unordered-native-configuration-comment-audit.json). Worker replacement
+failure is subsequently repaired in common-unordered-worker-failure.md, and concrete
+immediate stop in common-unordered-cooperative-stop.md. Private queue costs and
+shared/group immediate API review remain open.
 
 The CLR unordered worker failure boundary now contains replacement creation/start
 exceptions instead of terminating the process. Isolated pre-repair throw/start
@@ -235,8 +239,35 @@ inventoried and implementation paths present (unordered-worker-failure-comment-a
 Both full runs use --artifacts-path artifacts/worker-failure-validation because
 Rider holds the ordinary Debug test DLL; its process is preserved. Windows/net10.0
 remains the verified scope, existing compiler/analyzer warnings remain, and no
-test source exclusion or new skip is introduced. Immediate interruption and private
-queue costs remain open, along with the 99 pending source decisions.
+test source exclusion or new skip is introduced. Concrete immediate stop is subsequently
+implemented below. Shared/group immediate API and private queue costs remain open,
+along with the 99 pending source decisions.
+
+The concrete unordered executor now exposes StopAsync and StopToken. Running operations
+explicitly opt into cancellation; accepted waiting work is withdrawn, and actual workers,
+factory starts and asynchronous cancellation notifications drain before Termination.
+Callback failures remain observable together with any backend failure. Legacy shutdownNow
+forwards to this policy. A separate-process before/after comparison reproduces and removes
+an interrupt escaping into custom factory suffix code; the revised Debug and Release
+probes exit zero. All four worker-failure process modes still pass in both configurations.
+See [cooperative stop decisions](common-unordered-cooperative-stop.md).
+The expanded affected Debug selection passes 153 cases. Final whole Debug/Release each
+pass 1395 / fail zero / skip 14; all 759 non-Porting and all skip identities are unchanged,
+only 15 CLR rows are added, and names/outcomes match between configurations
+(unordered-stop-identity-comparison.json). One existing CLR-only probe now asserts
+explicit StopToken cancellation in place of injected interruption; its identity and
+queue-handle checks remain. No original Java fixture is changed. All 98 verified comment
+entries and the 21 unordered, eight original fixture and ten group comments have zero
+missing; all 271 pinned inventory entries and implementation paths match
+(unordered-stop-comment-audit.json). Both whole runs use --artifacts-path
+artifacts/cooperative-stop-validation to preserve the Rider process holding the ordinary
+Debug DLL. Existing compiler/analyzer warnings remain; only Windows/net10.0 is verified.
+Source decisions remain 42 verified, 29 CLR replacements, 13 exclusions, 99 pending and
+22 in progress; all 66 original test files have decisions (56 verified, ten exclusions).
+These counts do not measure remaining effort or establish native design completion.
+Next: measure private deadline queue insertion/claim/cancellation costs and compare BCL
+alternatives, then review shared/group immediate APIs against pinned consumers. Remaining
+collections, strings/encoding, platform and ownership reviews stay within the full goal.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already
@@ -290,9 +321,9 @@ the translation forced ThreadPool hops instead of testing synchronous reentrancy
 Inline-capable chain producers retain 20000 operations and the original two-second
 bound, and the final matrix passes. All 70 removed-source comments, seven PendingWrite
 and 12 fixture comments are preserved. See
-[native completion ownership](common-native-future-retirement.md). Final unordered
-immediate interruption, private queue costs and 99 pending source
-decisions remain open.
+[native completion ownership](common-native-future-retirement.md). Concrete unordered
+immediate stop is subsequently implemented in common-unordered-cooperative-stop.md;
+shared/group immediate API, private queue costs and 99 pending source decisions remain open.
 
 After native submission and scheduling migration, unused PromiseTask/IRunnableFuture
 and six Callable/Queueing glue files are removed. Their actual consumers already
@@ -418,8 +449,9 @@ Thirty-four new cases verify native cancellation, failure, deadline, context and
 lifetime contracts. ShutdownNow cancellation initially failed and was repaired.
 Seven unused CLR action/token wrappers are removed. Concrete unordered Java scheduler
 APIs have since been removed. Native queue ownership, graceful admission/drain and
-immutable configuration are implemented; immediate interruption, replacement-factory
-failure and private queue costs remain open.
+immutable configuration are implemented. Replacement-factory failure is repaired in
+common-unordered-worker-failure.md and concrete cooperative immediate stop in
+common-unordered-cooperative-stop.md. Shared/group immediate API and private queue costs remain open.
 See [common-native-scheduling.md](common-native-scheduling.md).
 
 All ordered/global/single-thread scheduling callers and fixtures now use native
@@ -516,7 +548,9 @@ remain; original workloads are retained. See
 [common-nonsticky-runner.md](common-nonsticky-runner.md). Detachable completion
 observers are now implemented separately and the remaining Future/Promise callers
 have native equivalents; see common-native-future-retirement.md. The unordered
-backend's native worker/interruption and public policy decisions remain open.
+backend's worker failure and concrete cooperative stop decisions are subsequently
+implemented in common-unordered-worker-failure.md and common-unordered-cooperative-stop.md;
+shared/group immediate API, private queue costs and remaining public policy review stay open.
 
 ExecutorCompletion now observes a producer-owned Task with ordered, detachable
 Action<Task> registrations. A BCL LinkedList and gate claim notification snapshots;

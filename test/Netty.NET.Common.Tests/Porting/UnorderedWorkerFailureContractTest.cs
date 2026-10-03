@@ -243,4 +243,37 @@ public class UnorderedWorkerFailureContractTest
             Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
+
+    [Fact]
+    public async Task ReentrantStopKeepsBothBackendAndCancellationCallbackFailures()
+    {
+        int creations = 0;
+        UnorderedThreadPoolEventExecutor executor = null;
+        var backend = new InvalidOperationException("replacement failed");
+        var callback = new ArgumentException("stop callback failed");
+        var factory = new Factory(task =>
+        {
+            if (Interlocked.Increment(ref creations) == 1) return new Thread(task.run) { IsBackground = true };
+            executor.StopAsync();
+            throw backend;
+        });
+        executor = new UnorderedThreadPoolEventExecutor(1, factory);
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        using var registration = executor.StopToken.UnsafeRegister(_ => throw callback, null);
+        var escaping = new EscapingSubmission(entered, release);
+        executor.execute(escaping);
+        try
+        {
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+            release.Set();
+            Assert.Same(backend, await Assert.ThrowsAsync<InvalidOperationException>(
+                () => executor.Termination.WaitAsync(TimeSpan.FromSeconds(5))));
+            Assert.Contains(backend, executor.Termination.Exception.Flatten().InnerExceptions);
+            Assert.Contains(callback, executor.Termination.Exception.Flatten().InnerExceptions);
+            Assert.Same(escaping.Error, await Assert.ThrowsAsync<InvalidOperationException>(() => escaping.Result));
+            Assert.True(executor.isTerminated());
+        }
+        finally { release.Set(); executor.shutdownNow(); Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5))); }
+    }
 }

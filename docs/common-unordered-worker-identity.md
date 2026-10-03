@@ -67,7 +67,8 @@ were still incomplete at this checkpoint. The subsequent unordered native migrat
 removes the concrete Java scheduler/result and raw JDK wrappers; see
 common-native-unordered-scheduling-migration.md. Later native queue, graceful shutdown,
 configuration and Future fixture migrations are recorded in common-porting.md.
-Immediate interruption remains open.
+Concrete immediate stop is subsequently implemented in common-unordered-cooperative-stop.md;
+shared/group immediate API and private queue costs remain open.
 This correction does not complete common.
 
 Whole default Debug and Release each discover 1354 cases on Windows/net10.0:

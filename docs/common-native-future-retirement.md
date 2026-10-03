@@ -145,7 +145,8 @@ contract; see common-unordered-graceful-shutdown.md. The subsequent native queue
 review removes public mutators and implements submission cancellation withdrawal;
 see common-unordered-native-queue.md. Immutable constructor settings and native
 diagnostics retire inherited configuration; see common-unordered-native-configuration.md.
-Immediate interruption and private queue costs remain open.
+Concrete immediate stop is subsequently implemented in common-unordered-cooperative-stop.md;
+shared/group immediate API and private queue costs remain open.
 
 ## Original pinned comment provenance
 

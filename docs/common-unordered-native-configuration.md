@@ -125,6 +125,7 @@ moving the old methods to an internal interface. All original comments remain in
 the mapped implementation or pinned provenance. Full matrix, fixture identity and
 comment/inventory evidence are recorded in common-porting.md after validation.
 Worker replacement failure is subsequently repaired in common-unordered-worker-failure.md.
-Immediate interruption, private queue
-costs and the remaining common source/runtime design reviews still need work.
+Concrete immediate stop is subsequently implemented in common-unordered-cooperative-stop.md.
+Shared/group immediate API, private queue costs and the remaining common source/runtime
+design reviews still need work.
 No common or complete unordered-backend claim is made by this unit.

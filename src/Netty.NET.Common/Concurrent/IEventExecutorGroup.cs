@@ -72,7 +72,8 @@ public interface IEventExecutorGroup : IExecutorService
     /// <remarks>
     /// Await propagates the original failure. A multithread group completes successfully
     /// after every child signal completes, including failed children. The unordered pool
-    /// completes after accepted work drains and all worker/start reservations are released.
+    /// completes after accepted work drains and all worker/start and immediate-stop
+    /// notification reservations are released. Stop callback failures are retained here.
     /// Failure to replace an unordered worker faults waiting native work and this
     /// signal with the backend failure after surviving workers drain.
     /// This signal does not join custom thread-factory code outside the executor's worker loop.

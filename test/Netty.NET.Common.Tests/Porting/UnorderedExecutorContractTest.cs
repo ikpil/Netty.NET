@@ -121,24 +121,26 @@ public class UnorderedExecutorContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
+        using var release = new ManualResetEventSlim();
         try
         {
-            var running = executor.SubmitAsync<bool>(() =>
+            var running = executor.SubmitAsync<bool>(token =>
             {
                 entered.Signal();
-                try { Thread.Sleep(Timeout.Infinite); return false; }
-                catch (ThreadInterruptedException) { return true; }
-            });
+                release.Wait(TimeSpan.FromSeconds(5), token);
+                return false;
+            }, executor.StopToken);
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1));
             IRunnable reservation = Assert.Single(executor.shutdownNow());
             Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(reservation);
             reservation.run();
-            Assert.True(running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            Assert.ThrowsAny<OperationCanceledException>(() => running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            Assert.True(running.IsCanceled);
             Assert.True(delayed.IsCanceled);
             Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
         }
-        finally { stop(executor); }
+        finally { release.Set(); stop(executor); }
     }
 
     [Fact]

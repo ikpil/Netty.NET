@@ -27,8 +27,10 @@ canceling a WaitAsync observer never cancels shutdown or this Task.
 This deliberately changes the pinned unordered shutdown signal. A consumer that
 only needs request acknowledgement can call shutdown synchronously; awaiting
 ShutdownGracefullyAsync now waits for the executor's lifetime boundary. An
-immediate shutdown requests CLR interruption but cannot force noncooperating user
-code to return. Neither normal nor immediate shutdown completes while such a
+immediate shutdown used CLR interruption at this checkpoint. The subsequent
+common-unordered-cooperative-stop.md replaces it with explicit StopToken cooperation
+and includes cancellation notification drain/failures. Neither path forces
+noncooperating user code to return. Neither normal nor immediate shutdown completes while such a
 worker still owns an invocation. A reentrant factory's creation reservation also
 prevents completion until its call returns, even when it returns no Thread.
 
@@ -76,8 +78,8 @@ fixture migration retires plain Future/Promise (common-native-future-retirement.
 The subsequent native queue review removes public mutators and uses owned token
 withdrawal with PendingTaskCount diagnostics; see common-unordered-native-queue.md.
 The subsequent native configuration review retires inherited settings and statistics;
-see common-unordered-native-configuration.md. Immediate interruption and private
-queue costs remain open.
+see common-unordered-native-configuration.md. Concrete immediate stop is implemented
+in common-unordered-cooperative-stop.md; shared/group immediate API and private queue costs remain open.
 Search of all pinned modules finds bulk invocation only in forwarding/guard
 implementations, common/transport blocking-guard tests and benchmark stubs; no
 production operation requires a custom bulk-result API. Useful composition now

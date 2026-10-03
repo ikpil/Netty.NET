@@ -115,8 +115,8 @@ The subsequent pool-configuration review uses that pinned all-module search to
 retire inherited settings and statistics in favor of immutable constructor settings,
 owned cancellation and native diagnostics; see common-unordered-native-configuration.md.
 Its probe mapping also records further changes to the historical table above.
-Immediate interruption and private queue costs remain
-open. The remaining pending upstream source
+Concrete immediate stop is subsequently implemented in common-unordered-cooperative-stop.md.
+Shared/group immediate API and private queue costs remain open. The remaining pending upstream source
 reviews and the remaining common design work stay within the full goal. The
 observed real-time auto-scaling stability issue prompted the subsequent
 common-autoscaling-monitor-windows.md review. Controlled cases prove repeated

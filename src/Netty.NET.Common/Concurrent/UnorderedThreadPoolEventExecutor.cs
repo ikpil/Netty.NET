@@ -71,6 +71,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private bool shutdownRequested;
     private bool stopping;
     private Exception backendFailure;
+    private readonly CancellationTokenSource stopSource = new();
+    private readonly CancellationToken stopToken;
+    private int stopNotifications;
+    private AggregateException stopCallbackFailure;
     private static long nextSequence;
 
     /**
@@ -107,6 +111,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         configuredWorkerCount = workerCount;
         this.threadFactory = threadFactory;
         rejectedHandler = handler;
+        stopToken = stopSource.Token;
     }
 
     public IEventExecutorGroup parent() => this;
@@ -122,7 +127,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     public bool isShutdown() { using (UninterruptibleMonitor.enter(gate)) return shutdownRequested; }
     public bool isTerminated()
     {
-        using (UninterruptibleMonitor.enter(gate)) return shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0;
+        using (UninterruptibleMonitor.enter(gate)) return shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && stopNotifications == 0;
     }
     // All callers hold gate. Async continuations cannot run inline while pool
     // state is being published. A start reservation counts even before its
@@ -131,10 +136,14 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         AdvanceGracefulShutdown();
         Monitor.PulseAll(gate);
-        if (shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0)
+        if (shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && stopNotifications == 0 && !termination.Task.IsCompleted)
         {
-            if (backendFailure == null) termination.TrySetResult();
-            else termination.TrySetException(backendFailure);
+            stopSource.Dispose();
+            if (stopCallbackFailure != null)
+                termination.TrySetException(backendFailure == null ? stopCallbackFailure.InnerExceptions :
+                    new[] { backendFailure }.Concat(stopCallbackFailure.InnerExceptions));
+            else if (backendFailure != null) termination.TrySetException(backendFailure);
+            else termination.TrySetResult();
         }
     }
     public Task Termination => termination.Task;
@@ -151,25 +160,74 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     /// <summary>Gets the number of currently claimed invocations; yielded asynchronous bodies are caller-owned.</summary>
     public int ActiveWorkerCount { get { using (UninterruptibleMonitor.enter(gate)) return activeWorkers.Count; } }
 
-    public List<IRunnable> shutdownNow()
+    /// <summary>Gets the token requested by immediate stop; graceful closure does not request it.</summary>
+    /// <remarks>
+    /// Pass this token to native submission/scheduling or explicitly link it with an
+    /// operation's owner token. Stop does not cancel unrelated caller token sources.
+    /// The token remains readable after termination; its source is disposed on drain.
+    /// </remarks>
+    public CancellationToken StopToken => stopToken;
+
+    /// <summary>Closes admission, cancels waiting work, requests cooperative stop, and waits for drain.</summary>
+    /// <remarks>
+    /// Running delegates must observe their own cancellation policy; threads are never
+    /// interrupted. This is the same persistent Task as Termination. Stop callbacks
+    /// present at the request execute asynchronously, are included in drain, and their failures are
+    /// retained in Termination.Exception. Yielded asynchronous bodies remain caller-owned.
+    /// </remarks>
+    public Task StopAsync()
+    {
+        StopCore(false);
+        return Termination;
+    }
+
+    public List<IRunnable> shutdownNow() => StopCore(true);
+
+    private List<IRunnable> StopCore(bool returnHandles)
     {
         List<IRunnable> tasks;
+        Task notifications = null;
         using (UninterruptibleMonitor.enter(gate))
         {
             shutdownRequested = stopping = true;
             DisposeGracefulTimer();
+            if (!stopToken.IsCancellationRequested && !termination.Task.IsCompleted)
+            {
+                ++stopNotifications;
+                // CancelAsync requests the token now, but never invokes arbitrary
+                // registered code inline under this gate (including factory reentry).
+                using (ExecutionContext.IsFlowSuppressed() ? default : ExecutionContext.SuppressFlow())
+                    notifications = stopSource.CancelAsync();
+            }
             Work[] pending = queue.UnorderedItems.Select(item => item.Element).ToArray();
-            tasks = pending.Select(work => work.outer).ToList();
+            tasks = returnHandles ? pending.Select(work => work.outer).ToList() : null;
             // Queue handles are membership, not results. Every removed reservation
             // settles cancellation or releases its raw callback before termination.
             // Canceling a submission can remove itself through its membership
             // hook. Iterate the owned snapshot rather than a live BCL enumerator.
             foreach (Work work in pending) work.cancelOuter();
             queue.Clear();
-            foreach (var worker in workers) worker.Interrupt();
             PublishPoolState();
         }
+        if (notifications != null)
+        {
+            using (ExecutionContext.IsFlowSuppressed() ? default : ExecutionContext.SuppressFlow())
+                _ = ObserveStopCallbacksAsync(notifications);
+        }
         return tasks;
+    }
+
+    private async Task ObserveStopCallbacksAsync(Task notifications)
+    {
+        AggregateException failure = null;
+        try { await notifications.ConfigureAwait(false); }
+        catch (Exception error) { failure = notifications.Exception ?? new AggregateException(error); }
+        using (UninterruptibleMonitor.enter(gate))
+        {
+            stopCallbackFailure = failure;
+            --stopNotifications;
+            PublishPoolState();
+        }
     }
 
     public void shutdown()
@@ -262,7 +320,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         var elapsed = Stopwatch.StartNew();
         using (UninterruptibleMonitor.enter(gate))
         {
-            while (!shutdownRequested || workers.Count != 0 || startingWorkers != 0 || queue.Count != 0)
+            while (!shutdownRequested || workers.Count != 0 || startingWorkers != 0 || queue.Count != 0 || stopNotifications != 0)
             {
                 TimeSpan remaining = timeout - elapsed.Elapsed;
                 if (remaining <= TimeSpan.Zero) return false;
@@ -407,10 +465,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 if (work == null) { countReleased = true; return; }
                 try
                 {
-                    // JDK workers clear an old interrupt before ordinary work and retain it for shutdownNow.
-                    try { Thread.Sleep(0); }
-                    catch (ThreadInterruptedException) { }
-                    if (Volatile.Read(ref stopping)) Thread.CurrentThread.Interrupt();
                     work.outer.run();
                 }
                 catch (Exception failure)

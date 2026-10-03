@@ -64,8 +64,9 @@ Cancellation before invocation prevents execution and releases queue membership.
 After a one-shot claim, owner cancellation does not overwrite a normal result and
 does not inject Thread.Interrupt; the two old JdkFutureTask running-cancellation
 probes now use native schedules, retaining the 256-iteration no-interrupt workload.
-Immediate pool shutdown's worker interruption is a separate existing backend
-policy, exercised independently. Shutdown removes queued work and settles native
+Immediate pool shutdown's worker interruption was a separate backend policy at this
+checkpoint. The subsequent common-unordered-cooperative-stop.md replaces it with
+explicit StopToken cooperation and callback drain. Shutdown removes queued work and settles native
 cancellation; returned IRunnable handles carry membership, not pending results.
 Continued periodic/delayed shutdown policy tests retain their barriers and timing.
 
@@ -98,8 +99,9 @@ Subsequent wrapper cleanup removes the unused PromiseTask and Callable glue.
 Subsequent native fixture migration removes the plain Future/Promise hierarchy;
 see common-native-future-retirement.md. The subsequent queue review removes public
 mutators and unused metadata forwarding; see common-unordered-native-queue.md.
-The subsequent configuration review retires inherited settings. Immediate shutdown
-interruption, private queue costs and all pending
+The subsequent configuration review retires inherited settings, and concrete immediate
+stop is implemented in common-unordered-cooperative-stop.md. Shared/group immediate
+API, private queue costs and all pending
 source reviews still prevent common completion.
 The subsequent graceful-shutdown review implements quiet/timeout admission;
 see common-unordered-graceful-shutdown.md.

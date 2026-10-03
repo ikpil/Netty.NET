@@ -116,8 +116,10 @@ existing compiler/analyzer warnings remain.
 
 ## Remaining work
 
-Immediate shutdown still uses legacy Thread.Interrupt. Its CLR cancellation,
-claimed-invocation and custom-factory boundaries require a native policy decision.
+At this checkpoint immediate shutdown still used legacy Thread.Interrupt. The subsequent
+[cooperative stop decision](common-unordered-cooperative-stop.md) implements StopToken
+and StopAsync, includes callback drain/failures, and removes factory suffix interruption.
+Shared/group immediate API review remains open.
 Private queue costs and all 99 pending source decisions also remain, together with
 the other common public API/runtime reviews. This repair does not finish common
 or claim that all exceptions in arbitrary factory code are contained.
