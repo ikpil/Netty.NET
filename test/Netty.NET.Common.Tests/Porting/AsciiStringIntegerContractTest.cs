@@ -177,8 +177,8 @@ public class AsciiStringIntegerContractTest
             Assert.Equal(-12, new AsciiString("-12").ParseInt32());
             Assert.Equal(-12L, new AsciiString("-12").ParseInt64());
             Assert.False(new AsciiString("~12").TryParseInt64(out _));
-            Assert.Equal(long.MinValue, CharUtil.ParseLong(new AsciiString("-9223372036854775808")));
-            Assert.Equal(255L, CharUtil.ParseLong(new AsciiString("ff"), 16));
+            Assert.Equal(long.MinValue, new AsciiString("-9223372036854775808").ParseInt64());
+            Assert.Equal(255L, new AsciiString("ff").ParseInt64(16));
         }
         finally { CultureInfo.CurrentCulture = previous; }
     }

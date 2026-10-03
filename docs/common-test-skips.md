@@ -1,9 +1,9 @@
 # Current full-suite skips
 
 Baseline: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` in `D:/workspace/netty`.
-Both sequence-comparison-final-full-debug.trx and sequence-comparison-final-full-release.trx
-report 1790 passed, zero failed and the same 14 skipped cases on Windows/net10.0
-(1804 discovered cases). The earlier auto-scaling failure is preserved in
+Both charutil-ows-full-debug.trx and charutil-ows-full-release.trx
+report 1819 passed, zero failed and the same 14 skipped cases on Windows/net10.0
+(1833 discovered cases). The earlier auto-scaling failure is preserved in
 encoding-full-release-first.trx; it adds no skip and is not counted as a pass
 in that run. A subsequent traced reproduction/repair is recorded in
 common-porting.md, with the limitations of that timing evidence explicit.

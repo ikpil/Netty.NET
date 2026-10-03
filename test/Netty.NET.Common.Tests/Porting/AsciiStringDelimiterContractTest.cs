@@ -189,8 +189,8 @@ public class AsciiStringDelimiterContractTest
         foreach (ICharSequence value in values)
         {
             Assert.Equal(4, AsciiString.indexOf(value, ':', 0));
-            Assert.Equal("value", value.SubstringAfter(':').ToString());
-            Assert.Null(value.SubstringAfter(','));
+            Assert.Equal("value", StringUtil.substringAfter(value.ToString(), ':'));
+            Assert.Null(StringUtil.substringAfter(value.ToString(), ','));
         }
     }
 }

@@ -823,15 +823,9 @@ public static class StringUtil
      */
     public static string trimOws(string value)
     {
-        int length = value.Length;
-        if (length == 0)
-        {
-            return value;
-        }
-
-        int start = indexOfFirstNonOwsChar(value, length);
-        int end = indexOfLastNonOwsChar(value, start, length);
-        return start == 0 && end == length - 1 ? value : value[start..(end + 1)];
+        ArgumentNullException.ThrowIfNull(value);
+        ReadOnlySpan<char> trimmed = value.AsSpan().Trim(" \t".AsSpan());
+        return trimmed.Length == value.Length ? value : trimmed.ToString();
     }
 
     /**
@@ -854,13 +848,8 @@ public static class StringUtil
      */
     private static int indexOfFirstNonOwsChar(string value, int length)
     {
-        int i = 0;
-        while (i < length && isOws(value[i]))
-        {
-            i++;
-        }
-
-        return i;
+        int index = value.AsSpan(0, length).IndexOfAnyExcept(SPACE, TAB);
+        return index < 0 ? length : index;
     }
 
     /**
@@ -868,17 +857,12 @@ public static class StringUtil
      */
     private static int indexOfLastNonOwsChar(string value, int start, int length)
     {
-        int i = length - 1;
-        while (i > start && isOws(value[i]))
+        if (start == length)
         {
-            i--;
+            return length - 1;
         }
 
-        return i;
-    }
-
-    private static bool isOws(char c)
-    {
-        return c == SPACE || c == TAB;
+        int index = value.AsSpan(start, length - start).LastIndexOfAnyExcept(SPACE, TAB);
+        return index < 0 ? start : start + index;
     }
 }

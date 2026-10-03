@@ -999,6 +999,33 @@ Original AsciiString.java delimiter facade and all four original comments:
     }
 ```
 
+## Native OWS and scaffolding
+
+StringUtil.java:664-675/707-731 trims only SP and HTAB, retains unchanged input
+identity and returns empty for an all-OWS value. Its private boundaries also drive
+escapeCsv(CharSequence, boolean):373-455. Actual consumers include
+codec-http CombinedHttpHeaders.java:78/102/114 for header lookup and CSV values.
+Use native span Trim with the explicit nonempty " \t" character set; Unicode
+whitespace, CR/LF, NUL, unpaired surrogates and quoted interior whitespace remain.
+Use IndexOfAnyExcept/LastIndexOfAnyExcept for CSV boundaries, retaining the
+start == length sentinel for empty/all-OWS input. Null arguments map Java NPE to
+ArgumentNullException(value). All 67 StringUtil original comments stay in place.
+Framework contracts: [Trim](https://learn.microsoft.com/en-us/dotnet/api/system.memoryextensions.trim),
+[IndexOfAnyExcept](https://learn.microsoft.com/en-us/dotnet/api/system.memoryextensions.indexofanyexcept?view=net-10.0),
+[LastIndexOfAnyExcept](https://learn.microsoft.com/en-us/dotnet/api/system.memoryextensions.lastindexofanyexcept?view=net-10.0).
+
+CharUtil has no counterpart in the pinned Java modules. Retire its unused numeric,
+split, whitespace, digit-table, control/code-point and search facades; preserve
+the actual general comparison bridge verbatim. The only noncomparison callers
+were two CLR Porting assertions of ParseLong and two SubstringAfter assertions
+over three representations. Move these to AsciiString.ParseInt64 and the actual
+StringUtil.substringAfter with explicit fixture string materialization, retaining
+names, inputs, expected results and assertion counts. No new compatibility API
+or Character table is introduced, and no removed CharUtil comment represents
+pinned Netty code. This public scaffolding removal is a source API change in
+the unfinished port.
+Execution evidence and remaining work are in the OWS/scaffolding checkpoint.
+
 ## Native UTF-16 comparison and ASCII protocol comparison
 
 StringCharSequence and AppendableCharSequence contentEquals now compares exact
@@ -1025,8 +1052,9 @@ The bridge keeps false for invalid region bounds and its original nonpositive
 length rule after bounds checks; no Java range wrapper is introduced for native
 Span slicing. Instance region null arguments throw ArgumentNullException;
 the static region dispatcher retains false for null inputs. Two unused CLR-only
-CharUtil string overloads are removed after caller review. Remaining numeric,
-split/trim/search helpers and the whole ICharSequence public API remain separate.
+CharUtil string overloads are removed after caller review. Its unused noncomparison
+helpers are retired in the Native OWS and scaffolding decision; the whole
+ICharSequence public API remains separate.
 
 StringCharSequence object equality is confined to immutable StringCharSequence
 values, using exact content and matching native hashes. Cross-type content remains
@@ -1140,8 +1168,8 @@ assertions, names and comments, using fixture-local native window consumers with
 ASCII byte literals. Those helpers are not library compatibility APIs and do not
 validate arbitrary nullable CharSequence inputs or preserve removed facade exceptions.
 
-subSequence remains an ICharSequence bridge for actual CharUtil range extraction,
-trim/error reporting and pinned HTTP/header slicing. Its endpoint guard now runs
+subSequence remains an ICharSequence bridge for actual hex-error reporting
+(StringUtil.decodeHexByte) and pinned HTTP/header slicing. Its endpoint guard now runs
 before end-start, producing ArgumentOutOfRangeException in checked/unchecked builds.
 Partial copy=true slices own detached arrays; copy=false shares the logical bytes.
 Full-range requests keep the pinned source identity even with copy=true; empty

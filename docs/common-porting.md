@@ -121,15 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1804 cases** on Windows/net10.0:
-**1790 passed / 0 failed / 14 skipped** in final Debug and Release.
+The current default suite executes **1833 cases** on Windows/net10.0:
+**1819 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`sequence-comparison-final-full-debug.trx` and `sequence-comparison-final-full-release.trx`;
-affected Debug passes 114, and checked Release passes 66 relevant cases.
-General UTF-16 comparison uses native ordinal rules; ASCII protocol comparisons
-retain A-Z folding. Content/object equality and checked ASCII hash arithmetic are
-corrected, and native logical span comparison/hashing avoid string materialization.
+`charutil-ows-full-debug.trx` and `charutil-ows-full-release.trx`;
+affected Debug and checked Release each pass 239 relevant cases.
+Unused noncomparison CharUtil facades are removed; actual StringUtil OWS/CSV
+boundaries use native spans with SP/HTAB policy and unchanged-value identity.
+General UTF-16/ASCII comparison and checked hash work remain in their checkpoint.
 The earlier string, pattern, delimiter, numeric and scheduling work remains below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
@@ -711,6 +711,43 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### Native OWS/scaffolding checkpoint
+
+Retire unused CLR-only CharUtil noncomparison helpers after all-module pinned
+source and whole-workspace caller review. Keep actual comparison code verbatim.
+Two integer assertions use AsciiString.ParseInt64; two delimiter assertions over
+three representations use StringUtil.substringAfter with explicit fixture text.
+All existing names, inputs, expected results and assertions remain. The public
+API removal, actual HTTP header consumers and native decisions are recorded once
+in common-clr-design.md Native OWS and scaffolding.
+
+Actual StringUtil OWS trim and CSV scanners use native span operations. One
+pre-repair null regression fails with NullReferenceException, then passes with
+ArgumentNullException(value). Corretto 21.0.11 executes six exact pinned methods
+over 70224 unique inputs: all UTF-16 code units surrounded by OWS, exhaustive
+length 0-4 CSV alphabet strings and quoted cases. All 210672 trim/CSV results
+agree, as do trim and nonempty CSV reference checks. Empty CSV reference identity
+is excluded from comparison because CLR canonicalizes empty strings; original
+literal-empty fixture assertions still execute. Null NPE maps to the CLR argument
+exception. Harness dependencies are native constants/StringBuilder and a null
+check shim; this does not exercise thread-local caches or HTTP module execution.
+
+Debug and checked Release affected selections each pass 239, including all 64
+original StringUtil cases and 29 new actual OWS/CSV contract cases. Full default
+Debug/Release each discover 1833 / pass 1819 / fail zero / retain 14 skips. All
+prior 1804 identities/outcomes and all 759 non-Porting cases remain unchanged.
+All 271 inventory paths and missing-comment counts are unchanged; all 67
+StringUtil comments remain. Evidence: charutil-ows-before.trx,
+charutil-ows-affected-debug.trx, charutil-ows-checked-release.trx,
+charutil-ows-full-debug.trx, charutil-ows-full-release.trx,
+charutil-ows-identity-comparison.json, charutil-ows-comment-audit.json,
+charutil-ows-inventory-summary.json, charutil-ows-java-clr-oracle.json.
+Harnesses/corpora remain in ignored artifacts/charutil-ows-validation. No new
+feature MD or performance claim. Windows/net10.0 SDK 10.0.203/runtime 10.0.7.
+Source/test decision counts stay unchanged; StringUtil/common remain in progress.
+Next: review actual AsciiString trim/case-transform consumers and native API
+choices, then the remaining mixed-sequence ownership/API and memory/SWAR work.
 
 ### Native sequence comparison/hash checkpoint
 
