@@ -121,12 +121,12 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1441 cases** on Windows/net10.0:
-**1427 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1445 cases** on Windows/net10.0:
+**1431 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`ticker-full-debug.trx` and `ticker-full-release.trx`; the before-run is
-`ticker-before.trx`. Results remain in the ignored TestResults
+`mock-ticker-full-debug.trx` and `mock-ticker-full-release.trx`; the before-run is
+`mock-ticker-before-expanded.trx`. Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
 portable test source without PortingBatch and do not establish module completion.
@@ -346,6 +346,35 @@ module completion or arbitrary TimeProvider injection. Next: resolve DefaultMock
 FIFO/fairness and repeated sleep-phase observation, native atomic/reference-set
 ownership and noninterruptible advance lock entry, then finish the shared native
 clock-selection decision against the original embedded/manual event-loop consumers.
+
+The subsequent controlled-mock review reproduces stale sleep-phase observation:
+128 advances can repeatedly see the same old registration, leaving the final sleep
+unfinished. A separate probe compiles the unchanged pinned clock/ObjectUtil Java
+sources and passes 20 x 128 phases on Corretto 21.0.11. Contended CLR monitor entry
+also reproduces interruption aborting advance, unlike the original noninterruptible
+ReentrantLock.lock. The expanded before-run fails those two rows and passes two.
+The native fix uses Interlocked, reference-identity HashSet membership and a reusable
+linked FIFO tick queue. Existing sleepers acknowledge each tick before new phases,
+observers or another advance pass; interrupted registrations release their pending
+node in finally. Advance preserves consumed interrupts for the next interruptible
+wait. This implements clock wakeup policy, not a general fair CLR mutex or FIFO
+application-code execution. See the time-source decision above.
+
+The affected Debug selection passes 155 cases. Final whole Debug/Release each
+pass 1431 / fail zero / skip the same 14 (1445 discovered). All 759 non-Porting and
+skip identities remain; only four CLR phase/clock rows are added and both
+configurations have matching identities/outcomes (mock-ticker-identity-comparison.json).
+All 105 verified comment entries plus ScheduledFutureTask (106 distinct entries)
+have zero missing, including all four mock source comments; all 271 pinned entries
+and implementation paths match (mock-ticker-all-comment-audit.json,
+mock-ticker-inventory-summary.json). Validation remains Windows/net10.0, with the
+same isolated artifact path and existing compiler/analyzer warnings. No new skip,
+source exclusion or feature MD file is introduced. Source decisions: 49 verified /
+31 CLR replacements / 13 exclusions / 91 pending / 21 in progress; original tests
+remain 56 verified / ten exclusions. DefaultMockTicker's reviewed clock-policy
+behavior/native design is verified within this scope. Shared native clock-selection
+API review remains next, followed by the outstanding collection, encoding,
+platform and ownership decisions. Overall common completion remains open.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already

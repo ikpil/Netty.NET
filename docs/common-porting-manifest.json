@@ -1330,7 +1330,7 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultMockTicker.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/DefaultMockTicker.cs"
       ],
@@ -1339,14 +1339,20 @@
       ],
       "evidence": [
         "Pinned time source, original DefaultMockTickerTest and scheduler/metrics/monitor consumers reviewed; transport EmbeddedEventLoop/ManualIoEventLoop clock selection and I/O raw-timestamp delay callers checked. Local Corretto 21.0.11 TimeUnit.java confirms saturated conversion and nonpositive sleep no-op. See docs/common-clr-design.md monotonic-time decision.",
-        "Initial CLR ticker regressions: seven failed/three passed before repair; expanded affected Debug passes 151. Whole Debug/Release each 1427 passed/zero failed/14 unchanged skips, with 759 original identities retained and 16 CLR rows added; ticker-identity-comparison.json. All 17 source/eight original test comments preserved; all 271 inventory paths match. Windows/net10.0 only."
+        "Initial CLR ticker regressions: seven failed/three passed before repair; expanded affected Debug passes 151. Whole Debug/Release each 1427 passed/zero failed/14 unchanged skips, with 759 original identities retained and 16 CLR rows added; ticker-identity-comparison.json. All 17 source/eight original test comments preserved; all 271 inventory paths match. Windows/net10.0 only.",
+        "Pinned fair-lock contract reproduced with unchanged Java Ticker/SystemTicker/MockTicker/DefaultMockTicker/ObjectUtil: Corretto 21.0.11 probe passes 20 x 128 consecutive phases. Expanded C# before-run fails stale-phase observation and interruptible advance entry, with two other clock rows passing. Four native clock-policy rows pass with unchanged original mock scenarios in 155 affected Debug cases. See mock-ticker-before-expanded.trx, mock-ticker-upstream-probe.log and docs/common-clr-design.md.",
+        "Final full Debug/Release each 1431 passed/zero failed/14 unchanged skipped (1445 total), with 759 original identities retained, four CLR rows added and matching configuration identities/outcomes; mock-ticker-identity-comparison.json. All 106 reviewed comment entries have zero missing and all 271 pinned entries/implementation paths match; mock-ticker-all-comment-audit.json and mock-ticker-inventory-summary.json. Windows/net10.0 only."
       ],
-      "adaptation": "Original four comments restored. Existing mock scenarios pass, but Monitor does not implement ReentrantLock(true) FIFO admission. Fair sleep-phase observation, native atomic/reference-set ownership and noninterruptible advance entry remain in progress; no equivalent fairness or completed native mock design claimed.",
+      "adaptation": "Native Interlocked long timestamp, reference-identity HashSet membership and explicit reusable linked tick nodes implement ordered wakeup/phase observation. Existing sleepers process each tick before new phases, observers or another advance can pass. Monitor itself is not a general fair mutex; user code after sleep has no FIFO execution guarantee. Interrupted waiters remove both registration and pending nodes in finally. Advance entry and tick-drain waits preserve a consumed interrupt for the next interruptible operation; sleep/observation remain interruptible. All four original comments retained. Native clock-selection API review is separate.",
       "comments": {
         "upstreamCount": 4,
         "required": true,
         "preservedCount": 4,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Original fair wakeup purpose implemented with a CLR clock-specific ordered notification barrier, rather than a Java ReentrantLock wrapper or an incorrect claim that Monitor is fair. Native atomic/reference membership and interruption/lifetime policies have regression coverage; arbitrary TimeProvider injection and broader clock API selection remain separate."
       }
     },
     {

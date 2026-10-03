@@ -475,10 +475,29 @@ Ticker remains the executor's elapsed-nanosecond and synchronous-wait policy.
 TimeProvider supplies the system timestamp source here; this does not introduce
 arbitrary TimeProvider injection or replace event-loop scheduling with CreateTimer
 callbacks. The existing controlled mock supplies nanosecond advancement and
-blocking sleeper observation that TimeProvider alone does not specify. Its
-ReentrantLock(true) fairness is still an open implementation contract: the current
-CLR Monitor has no FIFO admission guarantee. Keep DefaultMockTicker in progress;
-its original fairness comment is preserved and followed by an explicit CLR note,
-rather than asserting that Monitor implements it. Native atomic/set replacement,
-interruption on advance lock entry and repeated sleep-phase observation are part
-of that remaining review. The six original mock test scenarios remain unchanged.
+blocking sleeper observation that TimeProvider alone does not specify. The final
+clock-selection API review remains separate; the current four original clock types
+have reviewed behavior, without a claim of arbitrary-provider integration.
+
+DefaultMockTicker implements the useful fair-wakeup policy with an explicit FIFO
+tick queue. Each advance notifies registered sleepers in registration order; new
+sleep phases, observers and subsequent advances wait for those notifications to
+be processed. This prevents awaitSleepingThread from observing the stale old phase
+after its deadline. CLR Monitor still supplies no general fair-mutex guarantee,
+and application code after sleep returns has no FIFO execution guarantee. A reusable
+LinkedListNode per sleeper avoids new tick-node allocation on every advance;
+Interlocked owns the native long timestamp, HashSet with ReferenceEqualityComparer
+owns thread membership, and interrupted sleepers remove registration and pending
+notification nodes in finally. The original fairness comment remains alongside
+the precise CLR policy note.
+
+Advance entry and pending-notification waits preserve a consumed interrupt for the
+next interruptible wait, as Java ReentrantLock.lock does; sleep and observer waits
+remain interruptible. Four CLR regressions cover 128 consecutive sleep phases,
+signed clock wrap, interrupted-registration cleanup and contended advance. The
+before-run fails the stale phase and contended-advance rows. For the latter, the
+test only holds the private gate to force contention and checks public clock/interrupt
+outcomes. A separate probe compiled the five unchanged pinned Java sources
+(four clock types plus ObjectUtil) with local Corretto 21.0.11; 20 x 128 consecutive
+sleep phases pass. That confirms the expected original behavior, without claiming
+to run the entire Java suite. The six original C# mock scenarios remain unchanged.

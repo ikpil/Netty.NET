@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Netty.NET.Common.Internal;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common.Concurrent;
@@ -27,11 +28,20 @@ namespace Netty.NET.Common.Concurrent;
 public sealed class DefaultMockTicker : MockTicker
 {
     // The lock is fair, so waiters get to process condition signals in the order they (the waiters) queued up.
-    // CLR review: the preceding original comment describes ReentrantLock(true).
-    // Monitor does not guarantee FIFO admission; that policy remains under review.
+    // CLR: Monitor alone is not fair. The explicit tick queue lets existing
+    // sleepers observe each advance in registration order before a new phase,
+    // observer or advance can pass them. This is clock policy, not a fair mutex.
     private readonly object _lock = new object();
-    private readonly AtomicLong _nanoTime = new AtomicLong();
-    private readonly Dictionary<Thread, bool> sleepers = new Dictionary<Thread, bool>();
+    private long _nanoTime;
+    private readonly HashSet<Thread> sleepers = new HashSet<Thread>(ReferenceEqualityComparer.Instance);
+    private readonly LinkedList<Sleeper> registered = new LinkedList<Sleeper>();
+    private readonly LinkedList<Sleeper> pendingTicks = new LinkedList<Sleeper>();
+
+    private sealed class Sleeper
+    {
+        internal readonly LinkedListNode<Sleeper> Tick;
+        internal Sleeper() => Tick = new LinkedListNode<Sleeper>(this);
+    }
 
     public DefaultMockTicker()
     {
@@ -39,7 +49,7 @@ public sealed class DefaultMockTicker : MockTicker
 
     public override long nanoTime()
     {
-        return _nanoTime.get();
+        return Interlocked.Read(ref _nanoTime);
     }
 
     // nano time
@@ -54,19 +64,30 @@ public sealed class DefaultMockTicker : MockTicker
 
         lock (_lock)
         {
+            // A signaled old phase must leave its registration before an
+            // observer can mistake it for this newly admitted sleep.
+            while (pendingTicks.Count != 0) Monitor.Wait(_lock);
+            var sleeper = new Sleeper();
+            var registration = registered.AddLast(sleeper);
             try
             {
                 long startTimeNanos = nanoTime();
-                sleepers.Add(Thread.CurrentThread, true);
+                sleepers.Add(Thread.CurrentThread);
                 Monitor.PulseAll(_lock);
-                do
+                while (true)
                 {
-                    Monitor.Wait(_lock);
-                } while (nanoTime() - startTimeNanos < delayNanos);
+                    while (pendingTicks.First != sleeper.Tick) Monitor.Wait(_lock);
+                    pendingTicks.RemoveFirst();
+                    if (unchecked(nanoTime() - startTimeNanos) >= delayNanos) return;
+                    Monitor.PulseAll(_lock);
+                }
             }
             finally
             {
                 sleepers.Remove(Thread.CurrentThread);
+                registered.Remove(registration);
+                if (sleeper.Tick.List != null) pendingTicks.Remove(sleeper.Tick);
+                Monitor.PulseAll(_lock);
             }
         }
     }
@@ -78,7 +99,7 @@ public sealed class DefaultMockTicker : MockTicker
     {
         lock (_lock)
         {
-            while (!sleepers.ContainsKey(thread))
+            while (pendingTicks.Count != 0 || !sleepers.Contains(thread))
             {
                 Monitor.Wait(_lock);
             }
@@ -94,10 +115,26 @@ public sealed class DefaultMockTicker : MockTicker
             return;
         }
 
-        lock (_lock)
+        bool interrupted = false;
+        try
         {
-            _nanoTime.addAndGet(amountNanos);
-            Monitor.PulseAll(_lock);
+            // Java lock.lock is noninterruptible, while sleep/observation entry
+            // is interruptible. Preserve that distinction with native monitors.
+            using (UninterruptibleMonitor.enter(_lock))
+            {
+                while (pendingTicks.Count != 0)
+                {
+                    try { Monitor.Wait(_lock); }
+                    catch (ThreadInterruptedException) { interrupted = true; }
+                }
+                Interlocked.Add(ref _nanoTime, amountNanos);
+                foreach (var sleeper in registered) pendingTicks.AddLast(sleeper.Tick);
+                Monitor.PulseAll(_lock);
+            }
+        }
+        finally
+        {
+            if (interrupted) Thread.CurrentThread.Interrupt();
         }
     }
 }
