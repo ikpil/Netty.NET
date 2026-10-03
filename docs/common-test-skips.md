@@ -1,9 +1,9 @@
 # Current full-suite skips
 
 Baseline: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` in `D:/workspace/netty`.
-Both mock-ticker-full-debug.trx and mock-ticker-full-release.trx
-report 1431 passed, zero failed and the same 14 skipped cases on Windows/net10.0
-(1445 discovered cases).
+Both provider-clock-full-debug.trx and provider-clock-full-release.trx
+report 1442 passed, zero failed and the same 14 skipped cases on Windows/net10.0
+(1456 discovered cases).
 
 | Cases | Reason | Source and executed coverage |
 | --- | --- | --- |

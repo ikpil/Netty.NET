@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System;
 using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
@@ -24,6 +25,17 @@ namespace Netty.NET.Common.Concurrent;
  */
 public sealed class DefaultEventExecutor : SingleThreadEventExecutor
 {
+    /// <summary>
+    /// Uses a native timestamp provider while retaining the dedicated executor
+    /// thread. After manually advancing the provider, submit work to wake the
+    /// executor. Provider timers do not dispatch scheduled callbacks.
+    /// </summary>
+    public DefaultEventExecutor(TimeProvider timeProvider)
+        : base(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventExecutor))),
+            true, false, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.reject(), timeProvider)
+    {
+    }
+
     public DefaultEventExecutor()
         : this((IEventExecutorGroup)null)
     {

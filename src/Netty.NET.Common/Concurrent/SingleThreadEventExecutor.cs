@@ -183,7 +183,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
         bool addTaskWakesUp, bool supportSuspension,
         int maxPendingTasks, IRejectedExecutionHandler rejectedHandler)
-        : base(parent)
+        : this(parent, executor, addTaskWakesUp, supportSuspension, maxPendingTasks, rejectedHandler, TimeProvider.System)
+    {
+    }
+
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
+        bool addTaskWakesUp, bool supportSuspension,
+        int maxPendingTasks, IRejectedExecutionHandler rejectedHandler, TimeProvider timeProvider)
+        : base(parent, timeProvider)
     {
         _addTaskWakesUp = addTaskWakesUp;
         _supportSuspension = supportSuspension;

@@ -31,14 +31,17 @@ public static class SystemTimer
     }
 
     internal static long ScaleTimestamp(long timestamp, long unitsPerSecond)
+        => ScaleTimestamp(timestamp, unitsPerSecond, Frequency);
+
+    internal static long ScaleTimestamp(long timestamp, long unitsPerSecond, long frequency)
     {
         // Common frequencies use ordinary integer arithmetic on the hot path.
         // Wrap after scaling, as System.nanoTime does; a floating cast can lose
         // precision or turn a distant positive timestamp into long.MinValue.
-        if (unitsPerSecond % Frequency == 0)
-            return unchecked(timestamp * (unitsPerSecond / Frequency));
-        if (Frequency % unitsPerSecond == 0)
-            return timestamp / (Frequency / unitsPerSecond);
-        return unchecked((long)((Int128)timestamp * unitsPerSecond / Frequency));
+        if (unitsPerSecond % frequency == 0)
+            return unchecked(timestamp * (unitsPerSecond / frequency));
+        if (frequency % unitsPerSecond == 0)
+            return timestamp / (frequency / unitsPerSecond);
+        return unchecked((long)((Int128)timestamp * unitsPerSecond / frequency));
     }
 }

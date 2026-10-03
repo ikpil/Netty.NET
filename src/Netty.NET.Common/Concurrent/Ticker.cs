@@ -24,6 +24,18 @@ namespace Netty.NET.Common.Concurrent;
  */
 public abstract class Ticker
 {
+    /// <summary>
+    /// Selects a native monotonic timestamp source. Provider advancement only
+    /// changes the clock; the owning executor must still be driven or awakened.
+    /// Custom providers supply timestamps, without a blocking-sleep policy.
+    /// </summary>
+    public static Ticker FromTimeProvider(TimeProvider timeProvider)
+    {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+        return ReferenceEquals(timeProvider, TimeProvider.System) ? systemTicker() :
+            new TimeProviderTicker(timeProvider);
+    }
+
     /**
      * Returns the singleton {@link Ticker} that returns the values from the real system clock source.
      * However, note that this is not the same as {@link System#nanoTime()} because we apply a fixed offset

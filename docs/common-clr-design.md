@@ -472,12 +472,9 @@ saturates each converted duration, while accumulation still wraps as the origina
 AtomicLong does. Original TimeUnit comments are retained verbatim beside CLR notes.
 
 Ticker remains the executor's elapsed-nanosecond and synchronous-wait policy.
-TimeProvider supplies the system timestamp source here; this does not introduce
-arbitrary TimeProvider injection or replace event-loop scheduling with CreateTimer
-callbacks. The existing controlled mock supplies nanosecond advancement and
-blocking sleeper observation that TimeProvider alone does not specify. The final
-clock-selection API review remains separate; the current four original clock types
-have reviewed behavior, without a claim of arbitrary-provider integration.
+The controlled mock supplies nanosecond advancement and blocking sleeper observation
+that TimeProvider alone does not specify; inheriting TimeProvider's default timer
+behavior would silently introduce real-clock timers into a controlled mock.
 
 DefaultMockTicker implements the useful fair-wakeup policy with an explicit FIFO
 tick queue. Each advance notifies registered sleepers in registration order; new
@@ -501,3 +498,36 @@ outcomes. A separate probe compiled the five unchanged pinned Java sources
 (four clock types plus ObjectUtil) with local Corretto 21.0.11; 20 x 128 consecutive
 sleep phases pass. That confirms the expected original behavior, without claiming
 to run the entire Java suite. The six original C# mock scenarios remain unchanged.
+
+### Native provider selection for ordered scheduling
+
+Ticker.FromTimeProvider accepts a CLR timestamp source. TimeProvider.System selects
+the existing singleton and shared epoch. A custom selection captures a stable
+positive TimestampFrequency and its native timestamp origin; its elapsed clock
+starts at zero. It subtracts native ticks with signed wrap before integer scaling,
+avoiding fractional-frequency origin rounding and native timestamp rollover errors.
+The initialNanoTime metadata is the scaled captured origin. Raw-clock legacy helpers
+must not mix system timestamps with a custom provider's epoch or units.
+
+AbstractScheduledEventExecutor(parent, timeProvider) and the allocated-queue
+SingleThreadEventExecutor core constructor select that clock; DefaultEventExecutor
+exposes a public TimeProvider constructor. Existing constructors retain the system
+singleton. Provider input is immutable for the executor, and the caller owns the
+provider. Native Task scheduling, cancellation, deadline/tie ordering, metrics and
+callback dispatch still use the existing executor state and queue.
+
+Pinned transport EmbeddedEventLoop.java:43-45/90-92 selects a clock and runs due
+work when driven. ManualIoEventLoop.java:145-154 explicitly requires manual wakeup
+when the supplied clock advances faster than I/O system time. Preserve that contract:
+provider advancement makes deadlines due, and the owner must pump/wake the executor
+(e.g. submit ordinary work through SubmitAsync for a dedicated DefaultEventExecutor).
+Do not dispatch callbacks from TimeProvider.CreateTimer or read GetUtcNow for deadlines.
+A timestamp-only custom adapter rejects synchronous sleep, as the pinned embedded
+FreezableTicker does. SystemTicker and DefaultMockTicker retain their explicit waits.
+
+Eleven native provider rows cover system identity/null input, invalid frequencies,
+nonzero/fractional-frequency origins, subnanosecond conversion, native tick wrap,
+unsupported sleep and due/tie/affinity behavior on manual and actual dedicated
+executors. Their provider throws if wall time or provider timers are accessed.
+This reviews common ordered clock selection; it does not implement those transport
+event loops or add provider injection to the pinned fixed-system unordered backend.

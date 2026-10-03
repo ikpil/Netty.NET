@@ -43,15 +43,25 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     protected IPriorityQueue<IScheduledWork> _scheduledTaskQueue;
 
     private long nextTaskId;
+    private readonly Ticker selectedTicker;
 
     protected AbstractScheduledEventExecutor() : this(null)
     {
     }
 
     protected AbstractScheduledEventExecutor(IEventExecutorGroup parent)
-        : base(parent)
+        : this(parent, TimeProvider.System)
     {
     }
+
+    // CLR: native timestamp injection retains this executor's dispatch/queue policy.
+    protected AbstractScheduledEventExecutor(IEventExecutorGroup parent, TimeProvider timeProvider)
+        : base(parent)
+    {
+        selectedTicker = Ticker.FromTimeProvider(timeProvider);
+    }
+
+    public override Ticker ticker() => selectedTicker;
 
     /**
      * Get the current time in nanoseconds by this executor's clock. This is not the same as {@link System#nanoTime()}

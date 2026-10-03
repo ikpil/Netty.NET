@@ -121,12 +121,12 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1445 cases** on Windows/net10.0:
-**1431 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1456 cases** on Windows/net10.0:
+**1442 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`mock-ticker-full-debug.trx` and `mock-ticker-full-release.trx`; the before-run is
-`mock-ticker-before-expanded.trx`. Results remain in the ignored TestResults
+`provider-clock-full-debug.trx` and `provider-clock-full-release.trx`; focused evidence is
+`provider-clock-affected-debug.trx`. Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
 portable test source without PortingBatch and do not establish module completion.
@@ -375,6 +375,34 @@ remain 56 verified / ten exclusions. DefaultMockTicker's reviewed clock-policy
 behavior/native design is verified within this scope. Shared native clock-selection
 API review remains next, followed by the outstanding collection, encoding,
 platform and ownership decisions. Overall common completion remains open.
+
+Native ordered clock selection now accepts TimeProvider through Ticker.FromTimeProvider,
+the protected scheduled/core executor constructors and DefaultEventExecutor(TimeProvider).
+System input retains its singleton/epoch; custom input captures native frequency/origin
+and converts the signed tick difference before scaling. This preserves fractional
+precision and native timestamp wrap. Original embedded/manual transport consumers
+establish explicit pump/wakeup and unsupported-sleep contracts, so provider advancement
+makes work due and executor dispatch owns callback execution. Provider wall time/timers
+are not used. See the native provider selection decision in common-clr-design.md.
+
+Eleven new CLR rows cover that boundary and actual dedicated-worker affinity; the
+affected Debug selection passes 166. Whole Debug/Release each pass 1442 / fail zero /
+skip the same 14 (1456 discovered). All 759 non-Porting and skip identities remain,
+only eleven provider rows are added and configuration names/outcomes match
+(provider-clock-identity-comparison.json). All 105 verified comment entries plus
+ScheduledFutureTask/SingleThreadEventExecutor (107 distinct entries) have zero missing;
+the changed seven original clock/executor sources retain all 175 comments. All 271
+inventory entries and implementation paths match (provider-clock-comment-audit.json,
+provider-clock-inventory-summary.json). Both full runs use --artifacts-path
+artifacts/provider-clock-validation to preserve Rider's ordinary Debug DLL.
+Windows/net10.0 is the verified scope; existing compiler/analyzer warnings remain.
+Ticker/MockTicker native clock-policy selection reviews are now verified within this
+scope. The ordered worker/backend review remains in progress, and fixed-system
+unordered provider injection and transport implementations are not claimed.
+Source decisions remain 49 verified / 31 CLR replacements / 13 exclusions /
+91 pending / 21 in progress; original tests remain 56 verified / ten exclusions.
+Next: review primitive supplier interfaces against native Func delegates and actual
+transport consumers, then continue remaining collection/encoding/platform decisions.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already
