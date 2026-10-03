@@ -150,7 +150,7 @@ provenance is audited within each code fence; all seven providers have zero miss
 
 - Managed field-offset and raw native-address stubs have been retired after
   consumer review. Bounded spans and owners preserve the memory purposes; see
-  common-clr-design.md. Remaining JVM-shaped APIs/low-level array stubs and
+  common-clr-design.md. Remaining JVM-shaped APIs and
   native ordered-publication integration require separate review.
 - Future buffer pool/reference-count integration must use ownership/leases correctly;
   disposing an owner is not a substitute for shared retain/release.

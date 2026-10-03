@@ -14,6 +14,9 @@
  * under the License.
  */
 
+using System;
+using System.Security.Cryptography;
+
 namespace Netty.NET.Common.Internal;
 
 public static class ConstantTimeUtils
@@ -95,15 +98,13 @@ public static class ConstantTimeUtils
     public static int EqualsConstantTime(byte[] bytes1, int startPos1,
         byte[] bytes2, int startPos2, int length)
     {
-        // Benchmarking demonstrates that using an int to accumulate is faster than other data types.
-        int b = 0;
-        int end = startPos1 + length;
-        for (; startPos1 < end; ++startPos1, ++startPos2)
-        {
-            b |= bytes1[startPos1] ^ bytes2[startPos2];
-        }
-
-        return EqualsConstantTime(b, 0);
+        ArgumentNullException.ThrowIfNull(bytes1);
+        ArgumentNullException.ThrowIfNull(bytes2);
+        if (length <= 0) return 1;
+        // CLR adaptation: validate equal-length slices before calling the BCL's
+        // fixed-time primitive. Its timing contract depends on length, not bytes.
+        return CryptographicOperations.FixedTimeEquals(
+            bytes1.AsSpan(startPos1, length), bytes2.AsSpan(startPos2, length)) ? 1 : 0;
     }
 
     /**

@@ -14,6 +14,70 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## Native byte comparison, zero checks and ASCII hashing
+
+Pinned common AsciiString uses logical-slice equality and the low-five-bit ASCII
+hash; NetUtil uses zero checks for parsed IPv6 storage. HPACK HpackUtil and QPACK
+QpackUtil establish fixed-time byte comparison consumers. Their buffer/protocol
+implementations remain outside this common stage. Ordinary comparison may stop on
+a mismatch; fixed-time comparison must retain its separate byte-content contract.
+
+PlatformDependent equality uses bounded Span.SequenceEqual; zero checks use
+IndexOfAnyExcept(0). ConstantTimeUtils's byte entry point uses
+[CryptographicOperations.FixedTimeEquals](https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.cryptographicoperations.fixedtimeequals?view=net-10.0),
+and PlatformDependent delegates to it. Equal-length spans supply the BCL's
+content-independent comparison, including aliasing inputs. Preserve 0/1 results
+for existing cascading callers. This is reliance on the documented runtime
+primitive, not a timing guarantee established by functional tests or a benchmark.
+Integer and ICharSequence constant-time helpers remain separately pending review.
+
+ASCII hashing has one native-order MemoryMarshal word/tail implementation with
+the pinned unchecked integer arithmetic and existing constants/compute/sanitize
+helpers. Hash values stay identical; this low-five-bit hash is not a Unicode
+comparer or a content-equality proof. Retire six scalar/strategy helpers and four
+PlatformDependent0 throwing array/hash stubs, plus five unused layout fields.
+Remove HasUnsafe/UnalignedAccess dispatch from these four operations. The pure
+hash arithmetic in PlatformDependent0 is retained; neither platform class is
+declared complete by this unit.
+
+Nonnull comparisons/zero checks keep the original nonpositive-length empty
+results, including -1. Positive ranges validate before any mismatch/overflow can
+hide invalid storage. Hash ranges validate even when length is zero and reject
+negative lengths. Null arrays now fail explicitly with ArgumentNullException,
+including empty comparisons; these are stated CLR adaptations of Java's
+caller-validated range contract. Bounds checking does not inspect byte contents.
+
+The original TestHashCodeAscii keeps all 1000 byte/string comparisons; the
+redundant scalar-versus-Unsafe strategy assertion retires with that JVM strategy.
+AsciiStringHashContractTest compares the single public kernel with its independent
+pinned Java tables for every tail/word boundary. Twenty-one new cases cover
+logical slices, every mismatch lane, high-bit bytes, zero checks, overflow-hidden
+bounds, invalid second ranges, nulls and empty results. Eight fail before repair.
+The 17024-input oracle matches exact extracted scalar and Unsafe Java methods.
+Full/checked verification is recorded in common-porting.md. No feature MD added.
+
+Retired placeholder code stored as C# line comments is implementation scaffolding,
+not original Java explanatory comments. Remove that dead code; keep all original
+comments below or at their retained implementation. Historical comments for the
+removed scalar strategy and accumulator optimization remain exact provenance.
+
+### Retired scalar strategy/accumulator comments
+
+```java
+/**
+     * Package private for testing purposes only!
+     */
+// Benchmarking demonstrates that using an int to accumulate is faster than other data types.
+```
+
+### Pinned PlatformDependent0 hash-tail comments
+
+```java
+// 1, 3, 5, 7
+// 2, 3, 6, 7
+// 4, 5, 6, 7
+```
+
 ## Native byte access through bounded CLR memory
 
 Retire 39 declarations in PlatformDependent/PlatformDependent0: raw long-address

@@ -346,46 +346,11 @@ public static class PlatformDependent
         return (int)value;
     }
 
-    private static long GetLongSafe(byte[] bytes, int offset) {
-        if (BIG_ENDIAN_NATIVE_ORDER) {
-            return (long) bytes[offset] << 56 |
-                    ((long) bytes[offset + 1] & 0xff) << 48 |
-                    ((long) bytes[offset + 2] & 0xff) << 40 |
-                    ((long) bytes[offset + 3] & 0xff) << 32 |
-                    ((long) bytes[offset + 4] & 0xff) << 24 |
-                    ((long) bytes[offset + 5] & 0xff) << 16 |
-                    ((long) bytes[offset + 6] & 0xff) <<  8 |
-                    (long) bytes[offset + 7] & 0xff;
-        }
-        return (long) bytes[offset] & 0xff |
-                ((long) bytes[offset + 1] & 0xff) << 8 |
-                ((long) bytes[offset + 2] & 0xff) << 16 |
-                ((long) bytes[offset + 3] & 0xff) << 24 |
-                ((long) bytes[offset + 4] & 0xff) << 32 |
-                ((long) bytes[offset + 5] & 0xff) << 40 |
-                ((long) bytes[offset + 6] & 0xff) << 48 |
-                (long) bytes[offset + 7] << 56;
-    }
 
-    private static int GetIntSafe(byte[] bytes, int offset) {
-        if (BIG_ENDIAN_NATIVE_ORDER) {
-            return bytes[offset] << 24 |
-                    (bytes[offset + 1] & 0xff) << 16 |
-                    (bytes[offset + 2] & 0xff) << 8 |
-                    bytes[offset + 3] & 0xff;
-        }
-        return bytes[offset] & 0xff |
-                (bytes[offset + 1] & 0xff) << 8 |
-                (bytes[offset + 2] & 0xff) << 16 |
-                bytes[offset + 3] << 24;
-    }
 
-    private static short GetShortSafe(byte[] bytes, int offset) {
-        if (BIG_ENDIAN_NATIVE_ORDER) {
-            return unchecked((short) (bytes[offset] << 8 | (bytes[offset + 1] & 0xff)));
-        }
-        return unchecked((short) (bytes[offset] & 0xff | (bytes[offset + 1] << 8)));
-    }
+
+
+
 
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link CharSequence}.
@@ -492,14 +457,11 @@ public static class PlatformDependent
      * by the caller.
      */
     public static bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
-        // CLR adaptation: Span equality is available on the declared target.
-        // A JDK-version threshold cannot be applied to Environment.Version.
-        if ((startPos2 | startPos1 | (bytes1.Length - length) | bytes2.Length - length) == 0) {
-            return bytes1.AsSpan().SequenceEqual(bytes2);
-        }
-        return !HasUnsafe() || !UnalignedAccess() ?
-                  EqualsSafe(bytes1, startPos1, bytes2, startPos2, length) :
-                  PlatformDependent0.Equals(bytes1, startPos1, bytes2, startPos2, length);
+        ArgumentNullException.ThrowIfNull(bytes1);
+        ArgumentNullException.ThrowIfNull(bytes2);
+        // Keep the existing empty result for nonpositive comparison lengths.
+        if (length <= 0) return true;
+        return bytes1.AsSpan(startPos1, length).SequenceEqual(bytes2.AsSpan(startPos2, length));
     }
 
     /**
@@ -510,9 +472,9 @@ public static class PlatformDependent
      * @return {@code false} if {@code bytes[startPos:startsPos+length)} contains a value other than zero.
      */
     public static bool IsZero(byte[] bytes, int startPos, int length) {
-        return !HasUnsafe() || !UnalignedAccess() ?
-                IsZeroSafe(bytes, startPos, length) :
-                PlatformDependent0.IsZero(bytes, startPos, length);
+        ArgumentNullException.ThrowIfNull(bytes);
+        if (length <= 0) return true;
+        return bytes.AsSpan(startPos, length).IndexOfAnyExcept((byte)0) < 0;
     }
 
     /**
@@ -537,9 +499,8 @@ public static class PlatformDependent
      * @return {@code 0} if not equal. {@code 1} if equal.
      */
     public static int EqualsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
-        return !HasUnsafe() || !UnalignedAccess() ?
-                  ConstantTimeUtils.EqualsConstantTime(bytes1, startPos1, bytes2, startPos2, length) :
-                  PlatformDependent0.EqualsConstantTime(bytes1, startPos1, bytes2, startPos2, length);
+        // CLR bounded fixed-time comparison replaces both JVM Unsafe branches.
+        return ConstantTimeUtils.EqualsConstantTime(bytes1, startPos1, bytes2, startPos2, length);
     }
 
     /**
@@ -552,9 +513,39 @@ public static class PlatformDependent
      * The resulting hash code will be case insensitive.
      */
     public static int HashCodeAscii(byte[] bytes, int startPos, int length) {
-        return !HasUnsafe() || !UnalignedAccess() ?
-                HashCodeAsciiSafe(bytes, startPos, length) :
-                PlatformDependent0.HashCodeAscii(bytes, startPos, length);
+        ArgumentNullException.ThrowIfNull(bytes);
+        ReadOnlySpan<byte> data = bytes.AsSpan(startPos, length);
+        // Native-order words preserve Netty's low-five-bit hash contract. The
+        // complete range is validated before any word or tail is inspected.
+        int hash = HASH_CODE_ASCII_SEED;
+        int remainingBytes = length & 7;
+        int end = remainingBytes;
+        for (int i = length - 8; i >= end; i -= 8) {
+            hash = PlatformDependent0.HashCodeAsciiCompute(MemoryMarshal.Read<long>(data.Slice(i)), hash);
+        }
+        switch(remainingBytes) {
+        case 7:
+            return unchecked(((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(data[0]))
+                          * HASH_CODE_C2 + HashCodeAsciiSanitize(MemoryMarshal.Read<short>(data.Slice(1))))
+                          * HASH_CODE_C1 + HashCodeAsciiSanitize(MemoryMarshal.Read<int>(data.Slice(3))));
+        case 6:
+            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(MemoryMarshal.Read<short>(data.Slice(0))))
+                         * HASH_CODE_C2 + HashCodeAsciiSanitize(MemoryMarshal.Read<int>(data.Slice(2))));
+        case 5:
+            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(data[0]))
+                         * HASH_CODE_C2 + HashCodeAsciiSanitize(MemoryMarshal.Read<int>(data.Slice(1))));
+        case 4:
+            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(MemoryMarshal.Read<int>(data.Slice(0))));
+        case 3:
+            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(data[0]))
+                         * HASH_CODE_C2 + HashCodeAsciiSanitize(MemoryMarshal.Read<short>(data.Slice(1))));
+        case 2:
+            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(MemoryMarshal.Read<short>(data.Slice(0))));
+        case 1:
+            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(data[0]));
+        default:
+            return hash;
+        }
     }
 
     public static int HashCodeAscii(string bytes)
@@ -938,60 +929,11 @@ public static class PlatformDependent
     }
 
 
-    private static bool EqualsSafe(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
-        int end = startPos1 + length;
-        for (; startPos1 < end; ++startPos1, ++startPos2) {
-            if (bytes1[startPos1] != bytes2[startPos2]) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    private static bool IsZeroSafe(byte[] bytes, int startPos, int length) {
-        int end = startPos + length;
-        for (; startPos < end; ++startPos) {
-            if (bytes[startPos] != 0) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    /**
-     * Package private for testing purposes only!
-     */
-    public static int HashCodeAsciiSafe(byte[] bytes, int startPos, int length) {
-        int hash = HASH_CODE_ASCII_SEED;
-        int remainingBytes = length & 7;
-        int end = startPos + remainingBytes;
-        for (int i = startPos - 8 + length; i >= end; i -= 8) {
-            hash = PlatformDependent0.HashCodeAsciiCompute(GetLongSafe(bytes, i), hash);
-        }
-        switch(remainingBytes) {
-        case 7:
-            return unchecked(((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(bytes[startPos]))
-                          * HASH_CODE_C2 + HashCodeAsciiSanitize(GetShortSafe(bytes, startPos + 1)))
-                          * HASH_CODE_C1 + HashCodeAsciiSanitize(GetIntSafe(bytes, startPos + 3)));
-        case 6:
-            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(GetShortSafe(bytes, startPos)))
-                         * HASH_CODE_C2 + HashCodeAsciiSanitize(GetIntSafe(bytes, startPos + 2)));
-        case 5:
-            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(bytes[startPos]))
-                         * HASH_CODE_C2 + HashCodeAsciiSanitize(GetIntSafe(bytes, startPos + 1)));
-        case 4:
-            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(GetIntSafe(bytes, startPos)));
-        case 3:
-            return unchecked((hash * HASH_CODE_C1 + HashCodeAsciiSanitize(bytes[startPos]))
-                         * HASH_CODE_C2 + HashCodeAsciiSanitize(GetShortSafe(bytes, startPos + 1)));
-        case 2:
-            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(GetShortSafe(bytes, startPos)));
-        case 1:
-            return unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitize(bytes[startPos]));
-        default:
-            return hash;
-        }
-    }
+
+
+
 
     public static string NormalizedArch() {
         return NORMALIZED_ARCH;

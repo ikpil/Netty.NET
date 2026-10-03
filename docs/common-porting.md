@@ -121,23 +121,26 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1874 cases** on Windows/net10.0:
-**1860 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: native-access-final-full-debug.trx and native-access-final-full-release.trx.
-All 1861 prior case identities/outcomes remain; the original negative-address
-fixture now rejects wrapping metadata and also preserves valid unsigned bits.
-Thirteen new native access cases pass; no test source was excluded. Related native,
-heap, ASCII-native and original platform checked Release passes 73 cases.
-The exact extracted pinned Java word/copy/fill oracle matches 236 inputs for each
-of two copy branches on Corretto21.0.11. This is not a JDK8 or native transport run.
-The library/full test project build with zero errors; existing warnings remain.
-39 raw-memory/array-header/ordered-address declarations (including 18 throwing
-stubs) retire to owners, bounded Memory/Span and CLR primitive access. Native views
-reject unsigned address wrap and retain signed-boundary address bits. Original
-copy comments are preserved. Both platform sources and common remain in progress;
-the genuine native ordered-publication consumer contract is still pending.
-The naming pass still establishes uppercase C# methods; native ref-int counters
-retain the prior full positive Int32 and terminal-zero contracts.
+The current default suite executes **1895 cases** on Windows/net10.0:
+**1881 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: byte-range-full-debug.trx and byte-range-full-release.trx. All 1874 prior
+case identities/outcomes remain, including 759 original non-Porting cases.
+Twenty-one new byte-range cases pass; eight reproduce pre-repair range/null
+defects. Checked byte/AsciiString/platform/NetUtil Release passes 375 cases.
+The 17024-input comparison/zero/hash oracle matches exact scalar and Unsafe Java
+kernels on Corretto21.0.11. Native host byte order and Java-compatible wrapping
+hash values remain. Fixed-time byte comparison uses the documented BCL primitive;
+functional oracle results are not a timing-security measurement.
+Six scalar/strategy helpers and four throwing array/hash stubs retire. Equality,
+zero scans and hashing no longer dispatch on JVM Unsafe/unaligned flags. Nonpositive
+comparison/zero lengths retain empty results; positive ranges and all hash ranges
+are bounded, and null storage fails explicitly. Original explanatory comments
+are preserved. Original hash tests retain their 1000 byte/string comparisons and
+independent Java tables; no portable source or test case was excluded.
+Uppercase method naming, native memory ownership/wrap checks and native ref-int
+counter contracts remain. Both platform classes/common still require further
+review; native ordered publication and non-byte fixed-time APIs remain pending.
+Library/full test builds have zero errors; existing warnings remain.
 Earlier ASCII trim, word conversion, OWS, comparison and hash checkpoints remain.
 The earlier string, pattern, delimiter, numeric and scheduling work remains below.
 Results remain in the ignored TestResults
@@ -720,6 +723,42 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### Native byte comparison/hash checkpoint
+
+Review pinned AsciiString, NetUtil and HPACK/QPACK users; replace JVM dispatch with
+bounded CLR SequenceEqual/IndexOfAnyExcept, BCL FixedTimeEquals and one native-order
+MemoryMarshal hash kernel. Remove four throwing stubs, six redundant scalar/
+strategy helpers and five unused layout fields. Keep 0/1 chaining and nonpositive
+comparison/zero empty results. Positive and hash-empty ranges validate before
+content access, preventing overflow/early mismatch from hiding invalid storage;
+null arrays reject explicitly. Original explanatory comments remain in the
+implementation/existing common-clr-design.md; commented placeholder code retires.
+
+New 21 cases execute; eight fail before repair. Related Debug passes 42;
+checked Release byte/AsciiString/platform/NetUtil passes 375. Default Debug/Release
+each discover 1895 / pass 1881 / fail zero / retain 14 unchanged skips. All prior
+1874 case identities/outcomes remain, including 759 original non-Porting cases.
+TestHashCodeAscii retains 1000 byte/string comparisons; the redundant JVM strategy
+assertion retires. Independent Java tables now test the single public hash kernel.
+
+Exact extracted scalar and Unsafe Java paths match all 17024 inputs: lengths
+0..128 and 1024/1025/4096/4097, offsets 0..15, eight byte patterns, equal/first/
+middle/last mismatch cases, zero checks and hash values. The host is little-endian
+Windows x64; actual big-endian execution is not claimed. Functional result checks
+do not prove timing-security or throughput equivalence. The BCL documents the
+fixed-time byte contract; integer/character helpers remain pending review.
+Warmed allocation check: 400000 valid 65-byte operation calls allocate zero managed
+bytes on this host. This is a hot-path allocation check, not a throughput benchmark.
+
+Evidence: byte-range-before-debug.trx, byte-range-targeted-debug.trx,
+byte-range-full-debug.trx, byte-range-full-release.trx, byte-range-checked-release.trx,
+byte-range-java-clr-oracle.json, byte-range-comment-audit.json and
+byte-range-identity-and-inventory.json. Reproduction tools/logs stay in ignored
+artifacts/byte-range-validation. No feature MD added. ConstantTimeUtils moves from
+pending to in-progress for its byte overload; other source/test status decisions
+remain unchanged. Next: platform class-loader/reflection/exception APIs against
+actual Java consumers and CLR assembly/loading semantics.
 
 ### Bounded native byte access checkpoint
 

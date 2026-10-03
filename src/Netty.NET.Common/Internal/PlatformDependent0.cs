@@ -32,12 +32,7 @@ namespace Netty.NET.Common.Internal;
 public class PlatformDependent0
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(PlatformDependent0));
-    private static readonly long ADDRESS_FIELD_OFFSET;
-    private static readonly long INT_ARRAY_BASE_OFFSET;
-    private static readonly long INT_ARRAY_INDEX_SCALE;
-    private static readonly long LONG_ARRAY_BASE_OFFSET;
 
-    private static readonly long LONG_ARRAY_INDEX_SCALE;
 
     // private static readonly MethodHandle DIRECT_BUFFER_CONSTRUCTOR;
     // private static readonly MethodHandle ALLOCATE_ARRAY_METHOD;
@@ -605,125 +600,13 @@ public class PlatformDependent0
     }
 
 
-    public static bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
-    {
-        ThrowException(new NotImplementedException());
-        return false;
-        // int remainingBytes = length & 7;
-        // long baseOffset1 = BYTE_ARRAY_BASE_OFFSET + startPos1;
-        // long diff = startPos2 - startPos1;
-        // if (length >= 8) {
-        //     long end = baseOffset1 + remainingBytes;
-        //     for (long i = baseOffset1 - 8 + length; i >= end; i -= 8) {
-        //         if (UNSAFE.getLong(bytes1, i) != UNSAFE.getLong(bytes2, i + diff)) {
-        //             return false;
-        //         }
-        //     }
-        // }
-        // if (remainingBytes >= 4) {
-        //     remainingBytes -= 4;
-        //     long pos = baseOffset1 + remainingBytes;
-        //     if (UNSAFE.getInt(bytes1, pos) != UNSAFE.getInt(bytes2, pos + diff)) {
-        //         return false;
-        //     }
-        // }
-        // long baseOffset2 = baseOffset1 + diff;
-        // if (remainingBytes >= 2) {
-        //     return UNSAFE.getChar(bytes1, baseOffset1) == UNSAFE.getChar(bytes2, baseOffset2) &&
-        //             (remainingBytes == 2 ||
-        //             UNSAFE.getByte(bytes1, baseOffset1 + 2) == UNSAFE.getByte(bytes2, baseOffset2 + 2));
-        // }
-        // return remainingBytes == 0 ||
-        //         UNSAFE.getByte(bytes1, baseOffset1) == UNSAFE.getByte(bytes2, baseOffset2);
-    }
 
-    public static int EqualsConstantTime(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        // long result = 0;
-        // long remainingBytes = length & 7;
-        // long baseOffset1 = BYTE_ARRAY_BASE_OFFSET + startPos1;
-        // long end = baseOffset1 + remainingBytes;
-        // long diff = startPos2 - startPos1;
-        // for (long i = baseOffset1 - 8 + length; i >= end; i -= 8) {
-        //     result |= UNSAFE.getLong(bytes1, i) ^ UNSAFE.getLong(bytes2, i + diff);
-        // }
-        // if (remainingBytes >= 4) {
-        //     result |= UNSAFE.getInt(bytes1, baseOffset1) ^ UNSAFE.getInt(bytes2, baseOffset1 + diff);
-        //     remainingBytes -= 4;
-        // }
-        // if (remainingBytes >= 2) {
-        //     long pos = end - remainingBytes;
-        //     result |= UNSAFE.getChar(bytes1, pos) ^ UNSAFE.getChar(bytes2, pos + diff);
-        //     remainingBytes -= 2;
-        // }
-        // if (remainingBytes == 1) {
-        //     long pos = end - 1;
-        //     result |= UNSAFE.getByte(bytes1, pos) ^ UNSAFE.getByte(bytes2, pos + diff);
-        // }
-        // return ConstantTimeUtils.equalsConstantTime(result, 0);
-    }
 
-    public static bool IsZero(byte[] bytes, int startPos, int length)
-    {
-        ThrowException(new NotImplementedException());
-        return false;
-        // if (length <= 0) {
-        //     return true;
-        // }
-        // long baseOffset = BYTE_ARRAY_BASE_OFFSET + startPos;
-        // int remainingBytes = length & 7;
-        // long end = baseOffset + remainingBytes;
-        // for (long i = baseOffset - 8 + length; i >= end; i -= 8) {
-        //     if (UNSAFE.getLong(bytes, i) != 0) {
-        //         return false;
-        //     }
-        // }
-        //
-        // if (remainingBytes >= 4) {
-        //     remainingBytes -= 4;
-        //     if (UNSAFE.getInt(bytes, baseOffset + remainingBytes) != 0) {
-        //         return false;
-        //     }
-        // }
-        // if (remainingBytes >= 2) {
-        //     return UNSAFE.getChar(bytes, baseOffset) == 0 &&
-        //             (remainingBytes == 2 || bytes[startPos + 2] == 0);
-        // }
-        // return bytes[startPos] == 0;
-    }
 
-    public static int HashCodeAscii(byte[] bytes, int startPos, int length)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        // int hash = HASH_CODE_ASCII_SEED;
-        // long baseOffset = BYTE_ARRAY_BASE_OFFSET + startPos;
-        // int remainingBytes = length & 7;
-        // long end = baseOffset + remainingBytes;
-        // for (long i = baseOffset - 8 + length; i >= end; i -= 8) {
-        //     hash = hashCodeAsciiCompute(UNSAFE.getLong(bytes, i), hash);
-        // }
-        // if (remainingBytes == 0) {
-        //     return hash;
-        // }
-        // int hcConst = HASH_CODE_C1;
-        // if (remainingBytes != 2 & remainingBytes != 4 & remainingBytes != 6) { // 1, 3, 5, 7
-        //     hash = hash * HASH_CODE_C1 + hashCodeAsciiSanitize(UNSAFE.getByte(bytes, baseOffset));
-        //     hcConst = HASH_CODE_C2;
-        //     baseOffset++;
-        // }
-        // if (remainingBytes != 1 & remainingBytes != 4 & remainingBytes != 5) { // 2, 3, 6, 7
-        //     hash = hash * hcConst + hashCodeAsciiSanitize(UNSAFE.getShort(bytes, baseOffset));
-        //     hcConst = hcConst == HASH_CODE_C1 ? HASH_CODE_C2 : HASH_CODE_C1;
-        //     baseOffset += 2;
-        // }
-        // if (remainingBytes >= 4) { // 4, 5, 6, 7
-        //     return hash * hcConst + hashCodeAsciiSanitize(UNSAFE.getInt(bytes, baseOffset));
-        // }
-        // return hash;
-    }
+
+
+
+
 
     public static int HashCodeAsciiCompute(long value, int hash)
     {

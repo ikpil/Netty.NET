@@ -164,11 +164,6 @@ public class PlatformDependentTest
 
             string str = new string(bytesChar);
             Assert.Equal(
-                PlatformDependent.HashCodeAsciiSafe(bytes, 0, bytes.Length),
-                PlatformDependent.HashCodeAscii(bytes, 0, bytes.Length),
-                "length=" + i
-            );
-            Assert.Equal(
                 PlatformDependent.HashCodeAscii(bytes, 0, bytes.Length),
                 PlatformDependent.HashCodeAscii(str),
                 "length=" + i
