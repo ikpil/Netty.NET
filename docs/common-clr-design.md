@@ -381,3 +381,62 @@ regressions pass. Broader source review remains; see common-ordered-multimap.md.
 
 The subsequent CLR worker replacement failure boundary is implemented in
 [common-unordered-worker-failure.md](common-unordered-worker-failure.md).
+
+## CLR replacements for concurrent sets and read-only iterators
+
+ConcurrentSet.java is deprecated in the pinned source in favor of JDK concurrent
+map key sets. An all-repository pinned search finds no consumer outside its own
+class, and there is no C# class/caller/test to preserve. Use
+ConcurrentDictionary<T, byte> for concurrent membership: TryAdd/TryRemove supply
+the admission/removal result, ContainsKey/Count/Clear expose membership, and
+pair enumeration supplies a concurrent view without a Java AbstractSet wrapper.
+Choose the equality comparer for the domain; membership here is set equality,
+not the indexed heap's reference ownership. A HashSet snapshot can supply set
+algebra when needed. JVM Serializable/serialVersionUID creates no CLR requirement.
+No ConcurrentSet facade is added and no unported consumer is claimed implemented.
+
+ReadOnlyIterator.java exists to forward traversal while rejecting Java
+Iterator.remove. Its actual consumers are transport ThreadPerChannelEventLoopGroup
+(line 147) and AbstractChannelPoolMap (line 115); same-named nested HTTP header
+iterators are separate classes. CLR IEnumerable<T>/IEnumerator<T> provide
+traversal and disposal without a Remove member. They preserve this restriction
+without an adapter and do not make the collection or referenced elements
+immutable. Future channel/pool collections still own ordering, consistency,
+mutation and resource policy. The existing common group enumeration contract
+verifies that child traversal exposes no mutable collection; it does not port
+those transport consumers. No ReadOnlyIterator facade is added.
+
+Original comments at the pinned common/src/main/java/io/netty/util/internal/
+ConcurrentSet.java and ReadOnlyIterator.java are preserved below. Both originals
+share this identical license header; it is attributed to both files.
+
+```java
+/*
+ * Copyright 2013 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+```
+
+ConcurrentSet.java additionally contains these two documentation blocks. The
+constructor actually creates its own map; the source wording is archived as written.
+
+```java
+/**
+ * @deprecated For removal in Netty 4.2. Please use {@link ConcurrentHashMap#newKeySet()} instead
+ */
+
+/**
+     * Creates a new instance which wraps the specified {@code map}.
+     */
+```

@@ -2888,16 +2888,20 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/ConcurrentSet.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Pinned full-repository search finds no consumer outside ConcurrentSet.java; the class is deprecated for removal in favor of ConcurrentHashMap.newKeySet. No current C# class/caller/test exists. Framework concurrent membership uses ConcurrentDictionary<T,byte> TryAdd/TryRemove/ContainsKey/Count/Clear with an explicit domain comparer; HashSet snapshots supply set algebra if required. Original three comments preserved in docs/common-clr-design.md#clr-replacements-for-concurrent-sets-and-read-only-iterators."
+      ],
+      "adaptation": "Use standard CLR concurrent membership rather than copying a deprecated Java AbstractSet/Serializable wrapper. Map pair enumeration supplies a concurrent view. Do not conflate value-based set equality with indexed reference ownership. No runtime implementation, test or excluded source placeholder is invented.",
       "comments": {
         "upstreamCount": 3,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 3
+        "required": false,
+        "preservedCount": 3,
+        "missingCount": 0
       }
     },
     {
@@ -3461,16 +3465,22 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/ReadOnlyIterator.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "docs/common-clr-design.md",
+        "src/Netty.NET.Common/Concurrent/MultithreadEventExecutorGroup.cs",
+        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs"
+      ],
+      "evidence": [
+        "Pinned imports identify transport ThreadPerChannelEventLoopGroup.java:30/147 and AbstractChannelPoolMap.java:21/115 as actual helper consumers. Same-named HTTP header nested iterators are unrelated. CLR IEnumerator<T> has no Remove member; existing common ChildEnumerationCannotMutateGroupAndShutdownNowUsesInheritedBehavior passes in the indexed-queue full Debug/Release suites. Referenced elements/backing collection are not thereby immutable. Transport consumers themselves are outside this common checkpoint. Original license comment preserved in docs/common-clr-design.md#clr-replacements-for-concurrent-sets-and-read-only-iterators."
+      ],
+      "adaptation": "Use IEnumerable<T>/IEnumerator<T> traversal and disposal directly; there is no iterator removal API to block and no reason for another wrapper. Collection ownership, ordering and concurrent enumeration remain consumer decisions. Existing common enumeration remains native CLR; no transport port claim.",
       "comments": {
         "upstreamCount": 1,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 1
+        "required": false,
+        "preservedCount": 1,
+        "missingCount": 0
       }
     },
     {

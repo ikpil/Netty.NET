@@ -294,9 +294,28 @@ allocation results are in the existing
 [CLR design](common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership)
 and common-indexed-queue-costs.csv. No overall scheduler throughput claim is made.
 Source decisions: 45 verified / 29 CLR replacements / 13 exclusions / 97 pending /
-21 in progress; original tests remain 56 verified / ten exclusions. Next: resolve
-remaining collection/iterator wrappers against pinned consumers and native CLR
-equivalents, then continue strings/encoding and platform/ownership review.
+21 in progress; original tests remain 56 verified / ten exclusions. Two subsequent
+framework replacements are recorded below.
+
+ConcurrentSet and ReadOnlyIterator now have explicit CLR replacement decisions.
+The former has no pinned consumer outside its deprecated class; use framework
+concurrent membership rather than a Java AbstractSet/Serializable facade. The
+latter's transport group/pool consumers need traversal without Iterator.remove,
+already supplied by CLR IEnumerable/IEnumerator. Same-named HTTP nested iterators
+are distinct, and this decision does not claim to port the transport consumers.
+The existing common child-enumeration contract supplies the local ownership probe.
+See [replacement decisions and all original comments](common-clr-design.md#clr-replacements-for-concurrent-sets-and-read-only-iterators).
+This unit changes documentation/manifest only; the full Debug/Release runtime
+matrix above remains applicable without repeating unchanged tests. The two
+focused comment audits report 3/3 and 1/1 preserved occurrences (one identical
+license block is attributed to both originals), and all 271 inventory paths match
+(concurrent-set-comment-audit.json, readonly-iterator-comment-audit.json and
+collection-replacement-inventory-summary.json). No class, no-op, runtime test or
+source exclusion is added. Current source decisions are 45 verified / 31 CLR
+replacements / 13 exclusions / 95 pending / 21 in progress. Next: review the
+Ticker/SystemTicker/MockTicker time-source boundary against CLR timing/provider
+facilities and pinned scheduler consumers, then continue remaining collections,
+strings/encoding and platform/ownership review.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already
