@@ -145,7 +145,7 @@ contract; see common-unordered-graceful-shutdown.md. The subsequent native queue
 review removes public mutators and implements submission cancellation withdrawal;
 see common-unordered-native-queue.md. Immutable constructor settings and native
 diagnostics retire inherited configuration; see common-unordered-native-configuration.md.
-Immediate interruption, replacement-factory failure and private queue costs remain open.
+Immediate interruption and private queue costs remain open.
 
 ## Original pinned comment provenance
 
@@ -938,3 +938,6 @@ Original line 18:
  * exception.
  */
 ```
+
+The subsequent CLR worker replacement failure boundary is implemented in
+[common-unordered-worker-failure.md](common-unordered-worker-failure.md).

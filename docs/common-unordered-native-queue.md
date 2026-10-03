@@ -115,7 +115,7 @@ The subsequent pool-configuration review uses that pinned all-module search to
 retire inherited settings and statistics in favor of immutable constructor settings,
 owned cancellation and native diagnostics; see common-unordered-native-configuration.md.
 Its probe mapping also records further changes to the historical table above.
-Immediate interruption, replacement-factory failure and private queue costs remain
+Immediate interruption and private queue costs remain
 open. The remaining pending upstream source
 reviews and the remaining common design work stay within the full goal. The
 observed real-time auto-scaling stability issue prompted the subsequent
@@ -123,3 +123,6 @@ common-autoscaling-monitor-windows.md review. Controlled cases prove repeated
 catch-up sampling can fabricate idle windows; phase-preserving coalescing repairs
 that defect. Its causal relation to the retained real-time failure remains unproven.
 The original high-load/max-count expectation, waits and thresholds remain unchanged.
+
+The subsequent CLR worker replacement failure boundary is implemented in
+[common-unordered-worker-failure.md](common-unordered-worker-failure.md).

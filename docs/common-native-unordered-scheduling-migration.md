@@ -99,7 +99,7 @@ Subsequent native fixture migration removes the plain Future/Promise hierarchy;
 see common-native-future-retirement.md. The subsequent queue review removes public
 mutators and unused metadata forwarding; see common-unordered-native-queue.md.
 The subsequent configuration review retires inherited settings. Immediate shutdown
-interruption, replacement-factory failure, private queue costs and all pending
+interruption, private queue costs and all pending
 source reviews still prevent common completion.
 The subsequent graceful-shutdown review implements quiet/timeout admission;
 see common-unordered-graceful-shutdown.md.
@@ -288,3 +288,6 @@ Upstream: common/src/main/java/io/netty/util/concurrent/ScheduledFuture.java
  * The result of a scheduled asynchronous operation.
  */
 ```
+
+The subsequent CLR worker replacement failure boundary is implemented in
+[common-unordered-worker-failure.md](common-unordered-worker-failure.md).

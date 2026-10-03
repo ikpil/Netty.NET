@@ -1,9 +1,9 @@
 # Current full-suite skips
 
 Baseline: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` in `D:/workspace/netty`.
-Both unordered-native-configuration-full-debug.trx and unordered-native-configuration-full-release.trx
-report 1372 passed, zero failed and the same 14 skipped cases on Windows/net10.0
-(1386 discovered cases).
+Both unordered-worker-failure-final-full-debug.trx and unordered-worker-failure-final-full-release.trx
+report 1380 passed, zero failed and the same 14 skipped cases on Windows/net10.0
+(1394 discovered cases).
 
 | Cases | Reason | Source and executed coverage |
 | --- | --- | --- |

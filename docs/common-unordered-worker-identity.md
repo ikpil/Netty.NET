@@ -67,7 +67,7 @@ were still incomplete at this checkpoint. The subsequent unordered native migrat
 removes the concrete Java scheduler/result and raw JDK wrappers; see
 common-native-unordered-scheduling-migration.md. Later native queue, graceful shutdown,
 configuration and Future fixture migrations are recorded in common-porting.md.
-Immediate interruption and replacement-factory failure remain open.
+Immediate interruption remains open.
 This correction does not complete common.
 
 Whole default Debug and Release each discover 1354 cases on Windows/net10.0:
@@ -89,3 +89,6 @@ Task result. Remove obsolete result adapters only after their consumers migrate,
 including the raw execute backend and direct JdkFutureTask probes; do not keep
 inherited APIs solely for fixture syntax. Review native factory failure admission,
 shutdown policy and cancellation cleanup independently of the Java decorators.
+
+The subsequent CLR worker replacement failure boundary is implemented in
+[common-unordered-worker-failure.md](common-unordered-worker-failure.md).

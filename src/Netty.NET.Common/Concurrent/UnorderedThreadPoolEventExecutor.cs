@@ -70,6 +70,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private Timer gracefulTimer;
     private bool shutdownRequested;
     private bool stopping;
+    private Exception backendFailure;
     private static long nextSequence;
 
     /**
@@ -131,7 +132,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         AdvanceGracefulShutdown();
         Monitor.PulseAll(gate);
         if (shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0)
-            termination.TrySetResult();
+        {
+            if (backendFailure == null) termination.TrySetResult();
+            else termination.TrySetException(backendFailure);
+        }
     }
     public Task Termination => termination.Task;
     public Task ShutdownGracefullyAsync() => ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(15));
@@ -310,21 +314,23 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         handler(work.outer, this);
     }
 
-    private void ensureWorker()
+    private bool ensureWorker()
     {
         int limit = Math.Max(1, configuredWorkerCount);
-        if (stopping || (shutdownRequested && queue.Count == 0) || workerCount >= limit) return;
+        if (stopping || (shutdownRequested && queue.Count == 0)) return false;
+        if (workerCount >= limit) return true;
         ++startingWorkers;
         ++workerCount;
         bool started = false;
         try
         {
             Thread thread = threadFactory.newThread(Runnables.Create(workerLoop));
-            if (thread == null || stopping) return;
+            if (thread == null || stopping) return false;
             workers.Add(thread);
             try { thread.Start(); }
             catch { workers.Remove(thread); throw; }
             started = true;
+            return true;
         }
         finally { --startingWorkers; if (!started) --workerCount; PublishPoolState(); }
     }
@@ -410,7 +416,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 catch (Exception failure)
                 {
                     // CLR unhandled exceptions kill the process. Match JDK worker replacement instead.
-                    logger.warn("Unexpected worker failure", failure);
+                    LogWorkerFailure("Unexpected worker failure", failure);
                     return;
                 }
                 finally
@@ -431,19 +437,64 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 using (UninterruptibleMonitor.enter(gate))
                 {
                     if (!countReleased) --workerCount;
-                    workers.Remove(Thread.CurrentThread);
-                    if (!stopping)
+                    try
                     {
-                        int minimum = configuredWorkerCount;
-                        if (minimum == 0 && queue.Count != 0) minimum = 1;
-                        if (workerCount < minimum) ensureWorker();
+                        if (!stopping && (!shutdownRequested || queue.Count != 0))
+                        {
+                            int minimum = configuredWorkerCount;
+                            if (minimum == 0 && queue.Count != 0) minimum = 1;
+                            if (workerCount < minimum)
+                            {
+                                try
+                                {
+                                    // Factory code may reenter shutdown; a null
+                                    // return then needs no replacement or failure.
+                                    if (!ensureWorker() && !stopping && (!shutdownRequested || queue.Count != 0))
+                                        FailWorkerReplacement(new InvalidOperationException("Thread factory returned no replacement worker."));
+                                }
+                                catch (Exception failure) { FailWorkerReplacement(failure); }
+                            }
+                        }
                     }
-                    PublishPoolState();
+                    finally
+                    {
+                        // Keep the retiring loop owned until the replacement
+                        // outcome is known. Its factory can close admission and
+                        // discard work before throwing; publishing success from
+                        // the start reservation's finally would hide that error.
+                        workers.Remove(Thread.CurrentThread);
+                        PublishPoolState();
+                    }
                 }
             }
             finally { eventLoopThreads.TryRemove(Thread.CurrentThread, out _); }
         }
     }
+    // A failure on a background worker has no admission caller to receive it.
+    // Never let replacement creation/start kill the CLR process or leave accepted
+    // native results pending. Close admission, reject waiting work, and publish the
+    // same failure only after every other worker and factory reservation drains.
+    // Initial admission failures still affect only that admission and can be retried.
+    private void FailWorkerReplacement(Exception failure)
+    {
+        backendFailure ??= failure;
+        shutdownRequested = stopping = true;
+        DisposeGracefulTimer();
+        Work[] pending = queue.UnorderedItems.Select(item => item.Element).ToArray();
+        queue.Clear();
+        foreach (Work work in pending) work.reject(backendFailure);
+        LogWorkerFailure("Failed to replace executor worker", backendFailure);
+        PublishPoolState();
+    }
+
+    private static void LogWorkerFailure(string message, Exception failure)
+    {
+        // A logging provider failure must not become an unhandled CLR thread
+        // exception while reporting the original worker/backend failure.
+        try { logger.warn(message, failure); }
+        catch (Exception) { }
+    }
+
     private bool canRun(Work work)
     {
         using (UninterruptibleMonitor.enter(gate))
@@ -514,6 +565,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         IRunnable outer { get; }
         bool isCancelled();
         void cancelOuter();
+        void reject(Exception error);
     }
 
     internal void ExecuteNativeSubmission(INativeSubmission submission)
@@ -563,12 +615,21 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
         public bool isCancelled() => Volatile.Read(ref _submission)?.IsCanceled ?? true;
         public void cancelOuter() => Interlocked.Exchange(ref _submission, null)?.CancelForShutdown();
+        public void reject(Exception error) => Interlocked.Exchange(ref _submission, null)?.Reject(error);
         public void run()
         {
             INativeSubmission submission = Interlocked.Exchange(ref _submission, null);
             if (submission == null) return;
             if (!owner.canRun(this)) submission.CancelForShutdown();
-            else submission.run();
+            else
+            {
+                try { submission.run(); }
+                catch (Exception error)
+                {
+                    submission.Reject(error);
+                    throw;
+                }
+            }
         }
     }
 
@@ -635,6 +696,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
         public bool isCancelled() => _task.IsCanceled;
         public void cancelOuter() => _task.CancelForShutdown();
+        public void reject(Exception error) => _task.Reject(error);
         public void run() => _task.run();
     }
 
@@ -657,6 +719,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
         public bool isCancelled() => Volatile.Read(ref command) == null;
         public void cancelOuter() => Interlocked.Exchange(ref command, null);
+        public void reject(Exception error) => cancelOuter();
         public void run()
         {
             IRunnable callback = Interlocked.Exchange(ref command, null);

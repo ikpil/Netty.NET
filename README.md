@@ -28,5 +28,6 @@ Its [worker identity](docs/common-unordered-worker-identity.md) recognizes threa
 Its [queue API](docs/common-unordered-native-queue.md) exposes pending counts;
 native token cancellation withdraws work without exporting mutable queue handles.
 Its [native configuration](docs/common-unordered-native-configuration.md) fixes worker limits and shutdown policy at construction, with read-only worker diagnostics.
+Its [worker failure boundary](docs/common-unordered-worker-failure.md) faults waiting native work and termination after surviving workers drain if replacement creation fails.
 Auto-scaling [monitoring windows](docs/common-autoscaling-monitor-windows.md)
 coalesce catch-up callbacks while preserving fixed-rate cadence and actual elapsed utilization.

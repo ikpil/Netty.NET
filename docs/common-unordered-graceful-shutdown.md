@@ -111,7 +111,7 @@ CLR-only transfer/clear probes to owned cancellation and actual rejection/remova
 see common-unordered-native-queue.md. The above counts/identities are the graceful
 checkpoint preceding that migration. Native configuration is subsequently implemented
 in common-unordered-native-configuration.md. Remaining work includes immediate
-interruption, replacement-factory failure and the remaining source/test inventory reviews.
+interruption and the remaining source/test inventory reviews.
 
 ## Next public pool/queue review
 
@@ -128,5 +128,8 @@ workload and explicitly map CLR-only probes. Internal BCL deadline ordering,
 atomic membership, cancellation removal and worker lifetime remain necessary.
 The queue decision is now implemented in common-unordered-native-queue.md;
 the configuration decision is subsequently implemented in
-common-unordered-native-configuration.md. Immediate interruption, replacement-factory
-failure and private queue costs remain open.
+common-unordered-native-configuration.md. Immediate interruption and private queue
+costs remain open.
+
+The subsequent CLR worker replacement failure boundary is implemented in
+[common-unordered-worker-failure.md](common-unordered-worker-failure.md).

@@ -121,8 +121,8 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default, non-batch suite executes **1386 cases** on Windows/net10.0:
-**1372 passed / 0 failed / 14 skipped** in final Debug and Release.
+The current default, non-batch suite executes **1394 cases** on Windows/net10.0:
+**1380 passed / 0 failed / 14 skipped** in final Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Evidence:
 `native-completion-final-contracts.trx`,
@@ -169,11 +169,14 @@ and analyzer warnings are not claimed resolved. Evidence:
 `autoscaling-window-full-debug.trx`,
 `autoscaling-window-full-release.trx`,
 `unordered-native-configuration-final-contracts-debug.trx`,
-`unordered-native-configuration-full-debug.trx` and
-`unordered-native-configuration-full-release.trx` in the ignored TestResults directory.
+`unordered-native-configuration-full-debug.trx`,
+`unordered-native-configuration-full-release.trx`,
+`unordered-worker-failure-final-contracts-debug.trx`,
+`unordered-worker-failure-final-full-debug.trx` and
+`unordered-worker-failure-final-full-release.trx` in the ignored TestResults directory.
 Whole-suite files use the full default common test project, without PortingBatch.
 Files named contracts record focused execution; the worker-identity before file
-retains the expected failing regression run. The newest unordered-native-configuration full
+retains the expected failing regression run. The newest unordered-worker-failure final-full
 files establish the current Debug/Release counts above.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
@@ -210,7 +213,30 @@ and skip identities unchanged and matching outcomes between configurations
 (unordered-native-configuration-identity-comparison.json). All 98 verified comment
 entries have zero missing; all 271 pinned files are inventoried and implementation
 paths exist (unordered-native-configuration-comment-audit.json). Immediate worker
-interruption, replacement-factory failure and private queue costs remain open.
+interruption and private queue costs remain open; worker replacement failure is
+subsequently repaired in common-unordered-worker-failure.md.
+
+The CLR unordered worker failure boundary now contains replacement creation/start
+exceptions instead of terminating the process. Isolated pre-repair throw/start
+probes exit -532462766; null replacement leaves accepted work pending. Waiting
+native operations and notification/NonSticky reservations now receive the backend
+failure, and Termination faults after surviving workers drain. An escaped native
+invocation keeps its own failure; successful replacement keeps the pool available.
+Factory reentrant closure/throw also failed before repair: retaining the retiring
+loop until the replacement outcome prevents premature lifecycle success. Eight CLR
+rows and four isolated process modes pass; see
+[worker failure decisions](common-unordered-worker-failure.md).
+Final full Debug/Release each pass 1380 / fail zero / skip 14. All 759 non-Porting
+and skip identities are unchanged; only eight CLR rows are added and both
+configurations have matching names/outcomes (unordered-worker-failure-identity-comparison.json).
+The 98 verified comment entries have zero missing; 21 unordered source, eight
+original test and ten group-contract comments remain, with all 271 pinned files
+inventoried and implementation paths present (unordered-worker-failure-comment-audit.json).
+Both full runs use --artifacts-path artifacts/worker-failure-validation because
+Rider holds the ordinary Debug test DLL; its process is preserved. Windows/net10.0
+remains the verified scope, existing compiler/analyzer warnings remain, and no
+test source exclusion or new skip is introduced. Immediate interruption and private
+queue costs remain open, along with the 99 pending source decisions.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already
@@ -265,7 +291,7 @@ Inline-capable chain producers retain 20000 operations and the original two-seco
 bound, and the final matrix passes. All 70 removed-source comments, seven PendingWrite
 and 12 fixture comments are preserved. See
 [native completion ownership](common-native-future-retirement.md). Final unordered
-immediate interruption, replacement-factory failure, private queue costs and 99 pending source
+immediate interruption, private queue costs and 99 pending source
 decisions remain open.
 
 After native submission and scheduling migration, unused PromiseTask/IRunnableFuture
@@ -1056,3 +1082,6 @@ open: required source reviews, API migrations and remaining ordered-multimap
 public-purpose decisions remain.
 ThrowableUtil still cannot replace an already-thrown CLR stack or
 capture another managed thread's stack; those limitations remain explicit.
+
+The subsequent CLR worker replacement failure boundary is implemented in
+[common-unordered-worker-failure.md](common-unordered-worker-failure.md).
