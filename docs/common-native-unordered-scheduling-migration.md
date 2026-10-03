@@ -26,7 +26,8 @@ or purge consumer. Those inherited JDK cancellation-maintenance APIs are removed
 native token cancellation already removes pending work, including decorated work.
 The subsequent native queue review removes mutable handles in favor of
 PendingTaskCount and owned token cancellation; see common-unordered-native-queue.md.
-Inherited configuration APIs still require their separate final review.
+The subsequent inherited configuration review replaces those APIs with immutable
+constructor settings and native diagnostics; see common-unordered-native-configuration.md.
 
 All unordered schedule callers now use ScheduleAsync/ScheduleAtFixedRateAsync/
 ScheduleWithFixedDelayAsync with caller-owned tokens when cancellation is needed.
@@ -51,8 +52,10 @@ in the pinned archive below.
 
 Throwing factory admission rolls back the affected reservation before reporting
 failure; it cannot silently run after a later successful submission. Null factory
-results remain accepted pending work that can recover through configuration or
-be canceled/shut down. Native schedule rejection faults even when the raw rejection
+results remain accepted pending work. With immutable constructor configuration,
+a stateful factory can recover on later admission while the pool is open; owned
+cancellation or immediate shutdown can settle workerless work after closure.
+Native schedule rejection faults even when the raw rejection
 handler deliberately discards work. Queue insertion rejects reservations owned by
 another pool: their clock, shutdown and cancellation removal refer to their owner.
 Manual remove/reinsert uses the actual queue handle, never the result Task.
@@ -95,8 +98,8 @@ Subsequent wrapper cleanup removes the unused PromiseTask and Callable glue.
 Subsequent native fixture migration removes the plain Future/Promise hierarchy;
 see common-native-future-retirement.md. The subsequent queue review removes public
 mutators and unused metadata forwarding; see common-unordered-native-queue.md.
-Remaining pool configuration
-design, immediate shutdown interruption policy and all pending
+The subsequent configuration review retires inherited settings. Immediate shutdown
+interruption, replacement-factory failure, private queue costs and all pending
 source reviews still prevent common completion.
 The subsequent graceful-shutdown review implements quiet/timeout admission;
 see common-unordered-graceful-shutdown.md.

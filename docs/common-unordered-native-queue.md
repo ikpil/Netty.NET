@@ -11,8 +11,9 @@ UnorderedThreadPoolEventExecutorTest.java line 69, checking that the queue remai
 empty 10000 times after completion notifications. It finds no unordered queue
 remove, clear, dequeue, drain or reinsertion consumer. Constructor factory/rejection
 arguments and executor work/termination contracts are separate required behavior.
-The inherited settings remain a separate unfinished review; their absence from
-actual Netty consumers is not a reason to replace dedicated workers with Task.Run.
+The inherited settings were a separate unfinished review at this checkpoint;
+common-unordered-native-configuration.md records their subsequent retirement.
+Their absence from actual Netty consumers does not replace dedicated workers with Task.Run.
 
 The native API exposes PendingTaskCount, a gate-protected momentary count of queued
 invocation reservations, including future deadlines and excluding active work.
@@ -110,13 +111,15 @@ All implementation paths exist and the pinned source/test inventory matches all
 271 manifest entries. git diff --check passes; compiler/analyzer warnings remain.
 No whole-common or final unordered backend completion is claimed.
 
-Next, finish the inherited pool-configuration API review using the already-pinned
-all-module consumer search. Core/maximum/keep-alive/timeout/prestart, mutable factory,
-rejection-handler and delayed/periodic settings need explicit native inclusion,
-replacement or exclusion decisions rather than keeping methods for CLR-only JDK
-probes. Immediate interruption policy is also open. All 100 pending upstream source
+The subsequent pool-configuration review uses that pinned all-module search to
+retire inherited settings and statistics in favor of immutable constructor settings,
+owned cancellation and native diagnostics; see common-unordered-native-configuration.md.
+Its probe mapping also records further changes to the historical table above.
+Immediate interruption, replacement-factory failure and private queue costs remain
+open. The remaining pending upstream source
 reviews and the remaining common design work stay within the full goal. The
-observed real-time auto-scaling stability issue needs a separate controlled review;
-fixed-rate catch-up sampling very short elapsed windows is one unproven hypothesis,
-not an established cause of the retained failure. Do not change the original
-high-load/max-count expectation or thresholds merely to obtain a passing run.
+observed real-time auto-scaling stability issue prompted the subsequent
+common-autoscaling-monitor-windows.md review. Controlled cases prove repeated
+catch-up sampling can fabricate idle windows; phase-preserving coalescing repairs
+that defect. Its causal relation to the retained real-time failure remains unproven.
+The original high-load/max-count expectation, waits and thresholds remain unchanged.

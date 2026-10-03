@@ -305,8 +305,7 @@ public class ExecutorCompletionContractTest
     [InlineData(true)]
     public async Task RejectedNativeNotificationsCannotBeSilentlyDiscarded(bool orderedChild)
     {
-        var pool = new UnorderedThreadPoolEventExecutor(1);
-        pool.setRejectedExecutionHandler((_, _) => { });
+        var pool = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
         IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).next() : pool;
         pool.shutdownNow();
         using var observation = new ExecutorCompletion(executor, Task.CompletedTask);

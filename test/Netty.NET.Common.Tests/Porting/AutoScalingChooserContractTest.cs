@@ -240,6 +240,88 @@ public class AutoScalingChooserContractTest
     }
 
     [Fact]
+    public void ShortCatchUpCallbacksDoNotInventIdleMonitoringWindows()
+    {
+        using var h = new Harness(1, 2, patience: 2);
+        foreach (ManualExecutor child in h.children) child.activeTime = Period;
+        h.tick();
+        for (int callback = 0; callback < 8; ++callback) h.tick(1);
+        Assert.Equal(2, h.chooser.activeExecutorCount());
+        Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
+        Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(1.0, metric.utilization()));
+
+        // Sustained idle time still reaches the original pre-increment patience boundary.
+        h.tick(Period - 8); Assert.Equal(2, h.chooser.activeExecutorCount());
+        h.tick(); Assert.Equal(2, h.chooser.activeExecutorCount());
+        h.tick(); Assert.Equal(1, h.chooser.activeExecutorCount());
+    }
+
+    [Fact]
+    public void PartialWindowCallbacksPreserveTheReportedActiveTimeBudget()
+    {
+        using var h = new Harness(2, 2);
+        foreach (ManualExecutor child in h.children) child.activeTime = Period;
+        h.tick();
+        for (int quarter = 1; quarter <= 4; ++quarter)
+        {
+            h.children[0].activeTime += Period / 8;
+            h.children[1].activeTime += Period / 4;
+            h.tick(Period / 4);
+            if (quarter < 4)
+            {
+                Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
+                Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(1.0, metric.utilization()));
+            }
+        }
+        Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
+        Assert.Equal(0.5, h.chooser.executorUtilizations()[0].utilization());
+        Assert.Equal(1.0, h.chooser.executorUtilizations()[1].utilization());
+        Assert.All(h.children, child => Assert.Equal(0, child.activeTime));
+    }
+
+    [Fact]
+    public void ADelayedSampleDoesNotMoveTheNextScheduledWindowBoundary()
+    {
+        using var h = new Harness(2, 2);
+        foreach (ManualExecutor child in h.children) child.activeTime = Period;
+        h.tick(Period + Period / 100);
+        foreach (ManualExecutor child in h.children) child.activeTime = Period / 2;
+        h.tick(Period - Period / 100);
+        Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
+        Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(50.0 / 99.0, metric.utilization()));
+    }
+
+    [Fact]
+    public void ADelayedWindowAndItsCatchUpCallbacksCountAsOneIdleSample()
+    {
+        using var h = new Harness(1, 2, patience: 2);
+        h.tick();
+        h.tick(Period * 4);
+        for (int callback = 0; callback < 8; ++callback) h.tick(1);
+        Assert.Equal(2, h.chooser.activeExecutorCount());
+        Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
+        h.tick(Period - 8);
+        Assert.Equal(1, h.chooser.activeExecutorCount());
+    }
+
+    [Theory]
+    [InlineData(0L)]
+    [InlineData(long.MaxValue - Period / 2)]
+    public void AcceptedWindowBoundaryCanBeZeroOrCrossTheSignedClockRange(long initialTime)
+    {
+        using var h = new Harness(2, 2);
+        h.clock.advance(initialTime);
+        foreach (ManualExecutor child in h.children) child.activeTime = Period;
+        h.tick(0);
+        h.tick(1);
+        Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
+        foreach (ManualExecutor child in h.children) child.activeTime = Period / 2;
+        h.tick(Period - 1);
+        Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
+        Assert.All(h.chooser.executorUtilizations(), metric => Assert.Equal(0.5, metric.utilization()));
+    }
+
+    [Fact]
     public void InvalidElapsedWindowAndShutdownSkipMetricReadsAndScaling()
     {
         using var h = new Harness(1, 2);

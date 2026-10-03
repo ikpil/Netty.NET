@@ -392,70 +392,71 @@ public class UnorderedExecutorContractTest
         finally { stop(executor); }
     }
     [Fact]
-    public void ContinuedPeriodicPolicyRunsAfterShutdownAndCanBeDisabled()
+    public void ClosingAdmissionStopsPeriodicReentryAfterItsRunningInvocation()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
-        using var continued = new CountdownEvent(3);
-        using var release = new CountdownEvent(1);
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        int calls = 0;
+        bool interrupted = false;
         try
         {
-            executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
-            var future = executor.ScheduleAtFixedRateAsync(() =>
+            Task repeating = executor.ScheduleAtFixedRateAsync(() =>
             {
-                if (executor.isShutdown() && !continued.IsSet)
-                {
-                    continued.Signal();
-                    if (continued.IsSet) release.Wait();
-                }
-            }, TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(5));
-            var termination = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+                Interlocked.Increment(ref calls);
+                entered.Set();
+                try { release.Wait(); }
+                catch (ThreadInterruptedException) { interrupted = true; }
+            }, TimeSpan.Zero, TimeSpan.FromMilliseconds(5));
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+            Task termination = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+            Assert.False(repeating.IsCompleted);
             Assert.False(termination.IsCompleted);
-            Assert.True(continued.Wait(TimeSpan.FromSeconds(5)));
-            Assert.False(executor.isTerminated());
-            executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-            release.Signal();
-            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
-            Assert.True(future.IsCanceled);
+            Assert.Equal(1, executor.ActiveWorkerCount);
+            release.Set();
             termination.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+            Assert.True(repeating.IsCanceled);
+            Assert.Equal(1, calls);
+            Assert.False(interrupted);
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { release.Set(); stop(executor); }
     }
 
     [Fact]
-    public void OwnerCancellationPreventsPeriodicReentryAfterShutdown()
+    public void ClosureCancelsPeriodicReservationsBeforeOwnerCancellation()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         int calls = 0;
         using var cancellation = new CancellationTokenSource();
         try
         {
-            executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
-            var future = executor.ScheduleAtFixedRateAsync(() => ++calls,
+            Task repeating = executor.ScheduleAtFixedRateAsync(() => ++calls,
                 TimeSpan.FromDays(1), TimeSpan.FromDays(1), cancellation.Token);
             executor.shutdown();
-            Assert.False(future.IsCompleted);
+            Assert.True(repeating.IsCanceled);
+            Assert.False(cancellation.IsCancellationRequested);
             cancellation.Cancel();
             Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);
-            Assert.True(future.IsCanceled);
             Assert.Equal(0, executor.PendingTaskCount);
         }
         finally { stop(executor); }
     }
 
     [Fact]
-    public void DisablingDelayedPolicyDropsFutureWorkButKeepsAlreadyDueWork()
+    public void OwnerCancellationDropsFutureWorkAndKeepsAcceptedDueWork()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
+        using var cancellation = new CancellationTokenSource();
         try
         {
             var running = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 1; });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var due = executor.SubmitAsync<int>(() => 2);
-            var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1));
-            executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1), cancellation.Token);
+            cancellation.Cancel();
             executor.shutdown();
             Assert.True(future.IsCanceled);
             Assert.False(due.IsCompleted);
@@ -468,19 +469,20 @@ public class UnorderedExecutorContractTest
     }
 
     [Fact]
-    public void DelayedPolicyCanChangeAfterShutdownHasAlreadyStarted()
+    public void OwnerCancellationWithdrawsADelayedReservationAfterAdmissionCloses()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+        using var cancellation = new CancellationTokenSource();
         try
         {
-            var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1));
+            var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1), cancellation.Token);
             executor.shutdown();
             Assert.False(future.IsCanceled);
-            Assert.True(executor.isTerminating());
-            executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            Assert.False(executor.Termination.IsCompleted);
+            cancellation.Cancel();
             Assert.True(future.IsCanceled);
             Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
-            Assert.False(executor.isTerminating());
+            Assert.True(executor.Termination.IsCompletedSuccessfully);
         }
         finally { stop(executor); }
     }
@@ -514,7 +516,7 @@ public class UnorderedExecutorContractTest
     }
 
     [Fact]
-    public void CoreResizeRetiresIdleWorkersWithoutInterruptingActiveWork()
+    public void ConstructorWorkerLimitBoundsOverlapWithoutInterruptingActiveWork()
     {
         var executor = new UnorderedThreadPoolEventExecutor(2);
         using var entered = new CountdownEvent(2);
@@ -522,9 +524,7 @@ public class UnorderedExecutorContractTest
         int interrupted = 0;
         try
         {
-            Assert.Equal(2, executor.prestartAllCoreThreads());
-            Assert.False(executor.prestartCoreThread());
-            var futures = Enumerable.Range(0, 2).Select(_ => executor.SubmitAsync<int>(() =>
+            var operations = Enumerable.Range(0, 2).Select(_ => executor.SubmitAsync<int>(() =>
             {
                 entered.Signal();
                 try { release.Wait(); }
@@ -532,57 +532,57 @@ public class UnorderedExecutorContractTest
                 return 7;
             })).ToArray();
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            executor.setCorePoolSize(1);
-            Assert.Equal(2, executor.getActiveCount());
+            var queued = executor.SubmitAsync(() => 8);
+            Assert.Equal(2, executor.ActiveWorkerCount);
+            Assert.Equal(2, executor.WorkerCount);
+            Assert.Equal(1, executor.PendingTaskCount);
+            Assert.False(queued.IsCompleted);
             release.Signal();
-            Assert.All(futures, future => Assert.Equal(7, future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
-            Assert.True(SpinWait.SpinUntil(() => executor.getPoolSize() == 1, TimeSpan.FromSeconds(5)));
+            Assert.All(operations, operation => Assert.Equal(7, operation.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
+            Assert.Equal(8, queued.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(0, interrupted);
-            executor.setCorePoolSize(3);
-            Assert.Equal(2, executor.prestartAllCoreThreads());
-            Assert.Equal(3, executor.getPoolSize());
-            Assert.Equal(3, executor.getLargestPoolSize());
         }
         finally { if (!release.IsSet) release.Signal(); stop(executor); }
     }
 
     [Fact]
-    public void CoreTimeoutRetiresIdleWorkersAndKeepsOneForDelayedWork()
+    public void PositiveWorkerCountStartsLazilyAndRetainsIdleWorkersUntilShutdown()
     {
         var factory = new Factory();
         var executor = new UnorderedThreadPoolEventExecutor(2, factory);
-        using var entered = new CountdownEvent(1);
-        using var release = new CountdownEvent(1);
         try
         {
-            executor.setKeepAliveTime(TimeSpan.FromMilliseconds(5));
-            executor.allowCoreThreadTimeOut(true);
-            Assert.Equal(2, executor.prestartAllCoreThreads());
-            Assert.True(SpinWait.SpinUntil(() => executor.getPoolSize() == 0, TimeSpan.FromSeconds(5)));
-            var delayed = executor.ScheduleAsync(() => { entered.Signal(); release.Wait(); return 7; },
-                TimeSpan.FromMilliseconds(50));
-            Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-            Assert.Equal(3, factory.threads.Count);
-            Assert.Equal(1, executor.getPoolSize());
-            release.Signal();
+            Assert.Empty(factory.threads);
+            Assert.Equal(0, executor.WorkerCount);
+            var delayed = executor.ScheduleAsync(() => 7, TimeSpan.FromMilliseconds(30));
             Assert.Equal(7, delayed.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.True(SpinWait.SpinUntil(() => executor.getPoolSize() == 0, TimeSpan.FromSeconds(5)));
+            Assert.Single(factory.threads);
+            Assert.True(SpinWait.SpinUntil(() => executor.ActiveWorkerCount == 0, TimeSpan.FromSeconds(5)));
+            Assert.False(factory.threads.Single().Join(TimeSpan.FromMilliseconds(30)));
+            Assert.Equal(1, executor.WorkerCount);
+            executor.shutdown();
+            Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.True(factory.threads.Single().Join(TimeSpan.FromSeconds(5)));
+            Assert.Equal(0, executor.WorkerCount);
         }
-        finally { if (!release.IsSet) release.Signal(); stop(executor); }
+        finally { stop(executor); }
     }
 
     [Fact]
-    public void ZeroKeepAliveDoesNotHoldTheQueueLockWhileDelayedWorkRemains()
+    public void ZeroWorkerCountKeepsFutureDeadlinesAndAllowsImmediateWork()
     {
         var executor = new UnorderedThreadPoolEventExecutor(0);
         using var cancellation = new CancellationTokenSource();
         try
         {
-            executor.setKeepAliveTime(TimeSpan.Zero);
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1), cancellation.Token);
             Assert.Equal(7, executor.SubmitAsync<int>(() => 7).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            Assert.False(delayed.IsCompleted);
+            Assert.Equal(1, executor.WorkerCount);
             cancellation.Cancel();
             Assert.True(delayed.IsCanceled);
+            Assert.True(SpinWait.SpinUntil(() => executor.WorkerCount == 0, TimeSpan.FromSeconds(5)));
+            Assert.Equal(8, executor.SubmitAsync(() => 8).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
         finally { stop(executor); }
     }
@@ -613,9 +613,12 @@ public class UnorderedExecutorContractTest
     }
 
     [Fact]
-    public void ReplacingFactoryPreservesNativeWorkerIdentity()
+    public void StatefulConstructorFactoryCreatesSuccessiveNativeWorkers()
     {
-        var executor = new UnorderedThreadPoolEventExecutor(0);
+        int creations = 0;
+        var factory = new LambdaFactory(task => new Thread(task.run)
+            { IsBackground = true, Name = "native-worker-" + Interlocked.Increment(ref creations) });
+        var executor = new UnorderedThreadPoolEventExecutor(0, factory);
         try
         {
             var first = executor.SubmitAsync<Thread>(() =>
@@ -624,17 +627,21 @@ public class UnorderedExecutorContractTest
                 return Thread.CurrentThread;
             }).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
             Assert.True(first.Join(TimeSpan.FromSeconds(5)));
-            var replacement = new Factory();
-            executor.setThreadFactory(replacement);
-            Assert.Same(replacement, executor.getThreadFactory());
-            // CLR accounting belongs to the worker loop, including replacement-factory workers.
-            Assert.True(executor.SubmitAsync<bool>(() => executor.inEventLoop()).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            var second = executor.SubmitAsync<Thread>(() =>
+            {
+                Assert.True(executor.inEventLoop());
+                return Thread.CurrentThread;
+            }).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+            Assert.NotSame(first, second);
+            Assert.Equal("native-worker-1", first.Name);
+            Assert.Equal("native-worker-2", second.Name);
+            Assert.True(second.Join(TimeSpan.FromSeconds(5)));
         }
         finally { stop(executor); }
     }
 
     [Fact]
-    public void CompletedTaskStatisticsIncludeRawExecuteAndScheduledSubmissions()
+    public void PendingAndActiveCountsDistinguishRawAndNativeInvocations()
     {
         var executor = new UnorderedThreadPoolEventExecutor(2);
         using var entered = new CountdownEvent(2);
@@ -645,15 +652,13 @@ public class UnorderedExecutorContractTest
             var submitted = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 7; });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var queued = executor.SubmitAsync<int>(() => 8);
-            Assert.Equal(2, executor.getActiveCount());
-            Assert.Equal(3L, executor.getTaskCount());
-            Assert.Equal(0L, executor.getCompletedTaskCount());
+            Assert.Equal(2, executor.ActiveWorkerCount);
+            Assert.Equal(1, executor.PendingTaskCount);
             release.Signal();
             Assert.Equal(7, submitted.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(8, queued.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.True(SpinWait.SpinUntil(() => executor.getCompletedTaskCount() == 3, TimeSpan.FromSeconds(5)));
-            Assert.Equal(3L, executor.getTaskCount());
-            Assert.Equal(0, executor.getActiveCount());
+            Assert.True(SpinWait.SpinUntil(() => executor.ActiveWorkerCount == 0, TimeSpan.FromSeconds(5)));
+            Assert.Equal(0, executor.PendingTaskCount);
         }
         finally { if (!release.IsSet) release.Signal(); stop(executor); }
     }
@@ -735,7 +740,7 @@ public class UnorderedExecutorContractTest
         try
         {
             Assert.Equal(7, executor.SubmitAsync<int>(() => 7).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.True(SpinWait.SpinUntil(() => executor.getCompletedTaskCount() == 2, TimeSpan.FromSeconds(5)));
+            Assert.True(SpinWait.SpinUntil(() => Volatile.Read(ref reentrantExecutions) == 1, TimeSpan.FromSeconds(5)));
             Assert.Equal(1, reentrantExecutions);
             Assert.Equal(1, creations);
         }
@@ -759,7 +764,7 @@ public class UnorderedExecutorContractTest
             var failed = executor.ScheduleAsync(() => ++executions, TimeSpan.Zero);
             Assert.Same(expected, Assert.Throws<InvalidOperationException>(() =>
                 failed.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
-            Assert.Equal(0, executor.getPoolSize());
+            Assert.Equal(0, executor.WorkerCount);
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.Equal(7, executor.SubmitAsync<int>(() => 7).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(2, attempts);
@@ -769,46 +774,36 @@ public class UnorderedExecutorContractTest
     }
 
     [Fact]
-    public void NullFactoryResultCanRecoverAfterShutdownWhenDelayedWorkRemains()
+    public void NullFactoryRetainedWorkIsCanceledByImmediateShutdown()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new LambdaFactory(_ => null));
         try
         {
-            var future = executor.SubmitAsync<int>(() => 7);
-            Assert.Equal(0, executor.getPoolSize());
-            Assert.False(future.IsCompleted);
+            var operation = executor.SubmitAsync<int>(() => 7);
+            Assert.Equal(0, executor.WorkerCount);
+            Assert.False(operation.IsCompleted);
             executor.shutdown();
             Assert.False(executor.awaitTermination(TimeSpan.FromMilliseconds(1)));
-            executor.setThreadFactory(new Factory());
-            Assert.True(executor.prestartCoreThread());
-            Assert.Equal(7, future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
+            executor.shutdownNow();
+            Assert.True(operation.IsCanceled);
             Assert.True(executor.awaitTermination(TimeSpan.FromSeconds(5)));
+            Assert.Equal(0, executor.WorkerCount);
         }
         finally { stop(executor); }
     }
 
     [Fact]
-    public void InvalidConfigurationPreservesTheExistingPoolSettings()
+    public void ConstructorRejectsInvalidWorkerCountFactoryAndHandler()
     {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new UnorderedThreadPoolEventExecutor(-1));
+        Assert.Throws<ArgumentNullException>(() => new UnorderedThreadPoolEventExecutor(1, (IThreadFactory)null));
+        Assert.Throws<ArgumentNullException>(() => new UnorderedThreadPoolEventExecutor(1,
+            (Action<IRunnable, UnorderedThreadPoolEventExecutor>)null));
+        Assert.Throws<ArgumentNullException>(() => new UnorderedThreadPoolEventExecutor(1, new Factory(), null));
         var executor = new UnorderedThreadPoolEventExecutor(2);
         try
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => executor.setCorePoolSize(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => executor.setMaximumPoolSize(1));
-            executor.setMaximumPoolSize(3);
-            Assert.Throws<ArgumentOutOfRangeException>(() => executor.setCorePoolSize(4));
-            Assert.Throws<ArgumentException>(() => executor.setKeepAliveTime(TimeSpan.FromTicks(-1)));
-            executor.setKeepAliveTime(TimeSpan.Zero);
-            Assert.Throws<ArgumentException>(() => executor.allowCoreThreadTimeOut(true));
-            executor.setKeepAliveTime(TimeSpan.FromSeconds(1));
-            executor.allowCoreThreadTimeOut(true);
-            Assert.Throws<ArgumentException>(() => executor.setKeepAliveTime(TimeSpan.Zero));
-            Assert.Throws<ArgumentNullException>(() => executor.setThreadFactory(null));
-            Assert.Throws<ArgumentNullException>(() => executor.setRejectedExecutionHandler(null));
-            Assert.Equal(2, executor.getCorePoolSize());
-            Assert.Equal(3, executor.getMaximumPoolSize());
-            Assert.Equal(TimeSpan.FromSeconds(1), executor.getKeepAliveTime());
-            Assert.True(executor.allowsCoreThreadTimeOut());
+            Assert.Equal(7, executor.SubmitAsync(() => 7).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
         finally { stop(executor); }
     }

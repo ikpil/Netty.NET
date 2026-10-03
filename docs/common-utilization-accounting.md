@@ -52,6 +52,11 @@ failed run as evidence and keep the cause unproven unless a causal reproducer is
 obtained. Final default configuration results are in common-porting.md.
 No throughput or allocation improvement is claimed without measurements.
 
+The subsequent common-autoscaling-monitor-windows.md review independently proves
+and repairs repeated catch-up sampling through configured phase boundaries.
+It preserves fixed-rate cadence and the original workloads/waits/assertions;
+it does not identify that defect as the cause of these historical failures.
+
 The first accounting full Debug run instead failed the native observer-only
 cancellation test (1284 passed / 1 failed / 14 skipped, 1299 total). Its 100ms delay
 did not guarantee a pending producer before WaitAsync; a completed Task wins over

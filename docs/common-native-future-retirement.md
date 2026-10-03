@@ -143,8 +143,9 @@ decisions remain required work. The subsequent unordered graceful-shutdown revie
 implements quiet/timeout admission and actual drain from the documented group
 contract; see common-unordered-graceful-shutdown.md. The subsequent native queue
 review removes public mutators and implements submission cancellation withdrawal;
-see common-unordered-native-queue.md. Final inherited configuration and immediate
-interruption decisions remain open.
+see common-unordered-native-queue.md. Immutable constructor settings and native
+diagnostics retire inherited configuration; see common-unordered-native-configuration.md.
+Immediate interruption, replacement-factory failure and private queue costs remain open.
 
 ## Original pinned comment provenance
 

@@ -55,7 +55,7 @@ public class UnorderedTerminationContractTest
             await last.WaitAsync(TimeSpan.FromSeconds(5));
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(executor.isTerminated());
-            Assert.Equal(0, executor.getPoolSize());
+            Assert.Equal(0, executor.WorkerCount);
             Assert.Same(termination, executor.ShutdownGracefullyAsync());
         }
         finally
@@ -76,7 +76,7 @@ public class UnorderedTerminationContractTest
             TimeSpan.FromDays(1), cancellation.Token);
         try
         {
-            Assert.Equal(0, executor.getPoolSize());
+            Assert.Equal(0, executor.WorkerCount);
             Assert.Equal(1, executor.PendingTaskCount);
             Task termination = executor.ShutdownGracefullyAsync();
             Assert.False(termination.IsCompleted);
@@ -107,7 +107,7 @@ public class UnorderedTerminationContractTest
     }
 
     [Fact]
-    public async Task ShutdownPolicyRemovalCompletesWithoutCreatingAWorker()
+    public async Task ImmediateShutdownSettlesAWorkerlessDeadlineWithoutCreatingAWorker()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
         Task work = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
@@ -115,7 +115,7 @@ public class UnorderedTerminationContractTest
         {
             Task termination = executor.ShutdownGracefullyAsync();
             Assert.False(termination.IsCompleted);
-            executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            executor.shutdownNow();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => work);
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(executor.isTerminated());

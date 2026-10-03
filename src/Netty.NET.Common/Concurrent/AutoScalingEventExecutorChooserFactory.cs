@@ -270,12 +270,17 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             private readonly List<SingleThreadEventExecutor> consistentlyIdleChildren;
             private readonly List<SingleThreadEventExecutor> consistentlyBusyChildren;
             private long lastCheckTimeNanos;
+            private bool hasCheckTime;
+            private long nextCheckTimeNanos;
 
             internal UtilizationMonitor(AutoScalingEventExecutorChooser chooser)
             {
                 this.chooser = chooser;
                 consistentlyIdleChildren = new List<SingleThreadEventExecutor>(chooser.factory.maxChildren);
                 consistentlyBusyChildren = new List<SingleThreadEventExecutor>(chooser.factory.maxChildren);
+                if (chooser.executors.Length > 0)
+                    nextCheckTimeNanos = unchecked(chooser.executors[0].ticker().nanoTime() +
+                        chooser.factory.utilizationCheckPeriodNanos);
             }
 
             public void run()
@@ -291,7 +296,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 long now = chooser.executors[0].ticker().nanoTime();
                 long totalTime;
 
-                if (lastCheckTimeNanos == 0)
+                if (!hasCheckTime)
                 {
                     // On the first run, use the configured period as a baseline to avoid skipping the cycle.
                     totalTime = chooser.factory.utilizationCheckPeriodNanos;
@@ -299,16 +304,38 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 else
                 {
                     // On subsequent runs, calculate the actual elapsed time.
-                    totalTime = now - lastCheckTimeNanos;
+                    totalTime = unchecked(now - lastCheckTimeNanos);
                 }
 
+                // CLR adaptation: sample once per scheduled measurement window.
+                // Catch-up callbacks before the next boundary must not reset
+                // activity or count as consecutive idle cycles. Keep the original
+                // fixed-rate phase; rebasing every boundary to a late invocation
+                // would slow monitoring and alias periodic activity reports.
+                if (hasCheckTime && totalTime > 0 && unchecked(now - nextCheckTimeNanos) < 0)
+                    return;
+
                 // Always update the timestamp for the next cycle.
+                // The original comment applies to accepted windows and invalid
+                // clock intervals; skipped catch-up callbacks do not start a cycle.
                 lastCheckTimeNanos = now;
+                hasCheckTime = true;
 
                 if (totalTime <= 0)
                 {
                     // Skip this cycle if the clock has issues or the interval is invalid.
+                    nextCheckTimeNanos = unchecked(now + chooser.factory.utilizationCheckPeriodNanos);
                     return;
+                }
+
+                long elapsedDeadline = unchecked(now - nextCheckTimeNanos);
+                if (elapsedDeadline >= 0)
+                {
+                    // A delayed sample consumes the elapsed window once. Advance
+                    // to the first future boundary without iterating missed slots.
+                    // Signed-distance arithmetic also supports clock wraparound.
+                    long period = chooser.factory.utilizationCheckPeriodNanos;
+                    nextCheckTimeNanos = unchecked(now + (period - elapsedDeadline % period));
                 }
 
                 consistentlyIdleChildren.Clear();

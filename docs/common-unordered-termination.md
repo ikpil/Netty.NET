@@ -75,7 +75,9 @@ result wrappers (common-native-unordered-scheduling-migration.md). The subsequen
 fixture migration retires plain Future/Promise (common-native-future-retirement.md).
 The subsequent native queue review removes public mutators and uses owned token
 withdrawal with PendingTaskCount diagnostics; see common-unordered-native-queue.md.
-Final pool configuration and immediate interruption policy remain open.
+The subsequent native configuration review retires inherited settings and statistics;
+see common-unordered-native-configuration.md. Immediate interruption, replacement-factory
+failure and private queue costs remain open.
 Search of all pinned modules finds bulk invocation only in forwarding/guard
 implementations, common/transport blocking-guard tests and benchmark stubs; no
 production operation requires a custom bulk-result API. Useful composition now
@@ -84,6 +86,7 @@ The subsequent graceful-shutdown review implements quietPeriod/timeout admission
 from the documented EventExecutorGroup contract, then applies existing drain
 policies; see common-unordered-graceful-shutdown.md. Queue insertion is now refused
 at admission closure, including before Termination completes. The subsequent queue
-review removes that public mutation surface altogether. Final inherited pool
-configuration remains open. All original Java comments stay
+review removes that public mutation surface altogether. The configuration follow-up
+replaces inherited settings with immutable constructors and owned cancellation.
+All original Java comments stay
 beside the mapped implementation or its provenance, including the upstream TODO.

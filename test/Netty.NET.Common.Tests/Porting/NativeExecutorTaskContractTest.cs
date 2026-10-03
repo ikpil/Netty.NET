@@ -205,8 +205,7 @@ public class NativeExecutorTaskContractTest
     [Fact]
     public async Task UnorderedNativeRejectionFaultsEvenWhenTheLegacyHandlerDiscardsWork()
     {
-        var executor = new UnorderedThreadPoolEventExecutor(1);
-        executor.setRejectedExecutionHandler((_, _) => { });
+        var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
         executor.shutdown();
         Task result = executor.SubmitAsync(() => { });
         Assert.True(result.IsFaulted);
@@ -293,9 +292,8 @@ public class NativeExecutorTaskContractTest
     [Fact]
     public async Task NonStickyNativeChildRejectsShutdownEvenWhenThePoolHandlerDiscards()
     {
-        var executor = new UnorderedThreadPoolEventExecutor(1);
+        var executor = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
         IEventExecutor child = new NonStickyEventExecutorGroup(executor).next();
-        executor.setRejectedExecutionHandler((_, _) => { });
         executor.shutdown();
         Task result = child.SubmitAsync(() => { });
         Assert.True(result.IsFaulted);
@@ -471,7 +469,7 @@ public class NativeExecutorTaskContractTest
             Task result = executor.SubmitAsync(() => { });
             Assert.Same(original, await Assert.ThrowsAsync<InvalidOperationException>(async () => await result));
             Assert.Equal(0, executor.PendingTaskCount);
-            Assert.Equal(0, executor.getTaskCount());
+            Assert.Equal(0, executor.ActiveWorkerCount);
         }
         finally
         {

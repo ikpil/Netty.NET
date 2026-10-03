@@ -27,8 +27,10 @@ CLR Thread is sealed. A thread registry, not a Thread subclass, carries worker
 ownership. Registration and finally removal now belong to workerLoop itself.
 Both original and replacement factories start the same loop, including workers
 started while an existing worker is still active. The configured factory is
-stored directly and getThreadFactory returns that same object. Constructor and
-setter null validation remain. Factory prefix/suffix code outside task.run does
+stored directly; at this checkpoint getThreadFactory returned that same object
+and setter null validation remained. The subsequent configuration review retires
+factory mutation and tests stateful constructor factories instead; see
+common-unordered-native-configuration.md. Factory prefix/suffix code outside task.run does
 not acquire event-loop identity, and terminated threads are removed from the
 registry. A concurrent dictionary permits external affinity queries during pool
 transitions without introducing another lock ordering with the pool gate.
@@ -60,11 +62,13 @@ Scope tests explicitly join the factory Thread and wait for its suffix marker.
 They do not claim that Termination joins custom factory suffix code or an async
 delegate body after it yields. Unordered concrete legacy scheduling/results,
 raw execute's JDK wrapper,
-remaining configuration decisions and graceful-shutdown parameter policy are
+remaining configuration decisions and graceful-shutdown parameter policy
 were still incomplete at this checkpoint. The subsequent unordered native migration
 removes the concrete Java scheduler/result and raw JDK wrappers; see
-common-native-unordered-scheduling-migration.md. Final configuration/queue/shutdown
-and plain Future fixture review remain open. This correction does not complete common.
+common-native-unordered-scheduling-migration.md. Later native queue, graceful shutdown,
+configuration and Future fixture migrations are recorded in common-porting.md.
+Immediate interruption and replacement-factory failure remain open.
+This correction does not complete common.
 
 Whole default Debug and Release each discover 1354 cases on Windows/net10.0:
 1340 passed / zero failed / 14 unchanged skips. Evidence:

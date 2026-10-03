@@ -121,8 +121,8 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default, non-batch suite executes **1380 cases** on Windows/net10.0:
-**1366 passed / 0 failed / 14 skipped** in final Debug and Release.
+The current default, non-batch suite executes **1386 cases** on Windows/net10.0:
+**1372 passed / 0 failed / 14 skipped** in final Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Evidence:
 `native-completion-final-contracts.trx`,
@@ -163,12 +163,60 @@ and analyzer warnings are not claimed resolved. Evidence:
 `unordered-graceful-final-full-debug.trx`,
 `unordered-graceful-final-full-release.trx`,
 `unordered-native-queue-final-contracts-v2-debug.trx`,
-`unordered-native-queue-full-debug.trx` and
-`unordered-native-queue-final-full-release.trx` in the ignored TestResults directory.
+`unordered-native-queue-full-debug.trx`,
+`unordered-native-queue-final-full-release.trx`,
+`autoscaling-window-phase-contracts-debug.trx`,
+`autoscaling-window-full-debug.trx`,
+`autoscaling-window-full-release.trx`,
+`unordered-native-configuration-final-contracts-debug.trx`,
+`unordered-native-configuration-full-debug.trx` and
+`unordered-native-configuration-full-release.trx` in the ignored TestResults directory.
 Whole-suite files use the full default common test project, without PortingBatch.
 Files named contracts record focused execution; the worker-identity before file
-retains the expected failing regression run. The newest unordered-native-queue full
+retains the expected failing regression run. The newest unordered-native-configuration full
 files establish the current Debug/Release counts above.
+
+The auto-scaling monitor now coalesces callbacks within configured fixed-rate
+window boundaries without sampling/resetting activity or patience repeatedly.
+Actual elapsed duration remains the utilization denominator, with a valid zero
+timestamp and signed clock wraparound. Five independent clock cases fail before
+repair; a sixth catches phase drift in a rejected elapsed-only approach.
+Fixed delay was also rejected after a trace exposed 62-64ms intervals aliasing
+35ms activity reports and breaking original scale-up scenarios. Final coupled
+Debug passes 97 cases, including all seven unchanged original auto-scaling fixtures.
+See [monitoring window decisions](common-autoscaling-monitor-windows.md).
+The controlled defect does not establish the cause of the retained real-time
+failure; no original workload, wait, threshold, assertion or comment is changed.
+Final full Debug/Release each pass 1372 cases with zero failures and the same 14
+skips. All 759 non-Porting identities and all skip identities remain unchanged;
+only six CLR clock/phase cases are added, with matching Debug/Release outcomes
+(autoscaling-window-identity-comparison.json). All 98 verified comment entries,
+43 factory and 17 original fixture comments have zero missing; inventory matches
+the pinned 271 files and all implementation paths exist
+(autoscaling-window-comment-audit.json).
+
+The unordered inherited configuration and statistics API is retired after a pinned
+all-module search finds no corresponding Netty consumers. Constructor worker limits,
+factory and raw rejection delegate are immutable; PendingTaskCount, WorkerCount and
+ActiveWorkerCount provide momentary diagnostics. Admission closure retains accepted
+one-shots and stops periodic reentry; callers withdraw owned work with tokens.
+Fifteen CLR-only methods and two theory row identities are explicitly remapped in
+[native configuration decisions](common-unordered-native-configuration.md).
+The initial selection fails one new probe that incorrectly assumes cancellation
+of a currently running periodic Task at closure; the corrected probe waits for
+the invocation to return. Final affected Debug passes all 233 cases. Full Debug
+and Release each pass 1372 / fail zero / skip 14, with all 759 original identities
+and skip identities unchanged and matching outcomes between configurations
+(unordered-native-configuration-identity-comparison.json). All 98 verified comment
+entries have zero missing; all 271 pinned files are inventoried and implementation
+paths exist (unordered-native-configuration-comment-audit.json). Immediate worker
+interruption, replacement-factory failure and private queue costs remain open.
+
+UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
+search has no caller, and the deprecated alias's result transfer is already
+covered by the ten native TaskCompletionTransferPortTest cases in both full runs.
+No additional FutureListener/Promise facade is introduced. Both original comments
+are archived in common-task-composition.md. Remaining pending source reviews: 99.
 
 The unordered public mutable queue/remove API and unused metadata forwarding are
 removed. PendingTaskCount preserves the original 10000 empty-queue checks; owned
@@ -217,7 +265,7 @@ Inline-capable chain producers retain 20000 operations and the original two-seco
 bound, and the final matrix passes. All 70 removed-source comments, seven PendingWrite
 and 12 fixture comments are preserved. See
 [native completion ownership](common-native-future-retirement.md). Final unordered
-configuration and immediate interruption policies and 100 pending source
+immediate interruption, replacement-factory failure, private queue costs and 99 pending source
 decisions remain open.
 
 After native submission and scheduling migration, unused PromiseTask/IRunnableFuture
@@ -343,7 +391,9 @@ result adapters. Global quiet-period and auto-scaling monitoring work are migrat
 Thirty-four new cases verify native cancellation, failure, deadline, context and
 lifetime contracts. ShutdownNow cancellation initially failed and was repaired.
 Seven unused CLR action/token wrappers are removed. Concrete unordered Java scheduler
-APIs have since been removed; final pool/configuration/shutdown decisions remain open.
+APIs have since been removed. Native queue ownership, graceful admission/drain and
+immutable configuration are implemented; immediate interruption, replacement-factory
+failure and private queue costs remain open.
 See [common-native-scheduling.md](common-native-scheduling.md).
 
 All ordered/global/single-thread scheduling callers and fixtures now use native
@@ -594,8 +644,8 @@ both default runs. The former weak-queue/helper types have been removed. All 26
 source comments are preserved in code or replacement provenance, and all six
 test comments remain. See [common-object-cleanup.md](common-object-cleanup.md).
 
-The manifest records 42 verified source files, 22 in progress, 100 pending,
-28 CLR replacements and 13 JVM-only decisions (205 source entries). Tests have
+The manifest records 42 verified source files, 22 in progress, 99 pending,
+29 CLR replacements and 13 JVM-only decisions (205 source entries). Tests have
 56 verified, zero pending and ten not-applicable entries (66 original files).
 All 98 verified source/test entries have zero missing required comments.
 CompleteFuture, SucceededFuture and FailedFuture now record CLR replacement by

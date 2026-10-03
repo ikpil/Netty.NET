@@ -1,7 +1,8 @@
 # Native Task composition and producer ownership
 
 Original baseline: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c`.
-This decision replaces four Java-shaped common helpers with .NET functionality;
+This decision replaces four Java-shaped common helpers and the deprecated unary
+notifier alias with .NET functionality;
 it does not introduce another facade with renamed add/finish/listener methods.
 
 ## Source and consumer evidence
@@ -15,6 +16,11 @@ it does not introduce another facade with renamed add/finish/listener methods.
   producers. Consumers include `codec-http/.../websocketx/WebSocketProtocolHandler.java`,
   `codec-classes-quic/.../QuicheQuicStreamChannel.java`, and
   `transport-classes-io_uring/.../AbstractIoUringChannel.java`.
+- `common/.../concurrent/UnaryPromiseNotifier.java` is deprecated in favor of
+  PromiseNotifier.cascade. An all-module pinned search finds only its declaration,
+  constructor and logger, with no construction, cascadeTo call or test consumer.
+  Its success/fault/cancellation forwarding is the same native transfer decision;
+  it does not require restoring a FutureListener/Promise facade.
 - `common/.../concurrent/PromiseAggregator.java` is deprecated in favor of the
   combiner. The pinned repository has no production construction of it outside
   its own declaration; its remaining constructions are common tests.
@@ -31,6 +37,7 @@ the current common stage.
 | --- | --- | --- |
 | PromiseCombiner | Collect `List<Task>` and call `Task.WhenAll` after collection | Wait for every child, retain original failure objects and support different result types through Task. Collection/snapshot replaces the mutable builder's add/finish phase. |
 | PromiseNotifier | Share the same read-only Task when appropriate; otherwise the actual producer calls `TaskCompletionSource<T>.TrySetFromTask` | Transfer result, complete exception information, canceled status/token, and reject overwriting an already-completed target. No receiver can force another operation's completion. |
+| UnaryPromiseNotifier | The same shared Task / owned TCS TrySetFromTask decision | The deprecated unary alias has no distinct consumer contract. A rejected target write returns false; the actual owner chooses logging rather than allocating a notifier with a global logger. |
 | PromiseAggregator | Task.WhenAll; explicitly use Task.WhenAny for a fail-fast observation if needed | Aggregate completion without forcibly failing sibling producers. Owner-controlled cancellation can be requested separately; a request is not an invented sibling result. |
 | PromiseNotificationUtil | TCS TrySet* / TrySetFromTask returns a bool; the owning caller chooses whether a rejected write warrants logging | Preserve observable completion rejection without a globally selected logger or another Java Promise layer. |
 
@@ -185,3 +192,44 @@ step, not a claim that common is complete.
 - [Task.WhenAll completion, exceptions and cancellation](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenall?view=net-10.0).
 - [Generic TrySetFromTask](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource-1.trysetfromtask?view=net-10.0).
 - [Non-generic TrySetFromTask](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource.trysetfromtask?view=net-10.0).
+
+## Deprecated unary notifier review and comment provenance
+
+The pending UnaryPromiseNotifier entry is a CLR replacement, not a missing native
+implementation. The pinned all-module search finds no caller. Its completion
+forwarding is already exercised by TaskCompletionTransferPortTest's ten cases:
+result/failure identity, canceled token, target overwrite rejection, faulted
+OperationCanceledException, full non-generic failure transfer, validation, observer
+cancellation and real executor cancellation ownership. These cases run in the
+current default full suite; no redundant alias-specific test or public C# class
+is introduced. As with PromiseNotifier, TrySetFromTask keeps the entire completed
+Task outcome and the actual producer owns any rejected-write logging. This does
+not claim that a native consumer still supports Java FutureListener or direct
+cancellation of another writable result.
+
+Both original comments below are from
+common/src/main/java/io/netty/util/concurrent/UnaryPromiseNotifier.java at the pinned
+baseline. They record source provenance rather than documenting a C# notifier API.
+
+```java
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ *
+ * @deprecated use {@link PromiseNotifier#cascade(boolean, Future, Promise)}.
+ */
+```

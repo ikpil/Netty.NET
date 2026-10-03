@@ -115,16 +115,20 @@ public class UnorderedGracefulShutdownContractTest
     }
 
     [Fact]
-    public async Task WorkerlessPoolClosesAfterQuietPeriodAndSettlesRemovedDeadlines()
+    public async Task WorkerlessPoolClosesAfterQuietPeriodAndRetainsDeadlinesUntilOwnerCancellation()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
-        executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
+        using var cancellation = new CancellationTokenSource();
+        Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Canceled deadline ran"), TimeSpan.FromDays(1), cancellation.Token);
         try
         {
             Task termination = executor.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5));
             Assert.False(executor.isShutdown());
             Assert.False(scheduled.IsCompleted);
+            Assert.True(SpinWait.SpinUntil(executor.isShutdown, TimeSpan.FromSeconds(5)));
+            Assert.False(termination.IsCompleted);
+            Assert.False(scheduled.IsCompleted);
+            cancellation.Cancel();
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(scheduled.IsCanceled);
             Assert.True(executor.isTerminated());
@@ -224,7 +228,6 @@ public class UnorderedGracefulShutdownContractTest
     public async Task ShutdownNowPeriodicHandlesCannotRestartATerminatedPool()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
-        executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(true);
         Task repeating = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromDays(1));
         IRunnable handle = Assert.Single(executor.shutdownNow());
         try

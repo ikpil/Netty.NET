@@ -56,19 +56,12 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }));
     private readonly HashSet<Thread> workers = new();
     private readonly HashSet<Thread> activeWorkers = new();
-    private int corePoolSize;
-    private int maximumPoolSize = int.MaxValue;
+    private readonly int configuredWorkerCount;
     private int startingWorkers;
     private int workerCount;
-    private int largestPoolSize;
-    private long completedTaskCount;
-    private long keepAliveNanos = 10_000_000;
-    private bool coreThreadTimeout;
-    private long configurationGeneration;
-    private bool continuePeriodicAfterShutdown;
-    private bool executeDelayedAfterShutdown = true;
-    private IThreadFactory threadFactory;
-    private Action<IRunnable, UnorderedThreadPoolEventExecutor> rejectedHandler;
+    private const long ZeroWorkerIdleNanos = 10_000_000;
+    private readonly IThreadFactory threadFactory;
+    private readonly Action<IRunnable, UnorderedThreadPoolEventExecutor> rejectedHandler;
     private bool gracefulRequested;
     private long gracefulStartNanos;
     private long gracefulActivityNanos;
@@ -83,33 +76,34 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int, ThreadFactory)}
      * using {@link DefaultThreadFactory}.
      */
-    public UnorderedThreadPoolEventExecutor(int corePoolSize)
-        : this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor))) { }
+    /// <remarks>Workers start on admission. Zero uses one transient worker while reservations remain.</remarks>
+    public UnorderedThreadPoolEventExecutor(int workerCount)
+        : this(workerCount, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor))) { }
 
     /**
      * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)}
      */
-    public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory)
-        : this(corePoolSize, threadFactory, (_, _) => throw new RejectedExecutionException()) { }
+    public UnorderedThreadPoolEventExecutor(int workerCount, IThreadFactory threadFactory)
+        : this(workerCount, threadFactory, (_, _) => throw new RejectedExecutionException()) { }
 
     /**
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int,
      * ThreadFactory, java.util.concurrent.RejectedExecutionHandler)} using {@link DefaultThreadFactory}.
      */
-    public UnorderedThreadPoolEventExecutor(int corePoolSize, Action<IRunnable, UnorderedThreadPoolEventExecutor> handler)
-        : this(corePoolSize, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler) { }
+    public UnorderedThreadPoolEventExecutor(int workerCount, Action<IRunnable, UnorderedThreadPoolEventExecutor> handler)
+        : this(workerCount, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler) { }
 
     /**
      * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory, RejectedExecutionHandler)}
      */
     // CLR represents the JDK rejection handler as a delegate; it is not Netty's SingleThread rejection handler.
-    public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory,
+    public UnorderedThreadPoolEventExecutor(int workerCount, IThreadFactory threadFactory,
         Action<IRunnable, UnorderedThreadPoolEventExecutor> handler)
     {
-        if (corePoolSize < 0) throw new ArgumentOutOfRangeException(nameof(corePoolSize));
+        if (workerCount < 0) throw new ArgumentOutOfRangeException(nameof(workerCount));
         ArgumentNullException.ThrowIfNull(threadFactory);
         ArgumentNullException.ThrowIfNull(handler);
-        this.corePoolSize = corePoolSize;
+        configuredWorkerCount = workerCount;
         this.threadFactory = threadFactory;
         rejectedHandler = handler;
     }
@@ -148,114 +142,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     /// callers cannot mutate the executor's queue or transfer reservations between pools.
     /// </remarks>
     public int PendingTaskCount { get { using (UninterruptibleMonitor.enter(gate)) return queue.Count; } }
-    public int getCorePoolSize() { using (UninterruptibleMonitor.enter(gate)) return corePoolSize; }
-
-    // CLR TimeSpan/delegate equivalents of inherited JDK pool configuration.
-    public void setCorePoolSize(int size)
-    {
-        using (UninterruptibleMonitor.enter(gate))
-        {
-            if (size < 0 || size > maximumPoolSize) throw new ArgumentOutOfRangeException(nameof(size));
-            int delta = size - corePoolSize;
-            corePoolSize = size;
-            if (workerCount > size) wakeIdleWorkers();
-            else if (delta > 0)
-            {
-                int count = Math.Min(delta, queue.Count);
-                while (count-- > 0 && startWorker(corePoolSize))
-                    if (queue.Count == 0) break;
-            }
-        }
-    }
-    public int getMaximumPoolSize() { using (UninterruptibleMonitor.enter(gate)) return maximumPoolSize; }
-    public void setMaximumPoolSize(int size)
-    {
-        using (UninterruptibleMonitor.enter(gate))
-        {
-            if (size <= 0 || size < corePoolSize) throw new ArgumentOutOfRangeException(nameof(size));
-            maximumPoolSize = size;
-            if (workerCount > size) wakeIdleWorkers();
-        }
-    }
-    public TimeSpan getKeepAliveTime() { using (UninterruptibleMonitor.enter(gate)) return TimeSpan.FromTicks(keepAliveNanos / 100); }
-    public void setKeepAliveTime(TimeSpan time)
-    {
-        using (UninterruptibleMonitor.enter(gate))
-        {
-            if (time < TimeSpan.Zero || (time == TimeSpan.Zero && coreThreadTimeout)) throw new ArgumentException("invalid keep-alive time", nameof(time));
-            long nanos = AbstractScheduledEventExecutor.toNanos(time);
-            bool shorter = nanos < keepAliveNanos;
-            keepAliveNanos = nanos;
-            if (shorter) wakeIdleWorkers();
-        }
-    }
-    public bool allowsCoreThreadTimeOut() { using (UninterruptibleMonitor.enter(gate)) return coreThreadTimeout; }
-    public void allowCoreThreadTimeOut(bool value)
-    {
-        using (UninterruptibleMonitor.enter(gate))
-        {
-            if (value && keepAliveNanos <= 0) throw new ArgumentException("core threads must have a positive keep-alive time");
-            if (value != coreThreadTimeout)
-            {
-                coreThreadTimeout = value;
-                if (value) wakeIdleWorkers();
-            }
-        }
-    }
-    public bool prestartCoreThread() { using (UninterruptibleMonitor.enter(gate)) return startWorker(corePoolSize); }
-    public int prestartAllCoreThreads()
-    {
-        using (UninterruptibleMonitor.enter(gate))
-        {
-            int count = 0;
-            while (startWorker(corePoolSize)) ++count;
-            return count;
-        }
-    }
-    public int getPoolSize() { using (UninterruptibleMonitor.enter(gate)) return workers.Count; }
-    public int getActiveCount() { using (UninterruptibleMonitor.enter(gate)) return activeWorkers.Count; }
-    public int getLargestPoolSize() { using (UninterruptibleMonitor.enter(gate)) return largestPoolSize; }
-    public long getCompletedTaskCount() { using (UninterruptibleMonitor.enter(gate)) return completedTaskCount; }
-    public long getTaskCount() { using (UninterruptibleMonitor.enter(gate)) return unchecked(completedTaskCount + activeWorkers.Count + queue.Count); }
-    public bool isTerminating() { using (UninterruptibleMonitor.enter(gate)) return shutdownRequested && !isTerminated(); }
-    public IThreadFactory getThreadFactory() { using (UninterruptibleMonitor.enter(gate)) return threadFactory; }
-    public void setThreadFactory(IThreadFactory factory)
-    {
-        ArgumentNullException.ThrowIfNull(factory);
-        using (UninterruptibleMonitor.enter(gate)) threadFactory = factory;
-    }
-    public Action<IRunnable, UnorderedThreadPoolEventExecutor> getRejectedExecutionHandler()
-    { using (UninterruptibleMonitor.enter(gate)) return rejectedHandler; }
-    public void setRejectedExecutionHandler(Action<IRunnable, UnorderedThreadPoolEventExecutor> handler)
-    {
-        ArgumentNullException.ThrowIfNull(handler);
-        using (UninterruptibleMonitor.enter(gate)) rejectedHandler = handler;
-    }
-    public bool getContinueExistingPeriodicTasksAfterShutdownPolicy()
-    { using (UninterruptibleMonitor.enter(gate)) return continuePeriodicAfterShutdown; }
-    public void setContinueExistingPeriodicTasksAfterShutdownPolicy(bool value)
-    {
-        using (UninterruptibleMonitor.enter(gate))
-        {
-            continuePeriodicAfterShutdown = value;
-            if (!value && shutdownRequested) onShutdown();
-        }
-    }
-    public bool getExecuteExistingDelayedTasksAfterShutdownPolicy()
-    { using (UninterruptibleMonitor.enter(gate)) return executeDelayedAfterShutdown; }
-    public void setExecuteExistingDelayedTasksAfterShutdownPolicy(bool value)
-    {
-        using (UninterruptibleMonitor.enter(gate))
-        {
-            executeDelayedAfterShutdown = value;
-            if (!value && shutdownRequested) onShutdown();
-        }
-    }
-    private void wakeIdleWorkers()
-    {
-        ++configurationGeneration;
-        PublishPoolState();
-    }
+    /// <summary>Gets the number of worker threads currently owned by this pool, including retiring loops.</summary>
+    public int WorkerCount { get { using (UninterruptibleMonitor.enter(gate)) return workers.Count; } }
+    /// <summary>Gets the number of currently claimed invocations; yielded asynchronous bodies are caller-owned.</summary>
+    public int ActiveWorkerCount { get { using (UninterruptibleMonitor.enter(gate)) return activeWorkers.Count; } }
 
     public List<IRunnable> shutdownNow()
     {
@@ -351,7 +241,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         shutdownRequested = true;
         DisposeGracefulTimer();
-        // Retain the pool's explicit delayed/periodic shutdown policies. Timeout
+        // Retain accepted one-shots and cancel periodic reservations. Timeout
         // closes admission; it neither interrupts running code nor fakes drain.
         onShutdown();
     }
@@ -422,51 +312,32 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 
     private void ensureWorker()
     {
-        startWorker(Math.Max(1, corePoolSize));
-    }
-    private bool startWorker(int limit)
-    {
-        if (stopping || (shutdownRequested && queue.Count == 0) || workerCount >= limit) return false;
+        int limit = Math.Max(1, configuredWorkerCount);
+        if (stopping || (shutdownRequested && queue.Count == 0) || workerCount >= limit) return;
         ++startingWorkers;
         ++workerCount;
         bool started = false;
         try
         {
             Thread thread = threadFactory.newThread(Runnables.Create(workerLoop));
-            if (thread == null || stopping) return false;
+            if (thread == null || stopping) return;
             workers.Add(thread);
-            largestPoolSize = Math.Max(largestPoolSize, workers.Count);
             try { thread.Start(); }
             catch { workers.Remove(thread); throw; }
             started = true;
-            return true;
         }
         finally { --startingWorkers; if (!started) --workerCount; PublishPoolState(); }
     }
 
     private Work takeWork()
     {
-        bool timedOut = false;
         bool idleStarted = false;
         long idleDeadline = 0;
-        long generation;
         using (UninterruptibleMonitor.enter(gate))
         {
-            generation = configurationGeneration;
             for (;;)
             {
-                if (generation != configurationGeneration)
-                {
-                    generation = configurationGeneration;
-                    timedOut = idleStarted = false;
-                }
                 if (stopping || (shutdownRequested && queue.Count == 0))
-                {
-                    --workerCount;
-                    return null;
-                }
-                bool timed = coreThreadTimeout || workerCount > corePoolSize;
-                if ((workerCount > maximumPoolSize || (timed && timedOut)) && (workerCount > 1 || queue.Count == 0))
                 {
                     --workerCount;
                     return null;
@@ -484,39 +355,34 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                         return work;
                     }
                 }
-                if (timed)
+                // Zero retains the constructor's transient single-worker behavior.
+                // A future reservation needs that worker until its deadline or
+                // cancellation; only an empty queue starts the idle retirement.
+                if (configuredWorkerCount == 0 && !hasHead)
                 {
                     if (!idleStarted)
                     {
-                        idleDeadline = unchecked(now + keepAliveNanos);
+                        idleDeadline = unchecked(now + ZeroWorkerIdleNanos);
                         idleStarted = true;
                     }
                     long remaining = unchecked(idleDeadline - now);
                     if (remaining <= 0)
                     {
-                        timedOut = true;
-                        idleStarted = false;
-                        try { Monitor.Wait(gate, 0); }
-                        catch (ThreadInterruptedException) { timedOut = false; }
-                        continue;
+                        --workerCount;
+                        return null;
                     }
                     waitNanos = Math.Min(waitNanos, remaining);
                 }
                 else
                 {
-                    timedOut = idleStarted = false;
+                    idleStarted = false;
                 }
                 try
                 {
-                    if (!timed && !hasHead) Monitor.Wait(gate);
+                    if (configuredWorkerCount != 0 && !hasHead) Monitor.Wait(gate);
                     else Monitor.Wait(gate, (int)Math.Min(int.MaxValue, (waitNanos - 1) / 1_000_000 + 1));
-                    if (timed && unchecked(idleDeadline - ticker().nanoTime()) <= 0)
-                    {
-                        timedOut = true;
-                        idleStarted = false;
-                    }
                 }
-                catch (ThreadInterruptedException) { timedOut = idleStarted = false; }
+                catch (ThreadInterruptedException) { idleStarted = false; }
             }
         }
     }
@@ -524,10 +390,9 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private void workerLoop()
     {
         // Worker identity belongs to the loop, not to whichever factory created
-        // its Thread. Factory replacement must not bypass native callback affinity.
+        // its Thread. A stateful constructor factory cannot bypass native callback affinity.
         eventLoopThreads.TryAdd(Thread.CurrentThread, 0);
         bool countReleased = false;
-        bool abrupt = false;
         try
         {
             for (;;)
@@ -545,7 +410,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 catch (Exception failure)
                 {
                     // CLR unhandled exceptions kill the process. Match JDK worker replacement instead.
-                    abrupt = true;
                     logger.warn("Unexpected worker failure", failure);
                     return;
                 }
@@ -554,7 +418,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     using (UninterruptibleMonitor.enter(gate))
                     {
                         activeWorkers.Remove(Thread.CurrentThread);
-                        ++completedTaskCount;
                         RecordGracefulActivity();
                         PublishPoolState();
                     }
@@ -571,10 +434,9 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     workers.Remove(Thread.CurrentThread);
                     if (!stopping)
                     {
-                        int minimum = coreThreadTimeout ? 0 : corePoolSize;
+                        int minimum = configuredWorkerCount;
                         if (minimum == 0 && queue.Count != 0) minimum = 1;
-                        if (abrupt) startWorker(maximumPoolSize);
-                        else if (workerCount < minimum) startWorker(Math.Max(1, corePoolSize));
+                        if (workerCount < minimum) ensureWorker();
                     }
                     PublishPoolState();
                 }
@@ -585,8 +447,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private bool canRun(Work work)
     {
         using (UninterruptibleMonitor.enter(gate))
-            return !stopping && (!shutdownRequested || (work.period != 0 ? continuePeriodicAfterShutdown :
-                executeDelayedAfterShutdown || unchecked(work.deadline - ticker().nanoTime()) <= 0));
+            return !stopping && (!shutdownRequested || work.period == 0);
     }
     private void reExecutePeriodic(Work work)
     {
@@ -594,7 +455,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             // A detached queue handle belongs to its caller. It cannot re-create
             // pool ownership after the persistent Termination result was published.
-            if (!stopping && !termination.Task.IsCompleted && (!shutdownRequested || continuePeriodicAfterShutdown))
+            if (!stopping && !termination.Task.IsCompleted && !shutdownRequested)
             {
                 queue.Enqueue(work, (work.deadline, work.sequence));
                 ensureWorker();
@@ -608,8 +469,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         foreach (var work in queue.UnorderedItems.Select(item => item.Element).ToArray())
         {
-            if ((work.period != 0 ? !continuePeriodicAfterShutdown :
-                !executeDelayedAfterShutdown && unchecked(work.deadline - ticker().nanoTime()) > 0) || work.isCancelled())
+            if (work.period != 0 || work.isCancelled())
             {
                 remove(work);
                 work.cancelOuter();

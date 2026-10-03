@@ -24,6 +24,9 @@ The unordered executor's [termination signal](docs/common-unordered-termination.
 waits for its queue and worker reservations to drain.
 Its [graceful shutdown](docs/common-unordered-graceful-shutdown.md) accepts work
 during quiet waiting and closes admission at quiet expiry or timeout, then drains.
-Its [worker identity](docs/common-unordered-worker-identity.md) also survives thread-factory replacement.
+Its [worker identity](docs/common-unordered-worker-identity.md) recognizes threads created by a stateful constructor factory.
 Its [queue API](docs/common-unordered-native-queue.md) exposes pending counts;
 native token cancellation withdraws work without exporting mutable queue handles.
+Its [native configuration](docs/common-unordered-native-configuration.md) fixes worker limits and shutdown policy at construction, with read-only worker diagnostics.
+Auto-scaling [monitoring windows](docs/common-autoscaling-monitor-windows.md)
+coalesce catch-up callbacks while preserving fixed-rate cadence and actual elapsed utilization.

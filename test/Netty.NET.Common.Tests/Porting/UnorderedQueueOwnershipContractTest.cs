@@ -28,7 +28,7 @@ public class UnorderedQueueOwnershipContractTest
         {
             Assert.Same(expected, Assert.Throws<InvalidOperationException>(() =>
                 executor.execute(Runnables.Create(() => ++calls))));
-            Assert.Equal(0, executor.getPoolSize());
+            Assert.Equal(0, executor.WorkerCount);
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.Equal(7, executor.ScheduleAsync(() => 7, TimeSpan.Zero)
                 .WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());

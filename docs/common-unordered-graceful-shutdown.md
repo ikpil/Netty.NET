@@ -41,9 +41,11 @@ shutdown() and shutdownNow() override any pending quiet wait. The defaults remai
 two seconds quiet and fifteen seconds timeout.
 
 At closure, the existing explicit delayed/periodic shutdown policies apply.
-Delayed one-shot work is retained by default; periodic work is canceled by default.
-An opted-in continued periodic reservation can keep Termination pending until
-canceled or its policy is disabled. Retained delayed work can also outlast timeout.
+Delayed one-shot work is retained; periodic work is canceled after its current
+invocation returns, with queued periodic work canceled immediately. The subsequent
+configuration review retires the inherited policy toggles; callers withdraw owned
+one-shot reservations with tokens. See common-unordered-native-configuration.md.
+Retained delayed work can also outlast timeout.
 Timeout rejects new work; it does not inject Thread.Interrupt, overwrite a claimed
 result or manufacture successful drain. Running invocations and worker/start
 reservations must still return before Termination completes. Asynchronous delegate
@@ -65,10 +67,11 @@ work keeps Termination pending. Removal still transfers invocation responsibilit
 to the caller; clear cancels owned queued native results before publishing drain.
 This closes a lifecycle hole rather than treating a queue handle as a Task result.
 A detached periodic handle also cannot requeue into a terminated pool, even with
-continued periodic policy enabled. A separate before-repair regression reproduces
+the continued periodic policy enabled at this historical checkpoint. A separate before-repair regression reproduces
 resurrection (unordered-graceful-reentry-before.trx); reentry now cancels the
 reservation instead of reopening a completed lifecycle. The broader inherited
-public queue/configuration API review remains unfinished.
+public queue/configuration API review was unfinished at this checkpoint; both
+surfaces are subsequently retired as documented in common-porting.md.
 
 ## Tests and verification
 
@@ -106,8 +109,9 @@ or whole-backend completion is claimed.
 The subsequent native queue review removes public mutable handles and maps the
 CLR-only transfer/clear probes to owned cancellation and actual rejection/removal;
 see common-unordered-native-queue.md. The above counts/identities are the graceful
-checkpoint preceding that migration. Remaining work includes inherited configuration,
-immediate interruption policy and the remaining source/test inventory reviews.
+checkpoint preceding that migration. Native configuration is subsequently implemented
+in common-unordered-native-configuration.md. Remaining work includes immediate
+interruption, replacement-factory failure and the remaining source/test inventory reviews.
 
 ## Next public pool/queue review
 
@@ -123,4 +127,6 @@ and diagnostics that preserve actual consumers. Preserve the original empty-queu
 workload and explicitly map CLR-only probes. Internal BCL deadline ordering,
 atomic membership, cancellation removal and worker lifetime remain necessary.
 The queue decision is now implemented in common-unordered-native-queue.md;
-the next concrete review is the inherited configuration surface.
+the configuration decision is subsequently implemented in
+common-unordered-native-configuration.md. Immediate interruption, replacement-factory
+failure and private queue costs remain open.
