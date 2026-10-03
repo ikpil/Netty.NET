@@ -31,7 +31,7 @@ These decisions do not claim that every method of a listed component is complete
 | Indexed priority queue | `DefaultPriorityQueue.java`, scheduled-task removal; `codec-http2/.../WeightedFairQueueByteDistributor.java` priority updates | Retain the indexed reference-node heap for mutable priorities and independent queue membership. Ordinary value/immutable entries use BCL PriorityQueue. Stopped scheduler queues clear references and indices. | Core source/interfaces reviewed; bounded indexed/BCL/tree costs below. Remaining scheduler/runtime review stays open. |
 | Thread-local state | `FastThreadLocal.java`, `InternalThreadLocalMap.java`; allocator caches and event-loop workers | Physical-worker caches remain thread-local. AsyncLocal describes logical execution context and is a separate purpose. A sealed CLR Thread may be owned/wrapped where cleanup policy requires it. | Remove unnecessary ThreadGroup/JDK facade surface after caller review; keep cleanup/ownership behavior. |
 | Resource lifetime | `AbstractReferenceCounted.java`, `ReferenceCountUtil.java`, `Recycler.java`; `buffer/.../AbstractReferenceCountedByteBuf.java` | GC does not decide when shared pooled/native storage is reusable. Retain/release must deallocate exactly once and never resurrect returned storage. Dispose alone does not define shared ownership. | Native owners, borrowed views and pin leases are implemented; integrate them with future pooled retain/release consumers. Ordinary CLR object cleanup and shared storage ownership must remain distinct. |
-| Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Full native sequence API, culture/lexical numeric parsing, regex and charset/BOM review remains. Raw platform addresses and pooled-buffer integration remain separate reviews. |
+| Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. CharsetUtil is replaced by native Encoding/fallback policies and operation-owned codecs; explicit Java/CLR framing and replacement differences are recorded below. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Full native sequence API, culture/lexical numeric parsing, regex and future protocol framing/streaming integration remain. Raw platform addresses and pooled-buffer integration remain separate reviews. |
 | Runtime selection | `PlatformDependent.java`, `PlatformDependent0.java`; buffer/transport/TLS/resolver consumers | JDK-version facades and JVM reflective array allocation are removed. CLR consumers use Environment.Version and GC directly. Android detection uses the actual OS; JVM/Graal properties do not select CLR features. See common-platform-runtime.md. | NativeMemory owners/views replace the JVM cleaner hierarchy; managed words and copy/fill use CLR spans. Raw address/object-offset APIs remain in progress. See common-native-memory.md and common-heap-memory.md. |
 | Ordinary object GC fallback | Deprecated `ObjectCleaner.java`; no production registration consumer in the pinned tree | ConditionalWeakTable lifetime notification and CLR pool dispatch replace the Java live-set/weak-queue/worker loop. Action registration, diagnostic count and concurrent/context-isolated cleanup are verified. See common-object-cleanup.md. | This runtime replacement does not define pooled/native storage ownership or deterministic resource disposal. |
 
@@ -762,5 +762,159 @@ common/src/main/java/io/netty/util/HashingStrategy.java at the pinned commit:
 /**
      * A {@link HashingStrategy} which delegates to java's {@link Object#hashCode()}
      * and {@link Object#equals(Object)}.
+     */
+```
+
+## Native encoding and codec ownership
+
+CharsetUtil.java supplies Java charset constants and cached/reset CharsetEncoder/
+CharsetDecoder objects. Actual pinned consumers are AsciiString.java:199/246,
+ByteBufUtil.java:73/1319 (replacement encoding), and ByteBufUtil.java:1805
+(strict text validation). No C# production consumer uses CharsetUtil: AsciiString
+already accepts caller-selected Encoding and uses span-based one-shot GetBytes.
+Remove the unused Java utility and its two otherwise unused InternalThreadLocalMap
+codec caches. Its three test references migrate directly to native encodings;
+the two original encoding loops still execute six configurations and retain
+all assertions/iterations/comments. No Java-shaped replacement utility is added.
+
+The typed CLR configuration is Encoding, EncoderFallback and DecoderFallback.
+One-shot construction uses Encoding.GetByteCount/GetBytes without global mutable
+codec state. Incremental protocol consumers must own an Encoder/Decoder per
+independent operation and flush/reset that operation explicitly, rather than
+sharing a thread-local codec across nested operations or await continuations.
+Buffer/codec consumers have not been ported by this common framework decision.
+
+| Pinned Java charset/policy | CLR choice and explicit difference |
+| --- | --- |
+| UTF-16 | Choose big-/little-endian UnicodeEncoding explicitly. Java defaults to big-endian, emits FE FF for nonempty encoded input and detects BOM on decoding. CLR raw GetBytes does not prepend GetPreamble, and raw GetString does not perform BOM-driven endian selection. A framed protocol must write the chosen preamble once and select decoding byte order from its framing; StreamReader BOM detection is a text-stream policy. Do not alias Java UTF-16 to Encoding.Unicode. |
+| UTF-16BE / UTF-16LE | new UnicodeEncoding(true, false) / new UnicodeEncoding(false, false) provide the byte orders without an implicit wire preamble. |
+| UTF-8 | new UTF8Encoding(false, true) provides strict encoding/decoding; an explicit replacement fallback is a separate caller policy. GetBytes omits the preamble even when an Encoding advertises one. |
+| ISO-8859-1 / US-ASCII | Encoding.Latin1 / Encoding.ASCII are native inputs. Explicit '?' EncoderReplacementFallback emits two '?' bytes for an unmappable surrogate pair on CLR, versus one for the Java encoders. A valid representable input has the same payload bytes. |
+| Malformed and unmappable actions | CLR exposes one fallback policy per direction, including caller-defined fallback implementations. It has no pair of built-in Java CodingErrorAction settings. Remove the old overload that silently ignored its second argument. Encoding clones can configure ExceptionFallback, a specific replacement or a custom fallback without changing a shared Encoding instance. A caller needing distinct actions must implement that policy explicitly. |
+| Default replacements | Java UTF-8 replacement encoding emits '?' for a lone surrogate; CLR UTF-8 defaults to U+FFFD (EF BF BD). Java decoding defaults to U+FFFD, whereas generic DecoderFallback.ReplacementFallback uses '?'. Preserve the supplied Encoding's fallback, and choose replacement bytes/text deliberately at each protocol boundary. |
+
+The pinned CharsetUtil source was executed with Corretto 21.0.11 using minimal
+ObjectUtil/fresh-map harness dependencies. The harness does not exercise Netty's
+thread-local cache implementation. encoding-java-oracle.txt records six encoding
+configurations, empty/malformed input, distinct REPORT/REPLACE actions and invalid
+UTF-8 decoding. A separate net10.0 program calls BCL Encoding directly and records
+preambles, valid/empty/malformed bytes in encoding-clr-oracle.txt (runtime 10.0.7).
+Both oracle sources remain in ignored artifacts/encoding-validation; the pinned
+source checkout is unchanged. They establish the differences above, rather than
+claiming malformed/unmappable replacement and automatic UTF-16 framing are equal.
+
+EncodingConstructorContractTest checks seventeen actual AsciiString integration
+cases with literal expected bytes: six native configurations across string/span/
+char-array/sliced-sequence inputs, no automatic preamble even for empty input,
+custom and strict fallbacks, no policy change/state contamination after failure,
+invalid text outside the selected range, and no hidden thread-local codec state.
+Broader string parsing, sequence APIs and future streaming protocol integration
+remain separate work. Original CharsetUtil comments are preserved verbatim below.
+
+CharsetUtil.java original comments from
+common/src/main/java/io/netty/util/CharsetUtil.java at the pinned commit:
+
+```java
+/*
+ * Copyright 2012 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * A utility class that provides various common operations and constants
+ * related with {@link Charset} and its relevant classes.
+ */
+
+/**
+     * 16-bit UTF (UCS Transformation Format) whose byte order is identified by
+     * an optional byte-order mark
+     */
+
+/**
+     * 16-bit UTF (UCS Transformation Format) whose byte order is big-endian
+     */
+
+/**
+     * 16-bit UTF (UCS Transformation Format) whose byte order is little-endian
+     */
+
+/**
+     * 8-bit UTF (UCS Transformation Format)
+     */
+
+/**
+     * ISO Latin Alphabet No. 1, as known as <tt>ISO-LATIN-1</tt>
+     */
+
+/**
+     * 7-bit ASCII, as known as ISO646-US or the Basic Latin block of the
+     * Unicode character set
+     */
+
+/**
+     * @deprecated Use {@link #encoder(Charset)}.
+     */
+
+/**
+     * Returns a new {@link CharsetEncoder} for the {@link Charset} with specified error actions.
+     *
+     * @param charset The specified charset
+     * @param malformedInputAction The encoder's action for malformed-input errors
+     * @param unmappableCharacterAction The encoder's action for unmappable-character errors
+     * @return The encoder for the specified {@code charset}
+     */
+
+/**
+     * Returns a new {@link CharsetEncoder} for the {@link Charset} with the specified error action.
+     *
+     * @param charset The specified charset
+     * @param codingErrorAction The encoder's action for malformed-input and unmappable-character errors
+     * @return The encoder for the specified {@code charset}
+     */
+
+/**
+     * Returns a cached thread-local {@link CharsetEncoder} for the specified {@link Charset}.
+     *
+     * @param charset The specified charset
+     * @return The encoder for the specified {@code charset}
+     */
+
+/**
+     * @deprecated Use {@link #decoder(Charset)}.
+     */
+
+/**
+     * Returns a new {@link CharsetDecoder} for the {@link Charset} with specified error actions.
+     *
+     * @param charset The specified charset
+     * @param malformedInputAction The decoder's action for malformed-input errors
+     * @param unmappableCharacterAction The decoder's action for unmappable-character errors
+     * @return The decoder for the specified {@code charset}
+     */
+
+/**
+     * Returns a new {@link CharsetDecoder} for the {@link Charset} with the specified error action.
+     *
+     * @param charset The specified charset
+     * @param codingErrorAction The decoder's action for malformed-input and unmappable-character errors
+     * @return The decoder for the specified {@code charset}
+     */
+
+/**
+     * Returns a cached thread-local {@link CharsetDecoder} for the specified {@link Charset}.
+     *
+     * @param charset The specified charset
+     * @return The decoder for the specified {@code charset}
      */
 ```

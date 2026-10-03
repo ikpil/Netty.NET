@@ -67,8 +67,6 @@ public sealed class InternalThreadLocalMap
 
     // String-related thread-locals
     private StringBuilder _stringBuilder;
-    private Dictionary<Encoding, Encoder> _charsetEncoderCache;
-    private Dictionary<Encoding, Decoder> _charsetDecoderCache;
 
     // ArrayList-related thread-locals
     private System.Collections.IList _arrayList;
@@ -196,16 +194,6 @@ public sealed class InternalThreadLocalMap
             count++;
         }
 
-        if (_charsetEncoderCache != null)
-        {
-            count++;
-        }
-
-        if (_charsetDecoderCache != null)
-        {
-            count++;
-        }
-
         if (_arrayList != null)
         {
             count++;
@@ -238,28 +226,6 @@ public sealed class InternalThreadLocalMap
 
         sb.Length = 0;
         return sb;
-    }
-
-    public Dictionary<Encoding, Encoder> charsetEncoderCache()
-    {
-        var cache = _charsetEncoderCache;
-        if (cache == null)
-        {
-            _charsetEncoderCache = cache = new Dictionary<Encoding, Encoder>();
-        }
-
-        return cache;
-    }
-
-    public Dictionary<Encoding, Decoder> charsetDecoderCache()
-    {
-        var cache = _charsetDecoderCache;
-        if (cache == null)
-        {
-            _charsetDecoderCache = cache = new Dictionary<Encoding, Decoder>();
-        }
-
-        return cache;
     }
 
     public List<E> arrayList<E>()

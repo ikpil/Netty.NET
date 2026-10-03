@@ -58,12 +58,17 @@ it is invalid. A read-only view is access policy, not a lifetime guarantee.
 Custom/native memory without an exposed array is copied before its owner may be
 disposed; the tests dispose a custom MemoryManager and verify independent bytes.
 
-CharsetUtil's existing constants/cached encoder policy remain pending. In
-particular, Java UTF-16 BOM/byte order and independent malformed/unmappable
-actions cannot be inferred from ordinary CLR Encoding aliases. The constructors
-accept actual CLR Encoding behavior explicitly; the original encoding tests
-compare selected encoding results under that declared adaptation, rather than
-claiming all CharsetUtil fields match Java encoders.
+CharsetUtil is now replaced by native Encoding and caller-selected fallbacks;
+the unused utility and thread-local codec caches are removed. Java UTF-16 emits
+a BOM and detects byte order; CLR raw GetBytes/GetString require explicit framing
+and byte order. Java UTF-8 malformed-input replacement is '?' versus CLR U+FFFD;
+CLR single-byte '?' fallback replaces an unmappable surrogate pair twice versus
+once in Java. Constructors retain supplied CLR Encoding behavior, without an
+automatic preamble or silently ignored second error policy. Original encoding
+tests still use six native configurations. See the native encoding decision and
+all sixteen archived original comments in common-clr-design.md; pinned Java and
+independent CLR oracles establish these differences. Future streaming codec and
+protocol framing policies remain at their actual buffer/codec consumers.
 
 ## Test mapping and independent reference
 
@@ -94,7 +99,8 @@ oracle and its generator reside in the ignored TestResults directory.
 - Culture-independent numeric parsing, accepted lexical forms and overflow;
   Java floating-point suffixes/hex syntax must be considered before claiming equivalence.
 - Regex match/split behavior and actual consumer requirements.
-- CharsetUtil's BOM, error/fallback and encoder-cache semantics.
+- Future protocol BOM/framing and operation-owned incremental encoding/decoding,
+  applying the native Encoding decision in common-clr-design.md.
 - Remaining raw PlatformDependent/public API work and integration of native
   owners with future pooled buffer consumers. Native owner/view contracts are
   implemented in common-native-memory.md; full default tests currently pass.

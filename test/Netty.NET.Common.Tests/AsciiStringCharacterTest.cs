@@ -28,6 +28,14 @@ public class AsciiStringCharacterTest
 {
     private static readonly Random r = new Random();
 
+    // Preserve six encoding configurations with explicit CLR byte order/preamble policy.
+    // A preamble-capable Encoding does not insert its preamble into AsciiString's raw bytes.
+    private static readonly Encoding[] Encodings =
+    {
+        new UnicodeEncoding(true, true), new UnicodeEncoding(true, false),
+        new UnicodeEncoding(false, false), new UTF8Encoding(false), Encoding.Latin1, Encoding.ASCII
+    };
+
     [Fact]
     public void testContentEqualsIgnoreCase()
     {
@@ -48,7 +56,7 @@ public class AsciiStringCharacterTest
         }
 
         string bString = b.ToString();
-        Encoding[] charsets = CharsetUtil.values();
+        Encoding[] charsets = Encodings;
         for (int i = 0; i < charsets.Length; ++i)
         {
             Encoding charset = charsets[i];
@@ -68,7 +76,7 @@ public class AsciiStringCharacterTest
         }
 
         string bString = b.ToString();
-        Encoding[] charsets = CharsetUtil.values();
+        Encoding[] charsets = Encodings;
         for (int i = 0; i < charsets.Length; ++i)
         {
             Encoding charset = charsets[i];
@@ -89,7 +97,7 @@ public class AsciiStringCharacterTest
 
         string bString = b.ToString();
         // The AsciiString class actually limits the Charset to ISO_8859_1
-        byte[] expected = CharsetUtil.ISO_8859_1.GetBytes(bString);
+        byte[] expected = Encoding.Latin1.GetBytes(bString);
         byte[] actual = new AsciiString(bString).toByteArray();
         Assert.Equal(expected, actual);
     }

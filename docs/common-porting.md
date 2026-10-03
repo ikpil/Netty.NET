@@ -121,12 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1468 cases** on Windows/net10.0:
-**1454 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1485 cases** on Windows/net10.0:
+**1471 passed / 0 failed / 14 skipped** in Debug and the final Release run.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`comparer-full-debug.trx` and `comparer-full-release.trx`; the comparer boundary
-is covered by `comparer-affected-debug.trx`. Results remain in the ignored TestResults
+`encoding-full-debug.trx` and `encoding-full-release.trx`; the encoding boundary
+is covered by `encoding-affected-debug.trx`. The first Release run retained one
+existing auto-scaling real-time failure; the focused 40-case Release selection
+and final full rerun pass. Its cause remains unestablished, as detailed below.
+Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
 portable test source without PortingBatch and do not establish module completion.
@@ -456,6 +459,46 @@ Source decisions are 49 verified / 35 CLR replacements / 13 exclusions /
 Next: review CharsetUtil and actual encoding consumers against CLR Encoding,
 fallback/BOM and encoder/decoder state ownership. Broader AsciiString parsing,
 sequence API, runtime policies and the common module remain in progress.
+
+CharsetUtil now maps to native Encoding/EncoderFallback/DecoderFallback. Its
+unused Java aliases/factories and the two otherwise unused InternalThreadLocalMap
+codec caches are removed; the original encoding test loops still execute six
+native configurations with all assertions/iterations/comments retained. The old
+two-action overload silently ignored one policy; no replacement facade preserves
+that defect. Actual AsciiString constructors already use selected Encoding with
+span-based one-shot conversion. Java UTF-16 BOM/endian detection, UTF-8 default
+replacement and single-byte unmappable surrogate handling differ from CLR and
+are explicit consumer policies, established by pinned Java and independent CLR
+oracles (encoding-java-oracle.txt, encoding-clr-oracle.txt). Future buffer/codec
+framing and operation-owned streaming implementations are outside this decision.
+See common-clr-design.md and common-ascii-memory.md; no new feature MD is added.
+
+Seventeen native constructor cases cover literal byte references across input
+forms/ranges, byte order/preamble, custom/strict fallback, failure isolation and
+absence of hidden thread-local codec state. Affected Debug passes 211 / fails zero /
+skips the three unchanged guarded/disabled thread-local cases (214 discovered).
+Full Debug and final Release each pass 1471 / fail zero / skip the same 14
+(1485 discovered). All prior identities/outcomes and all 759 non-Porting cases
+are retained, with only seventeen new cases (encoding-identity-comparison.json).
+The first full Release instead passed 1470 / failed one / skipped 14: unchanged
+testScaleUpDoesNotExceedMaxThreads reported scaling down under high load. That
+result/log is retained as encoding-full-release-first.trx/.log with
+encoding-first-release-summary.json. Without source/threshold/assertion changes,
+the coupled auto-scaling/native-encoding Release selection passes 40 and the
+same Release build's full rerun passes. As with the earlier retained failure in
+common-autoscaling-monitor-windows.md, successful reruns do not establish its
+cause or timing stability. This unit does not claim an auto-scaling repair.
+
+All 114 reviewed comment entries have zero missing: CharsetUtil 16, AsciiString
+99, InternalThreadLocalMap 20 and original character test 24. All 271 pinned
+inventory entries and implementation paths match (encoding-comment-audit.json,
+encoding-inventory-summary.json). Validation uses --artifacts-path
+artifacts/encoding-validation, Windows/net10.0, SDK 10.0.203/runtime 10.0.7.
+Source decisions are 49 verified / 36 CLR replacements / 13 exclusions /
+86 pending / 21 in progress; original tests remain 56 verified / ten exclusions.
+Next: trace the recurring auto-scaling real-time failure with actual clock/I/O
+report evidence, then continue AsciiString integer parsing/radix/overflow review.
+Full native common completion remains open.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already
