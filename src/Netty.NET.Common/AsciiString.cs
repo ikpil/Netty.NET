@@ -519,17 +519,6 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     }
 
     /**
-     * Determines if this {@code String} contains the sequence of characters in the {@code CharSequence} passed.
-     *
-     * @param cs the character sequence to search for.
-     * @return {@code true} if the sequence of characters are contained in this string, otherwise {@code false}.
-     */
-    public bool contains(ICharSequence cs)
-    {
-        return indexOf(cs) >= 0;
-    }
-
-    /**
      * Compares the specified string to this string using the ASCII values of the characters. Returns 0 if the strings
      * contain the same characters in the same order. Returns a negative integer if the first non-equal character in
      * this string has an ASCII value which is less than the ASCII value of the character at the same position in the
@@ -803,10 +792,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public AsciiString subSequence(int start, int end, bool copy)
     {
-        if (isOutOfBounds(start, end - start, length()))
+        // Validate endpoints before subtraction, including in checked builds.
+        if (start < 0 || start > _length)
         {
-            throw new ArgumentOutOfRangeException("expected: 0 <= start(" + start + ") <= end (" + end + ") <= length("
-                                                  + length() + ')');
+            throw new ArgumentOutOfRangeException(nameof(start));
+        }
+        if (end < start || end > _length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(end));
         }
 
         if (start == 0 && end == length())
@@ -820,76 +813,6 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         return new AsciiString(_value, start + _offset, end - start, copy);
-    }
-
-    /**
-     * Searches in this string for the first index of the specified string. The search for the string starts at the
-     * beginning and moves towards the end of this string.
-     *
-     * @param string the string to find.
-     * @return the index of the first character of the specified string in this string, -1 if the specified string is
-     *         not a substring.
-     * @throws NullPointerException if {@code string} is {@code null}.
-     */
-    public int indexOf(ICharSequence str)
-    {
-        return indexOf(str, 0);
-    }
-
-    /**
-     * Searches in this string for the index of the specified string. The search for the string starts at the specified
-     * offset and moves towards the end of this string.
-     *
-     * @param subString the string to find.
-     * @param start the starting offset.
-     * @return the index of the first character of the specified string in this string, -1 if the specified string is
-     *         not a substring.
-     * @throws NullPointerException if {@code subString} is {@code null}.
-     */
-    public int indexOf(ICharSequence subString, int start)
-    {
-        int subCount = subString.length();
-        if (start < 0)
-        {
-            start = 0;
-        }
-
-        if (subCount <= 0)
-        {
-            return start < _length ? start : _length;
-        }
-
-        if (subCount > _length - start)
-        {
-            return INDEX_NOT_FOUND;
-        }
-
-        char firstChar = subString.charAt(0);
-        if (firstChar > MAX_CHAR_VALUE)
-        {
-            return INDEX_NOT_FOUND;
-        }
-
-        byte firstCharAsByte = c2b0(firstChar);
-        int len = _offset + _length - subCount;
-        for (int i = start + _offset; i <= len; ++i)
-        {
-            if (_value[i] == firstCharAsByte)
-            {
-                int o1 = i, o2 = 0;
-                while (++o2 < subCount && b2c(_value[++o1]) == subString.charAt(o2))
-                {
-                    // Intentionally empty
-                }
-
-                if (o2 == subCount)
-                {
-                    return i - _offset;
-                }
-            }
-        }
-
-        return INDEX_NOT_FOUND;
     }
 
     /**
@@ -912,72 +835,6 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         // Bound the logical start before slicing; adding the backing offset can overflow.
         int index = AsSpan().Slice(start).IndexOf((byte)ch);
         return index < 0 ? INDEX_NOT_FOUND : start + index;
-    }
-
-    /**
-     * Searches in this string for the last index of the specified string. The search for the string starts at the end
-     * and moves towards the beginning of this string.
-     *
-     * @param string the string to find.
-     * @return the index of the first character of the specified string in this string, -1 if the specified string is
-     *         not a substring.
-     * @throws NullPointerException if {@code string} is {@code null}.
-     */
-    public int lastIndexOf(ICharSequence str)
-    {
-        // Use count instead of count - 1 so lastIndexOf("") answers count
-        return lastIndexOf(str, _length);
-    }
-
-    /**
-     * Searches in this string for the index of the specified string. The search for the string starts at the specified
-     * offset and moves towards the beginning of this string.
-     *
-     * @param subString the string to find.
-     * @param start the starting offset.
-     * @return the index of the first character of the specified string in this string , -1 if the specified string is
-     *         not a substring.
-     * @throws NullPointerException if {@code subString} is {@code null}.
-     */
-    public int lastIndexOf(ICharSequence subString, int start)
-    {
-        int subCount = subString.length();
-        start = Math.Min(start, _length - subCount);
-        if (start < 0)
-        {
-            return INDEX_NOT_FOUND;
-        }
-
-        if (subCount == 0)
-        {
-            return start;
-        }
-
-        char firstChar = subString.charAt(0);
-        if (firstChar > MAX_CHAR_VALUE)
-        {
-            return INDEX_NOT_FOUND;
-        }
-
-        byte firstCharAsByte = c2b0(firstChar);
-        for (int i = _offset + start; i >= _offset; --i)
-        {
-            if (_value[i] == firstCharAsByte)
-            {
-                int o1 = i, o2 = 0;
-                while (++o2 < subCount && b2c(_value[++o1]) == subString.charAt(o2))
-                {
-                    // Intentionally empty
-                }
-
-                if (o2 == subCount)
-                {
-                    return i - _offset;
-                }
-            }
-        }
-
-        return INDEX_NOT_FOUND;
     }
 
     /**

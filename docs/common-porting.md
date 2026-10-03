@@ -121,15 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1696 cases** on Windows/net10.0:
-**1682 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1720 cases** on Windows/net10.0:
+**1706 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`ascii-delimiter-full-debug.trx` and `ascii-delimiter-full-release.trx`;
-affected Debug passes 409 and checked Release passes all 24 new cases.
-Unused delimiter splitting is replaced by native span ranges; byte/UTF-16
-character search uses bounded native spans, fixing backing-offset overflow.
-The earlier regex, numeric and auto-scaling work remains recorded below.
+`ascii-sequence-full-debug.trx` and `ascii-sequence-full-release.trx`;
+affected Debug passes 436 and checked Release passes 29 relevant cases.
+Unused instance pattern-search facades are replaced by native span windows;
+the actual slicing bridge validates endpoints before subtraction in checked builds.
+The earlier delimiter, regex, numeric and auto-scaling work remains recorded below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
@@ -709,6 +709,43 @@ ascii-delimiter-native-smoke.txt. Java/CLR harnesses/corpus remain in ignored
 artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
+AsciiString and common remain in progress.
+
+### Native pattern windows/slicing checkpoint
+
+Remove unused instance contains and four indexOf/lastIndexOf pattern facades after
+all-module call/member-reference review; actual protocol calls use String, headers
+or collections. Remove test-only StringCharSequence.indexOf(string). Original
+forward/reverse fixtures retain names, inputs, expected indexes, all 50 assertions
+and comments through fixture-local native byte-window consumers. Existing CLR
+string-slice assertions also use native ordinal windows. No public search wrapper
+is added. Keep the actual ICharSequence slicing bridge, validate endpoints before
+arithmetic, and preserve full/empty identity plus partial copy/shared storage.
+Native UTF-16/byte encoding and slice/cache/ownership decisions are explicit in
+common-clr-design.md. Eight removed comments are archived there; all 99 original
+AsciiString comments remain (85 source + 14 archived).
+
+Four checked baseline regressions fail with OverflowException; endpoint guards
+restore native ArgumentOutOfRangeException. Exact pinned Java search/slice methods
+and MathUtil predicate executed on Corretto 21.0.11: 1964 unique rows, zero outcome
+differences after exception mapping (1080 searches, 100 valid content/identity/
+sharing slices, 784 invalid ranges). Original Java fixture bodies pass 50 unchanged
+assertions. Independent scans cover every byte; native consumers cover UTF-16,
+overlaps, empty needles, windows and copy/view lifetimes. Warm 20000 native pattern
+search/memory-slice iterations allocate zero; no general throughput claim.
+Affected Debug 436 passes; checked Release 29 passes (24 new + five existing).
+Full Debug/Release each pass 1706 / fail zero / same 14 skips (1720 discovered).
+All prior 1696 identities/outcomes and 759 non-Porting cases remain; only 24 new
+cases are added. All 271 inventory paths and missing-comment counts are unchanged.
+Evidence: ascii-sequence-before-checked.trx, ascii-sequence-affected-debug.trx,
+ascii-sequence-checked-release.trx, ascii-sequence-full-debug.trx,
+ascii-sequence-full-release.trx, ascii-sequence-identity-comparison.json,
+ascii-sequence-comment-audit.json, ascii-sequence-inventory-summary.json,
+ascii-sequence-java-decisions.txt, ascii-sequence-java-clr-oracle.json,
+ascii-sequence-native-smoke.txt. Harnesses/corpus remain in ignored artifacts;
+no feature MD added. Windows/net10.0 SDK 10.0.203/runtime 10.0.7.
+Source/test decision counts stay unchanged. Next: coordinated ICharSequence and
+StringExtensions native API review, including indexing and mixed text comparison.
 AsciiString and common remain in progress.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module

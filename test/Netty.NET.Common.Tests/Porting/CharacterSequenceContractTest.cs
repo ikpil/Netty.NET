@@ -25,8 +25,9 @@ public class CharacterSequenceContractTest
         Assert.Equal("bc", slice.subSequence(1, 3).ToString());
         Assert.Equal(2, slice.indexOf('c'));
         Assert.Equal(-1, slice.indexOf('y'));
-        Assert.Equal(2, slice.indexOf("cd", 1));
-        Assert.Equal(-1, slice.indexOf("a", 1));
+        int found = slice.AsSpan().Slice(1).IndexOf("cd".AsSpan(), StringComparison.Ordinal);
+        Assert.Equal(2, found < 0 ? -1 : 1 + found);
+        Assert.Equal(-1, slice.AsSpan().Slice(1).IndexOf("a".AsSpan(), StringComparison.Ordinal));
         Assert.Throws<ArgumentOutOfRangeException>(() => slice.charAt(4));
     }
 

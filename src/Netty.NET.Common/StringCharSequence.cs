@@ -109,15 +109,6 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         return index < 0 ? -1 : start + index;
     }
 
-    public int indexOf(string target, int start = 0)
-    {
-        ObjectUtil.checkNotNull(target, nameof(target));
-        start = Math.Max(0, start);
-        if (start > _count) return target.Length == 0 ? _count : -1;
-        int index = _value.IndexOf(target, _offset + start, _count - start, StringComparison.Ordinal);
-        return index < 0 ? -1 : index - _offset;
-    }
-
     public string ToString(int start)
     {
         if (start < 0 || start > _count)

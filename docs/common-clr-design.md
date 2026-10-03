@@ -870,8 +870,8 @@ policy. All other StringUtil methods remain unchanged.
 Thirteen native consumer cases verify full matching of logical views, lossless
 Latin-1, cache invalidation, reusable Regex, invariant case/ASCII policy and native
 capture/count/trailing/zero-width splitting. Executed Java decisions and validation
-results are recorded in common-porting.md. The two regex comments below, four
-delimiter comments archived later and 93 source comments preserve all 99.
+results are recorded in common-porting.md. The regex, delimiter and pattern
+comment archives below plus remaining source comments preserve all 99.
 
 Original AsciiString.java regex facade comments and delegated implementations:
 
@@ -951,9 +951,9 @@ overflow exception. Native direct slicing retains the BCL's own range exceptions
 Independent byte scans, exact extracted Java methods and original search test
 bodies, UTF-16 views, native empty-field policies and shared/copy lifetimes are
 covered by the evidence recorded in common-porting.md. No generalized Java
-split adapter is introduced. AsciiString retains 93 original comments in source
-plus six archived here/in the regex section, preserving all 99. Sequence-pattern
-search, slicing and remaining ICharSequence/StringExtensions review remain open.
+split adapter is introduced. The original delimiter comments remain archived
+below. The next decision covers pattern search and the slicing bridge;
+ICharSequence/StringExtensions review stays open.
 
 Original AsciiString.java delimiter facade and all four original comments:
 
@@ -997,6 +997,121 @@ Original AsciiString.java delimiter facade and all four original comments:
 
         return res.toArray(EmptyArrays.EMPTY_ASCII_STRINGS);
     }
+```
+
+## Native pattern windows and sequence slicing
+
+Pinned all-module call/member-reference review finds no consumers of AsciiString's
+instance contains(CharSequence), indexOf(CharSequence) or lastIndexOf(CharSequence).
+The forward API is used only by the unused contains delegate; the reverse API is
+used only by its original fixture. Protocol contains calls are String/collections/
+headers (HttpObjectDecoder's newProtocol is a String); their semantics are separate.
+Remove all five instance facades and the CLR StringCharSequence.indexOf(string),
+which has only fixture consumers.
+Byte consumers use AsSpan().IndexOf/LastIndexOf(pattern), and UTF-16 consumers
+use ordinal native span search. No extra public search wrapper or byte-to-string
+conversion is needed. ASCII protocol patterns may be u8 literals; non-ASCII UTF-8
+is not Latin-1 and must not be substituted for losslessly widened byte content.
+
+Native searches return indexes relative to their selected span. A consumer maps a
+found suffix index back to its logical offset and keeps -1 unchanged. For a reverse
+search with a maximum candidate start, the prefix window must also include the
+pattern's length. Empty patterns use the native first/last endpoint rule; explicit
+window selection defines any clamping. Native Slice rejects invalid ranges.
+The two original search fixtures retain all input values, expected indexes, 50
+assertions, names and comments, using fixture-local native window consumers with
+ASCII byte literals. Those helpers are not library compatibility APIs and do not
+validate arbitrary nullable CharSequence inputs or preserve removed facade exceptions.
+
+subSequence remains an ICharSequence bridge for actual CharUtil range extraction,
+trim/error reporting and pinned HTTP/header slicing. Its endpoint guard now runs
+before end-start, producing ArgumentOutOfRangeException in checked/unchecked builds.
+Partial copy=true slices own detached arrays; copy=false shares the logical bytes.
+Full-range requests keep the pinned source identity even with copy=true; empty
+partial slices use EMPTY_STRING. Native Memory/Span slicing selects views directly,
+and ToArray explicitly copies the full range when required. Separate borrowed
+AsciiString text/hash caches require separate invalidation after shared mutations.
+This bridge does not acquire pooled/native storage leases or finish the coordinated
+ICharSequence public API review. Existing StringCharSequence immutable views share
+their backing string and reject invalid endpoints before arithmetic already.
+
+Validation and executed pinned source comparisons are in common-porting.md.
+All eight original removed comments below join the six prior archived comments
+and remaining 85 source comments to preserve AsciiString's 99-comment coverage.
+
+Original public boolean contains(CharSequence cs) comments, AsciiString.java:427-435:
+
+```java
+/**
+     * Determines if this {@code String} contains the sequence of characters in the {@code CharSequence} passed.
+     *
+     * @param cs the character sequence to search for.
+     * @return {@code true} if the sequence of characters are contained in this string, otherwise {@code false}.
+     */
+```
+
+Original public int indexOf(CharSequence string) comments, AsciiString.java:673-684:
+
+```java
+/**
+     * Searches in this string for the first index of the specified string. The search for the string starts at the
+     * beginning and moves towards the end of this string.
+     *
+     * @param string the string to find.
+     * @return the index of the first character of the specified string in this string, -1 if the specified string is
+     *         not a substring.
+     * @throws NullPointerException if {@code string} is {@code null}.
+     */
+```
+
+Original public int indexOf(CharSequence subString, int start) comments, AsciiString.java:686-726:
+
+```java
+/**
+     * Searches in this string for the index of the specified string. The search for the string starts at the specified
+     * offset and moves towards the end of this string.
+     *
+     * @param subString the string to find.
+     * @param start the starting offset.
+     * @return the index of the first character of the specified string in this string, -1 if the specified string is
+     *         not a substring.
+     * @throws NullPointerException if {@code subString} is {@code null}.
+     */
+
+// Intentionally empty
+```
+
+Original public int lastIndexOf(CharSequence string) comments, AsciiString.java:756-768:
+
+```java
+/**
+     * Searches in this string for the last index of the specified string. The search for the string starts at the end
+     * and moves towards the beginning of this string.
+     *
+     * @param string the string to find.
+     * @return the index of the first character of the specified string in this string, -1 if the specified string is
+     *         not a substring.
+     * @throws NullPointerException if {@code string} is {@code null}.
+     */
+
+// Use count instead of count - 1 so lastIndexOf("") answers count
+```
+
+Original public int lastIndexOf(CharSequence subString, int start) comments, AsciiString.java:770-807:
+
+```java
+/**
+     * Searches in this string for the index of the specified string. The search for the string starts at the specified
+     * offset and moves towards the beginning of this string.
+     *
+     * @param subString the string to find.
+     * @param start the starting offset.
+     * @return the index of the first character of the specified string in this string , -1 if the specified string is
+     *         not a substring.
+     * @throws NullPointerException if {@code subString} is {@code null}.
+     */
+
+// Intentionally empty
 ```
 
 ## Native encoding and codec ownership
