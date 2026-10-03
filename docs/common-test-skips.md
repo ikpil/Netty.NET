@@ -1,9 +1,9 @@
 # Current full-suite skips
 
 Baseline: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` in `D:/workspace/netty`.
-Both group-stop-full-debug.trx and group-stop-full-release.trx
-report 1405 passed, zero failed and the same 14 skipped cases on Windows/net10.0
-(1419 discovered cases).
+Both indexed-queue-full-debug.trx and indexed-queue-full-release.trx
+report 1411 passed, zero failed and the same 14 skipped cases on Windows/net10.0
+(1425 discovered cases).
 
 | Cases | Reason | Source and executed coverage |
 | --- | --- | --- |

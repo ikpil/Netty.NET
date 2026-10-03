@@ -26,11 +26,12 @@ namespace Netty.NET.Common.Internal;
  * {@link PriorityQueueNode} for the purpose of maintaining the index in the priority queue.
  * @param <T> The object that is maintained in the queue.
  */
-public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
+// CLR: This heap is for mutable reference nodes with indexed removal. Use the
+// BCL PriorityQueue<TElement, TPriority> for ordinary value/immutable entries.
+public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 {
     private readonly IComparer<T> _comparer;
     private int _count;
-    private int _capacity;
     private T[] _items;
 
     public int Count => _count;
@@ -38,10 +39,10 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
     public DefaultPriorityQueue(IComparer<T> comparer, int initialSize)
     {
         _comparer = ObjectUtil.checkNotNull(comparer, "comparer");
+        if (initialSize < 0) throw new ArgumentOutOfRangeException(nameof(initialSize));
         _items = initialSize != 0
             ? new T[initialSize]
             : Array.Empty<T>();
-        _capacity = _items.Length;
     }
 
     public DefaultPriorityQueue() : this(Comparer<T>.Default, 11)
@@ -85,7 +86,9 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
     public bool contains(T o)
     {
         int index = indexOf(o);
-        return index >= 0 && index < _count && EqualityComparer<T>.Default.Equals(o, _items[index]);
+        // An index identifies ownership of this reference, not a value-equal
+        // node whose stored index happens to point at a current member.
+        return index >= 0 && index < _count && ReferenceEquals(o, _items[index]);
     }
 
     public bool containsTyped(T node) => contains(node);
@@ -119,11 +122,13 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
     public bool offer(T e)
     {
         if (e == null) throw new ArgumentNullException(nameof(e));
-        if (e is IPriorityQueueNode<T> node && node.priorityQueueIndex(this) != -1)
+        if (e is not IPriorityQueueNode<T> node)
+            throw new ArgumentException("Element must provide indexed queue membership.", nameof(e));
+        if (node.priorityQueueIndex(this) != -1)
             throw new ArgumentException("Element already belongs to a priority queue.", nameof(e));
         int oldCount = _count;
         // Check that the array capacity is enough to hold values by doubling capacity.
-        if (oldCount == _capacity)
+        if (oldCount == _items.Length)
         {
             growHeap();
         }
@@ -223,13 +228,14 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
 
     private void growHeap()
     {
-        int oldCapacity = _capacity;
+        int oldCapacity = _items.Length;
         // Use a policy which allows for a 0 initial capacity. Same policy as JDK's priority queue, double when
         // "small", then grow by 50% when "large".
-        _capacity = oldCapacity + (oldCapacity < 64 ? oldCapacity + 2 : (oldCapacity >> 1));
-        var newHeap = new T[_capacity];
-        Array.Copy(_items, 0, newHeap, 0, _count);
-        _items = newHeap;
+        if (oldCapacity == Array.MaxLength) throw new OutOfMemoryException();
+        long newCapacity = (long)oldCapacity + (oldCapacity < 64 ? oldCapacity + 2 : (oldCapacity >> 1));
+        // Keep capacity owned by the array, so failed allocation cannot leave
+        // a second capacity field inconsistent with the actual storage.
+        Array.Resize(ref _items, (int)Math.Min(Array.MaxLength, newCapacity));
     }
 
     private void trickleDown(int index, T item)
@@ -294,7 +300,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T>
     }
 
     private int indexOf(T item) => item is IPriorityQueueNode<T> node
-        ? node.priorityQueueIndex(this) : Array.IndexOf(_items, item, 0, _count);
+        ? node.priorityQueueIndex(this) : -1;
 
     private void setIndex(T item, int index)
     {

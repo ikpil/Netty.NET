@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory)][string]$LibraryPath,
-    [ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$EvidenceName = 'unordered-queue-costs'
+    [ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$EvidenceName = 'unordered-queue-costs',
+    [switch]$IndexedQueues
 )
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -14,7 +15,9 @@ $previousTiering = [Environment]::GetEnvironmentVariable('DOTNET_TieredCompilati
 try {
     # Avoid candidate order changing tiered-JIT state halfway through a short probe.
     [Environment]::SetEnvironmentVariable('DOTNET_TieredCompilation', '0')
-    & dotnet (Join-Path $outputRoot 'build/bin/QueueCosts/release/QueueCosts.dll') (Join-Path $outputRoot 'results.json') *> (Join-Path $outputRoot 'run.log')
+    $probeArguments = @((Join-Path $outputRoot 'results.json'))
+    if ($IndexedQueues) { $probeArguments += '--indexed' }
+    & dotnet (Join-Path $outputRoot 'build/bin/QueueCosts/release/QueueCosts.dll') @probeArguments *> (Join-Path $outputRoot 'run.log')
     $probeExit = $LASTEXITCODE
 }
 finally { [Environment]::SetEnvironmentVariable('DOTNET_TieredCompilation', $previousTiering) }
@@ -25,5 +28,6 @@ Get-Content (Join-Path $outputRoot 'run.log')
     sourceHead = (git -C $repositoryRoot rev-parse HEAD)
     measuredAtUtc = [DateTime]::UtcNow.ToString('O')
     exitCode = $probeExit
+    mode = if ($IndexedQueues) { 'indexed-queues' } else { 'unordered-queues' }
 } | ConvertTo-Json | Set-Content (Join-Path $outputRoot 'evidence.json') -Encoding utf8
 if ($probeExit -ne 0) { throw "Queue measurement failed with exit $probeExit." }

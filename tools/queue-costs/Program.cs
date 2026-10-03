@@ -3,10 +3,12 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
+using Netty.NET.Common.Internal;
 
 // A bounded comparative probe, not a general-purpose benchmark framework. Each
 // candidate passes an independent order/identity check before it is measured.
 const int samples = 7;
+bool indexedOnly = args.Skip(1).Contains("--indexed");
 var rows = new List<Row>();
 foreach (int count in new[] { 64, 1024, 16384 })
 {
@@ -17,7 +19,9 @@ foreach (int count in new[] { 64, 1024, 16384 })
     Entry[] withdrawn = order.Take(Math.Min(32, count / 2)).Select(i => entries[i]).ToArray();
     Entry[] expected = entries.Except(withdrawn, ReferenceEqualityComparer.Instance)
         .Cast<Entry>().OrderBy(e => e.Offset).ThenBy(e => e.Id).ToArray();
-    foreach (string candidate in new[] { "snapshot-rebuild", "priority-queue-remove", "sorted-set" })
+    foreach (string candidate in indexedOnly
+                 ? new[] { "indexed-heap", "priority-queue-remove", "sorted-set" }
+                 : new[] { "snapshot-rebuild", "priority-queue-remove", "sorted-set" })
     {
         IQueue verified = Create(candidate);
         foreach (Entry entry in entries) verified.Add(entry);
@@ -28,6 +32,14 @@ foreach (int count in new[] { 64, 1024, 16384 })
         // Equality is deliberately hostile: a distinct equal-valued reference must
         // never remove a reservation, including equal-deadline members.
         if (verified.Remove(new Entry(expected[0].Id, expected[0].Offset))) throw new Exception("Alien removal");
+        if (indexedOnly)
+        {
+            IQueue other = Create(candidate);
+            var foreign = new Entry(expected[0].Id, expected[0].Offset);
+            other.Add(foreign);
+            if (verified.Remove(foreign)) throw new Exception("Foreign indexed owner removal");
+            other.Pop();
+        }
         foreach (Entry entry in expected)
             if (!ReferenceEquals(verified.Pop(), entry)) throw new Exception("Remaining deadline order failed");
         if (verified.Count != 0) throw new Exception("Drain failed");
@@ -58,7 +70,7 @@ foreach (int count in new[] { 64, 1024, 16384 })
             });
     }
 }
-foreach (int count in new[] { 64, 1024, 4096 })
+foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 })
 {
     // Admission/CTS/delegate creation and stop/cleanup are outside this interval.
     // A null-returning constructor factory retains work without introducing worker
@@ -105,6 +117,7 @@ var result = new
     warmups = 2,
     stopwatchFrequency = Stopwatch.Frequency,
     tieredCompilation = Environment.GetEnvironmentVariable("DOTNET_TieredCompilation"),
+    mode = indexedOnly ? "indexed-queues" : "unordered-queues",
     allocationScope = "current-thread managed bytes; no GC/worker/cross-thread allocation claim",
     rows
 };
@@ -122,6 +135,9 @@ void Measure(string candidate, string phase, int count, int operations, Func<IQu
         long ticks = Stopwatch.GetTimestamp() - start;
         long allocated = GC.GetAllocatedBytesForCurrentThread() - bytes;
         if (round >= 0) values.Add((ticks * 1e9 / Stopwatch.Frequency / operations, (double)allocated / operations));
+        // Indexed nodes are reused in the next setup. Release memberships after
+        // recording the interval; cleanup is outside measured work/allocation.
+        while (queue.Count != 0) queue.Pop();
     }
     Record(candidate, phase, count, values);
 }
@@ -135,17 +151,21 @@ static IQueue Create(string candidate) => candidate switch
 {
     "snapshot-rebuild" => new Heap(true),
     "priority-queue-remove" => new Heap(false),
+    "indexed-heap" => new IndexedHeap(),
     _ => new Tree()
 };
 record Row(string Candidate, string Phase, int Count, double MedianNs, double MinNs, double MaxNs, double MedianBytes);
-sealed class Entry(int id, int offset)
+sealed class Entry(int id, int offset) : IPriorityQueueNode<Entry>
 {
+    int index = -1;
     internal int Id => id;
     internal int Offset => offset;
     // Includes signed-clock wrap and equal deadlines, with a valid compact horizon.
     internal (long Deadline, long Sequence) Priority => (unchecked(long.MaxValue - 1000 + offset), id);
     public override bool Equals(object other) => other is Entry;
     public override int GetHashCode() => 0;
+    public int priorityQueueIndex(DefaultPriorityQueue<Entry> queue) => index;
+    public void priorityQueueIndex(DefaultPriorityQueue<Entry> queue, int value) => index = value;
 }
 interface IQueue
 {
@@ -171,6 +191,15 @@ sealed class Heap(bool rebuild) : IQueue
             if (!ReferenceEquals(item.Element, entry)) queue.Enqueue(item.Element, item.Priority);
         return true;
     }
+}
+sealed class IndexedHeap : IQueue
+{
+    readonly DefaultPriorityQueue<Entry> queue = new(
+        Comparer<Entry>.Create((a, b) => PriorityComparer.Instance.Compare(a.Priority, b.Priority)), 0);
+    public int Count => queue.Count;
+    public void Add(Entry entry) => queue.offer(entry);
+    public Entry Pop() => queue.poll();
+    public bool Remove(Entry entry) => queue.remove(entry);
 }
 sealed class Tree : IQueue
 {

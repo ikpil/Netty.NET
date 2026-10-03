@@ -28,7 +28,7 @@ These decisions do not claim that every method of a listed component is complete
 | Constant registry | `common/.../ConstantPool.java`; `AttributeKey.java`, `Signal.java` and channel configuration constants | ConcurrentDictionary publishes one reference identity per name; Interlocked allocates IDs. Competing factories and ID gaps match the original. AbstractConstant now seals identity methods and uses a non-generic native uniquifier sequence; pools require reference constants. | Further registry/public API naming decisions are separate from the verified concurrency/reference/generic-static contracts. See common-task-composition.md for the repaired identity regressions. |
 | Ordinary queues and maps | `PlatformDependent.java`, executor queues, `Recycler.java`; `buffer/.../PoolChunk.java` | Prefer ConcurrentQueue/Dictionary with explicit capacity and ownership policy where needed. PoolChunk's LongLongHashMap can use Dictionary<long,long> with explicit missing-value and remove/put result handling at its callers. | Recheck each queue's compound operations, reservation publication, overload/backpressure and iteration. Do not infer completion from a collection's thread-safe label. |
 | Specialized integer queue | `MpscIntQueue.java`; `buffer/.../AdaptivePoolingAllocator.java` free lists | Fixed capacity, integer empty sentinel, fill/drain and weak reduction have actual allocator consumers. These requirements justify an adapter; generic CLR integers require no boxing specialization. | Compare the current ring with CLR collection alternatives against those operations; performance has not been measured. |
-| Indexed priority queue | `DefaultPriorityQueue.java`, scheduled-task removal; `codec-http2/.../WeightedFairQueueByteDistributor.java` priority updates | Identity-based removal, changing priorities and node membership matter. Replacing the indexed heap with PriorityQueue requires explicit reindex/remove/reinsert decisions. | Keep source behavior verified while reviewing native representation and measuring relevant costs. |
+| Indexed priority queue | `DefaultPriorityQueue.java`, scheduled-task removal; `codec-http2/.../WeightedFairQueueByteDistributor.java` priority updates | Retain the indexed reference-node heap for mutable priorities and independent queue membership. Ordinary value/immutable entries use BCL PriorityQueue. Stopped scheduler queues clear references and indices. | Core source/interfaces reviewed; bounded indexed/BCL/tree costs below. Remaining scheduler/runtime review stays open. |
 | Thread-local state | `FastThreadLocal.java`, `InternalThreadLocalMap.java`; allocator caches and event-loop workers | Physical-worker caches remain thread-local. AsyncLocal describes logical execution context and is a separate purpose. A sealed CLR Thread may be owned/wrapped where cleanup policy requires it. | Remove unnecessary ThreadGroup/JDK facade surface after caller review; keep cleanup/ownership behavior. |
 | Resource lifetime | `AbstractReferenceCounted.java`, `ReferenceCountUtil.java`, `Recycler.java`; `buffer/.../AbstractReferenceCountedByteBuf.java` | GC does not decide when shared pooled/native storage is reusable. Retain/release must deallocate exactly once and never resurrect returned storage. Dispose alone does not define shared ownership. | Native owners, borrowed views and pin leases are implemented; integrate them with future pooled retain/release consumers. Ordinary CLR object cleanup and shared storage ownership must remain distinct. |
 | Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Full native sequence API, culture/lexical numeric parsing, regex and charset/BOM review remains. Raw platform addresses and pooled-buffer integration remain separate reviews. |
@@ -308,6 +308,64 @@ Task or Task.WhenAll replaces the original completion signal. Abstract custom
 backends default to their shutdown primitive and may override the native policy.
 ExecutorLifecycleContractTest covers these distinctions; current results and
 remaining backend/API work are in common-porting.md.
+
+## Ordered scheduler and indexed queue ownership
+
+The indexed heap supplies O(log n) removal and mutable-priority repair with no
+per-insertion tree node allocation. The pinned HTTP/2 distributor uses
+priorityChanged (WeightedFairQueueByteDistributor.java:376) and separate
+state-only/pseudo-time queue indices (lines 738-749). A BCL PriorityQueue stores
+priority alongside each element; its reference-aware Remove scans membership.
+SortedSet offers keyed removal but priority changes require removal/reinsertion
+and allocate tree nodes. Retain the indexed heap for these requirements and use
+BCL PriorityQueue for ordinary value/immutable entries. The CLR-only integer queue
+scenario now uses that BCL type; there is no general linear-scan fallback in
+DefaultPriorityQueue. Nodes must be references and implement indexed membership.
+
+CLR membership checks the actual reference at the recorded index. The pinned
+DefaultPriorityQueue.java uses node.equals at its contains helper; actual scheduler
+and HTTP/2 nodes use reference identity, while CLR value-equal objects/records must
+not remove another reservation through a stale index. Comparer order and per-queue
+indices still determine priority repair. Equal-priority FIFO requires a sequence
+tie breaker, as used by scheduled work; the generic heap adds none. Enumeration
+remains live and unordered; toArray is a typed snapshot rather than Java's erased
+array/iterator convenience overloads. BCL Array.Resize owns array capacity, capped
+at Array.MaxLength; failed allocation cannot desynchronize a parallel capacity
+field. Extreme OOM capacity limits are reviewed structurally, not forced in tests.
+
+The pinned scheduler cancels a snapshot then calls clearIgnoringIndexes
+(AbstractScheduledEventExecutor.java:170). That method explicitly assumes the
+queue is about to be garbage collected and nodes will not be reused
+(PriorityQueue.java clearIgnoringIndexes documentation). A stopped CLR executor can
+remain reachable, retaining its queue and scheduled work in the backing array.
+Shutdown now clears references and indices. A real retained executor with a
+weakly observed canceled reservation reproduces retention before and collection
+after the change. The terminal-only clearIgnoringIndexes API remains available
+for its original specialized purpose; ordinary clear permits node reuse.
+
+The reproducible bounded probe runs with -IndexedQueues in
+tools/Measure-UnorderedQueueCosts.ps1, using an explicit Release library path.
+Two sequential processes run after full tests, on Windows 10.0.26300 X64/.NET
+10.0.7 (16 logical processors), with tiered compilation disabled only in the
+probe, two warmups and seven samples per row. Random seed 42 selects 32 scattered
+members; removal rows combine 32 hits and 32 repeated misses. Independent checks
+cover ties, compact signed-clock wrap and hostile equality/foreign indices.
+Reuse fill/drain rows divide by 2N push/pop calls. Setup and post-interval drain
+are excluded; allocation is current-thread managed bytes only.
+
+| At 16384 entries, median ranges across two processes | Indexed heap | BCL PriorityQueue | SortedSet |
+| --- | --- | --- | --- |
+| Mixed removal, ns/call | 35.94-37.50 | 23237.50-23570.31 | 242.19-262.50 |
+| Reused fill/drain, ns/call | 139.87-141.56 | 123.17-124.24 | 155.52-155.94 |
+| Reused fill/drain, bytes/call | 0 | 0 | 24 (48 per insertion) |
+
+The BCL heap is faster for reused fill/drain in this probe, while indexed removal
+avoids the scan and the tree's insertion allocation. This supports retaining the
+indexed representation for mutable priorities/removal; it makes no overall
+scheduler throughput, contention or cross-thread allocation claim. All sizes,
+sample extrema and median allocations are in common-indexed-queue-costs.csv;
+raw outputs and library hash are under ignored artifacts/indexed-queue-costs-*.
+Current test results, inventory decisions and remaining work are in common-porting.md.
 
 Relevant CLR specifications:
 

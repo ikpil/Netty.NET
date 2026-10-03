@@ -1095,7 +1095,10 @@
         "src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs",
         "docs/common-native-scheduling.md",
         "docs/common-native-ordered-scheduling-migration.md",
-        "docs/common-native-unordered-scheduling-migration.md"
+        "docs/common-native-unordered-scheduling-migration.md",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/IndexedPriorityQueueContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeSchedulingContractTest.cs"
       ],
       "evidence": [
         "Historical earlier checkpoint: Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics.",
@@ -1103,12 +1106,13 @@
         "Observer-only native timeout test now uses an occupied-worker barrier to guarantee a pending producer before WaitAsync cancellation. The first accounting full Debug run failed this previously time-dependent precondition (1284 / 1 / 14); the correction preserves both observer-cancellation and producer-success assertions. Native completion/progress/scheduler/accounting selection: 99 passed. See docs/common-native-scheduling.md.",
         "Final default full Debug and Release on Windows/net10.0 each pass 1287 / fail 0 / skip 14, 1301 total: native-completion-termination-full-debug.trx and native-completion-termination-full-release.trx. Includes 29 native completion, 26 progress, two accounting and two real Global termination-observer integration cases. Initial Release auto-scaling timing failure and Debug observer-cancellation precondition failure remain documented; accounting defect is independently fixed, original auto-scaling assertion causality remains unproven.",
         "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json.",
-        "Native unordered scheduler checkpoint: default whole Debug/Release each 1357 discovered / 1343 passed / 0 failed / 14 unchanged skips on Windows/net10.0 (native-unordered-schedule-full-debug.trx and native-unordered-schedule-full-release.trx). Initial/final affected Debug 199/202 pass without failures/skips. All 759 non-Porting and skipped identities unchanged; whole-suite changes are exactly 12 documented CLR-only probe mappings plus three ownership regressions (native-unordered-schedule-identity-comparison.json). All 104 verified comment entries, 21 unordered source, two ScheduledFuture and eight original test comments have zero missing; all implementation paths exist (native-unordered-schedule-comment-audit.json). ScheduledFuture is a standard Task/owned-cancellation replacement with separate native queue metadata; all concrete scheduler result and raw JDK/Promise wrappers are removed. Plain Future fixtures/facades and final pool configuration/public queue/shutdown review remain open. No common/backend completion claim; see docs/common-native-unordered-scheduling-migration.md."
+        "Native unordered scheduler checkpoint: default whole Debug/Release each 1357 discovered / 1343 passed / 0 failed / 14 unchanged skips on Windows/net10.0 (native-unordered-schedule-full-debug.trx and native-unordered-schedule-full-release.trx). Initial/final affected Debug 199/202 pass without failures/skips. All 759 non-Porting and skipped identities unchanged; whole-suite changes are exactly 12 documented CLR-only probe mappings plus three ownership regressions (native-unordered-schedule-identity-comparison.json). All 104 verified comment entries, 21 unordered source, two ScheduledFuture and eight original test comments have zero missing; all implementation paths exist (native-unordered-schedule-comment-audit.json). ScheduledFuture is a standard Task/owned-cancellation replacement with separate native queue metadata; all concrete scheduler result and raw JDK/Promise wrappers are removed. Plain Future fixtures/facades and final pool configuration/public queue/shutdown review remain open. No common/backend completion claim; see docs/common-native-unordered-scheduling-migration.md.",
+        "Ordered scheduled-work ownership: cancelScheduledTasks now clears references and indices instead of using clearIgnoringIndexes on a queue whose executor remains reachable. Real stopped-executor weak-work regression fails before and passes after; same 69-case affected Debug selection preserves original queue/scheduler fixtures. Pinned scheduler usage and terminal-clear precondition are recorded in docs/common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership. Final matrix is in docs/common-porting.md."
       ],
       "adaptation": "TimeSpan uses saturating integer nanoseconds. IScheduledWork separates heap metadata from result representation; native and legacy tasks preserve deadlines, stable IDs, transfer capacity, suspension-aware cancellation and virtual submission/validation hooks. Native Task/TCS APIs use the same queue with no Future adapter. Remaining legacy API review is explicit.",
       "nativeDesignReview": {
         "status": "in-progress",
-        "evidence": "Shared/ordered/unordered scheduling consumers now use native Task results with owned CancellationToken. JDK scheduled-service/group/default/concrete scheduling facades, ordered/unordered result decorators and raw JDK wrapper removed. Native queue identity is separate from Task identity, worker identity follows loop scope, and actual callback failure/cancellation is published. Plain Future fixtures/waiting/listener facades and final pool/public queue/configuration/quiet-period/interruption policies remain open. See docs/common-native-unordered-scheduling-migration.md."
+        "evidence": "Native Task scheduling/results, owned cancellation and ordered queue identity are implemented. Retained-executor shutdown now releases scheduled references and membership; see docs/common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership. Remaining ordered runtime/public API review stays open; this checkpoint does not claim backend/module completion."
       },
       "comments": {
         "upstreamCount": 28,
@@ -2318,7 +2322,10 @@
         "src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs",
         "docs/common-native-scheduling.md",
         "docs/common-native-ordered-scheduling-migration.md",
-        "docs/common-native-unordered-scheduling-migration.md"
+        "docs/common-native-unordered-scheduling-migration.md",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/IndexedPriorityQueueContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeSchedulingContractTest.cs"
       ],
       "adaptation": "NativeScheduledWork supplies Task/TCS result, claim, token, deadline/sequence/index membership and repeating execution directly. Ordered Promise-based ScheduledTask and wrappers removed; pinned ScheduledFutureTask comments archived in docs/common-native-ordered-scheduling-migration.md. Unordered private legacy result decorator/backend still exists for its pending migration; no final backend/API completion claim.",
       "evidence": [
@@ -2328,12 +2335,13 @@
         "Observer-only native timeout test now uses an occupied-worker barrier to guarantee a pending producer before WaitAsync cancellation. The first accounting full Debug run failed this previously time-dependent precondition (1284 / 1 / 14); the correction preserves both observer-cancellation and producer-success assertions. Native completion/progress/scheduler/accounting selection: 99 passed. See docs/common-native-scheduling.md.",
         "Final default full Debug and Release on Windows/net10.0 each pass 1287 / fail 0 / skip 14, 1301 total: native-completion-termination-full-debug.trx and native-completion-termination-full-release.trx. Includes 29 native completion, 26 progress, two accounting and two real Global termination-observer integration cases. Initial Release auto-scaling timing failure and Debug observer-cancellation precondition failure remain documented; accounting defect is independently fixed, original auto-scaling assertion causality remains unproven.",
         "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json.",
-        "Native unordered scheduler checkpoint: default whole Debug/Release each 1357 discovered / 1343 passed / 0 failed / 14 unchanged skips on Windows/net10.0 (native-unordered-schedule-full-debug.trx and native-unordered-schedule-full-release.trx). Initial/final affected Debug 199/202 pass without failures/skips. All 759 non-Porting and skipped identities unchanged; whole-suite changes are exactly 12 documented CLR-only probe mappings plus three ownership regressions (native-unordered-schedule-identity-comparison.json). All 104 verified comment entries, 21 unordered source, two ScheduledFuture and eight original test comments have zero missing; all implementation paths exist (native-unordered-schedule-comment-audit.json). ScheduledFuture is a standard Task/owned-cancellation replacement with separate native queue metadata; all concrete scheduler result and raw JDK/Promise wrappers are removed. Plain Future fixtures/facades and final pool configuration/public queue/shutdown review remain open. No common/backend completion claim; see docs/common-native-unordered-scheduling-migration.md."
+        "Native unordered scheduler checkpoint: default whole Debug/Release each 1357 discovered / 1343 passed / 0 failed / 14 unchanged skips on Windows/net10.0 (native-unordered-schedule-full-debug.trx and native-unordered-schedule-full-release.trx). Initial/final affected Debug 199/202 pass without failures/skips. All 759 non-Porting and skipped identities unchanged; whole-suite changes are exactly 12 documented CLR-only probe mappings plus three ownership regressions (native-unordered-schedule-identity-comparison.json). All 104 verified comment entries, 21 unordered source, two ScheduledFuture and eight original test comments have zero missing; all implementation paths exist (native-unordered-schedule-comment-audit.json). ScheduledFuture is a standard Task/owned-cancellation replacement with separate native queue metadata; all concrete scheduler result and raw JDK/Promise wrappers are removed. Plain Future fixtures/facades and final pool configuration/public queue/shutdown review remain open. No common/backend completion claim; see docs/common-native-unordered-scheduling-migration.md.",
+        "Ordered scheduled-work ownership: cancelScheduledTasks now clears references and indices instead of using clearIgnoringIndexes on a queue whose executor remains reachable. Real stopped-executor weak-work regression fails before and passes after; same 69-case affected Debug selection preserves original queue/scheduler fixtures. Pinned scheduler usage and terminal-clear precondition are recorded in docs/common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership. Final matrix is in docs/common-porting.md."
       ],
       "status": "in-progress",
       "nativeDesignReview": {
         "status": "in-progress",
-        "evidence": "Shared/ordered/unordered scheduling consumers now use native Task results with owned CancellationToken. JDK scheduled-service/group/default/concrete scheduling facades, ordered/unordered result decorators and raw JDK wrapper removed. Native queue identity is separate from Task identity, worker identity follows loop scope, and actual callback failure/cancellation is published. Plain Future fixtures/waiting/listener facades and final pool/public queue/configuration/quiet-period/interruption policies remain open. See docs/common-native-unordered-scheduling-migration.md."
+        "evidence": "Native Task scheduling/results, owned cancellation and ordered queue identity are implemented. Retained-executor shutdown now releases scheduled references and membership; see docs/common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership. Remaining ordered runtime/public API review stays open; this checkpoint does not claim backend/module completion."
       },
       "comments": {
         "upstreamCount": 8,
@@ -2912,22 +2920,34 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/DefaultPriorityQueue.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Internal/DefaultPriorityQueue.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/Internal/DefaultPriorityQueue.cs"
+        "src/Netty.NET.Common/Internal/DefaultPriorityQueue.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/IndexedPriorityQueueContractTest.cs",
+        "docs/common-indexed-queue-costs.csv",
+        "tools/Measure-UnorderedQueueCosts.ps1",
+        "tools/queue-costs/Program.cs",
+        "tools/queue-costs/QueueCosts.csproj"
       ],
       "evidence": [
-        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
+        "Pinned indexed-heap source and WeightedFairQueueByteDistributor priorityChanged/per-queue indices reviewed. Original eight queue tests plus dual-owner, stale equal-node identity, reference-node admission, negative capacity and independent 1024-change sorted-reference scenarios pass in the 69-case affected Debug selection. General CLR-only value queue scenario now uses BCL PriorityQueue<int,int>; its identity is retained. Four before-run failures distinguish new CLR contracts/exception mapping from the independently reproduced scheduled-work retention defect. Final matrix and indexed-vs-BCL/tree costs are recorded in docs/common-porting.md.",
+        "Two sequential post-suite indexed-queue probe processes: Windows 10.0.26300 X64/.NET 10.0.7, two warmups/seven samples, tiered compilation disabled only in probe. At 16384 entries, mixed 32-hit/32-miss median cost is 35.94-37.50 ns/indexed call, 23237.50-23570.31 ns/BCL call and 242.19-262.50 ns/tree call; reused push/pop is faster on the BCL heap, while indexed/BCL heaps allocate zero warm bytes and the tree 24 bytes per push/pop call. Independent order/foreign-index/hostile-equality/wrap checks precede timing; setup/cleanup and cross-thread/GC allocation are excluded. No general throughput/contention claim. CSV extrema and conditions are in docs/common-clr-design.md and docs/common-indexed-queue-costs.csv."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "adaptation": "Retain an indexed heap for mutable priorities and per-queue membership; ordinary value/immutable queues use BCL PriorityQueue. CLR reference constraints and identity-based membership replace equality-based aliasing. There is no linear-scan general-entry fallback. Typed T[] snapshots and IEnumerable replace Java erased-array/iterator convenience contracts; live heap enumeration has no ordering guarantee. BCL Array.Resize owns capacity and caps growth at Array.MaxLength; OOM capacity limits are reviewed structurally, not induced in tests. See docs/common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership.",
       "comments": {
         "upstreamCount": 25,
         "required": true,
         "preservedCount": 25,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Indexed reference-node collection and its actual scheduler/HTTP2 consumer requirements reviewed; ordinary value entries use BCL PriorityQueue. Original scenarios plus CLR identity, mutable priority, independent owner and lifetime regressions pass. This is a queue review, not overall common/runtime completion."
       }
     },
     {
@@ -3367,35 +3387,55 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/PriorityQueue.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Internal/IPriorityQueue.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
-      "comments": {
-        "upstreamCount": 5,
-        "required": true,
-        "preservedCount": 3,
-        "missingCount": 2
-      }
-    },
-    {
-      "upstream": "common/src/main/java/io/netty/util/internal/PriorityQueueNode.java",
-      "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Internal/IPriorityQueueNode.cs"
+      "implementation": [
+        "src/Netty.NET.Common/Internal/IPriorityQueue.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/IndexedPriorityQueueContractTest.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned indexed-heap source and WeightedFairQueueByteDistributor priorityChanged/per-queue indices reviewed. Original eight queue tests plus dual-owner, stale equal-node identity, reference-node admission, negative capacity and independent 1024-change sorted-reference scenarios pass in the 69-case affected Debug selection. General CLR-only value queue scenario now uses BCL PriorityQueue<int,int>; its identity is retained. Four before-run failures distinguish new CLR contracts/exception mapping from the independently reproduced scheduled-work retention defect. Final matrix and indexed-vs-BCL/tree costs are recorded in docs/common-porting.md."
+      ],
+      "adaptation": "Retain an indexed heap for mutable priorities and per-queue membership; ordinary value/immutable queues use BCL PriorityQueue. CLR reference constraints and identity-based membership replace equality-based aliasing. There is no linear-scan general-entry fallback. Typed T[] snapshots and IEnumerable replace Java erased-array/iterator convenience contracts; live heap enumeration has no ordering guarantee. BCL Array.Resize owns capacity and caps growth at Array.MaxLength; OOM capacity limits are reviewed structurally, not induced in tests. See docs/common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership.",
       "comments": {
         "upstreamCount": 5,
         "required": true,
         "preservedCount": 5,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Indexed reference-node collection and its actual scheduler/HTTP2 consumer requirements reviewed; ordinary value entries use BCL PriorityQueue. Original scenarios plus CLR identity, mutable priority, independent owner and lifetime regressions pass. This is a queue review, not overall common/runtime completion."
+      }
+    },
+    {
+      "upstream": "common/src/main/java/io/netty/util/internal/PriorityQueueNode.java",
+      "kind": "source",
+      "status": "verified",
+      "candidates": [
+        "src/Netty.NET.Common/Internal/IPriorityQueueNode.cs"
+      ],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/IPriorityQueueNode.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/IndexedPriorityQueueContractTest.cs"
+      ],
+      "evidence": [
+        "Pinned indexed-heap source and WeightedFairQueueByteDistributor priorityChanged/per-queue indices reviewed. Original eight queue tests plus dual-owner, stale equal-node identity, reference-node admission, negative capacity and independent 1024-change sorted-reference scenarios pass in the 69-case affected Debug selection. General CLR-only value queue scenario now uses BCL PriorityQueue<int,int>; its identity is retained. Four before-run failures distinguish new CLR contracts/exception mapping from the independently reproduced scheduled-work retention defect. Final matrix and indexed-vs-BCL/tree costs are recorded in docs/common-porting.md."
+      ],
+      "adaptation": "Retain an indexed heap for mutable priorities and per-queue membership; ordinary value/immutable queues use BCL PriorityQueue. CLR reference constraints and identity-based membership replace equality-based aliasing. There is no linear-scan general-entry fallback. Typed T[] snapshots and IEnumerable replace Java erased-array/iterator convenience contracts; live heap enumeration has no ordering guarantee. BCL Array.Resize owns capacity and caps growth at Array.MaxLength; OOM capacity limits are reviewed structurally, not induced in tests. See docs/common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership.",
+      "comments": {
+        "upstreamCount": 5,
+        "required": true,
+        "preservedCount": 5,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Indexed reference-node collection and its actual scheduler/HTTP2 consumer requirements reviewed; ordinary value entries use BCL PriorityQueue. Original scenarios plus CLR identity, mutable priority, independent owner and lifetime regressions pass. This is a queue review, not overall common/runtime completion."
       }
     },
     {
@@ -5362,10 +5402,14 @@
         "test/Netty.NET.Common.Tests/Internal/DefaultPriorityQueueTest.cs"
       ],
       "implementation": [
-        "test/Netty.NET.Common.Tests/Internal/DefaultPriorityQueueTest.cs"
+        "test/Netty.NET.Common.Tests/Internal/DefaultPriorityQueueTest.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/IndexedPriorityQueueContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeSchedulingContractTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "Ordered scheduled-work ownership: cancelScheduledTasks now clears references and indices instead of using clearIgnoringIndexes on a queue whose executor remains reachable. Real stopped-executor weak-work regression fails before and passes after; same 69-case affected Debug selection preserves original queue/scheduler fixtures. Pinned scheduler usage and terminal-clear precondition are recorded in docs/common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership. Final matrix is in docs/common-porting.md."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {

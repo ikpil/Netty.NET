@@ -267,6 +267,7 @@ public class NativeSchedulingContractTest
     {
         internal InspectableExecutor() : base(null, new DefaultThreadFactory(typeof(InspectableExecutor)), true) { }
         internal int ScheduledCount => _scheduledTaskQueue?.Count ?? 0;
+        internal IScheduledWork ScheduledHead => peekScheduledTask();
         protected override void run()
         {
             while (!confirmShutdown())
@@ -459,6 +460,30 @@ public class NativeSchedulingContractTest
         _ = executor.ScheduleAsync(() => GC.KeepAlive(payload), TimeSpan.FromDays(1), cancellation.Token);
         cancellation.Cancel();
         return weak;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (WeakReference Work, Task Result) ScheduleRetainedWork(InspectableExecutor executor)
+    {
+        Task result = executor.ScheduleAsync(() => Assert.Fail("Stopped schedule ran"), TimeSpan.FromDays(1));
+        return (new WeakReference(executor.ScheduledHead), result);
+    }
+
+    [Fact]
+    public async Task ShutdownReleasesScheduledWorkWhileTheExecutorRemainsReferenced()
+    {
+        var executor = new InspectableExecutor();
+        try
+        {
+            var scheduled = await executor.SubmitAsync(() => ScheduleRetainedWork(executor)).WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(scheduled.Work.IsAlive);
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.True(scheduled.Result.IsCanceled);
+            GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+            Assert.False(scheduled.Work.IsAlive);
+            GC.KeepAlive(executor);
+        }
+        finally { await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
     }
 
     [Fact]

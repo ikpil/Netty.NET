@@ -47,16 +47,16 @@ public class UtilityContractTest
     [Fact]
     public void PriorityQueueHandlesValueTypeEntriesAndNonzeroCapacity()
     {
-        var queue = new DefaultPriorityQueue<int>(Comparer<int>.Default, 4);
-        foreach (int value in new[] { 4, 0, 2, 1 }) Assert.True(queue.tryEnqueue(value));
+        var queue = new PriorityQueue<int, int>(4);
+        foreach (int value in new[] { 4, 0, 2, 1 }) queue.Enqueue(value, value);
         foreach (int expected in new[] { 0, 1, 2, 4 })
         {
-            Assert.True(queue.tryDequeue(out var value));
+            Assert.True(queue.TryDequeue(out var value, out _));
             Assert.Equal(expected, value);
         }
-        Assert.False(queue.tryDequeue(out _));
-        queue.tryEnqueue(5);
-        queue.clear();
-        Assert.False(queue.contains(5));
+        Assert.False(queue.TryDequeue(out _, out _));
+        queue.Enqueue(5, 5);
+        queue.Clear();
+        Assert.Empty(queue.UnorderedItems);
     }
 }

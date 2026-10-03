@@ -121,12 +121,12 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1419 cases** on Windows/net10.0:
-**1405 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1425 cases** on Windows/net10.0:
+**1411 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`group-stop-full-debug.trx` and `group-stop-full-release.trx`; the escalation before-run is
-`group-stop-escalation-before.trx`. Results remain in the ignored TestResults
+`indexed-queue-full-debug.trx` and `indexed-queue-full-release.trx`; the before-run is
+`indexed-queue-before.trx`. Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
 portable test source without PortingBatch and do not establish module completion.
@@ -262,9 +262,41 @@ ownership. Existing warnings remain, with Windows/net10.0 as the verified scope;
 no original Java fixture/comment, test source exclusion or skip is added/changed.
 Source decisions remain 42 verified / 29 CLR replacements / 13 exclusions /
 99 pending / 22 in progress; original test files remain 56 verified / ten exclusions.
-Next: review ordered scheduler priority-queue membership/index lifetime and its
-pinned consumers before selecting a CLR collection or retaining necessary indexed
-removal. Remaining strings/encoding, platform and resource ownership review is open.
+Ordered queue membership/lifetime and its pinned consumers are subsequently
+reviewed below. Remaining strings/encoding, platform and resource ownership review
+is open.
+
+The indexed priority queue core/interfaces are now reviewed. HTTP/2 mutable
+priorities and independent per-queue indices justify retaining the indexed heap;
+ordinary value entries use BCL PriorityQueue. Membership now checks reference
+identity, general linear-scan fallback is removed, negative capacity uses the CLR
+argument exception, and BCL array resizing owns capacity. Scheduler shutdown clears
+references/indices rather than assuming the queue is about to be garbage collected.
+The retained real-executor weak-work probe fails before and passes after. Other
+before failures establish the explicit CLR identity, admission and exception
+decisions; they are not all claimed as original runtime defects. Original eight
+queue scenarios remain unchanged, with 1024 independent sorted-reference changes
+and dual-owner membership coverage. Affected Debug passes 69 cases. Final full
+Debug/Release each pass 1411 / fail zero / skip the same 14, with all 759 non-Porting
+identities retained and exactly six CLR rows added; configuration names/outcomes
+match (indexed-queue-identity-comparison.json). All 101 verified comment entries
+plus ScheduledFutureTask (102 distinct entries) have zero missing, including the
+two restored PriorityQueue interface comments. Inventory matches all 271 pinned
+Java files and implementation paths (indexed-queue-comment-audit.json and
+indexed-queue-inventory-summary.json). Isolated --artifacts-path
+artifacts/indexed-queue-validation preserves Rider; existing warnings remain and
+only Windows/net10.0 is verified.
+Two independent post-suite processes compare indexed/BCL/tree representations,
+including ownership and wrap checks before measurement. The indexed representation
+avoids scanned removal and tree insertion allocation, while the BCL heap is faster
+for reused fill/drain in this bounded workload. Conditions, limits, all extrema and
+allocation results are in the existing
+[CLR design](common-clr-design.md#ordered-scheduler-and-indexed-queue-ownership)
+and common-indexed-queue-costs.csv. No overall scheduler throughput claim is made.
+Source decisions: 45 verified / 29 CLR replacements / 13 exclusions / 97 pending /
+21 in progress; original tests remain 56 verified / ten exclusions. Next: resolve
+remaining collection/iterator wrappers against pinned consumers and native CLR
+equivalents, then continue strings/encoding and platform/ownership review.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already

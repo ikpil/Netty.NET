@@ -176,7 +176,9 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
             task.CancelForShutdown();
         }
 
-        scheduledTaskQueue.clearIgnoringIndexes();
+        // CLR: A terminated executor may remain reachable. Release queued work
+        // and its membership instead of assuming this queue is about to be GC'd.
+        scheduledTaskQueue.clear();
     }
 
     /**
