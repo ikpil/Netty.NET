@@ -14,6 +14,97 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## Native byte access through bounded CLR memory
+
+Retire 39 declarations in PlatformDependent/PlatformDependent0: raw long-address
+allocation/free/reallocation, word reads/writes, mixed object-offset/native copies
+and fills, array-header offsets and unsupported ordered-address adapters. Eighteen
+lower-level throwing stubs disappear. This is a reviewed CLR replacement of their
+purposes; both source files stay in-progress for remaining APIs and stubs.
+
+Pinned UnsafeByteBufUtil and UnsafeDirectSwappedByteBuf require byte/short/int/long
+access, including unaligned regions. Use indexed bounded spans and MemoryMarshal
+for host order; use BinaryPrimitives for declared wire order. Heap/native copies
+and fills use Memory/Span slices, CopyTo and Fill with validation before mutation.
+Overlapping CLR copies preserve snapshot semantics in either direction; no claim
+is made that every JVM Unsafe copy implementation does the same.
+
+PoolArena.memoryCopy and ReadOnlyUnsafeDirectByteBuf confirm native-to-native and
+native-to-heap purposes. NativeMemoryAllocator/Owner already supply allocation,
+reallocation, quota and deterministic release. WrappedUnpooledUnsafeDirectByteBuf
+requires an explicit borrowed NativeMemoryView and external lifetime. ByteBufUtil
+unsafeWriteUtf8's object-plus-array-header offsets become indexed bounded byte
+storage; its actual charset/writer implementation belongs to the future buffer
+port. Pin an owner for native I/O and keep its lease alive throughout pointer use.
+
+No pinned Java caller uses PlatformDependent0.putShortOrdered; this C# tree's
+long-address GetIntVolatile/PutIntOrdered adapters have no matching pinned Java
+public methods. Removing their throwing placeholders does not declare native
+publication unnecessary. SubmissionQueue/CompletionQueue use direct ByteBuffer
+VarHandle volatile/release operations. That genuine ordered-memory contract stays
+pending with VarHandleFactory/native transport integration: ordinary word access
+here provides neither atomicity nor acquire/release synchronization.
+
+NativeMemoryView now rejects unsigned address-plus-length wrap, including an
+unrepresentable exclusive end needed by end-slice pins. Addresses retain unsigned
+bits across nint.MaxValue; pointer conversions use explicit unchecked bit casts
+after validation, including in checked builds. This cannot establish whether an
+external allocation actually owns the described range. Borrowed pins retain the
+descriptor and never extend the external allocation's lifetime.
+
+Pinned PlatformDependent0Test's (-1, 10) address metadata wraps across zero and now
+fails explicitly, as its null/nonempty case already does in CLR. The same fixture
+also checks valid negative address bits (-16, 10); no synthetic pointer is read.
+All original case identities and other outcomes remain, with this documented
+assertion adaptation. Thirteen additional native cases cover words, bounds,
+heap/native copies, borrowed aliases and pointer arithmetic. The 236-input exact
+extracted Java word/copy/fill oracle matches both copy branches on Windows x64.
+Checked runs include the original platform fixtures. Full-suite evidence is in
+common-porting.md; this does not finish common or port any native transport.
+
+### Retired PlatformDependent0 port comments (historical)
+
+```csharp
+//return UNSAFE.getByte(address);
+//return UNSAFE.getShort(address);
+//return UNSAFE.getInt(address);
+//return UNSAFE.getLong(address);
+//return UNSAFE.getIntVolatile(null, address);
+//UNSAFE.putOrderedInt(null, address, newValue);
+//UNSAFE.putByte(address, value);
+//UNSAFE.putShort(address, value);
+// UNSAFE.storeFence();
+// UNSAFE.putShort(null, address, newValue);
+//UNSAFE.putInt(address, value);
+//UNSAFE.putLong(address, value);
+// Manual safe-point polling is only needed prior Java9:
+// See https://bugs.openjdk.java.net/browse/JDK-8149596
+// CLR adaptation: this JDK threshold does not apply. Native address
+// ownership and copying are still unported, so failure remains explicit.
+// Manual safe-point polling is only needed prior Java9:
+// See https://bugs.openjdk.java.net/browse/JDK-8149596
+// CLR adaptation: no JDK-version branch can select a CLR memory API.
+// The object-offset Unsafe model still requires a native replacement.
+//UNSAFE.setMemory(address, bytes, value);
+//UNSAFE.setMemory(o, offset, bytes, value);
+//return UNSAFE.allocateMemory(size);
+//UNSAFE.freeMemory(address);
+//return UNSAFE.reallocateMemory(address, newSize);
+```
+
+### Pinned PlatformDependent0 copy comments
+
+```java
+/**
+     * Limits the number of bytes to copy per {@link Unsafe#copyMemory(long, long, long)} to allow safepoint polling
+     * during a large copy.
+     */
+// Manual safe-point polling is only needed prior Java9:
+// See https://bugs.openjdk.java.net/browse/JDK-8149596
+// Manual safe-point polling is only needed prior Java9:
+// See https://bugs.openjdk.java.net/browse/JDK-8149596
+```
+
 ## C# method naming
 
 At the user's request, every tracked C# method and local-function declaration in

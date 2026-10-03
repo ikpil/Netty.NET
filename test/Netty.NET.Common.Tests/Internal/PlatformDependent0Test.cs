@@ -25,7 +25,10 @@ public class PlatformDependent0Test
     [Fact]
     public void TestNewDirectBufferNegativeMemoryAddress()
     {
-        TestNewDirectBufferMemoryAddress(-1);
+        // The original (-1, 10) describes a range that wraps to zero. CLR views
+        // reject that range while preserving valid unsigned address bits.
+        Assert.Throws<ArgumentOutOfRangeException>(() => new NativeMemoryView(-1, 10));
+        TestNewDirectBufferMemoryAddress(-16);
     }
 
     [Fact]

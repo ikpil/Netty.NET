@@ -89,8 +89,9 @@ NativeMemoryView describes borrowed address metadata and never frees its storage
 The caller must supply a valid externally owned region for any actual byte access.
 Its pins retain the descriptor, not the external allocation. Disposing a descriptor
 rejects new access but does not alter its external owner's memory reservation.
-A null address is allowed only for empty memory. Arbitrary address-bit metadata
-can be described without dereferencing it, as in the original constructor tests.
+A null address is allowed only for empty memory. Unsigned address bits are retained,
+but the complete range and its exclusive end must not wrap the address space.
+Metadata alone does not establish an externally valid allocation.
 
 ## Reallocation and alignment
 
@@ -147,11 +148,10 @@ provenance is audited within each code fence; all seven providers have zero miss
 
 ## Remaining review
 
-- PlatformDependent and PlatformDependent0 still contain raw object-field-offset,
-  native-address primitive/copy/set operations and other JVM-shaped methods.
-  Managed byte operations now use CLR spans; see common-heap-memory.md. Their
-  genuine consumer purposes need CLR API migration or supported implementation;
-  existing explicit stubs are not treated as ported.
+- Managed field-offset and raw native-address stubs have been retired after
+  consumer review. Bounded spans and owners preserve the memory purposes; see
+  common-clr-design.md. Remaining JVM-shaped APIs/low-level array stubs and
+  native ordered-publication integration require separate review.
 - Future buffer pool/reference-count integration must use ownership/leases correctly;
   disposing an owner is not a substitute for shared retain/release.
 - Process-wide allocator configuration, native preference and cost policy require

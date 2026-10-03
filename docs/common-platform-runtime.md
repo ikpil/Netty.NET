@@ -27,7 +27,9 @@ Graal native-image properties also do not enable reflective access. The explicit
 Netty reflection preference still has its configured meaning; this change does
 not certify the remaining reflection adapters as correct CLR APIs.
 
-The two raw-memory copy stubs still throw NotImplementedException. Removing a
+The two raw-memory copy stubs were subsequently retired in the bounded native
+access checkpoint (common-clr-design.md). At this historical runtime checkpoint
+they still threw NotImplementedException. Removing a
 JDK-version branch does not implement memory access. Native-memory ownership
 must be implemented before these operations can be claimed as ported.
 
@@ -81,7 +83,7 @@ provider test are mapped in [common-native-memory.md](common-native-memory.md).
 | --- | --- |
 | `testMajorVersionFromJavaSpecificationVersion` | JVM SecurityManager denies java.specification.version, requiring the Java 6 fallback. No CLR SecurityManager/property contract or production parser remains; excluded as a JVM-specific scenario. |
 | `testMajorVersion` | Tests JDK legacy `1.6`/`1.7`/`1.8` and modern version syntax. No JDK parser is needed; excluded as a JVM-specific scenario, without inventing a .NET parser for FrameworkDescription. |
-| `testNewDirectBufferNegativeMemoryAddress` | Borrowed address/length metadata preserved; no fake address is dereferenced. |
+| `testNewDirectBufferNegativeMemoryAddress` | Unsigned address bits preserved for valid ranges; (-1, 10) wrap explicitly rejected, (-16, 10) accepted; no fake address dereferenced. |
 | `testNewDirectBufferNonNegativeMemoryAddress` | Borrowed address/length metadata preserved; no fake address is dereferenced. |
 | `testNewDirectBufferZeroMemoryAddress` | Null empty views are supported; CLR rejects null nonempty spans explicitly. |
 
@@ -103,7 +105,8 @@ The historical runtime-only full runs had 1068 passed / 5 failed / 14 skipped
 out of 1087. Native owners/views resolve those five failures, and a fifth runtime
 case verifies the explicit shared allocator limit. The managed-byte checkpoint passed 1132 cases; the current ordered-multimap
 checkpoint passes 1161 cases with zero failures and 14 skips in both configurations.
-Raw object-field-offset/native-pointer stubs still need a separate review.
+Managed field-offset and raw native-pointer stubs were subsequently retired after
+consumer review; remaining native ordered/public API integration is pending.
 
 An initial full Release run also exposed unrelated global logger mocking and
 physical-worker thread-local contamination. The factory fixture is now exclusive

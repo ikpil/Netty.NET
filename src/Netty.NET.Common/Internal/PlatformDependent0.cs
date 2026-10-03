@@ -33,7 +33,6 @@ public class PlatformDependent0
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(PlatformDependent0));
     private static readonly long ADDRESS_FIELD_OFFSET;
-    private static readonly long BYTE_ARRAY_BASE_OFFSET;
     private static readonly long INT_ARRAY_BASE_OFFSET;
     private static readonly long INT_ARRAY_INDEX_SCALE;
     private static readonly long LONG_ARRAY_BASE_OFFSET;
@@ -567,7 +566,6 @@ public class PlatformDependent0
     }
 
 
-
     public static bool HasUnsafe()
     {
         return false;
@@ -606,112 +604,6 @@ public class PlatformDependent0
         // }
     }
 
-    public static long ByteArrayBaseOffset()
-    {
-        return BYTE_ARRAY_BASE_OFFSET;
-    }
-
-    public static byte GetByte(long address)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.getByte(address);
-    }
-
-    public static short GetShort(long address)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.getShort(address);
-    }
-
-    public static int GetInt(long address)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.getInt(address);
-    }
-
-    public static long GetLong(long address)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.getLong(address);
-    }
-
-    public static int GetIntVolatile(long address)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.getIntVolatile(null, address);
-    }
-
-    public static void PutIntOrdered(long address, int newValue)
-    {
-        ThrowException(new NotImplementedException());
-        //UNSAFE.putOrderedInt(null, address, newValue);
-    }
-
-    public static void PutByte(long address, byte value)
-    {
-        ThrowException(new NotImplementedException());
-        //UNSAFE.putByte(address, value);
-    }
-
-    public static void PutShort(long address, short value)
-    {
-        ThrowException(new NotImplementedException());
-        //UNSAFE.putShort(address, value);
-    }
-
-    public static void PutShortOrdered(long address, short newValue)
-    {
-        ThrowException(new NotImplementedException());
-        // UNSAFE.storeFence();
-        // UNSAFE.putShort(null, address, newValue);
-    }
-
-    public static void PutInt(long address, int value)
-    {
-        ThrowException(new NotImplementedException());
-        //UNSAFE.putInt(address, value);
-    }
-
-    public static void PutLong(long address, long value)
-    {
-        ThrowException(new NotImplementedException());
-        //UNSAFE.putLong(address, value);
-    }
-
-    public static void CopyMemory(long srcAddr, long dstAddr, long length)
-    {
-        // Manual safe-point polling is only needed prior Java9:
-        // See https://bugs.openjdk.java.net/browse/JDK-8149596
-        // CLR adaptation: this JDK threshold does not apply. Native address
-        // ownership and copying are still unported, so failure remains explicit.
-        throw new NotImplementedException();
-    }
-
-    public static void CopyMemory(object src, long srcOffset, object dst, long dstOffset, long length)
-    {
-        // Manual safe-point polling is only needed prior Java9:
-        // See https://bugs.openjdk.java.net/browse/JDK-8149596
-        // CLR adaptation: no JDK-version branch can select a CLR memory API.
-        // The object-offset Unsafe model still requires a native replacement.
-        throw new NotImplementedException();
-    }
-
-    public static void SetMemory(long address, long bytes, byte value)
-    {
-        ThrowException(new NotImplementedException());
-        //UNSAFE.setMemory(address, bytes, value);
-    }
-
-    public static void SetMemory(object o, long offset, long bytes, byte value)
-    {
-        ThrowException(new NotImplementedException());
-        //UNSAFE.setMemory(o, offset, bytes, value);
-    }
 
     public static bool Equals(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length)
     {
@@ -883,25 +775,6 @@ public class PlatformDependent0
         return IntPtr.Size;
     }
 
-    public static long AllocateMemory(long size)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.allocateMemory(size);
-    }
-
-    public static void FreeMemory(long address)
-    {
-        ThrowException(new NotImplementedException());
-        //UNSAFE.freeMemory(address);
-    }
-
-    public static long ReallocateMemory(long address, long newSize)
-    {
-        ThrowException(new NotImplementedException());
-        return 0;
-        //return UNSAFE.reallocateMemory(address, newSize);
-    }
 
     public static bool IsAndroid()
     {

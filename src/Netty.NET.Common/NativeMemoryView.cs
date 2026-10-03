@@ -31,6 +31,11 @@ public sealed unsafe class NativeMemoryView : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         if (address == 0 && length != 0)
             throw new ArgumentException("Nonempty native memory requires a nonzero address.", nameof(address));
+        // Native addresses are unsigned bits. The exclusive end must also be
+        // representable because an empty slice at Length can be pinned.
+        // This arithmetic check cannot establish external allocation validity.
+        if ((nuint)length > nuint.MaxValue - unchecked((nuint)address))
+            throw new ArgumentOutOfRangeException(nameof(length), "The native memory range wraps the address space.");
         Address = address;
         Length = length;
         _manager = new ViewManager(this);
@@ -63,7 +68,7 @@ public sealed unsafe class NativeMemoryView : IDisposable
                 throw new ArgumentOutOfRangeException(nameof(elementIndex));
             // Borrowing provides no owner retention. Keep the descriptor alive;
             // the external owner remains the caller's responsibility.
-            return new MemoryHandle((byte*)_view.Address + elementIndex, pinnable: new ViewPin(_view));
+            return new MemoryHandle(unchecked((byte*)_view.Address + elementIndex), pinnable: new ViewPin(_view));
         }
         public override void Unpin() => throw new NotSupportedException("Dispose the returned MemoryHandle.");
         protected override void Dispose(bool disposing) => Interlocked.Exchange(ref _disposed, 1);

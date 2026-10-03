@@ -38,8 +38,9 @@ These existing PlatformDependent methods remain adapters while the broader
 public API review proceeds. New C# byte consumers should use Span/Memory and
 MemoryMarshal, or BinaryPrimitives when the data format specifies byte order.
 Primitive operations here use **host native order**, not a claimed network order.
-Raw pointer operations remain an explicit separate
-review; their stubs are not enabled by making managed byte operations work.
+Raw pointer stubs are now retired after original consumer review in
+common-clr-design.md: native owners/views expose bounded Memory and spans.
+Ordinary word/copy/fill operations do not provide ordered publication.
 Managed object-field-offset stubs are now removed after typed ref-int counter
 migration; see common-clr-design.md CLR reference-count fields and JVM field access.
 

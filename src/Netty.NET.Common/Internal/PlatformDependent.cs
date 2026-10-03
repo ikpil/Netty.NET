@@ -58,7 +58,6 @@ public static class PlatformDependent
     public static readonly int MPSC_CHUNK_SIZE = 1024;
     public static readonly int MIN_MAX_MPSC_CAPACITY = MPSC_CHUNK_SIZE * 2;
     public static readonly int MAX_ALLOWED_MPSC_CAPACITY = Pow2.MAX_POW2;
-    private static readonly long BYTE_ARRAY_BASE_OFFSET = ByteArrayBaseOffset0();
     private static readonly DirectoryInfo TMPDIR = Tmpdir0();
     private static readonly int BIT_MODE = BitMode0();
     private static readonly string NORMALIZED_ARCH = NormalizeArch(SystemPropertyUtil.Get("os.arch", RuntimeInformation.ProcessArchitecture.ToString()));
@@ -162,9 +161,6 @@ public static class PlatformDependent
         return true;
     }
 
-    public static long ByteArrayBaseOffset() {
-        return BYTE_ARRAY_BASE_OFFSET;
-    }
 
     /**
      * Returns {@code true} if and only if the current platform is Android
@@ -235,15 +231,6 @@ public static class PlatformDependent
     }
 
 
-
-
-
-
-
-
-
-
-
     /**
      * Returns the temporary directory.
      */
@@ -266,17 +253,6 @@ public static class PlatformDependent
         return ADDRESS_SIZE;
     }
 
-    public static long AllocateMemory(long size) {
-        return PlatformDependent0.AllocateMemory(size);
-    }
-
-    public static void FreeMemory(long address) {
-        PlatformDependent0.FreeMemory(address);
-    }
-
-    public static long ReallocateMemory(long address, long newSize) {
-        return PlatformDependent0.ReallocateMemory(address, newSize);
-    }
 
     /**
      * Raises an exception bypassing compiler checks for checked exceptions.
@@ -332,35 +308,6 @@ public static class PlatformDependent
         return new ConcurrentDictionary<K, V>(map);
     }
 
-
-
-    public static void PutShortOrdered(long adddress, short newValue) {
-        PlatformDependent0.PutShortOrdered(adddress, newValue);
-    }
-
-    public static int GetIntVolatile(long address) {
-        return PlatformDependent0.GetIntVolatile(address);
-    }
-
-    public static void PutIntOrdered(long adddress, int newValue) {
-        PlatformDependent0.PutIntOrdered(adddress, newValue);
-    }
-
-    public static byte GetByte(long address) {
-        return PlatformDependent0.GetByte(address);
-    }
-
-    public static short GetShort(long address) {
-        return PlatformDependent0.GetShort(address);
-    }
-
-    public static int GetInt(long address) {
-        return PlatformDependent0.GetInt(address);
-    }
-
-    public static long GetLong(long address) {
-        return PlatformDependent0.GetLong(address);
-    }
 
     public static byte GetByte(byte[] data, int index) {
         return data[index];
@@ -495,21 +442,6 @@ public static class PlatformDependent
         return value & 0x1f;
     }
 
-    public static void PutByte(long address, byte value) {
-        PlatformDependent0.PutByte(address, value);
-    }
-
-    public static void PutShort(long address, short value) {
-        PlatformDependent0.PutShort(address, value);
-    }
-
-    public static void PutInt(long address, int value) {
-        PlatformDependent0.PutInt(address, value);
-    }
-
-    public static void PutLong(long address, long value) {
-        PlatformDependent0.PutLong(address, value);
-    }
 
     public static void PutByte(byte[] data, int index, byte value) {
         data[index] = value;
@@ -527,13 +459,6 @@ public static class PlatformDependent
         MemoryMarshal.Write(data.AsSpan(index, sizeof(long)), in value);
     }
 
-    public static void CopyMemory(long srcAddr, long dstAddr, long length) {
-        PlatformDependent0.CopyMemory(srcAddr, dstAddr, length);
-    }
-
-    public static void CopyMemory(byte[] src, int srcIndex, long dstAddr, long length) {
-        PlatformDependent0.CopyMemory(src, BYTE_ARRAY_BASE_OFFSET + srcIndex, null, dstAddr, length);
-    }
 
     public static void CopyMemory(byte[] src, int srcIndex, byte[] dst, int dstIndex, long length) {
         ArgumentNullException.ThrowIfNull(src);
@@ -544,27 +469,11 @@ public static class PlatformDependent
         src.AsSpan(srcIndex, count).CopyTo(dst.AsSpan(dstIndex, count));
     }
 
-    public static void CopyMemory(long srcAddr, byte[] dst, int dstIndex, long length) {
-        PlatformDependent0.CopyMemory(null, srcAddr, dst, BYTE_ARRAY_BASE_OFFSET + dstIndex, length);
-    }
 
     public static void SetMemory(byte[] dst, int dstIndex, long bytes, byte value) {
         ArgumentNullException.ThrowIfNull(dst);
         dst.AsSpan(dstIndex, checked((int)bytes)).Fill(value);
     }
-
-    public static void SetMemory(long address, long bytes, byte value) {
-        PlatformDependent0.SetMemory(address, bytes, value);
-    }
-
-
-
-
-
-
-
-
-
 
 
     public static long Align(long value, int alignment) {
@@ -1028,12 +937,6 @@ public static class PlatformDependent
         return IntPtr.Size;
     }
 
-    private static long ByteArrayBaseOffset0() {
-        if (!HasUnsafe()) {
-            return -1;
-        }
-        return PlatformDependent0.ByteArrayBaseOffset();
-    }
 
     private static bool EqualsSafe(byte[] bytes1, int startPos1, byte[] bytes2, int startPos2, int length) {
         int end = startPos1 + length;

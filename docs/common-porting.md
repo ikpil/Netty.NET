@@ -121,21 +121,23 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1861 cases** on Windows/net10.0:
-**1847 passed / 0 failed / 14 skipped** in Debug and Release.
-The common library and full test project build with zero errors; existing compiler
-and analyzer warnings are not claimed resolved. Current evidence is
-`method-casing-final-full-debug.trx` and `method-casing-full-release.trx`;
-the naming pass also builds the queue-cost consumer and passes 85 targeted cases.
-All 1861 existing cases and outcomes are retained under explicit method-name
-mapping, with the same 14 skips. Every tracked C# method/local-function declaration
-starts uppercase, and all existing C# comment text remains unchanged.
-The prior reference-count checkpoint passes 75 related checked Release cases.
-Native typed ref-int counters replace the unused JVM field-updater adapter and
-its five original counter/provider inventory decisions.
-Nonpositive direct counts are released, final release remains unique, and full
-positive Int32 counts and failure diagnostics have explicit native policy.
-Managed field-offset stubs are removed; raw native addresses remain in progress.
+The current default suite executes **1874 cases** on Windows/net10.0:
+**1860 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: native-access-final-full-debug.trx and native-access-final-full-release.trx.
+All 1861 prior case identities/outcomes remain; the original negative-address
+fixture now rejects wrapping metadata and also preserves valid unsigned bits.
+Thirteen new native access cases pass; no test source was excluded. Related native,
+heap, ASCII-native and original platform checked Release passes 73 cases.
+The exact extracted pinned Java word/copy/fill oracle matches 236 inputs for each
+of two copy branches on Corretto21.0.11. This is not a JDK8 or native transport run.
+The library/full test project build with zero errors; existing warnings remain.
+39 raw-memory/array-header/ordered-address declarations (including 18 throwing
+stubs) retire to owners, bounded Memory/Span and CLR primitive access. Native views
+reject unsigned address wrap and retain signed-boundary address bits. Original
+copy comments are preserved. Both platform sources and common remain in progress;
+the genuine native ordered-publication consumer contract is still pending.
+The naming pass still establishes uppercase C# methods; native ref-int counters
+retain the prior full positive Int32 and terminal-zero contracts.
 Earlier ASCII trim, word conversion, OWS, comparison and hash checkpoints remain.
 The earlier string, pattern, delimiter, numeric and scheduling work remains below.
 Results remain in the ignored TestResults
@@ -718,6 +720,41 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### Bounded native byte access checkpoint
+
+Review original buffer word/copy/fill/allocation users and io_uring publication
+users before replacing the raw long/object-offset facade. NativeMemoryAllocator,
+Owner/View and Memory/Span preserve ordinary memory purposes without JVM headers.
+MemoryMarshal uses host byte order; BinaryPrimitives handles explicit wire order.
+Ordered native publication remains a separate pending contract. Preserve removed
+comments in the existing common-clr-design.md; no feature MD is added.
+
+One address-wrap regression fails before repair. Checked validation initially
+finds two pointer-bit conversion failures; explicit unchecked bit conversions
+after bounds validation fix them. Full initial Debug/Release expose the prior
+(-1, 10) metadata assertion; the original fixture now checks explicit wrap failure
+and valid (-16, 10) unsigned bits. Final full Debug/Release each discover 1874 /
+pass 1860 / fail zero / keep the same 14 skips and 1861 prior case identities.
+Thirteen new cases cover unaligned host/wire words with sentinels, short-range
+failure before writes, all four heap/native copy pairs, empty end slices, borrowed
+overlapping aliases and native pointer boundaries. Final checked Release passes
+73 native/heap/ASCII-native/original platform cases.
+
+The 128 word inputs and 108 copy/fill inputs match exact extracted Java methods,
+including 1MiB threshold boundaries, offsets and source/untouched-byte digests.
+Both chunked and modern copy paths run on JDK21; neither real JDK8, big-endian
+hardware nor native transport execution is claimed. CLR alias-overlap semantics
+are independently checked against Array.Copy and are not claimed JVM equivalence.
+Source/test decision counts stay unchanged. Remaining low-level array/hash stubs
+and other JVM-shaped APIs stay pending; whole platform classes are not verified.
+
+Evidence: native-access-before-debug.trx, native-access-final-full-debug.trx,
+native-access-final-full-release.trx, native-access-final-checked-platform-release.trx,
+native-access-java-clr-oracle.json, native-access-comment-audit.json and
+native-access-identity-and-inventory.json. Reproduction/extraction logs remain in
+ignored artifacts/native-access-validation. Next: remaining PlatformDependent0
+array/hash stubs against actual original consumers and existing CLR implementations.
 
 ### C# method casing checkpoint
 
