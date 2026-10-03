@@ -58,13 +58,17 @@
       "implementation": [
         "src/Netty.NET.Common/AsciiString.cs",
         "src/Netty.NET.Common/GeneralCaseInsensitiveCharEqualityComparator.cs",
-        "docs/common-platform-runtime.md"
+        "docs/common-platform-runtime.md",
+        "src/Netty.NET.Common/CaseSensitiveHashingStrategy.cs",
+        "src/Netty.NET.Common/CaseInsensitiveHashingStrategy.cs"
       ],
       "evidence": [
         "Pinned source, original 42 character and 10 memory methods, HTTP/header/converter consumers reviewed. Four representation regressions failed before repair. CLR representation (4), native memory (13), and executed-Java hash reference (1); total affected Debug selection 70 passed. Remaining full-suite gates are recorded in docs/common-porting.md.",
         "Historical AsciiString checkpoint: Final default whole-suite Debug and Release each execute 1063 cases: 1040 passed, 9 unresolved platform/cleaner failures, 14 skipped. All 70 AsciiString cases pass in each configuration; both default builds have zero errors. Evidence: ascii-final-full-debug.trx, ascii-final-full-release.trx and docs/common-porting.md.",
         "CLR runtime/managed allocation consumer review: docs/common-platform-runtime.md. Targeted Debug native runtime/allocation + original character/memory/platform selection: 73 passed. Whole default results: docs/common-porting.md.",
-        "Historical runtime checkpoint (superseded): Debug and Release each 1087 cases, 1068 passed, 5 unresolved native-memory/platform failures, 14 skipped. All 18 native runtime/allocation cases and 11 ObjectCleaner cases pass in both. Evidence: platform-runtime-final-full-debug.trx, platform-runtime-final-full-release.trx and docs/common-porting.md."
+        "Historical runtime checkpoint (superseded): Debug and Release each 1087 cases, 1068 passed, 5 unresolved native-memory/platform failures, 14 skipped. All 18 native runtime/allocation cases and 11 ObjectCleaner cases pass in both. Evidence: platform-runtime-final-full-debug.trx, platform-runtime-final-full-release.trx and docs/common-porting.md.",
+        "Native IEqualityComparer<ICharSequence> fields/concrete comparers retain pinned ASCII hash/equality algorithms. Twelve CharacterSequenceComparerContractTest cases cover BCL collections, representations/slices, all Latin-1 pairs, non-ASCII casing, null and mutable backing-array ownership. HashingStrategy framework decision/comment provenance: docs/common-clr-design.md. Broader AsciiString review remains in progress.",
+        "Affected Debug selection 120 passed, including twelve CharacterSequenceComparerContractTest cases. Full Debug/Release each 1454 passed/zero failed/14 unchanged skips (1468 discovered); all prior identities/outcomes and all 759 non-Porting cases retained, only twelve new native comparer cases added. All 112 reviewed comment entries have zero missing (HashingStrategy five, AsciiString 99), and all 271 inventory paths match. Evidence: comparer-affected-debug.trx, comparer-full-debug.trx, comparer-full-release.trx, comparer-identity-comparison.json, comparer-comment-audit.json, comparer-inventory-summary.json. Windows/net10.0, SDK 10.0.203/runtime 10.0.7; no claim of full AsciiString or codec/header implementation."
       ],
       "adaptation": "Native string/ReadOnlySpan<char> input, ReadOnlyMemory<byte> replaces MemoryStream/ByteBuffer facades, logical AsSpan/AsMemory views, lossless byte widening and Cached(string) identity/sanitization. Original comments preserved beside the implementation, including the split comparator. Encoding uses explicit CLR fallback/no-preamble policy. Numeric parsing, regex/sequence APIs and CharsetUtil require further review. See docs/common-ascii-memory.md. Native runtime/allocation review removes JDK-version facades and Unsafe array-allocation helpers; actual AsciiString callers use GC.AllocateUninitializedArray<byte>. Android is an OS probe. Remaining native-memory/SWAR/public API work is not verified by this change.",
       "comments": {
@@ -424,18 +428,25 @@
     {
       "upstream": "common/src/main/java/io/netty/util/HashingStrategy.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/IHashingStrategy.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned HashingStrategy and AsciiString comparer bodies plus codec-base DefaultHeaders defaults/injection and HTTP/HTTP2 header/map consumers reviewed. IEqualityComparer<T>/EqualityComparer<T>.Default replace the Java interface/default singleton; no C# default-helper callers exist. Specialized ASCII algorithms remain. Twelve native collection contract cases added; full validation recorded in docs/common-porting.md.",
+        "Affected Debug selection 120 passed, including twelve CharacterSequenceComparerContractTest cases. Full Debug/Release each 1454 passed/zero failed/14 unchanged skips (1468 discovered); all prior identities/outcomes and all 759 non-Porting cases retained, only twelve new native comparer cases added. All 112 reviewed comment entries have zero missing (HashingStrategy five, AsciiString 99), and all 271 inventory paths match. Evidence: comparer-affected-debug.trx, comparer-full-debug.trx, comparer-full-release.trx, comparer-identity-comparison.json, comparer-comment-audit.json, comparer-inventory-summary.json. Windows/net10.0, SDK 10.0.203/runtime 10.0.7; no claim of full AsciiString or codec/header implementation."
+      ],
+      "adaptation": "Native IEqualityComparer<T> supplies hash/equality policy and EqualityComparer<T>.Default supplies the typed CLR default, including IEquatable<T>. Remove IHashingStrategy<T>, unused DefaultHashingStrategy<T> and specialized Java hashCode aliases. Keep AsciiString ASCII-only comparers, shared sensitive/insensitive hash, null comparer contract, CLR collection null policies and mutable-key ownership. Future header storage ordering/duplicates are not replaced by this comparer decision. Original five comments archived verbatim in common-clr-design.md.",
       "comments": {
         "upstreamCount": 5,
-        "required": true,
-        "preservedCount": 2,
-        "missingCount": 3
+        "required": false,
+        "preservedCount": 5,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "The combined contract is native IEqualityComparer<T>, not a Java alias interface. Pinned protocol consumers require retained ASCII algorithms; Dictionary/HashSet contracts cover mixed representations, slice offsets, collisions, null and non-ASCII boundaries. This records a framework substitution, not completed codec/header or full AsciiString porting."
       }
     },
     {

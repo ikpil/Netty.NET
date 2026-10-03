@@ -49,8 +49,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public const int CHARACTER_MIN_RADIX = 2;
     public const int CHARACTER_MAX_RADIX = 36;
 
-    public static readonly IHashingStrategy<ICharSequence> CASE_INSENSITIVE_HASHER = new CaseInsensitiveHashingStrategy();
-    public static readonly IHashingStrategy<ICharSequence> CASE_SENSITIVE_HASHER = new CaseSensitiveHashingStrategy();
+    public static readonly IEqualityComparer<ICharSequence> CASE_INSENSITIVE_HASHER = new CaseInsensitiveHashingStrategy();
+    public static readonly IEqualityComparer<ICharSequence> CASE_SENSITIVE_HASHER = new CaseSensitiveHashingStrategy();
 
     public int Count => _length;
 

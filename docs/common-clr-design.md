@@ -663,3 +663,104 @@ IntSupplier.java original comments:
      * @return a result
      */
 ```
+
+## Native character-sequence equality comparers
+
+The pinned HashingStrategy.java is a combined equality/hash contract. CLR
+IEqualityComparer<T> already supplies that contract; remove IHashingStrategy<T>
+and its Java hashCode alias. Its default JAVA_HASHER maps to
+EqualityComparer<T>.Default at typed consumers, including CLR IEquatable<T>
+dispatch. The unused DefaultHashingStrategy<T> helper has no C# callers and is
+removed rather than kept as a second default-comparer implementation.
+
+Pinned codec-base DefaultHeaders.java:95-142 injects a name comparer and chooses
+JAVA_HASHER for its defaults. DefaultHttpHeaders, CombinedHttpHeaders and HTTP/2
+CharSequenceMap/DefaultHttp2Headers choose AsciiString's specialized comparers.
+Future codec/header consumers must accept IEqualityComparer<T>; their port is
+outside this common change. Dictionary is useful for keyed storage, but this
+decision does not replace ordered duplicate-header storage with Dictionary.
+
+AsciiString.CASE_INSENSITIVE_HASHER and CASE_SENSITIVE_HASHER now expose native
+IEqualityComparer<ICharSequence>. Their concrete implementations retain the
+pinned AsciiString hash/content comparison algorithms and use GetHashCode/Equals
+without the extra Java method. Only ASCII A-Z folds to a-z. StringComparer's
+Unicode casing does not supply this protocol comparison. The sensitive comparer
+intentionally retains the insensitive hash: unequal case variants can collide
+and remain distinct keys. Slices and AsciiString/StringCharSequence/appendable
+representations must produce the same hash for equal content.
+
+Both comparers preserve null/null equality, one-null inequality and a zero null
+hash. HashSet accepts null elements; Dictionary rejects null keys using the CLR
+ArgumentNullException policy. Shared byte arrays and appendable sequences are
+mutable: do not mutate keys while resident in either collection. Remove a shared
+AsciiString key before mutation, call arrayChanged to reset its cached state,
+and reinsert it. No comparer can repair a mutated resident key's bucket.
+
+CharacterSequenceComparerContractTest exercises actual native collections,
+mixed sliced representations, deliberate hash collisions, null policies, all
+65,536 Latin-1 pairs with an independent ASCII-only reference, six non-ASCII
+casing pairs, and safe removal/reset/reinsertion after backing-array mutation.
+AsciiString's broader encoding/parsing/API review remains in progress.
+
+HashingStrategy.java original comments, preserved verbatim from
+common/src/main/java/io/netty/util/HashingStrategy.java at the pinned commit:
+
+```java
+/*
+ * Copyright 2015 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Abstraction for hash code generation and equality comparison.
+ */
+
+/**
+     * Generate a hash code for {@code obj}.
+     * <p>
+     * This method must obey the same relationship that {@link java.lang.Object#hashCode()} has with
+     * {@link java.lang.Object#equals(Object)}:
+     * <ul>
+     * <li>Calling this method multiple times with the same {@code obj} should return the same result</li>
+     * <li>If {@link #equals(Object, Object)} with parameters {@code a} and {@code b} returns {@code true}
+     * then the return value for this method for parameters {@code a} and {@code b} must return the same result</li>
+     * <li>If {@link #equals(Object, Object)} with parameters {@code a} and {@code b} returns {@code false}
+     * then the return value for this method for parameters {@code a} and {@code b} does <strong>not</strong> have to
+     * return different results results. However this property is desirable.</li>
+     * <li>if {@code obj} is {@code null} then this method return {@code 0}</li>
+     * </ul>
+     */
+
+/**
+     * Returns {@code true} if the arguments are equal to each other and {@code false} otherwise.
+     * This method has the following restrictions:
+     * <ul>
+     * <li><i>reflexive</i> - {@code equals(a, a)} should return true</li>
+     * <li><i>symmetric</i> - {@code equals(a, b)} returns {@code true} if {@code equals(b, a)} returns
+     * {@code true}</li>
+     * <li><i>transitive</i> - if {@code equals(a, b)} returns {@code true} and {@code equals(a, c)} returns
+     * {@code true} then {@code equals(b, c)} should also return {@code true}</li>
+     * <li><i>consistent</i> - {@code equals(a, b)} should return the same result when called multiple times
+     * assuming {@code a} and {@code b} remain unchanged relative to the comparison criteria</li>
+     * <li>if {@code a} and {@code b} are both {@code null} then this method returns {@code true}</li>
+     * <li>if {@code a} is {@code null} and {@code b} is non-{@code null}, or {@code a} is non-{@code null} and
+     * {@code b} is {@code null} then this method returns {@code false}</li>
+     * </ul>
+     */
+
+/**
+     * A {@link HashingStrategy} which delegates to java's {@link Object#hashCode()}
+     * and {@link Object#equals(Object)}.
+     */
+```

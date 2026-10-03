@@ -121,12 +121,12 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1456 cases** on Windows/net10.0:
-**1442 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1468 cases** on Windows/net10.0:
+**1454 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`supplier-full-debug.trx` and `supplier-full-release.trx`; the preceding provider
-boundary is covered by `provider-clock-affected-debug.trx`. Results remain in the ignored TestResults
+`comparer-full-debug.trx` and `comparer-full-release.trx`; the comparer boundary
+is covered by `comparer-affected-debug.trx`. Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
 portable test source without PortingBatch and do not establish module completion.
@@ -428,6 +428,34 @@ decisions are 49 verified / 34 CLR replacements / 13 exclusions / 88 pending /
 the Java HashingStrategy alias/default helper to native IEqualityComparer<T>,
 preserving specialized ASCII comparison/hash and actual header/map consumer contracts.
 Overall common completion remains open.
+
+HashingStrategy now maps directly to IEqualityComparer<T>, with
+EqualityComparer<T>.Default for default typed consumers. The unused default
+helper and Java alias interface are removed; AsciiString's two comparers expose
+GetHashCode/Equals directly and retain the pinned specialized ASCII algorithms.
+Header/map consumers require ASCII-only folding, mixed sequence hashes and
+deliberate sensitive-comparer collisions. This does not replace duplicate/ordered
+header storage with a Dictionary. Native collections reject null Dictionary keys
+and permit null HashSet elements. Mutable keys must be removed before mutation;
+shared AsciiString backing arrays require arrayChanged before reinsertion.
+Original HashingStrategy comments and the framework decision are recorded in
+common-clr-design.md, with no new feature document or test exclusion.
+
+Affected Debug selection passes all 120 cases, including twelve new collection
+contracts and an independent exhaustive ASCII folding reference for all 65,536
+Latin-1 pairs. Full Debug/Release each pass 1454 / fail zero / skip the same 14
+(1468 discovered). All prior case identities/outcomes, including the 759
+non-Porting cases, remain unchanged; only those twelve contracts are added
+(comparer-identity-comparison.json). All 112 reviewed comment entries have zero
+missing: HashingStrategy preserves five and AsciiString preserves 99. All 271
+inventory entries and implementation paths match (comparer-comment-audit.json,
+comparer-inventory-summary.json). Runs use --artifacts-path
+artifacts/comparer-validation, Windows/net10.0, SDK 10.0.203/runtime 10.0.7.
+Source decisions are 49 verified / 35 CLR replacements / 13 exclusions /
+87 pending / 21 in progress; original tests remain 56 verified / ten exclusions.
+Next: review CharsetUtil and actual encoding consumers against CLR Encoding,
+fallback/BOM and encoder/decoder state ownership. Broader AsciiString parsing,
+sequence API, runtime policies and the common module remain in progress.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
 search has no caller, and the deprecated alias's result transfer is already
