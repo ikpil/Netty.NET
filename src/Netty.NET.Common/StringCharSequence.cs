@@ -36,6 +36,12 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
 
     public int Count => _count;
 
+    /// <summary>Returns the logical UTF-16 view without copying or allocating a substring.</summary>
+    public ReadOnlySpan<char> AsSpan() => _value.AsSpan(_offset, _count);
+
+    /// <summary>Returns a logical view that retains the immutable backing string.</summary>
+    public ReadOnlyMemory<char> AsMemory() => _value.AsMemory(_offset, _count);
+
     public static explicit operator string(StringCharSequence charSequence)
     {
         Contract.Requires(charSequence != null);
@@ -99,8 +105,8 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
     {
         start = Math.Max(0, start);
         if (start >= _count) return -1;
-        int index = _value.IndexOf(ch, _offset + start, _count - start);
-        return index < 0 ? index : index - _offset;
+        int index = AsSpan().Slice(start).IndexOf(ch);
+        return index < 0 ? -1 : start + index;
     }
 
     public int indexOf(string target, int start = 0)

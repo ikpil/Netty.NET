@@ -31,7 +31,7 @@ These decisions do not claim that every method of a listed component is complete
 | Indexed priority queue | `DefaultPriorityQueue.java`, scheduled-task removal; `codec-http2/.../WeightedFairQueueByteDistributor.java` priority updates | Retain the indexed reference-node heap for mutable priorities and independent queue membership. Ordinary value/immutable entries use BCL PriorityQueue. Stopped scheduler queues clear references and indices. | Core source/interfaces reviewed; bounded indexed/BCL/tree costs below. Remaining scheduler/runtime review stays open. |
 | Thread-local state | `FastThreadLocal.java`, `InternalThreadLocalMap.java`; allocator caches and event-loop workers | Physical-worker caches remain thread-local. AsyncLocal describes logical execution context and is a separate purpose. A sealed CLR Thread may be owned/wrapped where cleanup policy requires it. | Remove unnecessary ThreadGroup/JDK facade surface after caller review; keep cleanup/ownership behavior. |
 | Resource lifetime | `AbstractReferenceCounted.java`, `ReferenceCountUtil.java`, `Recycler.java`; `buffer/.../AbstractReferenceCountedByteBuf.java` | GC does not decide when shared pooled/native storage is reusable. Retain/release must deallocate exactly once and never resurrect returned storage. Dispose alone does not define shared ownership. | Native owners, borrowed views and pin leases are implemented; integrate them with future pooled retain/release consumers. Ordinary CLR object cleanup and shared storage ownership must remain distinct. |
-| Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. CharsetUtil is replaced by native Encoding/fallback policies and operation-owned codecs; explicit Java/CLR framing and replacement differences are recorded below. Integer parsing uses bounded byte spans, native Parse/TryParse APIs and checked-safe generic math. Floating-point parsing uses invariant BCL span conversion plus Java grammar and hexadecimal rounding; see the numeric decisions below. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Unused regex facades are replaced by native Regex/literal string splitting. Full native sequence API and future protocol framing/streaming integration remain. Raw platform addresses and pooled-buffer integration remain separate reviews. |
+| Text and memory views | `AsciiString.java`, `CharsetUtil.java`; buffer/codec callers | AsciiString now uses lossless byte widening, native string/span construction and bounded memory views; MemoryStream constructors were replaced by ReadOnlyMemory. Cached text agrees with mapped bytes. CharsetUtil is replaced by native Encoding/fallback policies and operation-owned codecs; explicit Java/CLR framing and replacement differences are recorded below. Integer parsing uses bounded byte spans, native Parse/TryParse APIs and checked-safe generic math. Floating-point parsing uses invariant BCL span conversion plus Java grammar and hexadecimal rounding; see the numeric decisions below. Seven allocation callers use GC.AllocateUninitializedArray directly. See common-ascii-memory.md and common-platform-runtime.md. | Unused regex facades are replaced by native Regex/literal string splitting. Native delimiter ranges/character search are reviewed below. Full native sequence API and future protocol framing/streaming integration remain. Raw platform addresses and pooled-buffer integration remain separate reviews. |
 | Runtime selection | `PlatformDependent.java`, `PlatformDependent0.java`; buffer/transport/TLS/resolver consumers | JDK-version facades and JVM reflective array allocation are removed. CLR consumers use Environment.Version and GC directly. Android detection uses the actual OS; JVM/Graal properties do not select CLR features. See common-platform-runtime.md. | NativeMemory owners/views replace the JVM cleaner hierarchy; managed words and copy/fill use CLR spans. Raw address/object-offset APIs remain in progress. See common-native-memory.md and common-heap-memory.md. |
 | Ordinary object GC fallback | Deprecated `ObjectCleaner.java`; no production registration consumer in the pinned tree | ConditionalWeakTable lifetime notification and CLR pool dispatch replace the Java live-set/weak-queue/worker loop. Action registration, diagnostic count and concurrent/context-isolated cleanup are verified. See common-object-cleanup.md. | This runtime replacement does not define pooled/native storage ownership or deterministic resource disposal. |
 
@@ -864,14 +864,14 @@ fields, TrimEnd explicitly removes only the trailing delimiters, preserving
 leading/interior empties. The escaped Java dot/dollar regexes are literal char
 separators in C#. Delete the otherwise unused test-only JavaStringTestExtensions.
 This preserves these scenarios; it is not an arbitrary-input Java splitting API.
-The separate AsciiString split(char) byte-view/lifetime policy remains for the
-native sequence API review. All other StringUtil methods remain unchanged.
+The separate delimiter-range decision below covers native byte-view/lifetime
+policy. All other StringUtil methods remain unchanged.
 
 Thirteen native consumer cases verify full matching of logical views, lossless
 Latin-1, cache invalidation, reusable Regex, invariant case/ASCII policy and native
 capture/count/trailing/zero-width splitting. Executed Java decisions and validation
-results are recorded in common-porting.md. The two original comment blocks below
-complete AsciiString's 99-comment coverage with its remaining 97 source comments.
+results are recorded in common-porting.md. The two regex comments below, four
+delimiter comments archived later and 93 source comments preserve all 99.
 
 Original AsciiString.java regex facade comments and delegated implementations:
 
@@ -901,6 +901,101 @@ Original AsciiString.java regex facade comments and delegated implementations:
      */
     public AsciiString[] split(String expr, int max) {
         return toAsciiStringArray(Pattern.compile(expr).split(this, max));
+    }
+```
+
+## Native delimiter ranges and bounded character search
+
+Pinned AsciiString.java:1075-1113 implements split(char) with a thread-local
+list of shared AsciiString slices, preserving leading/interior empty fields and
+dropping trailing empties (an empty input instead returns itself). All-module
+call/member-reference review finds no caller; original AsciiString tests do not
+call it either. Remove this unused facade instead of maintaining a cached list
+and allocating wrapper/array results. Use native byte span splitting:
+
+```csharp
+ReadOnlyMemory<byte> memory = value.AsMemory();
+foreach (Range range in memory.Span.Split((byte)',')) {
+    var (start, length) = range.GetOffsetAndLength(memory.Length);
+    ReadOnlyMemory<byte> field = memory.Slice(start, length); // Shared array view.
+    // Copy field.ToArray() only when the consumer needs independent storage.
+}
+```
+
+[MemoryExtensions.Split<T>](https://learn.microsoft.com/en-us/dotnet/api/system.memoryextensions.split?view=net-10.0)
+enumerates ranges relative to the logical span without decoding bytes to text.
+Native splitting retains all empty fields, including trailing ones; an empty
+input has one empty range. Future protocol consumers must choose their actual
+empty-field/limit policy. A byte separator represents Latin-1 directly; do not
+truncate a UTF-16 character above 255 to a byte. StringCharSequence now exposes
+AsSpan/AsMemory over its complete logical UTF-16 view for native char splitting
+and search, retaining the immutable backing string without allocating substrings.
+
+Ranges alone do not retain storage; borrowed Span/enumerators stay synchronous.
+Ordinary array-backed Memory retains that array but shares mutations, whereas
+ToArray detaches bytes. Views do not acquire a pooled/native ownership lease.
+Parent text/hash caches still require arrayChanged after external mutations;
+native byte searches read current storage directly without those caches.
+
+Character search has actual mixed-sequence consumers: NetUtil's IPv6 scope
+separator and CharUtil.SubstringAfter, plus pinned HTTP header scanning through
+AsciiString.indexOf. Keep the current ICharSequence bridge until its coordinated
+native API review. AsciiString and StringCharSequence now perform bounded native
+span IndexOf; negative starts clamp to zero and starts at/beyond the logical end
+return -1. Byte strings reject search characters above 255. In the pinned Java
+and old CLR byte implementation, start+arrayOffset can overflow for large positive
+starts on nonzero-offset views and read a negative array index. Returning -1 for
+those positions preserves the intended logical search boundary, not the accidental
+overflow exception. Native direct slicing retains the BCL's own range exceptions.
+
+Independent byte scans, exact extracted Java methods and original search test
+bodies, UTF-16 views, native empty-field policies and shared/copy lifetimes are
+covered by the evidence recorded in common-porting.md. No generalized Java
+split adapter is introduced. AsciiString retains 93 original comments in source
+plus six archived here/in the regex section, preserving all 99. Sequence-pattern
+search, slicing and remaining ICharSequence/StringExtensions review remain open.
+
+Original AsciiString.java delimiter facade and all four original comments:
+
+```java
+    /**
+     * Splits the specified {@link String} with the specified delimiter..
+     */
+    public AsciiString[] split(char delim) {
+        final List<AsciiString> res = InternalThreadLocalMap.get().arrayList();
+
+        int start = 0;
+        final int length = length();
+        for (int i = start; i < length; i++) {
+            if (charAt(i) == delim) {
+                if (start == i) {
+                    res.add(EMPTY_STRING);
+                } else {
+                    res.add(new AsciiString(value, start + arrayOffset(), i - start, false));
+                }
+                start = i + 1;
+            }
+        }
+
+        if (start == 0) { // If no delimiter was found in the value
+            res.add(this);
+        } else {
+            if (start != length) {
+                // Add the last element if it's not empty.
+                res.add(new AsciiString(value, start + arrayOffset(), length - start, false));
+            } else {
+                // Truncate trailing empty elements.
+                for (int i = res.size() - 1; i >= 0; i--) {
+                    if (res.get(i).isEmpty()) {
+                        res.remove(i);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return res.toArray(EmptyArrays.EMPTY_ASCII_STRINGS);
     }
 ```
 

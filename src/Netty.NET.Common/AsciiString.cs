@@ -903,27 +903,15 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      */
     public int indexOf(char ch, int start)
     {
-        if (ch > MAX_CHAR_VALUE)
+        start = Math.Max(0, start);
+        if (ch > MAX_CHAR_VALUE || start >= _length)
         {
             return INDEX_NOT_FOUND;
         }
 
-        if (start < 0)
-        {
-            start = 0;
-        }
-
-        byte chAsByte = c2b0(ch);
-        int len = _offset + _length;
-        for (int i = start + _offset; i < len; ++i)
-        {
-            if (_value[i] == chAsByte)
-            {
-                return i - _offset;
-            }
-        }
-
-        return INDEX_NOT_FOUND;
+        // Bound the logical start before slicing; adding the backing offset can overflow.
+        int index = AsSpan().Slice(start).IndexOf((byte)ch);
+        return index < 0 ? INDEX_NOT_FOUND : start + index;
     }
 
     /**
@@ -1314,64 +1302,6 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         return true;
-    }
-
-    /**
-     * Splits the specified {@link String} with the specified delimiter..
-     */
-    public AsciiString[] split(char delim)
-    {
-        List<AsciiString> res = InternalThreadLocalMap.get().arrayList<AsciiString>();
-
-        int start = 0;
-        int length = this.length();
-        for (int i = start; i < length; i++)
-        {
-            if (charAt(i) == delim)
-            {
-                if (start == i)
-                {
-                    res.Add(EMPTY_STRING);
-                }
-                else
-                {
-                    res.Add(new AsciiString(_value, start + arrayOffset(), i - start, false));
-                }
-
-                start = i + 1;
-            }
-        }
-
-        if (start == 0)
-        {
-            // If no delimiter was found in the value
-            res.Add(this);
-        }
-        else
-        {
-            if (start != length)
-            {
-                // Add the last element if it's not empty.
-                res.Add(new AsciiString(_value, start + arrayOffset(), length - start, false));
-            }
-            else
-            {
-                // Truncate trailing empty elements.
-                for (int i = res.Count - 1; i >= 0; i--)
-                {
-                    if (res[i].isEmpty())
-                    {
-                        res.RemoveAt(i);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return res.ToArray();
     }
 
     /**

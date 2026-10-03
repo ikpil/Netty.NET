@@ -121,15 +121,15 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1672 cases** on Windows/net10.0:
-**1658 passed / 0 failed / 14 skipped** in Debug and Release.
+The current default suite executes **1696 cases** on Windows/net10.0:
+**1682 passed / 0 failed / 14 skipped** in Debug and Release.
 The common library and full test project build with zero errors; existing compiler
 and analyzer warnings are not claimed resolved. Current evidence is
-`ascii-regex-final-full-debug.trx` and `ascii-regex-full-release.trx`;
-the affected boundary is covered by `ascii-regex-affected-debug.trx`. Unused
-AsciiString regex facades and the JDK-only fixture adapter are removed in favor
-of native Regex/String.Split consumers. The earlier numeric and auto-scaling
-repairs remain recorded below.
+`ascii-delimiter-full-debug.trx` and `ascii-delimiter-full-release.trx`;
+affected Debug passes 409 and checked Release passes all 24 new cases.
+Unused delimiter splitting is replaced by native span ranges; byte/UTF-16
+character search uses bounded native spans, fixing backing-offset overflow.
+The earlier regex, numeric and auto-scaling work remains recorded below.
 Results remain in the ignored TestResults
 directory. Older checkpoint evidence is referenced by its corresponding records
 below and the manifest rather than repeated here. Full suites compile every
@@ -674,6 +674,41 @@ Source decisions remain 49 verified / 36 CLR replacements / 13 exclusions /
 86 pending / 21 in progress; original tests remain 56 verified / ten exclusions.
 Next: review AsciiString delimiter byte views, sequence/search APIs and remaining
 ICharSequence/StringExtensions against native span/memory/string consumers.
+AsciiString and common remain in progress.
+
+### Native delimiter ranges/character search checkpoint
+
+Remove unused AsciiString.split(char) after all-module call/member-reference
+review. Native byte Split ranges preserve every empty field and let consumers
+choose shared Memory slices or detached arrays. StringCharSequence exposes
+logical UTF-16 AsSpan/AsMemory without substring allocation. Actual mixed-sequence
+search consumers retain their bridge and use bounded native span IndexOf.
+Four baseline regressions expose start+backingOffset overflow; all pass after
+checking logical bounds. All 99 AsciiString comments remain (93 in source, two
+regex and four delimiter comments archived in common-clr-design.md).
+
+Exact pinned methods on Corretto 21.0.11: 20640 corpus rows. All 16528 ordinary
+search rows agree; 2048 Java overflow exceptions deliberately become -1. Of
+2064 splits, 2057 agree and seven retain trailing empties by native policy.
+Two original character-search test bodies pass all 21 unchanged assertions.
+Independent byte scans and native consumer cases cover all 256 byte values,
+logical offsets, extreme starts, UTF-16 and shared/copy ownership. Warm 20000
+native byte/char search+split+memory iterations allocate zero and create no
+thread-local map; this bounded smoke is not a general throughput claim.
+
+Affected Debug 409 passes; checked Release 24 passes. Full Debug/Release each
+1682 passed / zero failed / same 14 skipped (1696 discovered). All prior 1672
+identities/outcomes and 759 non-Porting cases remain; only 24 new cases are added.
+All 271 pinned inventory paths and prior missing-comment counts are unchanged.
+Evidence: ascii-delimiter-before.trx, ascii-delimiter-affected-debug.trx,
+ascii-delimiter-checked-release.trx, ascii-delimiter-full-debug.trx,
+ascii-delimiter-full-release.trx, ascii-delimiter-identity-comparison.json,
+ascii-delimiter-comment-audit.json, ascii-delimiter-inventory-summary.json,
+ascii-delimiter-java-decisions.txt, ascii-delimiter-java-clr-oracle.json,
+ascii-delimiter-native-smoke.txt. Java/CLR harnesses/corpus remain in ignored
+artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
+Source/test decision counts remain unchanged. Next: sequence-pattern search,
+slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
 
 UnaryPromiseNotifier is now recorded as a CLR replacement: the pinned all-module
