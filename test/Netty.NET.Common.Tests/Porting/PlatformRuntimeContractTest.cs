@@ -23,11 +23,17 @@ public class PlatformRuntimeContractTest
     [Fact]
     public void GraalNativeImagePropertiesDoNotEnableReflectiveAccess()
     {
-        WithFreshPlatform(new()
+        foreach (string setting in new string[] { null, "false", "true" }) WithFreshPlatform(new()
         {
             ["org.graalvm.nativeimage.imagecode"] = "runtime",
-            ["io.netty.tryReflectionSetAccessible"] = null
-        }, platform => Assert.False(InvokeBoolean(platform, nameof(PlatformDependent0.IsExplicitTryReflectionSetAccessible))));
+            ["io.netty.tryReflectionSetAccessible"] = setting
+        }, platform =>
+        {
+            // CLR nonpublic member lookup has no mutable JVM accessible flag.
+            MethodInfo probe = platform.GetMethod("IsAndroid0", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.NotNull(probe);
+            Assert.Equal(OperatingSystem.IsAndroid(), (bool)probe.Invoke(null, null));
+        });
     }
 
     [Fact]

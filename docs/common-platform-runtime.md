@@ -23,9 +23,11 @@ Android detection uses `OperatingSystem.IsAndroid()`, rather than accepting
 preference remains diagnostic, but `sun.misc.unsafe.memory.access` and future
 .NET version numbers do not select JDK Unsafe policies. `hasUnsafe()` still
 reports that JVM Unsafe is unavailable, independently of that preference.
-Graal native-image properties also do not enable reflective access. The explicit
-Netty reflection preference still has its configured meaning; this change does
-not certify the remaining reflection adapters as correct CLR APIs.
+At this historical checkpoint Graal properties did not enable the Java-shaped
+reflection preference. The subsequent CLR access review removes that preference
+and the no-op TrySetAccessible adapter. Actual CLR MemberInfo/BindingFlags operations
+apply their own access rules; the same runtime fixture tests a nonpublic invocation
+with absent/false/true Java reflection flags. See common-clr-design.md.
 
 The two raw-memory copy stubs were subsequently retired in the bounded native
 access checkpoint (common-clr-design.md). At this historical runtime checkpoint

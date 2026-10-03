@@ -48,7 +48,6 @@ public class PlatformDependent0
     // ImageInfo.java
     // CLR adaptation: Graal native-image properties do not describe this runtime.
 
-    private static readonly bool IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE = ExplicitTryReflectionSetAccessible0();
 
     // Package-private for testing.
     //public static readonly MethodHandle IS_VIRTUAL_THREAD_METHOD_HANDLE = getIsVirtualThreadMethodHandle();
@@ -577,36 +576,6 @@ public class PlatformDependent0
         return UNALIGNED;
     }
 
-    public static void ThrowException<E>(E cause) where E : Exception
-    {
-        ThrowException0<E>(cause);
-    }
-
-    //@SuppressWarnings("unchecked")
-    private static void ThrowException0<E>(E t) where E : Exception
-    {
-        throw t;
-    }
-
-    private static void RethrowIfPossible(Exception cause)
-    {
-        ThrowException(new NotImplementedException());
-        // if (cause instanceof Error) {
-        //     throw (Error) cause;
-        // }
-        // if (cause instanceof Exception) {
-        //     throw (Exception) cause;
-        // }
-    }
-
-
-
-
-
-
-
-
-
 
     public static int HashCodeAsciiCompute(long value, int hash)
     {
@@ -637,20 +606,6 @@ public class PlatformDependent0
         return value & 0x1f;
     }
 
-    public static Assembly GetClassLoader(Type clazz)
-    {
-        return clazz.Assembly;
-    }
-
-    public static Assembly GetContextClassLoader()
-    {
-        return Thread.CurrentThread.GetType().Assembly;
-    }
-
-    public static Assembly GetSystemClassLoader()
-    {
-        return Assembly.GetEntryAssembly();
-    }
 
     public static int AddressSize()
     {
@@ -683,16 +638,5 @@ public class PlatformDependent0
         return isAndroid;
     }
 
-    private static bool ExplicitTryReflectionSetAccessible0()
-    {
-        // we disable reflective access
-        return SystemPropertyUtil.GetBoolean("io.netty.tryReflectionSetAccessible",
-            false);
-    }
-
-    public static bool IsExplicitTryReflectionSetAccessible()
-    {
-        return IS_EXPLICIT_TRY_REFLECTION_SET_ACCESSIBLE;
-    }
 
 }

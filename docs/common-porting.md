@@ -121,32 +121,22 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1895 cases** on Windows/net10.0:
-**1881 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: byte-range-full-debug.trx and byte-range-full-release.trx. All 1874 prior
-case identities/outcomes remain, including 759 original non-Porting cases.
-Twenty-one new byte-range cases pass; eight reproduce pre-repair range/null
-defects. Checked byte/AsciiString/platform/NetUtil Release passes 375 cases.
-The 17024-input comparison/zero/hash oracle matches exact scalar and Unsafe Java
-kernels on Corretto21.0.11. Native host byte order and Java-compatible wrapping
-hash values remain. Fixed-time byte comparison uses the documented BCL primitive;
-functional oracle results are not a timing-security measurement.
-Six scalar/strategy helpers and four throwing array/hash stubs retire. Equality,
-zero scans and hashing no longer dispatch on JVM Unsafe/unaligned flags. Nonpositive
-comparison/zero lengths retain empty results; positive ranges and all hash ranges
-are bounded, and null storage fails explicitly. Original explanatory comments
-are preserved. Original hash tests retain their 1000 byte/string comparisons and
-independent Java tables; no portable source or test case was excluded.
-Uppercase method naming, native memory ownership/wrap checks and native ref-int
-counter contracts remain. Both platform classes/common still require further
-review; native ordered publication and non-byte fixed-time APIs remain pending.
-Library/full test builds have zero errors; existing warnings remain.
-Earlier ASCII trim, word conversion, OWS, comparison and hash checkpoints remain.
-The earlier string, pattern, delimiter, numeric and scheduling work remains below.
-Results remain in the ignored TestResults
-directory. Older checkpoint evidence is referenced by its corresponding records
-below and the manifest rather than repeated here. Full suites compile every
-portable test source without PortingBatch and do not establish module completion.
+The current default suite executes **1906 cases** on Windows/net10.0:
+**1892 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: clr-platform-access-full-debug.trx and clr-platform-access-full-release.trx.
+All 1895 prior case identities/outcomes remain, including 759 original non-Porting
+cases and every skip. Eleven new initialization/exception cases pass; the corrected
+before-repair run fails ten and passes one against the last committed library.
+Targeted Debug passes 35 cases; affected checked Release passes 277, with five
+unchanged skips among 282 discovered cases. Exact pinned Java initialization
+confirms the portable purpose; CLR type identity/generic state and failure types
+are deliberate runtime adaptations. Both platform classes/common remain unfinished.
+All tracked C# methods/local functions start uppercase; original comments and the
+pinned 271-file inventory remain checked. Library/full test builds have zero errors;
+existing warnings remain. Results are in the ignored TestResults directory.
+Full suites compile every portable test source without PortingBatch and do not
+establish module completion. Decisions and original comment provenance are in
+[common-clr-design.md](common-clr-design.md).
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.
@@ -723,6 +713,38 @@ artifacts. Windows/net10.0 SDK 10.0.203/runtime 10.0.7. No new feature MD.
 Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
+
+### CLR initialization/reflection/exception checkpoint
+
+Pinned ClassInitializerUtil initializes classes before native bootstrap; exact CLR
+Types now use RuntimeHelpers.RunClassConstructor, rather than reading metadata or
+resolving names against another assembly. ReflectionUtil retains its verified CLR
+generic resolver and retires the no-op JVM accessible-object API. Misleading
+platform loader aliases, the JVM reflection preference and unchecked-throw helpers
+retire after pinned common and downstream consumer review. Direct propagation and
+bare throw retain FastThreadLocal and shutdown-startup failure origins. Existing
+Graal fixture identity now tests real CLR reflection under three Java flag settings.
+
+Eleven new CLR cases: corrected before-repair Debug fails ten/passes one; current
+targeted Debug passes 35. Full default Debug/Release each discover 1906/pass 1892/
+fail zero/retain 14 unchanged skips. All 1895 prior identities/outcomes, including
+759 original non-Porting cases, remain. Affected checked Release discovers 282/
+passes 277/skips five unchanged cases. Original ClassInitializerUtil's five and
+ReflectionUtil's seven comments are preserved, including exact replacement
+provenance; remaining audit counts do not regress. Source review becomes verified
+for those two entries; platform/source-module completion remains open. No new
+exclusion or skip. Version resource discovery is a subsequent review candidate.
+
+The unchanged pinned initializer runs with a minimal same-loader dependency shim
+on Corretto 21.0.11. It verifies synchronous/once-only/64-concurrent initialization,
+cause/no-retry failures, empty/no-initializer types and null rejection. JVM and CLR
+failure types differ explicitly. Native integration, trimming/AOT and throughput
+are unverified. Details and preserved comments: common-clr-design.md.
+Evidence: clr-platform-access-before-debug.trx, clr-platform-access-final-targeted-debug.trx,
+clr-platform-access-full-debug.trx, clr-platform-access-full-release.trx,
+clr-platform-access-checked-release.trx, clr-platform-access-comment-audit.json,
+clr-platform-access-identity-and-inventory.json; ignored oracle sources/logs and
+method-casing verification in artifacts/clr-platform-access-validation.
 
 ### Native byte comparison/hash checkpoint
 
@@ -1762,7 +1784,8 @@ types. Find-cache keys include the requested superclass and parameter name, with
 the constructed runtime class, preventing incorrect reuse across different parents.
 Seven portable upstream cases and seven CLR contracts pass; JVM-only erased-variable
 failures explicitly skip. Enclosing CLR generic arguments and array bindings remain
-available. The ReflectionUtil accessibility/platform review remains in progress.
+available. ReflectionUtil's no-op JVM accessibility facade is now retired;
+actual CLR reflection operations replace it, while the generic resolver remains.
 ThreadExecutorMap's four original wrapping/restoration cases now run, including
 the real CLR thread factory. NettyRuntime's seven original configuration/race cases
 use a serialized environment-property harness and non-interruptible holder locks.

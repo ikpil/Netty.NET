@@ -198,18 +198,10 @@ public class FastThreadLocal<V> : IFastThreadLocal where V : class
 
     private V Initialize(InternalThreadLocalMap threadLocalMap)
     {
-        V v = null;
-        try
+        V v = InitialValue();
+        if (v == InternalThreadLocalMap.UNSET)
         {
-            v = InitialValue();
-            if (v == InternalThreadLocalMap.UNSET)
-            {
-                throw new ArgumentException("InternalThreadLocalMap.UNSET can not be initial value.");
-            }
-        }
-        catch (Exception e)
-        {
-            PlatformDependent.ThrowException(e);
+            throw new ArgumentException("InternalThreadLocalMap.UNSET can not be initial value.");
         }
 
         threadLocalMap.SetIndexedVariable(_index, v);
@@ -331,14 +323,7 @@ public class FastThreadLocal<V> : IFastThreadLocal where V : class
         if (v != InternalThreadLocalMap.UNSET)
         {
             FastThreadLocal.RemoveFromVariablesToRemove(threadLocalMap, this);
-            try
-            {
-                OnRemoval((V)v);
-            }
-            catch (Exception e)
-            {
-                PlatformDependent.ThrowException(e);
-            }
+            OnRemoval((V)v);
 
             return (V)v;
         }

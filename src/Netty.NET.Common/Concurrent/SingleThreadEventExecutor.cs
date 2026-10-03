@@ -1322,7 +1322,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 if (cause is OutOfMemoryException || cause is StackOverflowException || cause is ThreadAbortException)
                 {
                     // Also rethrow as it may be an OOME for example
-                    PlatformDependent.ThrowException(cause);
+                    throw;
                 }
 
                 return true;

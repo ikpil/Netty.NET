@@ -15,51 +15,12 @@
  */
 
 using System;
-using System.Security;
 
 namespace Netty.NET.Common.Internal;
 
 public static class ReflectionUtil
 {
-    /**
-     * Try to call {@link AccessibleObject#setAccessible(boolean)} but will catch any {@link SecurityException} and
-     * {@link java.lang.reflect.InaccessibleObjectException} and return it.
-     * The caller must check if it returns {@code null} and if not handle the returned exception.
-     */
-    public static Exception TrySetAccessible(object obj, bool checkAccessible)
-    {
-        if (checkAccessible && !PlatformDependent0.IsExplicitTryReflectionSetAccessible())
-        {
-            return new NotSupportedException("Reflective setAccessible(true) disabled");
-        }
 
-        try
-        {
-            //obj.setAccessible(true);
-            return null;
-        }
-        catch (SecurityException e)
-        {
-            return e;
-        }
-        catch (Exception e)
-        {
-            return HandleInaccessibleObjectException(e);
-        }
-    }
-
-    private static MemberAccessException HandleInaccessibleObjectException(Exception e)
-    {
-        // JDK 9 can throw an inaccessible object exception here; since Netty compiles
-        // against JDK 7 and this exception was only added in JDK 9, we have to weakly
-        // check the type
-        if (e is MemberAccessException || e.GetType().FullName == "System.MemberAccessException")
-        {
-            return e as MemberAccessException;
-        }
-
-        throw e;
-    }
 
     private static Type Fail(Type type, string typeParamName)
     {

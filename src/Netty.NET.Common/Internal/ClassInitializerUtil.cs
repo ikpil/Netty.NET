@@ -15,53 +15,33 @@
  */
 
 using System;
-using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Security;
 
 namespace Netty.NET.Common.Internal;
 
-/**
- * Utility which ensures that classes are loaded by the {@link ClassLoader}.
- */
+/// <summary>Explicitly initializes runtime types before native bootstrap work.</summary>
+/// <remarks>Types carry their own assembly/load-context identity. Initialization
+/// failures propagate; only type-loading and security failures are best effort.</remarks>
 public static class ClassInitializerUtil
 {
-    /**
-     * Preload the given classes and so ensure the {@link ClassLoader} has these loaded after this method call.
-     *
-     * @param loadingClass      the {@link Class} that wants to load the classes.
-     * @param classes           the classes to load.
-     */
-    public static void TryLoadClasses(Type loadingType, params Type[] classes)
+    /// <summary>Runs each exact type's static initializer in the supplied order.</summary>
+    [RequiresUnreferencedCode("Type initializers must be preserved when trimming.")]
+    public static void TryInitialize(params Type[] types)
     {
-        if (loadingType == null)
-            throw new ArgumentNullException(nameof(loadingType));
-
-        Assembly assembly = loadingType.Assembly;
-        foreach (Type type in classes)
+        ArgumentNullException.ThrowIfNull(types);
+        foreach (Type type in types)
         {
-            TryLoadType(assembly, type.FullName);
-        }
-    }
-
-    private static void TryLoadType(Assembly assembly, string typeName)
-    {
-        try
-        {
-            // Load the type and ensure it is initialized
-            Type type = assembly.GetType(typeName, throwOnError: false, ignoreCase: false);
-            if (type != null)
+            ArgumentNullException.ThrowIfNull(type);
+            if (type.ContainsGenericParameters)
+                throw new ArgumentException("A closed runtime type is required for initialization.", nameof(types));
+            try
             {
-                // Accessing Type.TypeInitializer ensures the type is initialized (similar to Class.forName with initialize=true)
-                _ = type.TypeInitializer;
+                RuntimeHelpers.RunClassConstructor(type.TypeHandle);
             }
-        }
-        catch (TypeLoadException)
-        {
-            // Ignore type loading failures
-        }
-        catch (SecurityException)
-        {
-            // Ignore security-related failures
+            catch (TypeLoadException) { }
+            catch (SecurityException) { }
         }
     }
 }

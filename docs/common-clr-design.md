@@ -14,6 +14,190 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## CLR initialization, reflection and exception origins
+
+Pinned ClassInitializerUtil.java calls Class.forName(name, true, loader): it
+initializes the class, rather than only loading metadata. Its actual bootstrap
+users are Unix, epoll, kqueue, io_uring, Quiche and the macOS DNS provider. Unix's
+OnLoad comment identifies avoiding a JNI class-loader deadlock as the purpose.
+Those native module integrations remain future work.
+
+ClassInitializerUtil.TryInitialize accepts exact CLR Types and calls
+RuntimeHelpers.RunClassConstructor on each TypeHandle in order. The former
+loadingType.Assembly.GetType(name) lookup could select another type identity;
+reading TypeInitializer metadata did not execute the initializer. There is no
+loading-class anchor or alias for a Java loader. Initialization completes before
+returning, runs once under concurrent/repeated calls, and preserves the supplied
+AssemblyLoadContext identity. Closed generic types have distinct CLR static state;
+open generic definitions and null lists/entries fail explicitly. Empty lists and
+types without initializers are valid. Only type-loading/security failures are
+best effort; constructor failures propagate as TypeInitializationException with
+their cause and are not retried. The API carries the BCL trimming annotation;
+trimmed/AOT/native bootstrap integration is not established by these tests.
+
+The unchanged pinned Java initializer, with only a same-loader lookup shim for
+PlatformDependent, was executed on Corretto 21.0.11. It confirms synchronous and
+once-only initialization, 64 concurrent calls, failure propagation/no retry, empty
+lists/no-initializer types and null rejection. JVM failures use
+ExceptionInInitializerError followed by NoClassDefFoundError; CLR uses
+TypeInitializationException. The harness does not exercise JNI, different Java
+class loaders, SecurityManager or the complete common module. Seven CLR cases
+add exact collectible-load-context identity and reified generic validation.
+
+Retire GetClassLoader/GetContextClassLoader/GetSystemClassLoader in both platform
+classes. A Type's Assembly owns its metadata/resources; it is not a Java loader.
+Thread.CurrentThread.GetType().Assembly returned corelib, and GetEntryAssembly
+could return null; neither represents contextual/system loading. The original
+Version identifies resources through the context loader, ResourceLeakDetectorFactory
+resolves a configured detector through the system loader, and native compression,
+transport, DNS, Quiche and SSL code resolves native libraries/optional classes.
+ClassResolvers uses contextual/owner loading for serialization. Future CLR module
+work must choose explicit Assembly resource ownership and AssemblyLoadContext or
+contextual-reflection policy for each purpose. The native custom leak factory and
+NativeLibraryUtil already use real CLR reflection/loading; their existing tests
+remain. Version's current working-directory property file and ignored Assembly
+argument still need migration; retiring misleading loader names does not fix that.
+
+Retire the no-op ReflectionUtil.TrySetAccessible, its unreachable JDK access-error
+translator and the platform reflective-access flag. JVM AccessibleObject has a
+mutable accessible flag; CLR members do not. Use actual MemberInfo/BindingFlags
+operations and handle their real failures. Original Unsafe/direct-buffer probes,
+NioIoHandler selector fields and SslMasterKeyHandler's private JDK TLS fields do
+not create equivalent CLR access contracts. Their module policies remain open.
+ReflectionUtil's previously reviewed constructed-generic resolver remains intact,
+with seven portable matcher cases and seven CLR contracts. The existing Graal
+runtime-test identity now invokes a real nonpublic method, rather than checking a
+retired flag: absent/false/true Java reflection properties do not change CLR access.
+
+C# has no checked-exception compiler bypass to emulate. Retire ThrowException and
+the unused throwing RethrowIfPossible stub. FastThreadLocal propagates InitialValue
+and OnRemoval failures directly; initialization failure leaves the binding unset
+and removal clears it before invoking the callback. StringBuilder.Append needs
+no Java Appendable IOException catch. Shutdown startup uses bare throw after
+publishing termination failure, retaining the original exception and stack. Four
+CLR cases reproduce lost callback/startup origins before repair and verify retry,
+cleanup and faulted Termination. Synthetic fatal exceptions do not exhaust the
+host. Stored/asynchronous exception transfer remains a distinct Task/EDI policy.
+
+Framework contracts: [explicit static initialization](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.runtimehelpers.runclassconstructor?view=net-10.0),
+[assembly load contexts](https://learn.microsoft.com/en-us/dotnet/core/dependency-loading/understanding-assemblyloadcontext),
+and [exception propagation](https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions).
+Original explanatory comments for the retired JVM-specific operations follow;
+existing source licenses and generic-resolution comments remain beside the code.
+
+### Pinned PlatformDependent comments
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java
+
+Line 552:
+
+```java
+/**
+     * Raises an exception bypassing compiler checks for checked exceptions.
+     */
+```
+
+Line 1376:
+
+```java
+/**
+     * Return the {@link ClassLoader} for the given {@link Class}.
+     */
+```
+
+Line 1383:
+
+```java
+/**
+     * Return the context {@link ClassLoader} for the current {@link Thread}.
+     */
+```
+
+Line 1390:
+
+```java
+/**
+     * Return the system {@link ClassLoader}.
+     */
+```
+
+### Pinned PlatformDependent0 comments
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent0.java
+
+Line 1229:
+
+```java
+// we disable reflective access
+```
+
+### Pinned ReflectionUtil comments
+
+Source: common/src/main/java/io/netty/util/internal/ReflectionUtil.java
+
+Line 29:
+
+```java
+/**
+     * Try to call {@link AccessibleObject#setAccessible(boolean)} but will catch any {@link SecurityException} and
+     * {@link java.lang.reflect.InaccessibleObjectException} and return it.
+     * The caller must check if it returns {@code null} and if not handle the returned exception.
+     */
+```
+
+Line 49:
+
+```java
+// JDK 9 can throw an inaccessible object exception here; since Netty compiles
+```
+
+Line 50:
+
+```java
+// against JDK 7 and this exception was only added in JDK 9, we have to weakly
+```
+
+Line 51:
+
+```java
+// check the type
+```
+
+### Pinned ClassInitializerUtil comments
+
+Source: common/src/main/java/io/netty/util/internal/ClassInitializerUtil.java
+
+Line 18:
+
+```java
+/**
+ * Utility which ensures that classes are loaded by the {@link ClassLoader}.
+ */
+```
+
+Line 25:
+
+```java
+/**
+     * Preload the given classes and so ensure the {@link ClassLoader} has these loaded after this method call.
+     *
+     * @param loadingClass      the {@link Class} that wants to load the classes.
+     * @param classes           the classes to load.
+     */
+```
+
+Line 40:
+
+```java
+// Load the class and also ensure we init it which means its linked etc.
+```
+
+Line 43:
+
+```java
+// Ignore
+```
+
 ## Native byte comparison, zero checks and ASCII hashing
 
 Pinned common AsciiString uses logical-slice equality and the low-five-bit ASCII

@@ -255,13 +255,6 @@ public static class PlatformDependent
 
 
     /**
-     * Raises an exception bypassing compiler checks for checked exceptions.
-     */
-    public static void ThrowException(Exception t) {
-        PlatformDependent0.ThrowException(t);
-    }
-
-    /**
      * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
      * @deprecated please use new ConcurrentDictionary<K, V>() directly.
      */
@@ -668,26 +661,6 @@ public static class PlatformDependent
         //return hasUnsafe() ? new MpmcArrayQueue<T>(capacity) : new MpmcAtomicArrayQueue<T>(capacity);
     }
 
-    /**
-     * Return the {@link ClassLoader} for the given {@link Class}.
-     */
-    public static Assembly GetClassLoader(Type clazz) {
-        return PlatformDependent0.GetClassLoader(clazz);
-    }
-
-    /**
-     * Return the context {@link ClassLoader} for the current {@link Thread}.
-     */
-    public static Assembly GetContextClassLoader() {
-        return PlatformDependent0.GetContextClassLoader();
-    }
-
-    /**
-     * Return the system {@link ClassLoader}.
-     */
-    public static Assembly GetSystemClassLoader() {
-        return PlatformDependent0.GetSystemClassLoader();
-    }
 
     /**
      * Returns a new concurrent {@link Deque}.

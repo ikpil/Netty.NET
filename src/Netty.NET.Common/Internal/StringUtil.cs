@@ -151,14 +151,7 @@ public static class StringUtil
      */
     public static StringBuilder ByteToHexStringPadded(StringBuilder buf, int value)
     {
-        try
-        {
-            buf.Append(ByteToHexStringPadded(value));
-        }
-        catch (IOException e)
-        {
-            PlatformDependent.ThrowException(e);
-        }
+        buf.Append(ByteToHexStringPadded(value));
 
         return buf;
     }
@@ -214,14 +207,7 @@ public static class StringUtil
      */
     public static StringBuilder ByteToHexString(StringBuilder buf, int value)
     {
-        try
-        {
-            buf.Append(ByteToHexString(value));
-        }
-        catch (IOException e)
-        {
-            PlatformDependent.ThrowException(e);
-        }
+        buf.Append(ByteToHexString(value));
 
         return buf;
     }
