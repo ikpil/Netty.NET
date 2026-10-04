@@ -10,7 +10,6 @@ public class PlatformAndAddressContractTest
     [Fact]
     public void ClrProbesReportNativeCapabilities()
     {
-        Assert.Equal(IntPtr.Size, PlatformDependent.AddressSize());
         Assert.Equal(OperatingSystem.IsAndroid(), PlatformDependent.IsAndroid());
         var allocator = new NativeMemoryAllocator(8);
         using (var owner = allocator.Allocate(8, true))
@@ -21,12 +20,14 @@ public class PlatformAndAddressContractTest
             Assert.Equal(8L, allocator.ReservedBytes);
         }
         Assert.Equal(0L, allocator.ReservedBytes);
-        if (!SystemPropertyUtil.Contains("os.name") && OperatingSystem.IsWindows())
+        Assert.Equal(OperatingSystem.IsWindows(), PlatformDependent.IsWindows());
+        Assert.Equal(OperatingSystem.IsMacOS(), PlatformDependent.IsOsx());
+        if (OperatingSystem.IsWindows())
         {
             Assert.True(PlatformDependent.IsWindows());
             Assert.Equal("windows", PlatformDependent.NormalizedOs());
         }
-        if (!SystemPropertyUtil.Contains("os.arch") && RuntimeInformation.ProcessArchitecture == Architecture.X64)
+        if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
             Assert.Equal("x86_64", PlatformDependent.NormalizedArch());
         Assert.True(PlatformDependent.Tmpdir().Exists);
     }

@@ -121,32 +121,32 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1940 cases** on Windows/net10.0:
-**1926 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: clr-capabilities-full-debug.trx and clr-capabilities-full-release.trx.
+The current default suite executes **1958 cases** on Windows/x64/net10.0:
+**1944 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: platform-state-full-debug.trx and platform-state-full-release.trx.
 All 1940 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain. No cases are added or
-excluded. Six JVM feature facades, three private probes/four fields and the
-commented/no-op PlatformDependent0 bootstrap class retire after actual common
-and downstream consumer review. The exact wrapping hash kernels/constants and
-actual CLR Android probe move privately into the existing PlatformDependent.
-Existing fresh-load runtime identities now test real native allocate/write/read/
-release and pinned Java hash results under noUnsafe/tryUnsafe/legacy JBoss flags,
-instead of unavailable-provider constants. The native shared-limit fixture stays.
-Targeted Debug passes 70; affected checked Release passes all 437. All 271 comment
-audit totals remain, with no coverage regression. All 81 PlatformDependent0
-comments are accounted for: eleven supplemental exact comments are archived in
-the existing design document, with previously recorded provenance preserved.
+the later byte-wrap regression and every skip, remain. Eighteen CLR runtime/cache/
+file scenarios are added. The first 16 new cases reproduce 14 identity/cache
+failures before repair; the two initial filesystem cases already pass.
+Actual OperatingSystem/ProcessArchitecture now select native runtime identity;
+JVM overrides and duplicate width/username facades retire. Linux classifiers now
+publish an ordered unique immutable IReadOnlyList through standard Lazy; malformed
+settings fail and remain cached only within that preference domain. Existing
+property parser fixtures remain independent, and native OS operations continue.
+Targeted Debug passes 32; affected checked Release passes all 115. All 271 comment
+audit totals/coverage are unchanged, prior Java/C# provenance remains and stranded
+direct-memory documentation is moved away from the unrelated temporary-dir method.
 Pinned inventory/paths match and uppercase method/local-function verification
-passes. Existing warnings remain. Source statuses are unchanged; removing the
-JVM helper class does not certify whole platform or common completion.
-Results remain in ignored TestResults and artifacts/clr-capabilities-validation;
-see clr-capabilities-identity-and-inventory.json and
-clr-capabilities-comment-audit.json. Decisions and downstream scope are in
-common-clr-design.md. Next: real platform OS/process-width and classifier/cached
-state initialization, then remaining collection consumers. Native transport,
-buffer/TLS backend and CLR allocation-diagnostics integration remain downstream
-module work. Full suites include every portable test source without PortingBatch.
+passes. Existing warnings remain. Source statuses stay unchanged; platform/common
+review and downstream native broadcast/loading policy remain open.
+Results remain in ignored TestResults and artifacts/platform-state-validation;
+see platform-state-before-debug.trx, platform-state-identity-and-inventory.json
+and platform-state-comment-audit.json. Actual consumer/native decisions and
+original comments are in common-clr-design.md. OS-release parsing uses real
+temporary files; other OS/architecture and Unix permission-denial execution are
+not claimed. Next: remaining concurrent-map/provider aliases, normalized runtime
+diagnostics and collection consumers, based on actual common/downstream uses.
+Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

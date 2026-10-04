@@ -53,33 +53,35 @@ public static class PlatformDependent
     private const int HASH_CODE_C2 = unchecked((int)0x1b873593);
     private static readonly bool IS_ANDROID = IsAndroid0();
 
-    private static readonly bool MAYBE_SUPER_USER;
-
     private static readonly bool CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !IsAndroid();
 
+    // CLR identity cannot be overridden by JVM system-property environment keys.
+    // Initialize the OS flags before temporary-directory fallback uses them.
+    private static readonly bool IS_WINDOWS = OperatingSystem.IsWindows();
+    private static readonly bool IS_OSX = OperatingSystem.IsMacOS();
     private static readonly DirectoryInfo TMPDIR = Tmpdir0();
-    private static readonly int BIT_MODE = BitMode0();
-    private static readonly string NORMALIZED_ARCH = NormalizeArch(SystemPropertyUtil.Get("os.arch", RuntimeInformation.ProcessArchitecture.ToString()));
-    private static readonly string NORMALIZED_OS = NormalizeOs(SystemPropertyUtil.Get("os.name",
+    private static readonly string NORMALIZED_ARCH = NormalizeArch(RuntimeInformation.ProcessArchitecture.ToString());
+    private static readonly string NORMALIZED_OS = NormalizeOs(
         OperatingSystem.IsWindows() ? "Windows" : OperatingSystem.IsMacOS() ? "Mac OS X" :
-        OperatingSystem.IsLinux() ? "Linux" : RuntimeInformation.OSDescription));
-    private static readonly ISet<string> LINUX_OS_CLASSIFIERS;
-    private static readonly bool IS_WINDOWS = IsWindows0();
-    private static readonly bool IS_OSX = IsOsx0();
-    private static readonly int ADDRESS_SIZE = AddressSize0();
-    private static readonly string LINUX_ID_PREFIX = "ID=";
-    private static readonly string LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
+        OperatingSystem.IsLinux() || OperatingSystem.IsAndroid() ? "Linux" :
+        OperatingSystem.IsFreeBSD() ? "FreeBSD" : RuntimeInformation.OSDescription);
+    // Classifier preferences belong to this cache; malformed settings must not
+    // disable unrelated OS, hashing or memory operations during type initialization.
+    private static readonly Lazy<IReadOnlyList<string>> LINUX_OS_CLASSIFIERS =
+        new(CreateLinuxClassifiers, LazyThreadSafetyMode.ExecutionAndPublication);
+    private const string LINUX_ID_PREFIX = "ID=";
+    private const string LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
     public static readonly bool BIG_ENDIAN_NATIVE_ORDER = ByteOrder.NativeOrder() == ByteOrder.BIG_ENDIAN;
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
-    public static void AddFilesystemOsClassifiers(ISet<string> availableClassifiers) {
+    public static void AddFilesystemOsClassifiers(ICollection<string> availableClassifiers) {
         if (ProcessOsReleaseFile("/etc/os-release", availableClassifiers)) {
             return;
         }
         ProcessOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
-    private static bool ProcessOsReleaseFile(string osReleaseFileName, ISet<string> availableClassifiers)
+    private static bool ProcessOsReleaseFile(string osReleaseFileName, ICollection<string> availableClassifiers)
     {
         if (string.IsNullOrEmpty(osReleaseFileName) || availableClassifiers == null)
             return false;
@@ -96,12 +98,12 @@ public static class PlatformDependent
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
-                        if (line.StartsWith(LINUX_ID_PREFIX))
+                        if (line.StartsWith(LINUX_ID_PREFIX, StringComparison.Ordinal))
                         {
                             string id = NormalizeOsReleaseVariableValue(line[LINUX_ID_PREFIX.Length..]);
                             AddClassifier(availableClassifiers, id);
                         }
-                        else if (line.StartsWith(LINUX_ID_LIKE_PREFIX))
+                        else if (line.StartsWith(LINUX_ID_LIKE_PREFIX, StringComparison.Ordinal))
                         {
                             line = NormalizeOsReleaseVariableValue(line[LINUX_ID_LIKE_PREFIX.Length..]);
                             AddClassifier(availableClassifiers, line.Split(" "));
@@ -111,6 +113,9 @@ public static class PlatformDependent
                     logger.Debug("Unable to read {}", osReleaseFileName, e);
                 } catch (IOException e) {
                     logger.Debug("Error while reading content of {}", osReleaseFileName, e);
+                } catch (UnauthorizedAccessException e) {
+                    // Java AccessDeniedException is an IOException; CLR access denial is separate.
+                    logger.Debug("Unable to read {}", osReleaseFileName, e);
                 }
                 // specification states we should only fall back if /etc/os-release does not exist
                 return true;
@@ -122,7 +127,7 @@ public static class PlatformDependent
         return false;
     }
 
-    public static bool AddPropertyOsClassifiers(ISet<string> availableClassifiers) {
+    public static bool AddPropertyOsClassifiers(ICollection<string> availableClassifiers) {
         // empty: -Dio.netty.osClassifiers (no distro specific classifiers for native libs)
         // single ID: -Dio.netty.osClassifiers=ubuntu
         // pair ID, ID_LIKE: -Dio.netty.osClassifiers=ubuntu,debian
@@ -157,7 +162,6 @@ public static class PlatformDependent
         return true;
     }
 
-
     /**
      * Returns {@code true} if and only if the current platform is Android
      */
@@ -180,14 +184,6 @@ public static class PlatformDependent
     }
 
     /**
-     * Return {@code true} if the current user may be a super-user. Be aware that this is just an hint and so it may
-     * return false-positives.
-     */
-    public static bool MaybeSuperUser() {
-        return MAYBE_SUPER_USER;
-    }
-
-    /**
      * Returns {@code true} if and only if it is fine to enable TCP_NODELAY socket option by default.
      */
     public static bool CanEnableTcpNoDelayByDefault() {
@@ -200,22 +196,6 @@ public static class PlatformDependent
     public static DirectoryInfo Tmpdir() {
         return TMPDIR;
     }
-
-    /**
-     * Returns the bit mode of the current VM (usually 32 or 64.)
-     */
-    public static int BitMode() {
-        return BIT_MODE;
-    }
-
-    /**
-     * Return the address size of the OS.
-     * 4 (for 32 bits systems ) and 8 (for 64 bits systems).
-     */
-    public static int AddressSize() {
-        return ADDRESS_SIZE;
-    }
-
 
     /**
      * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
@@ -263,7 +243,6 @@ public static class PlatformDependent
     public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(IDictionary<K, V> map) {
         return new ConcurrentDictionary<K, V>(map);
     }
-
 
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link CharSequence}.
@@ -320,7 +299,6 @@ public static class PlatformDependent
         return value & 0x1f;
     }
 
-
     public static void CopyMemory(byte[] src, int srcIndex, byte[] dst, int dstIndex, long length) {
         ArgumentNullException.ThrowIfNull(src);
         ArgumentNullException.ThrowIfNull(dst);
@@ -330,12 +308,10 @@ public static class PlatformDependent
         src.AsSpan(srcIndex, count).CopyTo(dst.AsSpan(dstIndex, count));
     }
 
-
     public static void SetMemory(byte[] dst, int dstIndex, long bytes, byte value) {
         ArgumentNullException.ThrowIfNull(dst);
         dst.AsSpan(dstIndex, checked((int)bytes)).Fill(value);
     }
-
 
     public static long Align(long value, int alignment) {
         return Pow2.Align(value, alignment);
@@ -510,44 +486,6 @@ public static class PlatformDependent
         return global::Netty.NET.Common.Internal.ThreadLocalRandom.Current();
     }
 
-    private static bool IsWindows0()
-    {
-        bool windows = string.Equals("windows", NORMALIZED_OS, StringComparison.OrdinalIgnoreCase);
-        if (windows) {
-            logger.Debug("Platform: Windows");
-        }
-        return windows;
-    }
-
-    private static bool IsOsx0() {
-        bool osx = string.Equals("osx", NORMALIZED_OS, StringComparison.OrdinalIgnoreCase);
-        if (osx) {
-            logger.Debug("Platform: MacOS");
-        }
-        return osx;
-    }
-
-    private static bool MaybeSuperUser0() {
-        string username = SystemPropertyUtil.Get("user.name");
-        if (IsWindows())
-        {
-            return "Administrator" == username;
-        }
-        // Check for root and toor as some BSDs have a toor user that is basically the same as root.
-        return "root" == username || "toor" == username;
-    }
-
-    /**
-     * Compute an estimate of the maximum amount of direct memory available to this JVM.
-     * <p>
-     * The computation is not cached, so you probably want to use {@link #maxDirectMemory()} instead.
-     * <p>
-     * This will produce debug log output when called.
-     *
-     * @return The estimated max direct memory, in bytes.
-     */
-    //@SuppressWarnings("unchecked")
-
     private static DirectoryInfo Tmpdir0() {
         DirectoryInfo f;
         try {
@@ -630,62 +568,6 @@ public static class PlatformDependent
         }
     }
 
-    private static int BitMode0() {
-        // Check user-specified bit mode first.
-        int bitMode = SystemPropertyUtil.GetInt("io.netty.bitMode", 0);
-        if (bitMode > 0) {
-            logger.Debug("-Dio.netty.bitMode: {}", bitMode);
-            return bitMode;
-        }
-
-        // And then the vendor specific ones which is probably most reliable.
-        bitMode = SystemPropertyUtil.GetInt("sun.arch.data.model", 0);
-        if (bitMode > 0) {
-            logger.Debug("-Dio.netty.bitMode: {} (sun.arch.data.model)", bitMode);
-            return bitMode;
-        }
-        bitMode = SystemPropertyUtil.GetInt("com.ibm.vm.bitmode", 0);
-        if (bitMode > 0) {
-            logger.Debug("-Dio.netty.bitMode: {} (com.ibm.vm.bitmode)", bitMode);
-            return bitMode;
-        }
-
-        // os.arch also gives us a good hint.
-        string arch = SystemPropertyUtil.Get("os.arch", "").ToLower(CultureInfo.GetCultureInfo("en-US")).Trim();
-        if ("amd64".Equals(arch) || "x86_64".Equals(arch)) {
-            bitMode = 64;
-        } else if ("i386".Equals(arch) || "i486".Equals(arch) || "i586".Equals(arch) || "i686".Equals(arch)) {
-            bitMode = 32;
-        }
-
-        if (bitMode > 0) {
-            logger.Debug("-Dio.netty.bitMode: {} (os.arch: {})", bitMode, arch);
-        }
-
-        // Last resort: guess from VM name and then fall back to most common 64-bit mode.
-        string vm = SystemPropertyUtil.Get("java.vm.name", "").ToLower(CultureInfo.GetCultureInfo("en-US"));
-        Regex bitPattern = new Regex("([1-9][0-9]+)-?bit");
-        var m = bitPattern.Match(vm);
-        if (m.Success) {
-            return int.Parse(m.Groups[1].Value);
-        } else {
-            // CLR adaptation: use the running process width rather than a JVM-name guess.
-            return IntPtr.Size * 8;
-        }
-    }
-
-    private static int AddressSize0() {
-        // CLR pointer width is available independently of JVM Unsafe.
-        return IntPtr.Size;
-    }
-
-
-
-
-
-
-
-
     public static string NormalizedArch() {
         return NORMALIZED_ARCH;
     }
@@ -694,8 +576,17 @@ public static class PlatformDependent
         return NORMALIZED_OS;
     }
 
-    public static ISet<string> NormalizedLinuxClassifiers() {
-        return LINUX_OS_CLASSIFIERS;
+    public static IReadOnlyList<string> NormalizedLinuxClassifiers() {
+        return LINUX_OS_CLASSIFIERS.Value;
+    }
+
+    private static IReadOnlyList<string> CreateLinuxClassifiers()
+    {
+        // Native library candidates must retain ID/ID_LIKE priority, unique entries
+        // and an immutable cached result. No mutable builder escapes publication.
+        var available = new List<string>(3);
+        if (!AddPropertyOsClassifiers(available)) AddFilesystemOsClassifiers(available);
+        return Array.AsReadOnly(available.ToArray());
     }
 
     /// <summary>
@@ -741,9 +632,9 @@ public static class PlatformDependent
      * @param dest             destination set
      * @param maybeClassifiers potential classifiers to add
      */
-    private static void AddClassifier(ISet<string> dest, params string[] maybeClassifiers) {
+    private static void AddClassifier(ICollection<string> dest, params string[] maybeClassifiers) {
         foreach (string id in maybeClassifiers) {
-            if (IsAllowedClassifier(id)) {
+            if (IsAllowedClassifier(id) && !dest.Contains(id)) {
                 dest.Add(id);
             }
         }
@@ -819,6 +710,8 @@ public static class PlatformDependent
 
             case "arm":
             case "arm32":
+            // CLR ProcessArchitecture distinguishes ARMv6; its native artifact is ARM32.
+            case "armv6":
                 return "arm_32";
 
             case "aarch64":

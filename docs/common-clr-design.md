@@ -14,6 +14,92 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## Actual CLR identity and ordered classifier state
+
+Six fresh-load identity scenarios expose JVM os.name/os.arch environment keys
+selecting another OS/architecture in the preceding port. Six classifier settings
+and two malformed settings expose the uninitialized null cache: the first 16 new
+cases have 14 failures and two passing filesystem cases. Fix the concrete runtime
+identity/cache defects; do not re-review already-certified hash/memory owners.
+
+OperatingSystem supplies actual Windows/macOS flags before temporary-directory
+fallback uses them. Native OS naming and RuntimeInformation.ProcessArchitecture
+feed the existing Netty artifact normalization; JVM identity overrides no longer
+select CLR code paths or native artifact architecture. Add the CLR ARMv6 spelling
+to the existing arm_32 artifact aliases. The Windows run exercises x64; other OS/
+architecture branches are source decisions, not execution validation.
+
+| Pinned purpose and actual consumers | CLR decision |
+| --- | --- |
+| PlatformDependent.java:261-267, 1747-1749; OpenSsl.java:747-768 | The original LinkedHashSet/unmodifiableSet is iterated to rank distro-specific native library candidates. Use a List builder with ordinal allowed-ID deduplication and an Array.AsReadOnly snapshot exposed as IReadOnlyList. Neither mutable cached state nor unspecified set iteration order satisfies this priority contract. |
+| addPropertyOsClassifiers/processOsReleaseFile | Keep explicit empty suppression, at most two property fields, JVM trailing-comma behavior, quoted ID/ID_LIKE parsing, allowed fedora/suse/arch, ID then ID_LIKE priority and filesystem fallback only when the first file is absent. ICollection accepts native ordered builders and existing original set fixtures. CLR UnauthorizedAccessException maps the original best-effort Java IOException access-denial branch. |
+| Cached classifier failure | Standard Lazy with ExecutionAndPublication initializes once on first classifier use and caches the same invalid-setting exception. Original Java fails whole PlatformDependent initialization; CLR confines that configuration failure to its cache, so unrelated OS/hash/memory operations remain available. Native original parser fixtures still run independently of cached preference initialization. |
+| NetUtil.java:180-185, native/DNS platform users, transport-classes-epoll Native.java:326-331, Quiche.java:77-78, macOS DNS provider:85-89 | Runtime identity chooses the actual platform and existing native artifact identifiers. Keep NetUtil's current common use and reviewed normalized names; downstream loading/DNS/transport implementations remain open. |
+| bitMode/bitMode0 and Unix Buffer.java:75-78 addressSize | No original production consumer calls bitMode. CLR process width is IntPtr.Size, borrowed views use nint and existing memory owners preserve pointer bits. Remove these duplicate public width facades, JVM guesses and cached fields; do not allow environment preferences to report another process layout. Future Unix I/O uses real native pointer layout. |
+| maybeSuperUser/0; AbstractChannel.java:415-430, DefaultDatagramChannelConfig.java:157-173 | The two users gate advisory broadcast logging only, never admission or exception handling. JVM user.name heuristics do not establish effective CLR/OS privileges. Remove the unused current C# hint/default-false cache. Future transport must review actual broadcast warning policy separately; successful bind is not proof of broadcast receive permission. No replacement username privilege facade is added. |
+
+Seven cached snapshots (including absent property), six identity cases, two
+malformed preference cases and three real UTF-8 file cases verify the new boundary.
+Priority/dedup, read-only exposure, stable snapshot after environment changes and
+cache-local repeated exception identity are covered. File absence permits fallback;
+an existing empty file completes selection. Synthetic files run on Windows without
+changing OS release files. Unix permission-denial execution is not claimed.
+The existing 14 runtime/classifier/address scenarios and original source/test
+identities remain; current full/checked results are in common-porting.md.
+
+Exact comments from retired heuristics follow. The stranded direct-memory-estimate
+Javadoc is moved out of Tmpdir0 into its original provenance, without changing
+temporary-file or allocator policy. Remaining platform APIs and actual downstream
+module integration are still open.
+
+Retired platform runtime/username heuristics: BitMode/AddressSize/MaybeSuperUser and their private helpers. Exact existing Java-derived and CLR comments follow.
+
+```java
+/**
+     * Returns the bit mode of the current VM (usually 32 or 64.)
+     */
+
+// Check user-specified bit mode first.
+
+// And then the vendor specific ones which is probably most reliable.
+
+// os.arch also gives us a good hint.
+
+// Last resort: guess from VM name and then fall back to most common 64-bit mode.
+
+/**
+     * Return the address size of the OS.
+     * 4 (for 32 bits systems ) and 8 (for 64 bits systems).
+     */
+
+/**
+     * Return {@code true} if the current user may be a super-user. Be aware that this is just an hint and so it may
+     * return false-positives.
+     */
+
+// Check for root and toor as some BSDs have a toor user that is basically the same as root.
+```
+
+```csharp
+// CLR adaptation: use the running process width rather than a JVM-name guess.
+
+// CLR pointer width is available independently of JVM Unsafe.
+```
+
+Original estimateMaxDirectMemory Javadoc left above Tmpdir0 by an earlier retirement; archive it under its original purpose.
+
+```java
+    /**
+     * Compute an estimate of the maximum amount of direct memory available to this JVM.
+     * <p>
+     * The computation is not cached, so you probably want to use {@link #maxDirectMemory()} instead.
+     * <p>
+     * This will produce debug log output when called.
+     *
+     * @return The estimated max direct memory, in bytes.
+     */
+```
+
 ## CLR operations replace JVM feature bootstrap
 
 Remove the six remaining JVM feature facades (HasUnsafe, its unavailability
