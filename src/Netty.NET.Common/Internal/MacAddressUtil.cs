@@ -148,7 +148,7 @@ public static class MacAddressUtil
         if (bestMacAddr == null)
         {
             bestMacAddr = new byte[EUI64_MAC_ADDRESS_LENGTH];
-            ThreadLocalRandom.Current().NextBytes(bestMacAddr);
+            Random.Shared.NextBytes(bestMacAddr);
             logger.Warn(
                 "Failed to find a usable hardware address from the network interfaces; using random bytes: {}",
                 FormatAddress(bestMacAddr));

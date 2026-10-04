@@ -80,7 +80,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
             }
             TraceRecord prior = previous;
             int count = previous.Pos() + 1;
-            dropped = count >= TARGET_RECORDS && ThreadLocalRandom.Current().Next(1 << Math.Min(count - TARGET_RECORDS, 30)) != 0;
+            dropped = count >= TARGET_RECORDS && Random.Shared.Next(1 << Math.Min(count - TARGET_RECORDS, 30)) != 0;
             if (dropped) prior = previous.Next();
             next = hint == null ? new TraceRecord(prior) : new TraceRecord(prior, hint);
         } while (!ReferenceEquals(Interlocked.CompareExchange(ref head, next, previous), previous));

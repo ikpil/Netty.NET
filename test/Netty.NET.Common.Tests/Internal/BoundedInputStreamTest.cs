@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System;
 using System.IO;
 using Netty.NET.Common.Internal;
 
@@ -31,7 +32,7 @@ public class BoundedInputStreamTest
     public void TestBoundEnforced(int repetition)
     {
         byte[] bytes = new byte[64];
-        ThreadLocalRandom.Current().NextBytes(bytes);
+        Random.Shared.NextBytes(bytes);
         using BoundedInputStream reader = new BoundedInputStream(new MemoryStream(bytes), bytes.Length - 1);
         Assert.Equal(bytes[0], (byte)reader.ReadByte());
 
@@ -73,7 +74,7 @@ public class BoundedInputStreamTest
     public void TestBigReadsPermittedIfUnderlyingStreamIsSmall(int repetition)
     {
         byte[] bytes = new byte[64];
-        ThreadLocalRandom.Current().NextBytes(bytes);
+        Random.Shared.NextBytes(bytes);
 
         using BoundedInputStream reader = new BoundedInputStream(new MemoryStream(bytes), 8192);
         byte[] buffer = new byte[10000];

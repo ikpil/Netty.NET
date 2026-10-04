@@ -104,7 +104,7 @@ public class AbstractReferenceCountedTest
 
                 for (int a = 0; a < threads; a++)
                 {
-                    int retainCnt = ThreadLocalRandom.Current().Next(1, int.MaxValue);
+                    int retainCnt = Random.Shared.Next(1, int.MaxValue);
                     futures.Enqueue(Task.Run(() =>
                     {
                         try

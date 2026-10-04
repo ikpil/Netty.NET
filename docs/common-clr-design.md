@@ -3166,3 +3166,291 @@ remain verbatim below. No original leak comments or portable tests are removed.
 
 /// <typeparam name="T">The type of elements in the hash set.</typeparam>
 ```
+
+
+## Native random consumers and scalar counters
+
+Pinned deprecated ThreadLocalRandom.java owns JVM seed properties, entropy
+bootstrap/timeout, interrupt restoration, an LCG, padding and bounded helpers.
+No all-module consumer calls its seed setter; only its original common test
+calls the seed getter. InternalThreadLocalMap.random and PlatformDependent's
+deprecated accessor are the only production entries into that obsolete class.
+Pinned ordinary common consumers use JDK ThreadLocalRandom for leak sampling,
+record backoff and MacAddressUtil fallback; reference-count, bounded-stream and
+priority-queue fixtures use it for data generation.
+
+These CLR consumers now call Random.Shared directly. The installed net10.0
+reference System.Runtime.xml P:System.Random.Shared explicitly guarantees use
+concurrently from any thread. Retire the hand-seeded thread-static adapter,
+the shadowed NextBytes extension and the unused map/platform accessors. No new
+provider facade, seed property, background entropy thread or TLS lifecycle is
+needed. Range validation at the leak sampling boundary and backoff shift cap
+remain. Random values need not match Java's algorithm or sequence; this is a
+native nondeterministic source. Explicit new Random(seed) remains the choice
+for repeatable fixtures. The original dedicated-thread interruption scenario
+now performs native generation and still consumes the pending interrupt only
+at its test sleep. Existing original workloads/assertions remain otherwise.
+
+Native integer/buffer operations cover actual consumers: Next(min,max),
+Next(bound), NextBytes and, for future long ranges, NextInt64. Both runtimes use
+an exclusive upper bound for ordinary positive bounds; Java rejects bound zero,
+where native Next(0) returns zero, so retain the owning positive-bound guard.
+Do not invent unused Gaussian or scaled floating-point helpers from the Java
+class. Its long-range subtraction/LCG/seed-property quirks have no common caller.
+Shared is a pseudorandom source, not a cryptographic API. Pinned handler's
+ThreadLocalInsecureRandom.java actually imports JDK ThreadLocalRandom and is
+explicitly insecure; its stale Javadoc names the retired platform accessor.
+Future TLS/certificate security requirements require RandomNumberGenerator at
+their owner, and Gaussian/other distribution needs require a separate consumer
+decision. No handler behavior or random-quality/performance equivalence is claimed.
+
+LongCounter and deprecated LongAdderCounter have no actual all-module consumer
+outside their own definitions and PlatformDependent.newLongCounter. PoolArena's
+two comments still mention LongCounter, but its live fields use JDK LongAdder.
+Retain that downstream statistical-counter purpose, without resurrecting an
+unused common interface/provider. Native long fields with Interlocked Add,
+Increment, Decrement and Read provide atomic scalar updates/snapshots. They are
+stronger snapshots than Java LongAdder's concurrent sum and do not promise its
+striped contention cost. Actual common LeakPresenceDetector already uses native
+Interlocked counting/exchange with the original quiescent-producer requirement;
+its concurrent exactly-once contract remains the validation for that owner.
+Allocator reservation is a separate hard-limit CAS policy and must not become
+an approximate/statistical counter. Future arena metrics can use native scalar
+owners initially; any striped optimization requires measured contention and an
+explicit snapshot/reset policy. No new counter type or speculative test is added.
+
+All 35 original random comments, both comments of each counter source, the
+counter factory Javadoc and retired C# explanatory/accessor comments follow.
+The three source entries use CLR replacement; other whole-source reviews remain
+open. The prior internal-map lifecycle/counter placeholders are outside this
+random-accessor change.
+
+```java
+/*
+ * Copyright 2014 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Written by Doug Lea with assistance from members of JCP JSR-166
+ * Expert Group and released to the public domain, as explained at
+ * https://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+/**
+ * A random number generator isolated to the current thread.  Like the
+ * global {@link java.util.Random} generator used by the {@link
+ * java.lang.Math} class, a {@code ThreadLocalRandom} is initialized
+ * with an internally generated seed that may not otherwise be
+ * modified. When applicable, use of {@code ThreadLocalRandom} rather
+ * than shared {@code Random} objects in concurrent programs will
+ * typically encounter much less overhead and contention.  Use of
+ * {@code ThreadLocalRandom} is particularly appropriate when multiple
+ * tasks (for example, each a {@link io.netty.util.internal.chmv8.ForkJoinTask}) use random numbers
+ * in parallel in thread pools.
+ *
+ * <p>Usages of this class should typically be of the form:
+ * {@code ThreadLocalRandom.current().nextX(...)} (where
+ * {@code X} is {@code Int}, {@code Long}, etc).
+ * When all usages are of this form, it is never possible to
+ * accidentally share a {@code ThreadLocalRandom} across multiple threads.
+ *
+ * <p>This class also provides additional commonly used bounded random
+ * generation methods.
+ *
+ * //since 1.7
+ * //author Doug Lea
+ */
+
+// Try to generate a real random number from /dev/random.
+
+// Get from a different thread to avoid blocking indefinitely on a machine without much entropy.
+
+// Get the real random seed from /dev/random
+
+// Use the value set via the setter.
+
+// Get the random seed from the generator thread with timeout.
+
+// Just in case the initialSeedUniquifier is zero or some other constant
+
+// just a meaningless random number
+
+// Restore the interrupt status because we don't know how to/don't need to handle it here.
+
+// Interrupt the generator thread if it's still running,
+
+// in the hope that the SecureRandom provider raises an exception on interruption.
+
+// L'Ecuyer, "Tables of Linear Congruential Generators of Different Sizes and Good Lattice Structure", 1999
+
+// Borrowed from
+
+// http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/src/main/java/util/concurrent/ThreadLocalRandom.java
+
+// same constants as Random, but must be redeclared because private
+
+/**
+     * The random seed. We can't use super.seed.
+     */
+
+/**
+     * Initialization flag to permit calls to setSeed to succeed only
+     * while executing the Random constructor.  We can't allow others
+     * since it would cause setting seed in one part of a program to
+     * unintentionally impact other usages by the thread.
+     */
+
+// Padding to help avoid memory contention among seed updates in
+
+// different TLRs in the common case that they are located near
+
+// each other.
+
+/**
+     * Constructor called only by localRandom.initialValue.
+     */
+
+/**
+     * Returns the current thread's {@code ThreadLocalRandom}.
+     *
+     * @return the current thread's {@code ThreadLocalRandom}
+     */
+
+/**
+     * Throws {@code UnsupportedOperationException}.  Setting seeds in
+     * this generator is not supported.
+     *
+     * @throws UnsupportedOperationException always
+     */
+
+/**
+     * Returns a pseudorandom, uniformly distributed value between the
+     * given least value (inclusive) and bound (exclusive).
+     *
+     * @param least the least value returned
+     * @param bound the upper bound (exclusive)
+     * @throws IllegalArgumentException if least greater than or equal
+     * to bound
+     * @return the next value
+     */
+
+/**
+     * Returns a pseudorandom, uniformly distributed value
+     * between 0 (inclusive) and the specified value (exclusive).
+     *
+     * @param n the bound on the random number to be returned.  Must be
+     *        positive.
+     * @return the next value
+     * @throws IllegalArgumentException if n is not positive
+     */
+
+// Divide n by two until small enough for nextInt. On each
+
+// iteration (at most 31 of them but usually much less),
+
+// randomly choose both whether to include high bit in result
+
+// (offset) and whether to continue with the lower vs upper
+
+// half (which makes a difference only if odd).
+
+/**
+     * Returns a pseudorandom, uniformly distributed value between the
+     * given least value (inclusive) and bound (exclusive).
+     *
+     * @param least the least value returned
+     * @param bound the upper bound (exclusive)
+     * @return the next value
+     * @throws IllegalArgumentException if least greater than or equal
+     * to bound
+     */
+
+/**
+     * Returns a pseudorandom, uniformly distributed {@code double} value
+     * between 0 (inclusive) and the specified value (exclusive).
+     *
+     * @param n the bound on the random number to be returned.  Must be
+     *        positive.
+     * @return the next value
+     * @throws IllegalArgumentException if n is not positive
+     */
+
+/**
+     * Returns a pseudorandom, uniformly distributed value between the
+     * given least value (inclusive) and bound (exclusive).
+     *
+     * @param least the least value returned
+     * @param bound the upper bound (exclusive)
+     * @return the next value
+     * @throws IllegalArgumentException if least greater than or equal
+     * to bound
+     */
+
+/*
+ * Copyright 2015 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Counter for long.
+ */
+
+/*
+ * Copyright 2017 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * @deprecated please use {@link LongAdder} instead.
+ */
+
+/**
+     * Creates a new fastest {@link LongCounter} implementation for the current platform.
+     * @deprecated please use {@link java.util.concurrent.atomic.LongAdder} instead.
+     */
+
+// The seed deliberately keeps the low 32 timestamp bits, including the sign bit.
+
+/**
+     * Return a {@link Random} which is not-threadsafe and so can only be used from the same thread.
+     * @deprecated Use ThreadLocalRandom.current() instead.
+     */
+
+/**
+     * @deprecated Use {@link java.util.concurrent.ThreadLocalRandom#current()} instead.
+     */
+```

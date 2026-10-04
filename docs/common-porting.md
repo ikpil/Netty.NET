@@ -123,31 +123,37 @@ Optimization follows behavioral verification and measured performance.
 
 The current default suite executes **1958 cases** on Windows/x64/net10.0:
 **1944 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: native-maps-full-debug.trx and native-maps-full-release.trx.
+Evidence: native-random-full-debug.trx and native-random-full-release.trx.
 All 1958 prior identities/outcomes, including 759 original non-Porting cases,
 the later byte-wrap regression and every skip, remain unchanged. No tests are
-added or removed for this owner/unused-facade migration.
-Leak tracker membership now uses a direct reference-equality ConcurrentDictionary;
-report deduplication uses an ordinal-text ConcurrentDictionary. Native TryAdd/
-TryRemove preserve atomic single-key claims and the existing GC/report lifecycle.
-Retire the unused C#-only ConcurrentHashSet and its IsEmpty overload, all five
-deprecated platform map factories and the unused NormalizeRuntime classifier.
-Existing leak contracts pass all 46 affected Debug cases; affected leak/platform/
-classifier checked Release passes all 84. All 271 comment audit totals remain;
-PlatformDependent original comment coverage improves from 113/129 to 118/129
-by preserving the five original map-factory Javadocs exactly. Every other file's
-coverage and prior Java/C# provenance remain. The remaining 11 platform comments
-are still open work; this checkpoint does not certify whole-source completion.
-Pinned inventory/paths and uppercase method/local-function checks pass.
-Source statuses stay unchanged. Results remain in ignored TestResults and
-artifacts/native-maps-validation; see native-maps-identity-and-inventory.json
-and native-maps-comment-audit.json. Native decisions and original comments are
-in common-clr-design.md#native-concurrent-membership-and-map-construction.
-HTTP/3's capacity-hint caller and side-effecting computeIfPresent state transition
-are reviewed as future module boundaries; no downstream implementation is claimed.
-Next: remaining platform counter/random aliases and actual collection consumers,
-using pinned contracts and native CLR ownership. Full suites include every
-portable test source without PortingBatch. Whole common review remains open.
+added or removed in this native random/counter decision unit.
+Actual leak sampling/backoff, MAC fallback and original data-generation fixtures
+now call Random.Shared directly. Remove the hand-seeded ThreadLocalRandom,
+shadowed NextBytes extension and unused platform/internal-map random accessors.
+The original dedicated-thread pending-interrupt scenario now generates a native
+random value; its next sleep still consumes the pending interruption.
+Existing positive sampling bounds and record shift caps remain; native random
+sequences are not compared with Java's algorithm. The installed framework docs
+guarantee Shared supports concurrent use; no custom random provider is retained.
+LongCounter/LongAdderCounter have no actual all-module consumer outside their
+own definitions/deprecated factory. Existing native long/Interlocked owners
+supply common counting; Java LongAdder's striped costs/concurrent-sum semantics
+and downstream arena metric policy are distinguished in common-clr-design.md.
+All 175 affected Debug cases and 175 checked Release cases pass. All 271 comment
+audit totals remain; all 35 random and four counter comments/licenses are now
+preserved. PlatformDependent coverage improves from 118/129 to 119/129 by
+archiving the original counter factory Javadoc; its remaining 10 comments stay
+open work. All other coverage and prior Java/C# provenance remain.
+Three pending source decisions become CLR replacements: source counts are
+52 verified / 46 CLR replacement / 13 not applicable / 73 pending / 21 in progress.
+Pinned paths and uppercase method/local-function checks pass. Existing warnings
+remain; no whole common/platform/internal-map or downstream completion is claimed.
+Evidence remains in ignored TestResults and artifacts/native-random-validation:
+native-random-identity-and-inventory.json and native-random-comment-audit.json.
+See common-clr-design.md#native-random-consumers-and-scalar-counters for original
+comments and native/API differences. Next: remaining internal thread-local map
+counter/cache placeholders and collection consumers, based on actual pinned
+uses. Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

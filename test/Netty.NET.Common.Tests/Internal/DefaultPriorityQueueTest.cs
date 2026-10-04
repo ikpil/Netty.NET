@@ -141,7 +141,7 @@ public class DefaultPriorityQueueTest
 
     [Fact]
     public void TestRemovalFuzz() {
-        var threadLocalRandom = ThreadLocalRandom.Current();
+        var threadLocalRandom = Random.Shared;
         int numElements = threadLocalRandom.Next(0, 30);
         TestElement[] values = new TestElement[numElements];
         DefaultPriorityQueue<TestElement> queue =

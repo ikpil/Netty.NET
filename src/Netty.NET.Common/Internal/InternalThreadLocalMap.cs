@@ -255,11 +255,6 @@ public sealed class InternalThreadLocalMap
         return _futureListenerStackDepth;
     }
 
-    /**
-     * @deprecated Use {@link java.util.concurrent.ThreadLocalRandom#current()} instead.
-     */
-    public Random Random() => ThreadLocalRandom.Current();
-
     public IntegerHolder CounterHashCode() => new IntegerHolder();
 
     public void SetCounterHashCode(IntegerHolder counterHashCode)

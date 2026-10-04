@@ -3215,13 +3215,15 @@
         "src/Netty.NET.Common/Internal/InternalThreadLocalMap.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/Internal/InternalThreadLocalMap.cs"
+        "src/Netty.NET.Common/Internal/InternalThreadLocalMap.cs",
+        "docs/common-clr-design.md"
       ],
       "evidence": [
         "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
         "CLR matcher find-cache keys now include superclass identity and parameter name; full constructed runtime types isolate reified generic bindings. Matcher and FastThreadLocal regression tests pass.",
         "CharsetUtil CLR framework substitution: unused charset codec caches removed; actual one-shot AsciiString consumers use supplied Encoding directly. Original AsciiStringCharacterTest encoding loops retain six explicit native configurations and all assertions/counts/comments. Seventeen native construction cases and Java/CLR byte-policy oracles document the framing/fallback differences; docs/common-clr-design.md and common-ascii-memory.md. Broader runtime/string review remains in progress.",
-        "Affected Debug 211 passed/zero failed/three unchanged thread-local skips (214 discovered). Full Debug and final Release 1471 passed/zero failed/14 unchanged skips (1485 discovered); all prior identities/outcomes including 759 non-Porting cases retained, only seventeen new native encoding cases. First Release had one existing testScaleUpDoesNotExceedMaxThreads failure; preserved as encoding-full-release-first.trx/.log and encoding-first-release-summary.json. Without code/assertion/threshold changes, coupled Release 40 passed and full same-build rerun passed; its cause/timing stability is not established or claimed repaired. All 114 reviewed comment entries have zero missing; all 271 inventory paths match. Evidence: encoding-affected-debug.trx, encoding-full-debug.trx, encoding-full-release.trx, encoding-autoscaling-coupled-release.trx, encoding-identity-comparison.json, encoding-comment-audit.json, encoding-inventory-summary.json, encoding-java-oracle.txt, encoding-clr-oracle.txt. Windows/net10.0, SDK 10.0.203/runtime 10.0.7. Future buffer/codec streaming/framing and full string/runtime review remain outside this decision."
+        "Affected Debug 211 passed/zero failed/three unchanged thread-local skips (214 discovered). Full Debug and final Release 1471 passed/zero failed/14 unchanged skips (1485 discovered); all prior identities/outcomes including 759 non-Porting cases retained, only seventeen new native encoding cases. First Release had one existing testScaleUpDoesNotExceedMaxThreads failure; preserved as encoding-full-release-first.trx/.log and encoding-first-release-summary.json. Without code/assertion/threshold changes, coupled Release 40 passed and full same-build rerun passed; its cause/timing stability is not established or claimed repaired. All 114 reviewed comment entries have zero missing; all 271 inventory paths match. Evidence: encoding-affected-debug.trx, encoding-full-debug.trx, encoding-full-release.trx, encoding-autoscaling-coupled-release.trx, encoding-identity-comparison.json, encoding-comment-audit.json, encoding-inventory-summary.json, encoding-java-oracle.txt, encoding-clr-oracle.txt. Windows/net10.0, SDK 10.0.203/runtime 10.0.7. Future buffer/codec streaming/framing and full string/runtime review remain outside this decision.",
+        "Remove only the unused deprecated Random accessor; actual consumers now call native Random.Shared directly. Preserve its original Javadoc in common-clr-design.md#native-random-consumers-and-scalar-counters; other map lifecycle/API work stays open."
       ],
       "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
       "comments": {
@@ -3234,31 +3236,39 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/LongAdderCounter.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Deprecated unused LongAdder bridge needs no CLR class; native long/Interlocked owns exact scalar updates. Java concurrent sum is weaker than atomic CLR reads and striped performance is not claimed. Existing native leak counting and hard-limit allocator policies remain separate. Both original comments archived in common-clr-design.md#native-random-consumers-and-scalar-counters."
+      ],
+      "adaptation": "Deprecated unused LongAdder bridge needs no CLR class; native long/Interlocked owns exact scalar updates. Java concurrent sum is weaker than atomic CLR reads and striped performance is not claimed. Existing native leak counting and hard-limit allocator policies remain separate. Both original comments archived in common-clr-design.md#native-random-consumers-and-scalar-counters.",
       "comments": {
         "upstreamCount": 2,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 2
+        "required": false,
+        "preservedCount": 2,
+        "missingCount": 0
       }
     },
     {
       "upstream": "common/src/main/java/io/netty/util/internal/LongCounter.java",
       "kind": "source",
-      "status": "pending",
+      "status": "clr-replacement",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "No all-module caller outside the deprecated factory/helper definitions. PoolArena comments mention this type but actual fields use JDK LongAdder. Native long/Interlocked scalar updates and reads replace purpose; existing LeakPresenceDetector counting/exchange contract is exercised. Future arena contention/snapshot policy remains downstream. Both original comments archived in common-clr-design.md#native-random-consumers-and-scalar-counters."
+      ],
+      "adaptation": "No all-module caller outside the deprecated factory/helper definitions. PoolArena comments mention this type but actual fields use JDK LongAdder. Native long/Interlocked scalar updates and reads replace purpose; existing LeakPresenceDetector counting/exchange contract is exercised. Future arena contention/snapshot policy remains downstream. Both original comments archived in common-clr-design.md#native-random-consumers-and-scalar-counters.",
       "comments": {
         "upstreamCount": 2,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 2
+        "required": false,
+        "preservedCount": 2,
+        "missingCount": 0
       }
     },
     {
@@ -3518,14 +3528,15 @@
         "MPSC retirement: exact pinned nested Mpsc/three overloads, HashedWheelTimer, NonSticky, Recycler, SingleThreadIoEventLoop, ManualIoEventLoop and AbstractEpollStreamChannel consumers reviewed. No tracked C# caller remains outside retired definitions. Remove three overloads, three provider constants and 13 unused files without touching live ordinary/specialized queue consumers. Two missing timer handoffs reproduce before repair; common-clr-design.md and current common-porting.md record native decisions, original comments, full/affected results and mpsc-retirement identity/inventory checks.",
         "CLR capability cleanup removes nine platform methods/four JVM fields and the unused JVM bootstrap class, retaining exact private hash arithmetic and OperatingSystem Android detection. Existing memory/hash/original platform tests and migrated runtime assertions exercise actual native consumers; no downstream TLS/native transport/JFR completion claim. See common-porting.md for actual results.",
         "Platform-state checkpoint: 14 failures among first 16 new public identity/classifier cache and real-file scenarios at preceding commit; 18 final new scenarios cover actual identity, read-only/stable ordered snapshots, missing/empty/property/file input and cache-local malformed preferences. Existing original OsClassifiers fixtures remain; current full/checked records and pinned comment/inventory checks in common-porting.md. Consumer review includes OpenSsl classifier priority, NetUtil, native/DNS users, Unix pointer layout and the two advisory-only broadcast username warnings. Windows/x64 only.",
-        "Native maps: retire all five deprecated unused NewConcurrentHashMap facades and the unused C#-only NormalizeRuntime classifier. Direct native construction owns capacity/comparer policy; HTTP/3 computeIfPresent side effects require a future explicit per-key transition. Exact five original Javadocs and retired CLR comments remain in common-clr-design.md#native-concurrent-membership-and-map-construction. Whole platform review stays in progress."
+        "Native maps: retire all five deprecated unused NewConcurrentHashMap facades and the unused C#-only NormalizeRuntime classifier. Direct native construction owns capacity/comparer policy; HTTP/3 computeIfPresent side effects require a future explicit per-key transition. Exact five original Javadocs and retired CLR comments remain in common-clr-design.md#native-concurrent-membership-and-map-construction. Whole platform review stays in progress.",
+        "Retire the unused deprecated ThreadLocalRandom accessor after direct native random consumer migration. Preserve its Javadoc and the previously unpreserved newLongCounter factory Javadoc in common-clr-design.md#native-random-consumers-and-scalar-counters. Whole platform review stays in progress."
       ],
       "adaptation": "Native runtime probes, allocation/ownership and managed byte access are reviewed CLR replacements. Typed ref-int counters retire managed field-offset stubs. Raw long-address allocation/word/mixed-copy/fill stubs and array-header-offset APIs now retire in favor of NativeMemoryAllocator/Owner/View, bounded Memory/Span, MemoryMarshal and BinaryPrimitives; original buffer users and strict unsigned view bounds are documented in common-clr-design.md. Ordinary byte access is not ordered publication: real io_uring VarHandle acquire/release users remain pending for native transport integration. Remaining JVM-shaped APIs and other stubs still require review; neither whole file is verified. Byte-range operations now use bounded CLR comparison/zero scans, BCL FixedTimeEquals and one native-order MemoryMarshal hash kernel. Retired scalar/Unsafe strategy helpers and throwing array/hash stubs; positive and hash-empty ranges validate before content access, nulls fail explicitly, and nonpositive comparison/zero lengths retain their empty result. Original Java hash values and 0/1 fixed-time results remain. Remaining platform or integer/character fixed-time APIs are not certified by this byte-only decision. Loader aliases and JVM reflective-access/unchecked-throw helpers now retire after actual common/native/TLS/serialization consumer review. Explicit Assembly/AssemblyLoadContext operations replace loader purpose; native type initialization and exception propagation preserve runtime identity/origins. Version diagnostics are now a standard assembly-metadata replacement. Remaining platform APIs and downstream native integration remain open. Ordinary array and host-order word access now uses native indexing/MemoryMarshal directly; JVM alignment probes retire. Explicit endian byte views are the standard BinaryPrimitives replacement documented in common-clr-design.md; no ordinary-access atomicity claim. Temporary-file creation now uses native DirectoryInfo/FileInfo, validated filename components, CLR temp path, exclusive CreateNew with bounded collision retries and Unix owner-only create mode; original Files null/short-prefix and null-suffix behavior retained. See common-clr-design.md; whole platform review remains open. Five unused throwing SPSC/fixed-MPSC/fixed-MPMC/deque factory facades retire after all-module consumer review; actual native bounded/FIFO/double-ended purposes and downstream scope are recorded in common-clr-design.md. JVM padding/provider selection is not ported. Bounded/chunked MPSC overloads were pending at that fixed-queue checkpoint; the subsequent native handoff decision below closes those common provider aliases. Remaining three MPSC aliases, provider bootstrap/constants and 13 unused JCTools/queue helper files now retire after all actual common and transport-consumer review. Timer/NonSticky/Recycler keep their existing native owned collections; no CLR provider or chunk facade is added. Native event-loop withdrawal/capacity and epoll integration remain downstream work. Original ten comments and retired C# explanatory comments are in common-clr-design.md; whole platform review remains open. Retire HasUnsafe/GetUnsafeUnavailabilityCause/IsVirtualThread/IsJ9Jvm/IsIkvmDotNet/IsJfrEnabled and private JVM probes; merge the only live PlatformDependent0 arithmetic/Android uses as private methods. Native CLR memory, thread lifetime and actual selected backends establish capabilities; no false JVM probe or new CLR capability facade is introduced. Exact original comments and downstream scope remain in common-clr-design.md; whole platform review stays open. Actual CLR OS/process architecture replaces os.name/os.arch and JVM width guessing. Retire BitMode/AddressSize/MaybeSuperUser with their cached fields/private helpers; native nint/IntPtr and actual downstream warning-policy review own their purposes. Classifiers now have a Lazy cache-local failure domain, ordered unique List builder and immutable IReadOnlyList snapshot; original property/file parsing semantics and priority retained. Original heuristic comments and orphaned estimateMaxDirectMemory Javadoc are preserved in common-clr-design.md; whole source review remains in-progress.",
       "comments": {
         "upstreamCount": 129,
         "required": true,
-        "preservedCount": 118,
-        "missingCount": 11
+        "preservedCount": 119,
+        "missingCount": 10
       }
     },
     {
@@ -3919,18 +3930,20 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/ThreadLocalRandom.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Internal/ThreadLocalRandom.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Native random migration: direct Random.Shared in leak sampling/backoff, MAC fallback and original data-generation fixtures. Remove the hand-seeded thread-static adapter, shadowed NextBytes extension and unused InternalThreadLocalMap/PlatformDependent accessors. Positive-bound guard and original interruption scenario retained. JVM seed/bootstrap/LCG/padding APIs have no required common consumer; native randomness is not Java sequence or crypto equivalence. All 35 original comments archived in common-clr-design.md#native-random-consumers-and-scalar-counters."
+      ],
+      "adaptation": "Native random migration: direct Random.Shared in leak sampling/backoff, MAC fallback and original data-generation fixtures. Remove the hand-seeded thread-static adapter, shadowed NextBytes extension and unused InternalThreadLocalMap/PlatformDependent accessors. Positive-bound guard and original interruption scenario retained. JVM seed/bootstrap/LCG/padding APIs have no required common consumer; native randomness is not Java sequence or crypto equivalence. All 35 original comments archived in common-clr-design.md#native-random-consumers-and-scalar-counters.",
       "comments": {
         "upstreamCount": 35,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 35
+        "required": false,
+        "preservedCount": 35,
+        "missingCount": 0
       }
     },
     {
@@ -6005,7 +6018,8 @@
         "test/Netty.NET.Common.Tests/Internal/ThreadLocalRandomTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "Original pending-interrupt scenario now initializes and uses Random.Shared on its dedicated thread; the subsequent sleep consumes the unchanged pending interrupt. Original test identity, license, explanatory comments and completion/join checks retained. Native random migration and current validation are recorded in common-porting.md."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {

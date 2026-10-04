@@ -429,15 +429,6 @@ public static class PlatformDependent
         return hash;
     }
 
-    /**
-     * Return a {@link Random} which is not-threadsafe and so can only be used from the same thread.
-     * @deprecated Use ThreadLocalRandom.current() instead.
-     */
-    [Obsolete]
-    public static Random ThreadLocalRandom() {
-        return global::Netty.NET.Common.Internal.ThreadLocalRandom.Current();
-    }
-
     private static DirectoryInfo Tmpdir0() {
         DirectoryInfo f;
         try {

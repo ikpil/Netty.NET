@@ -14,9 +14,9 @@
  * under the License.
  */
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests.Internal;
 
@@ -33,9 +33,10 @@ public class ThreadLocalRandomTest
                 Thread.CurrentThread.Interrupt();
                 // CLR cannot inspect pending interruption without consuming it.
                 // Arrange it, initialize the random, and consume it only here.
-                ThreadLocalRandom.Current();
+                // Native generation also initializes its runtime-owned random state.
+                _ = Random.Shared.Next();
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(100), 
-                    "Assert that thread is interrupted after invocation of getInitialSeedUniquifier()");
+                    "Native random initialization and generation preserve pending interruption");
                 // clear interrupted status in order to not affect other tests
                 // CLR adaptation: the assertion above consumes interruption on this dedicated thread.
                 completion.SetResult();

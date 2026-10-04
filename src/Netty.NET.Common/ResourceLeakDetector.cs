@@ -229,7 +229,7 @@ public class ResourceLeakDetector<T> where T : class
         {
             if (level == ResourceLeakDetectorLevel.DISABLED) return null;
             if (samplingInterval <= 0) throw new ArgumentOutOfRangeException(nameof(samplingInterval));
-            if (ThreadLocalRandom.Current().Next(samplingInterval) != 0) return null;
+            if (Random.Shared.Next(samplingInterval) != 0) return null;
         }
         ReportLeak();
         return new DefaultResourceLeak<T>(obj, refQueue, allLeaks, GetInitialHint(resourceType));
