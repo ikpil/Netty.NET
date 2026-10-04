@@ -50,7 +50,7 @@ public class AsciiStringMemoryTest
     [Fact]
     public void TestSharedMemory()
     {
-        ++a[aOffset];
+        unchecked { ++a[aOffset]; }
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
         AsciiString aAsciiString2 = new AsciiString(a, aOffset, length, false);
         Assert.Equal(aAsciiString, aAsciiString1);
@@ -65,7 +65,7 @@ public class AsciiStringMemoryTest
     public void TestNotSharedMemory()
     {
         AsciiString aAsciiString1 = new AsciiString(a, aOffset, length, true);
-        ++a[aOffset];
+        unchecked { ++a[aOffset]; }
         Assert.NotEqual(aAsciiString, aAsciiString1);
         int i = aOffset;
         Assert.NotEqual(a[i], aAsciiString1.ByteAt(i - aOffset));
@@ -74,6 +74,15 @@ public class AsciiStringMemoryTest
         {
             Assert.Equal(a[i], aAsciiString1.ByteAt(i - aOffset));
         }
+    }
+
+    [Fact]
+    public void TestByteIncrementWrapsWithoutChangingSharedAndCopiedMemoryContracts()
+    {
+        a[aOffset] = byte.MaxValue;
+        TestSharedMemory();
+        a[aOffset] = byte.MaxValue;
+        TestNotSharedMemory();
     }
 
     public class TestByteProcessor : IByteProcessor

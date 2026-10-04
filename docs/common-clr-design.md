@@ -14,6 +14,106 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## CLR endian views and JVM access strategies
+
+Pinned VarHandleFactory.java supplies twelve 16/32/64-bit LE/BE array/ByteBuffer
+views and a private int-field lookup, with a JVM availability/failure probe.
+PlatformDependent.java:717-805 exposes those handles. Actual byte consumers are
+buffer/VarHandleByteBufferAccess, HeapByteBufUtil, UnpooledDirectByteBuf and Unsafe
+buffer fallbacks. The sole findVarHandleOfIntField consumer is RefCnt.java:320;
+ReferenceCountUpdater selects that provider. ConcurrentSkipListIntObjMultimap uses
+the capability flag to choose an acquire fence, independently of the view factory.
+
+Record VarHandleFactory as a CLR framework replacement; no MethodHandle/VarHandle
+factory or capability facade is needed. Use BinaryPrimitives on bounded spans for
+explicit wire byte order, and MemoryMarshal for host-order words. Byte offsets may
+be unaligned, within the runtime span contract; no JVM Unsafe/architecture flag
+selects this operation. ByteBuffer position, limit and mutable order become an
+explicit logical Memory/Span slice and explicit endian operation. Plain byte reads
+and writes do not provide atomicity or acquire/release publication.
+
+The native ref-int counter already uses Interlocked/Volatile against the owner's
+typed field. The current ordered map serializes state through its CLR lock; its
+whole public API review remains open. Do not reproduce private JVM field lookup,
+an unrelated whole-object layout, or an arbitrary fence on ordinary endian access.
+Real io_uring SubmissionQueue:279-281 and CompletionQueue:125/166 use volatile/
+release operations through their own ByteBuffer handles, not this common factory.
+Their shared native ring needs an OS/ABI-specific aligned atomic/publication and
+lifetime design during transport work; endian parity does not certify that module.
+
+Retire fifteen remaining C# platform declarations: eleven array word/index
+forwarders plus ToIntExact, and three IsUnaligned/UnalignedAccess methods. Remove their
+default-false UNALIGNED field and AsciiString.ByteAt's JVM Unsafe branch. ByteAt
+keeps its logical substring range guard and uses the actual array index. Existing
+CLR fixtures now call MemoryMarshal or array indexing directly, retaining case
+identities and assertions. A native array long index fails with IndexOutOfRangeException,
+rather than the removed wrapper's OverflowException, and never truncates to the
+low 32 bits; this intentional exception change is recorded in the typed-array case.
+Other platform APIs and JVM bootstrap scaffolding remain a separate review.
+
+The unchanged pinned factory was executed on Corretto 21.0.11. Across 16/32/64-bit
+widths, both endian orders, offsets 0-7, six signed/high-bit values and array/heap
+ByteBuffer/direct ByteBuffer storage, 864 rows match the checked CLR byte payloads
+and read results. CLR storage uses heap bytes, NativeMemoryOwner and pinned borrowed
+NativeMemoryView. Java view order is verified independently of mutable ByteBuffer
+order/position; ByteBuffer limit and CLR logical slice rejection remain checked.
+Six integration cases verify the common owner/view bounds and no mutation after
+short-region failure, with byte expectations assembled independently of the BCL.
+
+Checked validation exposed an existing Select(-1) unsigned-cast overflow in
+ConcurrentOrderedMultiMap; explicit negative/upper bound checks restore absence.
+A subsequent run exposed the original AsciiStringMemoryTest byte increment at 255.
+Java byte ++ wraps; its two original increments now use explicit unchecked blocks,
+retaining every original assertion/workload. A seventh, deterministic boundary
+case invokes both original shared/copied-memory scenarios with 255 and fails before
+that fix. The first two checked runs each fail one distinct case; the final affected
+checked Release selection passes all 395. Initial fixture migration compile errors
+(explicit in on constants, array-expression syntax and remaining wrapper calls)
+were corrected before behavioral verification. Existing unrelated warnings remain.
+
+Framework contracts: [BinaryPrimitives](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.binary.binaryprimitives?view=net-10.0),
+[MemoryMarshal.Read](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.memorymarshal.read?view=net-10.0),
+and [Volatile ordering](https://learn.microsoft.com/en-us/dotnet/api/system.threading.volatile.read?view=net-10.0).
+This verifies ordinary byte interpretation and common storage integration on
+Windows/net10.0, not throughput, cross-architecture execution or native ring ordering.
+Original comments removed by these framework replacements follow verbatim.
+
+Source: common/src/main/java/io/netty/util/internal/VarHandleFactory.java, line 1.
+
+```java
+/*
+ * Copyright 2025 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+```
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java, line 467.
+
+```java
+/**
+     * {@code true} if and only if the platform supports unaligned access.
+     *
+     * @see <a href="https://en.wikipedia.org/wiki/Segmentation_fault#Bus_error">Wikipedia on segfault</a>
+     */
+```
+
+Source: common/src/main/java/io/netty/util/AsciiString.java, line 331.
+
+```java
+// Try to use unsafe to avoid double checking the index bounds
+```
+
 ## Native assembly version diagnostics
 
 Pinned Version.java:49-153 discovers META-INF/io.netty.versions.properties through
@@ -461,8 +561,9 @@ long-address GetIntVolatile/PutIntOrdered adapters have no matching pinned Java
 public methods. Removing their throwing placeholders does not declare native
 publication unnecessary. SubmissionQueue/CompletionQueue use direct ByteBuffer
 VarHandle volatile/release operations. That genuine ordered-memory contract stays
-pending with VarHandleFactory/native transport integration: ordinary word access
-here provides neither atomicity nor acquire/release synchronization.
+pending for native transport integration: the VarHandleFactory framework
+replacement is reviewed above, while ordinary word access here provides neither
+atomicity nor acquire/release synchronization.
 
 NativeMemoryView now rejects unsigned address-plus-length wrap, including an
 unrepresentable exclusive end needed by end-slice pins. Addresses retain unsigned
@@ -1581,7 +1682,8 @@ Marshal.OffsetOf on managed reference types, fixed GC field-layout assumptions,
 or unsafe object-offset emulation is introduced. Raw native-address allocation,
 word access, ordered native writes and mixed address copying remain a separate
 pending review against NativeMemoryAllocator/Owner/View and real buffer consumers.
-VarHandleFactory also supplies endian byte-memory views and remains pending.
+VarHandleFactory also supplies endian byte-memory views; its framework
+replacement is now reviewed above, with native transport ordering still pending.
 
 ### Original replaced counter/provider comments
 

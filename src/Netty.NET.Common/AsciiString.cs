@@ -411,12 +411,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             throw new ArgumentOutOfRangeException("index: " + index + " must be in the range [0," + _length + ")");
         }
 
-        // Try to use unsafe to avoid double checking the index bounds
-        if (PlatformDependent.HasUnsafe())
-        {
-            return PlatformDependent.GetByte(_value, index + _offset);
-        }
-
+        // CLR adaptation: indexed byte access retains the logical slice check;
+        // there is no JVM Unsafe strategy or array-header offset.
         return _value[index + _offset];
     }
 

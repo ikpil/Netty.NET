@@ -121,18 +121,21 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1906 cases** on Windows/net10.0:
-**1892 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: version-metadata-full-debug.trx and version-metadata-full-release.trx.
-All 1906 prior identities/outcomes remain, including 759 original non-Porting cases
-and every skip; no new fixture tests standard BCL internals. Version diagnostics
-now use the SDK's actual assembly name/informational version/Git metadata, with
-explicit Assembly/AssemblyLoadContext scope. The unused Java-shaped Version DTO,
-property-file parser and launcher retire. Build/consumer checks verify both actual
-DLLs; optional provenance is absent rather than invented. Original Java comments
-and the pinned 271-file inventory remain checked. Library/full test builds have
-zero errors; existing warnings remain. Both platform classes/common remain open.
-Results remain in ignored TestResults and artifacts/version-metadata-validation.
+The current default suite executes **1913 cases** on Windows/net10.0:
+**1899 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: varhandle-memory-final-full-debug.trx and varhandle-memory-final-full-release.trx.
+All 1906 prior identities/outcomes, including 759 original non-Porting cases and
+every skip, remain. Six endian/common-memory integration cases and one deterministic
+original-fixture byte-wrap boundary are added. The factory's standard CLR replacement
+matches 864 exact Java byte-view rows. Fifteen platform forwarding/alignment methods
+and the ByteAt JVM Unsafe branch retire; native indexed/MemoryMarshal consumers
+replace them. Checked Release passes 395 cases after two reproduced checked defects
+are repaired: negative map index guard and Java-style byte increment wrapping.
+Original comment coverage and the pinned 271-file inventory remain checked. All
+tracked C# methods/local functions start uppercase. Library/test builds have zero
+errors; existing warnings remain. Both platform classes/common remain unfinished;
+direct native-ring publication and buffer/transport integration remain separate.
+Results remain in ignored TestResults and artifacts/varhandle-memory-validation.
 Full suites compile every portable test source without PortingBatch and do not
 establish module completion. Decisions and original comment provenance are in
 [common-clr-design.md](common-clr-design.md).
@@ -713,6 +716,41 @@ Source/test decision counts remain unchanged. Next: sequence-pattern search,
 slicing and coordinated ICharSequence/StringExtensions native API review.
 AsciiString and common remain in progress.
 
+### CLR endian views/access-strategy checkpoint
+
+VarHandleFactory is a framework replacement using BinaryPrimitives/MemoryMarshal,
+typed counters and native map locking, with actual pinned buffer/counter/fence
+consumers reviewed. Fifteen array/narrowing/alignment methods and ByteAt's JVM
+Unsafe branch retire; existing CLR fixture assertions migrate to native APIs.
+The three huge typed-array indexes now expect native IndexOutOfRangeException,
+retaining the no-truncation purpose; other assertions and identities remain.
+Source licenses and removed explanatory comments are in common-clr-design.md.
+
+The exact pinned factory on Corretto 21.0.11 agrees with checked CLR common-memory
+consumers on 864 endian/read/payload rows. Six endian/owner/view integration cases
+and a deterministic 255 byte-wrap case add seven discovered cases. Targeted Debug
+before the wrap addition passes 34. Checked runs first discover 394/pass 393/fail
+one on the existing negative map index guard; after that repair, one original random
+byte-increment case fails. A controlled new boundary case fails before wrapping.
+Final checked Release passes all 395. Fixture migration compile errors were fixed;
+no test exclusion, workload reduction or new skip. Initial whole Debug/Release each
+pass 1898/skip 14 (1912 cases) before the final checked repairs/boundary addition.
+
+Final whole Debug/Release each discover 1913/pass 1899/fail zero/skip 14, retaining
+all 1906 prior outcomes and 759 original non-Porting identities. Comment audit
+preserves the original VarHandleFactory license and changed source/test comments;
+inventory/path validation and uppercase semantic checks pass. The factory moves
+pending to clr-replacement; source/module reviews remain open. Direct io_uring
+ring ordering is explicitly outside this byte-view decision. Next: remaining
+platform capability/bootstrap and utility stubs against their actual purposes.
+
+Evidence: varhandle-memory-final-full-debug.trx, varhandle-memory-final-full-release.trx,
+varhandle-memory-final-targeted-debug.trx, varhandle-memory-checked-release.trx,
+varhandle-memory-final-checked-release.trx, varhandle-memory-wrap-before-checked.trx,
+varhandle-memory-repaired-checked-release.trx, varhandle-memory-comment-audit.json
+and varhandle-memory-identity-and-inventory.json. Java/CLR oracle sources and
+semantic naming verification remain in ignored artifacts/varhandle-memory-validation.
+
 ### Native version metadata checkpoint
 
 Replace the unused Java Version class with standard assembly metadata already
@@ -732,7 +770,8 @@ default Debug/Release each discover 1906/pass 1892/fail zero/retain 14 skips, wi
 all 1906 previous identities/outcomes and 759 non-Porting cases unchanged. The
 pinned 271-file inventory/path/comment audit remains valid; Version moves from
 pending to clr-replacement. Common/platform completion remains open. Next review:
-VarHandleFactory's endian byte views and ordered-publication requirements.
+VarHandleFactory's endian byte views and ordered-publication requirements were
+the next review candidate; their subsequent CLR decision is recorded above.
 
 Evidence: version-metadata-full-debug.trx, version-metadata-full-release.trx,
 version-metadata-comment-audit.json and version-metadata-identity-and-inventory.json;

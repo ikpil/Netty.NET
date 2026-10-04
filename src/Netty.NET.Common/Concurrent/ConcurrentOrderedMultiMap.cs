@@ -195,7 +195,7 @@ public sealed class ConcurrentOrderedMultiMap<T>
 
     private bool Select(int index, bool remove, out KeyValuePair<int, T> entry)
     {
-        if ((uint)index >= (uint)_buckets.Count)
+        if (index < 0 || index >= _buckets.Count)
         { entry = default; return false; }
         int key = _buckets.Keys[index];
         var bucket = _buckets.Values[index];

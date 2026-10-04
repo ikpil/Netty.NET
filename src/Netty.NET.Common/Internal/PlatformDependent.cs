@@ -221,15 +221,6 @@ public static class PlatformDependent
         return UNSAFE_UNAVAILABILITY_CAUSE;
     }
 
-    /**
-     * {@code true} if and only if the platform supports unaligned access.
-     *
-     * @see <a href="https://en.wikipedia.org/wiki/Segmentation_fault#Bus_error">Wikipedia on segfault</a>
-     */
-    public static bool IsUnaligned() {
-        return PlatformDependent0.IsUnaligned();
-    }
-
 
     /**
      * Returns the temporary directory.
@@ -302,49 +293,6 @@ public static class PlatformDependent
     }
 
 
-    public static byte GetByte(byte[] data, int index) {
-        return data[index];
-    }
-
-    public static byte GetByte(byte[] data, long index) {
-        return data[ToIntExact(index)];
-    }
-
-    public static short GetShort(byte[] data, int index) {
-        return MemoryMarshal.Read<short>(data.AsSpan(index, sizeof(short)));
-    }
-
-    public static int GetInt(byte[] data, int index) {
-        return MemoryMarshal.Read<int>(data.AsSpan(index, sizeof(int)));
-    }
-
-    public static int GetInt(int[] data, long index) {
-        return data[ToIntExact(index)];
-    }
-
-    public static long GetLong(byte[] data, int index) {
-        return MemoryMarshal.Read<long>(data.AsSpan(index, sizeof(long)));
-    }
-
-    public static long GetLong(long[] data, long index) {
-        return data[ToIntExact(index)];
-    }
-
-    private static int ToIntExact(long value)
-    {
-        if (value > int.MaxValue || value < int.MinValue)
-        {
-            throw new OverflowException("Value out of range for Int32.");
-        }
-        return (int)value;
-    }
-
-
-
-
-
-
-
     /**
      * Identical to {@link PlatformDependent0#hashCodeAsciiCompute(long, int)} but for {@link CharSequence}.
      */
@@ -398,23 +346,6 @@ public static class PlatformDependent
      */
     private static int HashCodeAsciiSanitizeByte(char value) {
         return value & 0x1f;
-    }
-
-
-    public static void PutByte(byte[] data, int index, byte value) {
-        data[index] = value;
-    }
-
-    public static void PutShort(byte[] data, int index, short value) {
-        MemoryMarshal.Write(data.AsSpan(index, sizeof(short)), in value);
-    }
-
-    public static void PutInt(byte[] data, int index, int value) {
-        MemoryMarshal.Write(data.AsSpan(index, sizeof(int)), in value);
-    }
-
-    public static void PutLong(byte[] data, int index, long value) {
-        MemoryMarshal.Write(data.AsSpan(index, sizeof(long)), in value);
     }
 
 

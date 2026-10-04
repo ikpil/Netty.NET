@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -19,28 +20,28 @@ public class HeapMemoryContractTest
         byte[] expected = (byte[])data.Clone();
         const long value = unchecked((long)0x80ff0123fedcba98UL);
 
-        PlatformDependent.PutLong(data, offset, value);
+        MemoryMarshal.Write(data.AsSpan(offset, sizeof(long)), value);
         BitConverter.GetBytes(value).CopyTo(expected, offset);
         Assert.Equal(expected, data);
-        Assert.Equal(value, PlatformDependent.GetLong(data, offset));
+        Assert.Equal(value, MemoryMarshal.Read<long>(data.AsSpan(offset, sizeof(long))));
 
         const int intValue = unchecked((int)0x80abcdef);
-        PlatformDependent.PutInt(data, offset, intValue);
+        MemoryMarshal.Write(data.AsSpan(offset, sizeof(int)), intValue);
         BitConverter.GetBytes(intValue).CopyTo(expected, offset);
         Assert.Equal(expected, data);
-        Assert.Equal(intValue, PlatformDependent.GetInt(data, offset));
+        Assert.Equal(intValue, MemoryMarshal.Read<int>(data.AsSpan(offset, sizeof(int))));
 
         const short shortValue = unchecked((short)0x80ff);
-        PlatformDependent.PutShort(data, offset, shortValue);
+        MemoryMarshal.Write(data.AsSpan(offset, sizeof(short)), shortValue);
         BitConverter.GetBytes(shortValue).CopyTo(expected, offset);
         Assert.Equal(expected, data);
-        Assert.Equal(shortValue, PlatformDependent.GetShort(data, offset));
+        Assert.Equal(shortValue, MemoryMarshal.Read<short>(data.AsSpan(offset, sizeof(short))));
 
-        PlatformDependent.PutByte(data, offset, 0xfe);
+        data[offset] = 0xfe;
         expected[offset] = 0xfe;
         Assert.Equal(expected, data);
-        Assert.Equal((byte)0xfe, PlatformDependent.GetByte(data, offset));
-        Assert.Equal((byte)0xfe, PlatformDependent.GetByte(data, (long)offset));
+        Assert.Equal((byte)0xfe, data[offset]);
+        Assert.Equal((byte)0xfe, data[(long)offset]);
     }
 
     [Theory]
@@ -77,9 +78,11 @@ public class HeapMemoryContractTest
     {
         byte[] data = { 1, 2, 3, 4, 5, 6, 7, 8 };
         byte[] original = (byte[])data.Clone();
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.PutLong(data, 1, 9));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.PutShort(data, -1, 9));
-        Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.GetInt(data, 6));
+        const long longValue = 9;
+        const short shortValue = 9;
+        Assert.Throws<ArgumentOutOfRangeException>(() => MemoryMarshal.Write(data.AsSpan(1, sizeof(long)), longValue));
+        Assert.Throws<ArgumentOutOfRangeException>(() => MemoryMarshal.Write(data.AsSpan(-1, sizeof(short)), shortValue));
+        Assert.Throws<ArgumentOutOfRangeException>(() => MemoryMarshal.Read<int>(data.AsSpan(6, sizeof(int))));
         Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.CopyMemory(data, 0, data, 1, 8));
         Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.CopyMemory(data, -1, data, 0, 1));
         Assert.Throws<ArgumentOutOfRangeException>(() => PlatformDependent.SetMemory(data, 7, 2, 0));
@@ -100,10 +103,11 @@ public class HeapMemoryContractTest
     [Fact]
     public void TypedArrayIndexesAreElementIndexesAndCannotTruncateLongs()
     {
-        Assert.Equal(-2, PlatformDependent.GetInt(new[] { 1, -2 }, 1L));
-        Assert.Equal(long.MinValue, PlatformDependent.GetLong(new[] { 1L, long.MinValue }, 1L));
-        Assert.Throws<OverflowException>(() => PlatformDependent.GetByte(new byte[1], 1L << 32));
-        Assert.Throws<OverflowException>(() => PlatformDependent.GetInt(new int[1], 1L << 32));
-        Assert.Throws<OverflowException>(() => PlatformDependent.GetLong(new long[1], 1L << 32));
+        Assert.Equal(-2, new[] { 1, -2 }[1L]);
+        Assert.Equal(long.MinValue, new[] { 1L, long.MinValue }[1L]);
+        // Native arrays reject an out-of-range long index without narrowing it.
+        Assert.Throws<IndexOutOfRangeException>(() => (new byte[1])[1L << 32]);
+        Assert.Throws<IndexOutOfRangeException>(() => (new int[1])[1L << 32]);
+        Assert.Throws<IndexOutOfRangeException>(() => (new long[1])[1L << 32]);
     }
 }

@@ -28,9 +28,9 @@ public class PlatformAndAddressContractTest
     public void SafePrimitiveReadsAndEqualityRetainAllBytes()
     {
         byte[] data = { 99, 0xfe, 2, 3, 4, 5, 6, 7, 0x80 };
-        Assert.Equal(BitConverter.ToInt16(data, 1), PlatformDependent.GetShort(data, 1));
-        Assert.Equal(BitConverter.ToInt32(data, 1), PlatformDependent.GetInt(data, 1));
-        Assert.Equal(BitConverter.ToInt64(data, 1), PlatformDependent.GetLong(data, 1));
+        Assert.Equal(BitConverter.ToInt16(data, 1), MemoryMarshal.Read<short>(data.AsSpan(1, sizeof(short))));
+        Assert.Equal(BitConverter.ToInt32(data, 1), MemoryMarshal.Read<int>(data.AsSpan(1, sizeof(int))));
+        Assert.Equal(BitConverter.ToInt64(data, 1), MemoryMarshal.Read<long>(data.AsSpan(1, sizeof(long))));
         Assert.True(PlatformDependent.Equals(new byte[] { 1, 2 }, 0, new byte[] { 1, 2 }, 0, 2));
         Assert.False(PlatformDependent.Equals(new byte[] { 1, 2 }, 0, new byte[] { 1, 3 }, 0, 2));
     }

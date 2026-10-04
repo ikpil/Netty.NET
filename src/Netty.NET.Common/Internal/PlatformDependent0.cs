@@ -59,8 +59,6 @@ public class PlatformDependent0
     public static readonly int HASH_CODE_C1 = unchecked((int)0xcc9e2d51);
     public static readonly int HASH_CODE_C2 = unchecked((int)0x1b873593);
 
-    private static readonly bool UNALIGNED;
-
 
     static PlatformDependent0()
     {
@@ -554,11 +552,6 @@ public class PlatformDependent0
         return null;
     }
 
-    public static bool IsUnaligned()
-    {
-        return UNALIGNED;
-    }
-
 
     public static bool HasUnsafe()
     {
@@ -569,11 +562,6 @@ public class PlatformDependent0
     public static Exception GetUnsafeUnavailabilityCause()
     {
         return UNSAFE_UNAVAILABILITY_CAUSE;
-    }
-
-    public static bool UnalignedAccess()
-    {
-        return UNALIGNED;
     }
 
 
