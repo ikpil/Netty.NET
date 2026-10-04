@@ -32,12 +32,6 @@ public class FastThreadLocalThread
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(FastThreadLocalThread));
     private static readonly ConditionalWeakTable<Thread, FastThreadLocalThread> OwnedThreads = new();
     [ThreadStatic] private static FastThreadLocalThread _current;
-    /**
-     * Set of thread IDs that are treated like {@link FastThreadLocalThread}.
-     */
-    /**
-     * Immutable, thread-safe helper class that wraps {@link LongLongHashMap}
-     */
     // CLR adaptation: the upstream fallback set is replaced by per-thread scope
     // membership. Queries only inspect the caller, so no shared ID map is needed.
     [ThreadStatic] private static bool _fallbackScope;
@@ -49,23 +43,21 @@ public class FastThreadLocalThread
     public Thread Thread { get; }
     internal static FastThreadLocalThread CurrentFastThreadLocalThread() => _current;
 
-    public FastThreadLocalThread() : this(null, null, 0, false) { }
-    public FastThreadLocalThread(string name) : this(null, name, 0, false) { }
-    public FastThreadLocalThread(Action target) : this(target, null, 0, true) { }
-    public FastThreadLocalThread(Action target, string name) : this(target, name, 0, true) { }
-    public FastThreadLocalThread(ThreadGroup group, Action target) : this(target, null, 0, true, group) { }
-    public FastThreadLocalThread(ThreadGroup group, string name) : this(null, name, 0, false, group) { }
-    public FastThreadLocalThread(ThreadGroup group, Action target, string name) : this(target, name, 0, true, group) { }
-    public FastThreadLocalThread(ThreadGroup group, Action target, string name, long stackSize)
-        : this(target, name, checked((int)stackSize), true, group) { }
+    // Targetless construction supports subclasses that implement Run and own their cleanup policy.
+    public FastThreadLocalThread(string name = null, int maxStackSize = 0, ThreadGroup group = null)
+        : this(null, name, maxStackSize, false, group) { }
+
+    public FastThreadLocalThread(Action target, string name = null, int maxStackSize = 0, ThreadGroup group = null)
+        : this(target ?? throw new ArgumentNullException(nameof(target)), name, maxStackSize, true, group) { }
 
     // CLR ThreadGroup identity uses weak metadata and inherits the creator group.
     // Stack size is a CLR hint and must fit its Int32 parameter.
-    private FastThreadLocalThread(Action target, string name, int stackSize, bool cleanup, ThreadGroup group = null)
+    private FastThreadLocalThread(Action target, string name, int maxStackSize, bool cleanup, ThreadGroup group)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(maxStackSize);
         cleanupFastThreadLocals = cleanup;
         _target = cleanup ? FastThreadLocalRunnable.Wrap(target) : target;
-        Thread = stackSize == 0 ? new Thread(Entry) : new Thread(Entry, stackSize);
+        Thread = new Thread(Entry, maxStackSize);
         ThreadGroup.Assign(Thread, group);
         if (name != null) Thread.Name = name;
         OwnedThreads.Add(Thread, this);
@@ -85,26 +77,29 @@ public class FastThreadLocalThread
 
     public virtual void Run() => _target?.Invoke();
 
-    /**
-     * Returns the internal data structure that keeps the thread-local variables bound to this thread.
-     * Note that this method is for internal use only, and thus is subject to change at any time.
-     */
-    public InternalThreadLocalMap ThreadLocalMap()
+    internal InternalThreadLocalMap ThreadLocalMap
     {
-        if (_current != this && logger.IsWarnEnabled())
-            logger.Warn(new InvalidOperationException("It's not thread-safe to get 'threadLocalMap' which doesn't belong to the caller thread"));
-        return _threadLocalMap;
-    }
+        /**
+         * Returns the internal data structure that keeps the thread-local variables bound to this thread.
+         * Note that this method is for internal use only, and thus is subject to change at any time.
+         */
+        get
+        {
+            if (_current != this && logger.IsWarnEnabled())
+                logger.Warn(new InvalidOperationException("It's not thread-safe to get 'threadLocalMap' which doesn't belong to the caller thread"));
+            return _threadLocalMap;
+        }
 
-    /**
-     * Sets the internal data structure that keeps the thread-local variables bound to this thread.
-     * Note that this method is for internal use only, and thus is subject to change at any time.
-     */
-    public void SetThreadLocalMap(InternalThreadLocalMap threadLocalMap)
-    {
-        if (_current != this && logger.IsWarnEnabled())
-            logger.Warn(new InvalidOperationException("It's not thread-safe to set 'threadLocalMap' which doesn't belong to the caller thread"));
-        _threadLocalMap = threadLocalMap;
+        /**
+         * Sets the internal data structure that keeps the thread-local variables bound to this thread.
+         * Note that this method is for internal use only, and thus is subject to change at any time.
+         */
+        set
+        {
+            if (_current != this && logger.IsWarnEnabled())
+                logger.Warn(new InvalidOperationException("It's not thread-safe to set 'threadLocalMap' which doesn't belong to the caller thread"));
+            _threadLocalMap = value;
+        }
     }
 
     /**
@@ -112,7 +107,9 @@ public class FastThreadLocalThread
      *
      * @deprecated Use {@link FastThreadLocalThread#currentThreadWillCleanupFastThreadLocals()} instead
      */
-    public bool WillCleanupFastThreadLocals() => cleanupFastThreadLocals;
+    // CLR capability: subclasses that own Run can declare their actual cleanup guarantee.
+    // The original Java method deprecation does not apply to this CLR declaration hook.
+    public virtual bool CleansFastThreadLocals => cleanupFastThreadLocals;
 
     /**
      * Returns {@code true} if {@link FastThreadLocal#removeAll()} will be called once {@link Thread#run()} completes.
@@ -121,7 +118,7 @@ public class FastThreadLocalThread
      */
     public static bool WillCleanupFastThreadLocals(Thread thread)
     {
-        return thread != null && OwnedThreads.TryGetValue(thread, out var owner) && owner.cleanupFastThreadLocals;
+        return thread != null && OwnedThreads.TryGetValue(thread, out var owner) && owner.CleansFastThreadLocals;
     }
 
     /**
@@ -130,7 +127,7 @@ public class FastThreadLocalThread
     public static bool CurrentThreadWillCleanupFastThreadLocals()
     {
         // intentionally doesn't accept a thread parameter to work with ScopedValue in the future
-        return _current?.cleanupFastThreadLocals == true || _fallbackScope;
+        return _current != null ? _current.CleansFastThreadLocals : _fallbackScope;
     }
 
     /**
@@ -154,6 +151,7 @@ public class FastThreadLocalThread
      *
      * @param runnable The task to run
      */
+    // CLR scopes/maps are synchronous and physical-thread-bound; they never flow through AsyncLocal.
     public static void RunWithFastThreadLocal(Action runnable)
     {
         ArgumentNullException.ThrowIfNull(runnable);
@@ -168,15 +166,4 @@ public class FastThreadLocalThread
         }
     }
 
-    /**
-     * Query whether this thread is allowed to perform blocking calls or not.
-     * {@link FastThreadLocalThread}s are often used in event-loops, where blocking calls are forbidden in order to
-     * prevent event-loop stalls, so this method returns {@code false} by default.
-     * <p>
-     * Subclasses of {@link FastThreadLocalThread} can override this method if they are not meant to be used for
-     * running event-loops.
-     *
-     * @return {@code false}, unless overridden by a subclass.
-     */
-    public virtual bool PermitBlockingCalls() => false;
 }

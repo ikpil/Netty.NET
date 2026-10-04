@@ -1539,7 +1539,8 @@
       "evidence": [
         "Historical earlier checkpoint: Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics.",
         "Native string Length/indexers/ranges replace Java forwarding calls for pool naming; creator/group/thread policies unchanged. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips.",
-        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit.",
+        "Owner access/creation updated to native internal map property and named constructor group; prior physical map and factory contracts retain original fixtures/comments/outcomes. common-clr-design.md#native-owned-thread-construction-and-cleanup-capability; current common-porting.md and thread-construction-* records"
       ],
       "adaptation": "Weak CLR ThreadGroup metadata retains explicit group and creator inheritance. Native CLR ThreadPriority enum replaces Java integer priorities. CLR has no SecurityManager or JVM group permission policy. Native Action-to-Thread boundary, Interlocked IDs and CLR range/null exceptions; native Thread owns lifecycle. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records",
       "comments": {
@@ -1784,20 +1785,22 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/FastThreadLocalThread.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs"
       ],
       "implementation": [
         "src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/ThreadConstructionContractTest.cs"
       ],
       "evidence": [
         "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
-        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit.",
+        "Retained source/native review verified: optional CLR constructors/int stack hint, null/negative errors, internal map property and virtual cleanup capability. Previous C# rejects required cleanup override (CS0506); native property dispatch drives actual Recycler eligibility/removal. Four exact Java queries match four base/custom CLR rows. JVM-only blocking hook removed with original comment/code provenance. common-clr-design.md#native-owned-thread-construction-and-cleanup-capability; current common-porting.md and thread-construction-* records"
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Action targets and native Thread lifecycle replace Runnable/Start/Join/name facades; Entry finally releases invocation captures while retaining weak-key ownership metadata. Native Start controls logical context; physical map remains thread-static. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records",
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Action targets and native Thread lifecycle replace Runnable/Start/Join/name facades; Entry finally releases invocation captures while retaining weak-key ownership metadata. Native Start controls logical context; physical map remains thread-static. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records Constructor overloads become two native optional/named-argument shapes. CLR int maxStackSize replaces Java long hint; null target names the public parameter. Cleanup eligibility is virtual CleansFastThreadLocals property; metadata/current queries honor it. Raw owner map access is assembly-internal. Optional JVM BlockHound hook and fallback shared-ID structure are explicitly excluded/replaced with archived comments. common-clr-design.md#native-owned-thread-construction-and-cleanup-capability; current common-porting.md and thread-construction-* records",
       "comments": {
         "upstreamCount": 15,
         "required": true,
@@ -1805,8 +1808,8 @@
         "missingCount": 0
       },
       "nativeDesignReview": {
-        "status": "in-progress",
-        "evidence": "Native target/physical-state/lifetime review progressed; wider constructor/stack-size and blocking-policy decisions remain. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
+        "status": "verified",
+        "evidence": "Remaining constructors, real subclass cleanup contract, raw map visibility and JVM blocking decisions now close the retained worker review after earlier native invocation/context/capture/physical-scope tests. No global blocking instrumentor or future buffer module is certified. common-clr-design.md#native-owned-thread-construction-and-cleanup-capability; current common-porting.md and thread-construction-* records"
       }
     },
     {
@@ -3221,16 +3224,24 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/Hidden.java",
       "kind": "source",
-      "status": "pending",
+      "status": "not-applicable",
       "candidates": [],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "docs/common-clr-design.md"
+      ],
+      "evidence": [
+        "Entire source is optional reactor BlockHoundIntegration: JVM method allowlists/predicate and ServiceLoader/compareTo compatibility. Actual META-INF provider and transport-blockhound-tests consumers verified at pinned source; no CLR runtime instrumentor is supplied. Full original comment provenance archived. common-clr-design.md#native-owned-thread-construction-and-cleanup-capability; current common-porting.md and thread-construction-* records"
+      ],
+      "adaptation": "JVM-only diagnostic integration excluded; no CLR Hidden class, no-op builder or pretend blocking flag. Native threading and concrete executor-local execution guards remain separate. common-clr-design.md#native-owned-thread-construction-and-cleanup-capability; current common-porting.md and thread-construction-* records",
       "comments": {
         "upstreamCount": 5,
-        "required": true,
-        "preservedCount": 0,
-        "missingCount": 5
+        "required": false,
+        "preservedCount": 5,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "not-applicable",
+        "evidence": "All source contents are optional JVM diagnostic integration, not a portable common execution/protocol implementation. Actual provider and override consumers identified; comments archived. common-clr-design.md#native-owned-thread-construction-and-cleanup-capability; current common-porting.md and thread-construction-* records"
       }
     },
     {
@@ -3278,7 +3289,8 @@
         "Native removal-registry Size consumer now counts the reference-identity HashSet directly, matching pinned Java Set membership purpose. No dummy boolean dictionary or non-generic ICollection cast remains for this registry. Original cache/index/read-depth and thread ownership policies remain separate. See common-clr-design.md#native-thread-local-removal-membership and current common-porting.md; whole map review stays in progress.",
         "Native type matching retires both strong matcher-cache fields/accessors/Size branches. System.Type supplies native instance checks; existing constructed superclass resolver supplies metadata without worker cache state. RunAndCollect handler/payload lifetime fails before retirement and passes afterward. Scratch builder/list and local-channel read-depth policies are separate; whole map review remains in progress. See common-clr-design.md#direct-clr-type-resolution-and-matching and current common-porting.md.",
         "Retire scratch builder/list fields/APIs/Size branches and their unused capacity settings/logger bootstrap after actual common CSV consumers migrate to final owned strings and AsciiString already owns a native List. Original removed comments retained in common-clr-design.md#operation-owned-csv-storage. Pinned future HTTP cookie/multipart/list and conversion-builder users need native owner-scoped storage at their actual integrations; common tests do not certify those policies. Current full/checked validation, oracle and fixture mapping are in common-porting.md; whole map review stays in progress.",
-        "Current common native map review verified: all retained APIs covered by negative bounds, unset/null/reference/growth, shared saturated ID/publication, weak handler-cache, identity registry and physical get/remove/destroy ownership contracts. Six negative accessor failures repaired with ArgumentOutOfRangeException(index); three ordinary/scoped/factory workers prove logical-context flow does not transfer map/cache/depth/values and Destroy only detaches current fallback storage without callbacks. Prior retired API decisions/provenance remain; future LocalChannel/handler integrations and whole common remain open. See common-clr-design.md#native-map-access-and-physical-ownership and current common-porting.md."
+        "Current common native map review verified: all retained APIs covered by negative bounds, unset/null/reference/growth, shared saturated ID/publication, weak handler-cache, identity registry and physical get/remove/destroy ownership contracts. Six negative accessor failures repaired with ArgumentOutOfRangeException(index); three ordinary/scoped/factory workers prove logical-context flow does not transfer map/cache/depth/values and Destroy only detaches current fallback storage without callbacks. Prior retired API decisions/provenance remain; future LocalChannel/handler integrations and whole common remain open. See common-clr-design.md#native-map-access-and-physical-ownership and current common-porting.md.",
+        "Owner access/creation updated to native internal map property and named constructor group; prior physical map and factory contracts retain original fixtures/comments/outcomes. common-clr-design.md#native-owned-thread-construction-and-cleanup-capability; current common-porting.md and thread-construction-* records"
       ],
       "adaptation": "Physical-thread indexed storage uses native arrays and one saturated int/Volatile/CAS index owner; weak Type identity cache uses ConditionalWeakTable and removal membership uses identity HashSet. Native negative access errors are ArgumentOutOfRangeException(index), positive missing reads remain absent, and null/UNSET differ. Current fallback-only Destroy does not invoke callbacks or clear owned fast-thread storage. Retired JVM/erased scratch/matcher/counter/codec APIs and original comments have explicit prior provenance; future transport integrations are separate.",
       "comments": {

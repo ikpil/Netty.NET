@@ -117,6 +117,6 @@ public class DefaultThreadFactory : IThreadFactory
 
     protected virtual Thread NewThread(Action r, string name)
     {
-        return new FastThreadLocalThread(_threadGroup, r, name).Thread;
+        return new FastThreadLocalThread(r, name, group: _threadGroup).Thread;
     }
 }

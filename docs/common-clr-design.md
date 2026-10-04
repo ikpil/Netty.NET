@@ -4253,3 +4253,207 @@ FastThreadLocalRunnable's full small source/native review is verified. Remaining
 wrapper stack-size/constructor and blocking-policy decisions, wider executor APIs,
 JVM-only ObjectCleaner/BlockHound consumers and whole common remain separate.
 No throughput or allocation improvement is claimed by this boundary/lifetime unit.
+
+
+## Native owned-thread construction and cleanup capability
+
+Pinned FastThreadLocalThread.java:43-79 has targetless subclass and wrapped-target
+constructors, with Java long stack hints. Use two C# constructors with optional
+name/int maxStackSize/group arguments: native Thread owns lifecycle and validates
+the CLR hint, whose zero/default and positive sizes remain hints, not guarantees
+of allocated stack bytes. Reject negative hints and null targets with native
+public parameter names. No CLR long-to-int cast/OverflowException facade remains.
+Explicit groups stay weak metadata; default groups inherit the construction caller.
+Actual DefaultThreadFactory creation uses the named group argument. Existing native
+Thread name, priority/background and Start/context policies remain as reviewed in
+the preceding section. Named-argument consumers test zero/128-KiB hints, groups,
+owned execution/removal, native negative errors and targetless default behavior.
+
+The original instance cleanup query is virtual, and both arbitrary/current-thread
+queries invoke that method (FastThreadLocalThread.java:112-137). This is purposeful
+allocator/recycler eligibility, independent of indexed-map capability. Actual
+buffer consumers are AdaptivePoolingAllocator.java:271 and PooledByteBufAllocator
+.java:584; AdaptiveByteBufAllocatorUseCacheForNonEventLoopThreadsTest.java:60-79
+overrides the guarantee and Run. The old CLR method cannot be overridden (an
+isolated consumer fails with CS0506), and queries bypassed subclasses via the
+constructor field. Replace the instance Java method with virtual C# property
+CleansFastThreadLocals; native metadata/current queries invoke that property.
+Manual Run subclasses own cleanup and may truthfully declare it; a conservative
+false declaration can disable pooling even while a target wrapper still cleans.
+Real Recycler tests verify reuse versus NOOP handles, separate map capability,
+normal removal and no invented automatic cleanup on targetless workers. Four
+exact pinned Java queries match four CLR base/custom policy rows under Corretto
+21.0.11_10. The oracle throws if its untested ordinary/fallback branch is reached;
+scope/fallback behavior retains its earlier physical ownership validation.
+
+Only common/InternalThreadLocalMap.java:105/120-122/139 accesses the original
+worker's raw map in the pinned all-module tree. Make the CLR owner accessor an
+internal property; preserve getter/setter comments and warning-only diagnostics.
+It is not cross-thread synchronization. Normal consumers use the caller-owned
+InternalThreadLocalMap/FastThreadLocal APIs, not public raw-owner mutation.
+
+permitBlockingCalls at FastThreadLocalThread.java:184-196 is only queried by
+Hidden.java:191-198, which registers a predicate with reactor BlockHound. Its
+actual override test is in transport-blockhound-tests at 191-205; it controls JVM
+Thread.sleep instrumentation. Hidden.java is wholly that optional integration:
+JDK ServiceLoader visibility, JVM method/class allowlists and compareTo ordering.
+The common META-INF/services/reactor.blockhound.integration.BlockHoundIntegration
+resource registers Hidden$NettyBlockHoundIntegration. This has no CLR instrumentor
+or common protocol/execution implementation. Exclude Hidden and retire the unused
+CLR blocking flag rather than expose a pretend runtime blocking detector. Native
+Thread/blocking behavior and actual executor-local deadlock/affinity rules remain;
+no global CLR blocking instrumentation or replacement backend is certified.
+
+The upstream fallback AtomicReference/immutable ID bitmap is replaced by physical
+thread-static scope membership, as already verified by scope/map/cache/recycler
+tests. Its source comments previously sat above a bool despite describing a map;
+archive them with their original code below. Every original worker/Hidden comment
+is retained near its implementation or in these provenance blocks. Current full/
+checked counts, source decisions and remaining whole-common scope are recorded in
+common-porting.md. This completes the retained worker's source/native review,
+including earlier thread-map, fallback, subclass, cleanup and capture-lifetime
+decisions; broader executor APIs and future allocator integration remain open.
+
+Retired FastThreadLocalThread.java:32-36 fallback publication member:
+
+```java
+    /**
+     * Set of thread IDs that are treated like {@link FastThreadLocalThread}.
+     */
+    private static final AtomicReference<FallbackThreadSet> fallbackThreads =
+            new AtomicReference<>(FallbackThreadSet.EMPTY);
+```
+
+Retired FastThreadLocalThread.java:198-254 immutable fallback helper:
+
+```java
+    /**
+     * Immutable, thread-safe helper class that wraps {@link LongLongHashMap}
+     */
+    private static final class FallbackThreadSet {
+        static final FallbackThreadSet EMPTY = new FallbackThreadSet();
+        private static final long EMPTY_VALUE = 0L;
+
+        private final LongLongHashMap map;
+
+        private FallbackThreadSet() {
+            this.map = new LongLongHashMap(EMPTY_VALUE);
+        }
+
+        private FallbackThreadSet(LongLongHashMap map) {
+            this.map = map;
+        }
+
+        public boolean contains(long threadId) {
+            long key = threadId >>> 6;
+            long bit = 1L << (threadId & 63);
+
+            long bitmap = map.get(key);
+            return (bitmap & bit) != 0;
+        }
+
+        public FallbackThreadSet add(long threadId) {
+            long key = threadId >>> 6;
+            long bit = 1L << (threadId & 63);
+
+            LongLongHashMap newMap = new LongLongHashMap(map);
+            long oldBitmap = newMap.get(key);
+            long newBitmap = oldBitmap | bit;
+            newMap.put(key, newBitmap);
+
+            return new FallbackThreadSet(newMap);
+        }
+
+        public FallbackThreadSet remove(long threadId) {
+            long key = threadId >>> 6;
+            long bit = 1L << (threadId & 63);
+
+            long oldBitmap = map.get(key);
+            if ((oldBitmap & bit) == 0) {
+                return this;
+            }
+
+            LongLongHashMap newMap = new LongLongHashMap(map);
+            long newBitmap = oldBitmap & ~bit;
+
+            if (newBitmap != EMPTY_VALUE) {
+                newMap.put(key, newBitmap);
+            } else {
+                newMap.remove(key);
+            }
+
+            return new FallbackThreadSet(newMap);
+        }
+    }
+```
+
+Excluded FastThreadLocalThread.java:184-196 BlockHound hook:
+
+```java
+    /**
+     * Query whether this thread is allowed to perform blocking calls or not.
+     * {@link FastThreadLocalThread}s are often used in event-loops, where blocking calls are forbidden in order to
+     * prevent event-loop stalls, so this method returns {@code false} by default.
+     * <p>
+     * Subclasses of {@link FastThreadLocalThread} can override this method if they are not meant to be used for
+     * running event-loops.
+     *
+     * @return {@code false}, unless overridden by a subclass.
+     */
+    public boolean permitBlockingCalls() {
+        return false;
+    }
+```
+
+Excluded Hidden.java comments (pinned locations; entire source is JVM integration):
+
+Hidden.java:1:
+
+```java
+/*
+ * Copyright 2019 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+```
+
+Hidden.java:26:
+
+```java
+/**
+ * Contains classes that must have public visibility but are not public API.
+ */
+```
+
+Hidden.java:31:
+
+```java
+/**
+     * This class integrates Netty with BlockHound.
+     * <p>
+     * It is public but only because of the ServiceLoader's limitations
+     * and SHOULD NOT be considered a public API.
+     */
+```
+
+Hidden.java:148:
+
+```java
+// Let's whitelist SSLEngineImpl.unwrap(...) for now as it may fail otherwise for TLS 1.3.
+```
+
+Hidden.java:149:
+
+```java
+// See https://mail.openjdk.java.net/pipermail/security-dev/2020-August/022271.html
+```
