@@ -121,36 +121,37 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1960 cases** on Windows/x64/net10.0:
-**1946 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: thread-cache-full-debug.trx and thread-cache-full-release.trx.
-All 1958 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain unchanged. Two new
-handler-cache contracts fail before repair and pass with native weak ownership.
-The pinned WeakHashMap Class-key cache/actual ChannelHandlerAdapter consumer
-exposes strong CLR dictionary rooting of collectible types. Replace only this
-cache with ConditionalWeakTable<Type,StrongBox<bool>>: weak identity keys and
-native boolean holders preserve lifetime and distinguish absent/cached false.
-A RunAndCollect emitted type is collected while its map stays alive; two Type
-wrappers comparing equal retain independent values. Transport attribute-query
-integration remains future work, with a pure native factory policy documented.
-Remove the unused deprecated IntegerHolder/map getter/no-op setter and eight
-JVM padding fields. Native int/StrongBox replaces mutable-int purpose; the empty
-UnpaddedInternalThreadLocalMap Java 4.1 compatibility base is not applicable.
-Physical-thread/indexed cleanup, existing typed list switching, builder reuse
-and matcher cache policy remain. Whole map/index/lifetime review remains open.
-Affected Debug and checked Release each pass 85 with zero failures and two
-unchanged matcher skips (87 total). All 271 original comment totals remain;
-three empty-base comments are newly preserved, holder/map comments and all
-other coverage/prior Java/C# provenance remain. No original tests are removed.
-Source counts are 52 verified / 47 CLR replacement / 14 not applicable /
-72 pending / 20 in progress. Pinned inventory/paths and uppercase method/local-
-function checks pass. Existing warnings remain; no module completion is claimed.
-Records stay in ignored TestResults and artifacts/thread-cache-validation:
-thread-cache-before-debug.trx, thread-cache-identity-and-inventory.json and
-thread-cache-comment-audit.json. Native decisions and original comments are in
-common-clr-design.md#weak-handler-cache-and-retired-thread-local-scaffolding.
-Next: remaining indexed-variable/lifecycle and actual collection contracts.
+The current default suite executes **1970 cases** on Windows/x64/net10.0:
+**1956 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: indexed-storage-full-debug.trx and indexed-storage-full-release.trx.
+All 1960 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain unchanged. Ten new native
+index/bound/capacity/rejected-write cases are added. The first two fail before
+repair: the old JDK limit issues 52 IDs where only four fit the CLR array bound.
+InternalThreadLocalMap now uses one shared native int/Volatile/CAS counter,
+saturating at Array.MaxLength without wrapping/increment-reset races. Original
+construction-boundary fixture retains its assertions/comments using the native
+limit and scalar reflection. Actual indexed storage uses Array.Fill/Resize and
+bounded unsigned BitOperations capacity calculation; publish only completed
+storage and preserve UNSET/null/old-value/reference semantics.
+Five capacity scenarios include the original 1<<30 branch and the last native
+slot without multi-gigabyte allocation. Three invalid writes preserve existing
+storage; native upper/negative writes fail with ArgumentOutOfRangeException.
+Array.MaxLength is an upper bound; actual type/memory allocation failure still
+propagates. Allocation exhaustion is not forced. The original CI-only huge
+allocation scenario and its local skip condition remain unchanged.
+Targeted Debug and checked Release each pass all 19 cases. All 271 comment
+totals/coverage and prior Java/C# provenance remain; the removed JDK capacity
+reference is archived in common-clr-design.md. Pinned inventory/paths and
+uppercase method/local-function checks pass; no original tests are removed.
+Source statuses stay 52 verified / 47 CLR replacement / 14 not applicable /
+72 pending / 20 in progress. Whole map and common review remain open.
+Records stay in ignored TestResults and artifacts/indexed-storage-validation:
+indexed-storage-before-debug.trx, indexed-storage-identity-and-inventory.json
+and indexed-storage-comment-audit.json. Native decisions are in
+common-clr-design.md#native-indexed-variable-bounds-and-publication.
+Next: remaining thread-local listener/depth policies and actual collection
+purposes, using current CLR backends and pinned downstream consumers.
 Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate

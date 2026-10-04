@@ -16,8 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal.Logging;
 
@@ -33,17 +35,14 @@ public sealed class InternalThreadLocalMap
     [ThreadStatic]
     private static InternalThreadLocalMap _slowThreadLocalMap;
 
-    private static readonly AtomicInteger nextIndex = new AtomicInteger();
+    private static int nextIndex;
+    // Initialize the CLR limit before reserving the shared removal-registry index.
+    private static readonly int MAX_INDEXED_VARIABLE_COUNT = Array.MaxLength;
 
     // Internal use only.
     public static readonly int VARIABLES_TO_REMOVE_INDEX = NextVariableIndex();
 
     private static readonly int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
-
-    private static readonly int ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD = 1 << 30;
-
-    // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/ArrayList.java#l229
-    private const int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
 
     private static readonly int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
 
@@ -134,26 +133,27 @@ public sealed class InternalThreadLocalMap
 
     public static int NextVariableIndex()
     {
-        int index = nextIndex.GetAndIncrement();
-        if (index >= ARRAY_LIST_CAPACITY_MAX_SIZE || index < 0)
+        while (true)
         {
-            nextIndex.Set(ARRAY_LIST_CAPACITY_MAX_SIZE);
-            throw new InvalidOperationException("too many thread-local indexed variables");
+            int index = Volatile.Read(ref nextIndex);
+            if (index >= MAX_INDEXED_VARIABLE_COUNT || index < 0)
+                throw new InvalidOperationException("too many thread-local indexed variables");
+            // The single non-generic counter never advances past the array bound.
+            if (Interlocked.CompareExchange(ref nextIndex, index + 1, index) == index)
+                return index;
         }
-
-        return index;
     }
 
     public static int LastVariableIndex()
     {
-        return nextIndex.Get() - 1;
+        return Volatile.Read(ref nextIndex) - 1;
     }
 
 
     private static object[] NewIndexedVariableTable()
     {
         object[] array = new object[INDEXED_VARIABLE_TABLE_INITIAL_SIZE];
-        Arrays.Fill(array, UNSET);
+        Array.Fill(array, UNSET);
         return array;
     }
 
@@ -320,6 +320,7 @@ public sealed class InternalThreadLocalMap
      */
     public object GetAndSetIndexedVariable(int index, object value)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
         object[] lookup = indexedVariables;
         if (index < lookup.Length)
         {
@@ -336,26 +337,22 @@ public sealed class InternalThreadLocalMap
     {
         object[] oldArray = indexedVariables;
         int oldCapacity = oldArray.Length;
-        int newCapacity;
-        if (index < ARRAY_LIST_CAPACITY_EXPAND_THRESHOLD)
-        {
-            newCapacity = index;
-            newCapacity |= newCapacity >>> 1;
-            newCapacity |= newCapacity >>> 2;
-            newCapacity |= newCapacity >>> 4;
-            newCapacity |= newCapacity >>> 8;
-            newCapacity |= newCapacity >>> 16;
-            newCapacity++;
-        }
-        else
-        {
-            newCapacity = ARRAY_LIST_CAPACITY_MAX_SIZE;
-        }
-
-        object[] newArray = Arrays.CopyOf(oldArray, newCapacity);
-        Arrays.Fill(newArray, oldCapacity, newArray.Length, UNSET);
+        int newCapacity = IndexedVariableTableCapacity(index);
+        // Publish only after native allocation, copy and sentinel initialization succeed.
+        object[] newArray = oldArray;
+        Array.Resize(ref newArray, newCapacity);
+        Array.Fill(newArray, UNSET, oldCapacity, newCapacity - oldCapacity);
         newArray[index] = value;
         indexedVariables = newArray;
+    }
+
+    private static int IndexedVariableTableCapacity(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        if (index >= MAX_INDEXED_VARIABLE_COUNT)
+            throw new ArgumentOutOfRangeException(nameof(index));
+        uint capacity = BitOperations.RoundUpToPowerOf2((uint)index + 1);
+        return (int)Math.Min(capacity, (uint)MAX_INDEXED_VARIABLE_COUNT);
     }
 
     public object RemoveIndexedVariable(int index)

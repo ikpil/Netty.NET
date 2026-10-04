@@ -205,26 +205,26 @@ public class FastThreadLocalTest : IDisposable
     [Fact]
     public void TestConstructionWithIndex()
     {
-        int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
+        int ARRAY_LIST_CAPACITY_MAX_SIZE = Array.MaxLength;
         var field = typeof(InternalThreadLocalMap).GetField("nextIndex", BindingFlags.Static | BindingFlags.NonPublic);
-        var nextIndex = (AtomicInteger)field.GetValue(null);
-        int previous = nextIndex.Get();
+        int previous = (int)field.GetValue(null);
         try
         {
             // CLR test adaptation: jump to the boundary rather than allocating over two billion objects.
-            nextIndex.Set(ARRAY_LIST_CAPACITY_MAX_SIZE - 2);
-            while (nextIndex.Get() < ARRAY_LIST_CAPACITY_MAX_SIZE) new FastThreadLocal<object>();
+            field.SetValue(null, ARRAY_LIST_CAPACITY_MAX_SIZE - 2);
+            while ((int)field.GetValue(null) < ARRAY_LIST_CAPACITY_MAX_SIZE) new FastThreadLocal<object>();
             Assert.Equal(ARRAY_LIST_CAPACITY_MAX_SIZE - 1, InternalThreadLocalMap.LastVariableIndex());
             // Assert the max index cannot greater than (ARRAY_LIST_CAPACITY_MAX_SIZE - 1).
             Assert.Throws<InvalidOperationException>(() => new FastThreadLocal<object>());
             // Assert the index was reset to ARRAY_LIST_CAPACITY_MAX_SIZE
             // after it reaches ARRAY_LIST_CAPACITY_MAX_SIZE.
+            // CLR saturation keeps that terminal value without incrementing and resetting it.
             Assert.Equal(ARRAY_LIST_CAPACITY_MAX_SIZE - 1, InternalThreadLocalMap.LastVariableIndex());
         }
         finally
         {
             // Restore the index.
-            nextIndex.Set(previous);
+            field.SetValue(null, previous);
         }
     }
 

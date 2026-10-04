@@ -3550,3 +3550,56 @@ index allocation, listener/local-channel depth and downstream reviews remain ope
 
 // Start with small capacity to keep memory overhead as low as possible.
 ```
+
+
+## Native indexed-variable bounds and publication
+
+Reopen indexed storage for a concrete CLR bound mismatch: pinned
+InternalThreadLocalMap.java:42-56,149-159,324-361 uses the JDK ArrayList-derived
+int.MaxValue-8 limit. Installed net10.0 System.Runtime.xml P:System.Array.MaxLength
+defines the native upper element count. Before repair, seeding the actual global
+counter four positions below that native bound permits 52 claims rather than
+four, and the sequential native-limit assertion fails. No huge array is allocated
+to reproduce those public NextVariableIndex failures.
+
+Replace this owner's AtomicInteger with one non-generic static int and native
+Volatile/Interlocked.CompareExchange. The counter is initialized before reserving
+VARIABLES_TO_REMOVE_INDEX and uses a runtime bound initialized earlier still.
+Every successful claim advances exactly once; reaching Array.MaxLength is sticky
+and throws the existing InvalidOperationException without increment/reset races.
+The last-index snapshot remains nextIndex-1. Saturation ensures index+1 cannot
+overflow even with checked arithmetic. Constructors across all FastThreadLocal<V>
+types share this same owner, preserving CLR reified-static isolation requirements.
+Other actual AtomicInteger consumers remain separate; no project-wide facade
+retirement or starvation/performance guarantee is claimed.
+
+Use Array.Fill and Array.Resize directly for the physical-thread-owned object
+table. A local resized array is filled with the exact UNSET sentinel and receives
+the value before publication, so failed allocation/copy does not replace existing
+storage. Existing null-as-set, old-value, reference identity and cleanup semantics
+remain. The native capacity helper uses BitOperations.RoundUpToPowerOf2 on a
+positive uint and clamps before narrowing to int. Native array-limit rejection
+and negative-write ArgumentOutOfRangeException are explicit CLR boundary policy;
+nonnegative out-of-table reads/removals still return UNSET and presence remains false.
+Array.MaxLength is an upper bound, not a promise that every object array below
+it can be allocated: actual runtime/type/memory restrictions still propagate.
+
+Preserve original construction-boundary assertions/comments using the native
+limit and reflection on the new private scalar, rather than the removed counter
+wrapper. The original CI-only oversized allocation scenario remains unchanged
+and excluded by its existing local CI policy. Five capacity cases safely cover
+small growth, the original 1<<30 branch and the last native slot without allocating
+multi-gigabyte arrays. Three rejected-write cases retain prior storage; the two
+public allocation/concurrency regressions now pass. Existing indexed growth,
+generic list/cache/cleanup contracts continue to exercise the owning map.
+The rejected-write tests establish pre-validation preservation, while resize
+failure publication follows the local temporary-array boundary; allocation
+exhaustion is not deliberately forced in this local run.
+
+Original indexed-variable Javadocs and all original fixture explanations remain.
+The retired JDK capacity-reference explanation is preserved below. Whole map,
+remaining listener/local-channel depth and downstream lifecycle reviews stay open.
+
+```java
+// Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/ArrayList.java#l229
+```
