@@ -4031,3 +4031,53 @@ outcomes also agree throughout the full UTF-16 domain. New tests preserve this
 wire-format policy and MAC integration; no original fixture/comment is removed.
 Current full/checked counts and scope are in common-porting.md; oracle and raw
 outputs remain ignored artifacts/hex-decode-validation records.
+
+
+## Native hex output and builder bounds
+
+Pinned StringUtil.java:131-245 provides twelve byte/array/string/Appendable hex
+overloads. Preserve lowercase ASCII output, low-eight-bit masking of integer byte
+inputs, padded pairs, and numeric unpadded output (skip zero bytes, emit one nibble
+for a first byte below 16, keep zero for nonempty all-zero input). Empty valid ranges
+produce empty output, and builder calls return/append to the caller's same object.
+Real downstream SocksCommonUtils.java:55 formats IPv6 two-byte groups through the
+unpadded append overload; ByteBufUtil.java:1555 constructs padded byte entries.
+Current common NetUtilTest also exercises single-byte formatting; no transport
+port completion is inferred from these encoding contracts.
+
+Previous CLR bulk methods calculated offset+length and length<<1 before validation.
+Invalid ranges can silently skip or append a valid prefix before a later index
+error; null/negative-length/empty-range errors also differ from native conventions.
+Ten of seventeen new cases fail before repair; seven preserve existing content,
+integer masking and native StringBuilder capacity-failure behavior.
+One bounded private span slice checks null/offset/length with subtraction before
+allocation or append. All encoding overloads require valid source/range/destination,
+including empty ranges: this explicit native validation tightens incidental Java
+no-access acceptance of invalid empty arguments. DecodeHexDump's previously
+documented explicit zero-length slice short circuit remains its separate policy.
+Valid input append failures still use CLR StringBuilder exceptions and partial
+output, not a transactional rollback or Java IOException facade.
+
+Padded string output uses Convert.ToHexStringLower on the validated native span.
+Unpadded strings use native IndexOfAnyExcept to skip zero bytes (retain the last
+zero), checked final character-count arithmetic and string.Create for only the
+final immutable result. StringBuilder outputs append the retained immutable byte
+format entries directly, without intermediate output strings or scratch maps.
+The shared zero-skip helper carries the original implementation comment; all 67
+StringUtil source comments stay. The two private bounded span helpers do not add
+public API or framework substitutes. Remaining whitespace/search/null boundaries
+and broader StringUtil/native thread-wrapper reviews are separate.
+
+Twelve exact pinned Java methods/table initialization execute with an unused
+throwException shim for checked Appendable IOException translation. All 133562
+Java/CLR rows match: 2051 signed/masked integer inputs and 131511 full/sliced array
+inputs, including every 65536 byte pair with ordinary/leading-zero forms, empty,
+all-zero, shifted and seeded larger arrays. All overload content and builder
+prefix/reference identities are verified; invalid native arguments are tested
+separately. Warm Release comparison against the exact previous CLR methods yields
+20000 small padded calls: 2880000 -> 960000 allocated bytes; small unpadded:
+2720000 -> 800000. For 128 large calls both forms reduce 33566744 -> 16780312
+bytes. These are allocation measurements for the stated inputs, not speed claims.
+Raw oracle/allocation/validation records stay ignored in hex-encode-validation;
+the current full/checked counts and preserved fixture inventory are in
+common-porting.md. No new Markdown document or original-test exclusion is added.

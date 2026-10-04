@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -150,6 +149,7 @@ public static class StringUtil
      */
     public static StringBuilder ByteToHexStringPadded(StringBuilder buf, int value)
     {
+        ArgumentNullException.ThrowIfNull(buf);
         buf.Append(ByteToHexStringPadded(value));
 
         return buf;
@@ -160,6 +160,7 @@ public static class StringUtil
      */
     public static string ToHexStringPadded(byte[] src)
     {
+        ArgumentNullException.ThrowIfNull(src);
         return ToHexStringPadded(src, 0, src.Length);
     }
 
@@ -168,7 +169,7 @@ public static class StringUtil
      */
     public static string ToHexStringPadded(byte[] src, int offset, int length)
     {
-        return ToHexStringPadded(new StringBuilder(length << 1), src, offset, length).ToString();
+        return Convert.ToHexStringLower(HexSlice(src, offset, length));
     }
 
     /**
@@ -176,6 +177,8 @@ public static class StringUtil
      */
     public static StringBuilder ToHexStringPadded(StringBuilder dst, byte[] src)
     {
+        ArgumentNullException.ThrowIfNull(dst);
+        ArgumentNullException.ThrowIfNull(src);
         return ToHexStringPadded(dst, src, 0, src.Length);
     }
 
@@ -184,10 +187,10 @@ public static class StringUtil
      */
     public static StringBuilder ToHexStringPadded(StringBuilder dst, byte[] src, int offset, int length)
     {
-        int end = offset + length;
-        for (int i = offset; i < end; i++)
+        ArgumentNullException.ThrowIfNull(dst);
+        foreach (byte value in HexSlice(src, offset, length))
         {
-            ByteToHexStringPadded(dst, src[i]);
+            ByteToHexStringPadded(dst, value);
         }
 
         return dst;
@@ -206,6 +209,7 @@ public static class StringUtil
      */
     public static StringBuilder ByteToHexString(StringBuilder buf, int value)
     {
+        ArgumentNullException.ThrowIfNull(buf);
         buf.Append(ByteToHexString(value));
 
         return buf;
@@ -216,6 +220,7 @@ public static class StringUtil
      */
     public static string ToHexString(byte[] src)
     {
+        ArgumentNullException.ThrowIfNull(src);
         return ToHexString(src, 0, src.Length);
     }
 
@@ -224,7 +229,22 @@ public static class StringUtil
      */
     public static string ToHexString(byte[] src, int offset, int length)
     {
-        return ToHexString(new StringBuilder(length << 1), src, offset, length).ToString();
+        ReadOnlySpan<byte> bytes = SkipLeadingZeroBytes(HexSlice(src, offset, length));
+        if (bytes.IsEmpty) return EMPTY_STRING;
+        int firstDigits = bytes[0] < 16 ? 1 : 2;
+        int outputLength = checked((bytes.Length - 1) * 2 + firstDigits);
+        // Populate only the final immutable string, including the first byte's optional high nibble.
+        return string.Create(outputLength, (src, offset: offset + (length - bytes.Length), length: bytes.Length), static (destination, state) =>
+        {
+            string first = BYTE2HEX_NOPAD[state.src[state.offset]];
+            first.AsSpan().CopyTo(destination);
+            int written = first.Length;
+            for (int i = 1; i < state.length; i++)
+            {
+                BYTE2HEX_PAD[state.src[state.offset + i]].AsSpan().CopyTo(destination[written..]);
+                written += 2;
+            }
+        });
     }
 
     /**
@@ -232,6 +252,8 @@ public static class StringUtil
      */
     public static StringBuilder ToHexString(StringBuilder dst, byte[] src)
     {
+        ArgumentNullException.ThrowIfNull(dst);
+        ArgumentNullException.ThrowIfNull(src);
         return ToHexString(dst, src, 0, src.Length);
     }
 
@@ -240,30 +262,31 @@ public static class StringUtil
      */
     public static StringBuilder ToHexString(StringBuilder dst, byte[] src, int offset, int length)
     {
-        Debug.Assert(length >= 0);
-        if (length == 0)
+        ArgumentNullException.ThrowIfNull(dst);
+        ReadOnlySpan<byte> bytes = SkipLeadingZeroBytes(HexSlice(src, offset, length));
+        if (bytes.IsEmpty) return dst;
+        ByteToHexString(dst, bytes[0]);
+        foreach (byte value in bytes[1..])
         {
-            return dst;
+            ByteToHexStringPadded(dst, value);
         }
-
-        int end = offset + length;
-        int endMinusOne = end - 1;
-        int i;
-
-        // Skip preceding zeroes.
-        for (i = offset; i < endMinusOne; i++)
-        {
-            if (src[i] != 0)
-            {
-                break;
-            }
-        }
-
-        ByteToHexString(dst, src[i++]);
-        int remaining = end - i;
-        ToHexStringPadded(dst, src, i, remaining);
-
         return dst;
+    }
+
+    private static ReadOnlySpan<byte> HexSlice(byte[] src, int offset, int length)
+    {
+        ArgumentNullException.ThrowIfNull(src);
+        if (offset < 0 || offset > src.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+        if (length < 0 || length > src.Length - offset) throw new ArgumentOutOfRangeException(nameof(length));
+        return src.AsSpan(offset, length);
+    }
+
+    private static ReadOnlySpan<byte> SkipLeadingZeroBytes(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.IsEmpty) return bytes;
+        // Skip preceding zeroes.
+        int first = bytes.IndexOfAnyExcept((byte)0);
+        return bytes[(first < 0 ? bytes.Length - 1 : first)..];
     }
 
     /**

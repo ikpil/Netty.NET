@@ -122,37 +122,40 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2005 cases** on Windows/x64/net10.0:
-**1991 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: hex-decode-full-debug.trx and hex-decode-full-release.trx.
-All 1993 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain unchanged. Twelve new cases
-cover ASCII-only nibble/pair policy throughout UTF-16/byte domains, four invalid
-whitespace pairs and four invalid MAC consumer spellings, native null/range errors,
-logical dump slice bounds/empty short circuit and native allocation/diagnostics.
-Eleven pre-repair cases fail: permissive string HexNumber parsing accepts spaces
-and allocates pair strings, while native null/range contracts disagree. Direct
-string code-unit decoding now enforces the same ASCII policy/diagnostic as the
-sequence bridge without temporary success-path strings or whole-dump wrappers.
-Warm 10000 byte decodes allocate zero instead of the observed 320000 bytes.
-Nonempty dump ranges validate before allocation via subtraction; explicit empty
-slices preserve the original no-access return, including null/invalid start.
-Whole-input null arguments reject. Java negative signed-byte indexing throws;
-native unsigned byte 128..255 is invalid hex (-1), with all 128 values verified.
-Five exact pinned Java methods produce 213577 matching nibble/pair/dump outcomes
-and ASCII error diagnostics; native string/sequence UTF-16 pair policy also agrees.
-Targeted Debug and checked Release each pass 104 cases with zero failures/skips.
-All 271 comment totals/coverage and prior Java/C# provenance remain. Pinned
-inventory/paths and uppercase method/local-function checks pass; no original tests
-are removed and no new compiler-warning identities appear. Source statuses stay
-52 verified / 49 CLR replacement / 14 not applicable / 71 pending / 19 in progress.
-StringUtil's encoding/builder/other boundary review and whole common remain open.
-Records stay in ignored TestResults and artifacts/hex-decode-validation:
-hex-decode-before-debug.trx, hex-decode-identity-and-inventory.json,
-hex-decode-java-clr-oracle.json and hex-decode-comment-audit.json.
-Native decisions are in common-clr-design.md#native-ascii-hex-decoding.
-Next: StringUtil native hex encoding/builder and remaining text boundary contracts,
-then broader native thread-wrapper API review, using pinned actual callers.
+The current default suite executes **2022 cases** on Windows/x64/net10.0:
+**2008 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: hex-encode-full-debug.trx and hex-encode-full-release.trx.
+All 2005 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain unchanged. Seventeen new
+cases cover negative/overflowing/oversize hex ranges, native null/empty validation,
+masked byte integers, padded/unpadded zero/slice content, builder reference/prefix
+and native capacity-failure partial output. Ten pre-repair cases fail; seven pass
+as unchanged contract checks. Input spans validate before output allocation/append
+using subtraction, avoiding unchecked end/capacity arithmetic and partial invalid
+range writes. All encoder sources/ranges/destinations validate even for empty
+ranges; this tightens incidental invalid-empty acceptance. The previously reviewed
+decode slice's original explicit zero-length no-access policy remains separate.
+Padded output uses Convert.ToHexStringLower, unpadded output uses checked final
+length/string.Create; both create only the final string. Leading zero bytes skip
+while retaining zero for all-zero nonempty input. Native builders append cached
+byte entries directly; valid-input capacity exceptions retain CLR partial output.
+Twelve exact pinned Java methods yield 133562 matching lowercase/content/prefix/
+identity rows, including all 65536 byte pairs and 2051 signed/masked integers.
+Warm Release allocations for 20000 small padded/unpadded calls reduce
+2880000/2720000 -> 960000/800000 bytes; both large forms reduce
+33566744 -> 16780312 bytes for 128 calls. No general speed claim is made.
+Targeted Debug and checked Release each pass 107 cases, zero failures/skips.
+All 271 comment totals/coverage and prior Java/C# provenance remain; StringUtil's
+67 original comments stay. Pinned inventory/paths and uppercase declaration checks
+pass, with no original test removed or new compiler-warning identity. Source
+statuses stay 52 verified / 49 CLR replacement / 14 not applicable / 71 pending /
+19 in progress. Remaining StringUtil boundary and whole common reviews stay open.
+Records stay in ignored TestResults and artifacts/hex-encode-validation:
+hex-encode-before-debug.trx, hex-encode-identity-and-inventory.json,
+hex-encode-java-clr-oracle.json, allocation.json and hex-encode-comment-audit.json.
+Native decisions are in common-clr-design.md#native-hex-output-and-builder-bounds.
+Next: StringUtil whitespace classification/search and remaining native null/bounds
+contracts, then broader native thread-wrapper API review using pinned callers.
 Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
