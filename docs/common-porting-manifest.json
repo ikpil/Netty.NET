@@ -3216,13 +3216,15 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/InternalThreadLocalMap.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Internal/InternalThreadLocalMap.cs"
       ],
       "implementation": [
         "src/Netty.NET.Common/Internal/InternalThreadLocalMap.cs",
-        "docs/common-clr-design.md"
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/IndexedVariableContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/MapOwnershipContractTest.cs"
       ],
       "evidence": [
         "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
@@ -3235,14 +3237,19 @@
         "Native notification-depth ownership: only pinned DefaultPromise uses futureListenerStackDepth; remove unused CLR field/getter/setter/Size branch after common task/progress dispatch gains a shared physical-thread scope. Preserve actual LocalChannel recursive-read depth contract for future transport integration. Deprecated cleanerFlags APIs have no all-module consumer and are not a missing native cleanup mechanism. See common-clr-design.md#shared-native-notification-recursion-boundary and current common-porting.md; whole map review stays in progress.",
         "Native removal-registry Size consumer now counts the reference-identity HashSet directly, matching pinned Java Set membership purpose. No dummy boolean dictionary or non-generic ICollection cast remains for this registry. Original cache/index/read-depth and thread ownership policies remain separate. See common-clr-design.md#native-thread-local-removal-membership and current common-porting.md; whole map review stays in progress.",
         "Native type matching retires both strong matcher-cache fields/accessors/Size branches. System.Type supplies native instance checks; existing constructed superclass resolver supplies metadata without worker cache state. RunAndCollect handler/payload lifetime fails before retirement and passes afterward. Scratch builder/list and local-channel read-depth policies are separate; whole map review remains in progress. See common-clr-design.md#direct-clr-type-resolution-and-matching and current common-porting.md.",
-        "Retire scratch builder/list fields/APIs/Size branches and their unused capacity settings/logger bootstrap after actual common CSV consumers migrate to final owned strings and AsciiString already owns a native List. Original removed comments retained in common-clr-design.md#operation-owned-csv-storage. Pinned future HTTP cookie/multipart/list and conversion-builder users need native owner-scoped storage at their actual integrations; common tests do not certify those policies. Current full/checked validation, oracle and fixture mapping are in common-porting.md; whole map review stays in progress."
+        "Retire scratch builder/list fields/APIs/Size branches and their unused capacity settings/logger bootstrap after actual common CSV consumers migrate to final owned strings and AsciiString already owns a native List. Original removed comments retained in common-clr-design.md#operation-owned-csv-storage. Pinned future HTTP cookie/multipart/list and conversion-builder users need native owner-scoped storage at their actual integrations; common tests do not certify those policies. Current full/checked validation, oracle and fixture mapping are in common-porting.md; whole map review stays in progress.",
+        "Current common native map review verified: all retained APIs covered by negative bounds, unset/null/reference/growth, shared saturated ID/publication, weak handler-cache, identity registry and physical get/remove/destroy ownership contracts. Six negative accessor failures repaired with ArgumentOutOfRangeException(index); three ordinary/scoped/factory workers prove logical-context flow does not transfer map/cache/depth/values and Destroy only detaches current fallback storage without callbacks. Prior retired API decisions/provenance remain; future LocalChannel/handler integrations and whole common remain open. See common-clr-design.md#native-map-access-and-physical-ownership and current common-porting.md."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "adaptation": "Physical-thread indexed storage uses native arrays and one saturated int/Volatile/CAS index owner; weak Type identity cache uses ConditionalWeakTable and removal membership uses identity HashSet. Native negative access errors are ArgumentOutOfRangeException(index), positive missing reads remain absent, and null/UNSET differ. Current fallback-only Destroy does not invoke callbacks or clear owned fast-thread storage. Retired JVM/erased scratch/matcher/counter/codec APIs and original comments have explicit prior provenance; future transport integrations are separate.",
       "comments": {
         "upstreamCount": 20,
         "required": true,
         "preservedCount": 20,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "All retained map APIs and native storage/ownership covered by linked contract decisions/tests; six pre-repair bounds failures and three physical-worker modes verified. Removed source purposes have prior native replacement or unused JVM decisions; no original comment lost. Current platform/test scope and remaining module work are in common-porting.md."
       }
     },
     {

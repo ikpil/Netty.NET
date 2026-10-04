@@ -122,37 +122,37 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1983 cases** on Windows/x64/net10.0:
-**1969 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: csv-storage-full-debug.trx and csv-storage-full-release.trx.
-All 1979 prior outcomes, including 759 original non-Porting identities, the later
-byte-wrap regression and every skip, remain. One CLR-only scratch-cache fixture
-is explicitly adapted to native CSV output ownership; old/new names are in the
-identity report. Four new large/null/failure storage scenarios pass after three
-observed pre-migration failures: two retained worker maps and one null exception.
-Single/multiple CSV parsing uses input offsets and quote counts with native
-Substring/string.Create final strings, preserving ordering/empty fields and
-validation positions. Map scratch builder/list APIs, settings and their unused
-logger bootstrap retire; original comments remain in the existing design record.
-168511 UTF-16 inputs give 337022 matching parser outputs, error messages/indices
-and nonempty single-field reference results against five exact pinned Java methods.
-The Java clean-builder shim certifies content, not thread-local cache lifetime.
-Warm default CLR allocation is unchanged for small single/multiple inputs;
-128 large escaped single calls reduce 79094784 to 25604096 allocated bytes.
-This is input-specific allocation evidence, not a general speed claim.
-Targeted Debug and checked Release each discover 289 cases: 278 passed /
-0 failed / 11 unchanged skips. All 271 comment totals/coverage and prior Java/C#
-provenance remain; all 67 StringUtil comments stay in place. Pinned inventory/paths
-and uppercase method/local-function checks pass; no original tests are removed
-and no new compiler-warning identities appear.
-Source statuses stay 51 verified / 49 CLR replacement / 14 not applicable /
-71 pending / 20 in progress. Whole map/StringUtil/common review remain open.
-Records stay in ignored TestResults and artifacts/csv-storage-validation:
-csv-storage-before-debug.trx, csv-storage-identity-and-inventory.json,
-csv-storage-java-clr-oracle.json and csv-storage-comment-audit.json.
-Native decisions are in common-clr-design.md#operation-owned-csv-storage.
-Next: remaining map indexed access/thread ownership contracts and StringUtil
-hex/boundary consumers, using actual native semantics and pinned callers.
+The current default suite executes **1993 cases** on Windows/x64/net10.0:
+**1979 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: map-access-full-debug.trx and map-access-full-release.trx.
+All 1983 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain unchanged. Ten new cases
+cover six negative read/removal/presence errors, native unset/null/reference/growth
+semantics, and ordinary/scoped/factory worker map ownership under logical context.
+The six negative access cases fail before repair with IndexOutOfRangeException;
+native guards now give ArgumentOutOfRangeException(index), matching write policy.
+Positive missing indexes stay absent without storage growth. Destroy only detaches
+the caller's fallback slot without callbacks; it preserves an owned fast-thread
+map. Explicit Remove detaches either storage, while explicit variable removal and
+RemoveAll own their cleanup callbacks. Parent map/cache/depth/bindings remain
+separate even with captured ExecutionContext/AsyncLocal state.
+The retained InternalThreadLocalMap source/native review is now verified, with
+its earlier index/publication, weak cache, identity registry and retired API
+decisions. Future LocalChannel recursive-read/handler integration, broader thread
+wrapper and whole common review remain open; explicit maps still require the
+caller's physical-thread ownership and are not cross-thread synchronized.
+Targeted Debug and checked Release each discover 211 cases: 199 passed /
+0 failed / 12 unchanged skips. All 271 comment totals/coverage and prior Java/C#
+provenance remain. Pinned inventory/paths and uppercase method/local-function checks
+pass; no original tests are removed and no new compiler-warning identities appear.
+Source statuses are 52 verified / 49 CLR replacement / 14 not applicable /
+71 pending / 19 in progress. Only the retained map review status advances.
+Records stay in ignored TestResults and artifacts/map-access-validation:
+map-access-before-debug.trx, map-access-identity-and-inventory.json
+and map-access-comment-audit.json. Native decisions are in
+common-clr-design.md#native-map-access-and-physical-ownership.
+Next: StringUtil hex/boundary consumers and remaining native thread-wrapper API
+review, using pinned actual callers and CLR ownership rules.
 Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate

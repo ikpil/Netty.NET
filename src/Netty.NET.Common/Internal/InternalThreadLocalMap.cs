@@ -93,6 +93,7 @@ public sealed class InternalThreadLocalMap
 
     public static void Destroy()
     {
+        // Match ThreadLocal.remove(): detach only the caller's fallback slot, without removal callbacks.
         _slowThreadLocalMap = null;
     }
 
@@ -171,6 +172,7 @@ public sealed class InternalThreadLocalMap
 
     public object IndexedVariable(int index)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
         object[] lookup = indexedVariables;
         return index < lookup.Length ? lookup[index] : UNSET;
     }
@@ -225,6 +227,7 @@ public sealed class InternalThreadLocalMap
 
     public object RemoveIndexedVariable(int index)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
         object[] lookup = indexedVariables;
         if (index < lookup.Length)
         {
@@ -240,6 +243,7 @@ public sealed class InternalThreadLocalMap
 
     public bool IsIndexedVariableSet(int index)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
         object[] lookup = indexedVariables;
         return index < lookup.Length && lookup[index] != UNSET;
     }

@@ -3953,3 +3953,41 @@ Retired scratch storage translation of pinned InternalThreadLocalMap.java:74-101
     }
 
 ```
+
+
+## Native map access and physical ownership
+
+Pinned InternalThreadLocalMap.java:317-342/365-379 indexes the Java array for
+negative reads/removals/presence checks, so it throws a bounds error. The previous
+CLR methods leaked IndexOutOfRangeException while writes already used native
+ArgumentOutOfRangeException(index). Six -1/Int32.MinValue scenarios fail
+before repair and pass after direct ThrowIfNegative guards on all three methods.
+Positive indexes beyond current storage still return UNSET/false without growing
+the table; do not reinterpret a negative index as an absent slot through an
+unsigned comparison. Native slot coverage distinguishes unset/null/reference,
+growth gaps, replacement return values, sentinel clearing and removal.
+
+Pinned getIfSet/get/remove/destroy at 102-146 selects physical thread storage;
+destroy calls ThreadLocal.remove only for the caller's fallback slot. It is not
+global worker cleanup and does not remove an owned fast-thread map. Detachment
+does not invoke OnRemoval or clear a separately retained map; explicit variable
+removal does, and RemoveAll snapshots/clears callbacks before detaching in finally.
+Three ordinary/scoped/factory-native worker scenarios run a captured logical
+ExecutionContext/AsyncLocal marker while proving separate maps/cache/depth/values,
+fallback-only Destroy, explicit removal from the detached current-worker map,
+fresh subsequent maps and unaffected parent bindings. No owner synchronization
+facade or AsyncLocal map substitution is added. Explicit map access still requires
+the caller's physical-thread ownership; the original warning-only thread wrapper
+diagnostics do not make cross-thread mutation supported or thread-safe.
+
+The current common map source review is now verified: every remaining API is
+covered by native access/ownership, saturated index/publication, weak handler cache
+and identity-removal registry decisions/tests. Removed matcher/codec/random/counter/
+scratch/JVM padding APIs have explicit prior replacement/exclusion provenance;
+deprecated unused cleaner flags have no pinned all-module consumer.
+Size counts remaining reader-depth/cache presence and tracked variable membership,
+not every arbitrary indexed slot. LocalChannel recursive read policy and handler
+annotation integration remain future transport work; verification of this map
+does not certify FastThreadLocalThread, transport or whole common completion.
+All original comments stay; current full/checked counts and inventory are in
+common-porting.md. No new MD, public helper or compatibility object is added.

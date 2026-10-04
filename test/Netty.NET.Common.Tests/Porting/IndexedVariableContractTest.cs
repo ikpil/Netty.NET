@@ -91,4 +91,57 @@ public class IndexedVariableContractTest : IDisposable
     };
 
     public static TheoryData<int> InvalidWriteIndices => new() { -1, Array.MaxLength, int.MaxValue };
+
+    [Theory]
+    [InlineData(-1, 0)]
+    [InlineData(int.MinValue, 0)]
+    [InlineData(-1, 1)]
+    [InlineData(int.MinValue, 1)]
+    [InlineData(-1, 2)]
+    [InlineData(int.MinValue, 2)]
+    public void NegativeReadsRemovalsAndPresenceChecksRejectWithoutChangingBindings(int index, int operation)
+    {
+        var map = InternalThreadLocalMap.Get();
+        object value = new();
+        map.SetIndexedVariable(1, value);
+        map.SetIndexedVariable(33, null);
+        var error = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            if (operation == 0) map.IndexedVariable(index);
+            else if (operation == 1) map.RemoveIndexedVariable(index);
+            else map.IsIndexedVariableSet(index);
+        });
+        Assert.Equal("index", error.ParamName);
+        Assert.Same(value, map.IndexedVariable(1));
+        Assert.True(map.IsIndexedVariableSet(33));
+        Assert.Null(map.IndexedVariable(33));
+        Assert.Same(InternalThreadLocalMap.UNSET, map.IndexedVariable(32));
+    }
+
+    [Fact]
+    public void NativeSlotsDistinguishUnsetNullAndReferencesAcrossGrowthAndRemoval()
+    {
+        var map = InternalThreadLocalMap.Get();
+        foreach (int index in new[] { 32, Array.MaxLength, int.MaxValue })
+        {
+            Assert.Same(InternalThreadLocalMap.UNSET, map.IndexedVariable(index));
+            Assert.False(map.IsIndexedVariableSet(index));
+            Assert.Same(InternalThreadLocalMap.UNSET, map.RemoveIndexedVariable(index));
+        }
+        Assert.True(map.SetIndexedVariable(1, null));
+        Assert.True(map.IsIndexedVariableSet(1));
+        Assert.Null(map.IndexedVariable(1));
+        object value = new();
+        Assert.Null(map.GetAndSetIndexedVariable(1, value));
+        Assert.False(map.SetIndexedVariable(1, value));
+        Assert.Same(InternalThreadLocalMap.UNSET, map.GetAndSetIndexedVariable(33, null));
+        Assert.Same(value, map.IndexedVariable(1));
+        Assert.Same(InternalThreadLocalMap.UNSET, map.IndexedVariable(32));
+        Assert.True(map.IsIndexedVariableSet(33));
+        Assert.Null(map.RemoveIndexedVariable(33));
+        Assert.False(map.IsIndexedVariableSet(33));
+        Assert.Same(value, map.GetAndSetIndexedVariable(1, InternalThreadLocalMap.UNSET));
+        Assert.False(map.IsIndexedVariableSet(1));
+        Assert.Same(InternalThreadLocalMap.UNSET, map.RemoveIndexedVariable(1));
+    }
 }
