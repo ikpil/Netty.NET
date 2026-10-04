@@ -3454,3 +3454,99 @@ random-accessor change.
      * @deprecated Use {@link java.util.concurrent.ThreadLocalRandom#current()} instead.
      */
 ```
+
+
+## Weak handler cache and retired thread-local scaffolding
+
+Reopen the handler cache for a concrete lifetime defect: pinned
+InternalThreadLocalMap.java:301-307 uses WeakHashMap<Class<?>,Boolean>, while the
+previous CLR Dictionary<Type,bool> retained keys. Its actual downstream owner,
+transport/ChannelHandlerAdapter.java:44-63, caches a pure Sharable annotation
+query per physical thread and deliberately uses weak keys. A live CLR worker
+must likewise avoid rooting collectible handler types/assemblies solely through
+that cache. Two new public-owner tests fail before repair: a RunAndCollect type
+survives forced collections, and distinct Type wrappers comparing equal collide.
+
+Use ConditionalWeakTable<Type,StrongBox<bool>> directly in the map's lazy field.
+The native table supplies weak reference-identity keys and native StrongBox holds
+the boolean value; no custom weak dictionary or provider is added. The field's
+presence still counts as one cache in Size, regardless of live keys. For the
+future channel adapter, TryGetValue preserves absence versus a cached false;
+GetValue with a pure attribute-query factory is the natural compute path. That
+factory must not acquire side effects: concurrent callbacks may run more than
+once, and Add duplicate-key behavior is not Java Map.put replacement semantics.
+No transport implementation or new Sharable attribute is created in common.
+The strong CLR matcher caches retain their separate original strong-cache
+contract; this weak decision does not change or certify their lifetime policy.
+
+Keep physical-thread ownership, map cleanup, indexed storage, list type switching
+and StringBuilder trimming. Existing ThreadLocalContractTest already checks those
+reified list/reference-release contracts. Actual remaining list consumers include
+AsciiString.split and downstream ClientCookieEncoder/HttpPostMultipartRequestDecoder;
+StringUtil CSV helpers use the builder. No speculative list/builder refactor or
+ThreadLocal/AsyncLocal substitution is made for those verified paths.
+
+Pinned counterHashCode/setCounterHashCode simply creates the deprecated holder
+and performs a no-op; an all-module search finds no consumer outside those
+definitions. Remove both unused CLR accessors and IntegerHolder. Native int
+state, or StrongBox<int> when a real shared mutable box is required, replaces its
+purpose without a speculative compatibility type. The IntegerHolder source
+entry becomes CLR replacement. The eight obsolete rp padding fields likewise
+have no consumer and no established CLR layout/performance contract; remove them.
+The empty UnpaddedInternalThreadLocalMap base exists only to preserve Netty 4.1
+binary compatibility. CLR's existing sealed map owns all state directly; mark
+that empty JVM compatibility source not applicable, preserving its three comments.
+
+Original holder/base licenses and comments, deprecated padding documentation,
+no-op explanation and the retired capacity explanation follow. Whole map,
+index allocation, listener/local-channel depth and downstream reviews remain open.
+
+```java
+/*
+ * Copyright 2014 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * @deprecated For removal in netty 4.2
+ */
+
+/*
+ * Copyright 2014 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * @deprecated This class will be removed in the future.
+ */
+
+// We cannot remove this in 4.1 because it could break compatibility.
+
+/** @deprecated These padding fields will be removed in the future. */
+
+// No-op.
+
+// Start with small capacity to keep memory overhead as low as possible.
+```

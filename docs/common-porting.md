@@ -121,39 +121,37 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1958 cases** on Windows/x64/net10.0:
-**1944 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: native-random-full-debug.trx and native-random-full-release.trx.
+The current default suite executes **1960 cases** on Windows/x64/net10.0:
+**1946 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: thread-cache-full-debug.trx and thread-cache-full-release.trx.
 All 1958 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain unchanged. No tests are
-added or removed in this native random/counter decision unit.
-Actual leak sampling/backoff, MAC fallback and original data-generation fixtures
-now call Random.Shared directly. Remove the hand-seeded ThreadLocalRandom,
-shadowed NextBytes extension and unused platform/internal-map random accessors.
-The original dedicated-thread pending-interrupt scenario now generates a native
-random value; its next sleep still consumes the pending interruption.
-Existing positive sampling bounds and record shift caps remain; native random
-sequences are not compared with Java's algorithm. The installed framework docs
-guarantee Shared supports concurrent use; no custom random provider is retained.
-LongCounter/LongAdderCounter have no actual all-module consumer outside their
-own definitions/deprecated factory. Existing native long/Interlocked owners
-supply common counting; Java LongAdder's striped costs/concurrent-sum semantics
-and downstream arena metric policy are distinguished in common-clr-design.md.
-All 175 affected Debug cases and 175 checked Release cases pass. All 271 comment
-audit totals remain; all 35 random and four counter comments/licenses are now
-preserved. PlatformDependent coverage improves from 118/129 to 119/129 by
-archiving the original counter factory Javadoc; its remaining 10 comments stay
-open work. All other coverage and prior Java/C# provenance remain.
-Three pending source decisions become CLR replacements: source counts are
-52 verified / 46 CLR replacement / 13 not applicable / 73 pending / 21 in progress.
-Pinned paths and uppercase method/local-function checks pass. Existing warnings
-remain; no whole common/platform/internal-map or downstream completion is claimed.
-Evidence remains in ignored TestResults and artifacts/native-random-validation:
-native-random-identity-and-inventory.json and native-random-comment-audit.json.
-See common-clr-design.md#native-random-consumers-and-scalar-counters for original
-comments and native/API differences. Next: remaining internal thread-local map
-counter/cache placeholders and collection consumers, based on actual pinned
-uses. Full suites include every portable test source without PortingBatch.
+the later byte-wrap regression and every skip, remain unchanged. Two new
+handler-cache contracts fail before repair and pass with native weak ownership.
+The pinned WeakHashMap Class-key cache/actual ChannelHandlerAdapter consumer
+exposes strong CLR dictionary rooting of collectible types. Replace only this
+cache with ConditionalWeakTable<Type,StrongBox<bool>>: weak identity keys and
+native boolean holders preserve lifetime and distinguish absent/cached false.
+A RunAndCollect emitted type is collected while its map stays alive; two Type
+wrappers comparing equal retain independent values. Transport attribute-query
+integration remains future work, with a pure native factory policy documented.
+Remove the unused deprecated IntegerHolder/map getter/no-op setter and eight
+JVM padding fields. Native int/StrongBox replaces mutable-int purpose; the empty
+UnpaddedInternalThreadLocalMap Java 4.1 compatibility base is not applicable.
+Physical-thread/indexed cleanup, existing typed list switching, builder reuse
+and matcher cache policy remain. Whole map/index/lifetime review remains open.
+Affected Debug and checked Release each pass 85 with zero failures and two
+unchanged matcher skips (87 total). All 271 original comment totals remain;
+three empty-base comments are newly preserved, holder/map comments and all
+other coverage/prior Java/C# provenance remain. No original tests are removed.
+Source counts are 52 verified / 47 CLR replacement / 14 not applicable /
+72 pending / 20 in progress. Pinned inventory/paths and uppercase method/local-
+function checks pass. Existing warnings remain; no module completion is claimed.
+Records stay in ignored TestResults and artifacts/thread-cache-validation:
+thread-cache-before-debug.trx, thread-cache-identity-and-inventory.json and
+thread-cache-comment-audit.json. Native decisions and original comments are in
+common-clr-design.md#weak-handler-cache-and-retired-thread-local-scaffolding.
+Next: remaining indexed-variable/lifecycle and actual collection contracts.
+Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

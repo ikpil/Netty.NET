@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal.Logging;
@@ -44,7 +45,6 @@ public sealed class InternalThreadLocalMap
     // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/ArrayList.java#l229
     private const int ARRAY_LIST_CAPACITY_MAX_SIZE = int.MaxValue - 8;
 
-    private static readonly int HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY = 4;
     private static readonly int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
 
     private static readonly int STRING_BUILDER_INITIAL_SIZE;
@@ -61,7 +61,7 @@ public sealed class InternalThreadLocalMap
     // Core thread-locals
     private int _futureListenerStackDepth;
     private int _localChannelReaderStackDepth;
-    private Dictionary<Type, bool> _handlerSharableCache;
+    private ConditionalWeakTable<Type, StrongBox<bool>> _handlerSharableCache;
     private Dictionary<Type, TypeParameterMatcher> _typeParameterMatcherGetCache;
     private Dictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> _typeParameterMatcherFindCache;
 
@@ -70,9 +70,6 @@ public sealed class InternalThreadLocalMap
 
     // ArrayList-related thread-locals
     private System.Collections.IList _arrayList;
-
-    /** @deprecated These padding fields will be removed in the future. */
-    public long rp1, rp2, rp3, rp4, rp5, rp6, rp7, rp8;
 
     static InternalThreadLocalMap()
     {
@@ -255,13 +252,6 @@ public sealed class InternalThreadLocalMap
         return _futureListenerStackDepth;
     }
 
-    public IntegerHolder CounterHashCode() => new IntegerHolder();
-
-    public void SetCounterHashCode(IntegerHolder counterHashCode)
-    {
-        // No-op.
-    }
-
     public void SetFutureListenerStackDepth(int futureListenerStackDepth)
     {
         _futureListenerStackDepth = futureListenerStackDepth;
@@ -289,13 +279,13 @@ public sealed class InternalThreadLocalMap
         return cache;
     }
 
-    public IDictionary<Type, bool> HandlerSharableCache()
+    public ConditionalWeakTable<Type, StrongBox<bool>> HandlerSharableCache()
     {
         var cache = _handlerSharableCache;
         if (cache == null)
         {
-            // Start with small capacity to keep memory overhead as low as possible.
-            _handlerSharableCache = cache = new Dictionary<Type, bool>(HANDLER_SHARABLE_CACHE_INITIAL_CAPACITY);
+            // Weak identity keys preserve collectible type lifetime; values hold only the cached flag.
+            _handlerSharableCache = cache = new ConditionalWeakTable<Type, StrongBox<bool>>();
         }
 
         return cache;
