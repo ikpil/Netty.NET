@@ -54,88 +54,88 @@ public class TypeParameterMatcherTest
     [Fact]
     public void TestConcreteClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.Find(new TypeQ<BBB>(), typeof(TypeX<,,>), "A");
-        Assert.False(m.Match(new object()));
-        Assert.False(m.Match(new A()));
-        Assert.False(m.Match(new AA()));
-        Assert.True(m.Match(new AAA()));
-        Assert.False(m.Match(new B()));
-        Assert.False(m.Match(new BB()));
-        Assert.False(m.Match(new BBB()));
-        Assert.False(m.Match(new C()));
-        Assert.False(m.Match(new CC()));
+        Type m = ReflectionUtil.ResolveTypeParameter(new TypeQ<BBB>(), typeof(TypeX<,,>), "A");
+        Assert.False(m.IsInstanceOfType(new object()));
+        Assert.False(m.IsInstanceOfType(new A()));
+        Assert.False(m.IsInstanceOfType(new AA()));
+        Assert.True(m.IsInstanceOfType(new AAA()));
+        Assert.False(m.IsInstanceOfType(new B()));
+        Assert.False(m.IsInstanceOfType(new BB()));
+        Assert.False(m.IsInstanceOfType(new BBB()));
+        Assert.False(m.IsInstanceOfType(new C()));
+        Assert.False(m.IsInstanceOfType(new CC()));
     }
 
     [Fact(Skip = "JVM type erasure leaves this parameter unresolved; CLR retains BBB.")]
     public void TestUnsolvedParameter() => Assert.Throws<InvalidOperationException>(() =>
-        TypeParameterMatcher.Find(new TypeQ<BBB>(), typeof(TypeX<,,>), "B"));
+        ReflectionUtil.ResolveTypeParameter(new TypeQ<BBB>(), typeof(TypeX<,,>), "B"));
 
     [Fact]
     public void TestAnonymousClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.Find(new AnonymousQ(), typeof(TypeX<,,>), "B");
-        Assert.False(m.Match(new object()));
-        Assert.False(m.Match(new A()));
-        Assert.False(m.Match(new AA()));
-        Assert.False(m.Match(new AAA()));
-        Assert.False(m.Match(new B()));
-        Assert.False(m.Match(new BB()));
-        Assert.True(m.Match(new BBB()));
-        Assert.False(m.Match(new C()));
-        Assert.False(m.Match(new CC()));
+        Type m = ReflectionUtil.ResolveTypeParameter(new AnonymousQ(), typeof(TypeX<,,>), "B");
+        Assert.False(m.IsInstanceOfType(new object()));
+        Assert.False(m.IsInstanceOfType(new A()));
+        Assert.False(m.IsInstanceOfType(new AA()));
+        Assert.False(m.IsInstanceOfType(new AAA()));
+        Assert.False(m.IsInstanceOfType(new B()));
+        Assert.False(m.IsInstanceOfType(new BB()));
+        Assert.True(m.IsInstanceOfType(new BBB()));
+        Assert.False(m.IsInstanceOfType(new C()));
+        Assert.False(m.IsInstanceOfType(new CC()));
     }
 
     [Fact]
     public void TestAbstractClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.Find(new TypeQ<BBB>(), typeof(TypeX<,,>), "C");
-        Assert.False(m.Match(new object()));
-        Assert.False(m.Match(new A()));
-        Assert.False(m.Match(new AA()));
-        Assert.False(m.Match(new AAA()));
-        Assert.False(m.Match(new B()));
-        Assert.False(m.Match(new BB()));
-        Assert.False(m.Match(new BBB()));
-        Assert.False(m.Match(new C()));
-        Assert.True(m.Match(new CC()));
+        Type m = ReflectionUtil.ResolveTypeParameter(new TypeQ<BBB>(), typeof(TypeX<,,>), "C");
+        Assert.False(m.IsInstanceOfType(new object()));
+        Assert.False(m.IsInstanceOfType(new A()));
+        Assert.False(m.IsInstanceOfType(new AA()));
+        Assert.False(m.IsInstanceOfType(new AAA()));
+        Assert.False(m.IsInstanceOfType(new B()));
+        Assert.False(m.IsInstanceOfType(new BB()));
+        Assert.False(m.IsInstanceOfType(new BBB()));
+        Assert.False(m.IsInstanceOfType(new C()));
+        Assert.True(m.IsInstanceOfType(new CC()));
     }
 
     [Fact]
     public void TestInaccessibleClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.Find(new AnonymousPrivateU(), typeof(U<>), "E");
-        Assert.False(m.Match(new object()));
-        Assert.True(m.Match(new T()));
+        Type m = ReflectionUtil.ResolveTypeParameter(new AnonymousPrivateU(), typeof(U<>), "E");
+        Assert.False(m.IsInstanceOfType(new object()));
+        Assert.True(m.IsInstanceOfType(new T()));
     }
 
     [Fact]
     public void TestArrayAsTypeParam()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.Find(new AnonymousArrayU(), typeof(U<>), "E");
-        Assert.False(m.Match(new object()));
-        Assert.True(m.Match(new byte[1]));
+        Type m = ReflectionUtil.ResolveTypeParameter(new AnonymousArrayU(), typeof(U<>), "E");
+        Assert.False(m.IsInstanceOfType(new object()));
+        Assert.True(m.IsInstanceOfType(new byte[1]));
     }
 
     [Fact]
     public void TestRawType()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.Find(new RawU(), typeof(U<>), "E");
-        Assert.True(m.Match(new object()));
+        Type m = ReflectionUtil.ResolveTypeParameter(new RawU(), typeof(U<>), "E");
+        Assert.True(m.IsInstanceOfType(new object()));
     }
 
     [Fact]
     public void TestInnerClass()
     {
-        TypeParameterMatcher m = TypeParameterMatcher.Find(new V<string>().u, typeof(U<>), "E");
-        Assert.False(m.Match(new object()));
-        Assert.True(m.Match("value"));
+        Type m = ReflectionUtil.ResolveTypeParameter(new V<string>().u, typeof(U<>), "E");
+        Assert.False(m.IsInstanceOfType(new object()));
+        Assert.True(m.IsInstanceOfType("value"));
     }
 
     [Fact(Skip = "JVM type erasure is not applicable to constructed CLR generic types.")]
     public void TestErasure() => Assert.Throws<InvalidOperationException>(() =>
     {
-        TypeParameterMatcher m = TypeParameterMatcher.Find(new X<string, DateTime>(), typeof(W<>), "E");
-        Assert.True(m.Match(new DateTime()));
-        Assert.False(m.Match(new object()));
+        Type m = ReflectionUtil.ResolveTypeParameter(new X<string, DateTime>(), typeof(W<>), "E");
+        Assert.True(m.IsInstanceOfType(new DateTime()));
+        Assert.False(m.IsInstanceOfType(new object()));
     });
 }

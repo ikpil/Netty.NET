@@ -121,33 +121,35 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1978 cases** on Windows/x64/net10.0:
-**1964 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: removal-registry-full-debug.trx and removal-registry-full-release.trx.
-All 1974 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain unchanged. Four new native
-thread-local cleanup scenarios validate mixed-type/null bindings, duplicate
-writes/rebind, snapshot removal by callbacks on ordinary/scoped workers and
-finally map detachment/reuse after callback failure.
-The old dictionary passes those scenarios too: this is a native collection
-substitution, not a claimed runtime defect repair. FastThreadLocal now uses
-HashSet<IFastThreadLocal>(ReferenceEqualityComparer.Instance), with non-generic
-membership helpers and a matching native Size consumer. Strong ownership,
-identity, snapshot cleanup, clear-before-callback and failure propagation remain.
-No membership iteration order or all-callbacks-after-failure guarantee is added.
-Targeted Debug and checked Release each discover 200 cases: 188 passed /
-0 failed / 12 unchanged skips. All 271 comment totals/coverage and prior Java/C#
-provenance remain. Pinned inventory/paths and uppercase method/local-function
-checks pass; no original tests are removed and no new compiler-warning identities
-appear against the prior checkpoint.
-Source statuses stay 52 verified / 47 CLR replacement / 14 not applicable /
-72 pending / 20 in progress. Whole map and common review remain open.
-Records stay in ignored TestResults and artifacts/removal-registry-validation:
-removal-registry-before-debug.trx, removal-registry-identity-and-inventory.json
-and removal-registry-comment-audit.json. Native decisions are in
-common-clr-design.md#native-thread-local-removal-membership.
-Next: review remaining map scratch-storage and reflection-cache APIs against
-actual CLR and pinned downstream consumers before keeping or replacing them.
+The current default suite executes **1979 cases** on Windows/x64/net10.0:
+**1965 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: native-type-resolution-full-debug.trx and native-type-resolution-full-release.trx.
+All 1978 prior outcomes, including 759 original non-Porting identities, the later
+byte-wrap regression and every skip, remain. Two CLR cache-focused identities
+are explicitly adapted to native superclass isolation and shared metadata without
+thread-local allocation; their old/new names are in the identity report.
+One new RunAndCollect handler/payload case fails before matcher-cache retirement
+and passes with direct CLR Type resolution/instance checks on a live worker map.
+Seven portable original generic scenarios keep their names/assertions; two JVM
+erasure skips stay. Seven CLR metadata/variance/array/enclosing scenarios remain.
+Retire the matcher base, reflective wrapper and two duplicate NoOp classes, plus
+both map cache fields/accessors/Size branches. The constructed superclass resolver
+stays unchanged. Native Type/is T rejects null, whereas the old Object no-op
+accepted it; future codec/channel acceptance and resource policies remain separate.
+Targeted Debug and checked Release each discover 123 cases: 118 passed /
+0 failed / 5 unchanged skips. All 271 comment totals/coverage and prior Java/C#
+provenance remain, with both retired original sources archived in the existing
+design record. Pinned inventory/paths and uppercase method/local-function checks
+pass; no original tests are removed and no new compiler-warning identities appear.
+Source statuses are 51 verified / 49 CLR replacement / 14 not applicable /
+71 pending / 20 in progress. The two matcher source decisions are updated;
+whole map and common review remain open.
+Records stay in ignored TestResults and artifacts/native-type-resolution-validation:
+native-type-resolution-before-debug.trx, native-type-resolution-identity-and-inventory.json
+and native-type-resolution-comment-audit.json. Native decisions are in
+common-clr-design.md#direct-clr-type-resolution-and-matching.
+Next: remaining map scratch-storage lifetime and actual StringUtil CSV consumers;
+retain their original parsing contracts while reviewing native storage ownership.
 Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate

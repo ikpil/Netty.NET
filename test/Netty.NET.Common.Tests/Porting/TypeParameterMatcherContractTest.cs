@@ -7,8 +7,12 @@ using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
 
-public class TypeParameterMatcherContractTest
+[Collection("Thread-local globals")]
+public class TypeParameterMatcherContractTest : IDisposable
 {
+    public TypeParameterMatcherContractTest() => FastThreadLocal.RemoveAll();
+    public void Dispose() => FastThreadLocal.RemoveAll();
+
     private class Parent<E> { }
     private sealed class Lists : Parent<List<string>> { }
     private sealed class ListArrays : Parent<List<string>[]> { }
@@ -28,29 +32,29 @@ public class TypeParameterMatcherContractTest
     [Fact]
     public void ParameterizedTypesRetainTheirClrArgumentsIncludingInterfaceVariance()
     {
-        TypeParameterMatcher matcher = TypeParameterMatcher.Find(new Lists(), typeof(Parent<>), "E");
-        Assert.False(matcher.Match(new List<int>()));
-        Assert.True(matcher.Match(new List<string>()));
-        Assert.False(matcher.Match(new Dictionary<string, int>()));
-        Assert.False(matcher.Match(null));
-        Assert.NotSame(matcher, TypeParameterMatcher.Get(typeof(List<int>)));
-        Assert.Same(matcher, TypeParameterMatcher.Get(typeof(List<string>)));
-        Assert.True(TypeParameterMatcher.Get(typeof(IEnumerable<object>)).Match(new List<string>()));
-        Assert.False(TypeParameterMatcher.Get(typeof(IEnumerable<string>)).Match(new List<int>()));
+        Type matcher = ReflectionUtil.ResolveTypeParameter(new Lists(), typeof(Parent<>), "E");
+        Assert.False(matcher.IsInstanceOfType(new List<int>()));
+        Assert.True(matcher.IsInstanceOfType(new List<string>()));
+        Assert.False(matcher.IsInstanceOfType(new Dictionary<string, int>()));
+        Assert.False(matcher.IsInstanceOfType(null));
+        Assert.NotSame(matcher, typeof(List<int>));
+        Assert.Same(matcher, typeof(List<string>));
+        Assert.True(typeof(IEnumerable<object>).IsInstanceOfType(new List<string>()));
+        Assert.False(typeof(IEnumerable<string>).IsInstanceOfType(new List<int>()));
     }
 
     [Fact]
     public void ParameterizedArraysRetainElementTypesAndPreserveArrayShapes()
     {
-        TypeParameterMatcher matcher = TypeParameterMatcher.Find(new ListArrays(), typeof(Parent<>), "E");
-        Assert.True(matcher.Match(new List<string>[1]));
-        Assert.False(matcher.Match(new List<int>[1]));
-        Assert.False(matcher.Match(new Dictionary<string, int>[1]));
-        Assert.False(matcher.Match(new List<int>[1, 1]));
-        Assert.Same(matcher, TypeParameterMatcher.Get(typeof(List<string>[])));
-        Assert.NotSame(matcher, TypeParameterMatcher.Get(typeof(List<int>[])));
-        Assert.False(matcher.Match(Array.CreateInstance(typeof(List<int>), new[] { 1 }, new[] { 1 })));
-        Assert.True(TypeParameterMatcher.Find(new ObjectArrays(), typeof(Parent<>), "E").Match(new string[1]));
+        Type matcher = ReflectionUtil.ResolveTypeParameter(new ListArrays(), typeof(Parent<>), "E");
+        Assert.True(matcher.IsInstanceOfType(new List<string>[1]));
+        Assert.False(matcher.IsInstanceOfType(new List<int>[1]));
+        Assert.False(matcher.IsInstanceOfType(new Dictionary<string, int>[1]));
+        Assert.False(matcher.IsInstanceOfType(new List<int>[1, 1]));
+        Assert.Same(matcher, typeof(List<string>[]));
+        Assert.NotSame(matcher, typeof(List<int>[]));
+        Assert.False(matcher.IsInstanceOfType(Array.CreateInstance(typeof(List<int>), new[] { 1 }, new[] { 1 })));
+        Assert.True(ReflectionUtil.ResolveTypeParameter(new ObjectArrays(), typeof(Parent<>), "E").IsInstanceOfType(new string[1]));
     }
 
     [Fact]
@@ -58,33 +62,33 @@ public class TypeParameterMatcherContractTest
     {
         Assert.Equal(typeof(string[]), ReflectionUtil.ResolveTypeParameter(
             new ConcreteVariableArrays(), typeof(Parent<>), "E"));
-        TypeParameterMatcher matcher = TypeParameterMatcher.Find(new ConcreteVariableArrays(), typeof(Parent<>), "E");
-        Assert.True(matcher.Match(new string[1]));
-        Assert.False(matcher.Match(new int[1]));
+        Type matcher = ReflectionUtil.ResolveTypeParameter(new ConcreteVariableArrays(), typeof(Parent<>), "E");
+        Assert.True(matcher.IsInstanceOfType(new string[1]));
+        Assert.False(matcher.IsInstanceOfType(new int[1]));
     }
 
     [Fact]
     public void AnEnclosingClrTypeArgumentRemainsAvailable()
     {
-        TypeParameterMatcher matcher = TypeParameterMatcher.Find(new Outer<string>.Inner(), typeof(Parent<>), "E");
-        Assert.False(matcher.Match(new object()));
-        Assert.False(matcher.Match(null));
-        Assert.True(matcher.Match("value"));
-        Assert.Same(TypeParameterMatcher.Get(typeof(string)), matcher);
+        Type matcher = ReflectionUtil.ResolveTypeParameter(new Outer<string>.Inner(), typeof(Parent<>), "E");
+        Assert.False(matcher.IsInstanceOfType(new object()));
+        Assert.False(matcher.IsInstanceOfType(null));
+        Assert.True(matcher.IsInstanceOfType("value"));
+        Assert.Same(typeof(string), matcher);
     }
 
     [Fact]
-    public void FindCacheSeparatesSuperclassesThatReuseTheSameParameterName()
+    public void RequestedSuperclassesThatReuseTheSameParameterNameStayDistinct()
     {
-        TypeParameterMatcher first = TypeParameterMatcher.Find(new Leaf(), typeof(Middle<>), "A");
-        Assert.True(first.Match("value"));
-        Assert.False(first.Match(1));
-        TypeParameterMatcher second = TypeParameterMatcher.Find(new Leaf(), typeof(Ancestor<>), "A");
+        Type first = ReflectionUtil.ResolveTypeParameter(new Leaf(), typeof(Middle<>), "A");
+        Assert.True(first.IsInstanceOfType("value"));
+        Assert.False(first.IsInstanceOfType(1));
+        Type second = ReflectionUtil.ResolveTypeParameter(new Leaf(), typeof(Ancestor<>), "A");
         Assert.NotSame(first, second);
-        Assert.True(second.Match(1));
-        Assert.False(second.Match("value"));
-        Assert.Same(first, TypeParameterMatcher.Find(new Leaf(), typeof(Middle<>), "A"));
-        Assert.Same(second, TypeParameterMatcher.Find(new Leaf(), typeof(Ancestor<>), "A"));
+        Assert.True(second.IsInstanceOfType(1));
+        Assert.False(second.IsInstanceOfType("value"));
+        Assert.Same(first, ReflectionUtil.ResolveTypeParameter(new Leaf(), typeof(Middle<>), "A"));
+        Assert.Same(second, ReflectionUtil.ResolveTypeParameter(new Leaf(), typeof(Ancestor<>), "A"));
         Assert.Equal(typeof(int), ReflectionUtil.ResolveTypeParameter(new Leaf(), typeof(Ancestor<>), "A"));
     }
 
@@ -97,25 +101,27 @@ public class TypeParameterMatcherContractTest
         InvalidOperationException unrelated = Assert.Throws<InvalidOperationException>(() =>
             ReflectionUtil.ResolveTypeParameter(new Lists(), typeof(Dictionary<,>), "TKey"));
         Assert.Contains(typeof(Lists).ToString(), unrelated.Message);
-        Assert.Throws<ArgumentNullException>(() => TypeParameterMatcher.Find(null, typeof(Parent<>), "E"));
-        Assert.Throws<ArgumentNullException>(() => TypeParameterMatcher.Get(null));
-        Assert.Throws<InvalidOperationException>(() => TypeParameterMatcher.Find(new Lists(), typeof(Parent<int>), "E"));
+        Assert.Throws<ArgumentNullException>(() => ReflectionUtil.ResolveTypeParameter(null, typeof(Parent<>), "E"));
+        Assert.Throws<ArgumentNullException>(() => ReflectionUtil.ResolveTypeParameter(new Lists(), null, "E"));
+        Assert.Throws<InvalidOperationException>(() => ReflectionUtil.ResolveTypeParameter(new Lists(), typeof(Parent<int>), "E"));
     }
 
     [Fact]
-    public void GetCacheIsLocalToTheCallingThreadWhileTheObjectNoopRemainsShared()
+    public void NativeTypesAndResolutionDoNotCreateThreadLocalState()
     {
-        TypeParameterMatcher current = TypeParameterMatcher.Get(typeof(List<>));
-        TypeParameterMatcher objectMatcher = TypeParameterMatcher.Get(typeof(object));
-        TypeParameterMatcher other = null, otherObject = null;
+        Type current = ReflectionUtil.ResolveTypeParameter(new Lists(), typeof(Parent<>), "E");
+        Type other = null;
         Exception failure = null;
+        Assert.Null(InternalThreadLocalMap.GetIfSet());
         var thread = new Thread(() =>
         {
             try
             {
-                other = TypeParameterMatcher.Get(typeof(List<>));
-                otherObject = TypeParameterMatcher.Get(typeof(object));
-                Assert.Same(other, TypeParameterMatcher.Get(typeof(List<>)));
+                Assert.Null(InternalThreadLocalMap.GetIfSet());
+                other = ReflectionUtil.ResolveTypeParameter(new Lists(), typeof(Parent<>), "E");
+                Assert.True(other.IsInstanceOfType(new List<string>()));
+                Assert.False(other.IsInstanceOfType(new List<int>()));
+                Assert.Null(InternalThreadLocalMap.GetIfSet());
             }
             catch (Exception exception) { failure = exception; }
             finally { FastThreadLocal.RemoveAll(); }
@@ -123,7 +129,7 @@ public class TypeParameterMatcherContractTest
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(failure);
-        Assert.NotSame(current, other);
-        Assert.Same(objectMatcher, otherObject);
+        Assert.Same(current, other);
+        Assert.Null(InternalThreadLocalMap.GetIfSet());
     }
 }

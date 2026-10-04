@@ -60,8 +60,6 @@ public sealed class InternalThreadLocalMap
     // Core thread-locals
     private int _localChannelReaderStackDepth;
     private ConditionalWeakTable<Type, StrongBox<bool>> _handlerSharableCache;
-    private Dictionary<Type, TypeParameterMatcher> _typeParameterMatcherGetCache;
-    private Dictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> _typeParameterMatcherFindCache;
 
     // String-related thread-locals
     private StringBuilder _stringBuilder;
@@ -170,16 +168,6 @@ public sealed class InternalThreadLocalMap
             count++;
         }
 
-        if (_typeParameterMatcherGetCache != null)
-        {
-            count++;
-        }
-
-        if (_typeParameterMatcherFindCache != null)
-        {
-            count++;
-        }
-
         if (_stringBuilder != null)
         {
             count++;
@@ -239,28 +227,6 @@ public sealed class InternalThreadLocalMap
         list.Clear();
         list.EnsureCapacity(minCapacity);
         return list;
-    }
-
-    public IDictionary<Type, TypeParameterMatcher> TypeParameterMatcherGetCache()
-    {
-        var cache = _typeParameterMatcherGetCache;
-        if (cache == null)
-        {
-            _typeParameterMatcherGetCache = cache = new Dictionary<Type, TypeParameterMatcher>();
-        }
-
-        return cache;
-    }
-
-    public IDictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>> TypeParameterMatcherFindCache()
-    {
-        var cache = _typeParameterMatcherFindCache;
-        if (cache == null)
-        {
-            _typeParameterMatcherFindCache = cache = new Dictionary<Type, IDictionary<(Type Superclass, string Name), TypeParameterMatcher>>();
-        }
-
-        return cache;
     }
 
     public ConditionalWeakTable<Type, StrongBox<bool>> HandlerSharableCache()

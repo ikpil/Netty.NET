@@ -3476,8 +3476,9 @@ GetValue with a pure attribute-query factory is the natural compute path. That
 factory must not acquire side effects: concurrent callbacks may run more than
 once, and Add duplicate-key behavior is not Java Map.put replacement semantics.
 No transport implementation or new Sharable attribute is created in common.
-The strong CLR matcher caches retain their separate original strong-cache
-contract; this weak decision does not change or certify their lifetime policy.
+At this checkpoint the strong CLR matcher caches retained their separate original
+strong-cache policy. Their later native retirement and collectible-type validation
+are recorded in Direct CLR type resolution and matching below.
 
 Keep physical-thread ownership, map cleanup, indexed storage, list type switching
 and StringBuilder trimming. Existing ThreadLocalContractTest already checks those
@@ -3681,3 +3682,165 @@ identity, original factory/index/removal and Recycler consumers remain validatio
 All original source/test comments stay; no new MD or collection wrapper is added.
 Full/checked outcomes and unchanged inventory are recorded in common-porting.md.
 Whole map/common review remains open.
+
+
+## Direct CLR type resolution and matching
+
+Reopen the matcher backend for redundant CLR objects/caches and a concrete
+collectible-type lifetime problem: the old live worker map roots both a dynamic
+handler class and its generic payload. The RunAndCollect scenario fails before
+retirement and passes with direct CLR resolution/checks.
+Pinned TypeParameterMatcher.java:31-81 resolves superclass metadata, caches
+matcher instances and forwards ordinary checks to Class.isInstance. Its real
+codec-base consumers are ByteToMessageCodec:98, MessageToByteEncoder:95,
+MessageToMessageCodec:139/148, MessageToMessageDecoder:79 and
+MessageToMessageEncoder:78; transport SimpleChannelInboundHandler and
+SimpleUserEventChannelHandler:89 use the same acceptance predicate.
+In C#, generic handlers can use typeof(T)/message is T; runtime-selected types
+can retain System.Type and call IsInstanceOfType directly. Preserve the existing
+ReflectionUtil.ResolveTypeParameter for actual constructed superclass metadata,
+including distinct superclass/name bindings, arrays, private/enclosing types
+and retained CLR generic arguments. Neither purpose requires a matcher object,
+reflection-check facade, artificial per-thread identity or map cache.
+Retire TypeParameterMatcher, ReflectiveMatcher, both duplicate Noop/NoOp classes,
+and both map cache fields/accessors/Size branches. Pinned standalone
+NoOpTypeParameterMatcher.java has no all-module consumer; a real bypass policy
+can skip the type check directly rather than allocate a constant-true object.
+The original Object matcher also accepted null; CLR IsInstanceOfType and is T
+reject it. Null therefore remains explicit caller policy, not an implicit new
+no-op fallback. The original outbound context already checks msg nonnull at
+transport/AbstractChannelHandlerContext.java:844. Inbound/user-event null policy
+and codec forwarding/refcount rules still belong to future module integration.
+This common decision does not certify those downstream ports.
+Seven portable original tests keep their identities/assertions using Type checks;
+two JVM-erasure cases remain skipped. Seven CLR scenarios keep constructed type
+and variance semantics; rename the two cache-focused identities to their native
+superclass isolation/no-thread-local-state purposes. The native metadata is shared
+across physical workers rather than forcing different matcher instances.
+Original licenses are retained below. No replacement matcher/helper is added.
+Scratch storage is separate: StringUtil CSV still uses the native builder;
+the remaining pinned list consumers are AsciiString.split and HTTP cookie/
+multipart scratch lists. Current AsciiString uses an owned List already. No
+speculative change to the unused CLR list cache or future HTTP lifetime policy
+is made in this unit; whole map/common review remains open.
+
+Pinned common/src/main/java/io/netty/util/internal/TypeParameterMatcher.java (original replacement provenance):
+
+```java
+/*
+ * Copyright 2013 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package io.netty.util.internal;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public abstract class TypeParameterMatcher {
+
+    private static final TypeParameterMatcher NOOP = new TypeParameterMatcher() {
+        @Override
+        public boolean match(Object msg) {
+            return true;
+        }
+    };
+
+    public static TypeParameterMatcher get(final Class<?> parameterType) {
+        final Map<Class<?>, TypeParameterMatcher> getCache =
+                InternalThreadLocalMap.get().typeParameterMatcherGetCache();
+
+        TypeParameterMatcher matcher = getCache.get(parameterType);
+        if (matcher == null) {
+            if (parameterType == Object.class) {
+                matcher = NOOP;
+            } else {
+                matcher = new ReflectiveMatcher(parameterType);
+            }
+            getCache.put(parameterType, matcher);
+        }
+
+        return matcher;
+    }
+
+    public static TypeParameterMatcher find(
+            final Object object, final Class<?> parametrizedSuperclass, final String typeParamName) {
+
+        final Map<Class<?>, Map<String, TypeParameterMatcher>> findCache =
+                InternalThreadLocalMap.get().typeParameterMatcherFindCache();
+        final Class<?> thisClass = object.getClass();
+
+        Map<String, TypeParameterMatcher> map = findCache.get(thisClass);
+        if (map == null) {
+            map = new HashMap<String, TypeParameterMatcher>();
+            findCache.put(thisClass, map);
+        }
+
+        TypeParameterMatcher matcher = map.get(typeParamName);
+        if (matcher == null) {
+            matcher = get(ReflectionUtil.resolveTypeParameter(object, parametrizedSuperclass, typeParamName));
+            map.put(typeParamName, matcher);
+        }
+
+        return matcher;
+    }
+
+    public abstract boolean match(Object msg);
+
+    private static final class ReflectiveMatcher extends TypeParameterMatcher {
+        private final Class<?> type;
+
+        ReflectiveMatcher(Class<?> type) {
+            this.type = type;
+        }
+
+        @Override
+        public boolean match(Object msg) {
+            return type.isInstance(msg);
+        }
+    }
+
+    TypeParameterMatcher() { }
+}
+```
+
+
+Pinned common/src/main/java/io/netty/util/internal/NoOpTypeParameterMatcher.java (original replacement provenance):
+
+```java
+/*
+ * Copyright 2013 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package io.netty.util.internal;
+
+public final class NoOpTypeParameterMatcher extends TypeParameterMatcher {
+    @Override
+    public boolean match(Object msg) {
+        return true;
+    }
+}
+```
