@@ -489,7 +489,8 @@ public class HashedWheelTimer : ITimer, IDisposable
         // Add the timeout to the timeout queue which will be processed on the next tick.
         // During processing all the queued HashedWheelTimeouts will be added to the correct HashedWheelBucket.
         long delayNano = AbstractScheduledEventExecutor.ToNanos(delay);
-        long deadline = SystemTimer.NanoTime() + delayNano - Volatile.Read(ref _startTime);
+        // Match Java long wrap before the positive-delay overflow guard below.
+        long deadline = unchecked(SystemTimer.NanoTime() + delayNano - Volatile.Read(ref _startTime));
 
         // Guard against overflow.
         if (delay.Ticks > 0 && deadline < 0)
@@ -498,7 +499,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         }
 
         HashedWheelTimeout timeout = new HashedWheelTimeout(this, task, deadline);
-        _timeouts.Enqueue(timeout);
+        ConcurrentQueueOperations.EnqueueUninterruptibly(_timeouts, timeout);
 
         // stop() might have been called after start() returned, in which case the worker might have already drained
         // the timeouts queue for the last time. If we can still cancel the timeout it was neither expired nor returned

@@ -14,6 +14,322 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## Native MPSC handoffs and removed provider scaffolding
+
+The pinned three newMpscQueue overloads and nested Mpsc in PlatformDependent.java:
+1245-1328 have these real consumers:
+
+| Consumer | Queue purpose | Native common decision or later module integration |
+| --- | --- | --- |
+| HashedWheelTimer.java:114-115 | Unbounded timeout/cancellation publication, worker drain and stop ownership | Keep its existing two ConcurrentQueue fields; protect publication/drain from CLR interruption as below. |
+| NonStickyEventExecutorGroup.java:218 | FIFO tasks, serialized runner ownership, rejection recovery | Its existing native Queue plus owner gate already couples membership and runner reservations; no provider facade is used. |
+| Recycler.java:549 | Explicit chunk/max configuration, bounded cross-thread returns, no eviction of accepted handles | Existing CAS-reserved ConcurrentQueue preserves the rounded maximum and rejection; chunk allocation differs in CLR. Previous bounded-pool tests remain unchanged. |
+| transport/SingleThreadIoEventLoop.java:337-341 | Unbounded versus bounded event-loop admission | Future transport owner must choose effective capacity/rejection/wakeup/closure together. Original one-argument factory clamps to [2048, 2^30] then the JCTools queue rounds upward; explicit chunk overload has a separate constructor policy. Removing the common alias does not silently redefine a future caller's capacity. |
+| transport/ManualIoEventLoop.java:61/178/476/534/539 | FIFO commands, wakeup sentinels, removal after closure | Future owner needs atomic admission/closure and withdrawal membership. ConcurrentQueue or bounded Channel alone does not supply arbitrary item removal; do not substitute a fake TryRemove. |
+| transport-classes-epoll/AbstractEpollStreamChannel.java:851/855 | FIFO splice tasks, peek/head removal | Direct native FIFO collection with owner lifetime; epoll integration is outside common. |
+
+All tracked C# callers of the remaining provider APIs were the provider definitions
+themselves. Remove three PlatformDependent overloads, their three JCTools-specific
+capacity constants and 13 unused implementation/scaffolding files: the JCTools
+directory, ConcurrentCircularArrayQueue, ConcurrentQueueAdapter, AbstractQueue
+and IntegerExtensions. Ordinary IQueue/LinkedBlockingQueue consumers and the
+separately reviewed MpscAtomicIntegerArrayQueue remain. No replacement collection
+class, JVM padding hierarchy, feature probe or advertised chunk-size facade is
+introduced. This closes these common aliases, not future transport integration.
+
+Review of the timer's actual existing unbounded queues reproduced two missing
+handoffs at the preceding commit: ThreadInterruptedException from EnqueueSlow
+after pending admission, or after cancellation's terminal CAS. In the latter
+case the timeout is cancelled but its worker cleanup notification is missing.
+Both new public NewTimeout/Cancel scenarios fail before repair. Reflection holds
+the real net10 cross-segment gate only to control contention; timer APIs and IO
+operations are unmodified. After repair, all 33 accepted timeouts cancel, every
+cleanup callback runs, no task expires, pending count reaches zero and the caller
+still observes a later interrupt. The worker is held by an ordinary timer task
+during the handoff and released before callback/drain assertions.
+
+The broader checked timer selection also exposes two existing maximum-delay
+failures: deadline addition throws before the original overflow guard. Pinned
+HashedWheelTimer.java:454-459 relies on Java long wrap followed by that guard.
+Explicit unchecked addition/subtraction retains the same CLR default result and
+allows the original and native saturation fixtures to pass in checked builds.
+Keep both failed identities in mpsc-retirement-before-deadline-checked-release.trx.
+
+A shared internal ConcurrentQueueOperations boundary now supplies only native
+enqueue/try-dequeue with interruption retry/restoration. It is needed by two actual
+resource owners, not an IQueue/factory wrapper: queues, admission limits and lifetime
+remain owned by Recycler and timer. Move the preceding recycler boundary/comments
+here without changing reservations or guard/batch behavior; apply it to both timer
+writers and all three worker drains. Reviewed runtime v10.0.7 ConcurrentQueue and
+ConcurrentQueueSegment throw on these waits before this item is published/claimed;
+no user callback runs inside the retried operations. Retry only interruption,
+restore it on completion/error, and retain ordinary failure propagation. Other
+owner operations (Count, snapshots, arbitrary removal) are not certified by this
+two-operation boundary. No claim of JVM lock-free progress or performance parity.
+
+The original provider-selection fixture's six Java class identities remain an
+explicit JVM-only assertion mapping; all existing portable identities/assertions
+remain. Full results and inventory/semantic/comment checks are in common-porting.md
+and mpsc-retirement-* records. Original ten comments of the removed pinned nested
+class/overloads and existing C# explanatory comments follow. Commented placeholder
+bootstrap/return statements are not explanatory provenance and are not archived.
+Original licenses in surviving Java-derived source and the repository remain.
+
+Runtime sources: [ConcurrentQueue](https://github.com/dotnet/runtime/blob/v10.0.7/src/libraries/System.Private.CoreLib/src/System/Collections/Concurrent/ConcurrentQueue.cs)
+and [ConcurrentQueueSegment](https://github.com/dotnet/runtime/blob/v10.0.7/src/libraries/System.Private.CoreLib/src/System/Collections/Concurrent/ConcurrentQueueSegment.cs).
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java, nested Mpsc at line 1252 and three newMpscQueue overloads.
+
+```java
+// jctools goes through its own process of initializing unsafe; of
+
+// course, this requires permissions which might not be granted to calling code, so we
+
+// must mark this block as privileged too
+
+// force JCTools to initialize unsafe
+
+// Calculate the max capacity which can not be bigger than MAX_ALLOWED_MPSC_CAPACITY.
+
+// This is forced by the MpscChunkedArrayQueue implementation as will try to round it
+
+// up to the next power of two and so will overflow otherwise.
+
+/**
+     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
+     * consumer (one thread!).
+     * @return A MPSC queue which may be unbounded.
+     */
+
+/**
+     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
+     * consumer (one thread!).
+     */
+
+/**
+     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
+     * consumer (one thread!).
+     * The queue will grow and shrink its capacity in units of the given chunk size.
+     */
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/Collections/JCTools/MpscArrayQueue.cs.
+
+```csharp
+/// <summary>
+/// Forked from <a href="https://github.com/JCTools/JCTools">JCTools</a>.
+/// A Multi-Producer-Single-Consumer queue based on a <see cref="ConcurrentCircularArrayQueue{T}"/>. This implies
+/// that any thread may call the Enqueue methods, but only a single thread may call poll/peek for correctness to
+/// maintained.
+/// <para>
+/// This implementation follows patterns documented on the package level for False Sharing protection.
+/// </para>
+/// <para>
+/// This implementation is using the <a href="http://sourceforge.net/projects/mc-fastflow/">Fast Flow</a>
+/// method for polling from the queue (with minor change to correctly publish the index) and an extension of
+/// the Leslie Lamport concurrent queue algorithm (originated by Martin Thompson) on the producer side.
+/// </para>
+/// </summary>
+/// <typeparam name="T">The type of each item in the queue.</typeparam>
+// padded reference
+/// <summary>
+/// Lock free Enqueue operation, using a single compare-and-swap. As the class name suggests, access is
+/// permitted to many threads concurrently.
+/// </summary>
+/// <param name="e">The item to enqueue.</param>
+/// <returns><c>true</c> if the item was added successfully, otherwise <c>false</c>.</returns>
+/// <seealso cref="IQueue{T}.tryEnqueue"/>
+// use a cached view on consumer index (potentially updated in loop)
+// LoadLoad
+// LoadLoad
+// LoadLoad
+// FULL :(
+// update shared cached value of the consumerIndex
+// StoreLoad
+// update on stack copy, we might need this value again if we lose the CAS.
+// NOTE: the new producer index value is made visible BEFORE the element in the array. If we relied on
+// the index visibility to poll() we would need to handle the case where the element is not visible.
+// Won CAS, move on to storing
+// StoreStore
+// AWESOME :)
+/// <summary>
+/// A wait-free alternative to <see cref="tryEnqueue"/>, which fails on compare-and-swap failure.
+/// </summary>
+/// <param name="e">The item to enqueue.</param>
+/// <returns><c>1</c> if next element cannot be filled, <c>-1</c> if CAS failed, and <c>0</c> if successful.</returns>
+// LoadLoad
+// LoadLoad
+// LoadLoad
+// FULL :(
+// StoreLoad
+// look Ma, no loop!
+// CAS FAIL :(
+// Won CAS, move on to storing
+// AWESOME :)
+/// <summary>
+/// Lock free poll using ordered loads/stores. As class name suggests, access is limited to a single thread.
+/// </summary>
+/// <param name="item">The dequeued item.</param>
+/// <returns><c>true</c> if an item was retrieved, otherwise <c>false</c>.</returns>
+/// <seealso cref="IQueue{T}.tryDequeue"/>
+// LoadLoad
+// Copy field to avoid re-reading after volatile load
+// If we can't see the next available element we can't poll
+// LoadLoad
+// NOTE: Queue may not actually be empty in the case of a producer (P1) being interrupted after
+// winning the CAS on offer but before storing the element in the queue. Other producers may go on
+// to fill up the queue after this element.
+// StoreStore
+/// <summary>
+/// Lock free peek using ordered loads. As class name suggests access is limited to a single thread.
+/// </summary>
+/// <param name="item">The peeked item.</param>
+/// <returns><c>true</c> if an item was retrieved, otherwise <c>false</c>.</returns>
+/// <seealso cref="IQueue{T}.tryPeek"/>
+// Copy field to avoid re-reading after volatile load
+// LoadLoad
+// NOTE: Queue may not actually be empty in the case of a producer (P1) being interrupted after
+// winning the CAS on offer but before storing the element in the queue. Other producers may go on
+// to fill up the queue after this element.
+/// <summary>
+/// Returns the number of items in this <see cref="MpscArrayQueue{T}"/>.
+/// </summary>
+// It is possible for a thread to be interrupted or reschedule between the read of the producer and
+// consumer indices, therefore protection is required to ensure size is within valid range. In the
+// event of concurrent polls/offers to this method the size is OVER estimated as we read consumer
+// index BEFORE the producer index.
+// Order matters!
+// Loading consumer before producer allows for producer increments after consumer index is read.
+// This ensures the correctness of this method at least for the consumer thread. Other threads POV is
+// not really
+// something we can fix here.
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/Collections/JCTools/MpscArrayQueueConsumerField.cs.
+
+```csharp
+// todo: revisit: UNSAFE.putOrderedLong -- StoreStore fence
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/Collections/JCTools/MpscArrayQueueL1Pad.cs.
+
+```csharp
+// padded reference
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/Collections/JCTools/MpscArrayQueueL2Pad.cs.
+
+```csharp
+// padded reference
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/Collections/JCTools/MpscArrayQueueMidPad.cs.
+
+```csharp
+// padded reference
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/Collections/JCTools/RefArrayAccessUtil.cs.
+
+```csharp
+/// <summary>
+/// A plain store (no ordering/fences) of an element to a given offset.
+/// </summary>
+/// <typeparam name="T">The element type.</typeparam>
+/// <param name="buffer">The source buffer.</param>
+/// <param name="offset">Computed via <see cref="ConcurrentCircularArrayQueue{T}.CalcElementOffset"/></param>
+/// <param name="e">An orderly kitty.</param>
+/// <summary>
+/// An ordered store(store + StoreStore barrier) of an element to a given offset.
+/// </summary>
+/// <typeparam name="T">The element type.</typeparam>
+/// <param name="buffer">The source buffer.</param>
+/// <param name="offset">Computed via <see cref="ConcurrentCircularArrayQueue{T}.CalcElementOffset"/></param>
+/// <param name="e"></param>
+/// <summary>
+/// A plain load (no ordering/fences) of an element from a given offset.
+/// </summary>
+/// <typeparam name="T">The element type.</typeparam>
+/// <param name="buffer">The source buffer.</param>
+/// <param name="offset">Computed via <see cref="ConcurrentCircularArrayQueue{T}.CalcElementOffset"/></param>
+/// <returns>The element at the given <paramref name="offset"/> in the given <paramref name="buffer"/>.</returns>
+/// <summary>
+/// A volatile load (load + LoadLoad barrier) of an element from a given offset.
+/// </summary>
+/// <typeparam name="T">The element type.</typeparam>
+/// <param name="buffer">The source buffer.</param>
+/// <param name="offset">Computed via <see cref="ConcurrentCircularArrayQueue{T}.CalcElementOffset"/></param>
+/// <returns>The element at the given <paramref name="offset"/> in the given <paramref name="buffer"/>.</returns>
+/// <summary>
+/// Gets the offset in bytes within the array for a given index.
+/// </summary>
+/// <param name="index">The desired element index.</param>
+/// <param name="mask">Mask for the index.</param>
+/// <returns>The offset (in bytes) within the array for a given index.</returns>
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/Collections/ConcurrentCircularArrayQueue.cs.
+
+```csharp
+/// Forked from
+/// <a href="https://github.com/JCTools/JCTools">JCTools</a>
+/// .
+/// A concurrent access enabling class used by circular array based queues this class exposes an offset computation
+/// method along with differently memory fenced load/store methods into the underlying array. The class is pre-padded and
+/// the array is padded on either side to help with False sharing prvention. It is expected theat subclasses handle post
+/// padding.
+/// <p />
+/// Offset calculation is separate from access to enable the reuse of a give compute offset.
+/// <p />
+/// Load/Store methods using a
+/// <i>buffer</i>
+/// parameter are provided to allow the prevention of field reload after a
+/// LoadLoad barrier.
+/// <p />
+// pad data on either end with some empty slots.
+/// <summary>
+/// Calculates an element offset based on a given array index.
+/// </summary>
+/// <param name="index">The desirable element index.</param>
+/// <returns>The offset in bytes within the array for a given index.</returns>
+/// <summary>
+/// A plain store (no ordering/fences) of an element to a given offset.
+/// </summary>
+/// <param name="offset">Computed via <see cref="CalcElementOffset"/>.</param>
+/// <param name="e">A kitty.</param>
+/// <summary>
+/// An ordered store(store + StoreStore barrier) of an element to a given offset.
+/// </summary>
+/// <param name="offset">Computed via <see cref="CalcElementOffset"/>.</param>
+/// <param name="e">An orderly kitty.</param>
+/// <summary>
+/// A plain load (no ordering/fences) of an element from a given offset.
+/// </summary>
+/// <param name="offset">Computed via <see cref="CalcElementOffset"/>.</param>
+/// <returns>The element at the offset.</returns>
+/// <summary>
+/// A volatile load (load + LoadLoad barrier) of an element from a given offset.
+/// </summary>
+/// <param name="offset">Computed via <see cref="CalcElementOffset"/>.</param>
+/// <returns>The element at the offset.</returns>
+// looping
+// padded reference
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/Collections/ConcurrentQueueAdapter.cs.
+
+```csharp
+// CLR adaptation for Netty's unbounded JCTools queue. ConcurrentQueue supplies
+// concurrent publication and FIFO without Java Unsafe/VarHandle dependencies.
+// Its segment sizes and multi-consumer support differ from the upstream queue.
+```
+
+Retired C# explanatory comments: src/Netty.NET.Common/IntegerExtensions.cs.
+
+```csharp
+// first round down to one less than a power of 2
+```
+
 ## Native fixed queues and recycler publication
 
 Pinned PlatformDependent.java:1329-1375/1397-1402 contains five collection-provider
@@ -29,16 +345,17 @@ unused C# throwing declarations after the following actual-consumer review:
 | newConcurrentDeque | transport/pool/SimpleChannelPool.java:46/374/385; offerLast, pollFirst or pollLast according to recency policy | Owner-synchronized LinkedList or another real native double-ended collection is needed when porting the channel pool. The removed IQueue-returning stub never provided this contract; ConcurrentQueue would lose pollLast. |
 
 These are common-factory CLR decisions, not completed implementations of the
-downstream transport/buffer consumers. Existing unbounded MPSC adapter and the two
-remaining bounded/chunked MPSC overloads are not certified by this unit. Keep their
-reviews open. Do not port padding hierarchies or publish a fake native deque.
+downstream transport/buffer consumers. At this earlier fixed-queue checkpoint the unbounded MPSC adapter and two
+bounded/chunked MPSC overloads remained open; their subsequent removal and actual
+consumer boundaries are recorded above. Do not port padding hierarchies or publish a fake native deque.
 
 Original PlatformDependentTest.testVarHandleQueuesWhenUnsafeIsUnavailable contains
 six exact JCTools class-name assertions behind JVM feature assumptions. These
 identities are superseded by native consumer behavior, not recreated as CLR class
 names. Its fixed-capacity purposes are exercised through Recycler; ordinary FIFO
 publication is exercised by the existing NonSticky scenarios. Its chunked-provider
-class identity is JVM-only, while actual bounded/chunked contracts remain pending.
+class identity is JVM-only; the common aliases and actual native consumer purposes
+are subsequently reviewed above, with downstream module integration still pending.
 No existing portable test is removed, weakened or newly skipped.
 
 The existing Recycler reservation/ConcurrentQueue backend has a demonstrated CLR

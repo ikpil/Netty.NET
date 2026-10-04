@@ -29,7 +29,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Netty.NET.Common;
 using Netty.NET.Common.Collections;
-using Netty.NET.Common.Collections.JCTools;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -55,9 +54,6 @@ public static class PlatformDependent
 
     private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE = UnsafeUnavailabilityCause0();
 
-    public static readonly int MPSC_CHUNK_SIZE = 1024;
-    public static readonly int MIN_MAX_MPSC_CAPACITY = MPSC_CHUNK_SIZE * 2;
-    public static readonly int MAX_ALLOWED_MPSC_CAPACITY = Pow2.MAX_POW2;
     private static readonly DirectoryInfo TMPDIR = Tmpdir0();
     private static readonly int BIT_MODE = BitMode0();
     private static readonly string NORMALIZED_ARCH = NormalizeArch(SystemPropertyUtil.Get("os.arch", RuntimeInformation.ProcessArchitecture.ToString()));
@@ -527,32 +523,6 @@ public static class PlatformDependent
                     + HashCodeAsciiSanitizeInt(bytes, offset));
         }
         return hash;
-    }
-
-    /**
-     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
-     * consumer (one thread!).
-     * @return A MPSC queue which may be unbounded.
-     */
-    public static IQueue<T> NewMpscQueue<T>() {
-        return Mpsc.NewMpscQueue<T>();
-    }
-
-    /**
-     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
-     * consumer (one thread!).
-     */
-    public static IQueue<T> NewMpscQueue<T>(int maxCapacity) {
-        return Mpsc.NewMpscQueue<T>(maxCapacity);
-    }
-
-    /**
-     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
-     * consumer (one thread!).
-     * The queue will grow and shrink its capacity in units of the given chunk size.
-     */
-    public static IQueue<T> NewMpscQueue<T>(int chunkSize, int maxCapacity) {
-        return Mpsc.NewChunkedMpscQueue<T>(chunkSize, maxCapacity);
     }
 
     /**

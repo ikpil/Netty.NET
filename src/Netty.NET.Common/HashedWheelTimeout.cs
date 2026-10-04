@@ -78,7 +78,7 @@ internal sealed class HashedWheelTimeout : ITimeout, IRunnable
         // If a task should be canceled we put this to another queue which will be processed on each tick.
         // So this means that we will have a GC latency of max. 1 tick duration which is good enough. This way
         // we can make again use of our MpscLinkedQueue and so minimize the locking / overhead as much as possible.
-        _timer._cancelledTimeouts.Enqueue(this);
+        ConcurrentQueueOperations.EnqueueUninterruptibly(_timer._cancelledTimeouts, this);
         return true;
     }
 

@@ -72,7 +72,7 @@ internal sealed class HashedWheelWorker : IRunnable
 
         for (;;)
         {
-            _timer._timeouts.TryDequeue(out var timeout);
+            ConcurrentQueueOperations.TryDequeueUninterruptibly(_timer._timeouts, out var timeout);
             if (timeout == null)
             {
                 break;
@@ -93,7 +93,7 @@ internal sealed class HashedWheelWorker : IRunnable
         // adds new timeouts in a loop.
         for (int i = 0; i < 100000; i++)
         {
-            _timer._timeouts.TryDequeue(out var timeout);
+            ConcurrentQueueOperations.TryDequeueUninterruptibly(_timer._timeouts, out var timeout);
             if (timeout == null)
             {
                 // all processed
@@ -121,7 +121,7 @@ internal sealed class HashedWheelWorker : IRunnable
     {
         for (;;)
         {
-            _timer._cancelledTimeouts.TryDequeue(out var timeout);
+            ConcurrentQueueOperations.TryDequeueUninterruptibly(_timer._cancelledTimeouts, out var timeout);
             if (timeout == null)
             {
                 // all processed

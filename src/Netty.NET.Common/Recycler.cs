@@ -433,47 +433,16 @@ public abstract class Recycler<T> where T : class
                 before = Volatile.Read(ref count);
                 if (before >= capacity) return false;
             } while (Interlocked.CompareExchange(ref count, before + 1, before) != before);
-            bool interrupted = false;
-            try
-            {
-                for (;;)
-                {
-                    try { queue.Enqueue(value); return true; }
-                    catch (ThreadInterruptedException) { interrupted = true; }
-                }
-            }
+            try { ConcurrentQueueOperations.EnqueueUninterruptibly(queue, value); }
             catch { Interlocked.Decrement(ref count); throw; }
-            finally
-            {
-                // ConcurrentQueue segment transitions can wait on a CLR monitor.
-                // An interrupted transition has not published this value. Keep its
-                // one capacity reservation and restore the interrupt after publication.
-                if (interrupted) Thread.CurrentThread.Interrupt();
-            }
+            return true;
         }
         public H Poll() => TryPoll(out H value) ? value : null;
         private bool TryPoll(out H value)
         {
-            bool interrupted = false;
-            try
-            {
-                for (;;)
-                {
-                    try
-                    {
-                        if (!queue.TryDequeue(out value)) return false;
-                        Interlocked.Decrement(ref count);
-                        return true;
-                    }
-                    catch (ThreadInterruptedException) { interrupted = true; }
-                }
-            }
-            finally
-            {
-                // The CLR can interrupt before an empty segment is advanced, but
-                // never after the returned item is claimed. Retry without a second claim.
-                if (interrupted) Thread.CurrentThread.Interrupt();
-            }
+            if (!ConcurrentQueueOperations.TryDequeueUninterruptibly(queue, out value)) return false;
+            Interlocked.Decrement(ref count);
+            return true;
         }
         public int Size() => Volatile.Read(ref count);
         public void Clear() { while (TryPoll(out _)) { } }

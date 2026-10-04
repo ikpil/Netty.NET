@@ -121,27 +121,32 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1938 cases** on Windows/net10.0:
-**1924 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: bounded-pool-full-debug.trx and bounded-pool-full-release.trx.
-All 1930 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain. Eight recycler bounded/
-concurrent/interrupt contracts are added. The two interrupted CLR segment-change
-cases fail before repair; targeted Debug and checked Release each pass 75/skip
-eight unchanged (83 discovered). The native queue boundary preserves publication,
-claims, reservations and a later pending interrupt without changing the backend.
-Five unused throwing collection-provider facades retire after actual consumer
-review, with every original method comment archived in common-clr-design.md.
-All 271 comment audit rows are unchanged, pinned inventory/paths match and
-uppercase method/local-function verification passes. Existing warnings remain.
-Source statuses do not change; whole common/platform reviews remain unfinished.
-Results remain in ignored TestResults and artifacts/bounded-pool-validation;
-see bounded-pool-identity-and-inventory.json and bounded-pool-comment-audit.json.
-Next: remaining bounded/chunked MPSC factories, private queue scaffolding and
-platform bootstrap/capabilities against actual native consumers. Downstream
-double-ended/channel/buffer integration remains a separate module scope. Full
-suites include every portable test source without PortingBatch; green tests
-do not establish module completion.
+The current default suite executes **1940 cases** on Windows/net10.0:
+**1926 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: mpsc-retirement-full-debug.trx and mpsc-retirement-full-release.trx.
+All 1938 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain. Two timer publication/
+cancellation contracts are added; both fail before repair with CLR interruption.
+Shared native enqueue/dequeue protection retains owner admission/cleanup and the
+later pending interrupt. Targeted Debug passes 22. Expanded checked Release
+finds two existing maximum-delay failures before Java-wrap-compatible deadline
+arithmetic repair; final checked Release passes 201/skips eight (209 discovered).
+Three unused MPSC aliases, three provider constants and 13 unused queue/padding
+files retire after actual consumer review, with all ten pinned provider comments
+and retired C# explanatory comments archived in common-clr-design.md. No new
+per-feature Markdown file or replacement provider/collection hierarchy is added.
+All 271 comment audit rows have unchanged totals and no coverage regression;
+PlatformDependent missing comments decrease from 23 to 16. Pinned inventory/paths
+match and uppercase method/local-function verification passes. Existing warnings
+remain. Source statuses do not change; common/platform review remains unfinished.
+Results remain in ignored TestResults and artifacts/mpsc-retirement-validation;
+see mpsc-retirement-identity-and-inventory.json, mpsc-retirement-comment-audit.json,
+mpsc-retirement-before-debug.trx and
+mpsc-retirement-before-deadline-checked-release.trx.
+Next: platform bootstrap/capabilities and remaining collection consumers. Future
+event-loop capacity/withdrawal and channel/buffer integration remain downstream
+module work. Full suites include every portable test source without PortingBatch;
+green tests do not establish module completion.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.
