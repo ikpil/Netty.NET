@@ -92,7 +92,8 @@ locations in replacement provenance, without inventing classes to host them.
   adapters; ordinary external CLR threads have the default logical group. JVM
   SecurityManager and native group permission checks have no CLR counterpart.
 - Java erased generic lists can reuse one cache across element types. CLR List<T>
-  cannot; changing the requested type clears and replaces the cached list.
+  cannot; actual CLR consumers own native lists and final strings. The unused
+  map scratch list/builder cache and capacity properties were retired.
 - JVM Unsafe availability is false on the CLR. Pointer width, architecture, OS,
   and temporary directory use CLR probes unless a corresponding override exists.
   Remaining native-memory methods are not considered ported by these probes.
@@ -121,35 +122,37 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1979 cases** on Windows/x64/net10.0:
-**1965 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: native-type-resolution-full-debug.trx and native-type-resolution-full-release.trx.
-All 1978 prior outcomes, including 759 original non-Porting identities, the later
-byte-wrap regression and every skip, remain. Two CLR cache-focused identities
-are explicitly adapted to native superclass isolation and shared metadata without
-thread-local allocation; their old/new names are in the identity report.
-One new RunAndCollect handler/payload case fails before matcher-cache retirement
-and passes with direct CLR Type resolution/instance checks on a live worker map.
-Seven portable original generic scenarios keep their names/assertions; two JVM
-erasure skips stay. Seven CLR metadata/variance/array/enclosing scenarios remain.
-Retire the matcher base, reflective wrapper and two duplicate NoOp classes, plus
-both map cache fields/accessors/Size branches. The constructed superclass resolver
-stays unchanged. Native Type/is T rejects null, whereas the old Object no-op
-accepted it; future codec/channel acceptance and resource policies remain separate.
-Targeted Debug and checked Release each discover 123 cases: 118 passed /
-0 failed / 5 unchanged skips. All 271 comment totals/coverage and prior Java/C#
-provenance remain, with both retired original sources archived in the existing
-design record. Pinned inventory/paths and uppercase method/local-function checks
-pass; no original tests are removed and no new compiler-warning identities appear.
-Source statuses are 51 verified / 49 CLR replacement / 14 not applicable /
-71 pending / 20 in progress. The two matcher source decisions are updated;
-whole map and common review remain open.
-Records stay in ignored TestResults and artifacts/native-type-resolution-validation:
-native-type-resolution-before-debug.trx, native-type-resolution-identity-and-inventory.json
-and native-type-resolution-comment-audit.json. Native decisions are in
-common-clr-design.md#direct-clr-type-resolution-and-matching.
-Next: remaining map scratch-storage lifetime and actual StringUtil CSV consumers;
-retain their original parsing contracts while reviewing native storage ownership.
+The current default suite executes **1983 cases** on Windows/x64/net10.0:
+**1969 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: csv-storage-full-debug.trx and csv-storage-full-release.trx.
+All 1979 prior outcomes, including 759 original non-Porting identities, the later
+byte-wrap regression and every skip, remain. One CLR-only scratch-cache fixture
+is explicitly adapted to native CSV output ownership; old/new names are in the
+identity report. Four new large/null/failure storage scenarios pass after three
+observed pre-migration failures: two retained worker maps and one null exception.
+Single/multiple CSV parsing uses input offsets and quote counts with native
+Substring/string.Create final strings, preserving ordering/empty fields and
+validation positions. Map scratch builder/list APIs, settings and their unused
+logger bootstrap retire; original comments remain in the existing design record.
+168511 UTF-16 inputs give 337022 matching parser outputs, error messages/indices
+and nonempty single-field reference results against five exact pinned Java methods.
+The Java clean-builder shim certifies content, not thread-local cache lifetime.
+Warm default CLR allocation is unchanged for small single/multiple inputs;
+128 large escaped single calls reduce 79094784 to 25604096 allocated bytes.
+This is input-specific allocation evidence, not a general speed claim.
+Targeted Debug and checked Release each discover 289 cases: 278 passed /
+0 failed / 11 unchanged skips. All 271 comment totals/coverage and prior Java/C#
+provenance remain; all 67 StringUtil comments stay in place. Pinned inventory/paths
+and uppercase method/local-function checks pass; no original tests are removed
+and no new compiler-warning identities appear.
+Source statuses stay 51 verified / 49 CLR replacement / 14 not applicable /
+71 pending / 20 in progress. Whole map/StringUtil/common review remain open.
+Records stay in ignored TestResults and artifacts/csv-storage-validation:
+csv-storage-before-debug.trx, csv-storage-identity-and-inventory.json,
+csv-storage-java-clr-oracle.json and csv-storage-comment-audit.json.
+Native decisions are in common-clr-design.md#operation-owned-csv-storage.
+Next: remaining map indexed access/thread ownership contracts and StringUtil
+hex/boundary consumers, using actual native semantics and pinned callers.
 Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate

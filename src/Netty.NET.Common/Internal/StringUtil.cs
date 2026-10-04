@@ -567,7 +567,7 @@ public static class StringUtil
             return value;
         }
 
-        StringBuilder unescaped = InternalThreadLocalMap.Get().StringBuilder();
+        int escapedQuotes = 0;
         for (int i = 1; i < last; i++)
         {
             char current = value[i];
@@ -578,6 +578,7 @@ public static class StringUtil
                     // Followed by a double-quote but not the last character
                     // Just skip the next double-quote
                     i++;
+                    escapedQuotes++;
                 }
                 else
                 {
@@ -585,11 +586,9 @@ public static class StringUtil
                     throw NewInvalidEscapedCsvFieldException(value, i);
                 }
             }
-
-            unescaped.Append(current);
         }
 
-        return unescaped.ToString();
+        return UnescapeCsvField(value, 1, length - 2, escapedQuotes);
     }
 
     /**
@@ -602,8 +601,11 @@ public static class StringUtil
      */
     public static List<string> UnescapeCsvFields(string value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         List<string> unescaped = new List<string>(2);
-        StringBuilder current = InternalThreadLocalMap.Get().StringBuilder();
+        // Each returned field owns its string; only offsets/counts live during parsing.
+        int start = 0;
+        int escapedQuotes = 0;
         bool quoted = false;
         int last = value.Length - 1;
         for (int i = 0; i <= last; i++)
@@ -617,7 +619,7 @@ public static class StringUtil
                         if (i == last)
                         {
                             // Add the last field and return
-                            unescaped.Add(current.ToString());
+                            unescaped.Add(UnescapeCsvField(value, start + 1, i - start - 1, escapedQuotes));
                             return unescaped;
                         }
 
@@ -625,7 +627,7 @@ public static class StringUtil
                         if (next == DOUBLE_QUOTE)
                         {
                             // 2 double-quotes should be unescaped to one
-                            current.Append(DOUBLE_QUOTE);
+                            escapedQuotes++;
                             break;
                         }
 
@@ -633,15 +635,15 @@ public static class StringUtil
                         {
                             // This is the end of a field. Let's start to parse the next field.
                             quoted = false;
-                            unescaped.Add(current.ToString());
-                            current.Length = 0;
+                            unescaped.Add(UnescapeCsvField(value, start + 1, i - start - 2, escapedQuotes));
+                            start = i + 1;
+                            escapedQuotes = 0;
                             break;
                         }
 
                         // double-quote followed by other character is invalid
                         throw NewInvalidEscapedCsvFieldException(value, i - 1);
                     default:
-                        current.Append(c);
                         break;
                 }
             }
@@ -651,11 +653,11 @@ public static class StringUtil
                 {
                     case COMMA:
                         // Start to parse the next field
-                        unescaped.Add(current.ToString());
-                        current.Length = 0;
+                        unescaped.Add(UnescapeCsvField(value, start, i - start, 0));
+                        start = i + 1;
                         break;
                     case DOUBLE_QUOTE:
-                        if (current.Length == 0)
+                        if (i == start)
                         {
                             quoted = true;
                             break;
@@ -669,7 +671,6 @@ public static class StringUtil
                         // special characters appears without being enclosed with double-quotes
                         throw NewInvalidEscapedCsvFieldException(value, i);
                     default:
-                        current.Append(c);
                         break;
                 }
             }
@@ -680,8 +681,25 @@ public static class StringUtil
             throw NewInvalidEscapedCsvFieldException(value, last);
         }
 
-        unescaped.Add(current.ToString());
+        unescaped.Add(UnescapeCsvField(value, start, value.Length - start, 0));
         return unescaped;
+    }
+
+    private static string UnescapeCsvField(string value, int start, int length, int escapedQuotes)
+    {
+        if (escapedQuotes == 0) return value.Substring(start, length);
+        // Validation counted each doubled quote; allocate and populate only the final immutable string.
+        return string.Create(length - escapedQuotes, (value, start, length), static (destination, state) =>
+        {
+            ReadOnlySpan<char> source = state.value.AsSpan(state.start, state.length);
+            int written = 0;
+            for (int index = 0; index < source.Length; index++)
+            {
+                char current = source[index];
+                destination[written++] = current;
+                if (current == DOUBLE_QUOTE) index++;
+            }
+        });
     }
 
     /**

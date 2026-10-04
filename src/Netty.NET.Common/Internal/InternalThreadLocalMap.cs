@@ -18,10 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Internal;
 
@@ -42,14 +40,7 @@ public sealed class InternalThreadLocalMap
     // Internal use only.
     public static readonly int VARIABLES_TO_REMOVE_INDEX = NextVariableIndex();
 
-    private static readonly int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
-
     private static readonly int INDEXED_VARIABLE_TABLE_INITIAL_SIZE = 32;
-
-    private static readonly int STRING_BUILDER_INITIAL_SIZE;
-    private static readonly int STRING_BUILDER_MAX_SIZE;
-
-    private static readonly IInternalLogger logger;
 
     /** Internal use only. */
     public static readonly object UNSET = new object();
@@ -60,29 +51,6 @@ public sealed class InternalThreadLocalMap
     // Core thread-locals
     private int _localChannelReaderStackDepth;
     private ConditionalWeakTable<Type, StrongBox<bool>> _handlerSharableCache;
-
-    // String-related thread-locals
-    private StringBuilder _stringBuilder;
-
-    // ArrayList-related thread-locals
-    private System.Collections.IList _arrayList;
-
-    static InternalThreadLocalMap()
-    {
-        STRING_BUILDER_INITIAL_SIZE =
-            SystemPropertyUtil.GetInt("io.netty.threadLocalMap.stringBuilder.initialSize", 1024);
-        STRING_BUILDER_MAX_SIZE =
-            SystemPropertyUtil.GetInt("io.netty.threadLocalMap.stringBuilder.maxSize", 1024 * 4);
-
-        // Ensure the InternalLogger is initialized as last field in this class as InternalThreadLocalMap might be used
-        // by the InternalLogger itself. For this its important that all the other static fields are correctly
-        // initialized.
-        //
-        // See https://github.com/netty/netty/issues/12931.
-        logger = InternalLoggerFactory.GetInstance(typeof(InternalThreadLocalMap));
-        logger.Debug("-Dio.netty.threadLocalMap.stringBuilder.initialSize: {}", STRING_BUILDER_INITIAL_SIZE);
-        logger.Debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
-    }
 
     private InternalThreadLocalMap()
     {
@@ -168,16 +136,6 @@ public sealed class InternalThreadLocalMap
             count++;
         }
 
-        if (_stringBuilder != null)
-        {
-            count++;
-        }
-
-        if (_arrayList != null)
-        {
-            count++;
-        }
-
         object v = IndexedVariable(VARIABLES_TO_REMOVE_INDEX);
         if (v != null && v != UNSET)
         {
@@ -187,46 +145,6 @@ public sealed class InternalThreadLocalMap
         }
 
         return count;
-    }
-
-    public StringBuilder StringBuilder()
-    {
-        StringBuilder sb = _stringBuilder;
-        if (sb == null)
-        {
-            return _stringBuilder = new StringBuilder(STRING_BUILDER_INITIAL_SIZE);
-        }
-
-        if (sb.Capacity > STRING_BUILDER_MAX_SIZE)
-        {
-            sb.Clear();
-            sb.Capacity = STRING_BUILDER_INITIAL_SIZE;
-        }
-
-        sb.Length = 0;
-        return sb;
-    }
-
-    public List<E> ArrayList<E>()
-    {
-        return ArrayList<E>(DEFAULT_ARRAY_LIST_INITIAL_CAPACITY);
-    }
-
-    //@SuppressWarnings("unchecked")
-    public List<E> ArrayList<E>(int minCapacity)
-    {
-        // CLR generic lists cannot share storage across different element types.
-        // Clear the old list before replacing it so cached objects are released.
-        if (_arrayList is not List<E> list)
-        {
-            _arrayList?.Clear();
-            _arrayList = new List<E>(minCapacity);
-            return (List<E>)_arrayList;
-        }
-
-        list.Clear();
-        list.EnsureCapacity(minCapacity);
-        return list;
     }
 
     public ConditionalWeakTable<Type, StrongBox<bool>> HandlerSharableCache()

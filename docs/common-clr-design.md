@@ -3844,3 +3844,112 @@ public final class NoOpTypeParameterMatcher extends TypeParameterMatcher {
     }
 }
 ```
+
+
+## Operation-owned CSV storage
+
+Reopen StringUtil.java:458-584's single/multiple CSV parsers for worker scratch
+retention and native null validation. Before migration both valid/invalid parsing
+paths create/retain map state; multiple-field null input throws NullReferenceException.
+Three of four native storage/null scenarios fail before migration, then pass.
+Real downstream users are CombinedHttpHeaders.java:142/170 and HTTP/2/3
+HttpConversionUtil.java:567/500. Preserve their decoded field order/content,
+empty/trailing fields, doubled quotes, quoted CR/LF, unquoted special-character
+rejection and exact error positions/messages; this is not a broader CSV dialect.
+Single unquoted input still returns its original reference.
+
+Parse immutable CLR strings with offsets and validated doubled-quote counts.
+Use Substring for unchanged field ranges and string.Create for the final decoded
+string when quotes collapse. One private result-construction routine serves both
+parsers; no character buffer/provider/pool or thread-local builder remains.
+ArgumentNullException(value) precedes multiple-field allocation/parsing.
+168,511 inputs, including every UTF-16 unit raw/quoted and exhaustive strings of
+length zero through five over eight CSV characters, produce 337,022 matching
+outputs/error messages/nonempty single-field reference results against five exact
+pinned Java methods. The Java clean-builder shim verifies parser content, not
+thread-local lifecycle. Separate native tests verify no worker state and stable
+owned outputs after large data, failure and following calls.
+
+Retire both unused map scratch APIs/fields/Size branches, capacity settings and
+their now-unused logger bootstrap. Current AsciiString.split already uses an owned
+List; remaining pinned HTTP cookie/multipart list and cookie/HTTP conversion builder
+users need native operation-owned List/StringBuilder or final-string construction
+when those modules are ported. Their format/order/lifetime policies are not certified
+by this common checkpoint. No erased cross-type scratch cache is invented in C#.
+Replace one CLR-only cache fixture with CSV output ownership and explicitly map
+its identity; no original Java fixture is changed. Original map comments follow.
+Warm default CLR-baseline allocation: 20,000 small single calls use 640,000 bytes
+in both versions; 20,000 small multiple calls use 3,840,000 in both; 128 large
+escaped single calls use 79,094,784 before and 25,604,096 after. The harness uses
+exact prior CLR parser bodies/default 1024/4096 cache policy. This is input-specific
+allocation evidence, not Java performance, throughput or a general speed claim.
+All 67 StringUtil comments stay in place; whole map/StringUtil/common review remains open.
+
+Retired scratch storage translation of pinned InternalThreadLocalMap.java:74-101/213-264 (original comment provenance):
+
+```csharp
+    // String-related thread-locals
+    private StringBuilder _stringBuilder;
+
+    // ArrayList-related thread-locals
+    private System.Collections.IList _arrayList;
+
+    static InternalThreadLocalMap()
+    {
+        STRING_BUILDER_INITIAL_SIZE =
+            SystemPropertyUtil.GetInt("io.netty.threadLocalMap.stringBuilder.initialSize", 1024);
+        STRING_BUILDER_MAX_SIZE =
+            SystemPropertyUtil.GetInt("io.netty.threadLocalMap.stringBuilder.maxSize", 1024 * 4);
+
+        // Ensure the InternalLogger is initialized as last field in this class as InternalThreadLocalMap might be used
+        // by the InternalLogger itself. For this its important that all the other static fields are correctly
+        // initialized.
+        //
+        // See https://github.com/netty/netty/issues/12931.
+        logger = InternalLoggerFactory.GetInstance(typeof(InternalThreadLocalMap));
+        logger.Debug("-Dio.netty.threadLocalMap.stringBuilder.initialSize: {}", STRING_BUILDER_INITIAL_SIZE);
+        logger.Debug("-Dio.netty.threadLocalMap.stringBuilder.maxSize: {}", STRING_BUILDER_MAX_SIZE);
+    }
+
+
+    public StringBuilder StringBuilder()
+    {
+        StringBuilder sb = _stringBuilder;
+        if (sb == null)
+        {
+            return _stringBuilder = new StringBuilder(STRING_BUILDER_INITIAL_SIZE);
+        }
+
+        if (sb.Capacity > STRING_BUILDER_MAX_SIZE)
+        {
+            sb.Clear();
+            sb.Capacity = STRING_BUILDER_INITIAL_SIZE;
+        }
+
+        sb.Length = 0;
+        return sb;
+    }
+
+    public List<E> ArrayList<E>()
+    {
+        return ArrayList<E>(DEFAULT_ARRAY_LIST_INITIAL_CAPACITY);
+    }
+
+    //@SuppressWarnings("unchecked")
+    public List<E> ArrayList<E>(int minCapacity)
+    {
+        // CLR generic lists cannot share storage across different element types.
+        // Clear the old list before replacing it so cached objects are released.
+        if (_arrayList is not List<E> list)
+        {
+            _arrayList?.Clear();
+            _arrayList = new List<E>(minCapacity);
+            return (List<E>)_arrayList;
+        }
+
+        list.Clear();
+        list.EnsureCapacity(minCapacity);
+        return list;
+    }
+
+```

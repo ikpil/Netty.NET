@@ -80,20 +80,16 @@ public class ThreadLocalContractTest : IDisposable
     }
 
     [Fact]
-    public void CachedCollectionsHandleDifferentClrElementTypesAndReleaseOldEntries()
+    public void CsvResultsRemainOwnedAcrossFollowingCalls()
     {
-        var map = InternalThreadLocalMap.Get();
-        var strings = map.ArrayList<string>();
-        strings.Add("entry");
-        var objects = map.ArrayList<object>();
-        Assert.Empty(objects);
-        Assert.Empty(strings);
-        Assert.Same(objects, map.ArrayList<object>());
-        var builder = map.StringBuilder();
-        builder.Append('x', 10000);
-        Assert.Same(builder, map.StringBuilder());
-        Assert.Empty(builder.ToString());
-        Assert.Equal(1024, builder.Capacity);
+        var first = StringUtil.UnescapeCsvFields("\"first\",\"a\"\"b\"");
+        var second = StringUtil.UnescapeCsvFields("second,");
+        string large = new string('x', 10000);
+        Assert.Equal(large, StringUtil.UnescapeCsv("\"" + large + "\""));
+        Assert.Equal(new[] { "first", "a\"b" }, first);
+        Assert.Equal(new[] { "second", "" }, second);
+        Assert.NotSame(first, second);
+        Assert.Null(InternalThreadLocalMap.GetIfSet());
     }
 
     private sealed class TrackingLocal : FastThreadLocal<string>
