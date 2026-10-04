@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -40,6 +41,12 @@ public static class StringUtil
     private static readonly string[] BYTE2HEX_PAD = new string[256];
     private static readonly string[] BYTE2HEX_NOPAD = new string[256];
     private static readonly byte[] HEX2B;
+
+    // Resolver token boundaries retain the pinned delimiter set. CLR whitespace includes NEL/non-breaking
+    // spaces and omits U+001C..U+001F; using its general predicate would change parsed tokens.
+    private static readonly SearchValues<char> TOKEN_WHITESPACE = SearchValues.Create(
+        "\u0009\u000a\u000b\u000c\u000d\u001c\u001d\u001e\u001f\u0020\u1680" +
+        "\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u2028\u2029\u205f\u3000");
 
     /**
      * 2 - Quote character at beginning and end.
@@ -97,6 +104,7 @@ public static class StringUtil
      */
     public static string SubstringAfter(string value, char delim)
     {
+        ArgumentNullException.ThrowIfNull(value);
         int pos = value.IndexOf(delim);
         if (pos >= 0)
         {
@@ -113,6 +121,7 @@ public static class StringUtil
      */
     public static string SubstringBefore(string value, char delim)
     {
+        ArgumentNullException.ThrowIfNull(value);
         int pos = value.IndexOf(delim);
         if (pos >= 0)
         {
@@ -785,15 +794,11 @@ public static class StringUtil
      */
     public static int IndexOfNonWhiteSpace(string seq, int offset)
     {
-        for (; offset < seq.Length; ++offset)
-        {
-            if (!char.IsWhiteSpace(seq[offset]))
-            {
-                return offset;
-            }
-        }
-
-        return -1;
+        ArgumentNullException.ThrowIfNull(seq);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        if (offset >= seq.Length) return -1;
+        int relative = seq.AsSpan(offset).IndexOfAnyExcept(TOKEN_WHITESPACE);
+        return relative < 0 ? -1 : offset + relative;
     }
 
     /**
@@ -805,15 +810,11 @@ public static class StringUtil
      */
     public static int IndexOfWhiteSpace(string seq, int offset)
     {
-        for (; offset < seq.Length; ++offset)
-        {
-            if (char.IsWhiteSpace(seq[offset]))
-            {
-                return offset;
-            }
-        }
-
-        return -1;
+        ArgumentNullException.ThrowIfNull(seq);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        if (offset >= seq.Length) return -1;
+        int relative = seq.AsSpan(offset).IndexOfAny(TOKEN_WHITESPACE);
+        return relative < 0 ? -1 : offset + relative;
     }
 
     /**
@@ -826,7 +827,7 @@ public static class StringUtil
      */
     public static bool IsSurrogate(char c)
     {
-        return c >= '\uD800' && c <= '\uDFFF';
+        return char.IsSurrogate(c);
     }
 
     private static bool IsDoubleQuote(char c)
@@ -843,8 +844,8 @@ public static class StringUtil
      */
     public static bool EndsWith(string s, char c)
     {
-        int len = s.Length;
-        return len > 0 && s[len - 1] == c;
+        ArgumentNullException.ThrowIfNull(s);
+        return s.EndsWith(c);
     }
 
     /**

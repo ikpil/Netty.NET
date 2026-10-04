@@ -122,41 +122,32 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2022 cases** on Windows/x64/net10.0:
-**2008 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: hex-encode-full-debug.trx and hex-encode-full-release.trx.
-All 2005 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain unchanged. Seventeen new
-cases cover negative/overflowing/oversize hex ranges, native null/empty validation,
-masked byte integers, padded/unpadded zero/slice content, builder reference/prefix
-and native capacity-failure partial output. Ten pre-repair cases fail; seven pass
-as unchanged contract checks. Input spans validate before output allocation/append
-using subtraction, avoiding unchecked end/capacity arithmetic and partial invalid
-range writes. All encoder sources/ranges/destinations validate even for empty
-ranges; this tightens incidental invalid-empty acceptance. The previously reviewed
-decode slice's original explicit zero-length no-access policy remains separate.
-Padded output uses Convert.ToHexStringLower, unpadded output uses checked final
-length/string.Create; both create only the final string. Leading zero bytes skip
-while retaining zero for all-zero nonempty input. Native builders append cached
-byte entries directly; valid-input capacity exceptions retain CLR partial output.
-Twelve exact pinned Java methods yield 133562 matching lowercase/content/prefix/
-identity rows, including all 65536 byte pairs and 2051 signed/masked integers.
-Warm Release allocations for 20000 small padded/unpadded calls reduce
-2880000/2720000 -> 960000/800000 bytes; both large forms reduce
-33566744 -> 16780312 bytes for 128 calls. No general speed claim is made.
-Targeted Debug and checked Release each pass 107 cases, zero failures/skips.
-All 271 comment totals/coverage and prior Java/C# provenance remain; StringUtil's
-67 original comments stay. Pinned inventory/paths and uppercase declaration checks
-pass, with no original test removed or new compiler-warning identity. Source
-statuses stay 52 verified / 49 CLR replacement / 14 not applicable / 71 pending /
-19 in progress. Remaining StringUtil boundary and whole common reviews stay open.
-Records stay in ignored TestResults and artifacts/hex-encode-validation:
-hex-encode-before-debug.trx, hex-encode-identity-and-inventory.json,
-hex-encode-java-clr-oracle.json, allocation.json and hex-encode-comment-audit.json.
-Native decisions are in common-clr-design.md#native-hex-output-and-builder-bounds.
-Next: StringUtil whitespace classification/search and remaining native null/bounds
-contracts, then broader native thread-wrapper API review using pinned callers.
-Full suites include every portable test source without PortingBatch.
+The current default suite executes **2034 cases** on Windows/x64/net10.0:
+**2020 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: string-boundary-full-debug.trx and string-boundary-full-release.trx.
+All 2022 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain. Twelve new cases cover
+Java/CLR whitespace differences, resolver-style token/IP boundaries, native null/
+negative errors, end/oversize sentinels, UTF-16 suffix/surrogate and substring
+endpoints. Ten fail before repair; two preserve already correct behavior.
+Native SearchValues/span token searches retain the original delimiter policy;
+suffix/surrogate helpers use the BCL. Detailed choices and actual consumer scope:
+common-clr-design.md#native-string-token-boundaries. Whole StringUtil/common remain
+open; future DNS integration and historical JDK Unicode tables are not certified.
+Six pinned methods executed under Corretto 21.0.11_10 yield 65657 matching rows,
+covering all UTF-16 code units and 121 extra boundary/suffix inputs. The domain
+confirms 25 token delimiters and precisely eight differences from CLR whitespace.
+Targeted Debug and checked Release each pass 105 cases, zero failures/skips.
+All 271 comment totals/coverage, prior provenance, original fixture identities,
+pinned inventory/paths and uppercase declarations pass; no new warning identity.
+Source statuses stay 52 verified / 49 CLR replacement / 14 not applicable /
+71 pending / 19 in progress. No new Markdown file or original exclusion is added.
+Records stay in ignored TestResults and artifacts/string-boundary-validation:
+string-boundary-before-debug.trx, string-boundary-identity-and-inventory.json,
+string-boundary-java-clr-oracle.json, classification.json and comment audit.
+Next: remaining StringUtil joining/type-name/newline contracts and actual callers,
+then broader native thread-wrapper API review. Full portable sources build by
+default without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

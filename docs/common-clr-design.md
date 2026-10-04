@@ -4081,3 +4081,36 @@ bytes. These are allocation measurements for the stated inputs, not speed claims
 Raw oracle/allocation/validation records stay ignored in hex-encode-validation;
 the current full/checked counts and preserved fixture inventory are in
 common-porting.md. No new Markdown document or original-test exclusion is added.
+
+
+## Native string token boundaries
+
+StringUtil.java:604-628 searches with Character.isWhitespace. The actual consumer
+UnixResolverDnsServerAddressStreamProvider.java:185-205 separates nameserver values
+and comments; using general CLR char.IsWhiteSpace changes its tokens. On the
+executed Corretto 21.0.11_10 reference, Java accepts U+001C..U+001F and rejects
+NEL/NBSP/figure-space/narrow-NBSP (U+0085/U+00A0/U+2007/U+202F), unlike the CLR.
+Eight classification cases and the resolver-style token/IP scenario fail before
+repair. Native null/negative argument scenarios add one failure; two endpoint/
+surrogate/content checks already pass. No full DNS resolver port is claimed.
+
+Use one immutable BCL SearchValues<char> for the 25 reference delimiter code units
+and native span IndexOfAny/IndexOfAnyExcept. This is the required token policy,
+not a JDK character API facade; it avoids dependent runtime Unicode predicates.
+Return absolute UTF-16 indexes, retaining -1 at/beyond the end (including MaxValue).
+Null/negative inputs reject with native argument exceptions before slice creation.
+Character suffixes and surrogate classification use native string.EndsWith(char)
+and char.IsSurrogate; substring helpers now validate null explicitly while keeping
+their original absent-delimiter/empty-endpoint semantics. Original source comments
+stay alongside the implementation. OWS remains its separately reviewed SP/HTAB
+contract; this set is not substituted into CSV/OWS trimming or general CLR text.
+
+Six exact pinned methods run without shims: all 65536 UTF-16 code units at search
+offsets 0/1/2, substring endpoints, surrogate classification and character suffixes,
+plus 121 empty/end/oversize/NUL/paired-surrogate cases, produce 65657 matching rows.
+The complete domain confirms precisely eight CLR predicate differences. This
+records the executed JDK/runtime reference, not every historical JDK Unicode table.
+Default and checked validation, preserved fixture identities/comment coverage and
+remaining source scope are in common-porting.md; raw oracle records remain ignored
+in artifacts/string-boundary-validation. No performance/whole-source completion
+claim or new Markdown artifact is added.
