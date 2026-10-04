@@ -3056,3 +3056,113 @@ common/src/main/java/io/netty/util/CharsetUtil.java at the pinned commit:
      * @return The decoder for the specified {@code charset}
      */
 ```
+
+
+## Native concurrent membership and map construction
+
+Pinned ResourceLeakDetector.java:169-172, 329, 418-436 and 511-518 uses
+ConcurrentHashMap key sets only for tracker membership and report deduplication.
+The actual CLR owners now hold ConcurrentDictionary<DefaultResourceLeak<T>,byte>
+with ReferenceEqualityComparer.Instance and ConcurrentDictionary<string,byte>
+with StringComparer.Ordinal. TryAdd/TryRemove preserve single-key atomic claims:
+exactly one Close/Dispose wins, and each report text is published once. No
+check-then-act sequence, enumeration, set algebra or callback factory is needed.
+Keep the existing GC registration, record atomics, reachability fence and
+report/listener sequence. Existing concurrent-close, duplicate-report, disabled
+reporting and multi-tracker lifetime contracts exercise these owners.
+
+The C#-only ConcurrentHashSet and its unused IsEmpty overload retire. Their
+unconsumed snapshot/set-algebra surface supplies no Netty common contract and
+would require an additional comparer/atomicity policy. This applies the earlier
+concurrent-set decision to the actual owner rather than adding another facade.
+
+Pinned PlatformDependent.java:558-612 already deprecates all five map factories
+in favor of direct ConcurrentHashMap construction. No tracked C# caller uses
+these wrappers; three CLR overloads ignored capacity/load-factor/concurrency
+arguments. Construct ConcurrentDictionary directly with the owner's comparer
+and relevant native constructor. Java load factor has no corresponding CLR
+constructor contract; validate/adapt future public input at its owning boundary.
+No compatibility factory silently discards that input.
+
+The remaining pinned all-module production caller is HTTP/3's
+Http3ServerPushStreamManager.java:74-79 (initial push-stream capacity hint).
+Its later computeIfPresent callback closes a stream and returns null to remove
+the key. That atomic per-key transition must receive an explicit owner policy
+when HTTP/3 is ported: ConcurrentDictionary GetOrAdd/AddOrUpdate factories may
+run repeatedly and do not provide Java's side-effecting callback guarantee.
+This common constructor retirement does not certify that downstream transition.
+
+NormalizeRuntime is an unused C#-only product/backend classifier with no pinned
+Java counterpart. FrameworkDescription or Environment.Version directly serves
+runtime diagnostics; guessing CoreCLR/Mono/Unity from a product string or type
+lookup does not establish the selected backend. Remove that classifier without
+adding a replacement probe API. Whole PlatformDependent/common review stays open.
+
+Original five Java Javadocs, the prior C# adaptations and retired helper comments
+remain verbatim below. No original leak comments or portable tests are removed.
+
+```java
+/**
+     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
+     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
+     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
+     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
+     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentMap} implementation for the current platform.
+     * @deprecated please use new ConcurrentHashMap<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
+     */
+
+/**
+     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
+     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
+     */
+
+// dotnet version
+
+// 2 runtime check
+
+// fallback (NativeAOT, Wasm 등)
+
+/// <summary>
+
+/// Represents a thread-safe, unordered collection of unique items.
+
+/// </summary>
+
+/// <typeparam name="T">The type of elements in the hash set.</typeparam>
+```

@@ -26,11 +26,6 @@ public static class CollectionExtensions
         return 0 >= c.Count;
     }
 
-    public static bool IsEmpty<T>(this ConcurrentHashSet<T> c)
-    {
-        return 0 >= c.Count;
-    }
-
     public static bool IsEmpty<T>(this BlockingCollection<T> c)
     {
         return 0 >= c.Count;

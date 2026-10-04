@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Threading;
-using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
@@ -138,9 +137,9 @@ public static class ResourceLeakDetector
 public class ResourceLeakDetector<T> where T : class
 {
     /** the collection of active resources */
-    private readonly ConcurrentHashSet<DefaultResourceLeak<T>> allLeaks = new();
+    private readonly ConcurrentDictionary<DefaultResourceLeak<T>, byte> allLeaks = new(ReferenceEqualityComparer.Instance);
     private readonly ConcurrentQueue<DefaultResourceLeak<T>> refQueue = new();
-    private readonly ConcurrentHashSet<string> reportedLeaks = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, byte> reportedLeaks = new(StringComparer.Ordinal);
     private readonly string resourceType;
     private readonly int samplingInterval;
     /**
@@ -254,7 +253,7 @@ public class ResourceLeakDetector<T> where T : class
         {
             if (!leak.Dispose()) continue;
             string records = leak.GetReportAndClearRecords();
-            if (!reportedLeaks.Add(records)) continue;
+            if (!reportedLeaks.TryAdd(records, 0)) continue;
             if (records.Length == 0) ReportUntracedLeak(resourceType);
             else ReportTracedLeak(resourceType, records);
             Volatile.Read(ref leakListener)?.OnLeak(resourceType, records);

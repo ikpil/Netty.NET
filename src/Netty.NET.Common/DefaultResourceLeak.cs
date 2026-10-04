@@ -18,11 +18,11 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
     // CLR fields use native atomic operations; Java updater casts are unnecessary.
     private TraceRecord head;
     private int droppedRecords;
-    private readonly ISet<DefaultResourceLeak<T>> allLeaks;
+    private readonly ConcurrentDictionary<DefaultResourceLeak<T>, byte> allLeaks;
     private readonly int trackedHash;
     private readonly CollectedObjectWatch.Registration registration;
 
-    internal DefaultResourceLeak(T referent, ConcurrentQueue<DefaultResourceLeak<T>> refQueue, ISet<DefaultResourceLeak<T>> allLeaks, object initialHint)
+    internal DefaultResourceLeak(T referent, ConcurrentQueue<DefaultResourceLeak<T>> refQueue, ConcurrentDictionary<DefaultResourceLeak<T>, byte> allLeaks, object initialHint)
     {
         ArgumentNullException.ThrowIfNull(referent);
         this.allLeaks = allLeaks;
@@ -30,7 +30,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         // It's important that we not store a reference to the referent as this would disallow it from
         // be collected via the WeakReference.
         trackedHash = RuntimeHelpers.GetHashCode(referent);
-        allLeaks.Add(this);
+        allLeaks.TryAdd(this, 0);
         registration = CollectedObjectWatch.Register(referent, () => refQueue.Enqueue(this));
         // Create a new Record so we always have the creation stacktrace included.
         try { head = initialHint == null ? new TraceRecord(TraceRecord.BOTTOM) : new TraceRecord(TraceRecord.BOTTOM, initialHint); }
@@ -86,10 +86,10 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         } while (!ReferenceEquals(Interlocked.CompareExchange(ref head, next, previous), previous));
         if (dropped) Interlocked.Increment(ref droppedRecords);
     }
-    internal bool Dispose() { registration.Cancel(); return allLeaks.Remove(this); }
+    internal bool Dispose() { registration.Cancel(); return allLeaks.TryRemove(this, out _); }
     public bool Close()
     {
-        if (!allLeaks.Remove(this)) return false;
+        if (!allLeaks.TryRemove(this, out _)) return false;
         // Call clear so the reference is not even enqueued.
         registration.Cancel();
         Volatile.Write(ref head, TRACK_CLOSE ? new TraceRecord(true) : null);

@@ -123,30 +123,31 @@ Optimization follows behavioral verification and measured performance.
 
 The current default suite executes **1958 cases** on Windows/x64/net10.0:
 **1944 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: platform-state-full-debug.trx and platform-state-full-release.trx.
-All 1940 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain. Eighteen CLR runtime/cache/
-file scenarios are added. The first 16 new cases reproduce 14 identity/cache
-failures before repair; the two initial filesystem cases already pass.
-Actual OperatingSystem/ProcessArchitecture now select native runtime identity;
-JVM overrides and duplicate width/username facades retire. Linux classifiers now
-publish an ordered unique immutable IReadOnlyList through standard Lazy; malformed
-settings fail and remain cached only within that preference domain. Existing
-property parser fixtures remain independent, and native OS operations continue.
-Targeted Debug passes 32; affected checked Release passes all 115. All 271 comment
-audit totals/coverage are unchanged, prior Java/C# provenance remains and stranded
-direct-memory documentation is moved away from the unrelated temporary-dir method.
-Pinned inventory/paths match and uppercase method/local-function verification
-passes. Existing warnings remain. Source statuses stay unchanged; platform/common
-review and downstream native broadcast/loading policy remain open.
-Results remain in ignored TestResults and artifacts/platform-state-validation;
-see platform-state-before-debug.trx, platform-state-identity-and-inventory.json
-and platform-state-comment-audit.json. Actual consumer/native decisions and
-original comments are in common-clr-design.md. OS-release parsing uses real
-temporary files; other OS/architecture and Unix permission-denial execution are
-not claimed. Next: remaining concurrent-map/provider aliases, normalized runtime
-diagnostics and collection consumers, based on actual common/downstream uses.
-Full suites include every portable test source without PortingBatch.
+Evidence: native-maps-full-debug.trx and native-maps-full-release.trx.
+All 1958 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain unchanged. No tests are
+added or removed for this owner/unused-facade migration.
+Leak tracker membership now uses a direct reference-equality ConcurrentDictionary;
+report deduplication uses an ordinal-text ConcurrentDictionary. Native TryAdd/
+TryRemove preserve atomic single-key claims and the existing GC/report lifecycle.
+Retire the unused C#-only ConcurrentHashSet and its IsEmpty overload, all five
+deprecated platform map factories and the unused NormalizeRuntime classifier.
+Existing leak contracts pass all 46 affected Debug cases; affected leak/platform/
+classifier checked Release passes all 84. All 271 comment audit totals remain;
+PlatformDependent original comment coverage improves from 113/129 to 118/129
+by preserving the five original map-factory Javadocs exactly. Every other file's
+coverage and prior Java/C# provenance remain. The remaining 11 platform comments
+are still open work; this checkpoint does not certify whole-source completion.
+Pinned inventory/paths and uppercase method/local-function checks pass.
+Source statuses stay unchanged. Results remain in ignored TestResults and
+artifacts/native-maps-validation; see native-maps-identity-and-inventory.json
+and native-maps-comment-audit.json. Native decisions and original comments are
+in common-clr-design.md#native-concurrent-membership-and-map-construction.
+HTTP/3's capacity-hint caller and side-effecting computeIfPresent state transition
+are reviewed as future module boundaries; no downstream implementation is claimed.
+Next: remaining platform counter/random aliases and actual collection consumers,
+using pinned contracts and native CLR ownership. Full suites include every
+portable test source without PortingBatch. Whole common review remains open.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

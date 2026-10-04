@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -195,53 +194,6 @@ public static class PlatformDependent
      */
     public static DirectoryInfo Tmpdir() {
         return TMPDIR;
-    }
-
-    /**
-     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
-     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
-     */
-    [Obsolete]
-    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>() {
-        return new ConcurrentDictionary<K, V>();
-    }
-
-    /**
-     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
-     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
-     */
-    [Obsolete]
-    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(int initialCapacity) {
-        return new ConcurrentDictionary<K, V>();
-    }
-
-    /**
-     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
-     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
-     */
-    [Obsolete]
-    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(int initialCapacity, float loadFactor) {
-        return new ConcurrentDictionary<K, V>();
-    }
-
-    /**
-     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
-     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
-     */
-    [Obsolete]
-    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(
-            int initialCapacity, float loadFactor, int concurrencyLevel)
-    {
-        return new ConcurrentDictionary<K, V>();
-    }
-
-    /**
-     * Creates a new fastest {@link ConcurrentDictionary} implementation for the current platform.
-     * @deprecated please use new ConcurrentDictionary<K, V>() directly.
-     */
-    [Obsolete]
-    public static ConcurrentDictionary<K, V> NewConcurrentHashMap<K, V>(IDictionary<K, V> map) {
-        return new ConcurrentDictionary<K, V>(map);
     }
 
     /**
@@ -743,30 +695,6 @@ public static class PlatformDependent
             default:
                 return "unknown";
         }
-    }
-
-    public static string NormalizeRuntime()
-    {
-        // dotnet version
-        string desc = RuntimeInformation.FrameworkDescription ?? "Unknown CLR";
-
-        // 2 runtime check
-        if (Type.GetType("Mono.Runtime") != null)
-            return "Mono";
-
-        if (Type.GetType("UnityEngine.Application") != null)
-            return "Unity (IL2CPP or MonoBackend)";
-
-        if (desc.Contains(".NET Framework", StringComparison.OrdinalIgnoreCase))
-            return "CLR (.NET Framework)";
-
-        if (desc.Contains(".NET Core", StringComparison.OrdinalIgnoreCase))
-            return "CoreCLR (.NET Core)";
-
-        if (desc.Contains(".NET", StringComparison.OrdinalIgnoreCase))
-            return "CoreCLR (.NET 5/6/7/8/9+)";
-
-        return desc; // fallback (NativeAOT, Wasm 등)
     }
 
     private static string NormalizeOs(string value) {
