@@ -556,53 +556,6 @@ public static class PlatformDependent
     }
 
     /**
-     * Create a new {@link Queue} which is safe to use for single producer (one thread!) and a single
-     * consumer (one thread!).
-     */
-    public static IQueue<T> NewSpscQueue<T>() {
-        throw new NotImplementedException();
-        //return hasUnsafe() ? new SpscLinkedQueue<T>() : new SpscLinkedAtomicQueue<T>();
-    }
-
-    /**
-     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
-     * consumer (one thread!) with the given fixes {@code capacity}.
-     */
-    public static IQueue<T> NewFixedMpscQueue<T>(int capacity) {
-        throw new NotImplementedException();
-        //return hasUnsafe() ? new MpscArrayQueue<T>(capacity) : new MpscAtomicArrayQueue<T>(capacity);
-    }
-
-    /**
-     * Create a new un-padded {@link Queue} which is safe to use for multiple producers (different threads) and a single
-     * consumer (one thread!) with the given fixes {@code capacity}.<br>
-     * This should be preferred to {@link #newFixedMpscQueue(int)} when the queue is not to be heavily contended.
-     */
-    public static IQueue<T> NewFixedMpscUnpaddedQueue<T>(int capacity) {
-        throw new NotImplementedException();
-        //return hasUnsafe() ? new MpscUnpaddedArrayQueue<T>(capacity) : new MpscAtomicUnpaddedArrayQueue<T>(capacity);
-    }
-
-    /**
-     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and multiple
-     * consumers with the given fixes {@code capacity}.
-     */
-    public static IQueue<T> NewFixedMpmcQueue<T>(int capacity) {
-        throw new NotImplementedException();
-        //return hasUnsafe() ? new MpmcArrayQueue<T>(capacity) : new MpmcAtomicArrayQueue<T>(capacity);
-    }
-
-
-    /**
-     * Returns a new concurrent {@link Deque}.
-     */
-    public static IQueue<C> NewConcurrentDeque<C>()
-    {
-        throw new NotImplementedException();
-        //return new ConcurrentLinkedDeque<C>();
-    }
-
-    /**
      * Return a {@link Random} which is not-threadsafe and so can only be used from the same thread.
      * @deprecated Use ThreadLocalRandom.current() instead.
      */

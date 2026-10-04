@@ -14,6 +14,112 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## Native fixed queues and recycler publication
+
+Pinned PlatformDependent.java:1329-1375/1397-1402 contains five collection-provider
+factories, selecting JVM Unsafe/VarHandle/atomic JCTools classes. Remove their five
+unused C# throwing declarations after the following actual-consumer review:
+
+| Factory | Pinned consumers and required purpose | CLR decision |
+| --- | --- | --- |
+| newSpscQueue | transport/local/LocalChannel.java:68; add, poll, peek, empty/drain, FIFO handoff | Direct ConcurrentQueue provides native FIFO publication; no SPSC/provider wrapper is required. Channel transport integration remains outside common. |
+| newFixedMpscQueue | microbench/BurstCostExecutorsBenchmark.java:71/77/90/161; reject full admission, retain poison-pill/accepted work | A native bounded Channel in Wait full mode uses TryWrite to reject fullness. An owner must explicitly handle rejection and choose its effective capacity. No benchmark-only Java provider factory is ported. |
+| newFixedMpscUnpaddedQueue | buffer/PoolThreadCache.java:336; offer/poll, full-return rejection and freeing rejected entries | Bounded native collection with owner cleanup for rejected entries; padded/unpadded JVM choices are not CLR APIs. The buffer consumer is a future module integration, not certified by common tests. |
+| newFixedMpmcQueue | common/Recycler.java:539 and buffer/AdaptivePoolingAllocator.java:928; bounded offer/poll, FIFO returns, no eviction of accepted resources, multiple consumers | Current Recycler uses ConcurrentQueue plus CAS capacity reservations. Retain its explicit rounded bound/ownership and repair CLR interruption below. Adaptive shared chunk scanning/re-offering remains buffer work. |
+| newConcurrentDeque | transport/pool/SimpleChannelPool.java:46/374/385; offerLast, pollFirst or pollLast according to recency policy | Owner-synchronized LinkedList or another real native double-ended collection is needed when porting the channel pool. The removed IQueue-returning stub never provided this contract; ConcurrentQueue would lose pollLast. |
+
+These are common-factory CLR decisions, not completed implementations of the
+downstream transport/buffer consumers. Existing unbounded MPSC adapter and the two
+remaining bounded/chunked MPSC overloads are not certified by this unit. Keep their
+reviews open. Do not port padding hierarchies or publish a fake native deque.
+
+Original PlatformDependentTest.testVarHandleQueuesWhenUnsafeIsUnavailable contains
+six exact JCTools class-name assertions behind JVM feature assumptions. These
+identities are superseded by native consumer behavior, not recreated as CLR class
+names. Its fixed-capacity purposes are exercised through Recycler; ordinary FIFO
+publication is exercised by the existing NonSticky scenarios. Its chunked-provider
+class identity is JVM-only, while actual bounded/chunked contracts remain pending.
+No existing portable test is removed, weakened or newly skipped.
+
+The existing Recycler reservation/ConcurrentQueue backend has a demonstrated CLR
+defect: EnqueueSlow/TryDequeueSlow acquire a contended monitor at segment changes.
+Thread.Interrupt can throw before a return is published or a borrow is claimed.
+Two public Recycler scenarios fail at the preceding checkpoint with
+ThreadInterruptedException; reflection only holds the real net10 runtime gate to
+force those waits. Native channel TryWrite/TryRead also use monitor entry, so its
+thread-safe/bounded label alone would not preserve this resource-return contract.
+
+Retry interrupted ConcurrentQueue operations inside the private return queue.
+Enqueue retains its single CAS reservation during retries; other failures still
+roll it back. Dequeue releases exactly one reservation after claiming an item.
+Restore the consumed CLR interrupt in finally, for a later interruptible wait.
+Clear drains through that same Poll boundary. No delegate/callback runs inside
+these BCL operations; the reviewed net10 source throws on these waits before the
+item-specific side effect, so retry cannot duplicate a publication or claim.
+Keep the existing backend, guard/unguarded handles, rounded limits, debug monitor
+strategy, owner batching and reclamation policies. This is not a claim of JVM
+lock-free progress or a performance equivalence result.
+
+Eight new cases cover the two interrupted segment changes, full-pool FIFO/reuse
+at requested capacities 3 and 17 (effective 4 and 32) and concurrent guarded/
+unguarded returns that preserve already accepted objects. The two interrupted
+cases fail before repair; all eight pass afterward and preserve a later pending
+interrupt. Original recycler workloads/case identities/comments remain unchanged.
+Validation is Windows/net10.0; private gate scheduling is explicitly tied to the
+reviewed runtime layout and must fail clearly if that layout changes.
+
+Sources: [CLR ConcurrentQueue segment implementation](https://github.com/dotnet/runtime/blob/v10.0.7/src/libraries/System.Private.CoreLib/src/System/Collections/Concurrent/ConcurrentQueue.cs),
+[native bounded channel full-mode contract](https://learn.microsoft.com/en-us/dotnet/core/extensions/channels),
+[CLR bounded-channel monitor entry](https://github.com/dotnet/runtime/blob/v10.0.7/src/libraries/System.Threading.Channels/src/System/Threading/Channels/BoundedChannel.cs),
+and [Thread.Interrupt](https://learn.microsoft.com/en-us/dotnet/api/system.threading.thread.interrupt?view=net-10.0).
+The retired five factory comments follow verbatim; placeholder implementation
+statements are not original explanatory comments and are not archived.
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java, newSpscQueue, line 1330.
+
+```java
+/**
+     * Create a new {@link Queue} which is safe to use for single producer (one thread!) and a single
+     * consumer (one thread!).
+     */
+```
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java, newFixedMpscQueue, line 1341.
+
+```java
+/**
+     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
+     * consumer (one thread!) with the given fixes {@code capacity}.
+     */
+```
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java, newFixedMpscUnpaddedQueue, line 1352.
+
+```java
+/**
+     * Create a new un-padded {@link Queue} which is safe to use for multiple producers (different threads) and a single
+     * consumer (one thread!) with the given fixes {@code capacity}.<br>
+     * This should be preferred to {@link #newFixedMpscQueue(int)} when the queue is not to be heavily contended.
+     */
+```
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java, newFixedMpmcQueue, line 1365.
+
+```java
+/**
+     * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and multiple
+     * consumers with the given fixes {@code capacity}.
+     */
+```
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java, newConcurrentDeque, line 1397.
+
+```java
+/**
+     * Returns a new concurrent {@link Deque}.
+     */
+```
+
 ## Native temporary-file creation
 
 Pinned PlatformDependent.java:1751-1756 delegates to Files.createTempFile, not

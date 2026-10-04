@@ -121,22 +121,27 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1930 cases** on Windows/net10.0:
-**1916 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: temp-file-full-debug.trx and temp-file-full-release.trx.
-All 1913 prior identities/outcomes, including 759 original non-Porting cases and
-every skip, remain. Seventeen temporary-file contract cases are added; the Unix
-permission branch is guarded and was not executed on Windows. Targeted checked
-Release passes 25 cases. Eight cases fail before repair, fourteen pinned Java/real
-CLR rows agree, and an instrumented collision probe passes. See the native
-temporary-file decision in [common-clr-design.md](common-clr-design.md).
-Original comments and the pinned 271-file inventory remain checked; uppercase
-method/local-function verification passes. Existing warnings remain. Platform
-sources and common remain unfinished; no source completion status changes here.
-Results remain in ignored TestResults and artifacts/temp-file-validation.
-Next: remaining platform capability/bootstrap and queue factory purposes against
-actual pinned consumers. Full suites compile every portable test source without
-PortingBatch; green tests do not establish module completion.
+The current default suite executes **1938 cases** on Windows/net10.0:
+**1924 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: bounded-pool-full-debug.trx and bounded-pool-full-release.trx.
+All 1930 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain. Eight recycler bounded/
+concurrent/interrupt contracts are added. The two interrupted CLR segment-change
+cases fail before repair; targeted Debug and checked Release each pass 75/skip
+eight unchanged (83 discovered). The native queue boundary preserves publication,
+claims, reservations and a later pending interrupt without changing the backend.
+Five unused throwing collection-provider facades retire after actual consumer
+review, with every original method comment archived in common-clr-design.md.
+All 271 comment audit rows are unchanged, pinned inventory/paths match and
+uppercase method/local-function verification passes. Existing warnings remain.
+Source statuses do not change; whole common/platform reviews remain unfinished.
+Results remain in ignored TestResults and artifacts/bounded-pool-validation;
+see bounded-pool-identity-and-inventory.json and bounded-pool-comment-audit.json.
+Next: remaining bounded/chunked MPSC factories, private queue scaffolding and
+platform bootstrap/capabilities against actual native consumers. Downstream
+double-ended/channel/buffer integration remains a separate module scope. Full
+suites include every portable test source without PortingBatch; green tests
+do not establish module completion.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.
