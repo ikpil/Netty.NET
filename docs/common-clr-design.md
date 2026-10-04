@@ -3991,3 +3991,43 @@ annotation integration remain future transport work; verification of this map
 does not certify FastThreadLocalThread, transport or whole common completion.
 All original comments stay; current full/checked counts and inventory are in
 common-porting.md. No new MD, public helper or compatibility object is added.
+
+
+## Native ASCII hex decoding
+
+Pinned StringUtil.java:255-312 permits only ASCII 0-9/a-f/A-F, decodes pairs
+with their original input/index diagnostic and returns owned dump bytes. Actual
+common MacAddressUtil.java:168/175 calls decodeHexByte on strings; downstream
+QueryStringDecoder.java:394 and ByteBufUtil.java:175-190 use the same pair/dump
+contract. The CLR string overload instead used byte.Parse(HexNumber), accepting
+surrounding whitespace and allocating a temporary two-character string per pair.
+Four pair/four MAC-consumer scenarios expose this acceptance bug; null/range,
+logical dump bounds and allocation scenarios bring pre-repair failures to eleven.
+
+Read native immutable string code units directly through the ASCII nibble decoder,
+with no Java sequence wrapper or success-path pair strings. Standard conversion
+alone would change ArgumentException's pair/index/full-input diagnostic, so the
+existing nibble contract supplies both native string and actual sequence bridges.
+Invalid pairs have the same original diagnostic in either overload; valid string
+dumps allocate only their final byte array. Warm 10000 pair decodes allocate zero
+bytes after repair, versus the observed 320000 bytes before. This is allocation
+evidence for this call path, not a throughput claim. Encoding/builder review is
+still separate; this unit does not certify the whole StringUtil source.
+
+Native null arguments throw ArgumentNullException, pair bounds reject before any
+read, and nonempty dump ranges validate logical length by subtraction before result
+allocation or addition. Length parity/negative-length errors retain the original
+message. The original explicit zero-length slice returns shared empty bytes before
+accessing its sequence/start, even for null/invalid start; whole-input overloads
+still reject null. Java signed byte -128..-1 indexes outside the lookup table;
+CLR unsigned byte 128..255 has no such sign and returns -1 as non-ASCII. All 128
+native high-byte values and original signed-byte exceptions are checked explicitly.
+
+Five exact pinned methods and table initialization run with only an EmptyArrays
+stub. 213577 matching Java/CLR rows cover all 65536 UTF-16 nibble values, 131072
+fixed-neighbor Unicode pair outcomes, 128 ASCII byte values, all 16384 ASCII pair
+results/exact diagnostics, and 457 dump/error/empty slices. String/sequence pair
+outcomes also agree throughout the full UTF-16 domain. New tests preserve this
+wire-format policy and MAC integration; no original fixture/comment is removed.
+Current full/checked counts and scope are in common-porting.md; oracle and raw
+outputs remain ignored artifacts/hex-decode-validation records.

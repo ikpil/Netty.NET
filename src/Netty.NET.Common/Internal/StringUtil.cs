@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -300,6 +299,8 @@ public static class StringUtil
      */
     public static byte DecodeHexByte(ICharSequence s, int pos)
     {
+        ArgumentNullException.ThrowIfNull(s);
+        if (pos < 0 || pos > s.Length() - 2) throw new ArgumentOutOfRangeException(nameof(pos));
         int hi = DecodeHexNibble(s.CharAt(pos));
         int lo = DecodeHexNibble(s.CharAt(pos + 1));
         if (hi == -1 || lo == -1)
@@ -312,22 +313,16 @@ public static class StringUtil
 
     public static byte DecodeHexByte(string str, int index)
     {
-        if (index + 1 >= str.Length)
+        ArgumentNullException.ThrowIfNull(str);
+        if (index < 0 || index > str.Length - 2) throw new ArgumentOutOfRangeException(nameof(index));
+        // HexNumber permits surrounding whitespace; the wire format requires exactly two ASCII hex digits.
+        int hi = DecodeHexNibble(str[index]);
+        int lo = DecodeHexNibble(str[index + 1]);
+        if (hi == -1 || lo == -1)
         {
-            throw new ArgumentException($"Cannot decode hex byte at index {index}, string too short.");
+            throw new ArgumentException($"invalid hex byte '{str.Substring(index, 2)}' at index {index} of '{str}'");
         }
-
-        char c1 = str[index];
-        char c2 = str[index + 1];
-
-        try
-        {
-            return byte.Parse($"{c1}{c2}", NumberStyles.HexNumber);
-        }
-        catch (FormatException)
-        {
-            throw new ArgumentException($"Invalid hex characters at index {index}: '{c1}{c2}'");
-        }
+        return (byte)((hi << 4) + lo);
     }
 
     /**
@@ -349,6 +344,10 @@ public static class StringUtil
             return EmptyArrays.EMPTY_BYTES;
         }
 
+        ArgumentNullException.ThrowIfNull(hexDump);
+        int inputLength = hexDump.Length();
+        if (fromIndex < 0 || fromIndex > inputLength) throw new ArgumentOutOfRangeException(nameof(fromIndex));
+        if (length > inputLength - fromIndex) throw new ArgumentOutOfRangeException(nameof(length));
         byte[] bytes = new byte[length >>> 1];
         for (int i = 0; i < length; i += 2)
         {
@@ -363,12 +362,19 @@ public static class StringUtil
      */
     public static byte[] DecodeHexDump(ICharSequence hexDump)
     {
+        ArgumentNullException.ThrowIfNull(hexDump);
         return DecodeHexDump(hexDump, 0, hexDump.Length());
     }
     public static byte[] DecodeHexDump(string hexDump)
     {
-        var str = new StringCharSequence(hexDump);
-        return DecodeHexDump(str, 0, str.Length());
+        ArgumentNullException.ThrowIfNull(hexDump);
+        int length = hexDump.Length;
+        if ((length & 1) != 0) throw new ArgumentException("length: " + length);
+        if (length == 0) return EmptyArrays.EMPTY_BYTES;
+        // Read the native immutable string directly; only the owned byte result is allocated on success.
+        byte[] bytes = new byte[length / 2];
+        for (int i = 0; i < length; i += 2) bytes[i / 2] = DecodeHexByte(hexDump, i);
+        return bytes;
     }
 
     /**
