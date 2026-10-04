@@ -433,7 +433,9 @@
         "src/Netty.NET.Common/HashedWheelTimeout.cs",
         "src/Netty.NET.Common/HashedWheelBucket.cs",
         "src/Netty.NET.Common/Concurrent/Executors.cs",
-        "src/Netty.NET.Common/Internal/ConcurrentQueueOperations.cs"
+        "src/Netty.NET.Common/Internal/ConcurrentQueueOperations.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
       ],
       "evidence": [
         "All pinned constructors, lifecycle methods, worker, timeout and bucket operations reviewed; 16 original source cases and 12 CLR contracts pass in Debug and Release.",
@@ -441,7 +443,8 @@
         "Preserved all 63 source comments across the main timer and three internal support files. Original execution-time case retains 100,000 tasks and the 125-650 ms assertions.",
         "Full net10.0 PortingBatch: 926 passed, 14 skipped, zero failed. Default full test build now reports 286 diagnostics, all in AsciiStringCharacterTest.",
         "NewTimeout and Cancel public regressions force actual CLR EnqueueSlow contention and Thread.Interrupt: both fail at preceding commit. After repair, each scenario observes all 33 cancellation callbacks, zero expiration/pending entries and a later pending caller interrupt. Shared boundary also retains the preceding recycler segment-change cases. See TimerQueuePublicationContractTest, mpsc-retirement-before-debug.trx, final full/checked records in common-porting.md and native handoff design. net10 private gate is test schedule control, not production reflection.",
-        "Expanded checked timer selection reproduces two existing deadline overflow failures (original TestOverflow and NativeDurationSaturationDoesNotExpireMaximumDelayAndClampsSubmillisecondTicks). Pinned source line 454 wraps before lines 457-458 saturate. Explicit unchecked arithmetic repairs both; checked Release passes 201 with eight unchanged skips (209 discovered). Failure records retained as mpsc-retirement-before-deadline-checked-release.trx."
+        "Expanded checked timer selection reproduces two existing deadline overflow failures (original TestOverflow and NativeDurationSaturationDoesNotExpireMaximumDelayAndClampsSubmillisecondTicks). Pinned source line 454 wraps before lines 457-458 saturate. Explicit unchecked arithmetic repairs both; checked Release passes 201 with eight unchanged skips (209 discovered). Failure records retained as mpsc-retirement-before-deadline-checked-release.trx.",
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
       ],
       "adaptation": "ConcurrentQueue/Interlocked/Volatile replace JCTools/Java atomics and field updaters. Native Thread factory captures creator group and creates foreground normal-priority ordinary threads; no fast-local ownership. TimeSpan has 100 ns granularity and saturates nanosecond conversion; tick duration still clamps to 1 ms, large native sleep waits are chunked and interruptible. Keep original JVM Windows workaround comments, but omit that JVM-specific code on CLR. IDisposable calls stop; finalization guards partially constructed timers and decrements only registered instances. CLR interruption of an already terminated worker is harmless. Standalone support classes are internal, matching original private helpers; the worker exposes a read-only snapshot. Preserve source ordering and its post-stop pending-count/no-callback behavior for unprocessed tasks. Returned stop sets are caller-owned native HashSets. Unused unreferenced JDK fixed-pool/callable null stubs are omitted; no JDK utility emulation is required. Both native timeout/cancellation writers and all worker drain paths now share an internal interruption-safe ConcurrentQueue operation boundary. Admission/cancellation publication and later caller interrupt are preserved across real CLR segment monitor waits; no collection/provider wrapper is introduced. Explicit unchecked deadline arithmetic preserves Java long wrap before the original positive-delay saturation guard, including in checked builds.",
       "comments": {
@@ -888,12 +891,15 @@
         "src/Netty.NET.Common/ThreadDeathWatcher.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/ThreadDeathWatcher.cs"
+        "src/Netty.NET.Common/ThreadDeathWatcher.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
       ],
       "evidence": [
         "All pinned methods, watcher transitions and identity-based Entry matching reviewed; all three original tests and ten CLR contract cases pass.",
         "Release selection: 20 watcher/reference-count cases passed. Fresh serviceThreadPrefix process: three applicable cases passed. Full net10.0 PortingBatch: 898 passed, 14 skipped, zero failed.",
-        "All 32 source comments preserved; tests cover duplicate identity, callback failure/reentrancy, restart, ExecutionContext suppression, interrupted/large joins, millisecond truncation and eight concurrent registration producers."
+        "All 32 source comments preserved; tests cover duplicate identity, callback failure/reentrancy, restart, ExecutionContext suppression, interrupted/large joins, millisecond truncation and eight concurrent registration producers.",
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
       ],
       "adaptation": "ConcurrentQueue/Interlocked/Volatile replace MPMC queue and atomic fields. Native Thread/IRunnable retain thread liveness, one-second polling, daemon/minimum priority, explicit nonsticky ThreadGroup metadata and reference-identity cancellation; duplicate registrations cancel one occurrence. ExecutionContext suppression prevents singleton worker retention of caller AsyncLocal state in place of clearing a JVM ClassLoader. TimeSpan replaces TimeUnit; truncate to milliseconds, preserve zero/unbounded joins and chunk native Join beyond Int32 milliseconds. Ordinary CLR callback exceptions are isolated; fatal runtime exceptions cannot be recovered.",
       "comments": {
@@ -1526,18 +1532,25 @@
         "src/Netty.NET.Common/Concurrent/DefaultThreadFactory.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/Concurrent/DefaultThreadFactory.cs"
+        "src/Netty.NET.Common/Concurrent/DefaultThreadFactory.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
       ],
       "evidence": [
         "Historical earlier checkpoint: Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics.",
-        "Native string Length/indexers/ranges replace Java forwarding calls for pool naming; creator/group/thread policies unchanged. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
+        "Native string Length/indexers/ranges replace Java forwarding calls for pool naming; creator/group/thread policies unchanged. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips.",
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
       ],
-      "adaptation": "Weak CLR ThreadGroup metadata retains explicit group and creator inheritance. Native CLR ThreadPriority enum replaces Java integer priorities. CLR has no SecurityManager or JVM group permission policy.",
+      "adaptation": "Weak CLR ThreadGroup metadata retains explicit group and creator inheritance. Native CLR ThreadPriority enum replaces Java integer priorities. CLR has no SecurityManager or JVM group permission policy. Native Action-to-Thread boundary, Interlocked IDs and CLR range/null exceptions; native Thread owns lifecycle. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records",
       "comments": {
         "upstreamCount": 3,
         "required": true,
         "preservedCount": 3,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Native factory boundary, metadata names, best-effort flags/priority, group inheritance and cleanup on custom/default workers reviewed; JVM security checks retain existing exclusion. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       }
     },
     {
@@ -1744,18 +1757,28 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/FastThreadLocalRunnable.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/FastThreadLocalRunnable.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/FastThreadLocalRunnable.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
+      ],
+      "evidence": [
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
+      ],
+      "adaptation": "Upstream package-private cleanup helper becomes an internal sealed Action policy, with finally cleanup, single-callback idempotence and explicit multicast exception safety. No public Runnable API. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records",
       "comments": {
         "upstreamCount": 1,
         "required": true,
         "preservedCount": 1,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Full pinned helper has only null-checked invocation/finally cleanup/idempotent wrapping; translated to native delegates, with single/multicast and throwing custom-worker tests. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       }
     },
     {
@@ -1766,17 +1789,24 @@
         "src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs"
+        "src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
       ],
       "evidence": [
-        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review."
+        "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Action targets and native Thread lifecycle replace Runnable/Start/Join/name facades; Entry finally releases invocation captures while retaining weak-key ownership metadata. Native Start controls logical context; physical map remains thread-static. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records",
       "comments": {
         "upstreamCount": 15,
         "required": true,
         "preservedCount": 15,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "in-progress",
+        "evidence": "Native target/physical-state/lifetime review progressed; wider constructor/stack-size and blocking-policy decisions remain. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       }
     },
     {
@@ -1920,7 +1950,8 @@
         "docs/common-native-ordered-scheduling-migration.md",
         "docs/common-native-unordered-scheduling-migration.md",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
       ],
       "adaptation": "Global quiet task initializes before use. ExecutionContext flow is suppressed during worker creation/start; weak metadata retains creator group. Queue nonblocking operations preserve pending interrupts. One persistent failed native Task represents unsupported termination; native stack/classloader lifetime semantics retain explicit CLR limitations.",
       "evidence": [
@@ -1931,7 +1962,8 @@
         "Native scheduling: 34 CLR cases; default full Debug/Release each 1204 passed / 0 failed / 14 skipped (1218 total), Windows/net10.0. Native Task/TCS work shares deadline queues without IFuture/PromiseTask/JdkFutureTask result adapters. Global quiet-period and auto-scaling monitoring consumers migrated. shutdownNow orphaned native Task regression failed before repair. Original comments retained; docs/common-native-scheduling.md, native-scheduling-contracts-final.trx, native-scheduling-full-debug.trx and native-scheduling-full-release.trx record evidence. Legacy public API migration and final unordered backend design remain separate work.",
         "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json.",
         "Native unordered scheduler checkpoint: default whole Debug/Release each 1357 discovered / 1343 passed / 0 failed / 14 unchanged skips on Windows/net10.0 (native-unordered-schedule-full-debug.trx and native-unordered-schedule-full-release.trx). Initial/final affected Debug 199/202 pass without failures/skips. All 759 non-Porting and skipped identities unchanged; whole-suite changes are exactly 12 documented CLR-only probe mappings plus three ownership regressions (native-unordered-schedule-identity-comparison.json). All 104 verified comment entries, 21 unordered source, two ScheduledFuture and eight original test comments have zero missing; all implementation paths exist (native-unordered-schedule-comment-audit.json). ScheduledFuture is a standard Task/owned-cancellation replacement with separate native queue metadata; all concrete scheduler result and raw JDK/Promise wrappers are removed. Plain Future fixtures/facades and final pool configuration/public queue/shutdown review remain open. No common/backend completion claim; see docs/common-native-unordered-scheduling-migration.md.",
-        "Shared native stop: pinned AbstractEventExecutor.java:85, SingleThreadEventExecutor.java:782/923, MultithreadEventExecutorGroup.java:114-123 and transport NioEventLoopTest.java:204-238 establish backend/consumer policy. The initial affected Debug selection passes 92 cases. Disabling only native graceful-to-stop escalation reproduces one admission-closure failure among two theory rows; the direct-stop row passes. Seven CLR lifecycle rows cover drain/withdrawal, wrapper/Task identity, every-child requests and synchronous request failures; no original Java fixture/comment is changed. Final matrix and audits are recorded in docs/common-porting.md."
+        "Shared native stop: pinned AbstractEventExecutor.java:85, SingleThreadEventExecutor.java:782/923, MultithreadEventExecutorGroup.java:114-123 and transport NioEventLoopTest.java:204-238 establish backend/consumer policy. The initial affected Debug selection passes 92 cases. Disabling only native graceful-to-stop escalation reproduces one admission-closure failure among two theory rows; the direct-stop row passes. Seven CLR lifecycle rows cover drain/withdrawal, wrapper/Task identity, every-child requests and synchronous request failures; no original Java fixture/comment is changed. Final matrix and audits are recorded in docs/common-porting.md.",
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
       ],
       "status": "in-progress",
       "nativeDesignReview": {
@@ -2591,13 +2623,19 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/ThreadPerTaskExecutor.java",
       "kind": "source",
-      "status": "pending",
+      "status": "in-progress",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/ThreadPerTaskExecutor.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/ThreadPerTaskExecutor.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
+      ],
+      "evidence": [
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
+      ],
+      "adaptation": "Actual SingleThreadEventExecutor worker bootstrap converts its existing IRunnable producer to a bound Run Action before factory creation/start. Remaining IExecutor public boundary review is separate. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records",
       "comments": {
         "upstreamCount": 1,
         "required": true,
@@ -2717,7 +2755,8 @@
         "tools/Measure-UnorderedQueueCosts.ps1",
         "tools/queue-costs/Program.cs",
         "tools/queue-costs/QueueCosts.csproj",
-        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
       ],
       "evidence": [
         "All pinned Netty methods and 21 original comments ported. Five original tests and 34 CLR contracts pass: decoration, dedicated-worker membership/overlap, early shutdown Future, delayed/periodic shutdown policies, running bulk cancellation, queue removal/reinsertion, core resize/timeout, idle retirement, pool metrics, factory replacement/failure/null/reentrant reservation, rejection and huge deadlines. Large fixed-rate queue blocking and running invokeAll cancellation reproduced then fixed against local JDK source.",
@@ -2761,7 +2800,8 @@
         "Cooperative stop final checkpoint: default whole Debug and Release each pass 1395 / fail zero / skip 14 (1409 discovered), Windows/net10.0, isolated --artifacts-path artifacts/cooperative-stop-validation preserves Rider DLL ownership. All 759 non-Porting and 14 skip identities are unchanged, only 15 CLR rows are added, Debug/Release names/outcomes match (unordered-stop-identity-comparison.json). All four worker-failure process modes and the factory-suffix probe pass in both configurations. All 98 verified comment entries and selected 21 source/eight original fixture/ten group comments have zero missing; all 271 pinned inventory entries and implementation paths match (unordered-stop-comment-audit.json). Existing compiler/analyzer warnings remain; no new source exclusion/skip, performance or additional OS/TFM claim. Shared/group immediate API, private queue costs and 99 pending/22 in-progress source reviews remain open.",
         "Unordered private queue cost review: pinned original/common/transport consumers and net10.0 BCL Remove checked. Replaced whole snapshot/search/clear/reinsert with PriorityQueue.Remove using ReferenceEqualityComparer.Instance under the same owner gate; one queued membership, stored deadline/sequence priorities and sole native result ownership remain. Independent benchmark checks signed-clock wrap, ties, hostile value equality, repeated identity removal and survivor order before comparing snapshot, direct removal and SortedSet. Final sequential Release measurements on Windows/x64 .NET 10.0.7 Ryzen 5800X (two warmups/seven samples, tiering disabled only for probe) show native cancellation at 4096 pending schedules 116.116 to 2.953 us/entry, current-thread allocation 98180.8 to 80 bytes/entry. Heap reuse allocates zero; tree removal is faster for large queues but reusable insertion allocates nodes. Retain the BCL heap for this scope; no custom Java heap, duplicate registry or public queue API. Three CLR regression rows verify scattered submission/schedule cancellation and actual survivor results/order; final affected Debug 175 pass, zero failures/skips. See docs/common-unordered-queue-costs.md/csv, tools/Measure-UnorderedQueueCosts.ps1 and unordered-queue-remove-final-contracts-debug.trx. Shared/group immediate API, queue contention/cancellation-heavy workloads and remaining common source/runtime reviews stay open.",
         "Queue removal final checkpoint: default whole Debug and Release each discover 1412 / pass 1398 / fail zero / skip 14 unchanged, Windows/net10.0 (unordered-queue-remove-full-debug.trx and unordered-queue-remove-full-release.trx), isolated --artifacts-path artifacts/queue-removal-validation preserves Rider. All 759 non-Porting and all skip identities unchanged, only three CLR rows added, matching configuration names/outcomes (unordered-queue-remove-identity-comparison.json). All 98 verified comment entries and selected 21 source/eight fixture/ten group comments have zero missing, all 271 pinned inventory entries and implementation paths match (unordered-queue-remove-comment-audit.json). Two sequential before/after measurement series outside full test runs retain extrema/medians in common-unordered-queue-costs.csv; native cancellation at 4096 pending schedules has median ranges 116.116-211.616 us before and 2.953-3.563 us after, with 98180.8 to 80 current-thread bytes/entry. SortedSet large-removal advantage and heap capacity-reuse tradeoff are explicit, with no generalized throughput/contention claim. Existing compiler/analyzer warnings remain; no new source exclusion/skip or additional OS/TFM verification. Shared/group immediate API, other queue consumers and remaining source/runtime review stay open.",
-        "Shared native stop: pinned AbstractEventExecutor.java:85, SingleThreadEventExecutor.java:782/923, MultithreadEventExecutorGroup.java:114-123 and transport NioEventLoopTest.java:204-238 establish backend/consumer policy. The initial affected Debug selection passes 92 cases. Disabling only native graceful-to-stop escalation reproduces one admission-closure failure among two theory rows; the direct-stop row passes. Seven CLR lifecycle rows cover drain/withdrawal, wrapper/Task identity, every-child requests and synchronous request failures; no original Java fixture/comment is changed. Final matrix and audits are recorded in docs/common-porting.md."
+        "Shared native stop: pinned AbstractEventExecutor.java:85, SingleThreadEventExecutor.java:782/923, MultithreadEventExecutorGroup.java:114-123 and transport NioEventLoopTest.java:204-238 establish backend/consumer policy. The initial affected Debug selection passes 92 cases. Disabling only native graceful-to-stop escalation reproduces one admission-closure failure among two theory rows; the direct-stop row passes. Seven CLR lifecycle rows cover drain/withdrawal, wrapper/Task identity, every-child requests and synchronous request failures; no original Java fixture/comment is changed. Final matrix and audits are recorded in docs/common-porting.md.",
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
       ],
       "adaptation": "Native Task/TCS scheduling, result-free raw work and owner-token cancellation replace JDK Future decoration and public mutable queue handling. PendingTaskCount preserves actual Netty queue diagnostics. Graceful quiet/timeout and actual drain are implemented, with worker identity independent of factory. Original comments remain mapped/archived. Inherited configuration is retired; concrete StopAsync/StopToken provide cooperative immediate stop with callback drain and failure propagation. Local BCL queue costs are measured and snapshot/rebuild removal is retired. Shared/group immediate API and contention/cancellation-heavy workload review remain open. See docs/common-unordered-cooperative-stop.md and docs/common-unordered-native-queue.md. Native constructor workerCount/factory/raw handler are immutable; unused inherited JDK mutation/statistics methods are removed. One-shot retention and periodic closure cancellation are fixed policy; owner tokens withdraw reservations. Pending/worker/active counts are readonly observations. Worker replacement honors the same fixed limit, and the zero-count idle timeout applies only while empty.",
       "nativeDesignReview": {
@@ -3950,10 +3990,13 @@
         "src/Netty.NET.Common/Internal/ThreadExecutorMap.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/Internal/ThreadExecutorMap.cs"
+        "src/Netty.NET.Common/Internal/ThreadExecutorMap.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
       ],
       "evidence": [
-        "All pinned methods reviewed. All four original wrapping/restoration cases pass; original comments restored exactly."
+        "All pinned methods reviewed. All four original wrapping/restoration cases pass; original comments restored exactly.",
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
       ],
       "adaptation": "CLR anonymous executor/runnable/factory adapters preserve per-thread FastThreadLocal identity and finally restoration.",
       "comments": {
@@ -5104,7 +5147,8 @@
         "test/Netty.NET.Common.Tests/RecyclerTest.cs"
       ],
       "evidence": [
-        "All 67 inherited original theory rows pass on owned FastThreadLocalThread, including six retained-object/owner collection cases; all five source comments retained."
+        "All 67 inherited original theory rows pass on owned FastThreadLocalThread, including six retained-object/owner collection cases; all five source comments retained.",
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       ],
       "adaptation": "xUnit inherited cases call a virtual execution helper to run their bodies on a real owned CLR thread. Native child threads are also FastThreadLocalThread-owned. The GC override delegates to the portable sealed-Thread WeakReference fixture.",
       "comments": {
@@ -5171,7 +5215,8 @@
         "test/Netty.NET.Common.Tests/Porting/FastThreadLocalTestRunnerContractTest.cs"
       ],
       "evidence": [
-        "Reviewed all three JUnit interception entry points and shared proceed method; three original runner cases and four cleanup/error propagation contracts pass, including worker stack retention and cleanup callback failure."
+        "Reviewed all three JUnit interception entry points and shared proceed method; three original runner cases and four cleanup/error propagation contracts pass, including worker stack retention and cleanup callback failure.",
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       ],
       "adaptation": "Use an explicit Action execution helper from xUnit cases instead of recreating JUnit interfaces/annotations. Start/join a real FastThreadLocalThread, then ExceptionDispatchInfo.Throw the original exception after cleanup. Fact represents the original single repetition; Theory preserves the parameter row. CLR worker cleanup exceptions are captured to prevent unhandled thread exceptions terminating the test process; retain an earlier invocation failure if cleanup also fails.",
       "comments": {
@@ -5214,7 +5259,8 @@
       ],
       "evidence": [
         "All three original watch/unwatch/group cases pass in Debug and Release; all nine original comments preserved.",
-        "Full net10.0 PortingBatch: 898 passed, 14 skipped, zero failed. CLR regression files add ten watcher and seven reference-count cases."
+        "Full net10.0 PortingBatch: 898 passed, 14 skipped, zero failed. CLR regression files add ten watcher and seven reference-count cases.",
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       ],
       "adaptation": "xUnit uses real background Thread, interruptible sleep, bounded CountdownEvent/joins and native ThreadGroup metadata rather than fake lists. TimeSpan.MaxValue replaces Long.MAX_VALUE seconds without overflowing Thread.Join. The singleton watcher fixtures are serialized and drained between tests; no original assertions are dropped.",
       "comments": {
@@ -5362,7 +5408,8 @@
         "test/Netty.NET.Common.Tests/Concurrent/DefaultThreadFactoryTest.cs"
       ],
       "evidence": [
-        "Historical earlier checkpoint: Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics."
+        "Historical earlier checkpoint: Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics.",
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       ],
       "adaptation": "Four portable original cases run, including explicit creator-group assertions. SecurityManager inheritance case retains upstream unsupported-runtime skip; descendant case validates inheritance/task count but cannot test JVM permissions. CLR cannot join an unstarted Thread; inspect its assigned group instead.",
       "comments": {
@@ -5384,7 +5431,8 @@
       ],
       "evidence": [
         "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
-        "Original TestConstructionWithIndex retains boundary success/failure/last-index/restoration assertions and comments, adapting the upper limit to Array.MaxLength and private state to native int. Original CI-only oversized allocation test remains locally excluded unchanged. Final default/affected results and prior identity/comment inventory are recorded in common-porting.md."
+        "Original TestConstructionWithIndex retains boundary success/failure/last-index/restoration assertions and comments, adapting the upper limit to Array.MaxLength and private state to native int. Original CI-only oversized allocation test remains locally excluded unchanged. Final default/affected results and prior identity/comment inventory are recorded in common-porting.md.",
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {
@@ -5408,7 +5456,8 @@
       "evidence": [
         "Historical earlier checkpoint: Reviewed against pinned Java source; original tests ported and original comments preserved. PortingBatch: 513 passed, 4 skipped; full test build still has 1487 compiler diagnostics.",
         "Native lifecycle review: pinned producer/consumer completion paths, 123 initial affected executor cases, and 28 lifecycle/group contracts including nine CLR regressions. Default full Debug/Release each 1170 passed / 0 failed / 14 skipped (1184 total), net10.0 Windows. Evidence: lifecycle-final-full-debug.trx, lifecycle-final-full-release.trx and docs/common-executor-lifecycle.md. Unexpected OperationCanceledException in startup/run remains a fault preserving original identity; observer cancellation does not cancel the lifecycle producer. Backend/public API reviews remain distinct.",
-        "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json."
+        "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json.",
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       ],
       "adaptation": "Bounded joins/waits replace original unbounded waits; weak CLR ThreadGroup metadata retains factory inheritance. Throwing the stackless termination exception verifies stable synthetic trace in place of fillInStackTrace. Lifecycle observations now use native Task/await and preserve original exception identity; original workloads and comments remain.",
       "comments": {
@@ -5577,7 +5626,8 @@
         "Native submission caller migration: focused Debug 152 passed; full default Debug/Release each 1327 passed, zero failed, 14 unchanged skips (1341 cases), Windows/net10.0. All 759 original fixture identities unchanged; Java submit declarations/calls removed. Evidence: native-submit-final-contracts-debug-after.trx, native-submit-full-debug.trx, native-submit-full-release.trx, docs/common-native-submission-migration.md.",
         "Native bulk composition: pinned all-module search finds only inherited forwarders, blocking guards, tests and benchmark stubs. Four bulk overloads/newTaskFor hooks and CLR AbstractExecutorService removed. Native submission plus BCL Task composition/owned tokens replaces useful batch scenarios; no public replacement bulk facade. Four original SingleThread JDK rejection cases are explicitly replaced by queued async native counterparts, not claimed as unchanged expectations. Affected Debug selection 186 passed / zero failed / zero skips. First 97-case run failed an assertion-helper/negative-submillisecond timeout assumption; fixture corrected without changing native execution. See docs/common-native-bulk-composition.md, native-bulk-contracts-debug.trx and native-bulk-final-contracts-debug.trx.",
         "Native bulk checkpoint: full default Debug/Release each 1350 discovered, 1336 passed, zero failed, 14 unchanged skips on Windows/net10.0 (native-bulk-full-debug.trx and native-bulk-full-release.trx). The 759 non-Porting fixture identities change only by four documented JDK guard replacements; all others and skip identities match the preceding unordered termination checkpoint. All 247 original comments in five changed Netty sources plus SingleThread fixture retained; 105 verified entries have zero missing (native-bulk-comment-audit.json). No source exclusion/new skip and no module/native-backend completion claim.",
-        "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json."
+        "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json.",
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       ],
       "adaptation": "CLR Thread is sealed; native wrapper observes start and signals before runnable entry. Bounded waits expose hangs. Closed IExecutor supplies backing-service rejection. Remote stack query explicitly throws; the owner captures its own stack. Task shutdown bridge retains original failure identity. Lifecycle observations now use native Task/await and preserve original exception identity; original workloads and comments remain. The four inherited JDK bulk-in-loop rejection tests are replaced by explicitly named native WhenAll/WhenAny async yielding/affinity scenarios, with/without observer timeout; their Java-only method expectation is documented rather than asserted on an invented CLR bulk facade.",
       "comments": {
@@ -6040,7 +6090,8 @@
         "test/Netty.NET.Common.Tests/Internal/ThreadExecutorMapTest.cs"
       ],
       "evidence": [
-        "All four original assertions and cases pass; all original comments preserved."
+        "All four original assertions and cases pass; all original comments preserved.",
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
       ],
       "adaptation": "DefaultThreadFactory replaces JDK Executors.defaultThreadFactory. Bounded native join and captured assertion failure prevent an uncaught CLR worker exception from terminating the test host.",
       "comments": {

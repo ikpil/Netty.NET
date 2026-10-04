@@ -43,18 +43,18 @@ public class DefaultThreadFactoryTest
         // we then create a thread from the factory to run a "task" for us
         var brother = new ThreadGroup("brother");
         ThreadGroup firstCaptured = null;
-        var first = brother.NewThread(Runnables.Create(() =>
+        var first = brother.NewThread(() =>
         {
             try
             {
                 factory = new DefaultThreadFactory("test", false, ThreadPriority.Normal, null);
-                Thread t = factory.NewThread(task);
+                Thread t = factory.NewThread(task.Run);
                 firstCaptured = ThreadGroup.GetThreadGroup(t);
                 t.Start();
                 if (!t.Join(TimeSpan.FromSeconds(2))) throw new TimeoutException();
             }
             catch (Exception error) { interrupted = error; }
-        }));
+        });
         first.Start();
         Assert.True(first.Join(TimeSpan.FromSeconds(2)));
         Assert.Null(interrupted);
@@ -65,17 +65,17 @@ public class DefaultThreadFactoryTest
         // that forbids sibling thread groups from messing with each other will strike this down
         var sister = new ThreadGroup("sister");
         ThreadGroup secondCaptured = null;
-        var second = sister.NewThread(Runnables.Create(() =>
+        var second = sister.NewThread(() =>
         {
             try
             {
-                Thread t = factory.NewThread(task);
+                Thread t = factory.NewThread(task.Run);
                 secondCaptured = ThreadGroup.GetThreadGroup(t);
                 t.Start();
                 if (!t.Join(TimeSpan.FromSeconds(2))) throw new TimeoutException();
             }
             catch (Exception error) { interrupted = error; }
-        }));
+        });
         second.Start();
         Assert.True(second.Join(TimeSpan.FromSeconds(2)));
         Assert.Null(interrupted);
@@ -107,16 +107,16 @@ public class DefaultThreadFactoryTest
     {
         ThreadGroup captured = null;
         Exception exception = null;
-        var first = new ThreadGroup("wrong").NewThread(Runnables.Create(() =>
+        var first = new ThreadGroup("wrong").NewThread(() =>
         {
             try
             {
                 DefaultThreadFactory factory = callable();
-                Thread t = factory.NewThread(Runnables.Empty);
+                Thread t = factory.NewThread(() => { });
                 captured = ThreadGroup.GetThreadGroup(t);
             }
             catch (Exception error) { exception = error; }
-        }));
+        });
         first.Start();
         Assert.True(first.Join(TimeSpan.FromSeconds(2)));
         Assert.Null(exception);
@@ -131,23 +131,23 @@ public class DefaultThreadFactoryTest
         DefaultThreadFactory factory = null;
         ThreadGroup firstCaptured = null;
         var firstGroup = new ThreadGroup("first");
-        var first = firstGroup.NewThread(Runnables.Create(() =>
+        var first = firstGroup.NewThread(() =>
         {
             factory = new DefaultThreadFactory("sticky", false, ThreadPriority.Normal, null);
-            Thread t = factory.NewThread(Runnables.Empty);
+            Thread t = factory.NewThread(() => { });
             firstCaptured = ThreadGroup.GetThreadGroup(t);
-        }));
+        });
         first.Start();
         Assert.True(first.Join(TimeSpan.FromSeconds(2)));
         Assert.Same(firstGroup, firstCaptured);
 
         ThreadGroup secondCaptured = null;
         var secondGroup = new ThreadGroup("second");
-        var second = secondGroup.NewThread(Runnables.Create(() =>
+        var second = secondGroup.NewThread(() =>
         {
-            Thread t = factory.NewThread(Runnables.Empty);
+            Thread t = factory.NewThread(() => { });
             secondCaptured = ThreadGroup.GetThreadGroup(t);
-        }));
+        });
         second.Start();
         Assert.True(second.Join(TimeSpan.FromSeconds(2)));
         Assert.Same(secondGroup, secondCaptured);
@@ -161,20 +161,20 @@ public class DefaultThreadFactoryTest
         DefaultThreadFactory factory = null;
         ThreadGroup firstCaptured = null;
         var group = new ThreadGroup("first");
-        var first = group.NewThread(Runnables.Create(() =>
+        var first = group.NewThread(() =>
         {
             firstCaptured = ThreadGroup.GetThreadGroup(Thread.CurrentThread);
             factory = new DefaultThreadFactory("sticky", false);
-        }));
+        });
         first.Start();
         Assert.True(first.Join(TimeSpan.FromSeconds(2)));
         Assert.Same(group, firstCaptured);
 
         ThreadGroup currentThreadGroup = ThreadGroup.CurrentThreadGroup();
-        Thread second = factory.NewThread(Runnables.Create(() =>
+        Thread second = factory.NewThread(() =>
         {
             // NOOP.
-        }));
+        });
         // CLR cannot join an unstarted Thread. Inspect its assigned identity instead,
         // strengthening the upstream's final self-equality assertion.
         Assert.Same(currentThreadGroup, ThreadGroup.GetThreadGroup(second));

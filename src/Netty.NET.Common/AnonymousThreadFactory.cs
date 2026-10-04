@@ -1,20 +1,19 @@
 using System;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common;
 
 public class AnonymousThreadFactory : IThreadFactory
 {
-    private readonly Func<IRunnable, Thread> _factory;
+    private readonly Func<Action, Thread> _factory;
 
-    public AnonymousThreadFactory(Func<IRunnable, Thread> factory)
+    public AnonymousThreadFactory(Func<Action, Thread> factory)
     {
-        _factory = factory;
+        _factory = factory ?? throw new ArgumentNullException(nameof(factory));
     }
 
-    public Thread NewThread(IRunnable r)
+    public Thread NewThread(Action r)
     {
         return _factory.Invoke(r);
     }

@@ -150,8 +150,8 @@ public class RecyclerContractTest
             catch (Exception error) { failure = error; }
             finally { FastThreadLocal.RemoveAll(); }
         });
-        thread.Start();
-        Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        thread.Thread.Start();
+        Assert.True(thread.Thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(failure);
     }
 }

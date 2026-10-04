@@ -35,9 +35,9 @@ public class SingleThreadEventExecutorTest
     {
         internal readonly Thread thread;
         private readonly CountdownEvent runLatch = new(1);
-        internal TestThread(IRunnable task)
+        internal TestThread(Action task)
         {
-            thread = new Thread(() => { runLatch.Signal(); task.Run(); }) { IsBackground = true };
+            thread = new Thread(() => { runLatch.Signal(); task(); }) { IsBackground = true };
         }
         internal void AwaitStarted() =>
             Assert.True(SpinWait.SpinUntil(() => (thread.ThreadState & System.Threading.ThreadState.Unstarted) == 0,
@@ -48,7 +48,7 @@ public class SingleThreadEventExecutorTest
     private sealed class TestThreadFactory : IThreadFactory
     {
         internal readonly BlockingCollection<TestThread> threads = new();
-        public Thread NewThread(IRunnable runnable)
+        public Thread NewThread(Action runnable)
         {
             var wrapper = new TestThread(runnable);
             threads.Add(wrapper);

@@ -11,9 +11,9 @@ namespace Netty.NET.Common.Tests.Porting;
 
 public class UnorderedQueueOwnershipContractTest
 {
-    private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
+    private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(IRunnable task) => create(task);
+        public Thread NewThread(Action task) => create(task);
     }
 
     [Fact]
@@ -24,7 +24,7 @@ public class UnorderedQueueOwnershipContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(task =>
         {
             if (++attempts == 1) throw expected;
-            return new Thread(task.Run) { IsBackground = true };
+            return new Thread(task.Invoke) { IsBackground = true };
         }));
         try
         {

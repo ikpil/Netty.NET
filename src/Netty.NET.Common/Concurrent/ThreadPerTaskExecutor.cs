@@ -30,6 +30,6 @@ public class ThreadPerTaskExecutor : IExecutor
 
     public void Execute(IRunnable command)
     {
-        _threadFactory.NewThread(command).Start();
+        _threadFactory.NewThread(command.Run).Start();
     }
 }

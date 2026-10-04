@@ -30,7 +30,7 @@ namespace Netty.NET.Common.Tests;
  */
 public static class RunInFastThreadLocalThreadExtension
 {
-    private sealed class Worker(IRunnable invocation, Action<Exception> cleanupFailure) : FastThreadLocalThread(invocation)
+    private sealed class Worker(Action invocation, Action<Exception> cleanupFailure) : FastThreadLocalThread(invocation)
     {
         public override void Run()
         {
@@ -45,13 +45,13 @@ public static class RunInFastThreadLocalThreadExtension
     {
         ArgumentNullException.ThrowIfNull(invocation);
         ExceptionDispatchInfo failure = null;
-        var thread = new Worker(Runnables.Create(() =>
+        var thread = new Worker(() =>
         {
             try { invocation(); }
             catch (Exception error) { failure = ExceptionDispatchInfo.Capture(error); }
-        }), error => failure ??= ExceptionDispatchInfo.Capture(error));
-        thread.Start();
-        thread.Join();
+        }, error => failure ??= ExceptionDispatchInfo.Capture(error));
+        thread.Thread.Start();
+        thread.Thread.Join();
         failure?.Throw();
     }
 }

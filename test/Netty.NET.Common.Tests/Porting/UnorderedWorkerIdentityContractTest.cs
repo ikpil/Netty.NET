@@ -8,16 +8,16 @@ namespace Netty.NET.Common.Tests.Porting;
 
 public class UnorderedWorkerIdentityContractTest
 {
-    private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
+    private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(IRunnable task) => create(task);
+        public Thread NewThread(Action task) => create(task);
     }
 
     [Fact]
     public void ConstructorFactoryCreatesThreadsIndependentlyOfWorkerAccounting()
     {
         Thread created = null;
-        var original = new Factory(task => created = new Thread(task.Run) { IsBackground = true });
+        var original = new Factory(task => created = new Thread(task.Invoke) { IsBackground = true });
         var executor = new UnorderedThreadPoolEventExecutor(1, original);
         try
         {
@@ -46,7 +46,7 @@ public class UnorderedWorkerIdentityContractTest
         var factory = new Factory(task => worker = new Thread(() =>
         {
             prefixAffinity = executor.InEventLoop();
-            try { task.Run(); }
+            try { task.Invoke(); }
             finally
             {
                 suffixAffinity = executor.InEventLoop();
@@ -83,7 +83,7 @@ public class UnorderedWorkerIdentityContractTest
     public void StatefulConstructorFactoryKeepsConcurrentWorkersRecognizedTogether()
     {
         int creations = 0;
-        var factory = new Factory(task => new Thread(task.Run)
+        var factory = new Factory(task => new Thread(task.Invoke)
         {
             IsBackground = true,
             Name = Interlocked.Increment(ref creations) == 1 ? "first" : "second"

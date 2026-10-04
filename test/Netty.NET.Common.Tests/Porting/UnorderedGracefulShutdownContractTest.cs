@@ -13,7 +13,7 @@ public class UnorderedGracefulShutdownContractTest
 {
     private sealed class WorkerlessFactory : IThreadFactory
     {
-        public Thread NewThread(IRunnable task) => null;
+        public Thread NewThread(Action task) => null;
     }
 
     [Theory]

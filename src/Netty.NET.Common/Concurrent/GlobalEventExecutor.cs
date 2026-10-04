@@ -298,7 +298,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     private void StartThreadWithoutContext()
     {
-        Thread t = _threadFactory.NewThread(_taskRunner);
+        Thread t = _threadFactory.NewThread(_taskRunner.Run);
         // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
         // classloader.
         // See:

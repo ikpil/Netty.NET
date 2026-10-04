@@ -40,18 +40,18 @@ public class HashedWheelTimerContractTest
     {
         var group = new ThreadGroup("timer-factory-creator");
         IThreadFactory factory = null;
-        Thread creator = group.NewThread(Runnables.Create(() => factory = Executors.DefaultThreadFactory()));
+        Thread creator = group.NewThread(() => factory = Executors.DefaultThreadFactory());
         creator.Start(); Assert.True(creator.Join(TimeSpan.FromSeconds(5)));
         bool fastCleanup = true;
-        Thread worker = factory.NewThread(Runnables.Create(() =>
-            fastCleanup = FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()));
+        Thread worker = factory.NewThread(() =>
+            fastCleanup = FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
         Assert.Same(group, ThreadGroup.GetThreadGroup(worker));
         Assert.False(worker.IsBackground);
         Assert.Equal(ThreadPriority.Normal, worker.Priority);
         Assert.Matches("^pool-[0-9]+-thread-1$", worker.Name);
         worker.Start(); Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
         Assert.False(fastCleanup);
-        Thread next = factory.NewThread(Runnables.Empty);
+        Thread next = factory.NewThread(() => { });
         Assert.EndsWith("-thread-2", next.Name);
     }
 
@@ -237,7 +237,7 @@ public class HashedWheelTimerContractTest
     public void ThirtyDayTickWaitIsChunkedAndStopRemainsPrompt()
     {
         Thread worker = null;
-        var factory = new AnonymousThreadFactory(runnable => worker = new Thread(runnable.Run) { IsBackground = true });
+        var factory = new AnonymousThreadFactory(runnable => worker = new Thread(runnable.Invoke) { IsBackground = true });
         using var timer = new HashedWheelTimer(factory, TimeSpan.FromDays(30), 1);
         timer.NewTimeout(new RunOnlyTask(_ => throw new InvalidOperationException("early expiration")), TimeSpan.FromDays(31));
         Assert.True(SpinWait.SpinUntil(() => (worker.ThreadState & ThreadState.WaitSleepJoin) != 0, TimeSpan.FromSeconds(5)));

@@ -113,11 +113,11 @@ public class ThreadExecutorMapTest
         IThreadFactory threadFactory = ThreadExecutorMap.Apply(new DefaultThreadFactory("thread-executor-map-test"),
             ImmediateEventExecutor.INSTANCE);
         Exception failure = null;
-        Thread thread = threadFactory.NewThread(Runnables.Create(() =>
+        Thread thread = threadFactory.NewThread(() =>
         {
             try { Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor()); }
             catch (Exception exception) { failure = exception; }
-        }));
+        });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(failure);

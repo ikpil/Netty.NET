@@ -87,7 +87,7 @@ public static class ThreadDeathWatcher
     {
         pendingEntries.Enqueue(new Entry(thread, task, isWatch));
         if (Interlocked.CompareExchange(ref started, 1, 0) != 0) return;
-        Thread worker = threadFactory.NewThread(watcher);
+        Thread worker = threadFactory.NewThread(watcher.Run);
         // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
         // classloader.
         // See:

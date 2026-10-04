@@ -389,7 +389,7 @@ public class DefaultPromiseTest
     }
     private sealed class TestEventExecutor : SingleThreadEventExecutor
     {
-        internal TestEventExecutor() : base(null, new AnonymousThreadFactory(task => new Thread(task.Run) { IsBackground = true }), true) { }
+        internal TestEventExecutor() : base(null, new AnonymousThreadFactory(task => new Thread(task.Invoke) { IsBackground = true }), true) { }
         protected override void Run()
         {
             for (;;)

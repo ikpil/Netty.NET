@@ -74,7 +74,7 @@ public class MapOwnershipContractTest : IDisposable
             finally { FastThreadLocal.RemoveAll(); }
         }
         Thread worker = mode == 2
-            ? new DefaultThreadFactory(typeof(MapOwnershipContractTest), true).NewThread(Runnables.Create(Execute))
+            ? new DefaultThreadFactory(typeof(MapOwnershipContractTest), true).NewThread(Execute)
             : new Thread(Execute) { IsBackground = true };
         worker.Start();
         Assert.True(worker.Join(TimeSpan.FromSeconds(5)));

@@ -16,6 +16,7 @@
 
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Functional;
+using System;
 
 namespace Netty.NET.Common.Internal;
 
@@ -63,18 +64,7 @@ public static class ThreadExecutorMap
     {
         ObjectUtil.CheckNotNull(command, "command");
         ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
-        return Runnables.Create(() =>
-        {
-            IEventExecutor old = SetCurrentExecutor(eventExecutor);
-            try
-            {
-                command.Run();
-            }
-            finally
-            {
-                SetCurrentExecutor(old);
-            }
-        });
+        return Runnables.Create(() => RunWithExecutor(command.Run, eventExecutor));
     }
 
     /**
@@ -86,7 +76,14 @@ public static class ThreadExecutorMap
         ObjectUtil.CheckNotNull(threadFactory, "threadFactory");
         ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
         return new AnonymousThreadFactory(r =>
-            threadFactory.NewThread(Apply(r, eventExecutor))
+            threadFactory.NewThread(() => RunWithExecutor(r, eventExecutor))
         );
+    }
+
+    private static void RunWithExecutor(Action command, IEventExecutor eventExecutor)
+    {
+        IEventExecutor old = SetCurrentExecutor(eventExecutor);
+        try { command(); }
+        finally { SetCurrentExecutor(old); }
     }
 }

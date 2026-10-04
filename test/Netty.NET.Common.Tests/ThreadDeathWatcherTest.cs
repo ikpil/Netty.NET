@@ -90,11 +90,11 @@ public class ThreadDeathWatcherTest
     {
         var group = new ThreadGroup("group");
         ThreadGroup capturedGroup = null;
-        Thread thread = group.NewThread(Runnables.Create(() =>
+        Thread thread = group.NewThread(() =>
         {
-            Thread child = ThreadDeathWatcher.threadFactory.NewThread(Runnables.Empty);
+            Thread child = ThreadDeathWatcher.threadFactory.NewThread(() => { });
             capturedGroup = ThreadGroup.GetThreadGroup(child);
-        }));
+        });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(1)));
         Assert.Same(group, capturedGroup);

@@ -14,9 +14,9 @@ public class UnorderedExecutorContractTest
     private sealed class Factory : IThreadFactory
     {
         internal readonly ConcurrentBag<Thread> threads = new();
-        public Thread NewThread(IRunnable task)
+        public Thread NewThread(Action task)
         {
-            var thread = new Thread(task.Run) { IsBackground = true };
+            var thread = new Thread(task.Invoke) { IsBackground = true };
             threads.Add(thread);
             return thread;
         }
@@ -24,9 +24,9 @@ public class UnorderedExecutorContractTest
 
     private sealed class LambdaFactory : IThreadFactory
     {
-        private readonly Func<IRunnable, Thread> create;
-        internal LambdaFactory(Func<IRunnable, Thread> create) => this.create = create;
-        public Thread NewThread(IRunnable task) => create(task);
+        private readonly Func<Action, Thread> create;
+        internal LambdaFactory(Func<Action, Thread> create) => this.create = create;
+        public Thread NewThread(Action task) => create(task);
     }
 
     private static void Stop(UnorderedThreadPoolEventExecutor executor)
@@ -618,7 +618,7 @@ public class UnorderedExecutorContractTest
     public void StatefulConstructorFactoryCreatesSuccessiveNativeWorkers()
     {
         int creations = 0;
-        var factory = new LambdaFactory(task => new Thread(task.Run)
+        var factory = new LambdaFactory(task => new Thread(task.Invoke)
             { IsBackground = true, Name = "native-worker-" + Interlocked.Increment(ref creations) });
         var executor = new UnorderedThreadPoolEventExecutor(0, factory);
         try
@@ -736,7 +736,7 @@ public class UnorderedExecutorContractTest
         {
             Assert.Equal(1, ++creations);
             executor.Execute(Runnables.Create(() => ++reentrantExecutions));
-            return new Thread(task.Run) { IsBackground = true };
+            return new Thread(task.Invoke) { IsBackground = true };
         });
         executor = new UnorderedThreadPoolEventExecutor(1, factory);
         try
@@ -758,7 +758,7 @@ public class UnorderedExecutorContractTest
         var factory = new LambdaFactory(task =>
         {
             if (++attempts == 1) throw expected;
-            return new Thread(task.Run) { IsBackground = true };
+            return new Thread(task.Invoke) { IsBackground = true };
         });
         var executor = new UnorderedThreadPoolEventExecutor(1, factory);
         try

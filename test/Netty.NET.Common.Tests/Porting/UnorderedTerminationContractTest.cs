@@ -9,9 +9,9 @@ namespace Netty.NET.Common.Tests.Porting;
 
 public class UnorderedTerminationContractTest
 {
-    private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
+    private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(IRunnable task) => create(task);
+        public Thread NewThread(Action task) => create(task);
     }
 
     [Theory]

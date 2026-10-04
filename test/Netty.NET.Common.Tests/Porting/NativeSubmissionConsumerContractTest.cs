@@ -79,11 +79,11 @@ public class NativeSubmissionConsumerContractTest
 
     private sealed class GatedFactory(ManualResetEventSlim entered, ManualResetEventSlim release) : IThreadFactory
     {
-        public Thread NewThread(IRunnable task) => new(() =>
+        public Thread NewThread(Action task) => new(() =>
         {
             entered.Set();
             release.Wait();
-            task.Run();
+            task();
         }) { IsBackground = true };
     }
 
@@ -129,10 +129,10 @@ public class NativeSubmissionConsumerContractTest
     private sealed class FailingFactory(Exception failure) : IThreadFactory
     {
         private int _attempts;
-        public Thread NewThread(IRunnable task)
+        public Thread NewThread(Action task)
         {
             if (Interlocked.Increment(ref _attempts) == 1) throw failure;
-            return new Thread(task.Run) { IsBackground = true };
+            return new Thread(task.Invoke) { IsBackground = true };
         }
     }
 

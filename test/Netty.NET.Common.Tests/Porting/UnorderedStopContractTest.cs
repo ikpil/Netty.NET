@@ -9,9 +9,9 @@ namespace Netty.NET.Common.Tests.Porting;
 public class UnorderedStopContractTest
 {
     private static readonly AsyncLocal<string> Ambient = new();
-    private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
+    private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(IRunnable task) => create(task);
+        public Thread NewThread(Action task) => create(task);
     }
 
     [Theory]
@@ -164,7 +164,7 @@ public class UnorderedStopContractTest
         bool suffixInterrupted = false;
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(task => worker = new Thread(() =>
         {
-            task.Run();
+            task.Invoke();
             try { Thread.Sleep(1); }
             catch (ThreadInterruptedException) { suffixInterrupted = true; }
         }) { IsBackground = true }));

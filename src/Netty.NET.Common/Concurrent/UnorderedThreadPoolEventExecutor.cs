@@ -382,7 +382,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         bool started = false;
         try
         {
-            Thread thread = threadFactory.NewThread(Runnables.Create(WorkerLoop));
+            Thread thread = threadFactory.NewThread(WorkerLoop);
             if (thread == null || stopping) return false;
             workers.Add(thread);
             try { thread.Start(); }

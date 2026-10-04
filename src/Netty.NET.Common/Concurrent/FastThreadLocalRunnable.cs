@@ -14,16 +14,17 @@
  * under the License.
  */
 
-using Netty.NET.Common.Functional;
+using System;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
 
-public class FastThreadLocalRunnable : IRunnable
+// Internal cleanup policy for native delegates; no public Runnable facade is needed.
+internal sealed class FastThreadLocalRunnable
 {
-    private readonly IRunnable _runnable;
+    private readonly Action _runnable;
 
-    private FastThreadLocalRunnable(IRunnable runnable)
+    private FastThreadLocalRunnable(Action runnable)
     {
         _runnable = ObjectUtil.CheckNotNull(runnable, "runnable");
     }
@@ -32,7 +33,7 @@ public class FastThreadLocalRunnable : IRunnable
     {
         try
         {
-            _runnable.Run();
+            _runnable();
         }
         finally
         {
@@ -40,8 +41,10 @@ public class FastThreadLocalRunnable : IRunnable
         }
     }
 
-    public static IRunnable Wrap(IRunnable runnable)
+    internal static Action Wrap(Action runnable)
     {
-        return runnable is FastThreadLocalRunnable ? runnable : new FastThreadLocalRunnable(runnable);
+        ArgumentNullException.ThrowIfNull(runnable);
+        return runnable.Target is FastThreadLocalRunnable && runnable.GetInvocationList().Length == 1
+            ? runnable : new FastThreadLocalRunnable(runnable).Run;
     }
 }

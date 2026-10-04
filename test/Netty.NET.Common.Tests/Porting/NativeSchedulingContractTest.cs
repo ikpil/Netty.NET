@@ -227,7 +227,7 @@ public class NativeSchedulingContractTest
 
     private sealed class FailingFactory(Exception error) : IThreadFactory
     {
-        public Thread NewThread(IRunnable runnable) => throw error;
+        public Thread NewThread(Action runnable) => throw error;
     }
 
     [Fact]

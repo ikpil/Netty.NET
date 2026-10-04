@@ -60,7 +60,7 @@ public class ThreadLocalContractTest : IDisposable
         var local = new TrackingLocal();
         Exception failure = null;
         var factory = new DefaultThreadFactory(typeof(ThreadLocalContractTest), true);
-        var thread = factory.NewThread(Runnables.Create(() =>
+        var thread = factory.NewThread(() =>
         {
             try
             {
@@ -70,7 +70,7 @@ public class ThreadLocalContractTest : IDisposable
                 local.Set(Thread.CurrentThread.Name);
             }
             catch (Exception cause) { failure = cause; }
-        }));
+        });
         Assert.True(FastThreadLocalThread.WillCleanupFastThreadLocals(thread));
         Assert.True(thread.IsBackground);
         thread.Start();

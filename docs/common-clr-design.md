@@ -4195,3 +4195,61 @@ Retired pinned StringUtil.java:674-702 joining implementation/comment:
         return builder;
     }
 ```
+
+
+## Native thread creation and invocation ownership
+
+Pinned DefaultThreadFactory.java:104-121 and FastThreadLocalRunnable.java:20-37
+require an unstarted named thread, best-effort daemon/priority configuration and
+finally-based physical fast-local cleanup, including a custom factory's ordinary
+thread. Consumers include HashedWheelTimer.java:310, ThreadDeathWatcher.java:104,
+GlobalEventExecutor.java:249 and SingleThreadEventExecutor.java:141-175 through
+ThreadPerTaskExecutor.java:32-34. ThreadExecutorMap.java:84-95 supplies worker-local
+executor identity and restores the old mapping after invocation. Buffer allocator
+tests also use target-based and targetless/subclass FastThreadLocalThread workers.
+
+Use one Action-to-Thread factory boundary throughout common, custom test factories
+and logical ThreadGroup creation; no public IRunnable overload is retained there.
+FastThreadLocalThread takes Action and exposes its owned native Thread for start,
+join and name access. Targetless/virtual Run remains for the original subclass
+scenarios, with no invented automatic-cleanup promise. Existing IRunnable executor,
+timer and watcher producers supply a bound Run delegate at this boundary; their
+remaining public execution APIs are a separate review, not certified by this change.
+The factory decorator runs Action directly, sharing mapping restoration policy
+with its existing executor decorator. Global executor flow suppression remains.
+
+FastThreadLocalRunnable is an internal sealed delegate cleanup policy, matching
+the upstream package-private helper's purpose. Rewrapping its single callback is
+idempotent. CLR multicast delegates need their own outer finally: a chain whose
+last callback is already wrapped still requires cleanup if an earlier callback
+throws before reaching that callback. No public Java Runnable hierarchy is needed.
+Native Interlocked counters replace factory AtomicInteger objects; CLR priority
+range/null errors use ArgumentOutOfRangeException/ArgumentNullException. Explicit
+group and null-group creator inheritance and native metadata pool naming remain.
+
+A before-repair regression proves that holding a completed native Thread retains
+the invocation capture through weak-key ownership metadata. The key is intentionally
+alive, so weak lookup alone cannot release the owner's target. Clear that target
+in the owned thread's Entry finally, retaining cleanup metadata while releasing work
+after normal/exceptional termination. A GC test retains both owner and Thread on
+the exceptional path; neither capture survives. A subclass's own fields remain its
+responsibility; clearing the base target does not clear arbitrary subclass state.
+
+Standalone native threads follow CLR ExecutionContext capture at Thread.Start:
+the starter's current AsyncLocal state flows unless flow is suppressed. Factory
+construction does not snapshot the creator's logical state. Physical fast-local
+membership/map/cleanup remains thread-static and never follows AsyncLocal. Existing
+global/shared executor submission policies separately control caller context;
+this factory change does not substitute native threads with Task.Run or a pool.
+CLR unhandled worker exceptions retain native process-level behavior; contract
+tests use an explicit catching custom factory/subclass to observe failure safely.
+
+Ten native cases cover retained target release, exception cleanup, multicast,
+start/context policy, null/range errors and direct Action consumption. Existing
+original fixture identities/comments/scenarios remain, including the existing
+SecurityManager runtime skip; no new exclusion is introduced. Full Debug/Release,
+checked contracts and provenance/inventory results are in common-porting.md.
+FastThreadLocalRunnable's full small source/native review is verified. Remaining
+wrapper stack-size/constructor and blocking-policy decisions, wider executor APIs,
+JVM-only ObjectCleaner/BlockHound consumers and whole common remain separate.
+No throughput or allocation improvement is claimed by this boundary/lifetime unit.

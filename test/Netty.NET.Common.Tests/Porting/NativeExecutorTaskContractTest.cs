@@ -456,7 +456,7 @@ public class NativeExecutorTaskContractTest
 
     private sealed class FailingThreadFactory(Exception error) : IThreadFactory
     {
-        public Thread NewThread(IRunnable runnable) => throw error;
+        public Thread NewThread(Action runnable) => throw error;
     }
 
     [Fact]

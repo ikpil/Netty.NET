@@ -225,5 +225,5 @@ sealed class PriorityComparer : IComparer<(long Deadline, long Sequence)>
 }
 sealed class NoWorker : IThreadFactory
 {
-    public Thread NewThread(IRunnable task) => null;
+    public Thread NewThread(Action task) => null;
 }

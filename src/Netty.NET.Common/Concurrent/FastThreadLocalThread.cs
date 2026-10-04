@@ -17,7 +17,6 @@
 using System;
 using System.Threading;
 using System.Runtime.CompilerServices;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -46,23 +45,23 @@ public class FastThreadLocalThread
     // This will be set to true if we have a chance to wrap the Runnable.
     private readonly bool cleanupFastThreadLocals;
     private InternalThreadLocalMap _threadLocalMap;
-    private readonly IRunnable _target;
+    private Action _target;
     public Thread Thread { get; }
     internal static FastThreadLocalThread CurrentFastThreadLocalThread() => _current;
 
     public FastThreadLocalThread() : this(null, null, 0, false) { }
     public FastThreadLocalThread(string name) : this(null, name, 0, false) { }
-    public FastThreadLocalThread(IRunnable target) : this(target, null, 0, true) { }
-    public FastThreadLocalThread(IRunnable target, string name) : this(target, name, 0, true) { }
-    public FastThreadLocalThread(ThreadGroup group, IRunnable target) : this(target, null, 0, true, group) { }
+    public FastThreadLocalThread(Action target) : this(target, null, 0, true) { }
+    public FastThreadLocalThread(Action target, string name) : this(target, name, 0, true) { }
+    public FastThreadLocalThread(ThreadGroup group, Action target) : this(target, null, 0, true, group) { }
     public FastThreadLocalThread(ThreadGroup group, string name) : this(null, name, 0, false, group) { }
-    public FastThreadLocalThread(ThreadGroup group, IRunnable target, string name) : this(target, name, 0, true, group) { }
-    public FastThreadLocalThread(ThreadGroup group, IRunnable target, string name, long stackSize)
+    public FastThreadLocalThread(ThreadGroup group, Action target, string name) : this(target, name, 0, true, group) { }
+    public FastThreadLocalThread(ThreadGroup group, Action target, string name, long stackSize)
         : this(target, name, checked((int)stackSize), true, group) { }
 
     // CLR ThreadGroup identity uses weak metadata and inherits the creator group.
     // Stack size is a CLR hint and must fit its Int32 parameter.
-    private FastThreadLocalThread(IRunnable target, string name, int stackSize, bool cleanup, ThreadGroup group = null)
+    private FastThreadLocalThread(Action target, string name, int stackSize, bool cleanup, ThreadGroup group = null)
     {
         cleanupFastThreadLocals = cleanup;
         _target = cleanup ? FastThreadLocalRunnable.Wrap(target) : target;
@@ -76,14 +75,15 @@ public class FastThreadLocalThread
     {
         _current = this;
         try { Run(); }
-        finally { _current = null; }
+        finally
+        {
+            // Native Thread ownership metadata may outlive execution. Release captured work on termination.
+            _target = null;
+            _current = null;
+        }
     }
 
-    public virtual void Run() => _target?.Run();
-    public void Start() => Thread.Start();
-    public void Join() => Thread.Join();
-    public bool Join(TimeSpan timeout) => Thread.Join(timeout);
-    public string GetName() => Thread.Name;
+    public virtual void Run() => _target?.Invoke();
 
     /**
      * Returns the internal data structure that keeps the thread-local variables bound to this thread.
@@ -154,19 +154,19 @@ public class FastThreadLocalThread
      *
      * @param runnable The task to run
      */
-    public static void RunWithFastThreadLocal(IRunnable runnable)
+    public static void RunWithFastThreadLocal(Action runnable)
     {
+        ArgumentNullException.ThrowIfNull(runnable);
         if (_current != null) throw new InvalidOperationException("Caller is a real FastThreadLocalThread");
         if (_fallbackScope) throw new InvalidOperationException("Reentrant call to run()");
         _fallbackScope = true;
-        try { runnable.Run(); }
+        try { runnable(); }
         finally
         {
             _fallbackScope = false;
             FastThreadLocal.RemoveAll();
         }
     }
-    public static void RunWithFastThreadLocal(Action runnable) => RunWithFastThreadLocal(Runnables.Create(runnable));
 
     /**
      * Query whether this thread is allowed to perform blocking calls or not.

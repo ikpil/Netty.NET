@@ -300,7 +300,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         }
 
         _worker = new HashedWheelWorker(this);
-        _workerThread = threadFactory.NewThread(_worker);
+        _workerThread = threadFactory.NewThread(_worker.Run);
 
         _leak = leakDetection || !_workerThread.IsBackground ? leakDetector.Track(this) : null;
 

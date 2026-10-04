@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -31,10 +30,10 @@ public sealed class ThreadGroup
         Groups.Add(thread, group ?? CurrentThreadGroup());
 
     // CLR counterpart of new Thread(group, runnable), without fast-local behavior.
-    public Thread NewThread(IRunnable runnable)
+    public Thread NewThread(Action runnable)
     {
         ArgumentNullException.ThrowIfNull(runnable);
-        var thread = new Thread(runnable.Run);
+        var thread = new Thread(runnable.Invoke);
         Assign(thread, this);
         return thread;
     }

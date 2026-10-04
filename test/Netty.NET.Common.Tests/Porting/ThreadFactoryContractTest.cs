@@ -37,7 +37,7 @@ public class ThreadFactoryContractTest
         {
             var group = new ThreadGroup(name);
             Thread child = null;
-            var creator = group.NewThread(Runnables.Create(() => child = factory.NewThread(Runnables.Empty)));
+            var creator = group.NewThread(() => child = factory.NewThread(() => { }));
             creator.Start();
             Assert.True(creator.Join(TimeSpan.FromSeconds(5)));
             Assert.Same(group, ThreadGroup.GetThreadGroup(child));
@@ -51,7 +51,7 @@ public class ThreadFactoryContractTest
         var assigned = new ThreadGroup("assigned");
         var factory = new DefaultThreadFactory("explicit", true, ThreadPriority.Normal, assigned);
         ThreadGroup observed = null;
-        var child = factory.NewThread(Runnables.Create(() => observed = ThreadGroup.CurrentThreadGroup()));
+        var child = factory.NewThread(() => observed = ThreadGroup.CurrentThreadGroup());
         Assert.Same(assigned, ThreadGroup.GetThreadGroup(child));
         Assert.Equal(ThreadPriority.Normal, child.Priority);
         child.Start();

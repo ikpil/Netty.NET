@@ -16,7 +16,6 @@
 
 using System;
 using System.Threading;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
@@ -26,9 +25,9 @@ namespace Netty.NET.Common.Concurrent;
  */
 public class DefaultThreadFactory : IThreadFactory
 {
-    private static readonly AtomicInteger _poolId = new AtomicInteger();
+    private static int _poolId;
 
-    private readonly AtomicInteger _nextId = new AtomicInteger();
+    private int _nextId;
     private readonly string _prefix;
     private readonly bool _daemon;
     private readonly ThreadPriority _priority;
@@ -54,7 +53,7 @@ public class DefaultThreadFactory : IThreadFactory
 
     public static string ToPoolName(Type poolType)
     {
-        ObjectUtil.CheckNotNull(poolType, "poolType");
+        ArgumentNullException.ThrowIfNull(poolType);
 
         string poolName = StringUtil.SimpleClassName(poolType);
         switch (poolName.Length)
@@ -78,24 +77,24 @@ public class DefaultThreadFactory : IThreadFactory
 
     public DefaultThreadFactory(string poolName, bool daemon, ThreadPriority priority, ThreadGroup threadGroup)
     {
-        ObjectUtil.CheckNotNull(poolName, "poolName");
+        ArgumentNullException.ThrowIfNull(poolName);
 
         if (priority < ThreadPriority.Lowest || priority > ThreadPriority.Highest)
         {
-            throw new ArgumentException(
-                "priority: " + priority + " (expected: ThreadPriority.Lowest <= priority <= ThreadPriority.Highest)");
+            throw new ArgumentOutOfRangeException(nameof(priority), priority,
+                "Expected ThreadPriority.Lowest <= priority <= ThreadPriority.Highest.");
         }
 
-        _prefix = poolName + '-' + _poolId.IncrementAndGet() + '-';
+        _prefix = poolName + '-' + Interlocked.Increment(ref _poolId) + '-';
         _daemon = daemon;
         _priority = priority;
         _threadGroup = threadGroup;
     }
 
 
-    public virtual Thread NewThread(IRunnable r)
+    public virtual Thread NewThread(Action r)
     {
-        Thread t = NewThread(FastThreadLocalRunnable.Wrap(r), _prefix + _nextId.IncrementAndGet());
+        Thread t = NewThread(FastThreadLocalRunnable.Wrap(r), _prefix + Interlocked.Increment(ref _nextId));
         try
         {
             if (t.IsBackground != _daemon)
@@ -116,7 +115,7 @@ public class DefaultThreadFactory : IThreadFactory
         return t;
     }
 
-    protected virtual Thread NewThread(IRunnable r, string name)
+    protected virtual Thread NewThread(Action r, string name)
     {
         return new FastThreadLocalThread(_threadGroup, r, name).Thread;
     }

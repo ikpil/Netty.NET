@@ -122,34 +122,40 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2044 cases** on Windows/x64/net10.0:
-**2030 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: string-metadata-full-debug.trx and string-metadata-full-release.trx.
-All 2034 prior identities/outcomes, including 759 original non-Porting cases
-and every skip, remain. Ten new cases cover native type arrays/modifiers, generic
-parameters, function-pointer signatures, literal metadata names, runtime identity,
-platform newline and standard joining null/one-pass/disposal behavior. Six of nine
-initial cases fail before repair; function-pointer coverage was added afterward.
-Standard string.Join replaces the facade; explicit caller formatting retains the
-original fixture's null-text scenario. Type diagnostics traverse native metadata;
-newline uses Environment.NewLine with a snapshotted explicit environment override.
-3110 nonnull UTF-16 joining cases match pinned Java. Five isolated child processes
-verify Windows default and LF/CRLF/empty/custom overrides, initialization snapshot
-and actual leak-report consumer cleanup. No host environment is mutated.
-Detailed choices: common-clr-design.md#native-joining-metadata-labels-and-platform-separators.
-Current retained StringUtil source/native review is verified after earlier linked
-suffix/hex/CSV/OWS/token reviews. Whole common, future protocol integration/null
-policies and other platforms remain open. Targeted Debug and checked Release each
-execute 110 cases: 109 pass, zero fail, one existing skip.
-All 271 comment totals/coverage, prior provenance, original fixture identities,
-pinned inventory/paths and uppercase declarations pass; no new warning identity.
-Source statuses: 53 verified / 49 CLR replacement / 14 not applicable /
-71 pending / 18 in progress. No new Markdown file or original exclusion is added.
-Records stay in ignored TestResults and artifacts/string-metadata-validation:
-string-metadata-before-debug.trx, string-metadata-identity-and-inventory.json,
-string-metadata-evidence.json and comment audit.
-Next: broader native thread-wrapper/factory API review against actual upstream
-consumers. Full portable sources build by default without PortingBatch.
+The current default suite executes **2054 cases** on Windows/x64/net10.0:
+**2040 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: native-thread-full-debug.trx and native-thread-full-release.trx.
+All 2044 prior identities/outcomes, including 759 original non-Porting cases
+and every skip, remain. Ten native cases cover Action-to-Thread consumption,
+normal/exceptional capture release, custom-worker cleanup, multicast exceptions,
+native start/context flow and null/priority range errors. A before-repair GC
+failure proves retained Thread metadata previously held completed work alive.
+Initial full Release exposed two new tests' incorrect empty-runner-map assumptions;
+they now verify that native creation/null rejection preserves the caller's existing
+physical map. Final targeted/checked and full Debug/Release run after that repair.
+Native factory/group/wrapper boundaries take Action and return/expose Thread;
+actual executor/timer/watcher producers supply bound Run delegates. Factory IDs
+use Interlocked; the package-private cleanup policy is internal. Original tests
+keep all scenarios/assertions/comments; no new exclusion or fake success is added.
+Design and remaining API scope:
+common-clr-design.md#native-thread-creation-and-invocation-ownership.
+Targeted Debug and checked Release each execute 45 cases: 44 pass, zero fail,
+one existing skip. Existing unordered/bootstrap/global/timer/watcher tests pass
+in the full suite with their migrated factories. The queue-costs tool also builds
+in Debug/Release against the validated native factory boundary; no costs rerun
+or new performance claim. Declaration/collision and original comment/inventory/
+path/fixture checks pass; all modified source/test/tool comments remain and no
+new production/test warning identity appears.
+Source statuses: 54 verified / 49 CLR replacement / 14 not applicable /
+69 pending / 19 in progress. FastThreadLocalRunnable's full small native review
+is verified; ThreadPerTaskExecutor factory integration is in progress while its
+public IExecutor boundary remains separate. No new Markdown file is added.
+Records stay in ignored TestResults and artifacts/native-thread-validation:
+native-thread-before-debug.trx, native-thread-identity-and-inventory.json,
+comment audit, casing verification and tool build logs.
+Next: remaining wrapper constructor/stack-size and blocking-policy decisions,
+then native per-task/executor boundary review against actual consumers.
+Whole common remains open. Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

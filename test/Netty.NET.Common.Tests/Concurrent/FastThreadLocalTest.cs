@@ -293,7 +293,7 @@ public class FastThreadLocalTest : IDisposable
             try { runnable(); }
             catch (Exception cause) { failure = cause; }
         });
-        Thread thread = fast ? new FastThreadLocalThread(target).Thread : new Thread(target.Run);
+        Thread thread = fast ? new FastThreadLocalThread(target.Run).Thread : new Thread(target.Run);
         thread.IsBackground = true;
         thread.Name = "test-local-" + Guid.NewGuid();
         thread.Start();

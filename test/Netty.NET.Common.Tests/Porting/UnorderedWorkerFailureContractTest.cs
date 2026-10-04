@@ -8,9 +8,9 @@ namespace Netty.NET.Common.Tests.Porting;
 
 public class UnorderedWorkerFailureContractTest
 {
-    private sealed class Factory(Func<IRunnable, Thread> create) : IThreadFactory
+    private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(IRunnable task) => create(task);
+        public Thread NewThread(Action task) => create(task);
     }
 
     // Simulate a native backend defect escaping the usual producer boundary.
@@ -36,7 +36,7 @@ public class UnorderedWorkerFailureContractTest
         int creations = 0, rawCalls = 0;
         var factory = new Factory(task =>
         {
-            if (Interlocked.Increment(ref creations) == 1) return new Thread(task.Run) { IsBackground = true };
+            if (Interlocked.Increment(ref creations) == 1) return new Thread(task.Invoke) { IsBackground = true };
             if (mode == "throw") throw expected;
             if (mode == "null") return null;
             var started = new Thread(() => { }) { IsBackground = true };
@@ -96,7 +96,7 @@ public class UnorderedWorkerFailureContractTest
         int creations = 0;
         var expected = new InvalidOperationException("replacement creation failed");
         var factory = new Factory(task => Interlocked.Increment(ref creations) <= 2
-            ? new Thread(task.Run) { IsBackground = true } : throw expected);
+            ? new Thread(task.Invoke) { IsBackground = true } : throw expected);
         var executor = new UnorderedThreadPoolEventExecutor(2, factory);
         using var escapedEntered = new ManualResetEventSlim();
         using var escapedRelease = new ManualResetEventSlim();
@@ -145,7 +145,7 @@ public class UnorderedWorkerFailureContractTest
     {
         int creations = 0;
         var executor = new UnorderedThreadPoolEventExecutor(1,
-            new Factory(task => { Interlocked.Increment(ref creations); return new Thread(task.Run) { IsBackground = true }; }));
+            new Factory(task => { Interlocked.Increment(ref creations); return new Thread(task.Invoke) { IsBackground = true }; }));
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var escaping = new EscapingSubmission(entered, release);
@@ -176,7 +176,7 @@ public class UnorderedWorkerFailureContractTest
         int creations = 0;
         var executor = new UnorderedThreadPoolEventExecutor(1,
             new Factory(task => Interlocked.Increment(ref creations) == 1
-                ? new Thread(task.Run) { IsBackground = true } : throw new InvalidOperationException("Unneeded worker")));
+                ? new Thread(task.Invoke) { IsBackground = true } : throw new InvalidOperationException("Unneeded worker")));
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var escaping = new EscapingSubmission(entered, release);
@@ -210,7 +210,7 @@ public class UnorderedWorkerFailureContractTest
         var expected = new InvalidOperationException("failure after reentrant closure");
         var factory = new Factory(task =>
         {
-            if (Interlocked.Increment(ref creations) == 1) return new Thread(task.Run) { IsBackground = true };
+            if (Interlocked.Increment(ref creations) == 1) return new Thread(task.Invoke) { IsBackground = true };
             executor.ShutdownNow();
             pendingInsideFactory = !executor.Termination.IsCompleted;
             if (throwAfterClosing) throw expected;
@@ -253,7 +253,7 @@ public class UnorderedWorkerFailureContractTest
         var callback = new ArgumentException("stop callback failed");
         var factory = new Factory(task =>
         {
-            if (Interlocked.Increment(ref creations) == 1) return new Thread(task.Run) { IsBackground = true };
+            if (Interlocked.Increment(ref creations) == 1) return new Thread(task.Invoke) { IsBackground = true };
             executor.StopAsync();
             throw backend;
         });

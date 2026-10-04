@@ -1,5 +1,5 @@
+using System;
 using System.Threading;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -20,7 +20,7 @@ public static class Executors
         private readonly ThreadGroup group = ThreadGroup.CurrentThreadGroup();
         private readonly string prefix = "pool-" + Interlocked.Increment(ref poolNumber) + "-thread-";
 
-        public Thread NewThread(IRunnable runnable)
+        public Thread NewThread(Action runnable)
         {
             Thread thread = group.NewThread(runnable);
             thread.Name = prefix + Interlocked.Increment(ref threadNumber);
