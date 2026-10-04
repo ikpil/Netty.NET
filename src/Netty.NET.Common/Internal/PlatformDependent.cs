@@ -851,18 +851,41 @@ public static class PlatformDependent
         return LINUX_OS_CLASSIFIERS;
     }
 
-    public static FileInfo CreateTempFile(string prefix, string suffix, FileInfo directory) {
+    /// <summary>
+    /// Creates an empty file in the supplied directory, or the CLR temporary directory.
+    /// Null prefix means no prefix; null suffix means .tmp. The caller owns deletion.
+    /// </summary>
+    public static FileInfo CreateTempFile(string prefix, string suffix, DirectoryInfo directory) {
+        prefix ??= string.Empty;
+        suffix ??= ".tmp";
+        char[] invalidNameChars = Path.GetInvalidFileNameChars();
+        if (prefix.IndexOfAny(invalidNameChars) >= 0)
+            throw new ArgumentException("A temporary-file prefix must be a filename component.", nameof(prefix));
+        if (suffix.IndexOfAny(invalidNameChars) >= 0)
+            throw new ArgumentException("A temporary-file suffix must be a filename component.", nameof(suffix));
+
         string dirPath = directory?.FullName ?? Path.GetTempPath();
+        var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
+        if (!OperatingSystem.IsWindows())
+            options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 
-        var randomFileName =Path.GetRandomFileName();
-        string fileName = $"{prefix}{randomFileName}{suffix}";
-        string filePath = Path.Combine(dirPath, fileName);
-
-        {
-            using var fs = File.Create(filePath);
+        for (int attempt = 0; ; ++attempt) {
+            string filePath = Path.Combine(dirPath, prefix + Path.GetRandomFileName() + suffix);
+            FileStream stream;
+            try {
+                // CreateNew reserves the name atomically; never truncate or follow an existing file/link.
+                stream = new FileStream(filePath, options);
+            } catch (IOException error) when (attempt < 100 &&
+                (OperatingSystem.IsWindows()
+                    ? error.HResult == unchecked((int)0x80070050) || error.HResult == unchecked((int)0x800700b7)
+                    : error.HResult == 17)) {
+                // CLR maps Windows FILE_EXISTS/ALREADY_EXISTS and Unix EEXIST differently.
+                // Retry only a name collision, with a bound as in the CLR Windows temp-file API.
+                continue;
+            }
+            stream.Dispose();
+            return new FileInfo(filePath);
         }
-
-        return new FileInfo(filePath);
     }
 
     /**

@@ -121,24 +121,22 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1913 cases** on Windows/net10.0:
-**1899 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: varhandle-memory-final-full-debug.trx and varhandle-memory-final-full-release.trx.
-All 1906 prior identities/outcomes, including 759 original non-Porting cases and
-every skip, remain. Six endian/common-memory integration cases and one deterministic
-original-fixture byte-wrap boundary are added. The factory's standard CLR replacement
-matches 864 exact Java byte-view rows. Fifteen platform forwarding/alignment methods
-and the ByteAt JVM Unsafe branch retire; native indexed/MemoryMarshal consumers
-replace them. Checked Release passes 395 cases after two reproduced checked defects
-are repaired: negative map index guard and Java-style byte increment wrapping.
-Original comment coverage and the pinned 271-file inventory remain checked. All
-tracked C# methods/local functions start uppercase. Library/test builds have zero
-errors; existing warnings remain. Both platform classes/common remain unfinished;
-direct native-ring publication and buffer/transport integration remain separate.
-Results remain in ignored TestResults and artifacts/varhandle-memory-validation.
-Full suites compile every portable test source without PortingBatch and do not
-establish module completion. Decisions and original comment provenance are in
-[common-clr-design.md](common-clr-design.md).
+The current default suite executes **1930 cases** on Windows/net10.0:
+**1916 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: temp-file-full-debug.trx and temp-file-full-release.trx.
+All 1913 prior identities/outcomes, including 759 original non-Porting cases and
+every skip, remain. Seventeen temporary-file contract cases are added; the Unix
+permission branch is guarded and was not executed on Windows. Targeted checked
+Release passes 25 cases. Eight cases fail before repair, fourteen pinned Java/real
+CLR rows agree, and an instrumented collision probe passes. See the native
+temporary-file decision in [common-clr-design.md](common-clr-design.md).
+Original comments and the pinned 271-file inventory remain checked; uppercase
+method/local-function verification passes. Existing warnings remain. Platform
+sources and common remain unfinished; no source completion status changes here.
+Results remain in ignored TestResults and artifacts/temp-file-validation.
+Next: remaining platform capability/bootstrap and queue factory purposes against
+actual pinned consumers. Full suites compile every portable test source without
+PortingBatch; green tests do not establish module completion.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

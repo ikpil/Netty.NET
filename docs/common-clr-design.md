@@ -14,6 +14,59 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## Native temporary-file creation
+
+Pinned PlatformDependent.java:1751-1756 delegates to Files.createTempFile, not
+File.createTempFile. The inherited JDK 21 TempFileHelper creates with exclusive
+ownership, accepts null/empty/short prefixes, defaults a null suffix to .tmp,
+rejects path components, retries name collisions and defaults POSIX files to owner
+read/write. Actual consumers are common/NativeLibraryLoader.java:199 (WORKDIR),
+handler/ssl/util/SelfSignedCertificate.java:308/339 (.key/.crt), and
+codec-http/multipart/AbstractDiskHttpData.java:92-95 (default or configured directory).
+Transport/buffer/stream fixtures reopen the path as a file; EpollSpliceTest.java:194
+passes a null suffix. This review changes the common helper, not those modules.
+
+Use DirectoryInfo for the optional directory and FileInfo for the returned file.
+No C# caller currently supplies the removed FileInfo directory parameter. Default
+directory comes from Path.GetTempPath; JVM java.io.tmpdir and Netty's separate
+io.netty.tmpdir probe do not select this native helper's default. Prefix/suffix
+must be native filename components, validated before creation. Short/null/empty
+prefixes remain valid; no Java File three-character rule is introduced. Native
+platform filename constraints and exception types apply; random name formatting
+is deliberately unspecified.
+
+FileStreamOptions with CreateNew atomically reserves a filename without truncating
+or following an existing file/link. The stream is closed before returning the
+path; deletion belongs to the caller, with no automatic exit hook. UnixCreateMode
+requests UserRead|UserWrite during creation, subject to umask; Windows inherits its
+native directory ACL rather than inventing POSIX permissions. Retry only native
+collision errors (Windows HRESULT FILE_EXISTS/ALREADY_EXISTS, Unix errno EEXIST=17),
+at most 100 retries/101 attempts as in the CLR Windows temp-file implementation.
+Unlike JDK's unbounded collision loop, exhaustion propagates IOException. Other
+IO errors propagate immediately; close errors are outside the collision filter.
+The helper neither creates a missing directory nor silently changes destination.
+
+The previous code omitted .tmp for null suffix, allowed directory escape through
+prefix and used truncating File.Create. Eight new public contract cases fail
+against the preceding implementation. The repaired helper has 17 passing Windows
+cases covering these boundaries, named directory/ownership, missing/non-directory
+errors and 256 parallel reopenable files with preserved existing content. The Unix
+permission assertion is OS-guarded and its branch was not executed on Windows.
+Fourteen normalized rows from the exact pinned Java wrapper on Corretto 21.0.11
+match the real checked CLR library. A separate copy of the production method
+changes only Path.GetRandomFileName to a controlled name supplier: it verifies
+actual FileStream collision retry, preserved sentinel content, released handle,
+101-attempt exhaustion and immediate unrelated IO failure. It is an instrumented
+Windows probe, not a forced-collision run of the unmodified compiled library.
+No existing Java comment or fixture is removed; this original method has no
+method comment. Whole-platform capability/bootstrap/queue reviews remain open.
+
+Framework sources: [Java Files.createTempFile](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/file/Files.html#createTempFile(java.nio.file.Path,java.lang.String,java.lang.String,java.nio.file.attribute.FileAttribute...)),
+[FileMode.CreateNew](https://learn.microsoft.com/en-us/dotnet/api/system.io.filemode?view=net-10.0),
+[UnixCreateMode](https://learn.microsoft.com/en-us/dotnet/api/system.io.filestreamoptions.unixcreatemode?view=net-10.0),
+[CLR Windows temporary-file retries](https://github.com/dotnet/runtime/blob/v10.0.7/src/libraries/System.Private.CoreLib/src/System/IO/Path.Windows.cs#L188-L237),
+and [CLR Unix IO exception mapping](https://github.com/dotnet/runtime/blob/v10.0.7/src/libraries/Common/src/Interop/Unix/Interop.IOErrors.cs#L143-L148).
+
 ## CLR endian views and JVM access strategies
 
 Pinned VarHandleFactory.java supplies twelve 16/32/64-bit LE/BE array/ByteBuffer
