@@ -105,7 +105,12 @@ public class AutoScalingChooserContractTest
             if (!suspendAllowed) return false;
             return suspended = true;
         }
-        public override void Execute(IRunnable command) { suspended = false; ++wakes; }
+        public override void Execute(Action command)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            suspended = false;
+            ++wakes;
+        }
         protected override void Run() => throw new Exception("must not run");
         protected internal override int GetNumOfRegisteredChannels() => channels;
         protected internal override long GetAndResetAccumulatedActiveTimeNanos()

@@ -24,10 +24,12 @@ public class DynamicProgressContractTest
             finally { _running = null; }
         }
         public override bool InEventLoop(Thread thread) => thread != null && thread == _running;
-        public override void Execute(IRunnable task)
+        public override void Execute(Action task)
         {
-            if (Rejection != null) throw Rejection;
-            _queue.Enqueue(task);
+            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
+            if (Rejection != null)
+                throw Rejection;
+            _queue.Enqueue(queuedTask);
         }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;

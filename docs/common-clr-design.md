@@ -4556,3 +4556,61 @@ external queue/stop/pending ownership and actual native callback-thread dispatch
 The original 16 timer cases retain assertions, 100,000-task timing scenario and
 identities; broader ITimer/ITimerTask/ITimeout API, core queued executors, lifetime
 and untested-platform review remain open. Results are in common-porting.md.
+
+
+## Native queued Action execution
+
+Pinned SingleThreadEventExecutor.java:991-1040/1132 and AbstractEventExecutor
+.java:167-200 distinguish normal/lazy admission, wakeup policy and exception
+isolation. ImmediateEventExecutor uses a reentrant FIFO; GlobalEventExecutor and
+NonStickyEventExecutorGroup preserve their own queue/runner/lifecycle policies.
+Real transport SingleThreadEventLoop.java:147 uses wakesUpForTask; SslContext
+.java:1055/1109 uses ImmediateExecutor for delegated TLS work. Review this actual
+execution boundary, not only the original JDK Executor syntax.
+
+IExecutor.Execute, concrete/abstract event executor entry points, group forwarding
+and virtual LazyExecute now accept Action only. AnonymousExecutor's configuration
+and ThreadExecutorMap callback decoration use native delegates. No public
+Execute(IRunnable) overload is retained. SubmitAsync still owns its result through
+its existing TaskCompletionSource; raw Execute has no result Task or new implicit
+ExecutionContext capture. Ordinary callback exceptions, inline/reentrant behavior,
+lazy wakeup checks, rejection and physical affinity retain their source policies.
+A separate native consumer implements IExecutor and overrides both virtual hooks
+without importing IRunnable; it fails before with CS0535/CS0115 and passes after
+for inline execution, Task submission, scheduling and explicit lazy work.
+
+Internal queue work still carries deadline, cancellation and runner ownership.
+Replacing it with an unrelated callback wrapper would hide INativeSubmission /
+IScheduledWork and break pool cancellation/removal or ordered runner shutdown.
+ExecutorWork is an internal sealed envelope with one original work reference and
+one bound Action. Real common producers cross the public virtual Action hook;
+known queues recover the exact work only for the envelope's identical delegate.
+There is no second completion state. Multicast/composed callbacks are ordinary
+caller work and execute in full; arbitrary targets are not treated as work owners.
+The internal overload/extension is used by actual submission, scheduling, listener
+and runner producers, not exposed solely to call original tests. Native subclass
+forwarding into the real pool verifies pending-count removal on cancellation;
+a composed prefix verifies multicast preservation. Native normal/lazy callbacks
+visit their actual subclass hooks and preserve physical affinity. Existing original
+fixture queues unwrap the same real payload while retaining original assertions.
+
+The retained protected/internal queue APIs and wakeup markers need a later native
+queue redesign against future transport consumers. ShutdownNow, rejection handlers,
+shutdown hooks and other IRunnable/Future APIs are not certified by this entry-point
+migration. Single-thread canceled work retains its original queue policy; only the
+pool's existing cancel-removal contract is asserted here. All prior source comments
+remain; common-porting.md records exact full/checked outcomes, inventory and the
+allocation measurement of this transitional stateful dispatch envelope. This is
+not a claim that all queued/executor native design or whole common is finished.
+
+
+Allocation evidence for this bridge: the same Release Windows/x64/net10.0
+ImmediateEventExecutor.SubmitAsync<int> probe uses one static Func<int>, 5,000
+warmups and three 100,000-operation samples per version, checking completed results.
+Steady allocation increases from 264 to 360 bytes/operation: exactly +96 for the
+original-work envelope and its Action. Raw callback costs and controlled throughput
+are not established by this probe. Preserve the native entry point and queue/state
+contracts while reducing this transitional adapter cost during the native queue
+redesign; do not describe the current bridge as allocation-free or fully optimized.
+Records: artifacts/queued-action-validation/allocation-evidence.json and identical
+before/after Perf.cs sources (ignored artifacts).

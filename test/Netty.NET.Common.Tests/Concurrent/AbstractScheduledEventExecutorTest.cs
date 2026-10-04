@@ -133,6 +133,10 @@ public class AbstractScheduledEventExecutorTest
         public override bool IsShutdown() => false;
         public override bool IsTerminated() => false;
         public override bool AwaitTermination(TimeSpan timeout) => false;
-        public override void Execute(IRunnable command) => throw new NotSupportedException();
+        public override void Execute(Action command)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            throw new NotSupportedException();
+        }
     }
 }

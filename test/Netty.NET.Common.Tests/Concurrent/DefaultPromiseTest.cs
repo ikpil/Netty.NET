@@ -44,8 +44,9 @@ public class DefaultPromiseTest
         public override bool IsTerminated() => false;
         public override bool AwaitTermination(TimeSpan timeout) => false;
         public override bool InEventLoop(Thread thread) => false;
-        public override void Execute(IRunnable command)
+        public override void Execute(Action command)
         {
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
             Interlocked.Increment(ref submissions);
             throw new InvalidOperationException("Cannot schedule commands");
         }

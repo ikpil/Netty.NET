@@ -25,7 +25,13 @@ public class ExecutorProgressContractTest
             finally { _running = null; }
         }
         public override bool InEventLoop(Thread thread) => thread == _running;
-        public override void Execute(IRunnable work) { if (rejection != null) throw rejection; _queue.Enqueue(work); }
+        public override void Execute(Action work)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(work, nameof(work));
+            if (rejection != null)
+                throw rejection;
+            _queue.Enqueue(queuedTask);
+        }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override void Shutdown() { }

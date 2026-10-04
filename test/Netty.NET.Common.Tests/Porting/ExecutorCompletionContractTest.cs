@@ -27,11 +27,13 @@ public class ExecutorCompletionContractTest
             finally { _running = null; }
         }
         public override bool InEventLoop(Thread thread) => thread != null && thread == _running;
-        public override void Execute(IRunnable work)
+        public override void Execute(Action work)
         {
-            if (Rejection != null) throw Rejection;
-            LastWork = work;
-            _queue.Enqueue(work);
+            IRunnable queuedTask = ExecutorWork.Unwrap(work, nameof(work));
+            if (Rejection != null)
+                throw Rejection;
+            LastWork = queuedTask;
+            _queue.Enqueue(queuedTask);
         }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;

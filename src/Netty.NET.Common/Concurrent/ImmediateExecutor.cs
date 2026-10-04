@@ -16,6 +16,7 @@
 
 using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
+using System;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -31,8 +32,9 @@ public sealed class ImmediateExecutor : IExecutor
         // use static instance
     }
 
-    public void Execute(IRunnable command)
+    public void Execute(Action command)
     {
-        ObjectUtil.CheckNotNull(command, "command").Run();
+        ArgumentNullException.ThrowIfNull(command);
+        command();
     }
 }

@@ -67,7 +67,7 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
         return ShutdownGracefullyAsync(AbstractEventExecutor.DEFAULT_SHUTDOWN_QUIET_PERIOD, AbstractEventExecutor.DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
-    public virtual void Execute(IRunnable command)
+    public virtual void Execute(Action command)
     {
         Next().Execute(command);
     }

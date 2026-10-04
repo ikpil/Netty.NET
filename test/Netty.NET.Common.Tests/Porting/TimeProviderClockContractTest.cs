@@ -34,7 +34,11 @@ public class TimeProviderClockContractTest
             while ((due = PollScheduledTask()) != null) due.Run();
         }
         public override bool InEventLoop(Thread thread) => ReferenceEquals(thread, owner);
-        public override void Execute(IRunnable task) => tasks.Enqueue(task);
+        public override void Execute(Action task)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
+            tasks.Enqueue(queuedTask);
+        }
         public override bool IsShutdown() => stopped;
         public override bool IsShuttingDown() => stopped;
         public override bool IsTerminated() => stopped;

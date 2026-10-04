@@ -98,19 +98,20 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
         return false;
     }
 
-    public override void Execute(IRunnable command)
+    public override void Execute(Action command)
     {
-        ObjectUtil.CheckNotNull(command, "command");
+        IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+        ObjectUtil.CheckNotNull(queuedTask, "command");
         if (StrongFalse == RUNNING.Get())
         {
             RUNNING.Set(StrongTrue);
             try
             {
-                command.Run();
+                queuedTask.Run();
             }
             catch (Exception cause)
             {
-                logger.Info("Throwable caught while executing Runnable {}", command, cause);
+                logger.Info("Throwable caught while executing Runnable {}", queuedTask, cause);
             }
             finally
             {
@@ -133,7 +134,7 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
         }
         else
         {
-            DELAYED_RUNNABLES.Get().Enqueue(command);
+            DELAYED_RUNNABLES.Get().Enqueue(queuedTask);
         }
     }
 

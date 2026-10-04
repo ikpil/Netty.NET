@@ -20,7 +20,11 @@ public class NativeSubmissionConsumerContractTest
             finally { _running = false; }
         }
         internal void RunAll() => RunOwned(() => { while (_queue.TryDequeue(out var task)) task.Run(); });
-        public override void Execute(IRunnable task) => _queue.Enqueue(task);
+        public override void Execute(Action task)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
+            _queue.Enqueue(queuedTask);
+        }
         public override bool InEventLoop(Thread thread) => _running && thread == Thread.CurrentThread;
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;

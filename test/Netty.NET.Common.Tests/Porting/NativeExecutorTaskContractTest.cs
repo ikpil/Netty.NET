@@ -22,13 +22,15 @@ public class NativeExecutorTaskContractTest
         internal int Pending => _queue.Count;
         internal IRunnable LastSubmission;
         internal Action BeforeAdmission;
-        public override void Execute(IRunnable command)
+        public override void Execute(Action command)
         {
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
             ++Submissions;
             BeforeAdmission?.Invoke();
-            if (Rejection != null) throw Rejection;
-            LastSubmission = command;
-            _queue.Enqueue(command);
+            if (Rejection != null)
+                throw Rejection;
+            LastSubmission = queuedTask;
+            _queue.Enqueue(queuedTask);
         }
         internal void RunNext()
         {
@@ -303,7 +305,11 @@ public class NativeExecutorTaskContractTest
 
     private sealed class ForwardingExecutor(UnorderedThreadPoolEventExecutor underlying) : AbstractEventExecutor
     {
-        public override void Execute(IRunnable command) => underlying.Execute(command);
+        public override void Execute(Action command)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            underlying.Execute(queuedTask);
+        }
         public override bool InEventLoop(Thread thread) => underlying.InEventLoop(thread);
         public override bool IsShuttingDown() => underlying.IsShuttingDown();
         public override bool IsShutdown() => underlying.IsShutdown();

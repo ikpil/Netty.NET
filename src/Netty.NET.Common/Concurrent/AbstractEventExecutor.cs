@@ -69,7 +69,11 @@ public abstract class AbstractEventExecutor : IEventExecutor
 
     public abstract bool InEventLoop(Thread thread);
 
-    public abstract void Execute(IRunnable task);
+    public abstract void Execute(Action task);
+
+    // Stateful common work must still pass the public virtual Action hook.
+    internal void Execute(IRunnable task) => Execute(ExecutorWork.Wrap(task));
+    internal void LazyExecute(IRunnable task) => LazyExecute(ExecutorWork.Wrap(task));
     public abstract bool IsShutdown();
     public abstract bool IsTerminated();
     public abstract bool AwaitTermination(TimeSpan timeout);
@@ -156,7 +160,7 @@ public abstract class AbstractEventExecutor : IEventExecutor
      * </p>
      */
     [UnstableApi]
-    public virtual void LazyExecute(IRunnable task)
+    public virtual void LazyExecute(Action task)
     {
         Execute(task);
     }

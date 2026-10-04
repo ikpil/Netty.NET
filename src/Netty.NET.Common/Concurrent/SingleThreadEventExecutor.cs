@@ -1108,14 +1108,16 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         return IsTerminated();
     }
 
-    public override void Execute(IRunnable task)
+    public override void Execute(Action task)
     {
-        Execute0(task);
+        IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
+        Execute0(queuedTask);
     }
 
-    public override void LazyExecute(IRunnable task)
+    public override void LazyExecute(Action task)
     {
-        LazyExecute0(task);
+        IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
+        LazyExecute0(queuedTask);
     }
 
     private void Execute0(IRunnable task)

@@ -131,7 +131,11 @@ public class SchedulingContractTest
         public IRunnable PollDue() => PollScheduledTask(GetCurrentTimeNanos());
         public bool TransferDue(IQueue<IRunnable> queue) => FetchFromScheduledTaskQueue(queue);
         public override bool InEventLoop(Thread thread) => !holdRemoval;
-        public override void Execute(IRunnable task) => task.Run();
+        public override void Execute(Action task)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
+            queuedTask.Run();
+        }
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override Task Termination => Task.CompletedTask;
         public override bool IsShuttingDown() => false;
@@ -244,8 +248,17 @@ public class SchedulingContractTest
         internal int lazyCalls;
         internal readonly List<IRunnable> submissions = new();
         public override bool InEventLoop(Thread thread) => false;
-        public override void Execute(IRunnable command) => submissions.Add(command);
-        public override void LazyExecute(IRunnable command) { ++lazyCalls; submissions.Add(command); }
+        public override void Execute(Action command)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            submissions.Add(queuedTask);
+        }
+        public override void LazyExecute(Action command)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            ++lazyCalls;
+            submissions.Add(queuedTask);
+        }
         protected override bool BeforeScheduledTaskSubmitted(long deadline) => before;
         protected override bool AfterScheduledTaskSubmitted(long deadline) { ++afterCalls; return after; }
         protected override void ValidateScheduled(TimeSpan amount)

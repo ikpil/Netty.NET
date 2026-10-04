@@ -136,7 +136,7 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
         return _group.AwaitTermination(timeout);
     }
 
-    public void Execute(IRunnable command)
+    public void Execute(Action command)
     {
         _group.Execute(command);
     }

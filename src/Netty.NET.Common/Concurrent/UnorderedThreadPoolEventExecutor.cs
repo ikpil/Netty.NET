@@ -332,20 +332,30 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
     }
 
-    public void Execute(IRunnable command)
+    public void Execute(Action command)
     {
-        ArgumentNullException.ThrowIfNull(command);
-        if (command is INativeSubmission native)
+        IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+        ArgumentNullException.ThrowIfNull(queuedTask);
+        if (queuedTask is INativeSubmission native)
         {
             ExecuteNativeSubmission(native);
             return;
         }
-        var work = new RawWork(this, command);
-        try { Enqueue(work); }
+
+        var work = new RawWork(this, queuedTask);
+        try
+        {
+            Enqueue(work);
+        }
         catch
         {
             // Throwing admission must not execute the callback later after a retry.
-            using (UninterruptibleMonitor.Enter(gate)) { Remove(work); PublishPoolState(); }
+            using (UninterruptibleMonitor.Enter(gate))
+            {
+                Remove(work);
+                PublishPoolState();
+            }
+
             work.CancelOuter();
             throw;
         }

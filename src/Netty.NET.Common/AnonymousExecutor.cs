@@ -1,20 +1,20 @@
 using System;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common;
 
 public class AnonymousExecutor : IExecutor
 {
-    private readonly Action<IRunnable> _action;
+    private readonly Action<Action> _action;
 
-    public AnonymousExecutor(Action<IRunnable> action)
+    public AnonymousExecutor(Action<Action> action)
     {
-        _action = action;
+        _action = action ?? throw new ArgumentNullException(nameof(action));
     }
 
-    public void Execute(IRunnable command)
+    public void Execute(Action command)
     {
+        ArgumentNullException.ThrowIfNull(command);
         _action.Invoke(command);
     }
 }

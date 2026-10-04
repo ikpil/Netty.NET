@@ -1,7 +1,8 @@
-using Netty.NET.Common.Functional;
+using System;
 
 namespace Netty.NET.Common.Concurrent;
 
+// CLR: fire-and-forget admission uses Action; result-bearing work uses SubmitAsync.
 public interface IExecutor
 {
     /**
@@ -14,5 +15,5 @@ public interface IExecutor
       * accepted for execution
       * @throws NullReferenceException if command is null
       */
-    void Execute(IRunnable command);
+    void Execute(Action command);
 }

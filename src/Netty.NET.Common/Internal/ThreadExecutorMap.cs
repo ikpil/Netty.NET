@@ -72,11 +72,12 @@ public static class ThreadExecutorMap
      * Decorate the given {@link Runnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.
      */
-    public static IRunnable Apply(IRunnable command, IEventExecutor eventExecutor)
+    // CLR callback decoration uses native Action with physical mapping/finally restoration.
+    public static Action Apply(Action command, IEventExecutor eventExecutor)
     {
         ObjectUtil.CheckNotNull(command, "command");
         ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
-        return Runnables.Create(() => RunWithExecutor(command.Run, eventExecutor));
+        return () => RunWithExecutor(command, eventExecutor);
     }
 
     /**

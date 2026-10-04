@@ -19,7 +19,11 @@ public class NativeSchedulingContractTest
         internal IRunnable Poll() => PollScheduledTask();
         public override Ticker Ticker() => _clock;
         public override bool InEventLoop(Thread thread) => true;
-        public override void Execute(IRunnable task) => task.Run();
+        public override void Execute(Action task)
+        {
+            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
+            queuedTask.Run();
+        }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Shutdown(); return Termination; }
         public override void Shutdown() { _shutdown = true; CancelScheduledTasks(); }

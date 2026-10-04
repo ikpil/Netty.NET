@@ -33,12 +33,17 @@ public class ExecutorLifecycleContractTest
         internal Child(IEventExecutorGroup parent = null) : base(parent) { }
         internal IScheduledWork FirstScheduled() => PeekScheduledTask();
         public override bool InEventLoop(Thread thread) => running && thread == Thread.CurrentThread;
-        public override void Execute(IRunnable command)
+        public override void Execute(Action command)
         {
-            if (command is IScheduledWork scheduled) scheduledSubmission = scheduled;
-            if (++executions == rejectExecution) throw new RejectedExecutionException("Simulated queue full");
-            if (queued) tasks.Enqueue(command);
-            else Run(command);
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            if (queuedTask is IScheduledWork scheduled)
+                scheduledSubmission = scheduled;
+            if (++executions == rejectExecution)
+                throw new RejectedExecutionException("Simulated queue full");
+            if (queued)
+                tasks.Enqueue(queuedTask);
+            else
+                Run(queuedTask);
         }
         internal void Run(IRunnable command)
         {

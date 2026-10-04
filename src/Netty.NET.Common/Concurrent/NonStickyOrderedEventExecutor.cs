@@ -186,15 +186,18 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         return _executor.AwaitTermination(timeout);
     }
 
-    public override void Execute(IRunnable command)
+    public override void Execute(Action command)
     {
-        ArgumentNullException.ThrowIfNull(command);
+        IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+        ArgumentNullException.ThrowIfNull(queuedTask);
         RunnerReservation reservation;
         lock (_gate)
         {
-            if (_stopped) throw new RejectedExecutionException("Ordered executor has been stopped.");
-            tasks.Enqueue(command);
-            if (_reservation != null) return;
+            if (_stopped)
+                throw new RejectedExecutionException("Ordered executor has been stopped.");
+            tasks.Enqueue(queuedTask);
+            if (_reservation != null)
+                return;
             reservation = new RunnerReservation(this);
             _reservation = reservation;
         }
@@ -205,9 +208,14 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
             // execute ourself. At worst this will be a NOOP when run() is called.
             // CLR adaptation: a separate reservation identifies this admission
             // attempt, so a stale rejection/removal cannot claim a later runner.
-            if (Dispatch(reservation)) Run(reservation);
+            if (Dispatch(reservation))
+                Run(reservation);
         }
-        catch (Exception error) { reservation.Reject(error); throw; }
+        catch (Exception error)
+        {
+            reservation.Reject(error);
+            throw;
+        }
     }
 
     private static bool IsImmediateShutdownRequested(RunnerReservation reservation) =>

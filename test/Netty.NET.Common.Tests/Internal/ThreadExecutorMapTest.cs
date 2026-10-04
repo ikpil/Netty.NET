@@ -64,8 +64,9 @@ public class ThreadExecutorMapTest
             return false;
         }
 
-        public override void Execute(IRunnable command)
+        public override void Execute(Action command)
         {
+            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
             throw new NotSupportedException();
         }
     }
@@ -101,10 +102,10 @@ public class ThreadExecutorMapTest
     [Fact]
     public void TestDecorateRunnable()
     {
-        ThreadExecutorMap.Apply(Runnables.Create(() =>
+        ThreadExecutorMap.Apply(() =>
         {
             Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor());
-        }), ImmediateEventExecutor.INSTANCE).Run();
+        }, ImmediateEventExecutor.INSTANCE)();
     }
 
     [Fact]
