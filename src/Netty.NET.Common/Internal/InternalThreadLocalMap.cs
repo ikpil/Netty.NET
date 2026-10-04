@@ -194,7 +194,7 @@ public sealed class InternalThreadLocalMap
         if (v != null && v != UNSET)
         {
             //@SuppressWarnings("unchecked")
-            System.Collections.ICollection variablesToRemove = (System.Collections.ICollection)v;
+            HashSet<IFastThreadLocal> variablesToRemove = (HashSet<IFastThreadLocal>)v;
             count += variablesToRemove.Count;
         }
 

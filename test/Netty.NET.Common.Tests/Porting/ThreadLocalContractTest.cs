@@ -122,4 +122,99 @@ public class ThreadLocalContractTest : IDisposable
         public override int GetHashCode() => 1;
         protected override void OnRemoval(string value) => Removed = value;
     }
+
+    [Fact]
+    public void MixedTypeBindingsRegisterOnceAndCanBeRemovedAndRebound()
+    {
+        var text = new RemovalLocal<string>();
+        var bytes = new RemovalLocal<byte[]>();
+        var value = new RemovalLocal<object>();
+        var map = InternalThreadLocalMap.Get();
+        Assert.Null(text.Get()); // A null initial value still owns a binding.
+        text.Set(map, "first");
+        text.Set("second");
+        bytes.Set(new byte[] { 1 });
+        value.Set(null);
+        Assert.Equal(3, FastThreadLocal.Size());
+        text.Remove(map);
+        Assert.Equal("second", text.Removed);
+        Assert.Equal(2, FastThreadLocal.Size());
+        text.Set("rebound");
+        Assert.Equal(3, FastThreadLocal.Size());
+        FastThreadLocal.RemoveAll();
+        Assert.Equal(2, text.RemovalCount);
+        Assert.Equal("rebound", text.Removed);
+        Assert.Equal(1, bytes.RemovalCount);
+        Assert.Equal(new byte[] { 1 }, bytes.Removed);
+        Assert.Equal(1, value.RemovalCount);
+        Assert.Null(value.Removed);
+        Assert.Null(InternalThreadLocalMap.GetIfSet());
+        Assert.Equal(0, FastThreadLocal.Size());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CleanupSnapshotsBindingsWhileRemovalCallbacksRemoveOtherBindings(bool scoped)
+    {
+        var locals = new RemovalLocal<string>[3];
+        for (int index = 0; index < locals.Length; index++)
+            locals[index] = new RemovalLocal<string>
+            {
+                Removal = _ =>
+                {
+                    // The first callback removes all peers; do not depend on set iteration order.
+                    foreach (var local in locals) local.Remove();
+                }
+            };
+        void Work()
+        {
+            for (int index = 0; index < locals.Length; index++) locals[index].Set(index.ToString());
+            Assert.Equal(3, FastThreadLocal.Size());
+            if (!scoped) FastThreadLocal.RemoveAll();
+        }
+        if (scoped) FastThreadLocalThread.RunWithFastThreadLocal(Work);
+        else Work();
+        for (int index = 0; index < locals.Length; index++)
+        {
+            Assert.Equal(1, locals[index].RemovalCount);
+            Assert.Equal(index.ToString(), locals[index].Removed);
+            Assert.False(locals[index].IsSet());
+        }
+        Assert.Null(InternalThreadLocalMap.GetIfSet());
+        Assert.Equal(0, FastThreadLocal.Size());
+    }
+
+    [Fact]
+    public void CleanupDetachesTheMapWhenARemovalCallbackThrows()
+    {
+        var cause = new InvalidOperationException("removal failed");
+        var local = new RemovalLocal<string> { Removal = _ => throw cause };
+        local.Set("old binding");
+        var oldMap = InternalThreadLocalMap.Get();
+        Assert.Same(cause, Assert.Throws<InvalidOperationException>(FastThreadLocal.RemoveAll));
+        Assert.False(local.IsSet(oldMap));
+        Assert.Equal(0, oldMap.Size());
+        Assert.Null(InternalThreadLocalMap.GetIfSet());
+        local.Removal = null;
+        local.Set("new binding");
+        Assert.NotSame(oldMap, InternalThreadLocalMap.Get());
+        Assert.Equal(1, FastThreadLocal.Size());
+        FastThreadLocal.RemoveAll();
+        Assert.Equal(2, local.RemovalCount);
+        Assert.Equal("new binding", local.Removed);
+    }
+
+    private sealed class RemovalLocal<T> : FastThreadLocal<T> where T : class
+    {
+        public Action<T> Removal;
+        public int RemovalCount;
+        public T Removed;
+        protected override void OnRemoval(T value)
+        {
+            ++RemovalCount;
+            Removed = value;
+            Removal?.Invoke(value);
+        }
+    }
 }

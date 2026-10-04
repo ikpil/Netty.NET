@@ -3654,3 +3654,30 @@ bounded callback depth after returning, without deliberately overflowing the
 process stack. The new boundary exists for this missing shared policy; it is not
 a new configurable Java-style provider. Whole map/common/backend review stays open.
 No original test/comment/provenance is removed, and no new design MD is created.
+
+
+## Native thread-local removal membership
+
+Reopen the removal registry for a concrete CLR design issue: it used a
+Dictionary<IFastThreadLocal,bool> whose values were always true. Pinned
+FastThreadLocal.java:54-75/99-124 actually needs an identity Set; its Java
+Collections.newSetFromMap(IdentityHashMap) construction is not required in C#.
+Use HashSet<IFastThreadLocal>(ReferenceEqualityComparer.Instance) directly.
+The non-generic registration helpers accept the existing heterogeneous removal
+interface; they need neither erased type parameters nor dummy values. Update
+InternalThreadLocalMap.java:203-207's native Size consumer to the same set type.
+Keep strong ownership until removal, snapshot before callbacks, clear each
+indexed binding and membership before OnRemoval, and detach the physical-thread
+map in finally. Membership iteration order remains unspecified; callback failure
+still propagates and aborts the remaining snapshot, as in the original.
+Do not substitute AsyncLocal or ThreadLocal<T>: indexed worker caches and explicit
+callback cleanup still need their existing ownership policy.
+Four native scenarios verify mixed-type/null bindings, duplicate writes and
+rebind, callback-driven peer removals on ordinary/scoped workers, and map
+detachment/reuse after callback failure. They pass with the old dictionary before
+replacement and with the native set afterward: this is a framework substitution,
+not a claimed repair of an observed runtime failure. Existing overridden-equality
+identity, original factory/index/removal and Recycler consumers remain validation.
+All original source/test comments stay; no new MD or collection wrapper is added.
+Full/checked outcomes and unchanged inventory are recorded in common-porting.md.
+Whole map/common review remains open.

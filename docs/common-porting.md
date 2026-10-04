@@ -121,35 +121,33 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1974 cases** on Windows/x64/net10.0:
-**1960 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: notification-depth-full-debug.trx and notification-depth-full-release.trx.
-All 1970 prior identities/outcomes, including 759 original non-Porting cases,
+The current default suite executes **1978 cases** on Windows/x64/net10.0:
+**1964 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: removal-registry-full-debug.trx and removal-registry-full-release.trx.
+All 1974 prior identities/outcomes, including 759 original non-Porting cases,
 the later byte-wrap regression and every skip, remain unchanged. Four new native
-notification scenarios cover 64/10,000 pure progress and mixed completion/progress
-chains, delivery identities/order and bounded callback depth. Before repair the
-64-link pure progress chain nested 64 callbacks; mixed links already passed.
-Both native owners now share ExecutorNotificationScope, a stack-only physical-
-thread counter with deterministic restoration and inline threshold eight.
-Actual executors receive work at the threshold; ImmediateEventExecutor queues
-reentrant dispatch. Arbitrary executors must provide a bounded dispatch boundary.
-Task result ownership, ordered batches, rejection/removal/disposal/context and
-admission/backpressure contracts remain. No Java Future result owner is added.
-InternalThreadLocalMap's unused future-listener depth field/getter/setter/Size
-branch is removed. Preserve LocalChannel reader depth: pinned downstream local
-transport still requires its own recursive-read and rejection policy.
-Targeted Debug and checked Release each pass all 49 cases. All 271 comment
-totals/coverage and prior Java/C# provenance remain. Pinned inventory/paths and
-uppercase method/local-function checks pass; no original tests are removed and
-no new compiler-warning identities appear against the prior checkpoint.
+thread-local cleanup scenarios validate mixed-type/null bindings, duplicate
+writes/rebind, snapshot removal by callbacks on ordinary/scoped workers and
+finally map detachment/reuse after callback failure.
+The old dictionary passes those scenarios too: this is a native collection
+substitution, not a claimed runtime defect repair. FastThreadLocal now uses
+HashSet<IFastThreadLocal>(ReferenceEqualityComparer.Instance), with non-generic
+membership helpers and a matching native Size consumer. Strong ownership,
+identity, snapshot cleanup, clear-before-callback and failure propagation remain.
+No membership iteration order or all-callbacks-after-failure guarantee is added.
+Targeted Debug and checked Release each discover 200 cases: 188 passed /
+0 failed / 12 unchanged skips. All 271 comment totals/coverage and prior Java/C#
+provenance remain. Pinned inventory/paths and uppercase method/local-function
+checks pass; no original tests are removed and no new compiler-warning identities
+appear against the prior checkpoint.
 Source statuses stay 52 verified / 47 CLR replacement / 14 not applicable /
 72 pending / 20 in progress. Whole map and common review remain open.
-Records stay in ignored TestResults and artifacts/notification-depth-validation:
-notification-depth-before-debug.trx, notification-depth-identity-and-inventory.json
-and notification-depth-comment-audit.json. Native decisions are in
-common-clr-design.md#shared-native-notification-recursion-boundary.
-Next: remaining thread-local lifetime policies and actual collection purposes,
-using current CLR backends and pinned downstream consumers.
+Records stay in ignored TestResults and artifacts/removal-registry-validation:
+removal-registry-before-debug.trx, removal-registry-identity-and-inventory.json
+and removal-registry-comment-audit.json. Native decisions are in
+common-clr-design.md#native-thread-local-removal-membership.
+Next: review remaining map scratch-storage and reflection-cache APIs against
+actual CLR and pinned downstream consumers before keeping or replacing them.
 Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate

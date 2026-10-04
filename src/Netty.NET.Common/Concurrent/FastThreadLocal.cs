@@ -61,8 +61,9 @@ public static class FastThreadLocal
             if (v != null && v != InternalThreadLocalMap.UNSET)
             {
                 //@SuppressWarnings("unchecked")
-                Dictionary<IFastThreadLocal, bool> variablesToRemove = (Dictionary<IFastThreadLocal, bool>)v;
-                IFastThreadLocal[] variablesToRemoveArray = variablesToRemove.Keys.ToArray();
+                HashSet<IFastThreadLocal> variablesToRemove = (HashSet<IFastThreadLocal>)v;
+                // Snapshot before callbacks: each removal mutates this identity set.
+                IFastThreadLocal[] variablesToRemoveArray = variablesToRemove.ToArray();
                 foreach (IFastThreadLocal tlv in variablesToRemoveArray)
                 {
                     tlv.Remove(threadLocalMap);
@@ -103,24 +104,25 @@ public static class FastThreadLocal
     }
 
     //@SuppressWarnings("unchecked")
-    internal static void AddToVariablesToRemove<V>(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable) where V : class
+    internal static void AddToVariablesToRemove(InternalThreadLocalMap threadLocalMap, IFastThreadLocal variable)
     {
         object v = threadLocalMap.IndexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX);
-        Dictionary<IFastThreadLocal, bool> variablesToRemove;
+        HashSet<IFastThreadLocal> variablesToRemove;
         if (v == InternalThreadLocalMap.UNSET || v == null)
         {
-            variablesToRemove = new Dictionary<IFastThreadLocal, bool>(System.Collections.Generic.ReferenceEqualityComparer.Instance);
+            // CLR has a native set; no Java IdentityHashMap or dummy boolean values are needed.
+            variablesToRemove = new HashSet<IFastThreadLocal>(ReferenceEqualityComparer.Instance);
             threadLocalMap.SetIndexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX, variablesToRemove);
         }
         else
         {
-            variablesToRemove = (Dictionary<IFastThreadLocal, bool>)v;
+            variablesToRemove = (HashSet<IFastThreadLocal>)v;
         }
 
-        variablesToRemove[variable] = true;
+        variablesToRemove.Add(variable);
     }
 
-    internal static void RemoveFromVariablesToRemove<V>(InternalThreadLocalMap threadLocalMap, FastThreadLocal<V> variable) where V : class
+    internal static void RemoveFromVariablesToRemove(InternalThreadLocalMap threadLocalMap, IFastThreadLocal variable)
     {
         object v = threadLocalMap.IndexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX);
 
@@ -130,7 +132,7 @@ public static class FastThreadLocal
         }
 
         //@SuppressWarnings("unchecked")
-        Dictionary<IFastThreadLocal, bool> variablesToRemove = (Dictionary<IFastThreadLocal, bool>)v;
+        HashSet<IFastThreadLocal> variablesToRemove = (HashSet<IFastThreadLocal>)v;
         variablesToRemove.Remove(variable);
     }
 }
