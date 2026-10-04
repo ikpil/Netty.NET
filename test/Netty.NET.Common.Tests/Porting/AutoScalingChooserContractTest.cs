@@ -20,7 +20,7 @@ public class AutoScalingChooserContractTest
         private readonly MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         private Thread reportingThread;
         internal AccountingExecutor()
-            : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), true, true,
+            : base(null, _ => throw new Exception("must not start"), true, true,
                 int.MaxValue, RejectedExecutionHandlers.Reject()) { }
         public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
         public override bool InEventLoop(Thread thread) => thread != null && thread == Volatile.Read(ref reportingThread);
@@ -93,7 +93,7 @@ public class AutoScalingChooserContractTest
         internal int metricReads;
 
         internal ManualExecutor(MockTicker clock)
-            : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), true, true,
+            : base(null, _ => throw new Exception("must not start"), true, true,
                 int.MaxValue, RejectedExecutionHandlers.Reject()) => this.clock = clock;
         public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
         public override bool IsSuspended() => suspended;

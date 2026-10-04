@@ -41,7 +41,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
     {
         private int highLoad;
 
-        internal TestEventExecutor(IEventExecutorGroup parent, IExecutor executor)
+        internal TestEventExecutor(IEventExecutorGroup parent, Action<Action> executor)
             : base(parent, executor, true, true, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.Reject())
         {
         }
@@ -105,7 +105,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
 
         internal TestEventExecutorGroup(int minThreads, int maxThreads, TimeSpan checkPeriod)
             : base(maxThreads,
-                  new ThreadPerTaskExecutor(new DefaultThreadFactory("auto-scaling-test", true)),
+                  new ThreadPerTaskExecutor(new DefaultThreadFactory("auto-scaling-test", true)).Execute,
                   new AutoScalingEventExecutorChooserFactory(
                           minThreads, maxThreads, checkPeriod, 0.4, 0.6,
                           maxThreads, maxThreads, 2),
@@ -114,7 +114,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
         }
 
 
-        protected override IEventExecutor NewChild(IExecutor executor, params object[] args)
+        protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
         {
             return new TestEventExecutor(this, executor);
         }

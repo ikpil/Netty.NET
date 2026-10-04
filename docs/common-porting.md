@@ -122,39 +122,38 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2063 cases** on Windows/x64/net10.0:
-**2049 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: thread-construction-full-debug.trx and thread-construction-full-release.trx.
-All 2054 prior identities/outcomes, including 759 original non-Porting cases
-and every skip, remain. Nine native cases cover optional/named constructors,
-CLR zero/128-KiB stack hints and native null/negative parameter errors, separate
-map/cleanup capabilities, actual Recycler reuse and subclass removal guarantees.
-A pre-repair null-parameter failure and a CS0506 consumer compile failure establish
-the prior native error/API gap. Four exact pinned Java queries match four owned
-base/custom policy rows under Corretto 21.0.11_10; fallback paths are deliberately
-outside that oracle and retain earlier physical scope/map coverage.
-Native CleansFastThreadLocals override feeds both metadata and current-thread
-queries; raw owner map access is internal. JVM-only BlockHound hook/Hidden provider
-is excluded based on its actual ServiceLoader/instrumentation/test consumers,
-with original comments archived rather than a CLR no-op or pretend detector.
-Design and remaining scope:
-common-clr-design.md#native-owned-thread-construction-and-cleanup-capability.
-Targeted Debug and checked Release each execute 47 cases: 46 pass, zero fail,
-one existing skip. All 271 original comment totals have no coverage loss;
-Hidden's five archived comments improve missing coverage to zero, and all 15
-worker comments remain preserved. Inventory/paths, all prior fixtures/provenance,
-uppercase declarations and no-new-warning checks pass. No original test changes,
-new skip, Markdown file or performance claim is introduced.
-Source statuses: 55 verified / 49 CLR replacement / 15 not applicable /
-68 pending / 18 in progress. Retained FastThreadLocalThread source/native review
-is verified after the earlier capture/context/map/fallback decisions. Whole common,
-future allocator integration and untested platforms remain open.
-Records stay in ignored TestResults and artifacts/thread-construction-validation:
-thread-construction-before-debug.trx, before-override.log,
-thread-construction-identity-and-inventory.json, cleanup-policy-evidence.json,
-original comment audit and archived source extracts.
-Next: native per-task/executor boundary review against actual SingleThreadEventExecutor
-and backend consumers. Full portable sources build without PortingBatch.
+The current default suite executes **2078 cases** on Windows/x64/net10.0:
+**2064 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: worker-bootstrap-full-debug.trx and worker-bootstrap-full-release.trx.
+All 2063 prior identities/outcomes, including 759 original non-Porting cases and
+every skip, remain. Native worker dispatch now uses Action<Action> in the actual
+single-thread/group constructors and child hooks. ThreadPerTaskExecutor starts
+native Threads with Execute(Action), independent of queued work/result ownership.
+Eleven native cases cover fresh physical workers, synchronous null/factory/start
+errors, deferred mapping restoration and real serial single/group submissions
+with Task termination. Two null-entry/factory failures were reproduced before
+repair. Expanded checked Release exposed an existing timed-drain addition overflow;
+four deterministic budget rows verify its elapsed-time repair. An isolated pinned
+Java deadline/cutoff arithmetic probe documents the intentional huge-budget change.
+Design, source consumers and remaining scope:
+common-clr-design.md#native-worker-bootstrap-boundary.
+Targeted Debug and checked Release each pass 96 cases with no failures or skips.
+All 271 original comment totals have no coverage loss. Pinned inventory/paths,
+prior fixtures/provenance, uppercase declarations and no-new-warning checks pass.
+Original fixture bootstrap syntax was adapted without changing identities,
+assertions or outcomes. No exclusion, Markdown file or performance claim is added.
+Source statuses: 56 verified / 49 CLR replacement / 15 not applicable /
+68 pending / 17 in progress. ThreadPerTaskExecutor source/native review is complete;
+other verified behavior entries retain explicit incomplete native design scopes.
+The full common port and untested platforms remain open.
+Records stay in ignored TestResults and artifacts/worker-bootstrap-validation:
+worker-bootstrap-before-debug.trx, before-budget-checked-release.trx,
+worker-bootstrap-identity-and-inventory.json, original comment audit,
+java-budget.csv and BudgetOracle.java. The latter probes arithmetic/cutoff only,
+not the entire Java executor. Prior worker cleanup/BlockHound records remain in
+thread-construction-validation. Next: native queued-execution boundary and actual
+IExecutor/IRunnable consumers, preserving identity, cancellation and rejection
+ownership. Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

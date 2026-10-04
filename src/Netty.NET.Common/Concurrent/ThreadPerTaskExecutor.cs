@@ -14,22 +14,24 @@
  * under the License.
  */
 
-using Netty.NET.Common.Functional;
-using Netty.NET.Common.Internal;
+using System;
 
 namespace Netty.NET.Common.Concurrent;
 
-public class ThreadPerTaskExecutor : IExecutor
+// Native physical-thread starter; it does not own an event-loop work queue.
+public sealed class ThreadPerTaskExecutor
 {
     private readonly IThreadFactory _threadFactory;
 
     public ThreadPerTaskExecutor(IThreadFactory threadFactory)
     {
-        _threadFactory = ObjectUtil.CheckNotNull(threadFactory, "threadFactory");
+        _threadFactory = threadFactory ?? throw new ArgumentNullException(nameof(threadFactory));
     }
 
-    public void Execute(IRunnable command)
+    public void Execute(Action command)
     {
-        _threadFactory.NewThread(command.Run).Start();
+        ArgumentNullException.ThrowIfNull(command);
+        var thread = _threadFactory.NewThread(command) ?? throw new InvalidOperationException("The thread factory returned no thread.");
+        thread.Start();
     }
 }

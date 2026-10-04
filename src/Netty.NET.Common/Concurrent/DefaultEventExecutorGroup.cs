@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using Netty.NET.Common.Functional;
 
@@ -59,7 +60,7 @@ public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
     {
     }
 
-    protected override IEventExecutor NewChild(IExecutor executor, params object[] args)
+    protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
     {
         return new DefaultEventExecutor(this, executor, (int)args[0], (IRejectedExecutionHandler)args[1]);
     }

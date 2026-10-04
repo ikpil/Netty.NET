@@ -30,6 +30,8 @@ namespace Netty.NET.Common.Concurrent;
  * Abstract base class for {@link OrderedEventExecutor}'s that execute all its submitted tasks in a single thread.
  *
  */
+// CLR: original constructor Executor parameters are Action<Action> worker starters.
+// The entry runs for the worker lifetime; queued submissions use the event executor APIs.
 public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor, IOrderedEventExecutor
 {
     public static readonly int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.Max(16,
@@ -51,7 +53,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     private volatile Thread _thread;
     private readonly AtomicReference<IThreadProperties> _threadProperties = new AtomicReference<IThreadProperties>();
-    private readonly IExecutor _executor;
+    // CLR backend starts the worker entry; queued-task execution has separate ownership.
+    private readonly Action<Action> _executor;
     private volatile bool interrupted;
 
     private readonly object _processingLock = new object();
@@ -98,7 +101,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      */
     protected SingleThreadEventExecutor(
         IEventExecutorGroup parent, IThreadFactory threadFactory, bool addTaskWakesUp)
-        : this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp)
+        : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp)
     {
     }
 
@@ -115,7 +118,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected SingleThreadEventExecutor(
         IEventExecutorGroup parent, IThreadFactory threadFactory,
         bool addTaskWakesUp, int maxPendingTasks, IRejectedExecutionHandler rejectedHandler)
-        : this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp, maxPendingTasks, rejectedHandler)
+        : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, maxPendingTasks, rejectedHandler)
     {
     }
 
@@ -134,7 +137,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         IEventExecutorGroup parent, IThreadFactory threadFactory,
         bool addTaskWakesUp, bool supportSuspension,
         int maxPendingTasks, IRejectedExecutionHandler rejectedHandler)
-        : this(parent, new ThreadPerTaskExecutor(threadFactory), addTaskWakesUp, supportSuspension,
+        : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, supportSuspension,
             maxPendingTasks, rejectedHandler)
     {
     }
@@ -147,7 +150,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param addTaskWakesUp    {@code true} if and only if invocation of {@link #addTask(Runnable)} will wake up the
      *                          executor thread
      */
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor, bool addTaskWakesUp)
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp)
         : this(parent, executor, addTaskWakesUp, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.Reject())
     {
     }
@@ -162,7 +165,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, int maxPendingTasks,
         IRejectedExecutionHandler rejectedHandler)
         : this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler)
@@ -180,14 +183,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param maxPendingTasks   the maximum number of pending tasks before new tasks will be rejected.
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, bool supportSuspension,
         int maxPendingTasks, IRejectedExecutionHandler rejectedHandler)
         : this(parent, executor, addTaskWakesUp, supportSuspension, maxPendingTasks, rejectedHandler, TimeProvider.System)
     {
     }
 
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, bool supportSuspension,
         int maxPendingTasks, IRejectedExecutionHandler rejectedHandler, TimeProvider timeProvider)
         : base(parent, timeProvider)
@@ -201,14 +204,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         lastActivityTimeNanos = Ticker().NanoTime();
     }
 
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, IQueue<IRunnable> taskQueue,
         IRejectedExecutionHandler rejectedHandler)
         : this(parent, executor, addTaskWakesUp, false, taskQueue, rejectedHandler)
     {
     }
 
-    protected SingleThreadEventExecutor(IEventExecutorGroup parent, IExecutor executor,
+    protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, bool supportSuspension,
         IQueue<IRunnable> taskQueue, IRejectedExecutionHandler rejectedHandler)
         : base(parent)
@@ -569,7 +572,8 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             return false;
         }
 
-        long deadline = timeoutNanos > 0 ? GetCurrentTimeNanos() + timeoutNanos : 0;
+        // CLR: compare elapsed time so a large positive budget cannot overflow its deadline.
+        long budgetStart = timeoutNanos > 0 ? GetCurrentTimeNanos() : 0;
         long runTasks = 0;
         long lastExecutionTime;
         long workStartTime = Ticker().NanoTime();
@@ -584,7 +588,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             if ((runTasks & 0x3F) == 0)
             {
                 lastExecutionTime = GetCurrentTimeNanos();
-                if (lastExecutionTime >= deadline)
+                if (timeoutNanos <= 0 || unchecked(lastExecutionTime - budgetStart) >= timeoutNanos)
                 {
                     break;
                 }
@@ -1334,7 +1338,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     private void DoStartThread()
     {
-        _executor.Execute(Runnables.Create(DoStartThreadInternal));
+        _executor(DoStartThreadInternal);
     }
 
     private void DoStartThreadInternal()

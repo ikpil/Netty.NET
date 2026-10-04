@@ -4457,3 +4457,60 @@ Hidden.java:149:
 ```java
 // See https://mail.openjdk.java.net/pipermail/security-dev/2020-August/022271.html
 ```
+
+
+## Native worker bootstrap boundary
+
+Pinned ThreadPerTaskExecutor.java:23-34 creates and starts a physical worker for
+an entry; it has no queue, completion result or event-loop admission policy.
+SingleThreadEventExecutor.java:141-175/225/244/1197-1198, MultithreadEventExecutorGroup
+.java:53/79-88/186 and DefaultEventExecutorGroup.java:58 use that entry dispatcher
+to start long-lived workers. Actual future consumers include transport's
+ThreadPerChannelEventLoopGroup.java:103/121 and transport-native-epoll's
+EpollEventLoopTest.java:74. They require worker creation and child injection,
+not a Java interface specifically. Common bootstrap constructors, the stored
+backend and NewChild hook now use Action<Action>; ThreadPerTaskExecutor is sealed
+with Execute(Action) and no IExecutor implementation. Factory chaining uses its
+method group. No Java Runnable wrapper is allocated for the worker entry.
+Original constructor comments remain with nearby CLR interpretation notes.
+
+The supplied backend dispatches a long-lived entry which returns after worker
+termination; it must run the entry independently for ordinary event-loop use.
+ThreadPerTaskExecutor starts the configured native Thread synchronously and has
+no Task.Run policy. Start retains the previously reviewed native ExecutionContext
+flow. Factory/Start failures reach the caller without replacing exceptions;
+null commands fail before factory side effects, and a null returned Thread has
+an explicit InvalidOperationException instead of accidental NullReferenceException.
+A previously started Thread retains native ThreadStateException. These are CLR
+parameter/failure adaptations, not new completion signals or guaranteed uncaught
+worker exception recovery. Task submission and Termination keep their existing
+owners and state machine. Do not confuse dispatcher success with task completion.
+
+ThreadExecutorMap.Apply(Action<Action>, IEventExecutor) installs the physical
+FastThreadLocal mapping inside the dispatched entry and restores the previous
+binding in finally. It neither installs a binding on the submitting thread nor
+uses AsyncLocal flow. Deferred normal/exceptional entries and real single/group
+workers verify placement and restoration. Native consumers use SubmitAsync for
+serial tasks and Task termination while constructing backends with direct lambdas.
+Factory/fresh-thread/null/start failures and actual group NewChild injection are
+covered alongside original startup, suspension, chooser and lifecycle scenarios.
+Ordinary queued IExecutor/IRunnable APIs and queue cancellation/identity remain
+under separate review; this unit completes the small ThreadPerTaskExecutor source
+and native review, not all SingleThreadEventExecutor or group APIs. Future
+transport constructors will need the same worker-dispatcher adaptation.
+
+The expanded checked Release selection also exposed an existing timed-drain
+addition overflow at SingleThreadEventExecutor.java:529. At a positive clock of
+320 and budget Long.MAX_VALUE, Java's deadline wraps negative and cuts off after
+64 tasks even though the budget is huge; checked C# throws before running tasks.
+An isolated Corretto 21.0.11_10 arithmetic/64-task-check probe uses the exact pinned
+deadline expression and cutoff predicate. This is an overflow defect rather than
+intended timeout behavior; original SingleThreadIoEventLoop.java:228 supplies a
+normal task quantum. Compare elapsed time to the budget instead, with an explicit
+unchecked timestamp difference. Nonpositive budgets retain the every-64-task
+cutoff; large positive budgets drain 100 available tasks without overflow, and
+finite budgets retain the same check cadence. Four deterministic CLR rows verify
+zero, negative and adjacent extreme positive budgets from a nonzero ticker.
+The original metric case that failed checked Release now passes unchanged.
+This fix does not certify other timestamp arithmetic or untested platforms.
+Results, original identity/comment audit and remaining work are in common-porting.md.

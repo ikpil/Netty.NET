@@ -119,7 +119,7 @@ public class DefaultPromiseTest
     public void TestNoStackOverflowWithDefaultEventExecutorA()
     {
         using var service = new TestSingleThreadExecutor();
-        IEventExecutor executor = new DefaultEventExecutor(service);
+        IEventExecutor executor = new DefaultEventExecutor(service.Execute);
         try
         {
             TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, true, false);
@@ -137,7 +137,7 @@ public class DefaultPromiseTest
     public void TestNoStackOverflowWithDefaultEventExecutorB()
     {
         using var service = new TestSingleThreadExecutor();
-        IEventExecutor executor = new DefaultEventExecutor(service);
+        IEventExecutor executor = new DefaultEventExecutor(service.Execute);
         try
         {
             TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, true, true);
@@ -401,16 +401,16 @@ public class DefaultPromiseTest
         }
     }
     // CLR test harness for Executors.newSingleThreadExecutor(); the original executor-service lifecycle is retained.
-    private sealed class TestSingleThreadExecutor : IExecutor, IDisposable
+    private sealed class TestSingleThreadExecutor : IDisposable
     {
-        private readonly BlockingCollection<IRunnable> tasks = new();
+        private readonly BlockingCollection<Action> tasks = new();
         private readonly Thread thread;
         internal TestSingleThreadExecutor()
         {
-            thread = new Thread(() => { foreach (var task in tasks.GetConsumingEnumerable()) task.Run(); }) { IsBackground = true };
+            thread = new Thread(() => { foreach (var task in tasks.GetConsumingEnumerable()) task(); }) { IsBackground = true };
             thread.Start();
         }
-        public void Execute(IRunnable task) => tasks.Add(task);
+        public void Execute(Action task) => tasks.Add(task);
         public void Dispose()
         {
             tasks.CompleteAdding();

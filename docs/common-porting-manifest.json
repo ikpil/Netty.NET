@@ -1323,12 +1323,15 @@
         "src/Netty.NET.Common/Concurrent/DefaultEventExecutor.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/Concurrent/DefaultEventExecutor.cs"
+        "src/Netty.NET.Common/Concurrent/DefaultEventExecutor.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
       ],
       "evidence": [
         "All eight constructors and the run/take/update/confirm loop match the pinned source. Default-group and shutdown lifecycle tests pass.",
         "Native provider selection: pinned EmbeddedEventLoop.java clock injection/explicit pump and ManualIoEventLoop.java:145-154 manual wakeup contract reviewed. Ticker.FromTimeProvider, protected ordered scheduler/core constructor and public DefaultEventExecutor(TimeProvider) preserve executor-owned scheduling. Eleven provider rows and existing clock/scheduling/metrics/lifecycle cases pass in 166 affected Debug cases; provider-clock-affected-debug.trx. Final matrix/audit evidence is recorded in docs/common-porting.md.",
-        "Final Debug/Release each 1442 passed/zero failed/14 unchanged skips (1456 discovered), with 759 original identities retained and eleven CLR provider rows added; provider-clock-identity-comparison.json. All 107 reviewed comment entries have zero missing; changed seven sources retain 175 comments, and all 271 inventory paths match. Windows/net10.0 only."
+        "Final Debug/Release each 1442 passed/zero failed/14 unchanged skips (1456 discovered), with 759 original identities retained and eleven CLR provider rows added; provider-clock-identity-comparison.json. All 107 reviewed comment entries have zero missing; changed seven sources retain 175 comments, and all 271 inventory paths match. Windows/net10.0 only.",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
       ],
       "adaptation": "Uses the documented native-thread and blocking-queue support adapters.",
       "comments": {
@@ -1336,6 +1339,10 @@
         "required": true,
         "preservedCount": 2,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "in-progress",
+        "evidence": "Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary"
       }
     },
     {
@@ -1363,10 +1370,13 @@
         "src/Netty.NET.Common/Concurrent/DefaultEventExecutorGroup.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/Concurrent/DefaultEventExecutorGroup.cs"
+        "src/Netty.NET.Common/Concurrent/DefaultEventExecutorGroup.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
       ],
       "evidence": [
-        "Constructor argument forwarding and newChild reviewed. Remove incorrect shutdownNow override so inherited shutdown behavior runs. Parented-worker and upstream invalid-group tests pass."
+        "Constructor argument forwarding and newChild reviewed. Remove incorrect shutdownNow override so inherited shutdown behavior runs. Parented-worker and upstream invalid-group tests pass.",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
       ],
       "adaptation": "Uses the documented multithread group support; scaling extension methods in the superclass remain in progress.",
       "comments": {
@@ -1374,6 +1384,10 @@
         "required": true,
         "preservedCount": 5,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "in-progress",
+        "evidence": "Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary"
       }
     },
     {
@@ -2099,12 +2113,14 @@
       "implementation": [
         "src/Netty.NET.Common/Concurrent/MultithreadEventExecutorGroup.cs",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
       ],
       "evidence": [
         "All pinned methods and 11 original comments reviewed, including observable chooser metrics, construction failure cleanup, shutdown Future aggregation, readonly iteration and timeout arithmetic. The original 19 lifecycle/group contracts were extended to 28 native lifecycle cases.",
         "Native lifecycle review: pinned producer/consumer completion paths, 123 initial affected executor cases, and 28 lifecycle/group contracts including nine CLR regressions. Default full Debug/Release each 1170 passed / 0 failed / 14 skipped (1184 total), net10.0 Windows. Evidence: lifecycle-final-full-debug.trx, lifecycle-final-full-release.trx and docs/common-executor-lifecycle.md. Unexpected OperationCanceledException in startup/run remains a fault preserving original identity; observer cancellation does not cancel the lifecycle producer. Backend/public API reviews remain distinct.",
-        "Shared native stop: pinned AbstractEventExecutor.java:85, SingleThreadEventExecutor.java:782/923, MultithreadEventExecutorGroup.java:114-123 and transport NioEventLoopTest.java:204-238 establish backend/consumer policy. The initial affected Debug selection passes 92 cases. Disabling only native graceful-to-stop escalation reproduces one admission-closure failure among two theory rows; the direct-stop row passes. Seven CLR lifecycle rows cover drain/withdrawal, wrapper/Task identity, every-child requests and synchronous request failures; no original Java fixture/comment is changed. Final matrix and audits are recorded in docs/common-porting.md."
+        "Shared native stop: pinned AbstractEventExecutor.java:85, SingleThreadEventExecutor.java:782/923, MultithreadEventExecutorGroup.java:114-123 and transport NioEventLoopTest.java:204-238 establish backend/consumer policy. The initial affected Debug selection passes 92 cases. Disabling only native graceful-to-stop escalation reproduces one admission-closure failure among two theory rows; the direct-stop row passes. Seven CLR lifecycle rows cover drain/withdrawal, wrapper/Task identity, every-child requests and synchronous request failures; no original Java fixture/comment is changed. Final matrix and audits are recorded in docs/common-porting.md.",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
       ],
       "adaptation": "Native TaskCompletionSource owns the group signal; Interlocked counts every completed child, including failures and cancellation, and succeeds only after all. ConfigureAwait(false)/UnsafeOnCompleted does not capture constructor contexts; child faults are observed. Readonly enumeration and native duration/metric adaptations remain. See docs/common-executor-lifecycle.md.",
       "comments": {
@@ -2115,7 +2131,7 @@
       },
       "nativeDesignReview": {
         "status": "in-progress",
-        "evidence": "Native StopAsync reaches every child even after synchronous request exceptions; those exceptions aggregate separately. Existing all-child completion counting succeeds after every child signal, including failed children. See docs/common-clr-design.md#native-stop-across-executors-and-groups; broader runtime/API review stays open."
+        "evidence": "Native StopAsync reaches every child even after synchronous request exceptions; those exceptions aggregate separately. Existing all-child completion counting succeeds after every child signal, including failed children. See docs/common-clr-design.md#native-stop-across-executors-and-groups; broader runtime/API review stays open. Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary"
       }
     },
     {
@@ -2514,9 +2530,10 @@
         "docs/common-native-ordered-scheduling-migration.md",
         "docs/common-native-unordered-scheduling-migration.md",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/ExecutorLifecycleContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
       ],
-      "adaptation": "Interlocked/Volatile replace field updaters. Uninterruptible monitor entry restores consumed interrupts. Timed waits chunk Int32 millisecond limits. ThreadProperties exposes CLR state/id/priority; remote stack and non-destructive interrupt-flag queries throw NotSupportedException. Postmortem priority/daemon values use last observed snapshots. Private non-generic TaskCompletionSource is the sole lifecycle result owner. The persistent Task follows terminal-state publication/cleanup or preserves the original start/worker failure; user continuations run asynchronously. Complete backend/source/platform review remains in progress. Active-time reporting uses Interlocked.Add against the monitor Interlocked.Exchange; volatile read/add/write duplicated consumed samples. Original single event-loop reporting ownership remains. Fatal shutdown-startup failures use bare throw after faulting Termination, preserving original exception identity and origin.",
+      "adaptation": "Interlocked/Volatile replace field updaters. Uninterruptible monitor entry restores consumed interrupts. Timed waits chunk Int32 millisecond limits. ThreadProperties exposes CLR state/id/priority; remote stack and non-destructive interrupt-flag queries throw NotSupportedException. Postmortem priority/daemon values use last observed snapshots. Private non-generic TaskCompletionSource is the sole lifecycle result owner. The persistent Task follows terminal-state publication/cleanup or preserves the original start/worker failure; user continuations run asynchronously. Complete backend/source/platform review remains in progress. Active-time reporting uses Interlocked.Add against the monitor Interlocked.Exchange; volatile read/add/write duplicated consumed samples. Original single event-loop reporting ownership remains. Fatal shutdown-startup failures use bare throw after faulting Termination, preserving original exception identity and origin. Worker bootstrap is native Action<Action>. Timed task drain compares elapsed time rather than an overflowing absolute deadline.",
       "evidence": [
         "All 17 original tests pass and all 128 original comments preserved.",
         "Startup request omission reproduced (expected 1, actual 0); restore original startup CAS retry and unstarted suspension. Restore cancellation/suspend state retries and re-requested suspension.",
@@ -2535,12 +2552,14 @@
         "Shared native stop: pinned AbstractEventExecutor.java:85, SingleThreadEventExecutor.java:782/923, MultithreadEventExecutorGroup.java:114-123 and transport NioEventLoopTest.java:204-238 establish backend/consumer policy. The initial affected Debug selection passes 92 cases. Disabling only native graceful-to-stop escalation reproduces one admission-closure failure among two theory rows; the direct-stop row passes. Seven CLR lifecycle rows cover drain/withdrawal, wrapper/Task identity, every-child requests and synchronous request failures; no original Java fixture/comment is changed. Final matrix and audits are recorded in docs/common-porting.md.",
         "Native provider selection: pinned EmbeddedEventLoop.java clock injection/explicit pump and ManualIoEventLoop.java:145-154 manual wakeup contract reviewed. Ticker.FromTimeProvider, protected ordered scheduler/core constructor and public DefaultEventExecutor(TimeProvider) preserve executor-owned scheduling. Eleven provider rows and existing clock/scheduling/metrics/lifecycle cases pass in 166 affected Debug cases; provider-clock-affected-debug.trx. Final matrix/audit evidence is recorded in docs/common-porting.md.",
         "Final Debug/Release each 1442 passed/zero failed/14 unchanged skips (1456 discovered), with 759 original identities retained and eleven CLR provider rows added; provider-clock-identity-comparison.json. All 107 reviewed comment entries have zero missing; changed seven sources retain 175 comments, and all 271 inventory paths match. Windows/net10.0 only.",
-        "CLR initialization/reflection/exception-origin checkpoint: exact pinned ClassInitializerUtil executed with a same-loader lookup shim; 11 new cases (10 corrected pre-repair failures), targeted Debug 35 passes, checked Release 277 passes/5 unchanged skips, full default Debug/Release 1906 discovered/1892 passed/14 unchanged skips. All 1895 prior outcomes and 759 non-Porting identities retained. See common-clr-design.md, common-porting.md and clr-platform-access-* records; no native module completion claim."
+        "CLR initialization/reflection/exception-origin checkpoint: exact pinned ClassInitializerUtil executed with a same-loader lookup shim; 11 new cases (10 corrected pre-repair failures), targeted Debug 35 passes, checked Release 277 passes/5 unchanged skips, full default Debug/Release 1906 discovered/1892 passed/14 unchanged skips. All 1895 prior outcomes and 759 non-Porting identities retained. See common-clr-design.md, common-porting.md and clr-platform-access-* records; no native module completion claim.",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md.",
+        "Checked Release exposed timed-drain deadline addition overflow. Exact pinned arithmetic/cutoff predicate yields an early 64-task cutoff for Long.MAX_VALUE at clock 320; CLR elapsed-budget comparison preserves intended huge-budget work without overflow. Four extreme/zero/negative budget rows and the unchanged failed metric row verify the repair; docs/common-clr-design.md#native-worker-bootstrap-boundary"
       ],
       "status": "in-progress",
       "nativeDesignReview": {
         "status": "in-progress",
-        "evidence": "Native StopAsync closes admission, drains accepted invocations and cancels schedules; it can escalate a graceful quiet period. Pinned legacy entry points remain non-escalating. CAS uses the checked state snapshot to prevent reopening admission. Remaining ordered runtime/backend review stays open."
+        "evidence": "Native StopAsync closes admission, drains accepted invocations and cancels schedules; it can escalate a graceful quiet period. Pinned legacy entry points remain non-escalating. CAS uses the checked state snapshot to prevent reopening admission. Remaining ordered runtime/backend review stays open. Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary"
       },
       "comments": {
         "upstreamCount": 128,
@@ -2626,24 +2645,30 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/ThreadPerTaskExecutor.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/ThreadPerTaskExecutor.cs"
       ],
       "implementation": [
         "src/Netty.NET.Common/Concurrent/ThreadPerTaskExecutor.cs",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
       ],
       "evidence": [
-        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit.",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
       ],
-      "adaptation": "Actual SingleThreadEventExecutor worker bootstrap converts its existing IRunnable producer to a bound Run Action before factory creation/start. Remaining IExecutor public boundary review is separate. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records",
+      "adaptation": "Sealed native Execute(Action) starts the configured fresh Thread. No IExecutor/Runnable facade or Task completion owner. Native null/factory/start errors and actual bootstrap consumers verified; docs/common-clr-design.md#native-worker-bootstrap-boundary",
       "comments": {
         "upstreamCount": 1,
         "required": true,
         "preservedCount": 1,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Entire small source boundary reviewed against all pinned consumers: physical worker creation/start is retained with Action and native Thread. Original license preserved. Broader queued executor APIs are a separate scope."
       }
     },
     {
@@ -4004,11 +4029,13 @@
       "implementation": [
         "src/Netty.NET.Common/Internal/ThreadExecutorMap.cs",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
       ],
       "evidence": [
         "All pinned methods reviewed. All four original wrapping/restoration cases pass; original comments restored exactly.",
-        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit.",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
       ],
       "adaptation": "CLR anonymous executor/runnable/factory adapters preserve per-thread FastThreadLocal identity and finally restoration.",
       "comments": {
@@ -4016,6 +4043,10 @@
         "required": true,
         "preservedCount": 7,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "in-progress",
+        "evidence": "Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary"
       }
     },
     {
@@ -5328,7 +5359,8 @@
         "Native monitoring-window coalescing: pinned fixed-rate callbacks previously sampled/reset every positive interval, so missed callbacks could fabricate consecutive idle windows. Five controlled cases fail before repair (autoscaling-window-before.trx), and a sixth exposes drift from rebasing every window to the last actual sample (autoscaling-window-cadence-before.trx). The private monitor now samples once per configured phase boundary, keeps actual elapsed denominators and activity budgets, distinguishes zero from uninitialized time and handles signed clock wraparound. Fixed-rate cadence, all original workloads/waits/thresholds/assertions and lifecycle ownership remain unchanged. Rejected elapsed-only and fixed-delay attempts and their original fixture failures are documented rather than hidden. Final coupled Debug 97 pass / zero failures / zero skips, including all seven original cases and six new clock/phase rows. Original factory 43 and fixture 17 comments have zero missing. See docs/common-autoscaling-monitor-windows.md and autoscaling-window-phase-contracts-debug.trx. Catch-up defect is independently proven; causal relation to retained real-time failures remains unproven.",
         "Monitoring-window checkpoint: final default full Debug/Release each discover 1386 / pass 1372 / fail zero / skip 14 unchanged on Windows/net10.0 (autoscaling-window-full-debug.trx and autoscaling-window-full-release.trx). All 759 non-Porting identities and skip identities match the preceding commit checkpoint; only six new CLR clock/phase rows, no removals/renames and matching Debug/Release outcomes (autoscaling-window-identity-comparison.json). All 98 verified comment entries, 43 chooser and 17 original fixture comments have zero missing; pinned 271-file inventory matches and no implementation paths are missing (autoscaling-window-comment-audit.json). Fixed-rate cadence and original waits/workloads/assertions retained; earlier real-time failure causality remains unproven. Native API/backend and all remaining source reviews are still required.",
         "Baseline 8d16bf2 isolated tracing reproduces the unchanged original testScaleUpDoesNotExceedMaxThreads on its seventh invocation; first resumed interval 47.0048ms versus 50ms configured, third idle decision precedes the first I/O report by 2.9942ms. Pinned Java decision replay selects the same suspension. Six controlled resume cases fail baseline (autoscaling-resume-baseline.trx); affected Debug 131 passed (autoscaling-resume-affected-debug.trx). After native resume eligibility, the same original trace-enabled scenario passes forty repetitions (autoscaling-resume-fixed-probe.trx). Trace/oracle summary: autoscaling-resume-trace-summary.json and autoscaling-resume-java-decision.txt. Original fixture is unchanged; finite traced passes do not prove arbitrary timing stability or retrospectively identify earlier untraced failures. See docs/common-autoscaling-monitor-windows.md.",
-        "Final full Debug/Release each 1477 passed/zero failed/14 unchanged skipped (1491 discovered), all 759 non-Porting and all prior identities/outcomes retained; only six new controlled resume cases. Factory 43 and original fixture 17 comments preserved; all 114 reviewed comment entries have zero missing and all 271 inventory paths match. Evidence: autoscaling-resume-full-debug.trx, autoscaling-resume-full-release.trx, autoscaling-resume-identity-comparison.json, autoscaling-resume-comment-audit.json, autoscaling-resume-inventory-summary.json. Original workloads/waits/thresholds/assertions unchanged. Windows/net10.0, SDK 10.0.203/runtime 10.0.7; finite traced repetitions do not establish arbitrary timing stability or retrospectively assign untraced older failure causes."
+        "Final full Debug/Release each 1477 passed/zero failed/14 unchanged skipped (1491 discovered), all 759 non-Porting and all prior identities/outcomes retained; only six new controlled resume cases. Factory 43 and original fixture 17 comments preserved; all 114 reviewed comment entries have zero missing and all 271 inventory paths match. Evidence: autoscaling-resume-full-debug.trx, autoscaling-resume-full-release.trx, autoscaling-resume-identity-comparison.json, autoscaling-resume-comment-audit.json, autoscaling-resume-inventory-summary.json. Original workloads/waits/thresholds/assertions unchanged. Windows/net10.0, SDK 10.0.203/runtime 10.0.7; finite traced repetitions do not establish arbitrary timing stability or retrospectively assign untraced older failure causes.",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
       ],
       "adaptation": "CountdownEvent replaces CountDownLatch with a bounded startup wait. Volatile Int32 replaces AtomicBoolean; explicit iterator and LINQ replace Java Iterable/stream. DefaultThreadFactory uses background CLR threads; Xunit keeps the original 30-second test timeout. The inner Java variable was renamed to satisfy CLR scope rules. Lifecycle observations now use native Task/await and preserve original exception identity; original workloads and comments remain.",
       "comments": {
@@ -5399,7 +5431,8 @@
         "dotnet test Netty.NET.sln -p:PortingBatch=true; original tests pass.",
         "Final default full Debug and Release on Windows/net10.0 each pass 1287 / fail 0 / skip 14, 1301 total: native-completion-termination-full-debug.trx and native-completion-termination-full-release.trx. Includes 29 native completion, 26 progress, two accounting and two real Global termination-observer integration cases. Initial Release auto-scaling timing failure and Debug observer-cancellation precondition failure remain documented; accounting defect is independently fixed, original auto-scaling assertion causality remains unproven.",
         "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json.",
-        "Native retirement affected Debug selection: 236 passed / zero failed / zero skipped (native-future-retirement-final-contracts-debug.trx). First full Debug retained a two-second chain failure caused by RCAA ThreadPool hops; inline-capable chain translation preserves all 20000 operations and the same bound. Final chain/completion/state selection: 54 passed / zero failed / zero skipped (native-future-retirement-chain-contracts-debug.trx). Final default Debug: 1365 discovered / 1351 passed / zero failed / 14 unchanged skips (native-future-retirement-final-full-debug.trx). Final default Release: 1365 discovered / 1351 passed / zero failed / 14 unchanged skips (native-future-retirement-final-full-release.trx). All 759 non-Porting fixture and 14 skip identities remain unchanged; only eight PendingWrite cases are added and one CLR cancellation probe is renamed. All 98 verified entries have zero missing comments; all 70 retired-source, seven PendingWrite and 12 DefaultPromiseTest comments preserved. No missing implementation/candidate paths; git diff --check passes. See docs/common-native-future-retirement.md."
+        "Native retirement affected Debug selection: 236 passed / zero failed / zero skipped (native-future-retirement-final-contracts-debug.trx). First full Debug retained a two-second chain failure caused by RCAA ThreadPool hops; inline-capable chain translation preserves all 20000 operations and the same bound. Final chain/completion/state selection: 54 passed / zero failed / zero skipped (native-future-retirement-chain-contracts-debug.trx). Final default Debug: 1365 discovered / 1351 passed / zero failed / 14 unchanged skips (native-future-retirement-final-full-debug.trx). Final default Release: 1365 discovered / 1351 passed / zero failed / 14 unchanged skips (native-future-retirement-final-full-release.trx). All 759 non-Porting fixture and 14 skip identities remain unchanged; only eight PendingWrite cases are added and one CLR cancellation probe is renamed. All 98 verified entries have zero missing comments; all 70 retired-source, seven PendingWrite and 12 DefaultPromiseTest comments preserved. No missing implementation/candidate paths; git diff --check passes. See docs/common-native-future-retirement.md.",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
       ],
       "status": "verified",
       "comments": {
@@ -5639,7 +5672,8 @@
         "Native bulk composition: pinned all-module search finds only inherited forwarders, blocking guards, tests and benchmark stubs. Four bulk overloads/newTaskFor hooks and CLR AbstractExecutorService removed. Native submission plus BCL Task composition/owned tokens replaces useful batch scenarios; no public replacement bulk facade. Four original SingleThread JDK rejection cases are explicitly replaced by queued async native counterparts, not claimed as unchanged expectations. Affected Debug selection 186 passed / zero failed / zero skips. First 97-case run failed an assertion-helper/negative-submillisecond timeout assumption; fixture corrected without changing native execution. See docs/common-native-bulk-composition.md, native-bulk-contracts-debug.trx and native-bulk-final-contracts-debug.trx.",
         "Native bulk checkpoint: full default Debug/Release each 1350 discovered, 1336 passed, zero failed, 14 unchanged skips on Windows/net10.0 (native-bulk-full-debug.trx and native-bulk-full-release.trx). The 759 non-Porting fixture identities change only by four documented JDK guard replacements; all others and skip identities match the preceding unordered termination checkpoint. All 247 original comments in five changed Netty sources plus SingleThread fixture retained; 105 verified entries have zero missing (native-bulk-comment-audit.json). No source exclusion/new skip and no module/native-backend completion claim.",
         "Native ordered scheduling migration: shared JDK scheduled-service/group/default APIs and ordered result adapters removed. Every ordered/global/single-thread caller and fixture uses native Tasks with owned CancellationToken; Task identity is separate from deadline metadata. Original 1500ms Global workload and 2000 cancellation/suspend iterations retained. Affected Debug 179 passed / 0 failed / 0 skips. Full default Debug/Release each 1350 total / 1336 passed / 0 failed / 14 unchanged skips on Windows/net10.0; all 759 non-Porting and skipped identities match the native-bulk checkpoint. All 105 verified comment entries have zero missing, including 28 AbstractScheduled comments and eight pinned ScheduledFutureTask comments. Unordered concrete legacy scheduler/backend remains unfinished. Evidence: docs/common-native-ordered-scheduling-migration.md, native-ordered-schedule-final-contracts-debug.trx, native-ordered-schedule-full-debug.trx, native-ordered-schedule-full-release.trx and native-ordered-schedule-comment-audit.json.",
-        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records"
+        "Thread creation/lifecycle calls use native Action/Thread or bound producer Run; original scenarios/assertions/comments/identities retained. common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records",
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
       ],
       "adaptation": "CLR Thread is sealed; native wrapper observes start and signals before runnable entry. Bounded waits expose hangs. Closed IExecutor supplies backing-service rejection. Remote stack query explicitly throws; the owner captures its own stack. Task shutdown bridge retains original failure identity. Lifecycle observations now use native Task/await and preserve original exception identity; original workloads and comments remain. The four inherited JDK bulk-in-loop rejection tests are replaced by explicitly named native WhenAll/WhenAny async yielding/affinity scenarios, with/without observer timeout; their Java-only method expectation is documented rather than asserted on an invented CLR bulk facade.",
       "comments": {

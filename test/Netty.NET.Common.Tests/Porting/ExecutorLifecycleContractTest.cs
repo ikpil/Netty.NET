@@ -93,8 +93,8 @@ public class ExecutorLifecycleContractTest
     {
         internal ManualGroup(params Child[] children) : this(DefaultEventExecutorChooserFactory.INSTANCE, children) { }
         internal ManualGroup(IEventExecutorChooserFactory factory, params Child[] children)
-            : base(children.Length, ImmediateExecutor.INSTANCE, factory, (object)children) { }
-        protected override IEventExecutor NewChild(IExecutor executor, params object[] args) =>
+            : base(children.Length, command => command(), factory, (object)children) { }
+        protected override IEventExecutor NewChild(Action<Action> executor, params object[] args) =>
             ((Child[])args[0])[iteratorIndex++];
         private int iteratorIndex;
     }
@@ -117,8 +117,8 @@ public class ExecutorLifecycleContractTest
     private sealed class FailingGroup : MultithreadEventExecutorGroup
     {
         internal FailingGroup(List<Child> created, Exception failure)
-            : base(3, ImmediateExecutor.INSTANCE, created, failure) { }
-        protected override IEventExecutor NewChild(IExecutor executor, params object[] args)
+            : base(3, command => command(), created, failure) { }
+        protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
         {
             var created = (List<Child>)args[0];
             if (created.Count == 2) throw (Exception)args[1];
@@ -128,10 +128,10 @@ public class ExecutorLifecycleContractTest
         }
     }
 
-    private sealed class RejectingExecutor : IExecutor
+    private sealed class RejectingExecutor
     {
         internal readonly RejectedExecutionException failure = new("worker rejected");
-        public void Execute(IRunnable command) => throw failure;
+        public void Execute(Action command) => throw failure;
     }
 
     private sealed class FailingWorker : SingleThreadEventExecutor
@@ -332,7 +332,7 @@ public class ExecutorLifecycleContractTest
     public async Task WorkerStartFailureRetainsCauseAndAllowsExplicitExecutorNotification()
     {
         var backing = new RejectingExecutor();
-        var executor = new DefaultEventExecutor(backing);
+        var executor = new DefaultEventExecutor(backing.Execute);
         Task termination = executor.Termination;
         Task failure = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
         Assert.Same(termination, failure);
@@ -357,7 +357,7 @@ public class ExecutorLifecycleContractTest
         cancellation.Cancel();
         var failure = new OperationCanceledException("unexpected worker failure", cancellation.Token);
         SingleThreadEventExecutor executor = atStartup
-            ? new DefaultEventExecutor(new AnonymousExecutor(_ => throw failure))
+            ? new DefaultEventExecutor(_ => throw failure)
             : new FailingWorker(failure);
         Task termination = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
         Assert.Same(failure, await Assert.ThrowsAsync<OperationCanceledException>(() =>

@@ -56,6 +56,18 @@ public static class ThreadExecutorMap
         );
     }
 
+    // Native worker-entry dispatcher: preserve physical executor mapping without a Runnable adapter.
+    public static Action<Action> Apply(Action<Action> executor, IEventExecutor eventExecutor)
+    {
+        ArgumentNullException.ThrowIfNull(executor);
+        ArgumentNullException.ThrowIfNull(eventExecutor);
+        return command =>
+        {
+            ArgumentNullException.ThrowIfNull(command);
+            executor(() => RunWithExecutor(command, eventExecutor));
+        };
+    }
+
     /**
      * Decorate the given {@link Runnable} and ensure {@link #currentExecutor()} will return {@code eventExecutor}
      * when called from within the {@link Runnable} during execution.

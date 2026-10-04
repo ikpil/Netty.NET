@@ -27,6 +27,8 @@ namespace Netty.NET.Common.Concurrent;
  * Abstract base class for {@link EventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
  */
+// CLR: original constructor Executor parameters are Action<Action> worker starters.
+// The entry runs for the worker lifetime; queued submissions use the event executor APIs.
 public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
 {
     private readonly IEventExecutor[] children;
@@ -43,7 +45,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, IThreadFactory threadFactory, params object[] args)
-        : this(nThreads, threadFactory == null ? null : new ThreadPerTaskExecutor(threadFactory), args)
+        : this(nThreads, threadFactory == null ? (Action<Action>)null : new ThreadPerTaskExecutor(threadFactory).Execute, args)
     {
     }
 
@@ -54,7 +56,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param executor          the Executor to use, or {@code null} if the default should be used.
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor, params object[] args)
+    protected MultithreadEventExecutorGroup(int nThreads, Action<Action> executor, params object[] args)
         : this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args)
     {
     }
@@ -67,14 +69,14 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * @param chooserFactory    the {@link EventExecutorChooserFactory} to use.
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
-    protected MultithreadEventExecutorGroup(int nThreads, IExecutor executor,
+    protected MultithreadEventExecutorGroup(int nThreads, Action<Action> executor,
         IEventExecutorChooserFactory chooserFactory, params object[] args)
     {
         ObjectUtil.CheckPositive(nThreads, "nThreads");
 
         if (executor == null)
         {
-            executor = new ThreadPerTaskExecutor(NewDefaultThreadFactory());
+            executor = new ThreadPerTaskExecutor(NewDefaultThreadFactory()).Execute;
         }
 
         children = new IEventExecutor[nThreads];
@@ -196,7 +198,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      * called for each thread that will serve this {@link MultithreadEventExecutorGroup}.
      *
      */
-    protected abstract IEventExecutor NewChild(IExecutor executor, params object[] args);
+    protected abstract IEventExecutor NewChild(Action<Action> executor, params object[] args);
 
     public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
     {

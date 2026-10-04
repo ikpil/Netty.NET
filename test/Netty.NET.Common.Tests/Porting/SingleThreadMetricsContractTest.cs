@@ -23,10 +23,10 @@ public class SingleThreadMetricsContractTest
             return clock;
         }
         internal ActivityClockExecutor()
-            : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), false, true,
+            : base(null, _ => throw new Exception("must not start"), false, true,
                 int.MaxValue, RejectedExecutionHandlers.Reject()) { }
         internal ActivityClockExecutor(IQueue<IRunnable> queue)
-            : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), false, true,
+            : base(null, _ => throw new Exception("must not start"), false, true,
                 queue, RejectedExecutionHandlers.Reject()) { }
         public override Ticker Ticker() => clock;
         protected override void Run() => throw new Exception("must not run");
@@ -54,7 +54,7 @@ public class SingleThreadMetricsContractTest
     {
         internal readonly MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         internal ManualExecutor(bool support = false)
-            : base(null, new AnonymousExecutor(_ => throw new Exception("must not start")), false, support,
+            : base(null, _ => throw new Exception("must not start"), false, support,
                 int.MaxValue, RejectedExecutionHandlers.Reject()) { }
         public override bool InEventLoop(Thread thread) => thread == Thread.CurrentThread;
         public override Ticker Ticker() => clock;
@@ -89,6 +89,24 @@ public class SingleThreadMetricsContractTest
         Assert.False(executor.Drain(0));
         Assert.Equal(0, executor.ResetActive());
         Assert.Equal(500, executor.LastActivity());
+    }
+
+    [Theory]
+    [InlineData(0L, 64)]
+    [InlineData(-1L, 64)]
+    [InlineData(long.MaxValue, 100)]
+    [InlineData(long.MaxValue - 320, 100)]
+    public void TimedDrainUsesTheElapsedBudgetWithoutOverflowingALargeDeadline(long budget, int expectedCalls)
+    {
+        var executor = new ManualExecutor();
+        executor.clock.Advance(320);
+        int calls = 0;
+        for (int i = 0; i < 100; i++)
+            executor.Execute(Runnables.Create(() => { calls++; executor.clock.Advance(5); }));
+        Assert.True(executor.Drain(budget));
+        Assert.Equal(expectedCalls, calls);
+        Assert.Equal(expectedCalls * 5, executor.ResetActive());
+        Assert.Equal(320 + expectedCalls * 5, executor.LastActivity());
     }
 
     [Fact]
@@ -145,7 +163,7 @@ public class SingleThreadMetricsContractTest
 
     private sealed class CountingStartExecutor : SingleThreadEventExecutor
     {
-        internal CountingStartExecutor(IExecutor executor)
+        internal CountingStartExecutor(Action<Action> executor)
             : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
         protected override void Run() => throw new Exception("must not run");
         public override bool InEventLoop(Thread thread) => false;
@@ -157,7 +175,7 @@ public class SingleThreadMetricsContractTest
     public void StartingANeverStartedSuspendedExecutorResetsBothMonitorStreaks()
     {
         int starts = 0;
-        var executor = new CountingStartExecutor(new AnonymousExecutor(_ => ++starts));
+        var executor = new CountingStartExecutor(_ => ++starts);
         Assert.True(executor.TrySuspend());
         Assert.True(executor.IsSuspended());
         Assert.Equal(0, executor.Idle());

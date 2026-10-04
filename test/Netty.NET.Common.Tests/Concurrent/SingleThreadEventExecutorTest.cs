@@ -65,8 +65,8 @@ public class SingleThreadEventExecutorTest
     {
         internal Action started;
         internal LoopExecutor(IThreadFactory factory, bool wake = true) : base(null, factory, wake) { }
-        internal LoopExecutor(IExecutor executor, bool wake = true) : base(null, executor, wake) { }
-        internal LoopExecutor(IExecutor executor, IQueue<IRunnable> queue)
+        internal LoopExecutor(Action<Action> executor, bool wake = true) : base(null, executor, wake) { }
+        internal LoopExecutor(Action<Action> executor, IQueue<IRunnable> queue)
             : base(null, executor, false, queue, RejectedExecutionHandlers.Reject()) { }
         protected override void Run()
         {
@@ -90,7 +90,7 @@ public class SingleThreadEventExecutorTest
     }
     private sealed class CountingExecutor : SingleThreadEventExecutor
     {
-        internal CountingExecutor(IExecutor executor)
+        internal CountingExecutor(Action<Action> executor)
             : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
         protected override void Run() => throw new Exception("must not run");
     }
@@ -210,7 +210,7 @@ public class SingleThreadEventExecutorTest
             {
                 int threadStarts = 0;
                 // Only count the requests to start a thread, no thread is ever started.
-                var executor = new CountingExecutor(new AnonymousExecutor(_ => Interlocked.Increment(ref threadStarts)));
+                var executor = new CountingExecutor(_ => Interlocked.Increment(ref threadStarts));
                 Volatile.Write(ref executorRef, executor);
                 executor.Execute(Runnables.Empty);
                 Assert.True(SpinWait.SpinUntil(() => Volatile.Read(ref suspended) == i, TimeSpan.FromSeconds(2)));
@@ -345,15 +345,15 @@ public class SingleThreadEventExecutorTest
         }
     }
 
-    private sealed class ClosedExecutor : IExecutor
+    private sealed class ClosedExecutor
     {
-        public void Execute(IRunnable command) => throw new RejectedExecutionException();
+        public void Execute(Action command) => throw new RejectedExecutionException();
     }
     [Fact]
     public void TestWrappedExecutorIsShutdown()
     {
         // CLR: a closed backing executor reproduces ExecutorService.shutdownNow rejection.
-        var executor = new LoopExecutor(new ClosedExecutor(), false);
+        var executor = new LoopExecutor(new ClosedExecutor().Execute, false);
         ExecuteShouldFail(executor);
         ExecuteShouldFail(executor);
         Assert.Throws<RejectedExecutionException>(() =>
@@ -488,7 +488,7 @@ public class SingleThreadEventExecutorTest
         internal int rejects;
         internal readonly ConcurrentQueue<Task> submittedTasks = new();
         internal AfterShutdownExecutor(IQueue<IRunnable> queue)
-            : base(new ThreadPerTaskExecutor(new DefaultThreadFactory("after-shutdown")), queue) { }
+            : base(new ThreadPerTaskExecutor(new DefaultThreadFactory("after-shutdown")).Execute, queue) { }
         protected override bool ConfirmShutdown()
         {
             bool result = base.ConfirmShutdown();

@@ -31,7 +31,7 @@ public sealed class DefaultEventExecutor : SingleThreadEventExecutor
     /// executor. Provider timers do not dispatch scheduled callbacks.
     /// </summary>
     public DefaultEventExecutor(TimeProvider timeProvider)
-        : base(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventExecutor))),
+        : base(null, new ThreadPerTaskExecutor(new DefaultThreadFactory(typeof(DefaultEventExecutor))).Execute,
             true, false, DEFAULT_MAX_PENDING_EXECUTOR_TASKS, RejectedExecutionHandlers.Reject(), timeProvider)
     {
     }
@@ -46,7 +46,8 @@ public sealed class DefaultEventExecutor : SingleThreadEventExecutor
     {
     }
 
-    public DefaultEventExecutor(IExecutor executor)
+    /// <summary>Dispatches the long-lived worker entry using the supplied backend.</summary>
+    public DefaultEventExecutor(Action<Action> executor)
         : this(null, executor)
     {
     }
@@ -61,7 +62,7 @@ public sealed class DefaultEventExecutor : SingleThreadEventExecutor
     {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor)
+    public DefaultEventExecutor(IEventExecutorGroup parent, Action<Action> executor)
         : base(parent, executor, true)
     {
     }
@@ -71,7 +72,7 @@ public sealed class DefaultEventExecutor : SingleThreadEventExecutor
     {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, IExecutor executor, int maxPendingTasks, IRejectedExecutionHandler rejectedExecutionHandler)
+    public DefaultEventExecutor(IEventExecutorGroup parent, Action<Action> executor, int maxPendingTasks, IRejectedExecutionHandler rejectedExecutionHandler)
         : base(parent, executor, true, maxPendingTasks, rejectedExecutionHandler)
     {
     }

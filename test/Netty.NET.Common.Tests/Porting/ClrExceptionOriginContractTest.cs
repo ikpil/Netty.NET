@@ -45,7 +45,7 @@ public class ClrExceptionOriginContractTest
     {
         // Synthetic exceptions exercise propagation without exhausting the host.
         Exception original = stackOverflow ? new StackOverflowException("startup") : new OutOfMemoryException("startup");
-        var executor = new DefaultEventExecutor(new FailingExecutor(original));
+        var executor = new DefaultEventExecutor(new FailingExecutor(original).Execute);
         Exception observed = Record.Exception(() =>
         {
             _ = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
@@ -77,8 +77,8 @@ public class ClrExceptionOriginContractTest
         }
     }
 
-    private sealed class FailingExecutor(Exception original) : IExecutor
+    private sealed class FailingExecutor(Exception original)
     {
-        public void Execute(IRunnable command) => ThrowAtOrigin(original);
+        public void Execute(Action command) => ThrowAtOrigin(original);
     }
 }
