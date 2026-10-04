@@ -17,7 +17,7 @@ public class PlatformRuntimeContractTest
     public void AndroidDetectionUsesTheOperatingSystemRatherThanTheJvmName()
     {
         WithFreshPlatform(new() { ["java.vm.name"] = "Dalvik" }, platform =>
-            Assert.Equal(OperatingSystem.IsAndroid(), InvokeBoolean(platform, nameof(PlatformDependent0.IsAndroid))));
+            Assert.Equal(OperatingSystem.IsAndroid(), InvokeBoolean(platform, nameof(PlatformDependent.IsAndroid))));
     }
 
     [Fact]
@@ -47,19 +47,26 @@ public class PlatformRuntimeContractTest
             ["org.jboss.netty.tryUnsafe"] = "true"
         }, platform =>
         {
-            Assert.False(InvokeBoolean(platform, nameof(PlatformDependent0.IsExplicitNoUnsafe)));
-            Assert.False(InvokeBoolean(platform, nameof(PlatformDependent0.HasUnsafe)));
+            AssertNativeMemoryAndHash(platform);
         });
     }
 
     [Fact]
     public void ExplicitNettyPreferenceRemainsIndependentOfUnsafeAvailability()
     {
-        WithFreshPlatform(new() { ["io.netty.noUnsafe"] = "true" }, platform =>
+        foreach (var settings in new Dictionary<string, string>[]
         {
-            Assert.True(InvokeBoolean(platform, nameof(PlatformDependent0.IsExplicitNoUnsafe)));
-            Assert.False(InvokeBoolean(platform, nameof(PlatformDependent0.HasUnsafe)));
-        });
+            new() { ["io.netty.noUnsafe"] = "true" },
+            new() { ["io.netty.noUnsafe"] = "false", ["io.netty.tryUnsafe"] = "false" },
+            new() { ["io.netty.noUnsafe"] = "false", ["io.netty.tryUnsafe"] = null,
+                ["org.jboss.netty.tryUnsafe"] = "false" }
+        })
+            WithFreshPlatform(settings, platform =>
+            {
+                // The former preference diagnostic is retired. JVM preferences must
+                // leave actual CLR allocation and arithmetic available.
+                AssertNativeMemoryAndHash(platform);
+            });
     }
 
     [Fact]
@@ -98,8 +105,8 @@ public class PlatformRuntimeContractTest
                 Environment.SetEnvironmentVariable(setting.Key, setting.Value);
             }
 
-            Assembly assembly = context.LoadFromAssemblyPath(typeof(PlatformDependent0).Assembly.Location);
-            assertion(assembly.GetType(typeof(PlatformDependent0).FullName, throwOnError: true));
+            Assembly assembly = context.LoadFromAssemblyPath(typeof(PlatformDependent).Assembly.Location);
+            assertion(assembly.GetType(typeof(PlatformDependent).FullName, throwOnError: true));
         }
         finally
         {
@@ -111,4 +118,27 @@ public class PlatformRuntimeContractTest
 
     private static bool InvokeBoolean(Type platform, string name) =>
         (bool)platform.GetMethod(name, BindingFlags.Public | BindingFlags.Static).Invoke(null, null);
+
+    private static void AssertNativeMemoryAndHash(Type platform)
+    {
+        Type allocatorType = platform.Assembly.GetType(typeof(NativeMemoryAllocator).FullName, true);
+        object allocator = Activator.CreateInstance(allocatorType, new object[] { 16L });
+        MethodInfo allocate = allocatorType.GetMethod("Allocate");
+        byte[] bytes = new byte[30];
+        for (int index = 0; index < bytes.Length; index++)
+            bytes[index] = unchecked((byte)(index * 73 + 8 * 17 + 128));
+        using (var owner = (IMemoryOwner<byte>)allocate.Invoke(allocator, new object[] { 8, false }))
+        {
+            bytes.AsSpan(11, 8).CopyTo(owner.Memory.Span);
+            Assert.True(owner.Memory.Span.SequenceEqual(bytes.AsSpan(11, 8)));
+            Assert.Equal(8L, allocatorType.GetProperty("ReservedBytes").GetValue(allocator));
+            byte[] snapshot = owner.Memory.ToArray();
+            MethodInfo hash = platform.GetMethod(nameof(PlatformDependent.HashCodeAscii),
+                new[] { typeof(byte[]), typeof(int), typeof(int) });
+            // Pinned Java eight-byte result from AsciiStringHashContractTest's oracle.
+            Assert.Equal(BitConverter.IsLittleEndian ? 277172517 : 205010825,
+                (int)hash.Invoke(null, new object[] { snapshot, 0, snapshot.Length }));
+        }
+        Assert.Equal(0L, allocatorType.GetProperty("ReservedBytes").GetValue(allocator));
+    }
 }

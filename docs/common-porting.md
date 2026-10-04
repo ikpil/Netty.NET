@@ -123,30 +123,30 @@ Optimization follows behavioral verification and measured performance.
 
 The current default suite executes **1940 cases** on Windows/net10.0:
 **1926 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: mpsc-retirement-full-debug.trx and mpsc-retirement-full-release.trx.
-All 1938 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain. Two timer publication/
-cancellation contracts are added; both fail before repair with CLR interruption.
-Shared native enqueue/dequeue protection retains owner admission/cleanup and the
-later pending interrupt. Targeted Debug passes 22. Expanded checked Release
-finds two existing maximum-delay failures before Java-wrap-compatible deadline
-arithmetic repair; final checked Release passes 201/skips eight (209 discovered).
-Three unused MPSC aliases, three provider constants and 13 unused queue/padding
-files retire after actual consumer review, with all ten pinned provider comments
-and retired C# explanatory comments archived in common-clr-design.md. No new
-per-feature Markdown file or replacement provider/collection hierarchy is added.
-All 271 comment audit rows have unchanged totals and no coverage regression;
-PlatformDependent missing comments decrease from 23 to 16. Pinned inventory/paths
-match and uppercase method/local-function verification passes. Existing warnings
-remain. Source statuses do not change; common/platform review remains unfinished.
-Results remain in ignored TestResults and artifacts/mpsc-retirement-validation;
-see mpsc-retirement-identity-and-inventory.json, mpsc-retirement-comment-audit.json,
-mpsc-retirement-before-debug.trx and
-mpsc-retirement-before-deadline-checked-release.trx.
-Next: platform bootstrap/capabilities and remaining collection consumers. Future
-event-loop capacity/withdrawal and channel/buffer integration remain downstream
-module work. Full suites include every portable test source without PortingBatch;
-green tests do not establish module completion.
+Evidence: clr-capabilities-full-debug.trx and clr-capabilities-full-release.trx.
+All 1940 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain. No cases are added or
+excluded. Six JVM feature facades, three private probes/four fields and the
+commented/no-op PlatformDependent0 bootstrap class retire after actual common
+and downstream consumer review. The exact wrapping hash kernels/constants and
+actual CLR Android probe move privately into the existing PlatformDependent.
+Existing fresh-load runtime identities now test real native allocate/write/read/
+release and pinned Java hash results under noUnsafe/tryUnsafe/legacy JBoss flags,
+instead of unavailable-provider constants. The native shared-limit fixture stays.
+Targeted Debug passes 70; affected checked Release passes all 437. All 271 comment
+audit totals remain, with no coverage regression. All 81 PlatformDependent0
+comments are accounted for: eleven supplemental exact comments are archived in
+the existing design document, with previously recorded provenance preserved.
+Pinned inventory/paths match and uppercase method/local-function verification
+passes. Existing warnings remain. Source statuses are unchanged; removing the
+JVM helper class does not certify whole platform or common completion.
+Results remain in ignored TestResults and artifacts/clr-capabilities-validation;
+see clr-capabilities-identity-and-inventory.json and
+clr-capabilities-comment-audit.json. Decisions and downstream scope are in
+common-clr-design.md. Next: real platform OS/process-width and classifier/cached
+state initialization, then remaining collection consumers. Native transport,
+buffer/TLS backend and CLR allocation-diagnostics integration remain downstream
+module work. Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

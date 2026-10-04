@@ -14,6 +14,127 @@ source consumers and all original test-method decisions in
 [common-task-composition.md](common-task-composition.md). The four Java-shaped
 helper classes have been removed rather than wrapped in another public facade.
 
+## CLR operations replace JVM feature bootstrap
+
+Remove the six remaining JVM feature facades (HasUnsafe, its unavailability
+cause, virtual-thread, J9, IKVM and JFR detection), three private probes/four
+fields, and PlatformDependent0.cs. Its static constructor contained only
+commented JVM initialization; its provider diagnostics were consumed only by
+translated CLR fixtures. That is a concrete remaining CLR API/design problem,
+not a reason to re-review already-certified memory or executor implementations.
+
+| Pinned consumer / purpose | Native decision and scope |
+| --- | --- |
+| PlatformDependent0.java:58-72/74-589, 631-695: Unsafe, JEP, Graal/provider/reflection bootstrap | NativeMemoryAllocator/Owner/View, typed counters, MemoryMarshal/BinaryPrimitives and ordinary reflection already provide their reviewed common purposes. JVM preferences do not gate these CLR operations. No general capability flag is inferred from one backend. |
+| AsciiString.java:332, RefCnt.java:40/399, ReferenceCountUpdater.java:160, CleanerJava9.java:41 | Native byte access, Interlocked ref-int state and explicit memory ownership were migrated in prior units. Retain those implementations/tests; no Unsafe selection remains. |
+| PlatformDependent0.java:1131-1151 and 1212-1230 | Move the exact wrapping hash arithmetic/constants and OperatingSystem Android probe privately into PlatformDependent. Preserve all adjacent explanations, masks, byte order and overload behavior; expose no helper provider class. |
+| Recycler.java:590-593, PlatformDependent.java:1493-1512 | Existing CLR terminated/unstarted-thread handling owns recycler lifetime; the J9 performance workaround and IKVM VM-name diagnostic are JVM-specific. Their comments remain. |
+| VirtualThreadCheckTest.java and PlatformDependent.java:441-442 | The provider probe has no production Java consumer beyond itself, and CLR ordinary/thread-pool workers are not Java virtual threads. Keep the prior explicit test exclusion; do not export an always-false API. |
+| PlatformDependent.java:255-284/1914-1918, buffer AdaptivePoolingAllocator.java:1618/1687/2177/2220/2659 and PooledByteBufAllocator.java:803-848 | JFR event-provider selection is JVM-only. Allocation/lifetime observation needs the chosen CLR diagnostic backend during buffer integration; deleting this flag does not certify that work. |
+| buffer Unpooled.java:194, Unix Buffer.java:75, NioIoHandler.java:189, ReferenceCountedOpenSslEngine.java:2406 and OpenSslX509TrustManagerWrapper.java:60 | Native buffer byte/address access, I/O layout, selector field access and TLS trust wrapping need each CLR module/backend's real operations and failure handling. Earlier native-field/memory reviews cover common; downstream modules remain open. Returning false for JVM Unsafe would wrongly make it a CLR memory/backend gate. |
+
+The historical diagnostic preference in common-platform-runtime.md is now
+retired. Existing fresh-load fixture identities remain, but the two preference
+cases now allocate/write/read/release real native owners and compare the eight-
+byte hash with the existing independently generated Java oracle. Explicit
+noUnsafe=true, tryUnsafe=false and legacy JBoss=false settings all retain native
+operations. Shared io.netty.maxDirectMemory remains meaningful and its existing
+native reservation-domain fixture is unchanged. Android and nonpublic member
+access are still tested against the actual CLR OS/reflection behavior.
+
+The original platform test identities/scenarios and the complete hash-tail Java
+oracle remain. Removing a nonportable provider assertion is recorded explicitly;
+native operation success replaces it, not another constant capability result.
+Current full/checked results and comment/inventory checks are in common-porting.md.
+Class-level original-source status stays in-progress until remaining native/module
+and platform decisions are reconciled; deleting a helper class is not completion.
+The eleven remaining exact pinned PlatformDependent0 comments below supplement
+prior provenance, so all 81 are accounted for without copying existing archives.
+Commented placeholder implementation statements are discarded.
+
+### Retired JVM feature bootstrap comments
+
+The following exact pinned PlatformDependent0 comments complete the archived
+provenance not already present in surviving implementations and prior design
+records. They describe the removed JVM bootstrap, not CLR capabilities.
+
+```java
+/**
+ * The {@link PlatformDependent} operations which requires access to {@code sun.misc.*}.
+ */
+
+// See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/
+
+// ImageInfo.java
+
+// Package-private for testing.
+
+// Call once to make sure the invocation works.
+
+/**
+     * @param thread The thread to be checked.
+     * @return {@code true} if this {@link Thread} is a virtual thread, {@code false} otherwise.
+     */
+
+// See JDK 23 JEP 471 https://openjdk.org/jeps/471 and sun.misc.Unsafe.beforeMemoryAccess() on JDK 23+.
+
+// And JDK 24 JEP 498 https://openjdk.org/jeps/498, that enable warnings by default.
+
+// Due to JDK bugs, we only actually disable Unsafe by default on Java 25+, where we have memory segment APIs
+
+// available, and working.
+
+// Legacy properties
+```
+
+Source: common/src/main/java/io/netty/util/internal/PlatformDependent.java, six retired feature facade Javadocs.
+
+```java
+/**
+     * @param thread The thread to be checked.
+     * @return {@code true} if this {@link Thread} is a virtual thread, {@code false} otherwise.
+     */
+
+/**
+     * Return {@code true} if {@code sun.misc.Unsafe} was found on the classpath and can be used for accelerated
+     * direct memory access.
+     */
+
+/**
+     * Return the reason (if any) why {@code sun.misc.Unsafe} was not available.
+     */
+
+/**
+     * Returns {@code true} if the running JVM is either <a href="https://developer.ibm.com/javasdk/">IBM J9</a> or
+     * <a href="https://www.eclipse.org/openj9/">Eclipse OpenJ9</a>, {@code false} otherwise.
+     */
+
+/**
+     * Returns {@code true} if the running JVM is <a href="https://www.ikvm.net">IKVM.NET</a>, {@code false} otherwise.
+     */
+
+/**
+     * Check if JFR events are supported on this platform.
+     */
+
+// Probably failed to initialize PlatformDependent0.
+```
+
+Retired CLR diagnostic explanations, preserved as historical port provenance.
+
+```csharp
+// CLR adaptation: JVM Unsafe is unavailable; native CLR operations are ported explicitly.
+
+// CLR adaptation: Graal native-image properties do not describe this runtime.
+
+// CLR adaptation: JEP 471/498 and JDK 25 do not select CLR features.
+// Only the explicit Netty preference is relevant to this diagnostic.
+
+// CLR thread-pool workers are native threads, not Java virtual threads.
+
+// CLR adaptation: native pointer width is available without sun.misc.Unsafe.
+```
+
 ## Native MPSC handoffs and removed provider scaffolding
 
 The pinned three newMpscQueue overloads and nested Mpsc in PlatformDependent.java:

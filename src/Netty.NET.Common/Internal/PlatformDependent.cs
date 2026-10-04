@@ -32,7 +32,6 @@ using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
-using static Netty.NET.Common.Internal.PlatformDependent0;
 
 namespace Netty.NET.Common.Internal;
 
@@ -48,11 +47,15 @@ public static class PlatformDependent
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(PlatformDependent));
 
+    // constants borrowed from murmur3
+    private const int HASH_CODE_ASCII_SEED = unchecked((int)0xc2b2ae35);
+    private const int HASH_CODE_C1 = unchecked((int)0xcc9e2d51);
+    private const int HASH_CODE_C2 = unchecked((int)0x1b873593);
+    private static readonly bool IS_ANDROID = IsAndroid0();
+
     private static readonly bool MAYBE_SUPER_USER;
 
     private static readonly bool CAN_ENABLE_TCP_NODELAY_BY_DEFAULT = !IsAndroid();
-
-    private static readonly Exception UNSAFE_UNAVAILABILITY_CAUSE = UnsafeUnavailabilityCause0();
 
     private static readonly DirectoryInfo TMPDIR = Tmpdir0();
     private static readonly int BIT_MODE = BitMode0();
@@ -63,13 +66,10 @@ public static class PlatformDependent
     private static readonly ISet<string> LINUX_OS_CLASSIFIERS;
     private static readonly bool IS_WINDOWS = IsWindows0();
     private static readonly bool IS_OSX = IsOsx0();
-    private static readonly bool IS_J9_JVM = IsJ9Jvm0();
-    private static readonly bool IS_IVKVM_DOT_NET = IsIkvmDotNet0();
     private static readonly int ADDRESS_SIZE = AddressSize0();
     private static readonly string LINUX_ID_PREFIX = "ID=";
     private static readonly string LINUX_ID_LIKE_PREFIX = "ID_LIKE=";
     public static readonly bool BIG_ENDIAN_NATIVE_ORDER = ByteOrder.NativeOrder() == ByteOrder.BIG_ENDIAN;
-    private static readonly bool JFR;
 
     // For specifications, see https://www.freedesktop.org/software/systemd/man/os-release.html
     public static void AddFilesystemOsClassifiers(ISet<string> availableClassifiers) {
@@ -162,7 +162,7 @@ public static class PlatformDependent
      * Returns {@code true} if and only if the current platform is Android
      */
     public static bool IsAndroid() {
-        return PlatformDependent0.IsAndroid();
+        return IS_ANDROID;
     }
 
     /**
@@ -188,35 +188,11 @@ public static class PlatformDependent
     }
 
     /**
-     * @param thread The thread to be checked.
-     * @return {@code true} if this {@link Thread} is a virtual thread, {@code false} otherwise.
-     */
-    public static bool IsVirtualThread(Thread thread) {
-        return PlatformDependent0.IsVirtualThread(thread);
-    }
-
-    /**
      * Returns {@code true} if and only if it is fine to enable TCP_NODELAY socket option by default.
      */
     public static bool CanEnableTcpNoDelayByDefault() {
         return CAN_ENABLE_TCP_NODELAY_BY_DEFAULT;
     }
-
-    /**
-     * Return {@code true} if {@code sun.misc.Unsafe} was found on the classpath and can be used for accelerated
-     * direct memory access.
-     */
-    public static bool HasUnsafe() {
-        return UNSAFE_UNAVAILABILITY_CAUSE == null;
-    }
-
-    /**
-     * Return the reason (if any) why {@code sun.misc.Unsafe} was not available.
-     */
-    public static Exception GetUnsafeUnavailabilityCause() {
-        return UNSAFE_UNAVAILABILITY_CAUSE;
-    }
-
 
     /**
      * Returns the temporary directory.
@@ -441,7 +417,7 @@ public static class PlatformDependent
         int remainingBytes = length & 7;
         int end = remainingBytes;
         for (int i = length - 8; i >= end; i -= 8) {
-            hash = PlatformDependent0.HashCodeAsciiCompute(MemoryMarshal.Read<long>(data.Slice(i)), hash);
+            hash = HashCodeAsciiCompute(MemoryMarshal.Read<long>(data.Slice(i)), hash);
         }
         switch(remainingBytes) {
         case 7:
@@ -559,58 +535,6 @@ public static class PlatformDependent
         }
         // Check for root and toor as some BSDs have a toor user that is basically the same as root.
         return "root" == username || "toor" == username;
-    }
-
-    private static Exception UnsafeUnavailabilityCause0() {
-        if (IsAndroid()) {
-            logger.Debug("sun.misc.Unsafe: unavailable (Android)");
-            return new NotSupportedException("sun.misc.Unsafe: unavailable (Android)");
-        }
-
-        if (IsIkvmDotNet()) {
-            logger.Debug("sun.misc.Unsafe: unavailable (IKVM.NET)");
-            return new NotSupportedException("sun.misc.Unsafe: unavailable (IKVM.NET)");
-        }
-
-        Exception cause = PlatformDependent0.GetUnsafeUnavailabilityCause();
-        if (cause != null) {
-            return cause;
-        }
-
-        try {
-            bool hasUnsafe = PlatformDependent0.HasUnsafe();
-            logger.Debug("sun.misc.Unsafe: {}", hasUnsafe ? "available" : "unavailable");
-            return null;
-        } catch (Exception t) {
-            logger.Trace("Could not determine if Unsafe is available", t);
-            // Probably failed to initialize PlatformDependent0.
-            return new NotSupportedException("Could not determine if Unsafe is available", t);
-        }
-    }
-
-    /**
-     * Returns {@code true} if the running JVM is either <a href="https://developer.ibm.com/javasdk/">IBM J9</a> or
-     * <a href="https://www.eclipse.org/openj9/">Eclipse OpenJ9</a>, {@code false} otherwise.
-     */
-    public static bool IsJ9Jvm() {
-        return IS_J9_JVM;
-    }
-
-    private static bool IsJ9Jvm0() {
-        string vmName = SystemPropertyUtil.Get("java.vm.name", "").ToLower();
-        return vmName.StartsWith("ibm j9") || vmName.StartsWith("eclipse openj9");
-    }
-
-    /**
-     * Returns {@code true} if the running JVM is <a href="https://www.ikvm.net">IKVM.NET</a>, {@code false} otherwise.
-     */
-    public static bool IsIkvmDotNet() {
-        return IS_IVKVM_DOT_NET;
-    }
-
-    private static bool IsIkvmDotNet0() {
-        string vmName = SystemPropertyUtil.Get(".name", "").ToUpper(CultureInfo.GetCultureInfo("en-US"));
-        return vmName.Equals("IKVM.NET");
     }
 
     /**
@@ -991,11 +915,51 @@ public static class PlatformDependent
         return "unknown";
     }
 
-    /**
-     * Check if JFR events are supported on this platform.
-     */
-    public static bool IsJfrEnabled() {
-        return JFR;
+    private static int HashCodeAsciiCompute(long value, int hash)
+    {
+        // CLR adaptation: this operation is pure integer arithmetic and needs
+        // neither JVM Unsafe nor a native-memory implementation. Java's int
+        // arithmetic wraps, including when checked CLR callers are enabled.
+        // masking with 0x1f reduces the number of overall bits that impact the hash code but makes the hash
+        // code the same regardless of character case (upper case or lower case hash is the same).
+        return unchecked(hash * HASH_CODE_C1 +
+                // Low order int
+                HashCodeAsciiSanitize((int)value) * HASH_CODE_C2 +
+                // High order int
+                (int)((value & 0x1f1f1f1f00000000L) >>> 32));
     }
 
+    private static int HashCodeAsciiSanitize(int value)
+    {
+        return value & 0x1f1f1f1f;
+    }
+
+    private static int HashCodeAsciiSanitize(short value)
+    {
+        return value & 0x1f1f;
+    }
+
+    private static int HashCodeAsciiSanitize(byte value)
+    {
+        return value & 0x1f;
+    }
+
+    private static bool IsAndroid0()
+    {
+        // Idea: Sometimes java binaries include Android classes on the classpath, even if it isn't actually Android.
+        // Rather than check if certain classes are present, just check the VM, which is tied to the JDK.
+
+        // Optional improvement: check if `android.os.Build.VERSION` is >= 24. On later versions of Android, the
+        // OpenJDK is used, which means `Unsafe` will actually work as expected.
+
+        // Android sets this property to Dalvik, regardless of whether it actually is.
+        // CLR adaptation: detect the OS directly, independent of JVM properties.
+        bool isAndroid = OperatingSystem.IsAndroid();
+        if (isAndroid)
+        {
+            logger.Debug("Platform: Android");
+        }
+
+        return isAndroid;
+    }
 }

@@ -10,10 +10,17 @@ public class PlatformAndAddressContractTest
     [Fact]
     public void ClrProbesReportNativeCapabilities()
     {
-        Assert.False(PlatformDependent.HasUnsafe());
-        Assert.NotNull(PlatformDependent.GetUnsafeUnavailabilityCause());
         Assert.Equal(IntPtr.Size, PlatformDependent.AddressSize());
-        Assert.False(PlatformDependent0.IsVirtualThread(System.Threading.Thread.CurrentThread));
+        Assert.Equal(OperatingSystem.IsAndroid(), PlatformDependent.IsAndroid());
+        var allocator = new NativeMemoryAllocator(8);
+        using (var owner = allocator.Allocate(8, true))
+        {
+            Assert.Equal(0L, MemoryMarshal.Read<long>(owner.Memory.Span));
+            owner.Memory.Span[0] = 0xa5;
+            Assert.Equal(0xa5, owner.Memory.Span[0]);
+            Assert.Equal(8L, allocator.ReservedBytes);
+        }
+        Assert.Equal(0L, allocator.ReservedBytes);
         if (!SystemPropertyUtil.Contains("os.name") && OperatingSystem.IsWindows())
         {
             Assert.True(PlatformDependent.IsWindows());
