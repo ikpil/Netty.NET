@@ -122,32 +122,34 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2034 cases** on Windows/x64/net10.0:
-**2020 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: string-boundary-full-debug.trx and string-boundary-full-release.trx.
-All 2022 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain. Twelve new cases cover
-Java/CLR whitespace differences, resolver-style token/IP boundaries, native null/
-negative errors, end/oversize sentinels, UTF-16 suffix/surrogate and substring
-endpoints. Ten fail before repair; two preserve already correct behavior.
-Native SearchValues/span token searches retain the original delimiter policy;
-suffix/surrogate helpers use the BCL. Detailed choices and actual consumer scope:
-common-clr-design.md#native-string-token-boundaries. Whole StringUtil/common remain
-open; future DNS integration and historical JDK Unicode tables are not certified.
-Six pinned methods executed under Corretto 21.0.11_10 yield 65657 matching rows,
-covering all UTF-16 code units and 121 extra boundary/suffix inputs. The domain
-confirms 25 token delimiters and precisely eight differences from CLR whitespace.
-Targeted Debug and checked Release each pass 105 cases, zero failures/skips.
+The current default suite executes **2044 cases** on Windows/x64/net10.0:
+**2030 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: string-metadata-full-debug.trx and string-metadata-full-release.trx.
+All 2034 prior identities/outcomes, including 759 original non-Porting cases
+and every skip, remain. Ten new cases cover native type arrays/modifiers, generic
+parameters, function-pointer signatures, literal metadata names, runtime identity,
+platform newline and standard joining null/one-pass/disposal behavior. Six of nine
+initial cases fail before repair; function-pointer coverage was added afterward.
+Standard string.Join replaces the facade; explicit caller formatting retains the
+original fixture's null-text scenario. Type diagnostics traverse native metadata;
+newline uses Environment.NewLine with a snapshotted explicit environment override.
+3110 nonnull UTF-16 joining cases match pinned Java. Five isolated child processes
+verify Windows default and LF/CRLF/empty/custom overrides, initialization snapshot
+and actual leak-report consumer cleanup. No host environment is mutated.
+Detailed choices: common-clr-design.md#native-joining-metadata-labels-and-platform-separators.
+Current retained StringUtil source/native review is verified after earlier linked
+suffix/hex/CSV/OWS/token reviews. Whole common, future protocol integration/null
+policies and other platforms remain open. Targeted Debug and checked Release each
+execute 110 cases: 109 pass, zero fail, one existing skip.
 All 271 comment totals/coverage, prior provenance, original fixture identities,
 pinned inventory/paths and uppercase declarations pass; no new warning identity.
-Source statuses stay 52 verified / 49 CLR replacement / 14 not applicable /
-71 pending / 19 in progress. No new Markdown file or original exclusion is added.
-Records stay in ignored TestResults and artifacts/string-boundary-validation:
-string-boundary-before-debug.trx, string-boundary-identity-and-inventory.json,
-string-boundary-java-clr-oracle.json, classification.json and comment audit.
-Next: remaining StringUtil joining/type-name/newline contracts and actual callers,
-then broader native thread-wrapper API review. Full portable sources build by
-default without PortingBatch.
+Source statuses: 53 verified / 49 CLR replacement / 14 not applicable /
+71 pending / 18 in progress. No new Markdown file or original exclusion is added.
+Records stay in ignored TestResults and artifacts/string-metadata-validation:
+string-metadata-before-debug.trx, string-metadata-identity-and-inventory.json,
+string-metadata-evidence.json and comment audit.
+Next: broader native thread-wrapper/factory API review against actual upstream
+consumers. Full portable sources build by default without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

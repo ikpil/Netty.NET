@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Linq;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Internal;
 using static Netty.NET.Common.Internal.StringUtil;
@@ -629,15 +630,16 @@ public class StringUtilTest
     public void TestJoin()
     {
         Assert.Equal("",
-            StringUtil.Join(",", Collectives.EmptyList<string>()).ToString());
+            string.Join(",", Collectives.EmptyList<string>()));
         Assert.Equal("a",
-            StringUtil.Join(",", Collectives.SingletonList("a")).ToString());
+            string.Join(",", Collectives.SingletonList("a")));
         Assert.Equal("a,b",
-            StringUtil.Join(",", Collectives.AsList("a", "b")).ToString());
+            string.Join(",", Collectives.AsList("a", "b")));
         Assert.Equal("a,b,c",
-            StringUtil.Join(",", Collectives.AsList("a", "b", "c")).ToString());
+            string.Join(",", Collectives.AsList("a", "b", "c")));
         Assert.Equal("a,b,c,null,d",
-            StringUtil.Join(",", Collectives.AsList("a", "b", "c", null, "d")).ToString());
+            // Preserve this original Java append-text scenario with explicit caller formatting.
+            string.Join(",", Collectives.AsList("a", "b", "c", null, "d").Select(value => value ?? "null")));
     }
 
     [Fact]

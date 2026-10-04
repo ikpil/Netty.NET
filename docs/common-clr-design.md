@@ -4114,3 +4114,84 @@ Default and checked validation, preserved fixture identities/comment coverage an
 remaining source scope are in common-porting.md; raw oracle records remain ignored
 in artifacts/string-boundary-validation. No performance/whole-source completion
 claim or new Markdown artifact is added.
+
+
+## Native joining, metadata labels and platform separators
+
+Original joining consumers are HttpContentEncoder.java:94-104 and the StompVersion
+example:34-39. They need ordered string joining; use standard string.Join directly
+and retire the common Join facade. Native null-element/separator handling belongs
+to the BCL (empty text/separator); Java's singleton-null and first-null builder
+quirks are not a second public API. Preserve original TestJoin's later-null text
+scenario through explicit caller projection to "null", retaining every assertion,
+input scenario and fixture identity. Nonnull joining matches the exact pinned
+method on 3110 ordered UTF-16 cases. Future HTTP no-validation/malformed header
+handling must make its own null policy explicit; this is not an HTTP module port.
+The original method/comment is archived below, not dropped or housed in a facade.
+
+Original className/simpleClassName at 318-348 label diagnostics and thread factories
+(ReferenceCountUtil.java:204, DefaultThreadFactory.java:67-70, leak detection and codec
+errors). Native Type.FullName/Name define CLR identity; short labels traverse native
+declaring/element metadata with '+' and element suffixes, removing only numeric
+generic arity suffixes on generic types. This avoids assembly argument text in
+array/pointer/byref labels and preserves literal nongeneric backticks/digits.
+Generic parameters remain their own Name even when CLR reports nested attributes;
+function-pointer types use native signature text instead of an empty Name.
+No regex, strong reflection cache or unused package-separator field remains.
+Six pre-repair failures cover arrays/modifiers/literal names/default newline;
+an intermediate generic-parameter mismatch was repaired before final verification.
+
+The JVM populates line.separator; the CLR has Environment.NewLine. Use that native
+platform default with the existing explicit environment override, snapshotted on
+StringUtil initialization. ResourceLeakDetector/TraceRecord use it for reports;
+future LineSeparator.DEFAULT at codec-base/LineSeparator.java:31 has the same
+default-purpose requirement. Five isolated processes verify default Windows CRLF,
+LF/CRLF/empty/custom overrides, post-initialization snapshot and actual leak-report
+prefixes/cleanup. No host environment is mutated and no protocol CRLF constant is
+changed. Type diagnostics and these runtime/override decisions are CLR adaptations,
+not identical Java/CLR metadata spelling or multi-OS certification.
+
+The current retained StringUtil source/native review is verified. This closes its
+remaining joining/naming/newline decisions after earlier suffix/delimiter, hex,
+CSV storage, OWS and token-boundary reviews; see their existing sections for pinned
+consumers/oracles. Constants and byte/nibble lookup storage are native primitive
+values; the static class replaces the private Java constructor. Private CSV quote/
+validation and span-boundary helpers serve the reviewed contracts. Existing mixed
+sequence hex bridges serve actual buffer/codec purposes; ordinary strings avoid
+those adapters. Original test identities/comments stay; whole common, future
+protocol integrations and untested platforms remain open. Current validation is in
+common-porting.md; ignored string-metadata-validation records hold detailed evidence.
+
+Retired pinned StringUtil.java:674-702 joining implementation/comment:
+
+```java
+    /**
+     * Returns a char sequence that contains all {@code elements} joined by a given separator.
+     *
+     * @param separator for each element
+     * @param elements to join together
+     *
+     * @return a char sequence joined by a given separator.
+     */
+    public static CharSequence join(CharSequence separator, Iterable<? extends CharSequence> elements) {
+        ObjectUtil.checkNotNull(separator, "separator");
+        ObjectUtil.checkNotNull(elements, "elements");
+
+        Iterator<? extends CharSequence> iterator = elements.iterator();
+        if (!iterator.hasNext()) {
+            return EMPTY_STRING;
+        }
+
+        CharSequence firstElement = iterator.next();
+        if (!iterator.hasNext()) {
+            return firstElement;
+        }
+
+        StringBuilder builder = new StringBuilder(firstElement);
+        do {
+            builder.append(separator).append(iterator.next());
+        } while (iterator.hasNext());
+
+        return builder;
+    }
+```

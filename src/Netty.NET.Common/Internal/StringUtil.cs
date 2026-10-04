@@ -17,8 +17,6 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace Netty.NET.Common.Internal;
@@ -29,7 +27,8 @@ namespace Netty.NET.Common.Internal;
 public static class StringUtil
 {
     public static readonly string EMPTY_STRING = "";
-    public static readonly string NEWLINE = SystemPropertyUtil.Get("line.separator", "\n");
+    // The JVM supplies line.separator by default; the CLR supplies Environment.NewLine.
+    public static readonly string NEWLINE = Environment.GetEnvironmentVariable("line.separator") ?? Environment.NewLine;
 
     public const char DOUBLE_QUOTE = '\"';
     public const char COMMA = ',';
@@ -53,8 +52,6 @@ public static class StringUtil
      * 5 - Extra allowance for anticipated escape characters that may be added.
      */
     private static readonly int CSV_NUMBER_ESCAPE_CHARACTERS = 2 + 5;
-
-    private static readonly char PACKAGE_SEPARATOR_CHAR = '.';
 
     // Unused.
     // CLR adaptation: the private Java constructor is replaced by a static class.
@@ -414,7 +411,9 @@ public static class StringUtil
      */
     public static string ClassName(object o)
     {
-        return o == null ? "null_object" : o.GetType().FullName;
+        if (o == null) return "null_object";
+        Type type = o.GetType();
+        return type.FullName ?? type.Name;
     }
     public static string SimpleClassName<T>()
     {
@@ -442,12 +441,23 @@ public static class StringUtil
      */
     public static string SimpleClassName(Type t)
     {
-        ObjectUtil.CheckNotNull(t, nameof(t));
-        if (t.IsGenericType) t = t.GetGenericTypeDefinition();
-        string name = t.FullName ?? t.Name;
-        int namespaceEnd = name.LastIndexOf('.');
-        if (namespaceEnd >= 0) name = name.Substring(namespaceEnd + 1);
-        return System.Text.RegularExpressions.Regex.Replace(name, @"`\d+", "");
+        ArgumentNullException.ThrowIfNull(t);
+        if (t.IsGenericParameter) return t.Name;
+        if (t.IsFunctionPointer) return t.ToString();
+        // Type.Name keeps assembly-qualified generic arguments out of diagnostics. Element suffixes are CLR metadata.
+        if (t.HasElementType)
+        {
+            Type element = t.GetElementType();
+            return SimpleClassName(element) + t.Name[element.Name.Length..];
+        }
+        string name = t.Name;
+        int arity = name.LastIndexOf('`');
+        if (t.IsGenericType && arity >= 0 && arity < name.Length - 1 &&
+            name.AsSpan(arity + 1).IndexOfAnyExceptInRange('0', '9') < 0)
+        {
+            name = name[..arity];
+        }
+        return t.IsNested ? SimpleClassName(t.DeclaringType) + '+' + name : name;
     }
 
     /**
@@ -860,21 +870,6 @@ public static class StringUtil
         ArgumentNullException.ThrowIfNull(value);
         ReadOnlySpan<char> trimmed = value.AsSpan().Trim(" \t".AsSpan());
         return trimmed.Length == value.Length ? value : trimmed.ToString();
-    }
-
-    /**
-     * Returns a char sequence that contains all {@code elements} joined by a given separator.
-     *
-     * @param separator for each element
-     * @param elements to join together
-     *
-     * @return a char sequence joined by a given separator.
-     */
-    public static string Join(string separator, IEnumerable<string> elements)
-    {
-        ObjectUtil.CheckNotNull(separator, nameof(separator));
-        ObjectUtil.CheckNotNull(elements, nameof(elements));
-        return string.Join(separator, elements.Select(element => element ?? "null"));
     }
 
     /**
