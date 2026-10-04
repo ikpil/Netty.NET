@@ -435,7 +435,8 @@
         "src/Netty.NET.Common/Concurrent/Executors.cs",
         "src/Netty.NET.Common/Internal/ConcurrentQueueOperations.cs",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeTimerDispatchContractTest.cs"
       ],
       "evidence": [
         "All pinned constructors, lifecycle methods, worker, timeout and bucket operations reviewed; 16 original source cases and 12 CLR contracts pass in Debug and Release.",
@@ -444,14 +445,19 @@
         "Full net10.0 PortingBatch: 926 passed, 14 skipped, zero failed. Default full test build now reports 286 diagnostics, all in AsciiStringCharacterTest.",
         "NewTimeout and Cancel public regressions force actual CLR EnqueueSlow contention and Thread.Interrupt: both fail at preceding commit. After repair, each scenario observes all 33 cancellation callbacks, zero expiration/pending entries and a later pending caller interrupt. Shared boundary also retains the preceding recycler segment-change cases. See TimerQueuePublicationContractTest, mpsc-retirement-before-debug.trx, final full/checked records in common-porting.md and native handoff design. net10 private gate is test schedule control, not production reflection.",
         "Expanded checked timer selection reproduces two existing deadline overflow failures (original TestOverflow and NativeDurationSaturationDoesNotExpireMaximumDelayAndClampsSubmillisecondTicks). Pinned source line 454 wraps before lines 457-458 saturate. Explicit unchecked arithmetic repairs both; checked Release passes 201 with eight unchanged skips (209 discovered). Failure records retained as mpsc-retirement-before-deadline-checked-release.trx.",
-        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit."
+        "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit.",
+        "Pinned HashedWheelTimer.java:247-286/712-737: Action<Action> replaces configured IExecutor and default inline execution; the internal timeout dispatches Run without IRunnable. Preserve expiration/removal before dispatch, logged synchronous rejection and caller-owned accepted-callback lifetime. Native consumer fails before with CS1660 and compiles/runs after; NativeTimerDispatchContractTest verifies context, placement and ownership. docs/common-clr-design.md#native-timer-callback-dispatch"
       ],
-      "adaptation": "ConcurrentQueue/Interlocked/Volatile replace JCTools/Java atomics and field updaters. Native Thread factory captures creator group and creates foreground normal-priority ordinary threads; no fast-local ownership. TimeSpan has 100 ns granularity and saturates nanosecond conversion; tick duration still clamps to 1 ms, large native sleep waits are chunked and interruptible. Keep original JVM Windows workaround comments, but omit that JVM-specific code on CLR. IDisposable calls stop; finalization guards partially constructed timers and decrements only registered instances. CLR interruption of an already terminated worker is harmless. Standalone support classes are internal, matching original private helpers; the worker exposes a read-only snapshot. Preserve source ordering and its post-stop pending-count/no-callback behavior for unprocessed tasks. Returned stop sets are caller-owned native HashSets. Unused unreferenced JDK fixed-pool/callable null stubs are omitted; no JDK utility emulation is required. Both native timeout/cancellation writers and all worker drain paths now share an internal interruption-safe ConcurrentQueue operation boundary. Admission/cancellation publication and later caller interrupt are preserved across real CLR segment monitor waits; no collection/provider wrapper is introduced. Explicit unchecked deadline arithmetic preserves Java long wrap before the original positive-delay saturation guard, including in checked builds.",
+      "adaptation": "ConcurrentQueue/Interlocked/Volatile replace JCTools/Java atomics and field updaters. Native Thread factory captures creator group and creates foreground normal-priority ordinary threads; no fast-local ownership. TimeSpan has 100 ns granularity and saturates nanosecond conversion; tick duration still clamps to 1 ms, large native sleep waits are chunked and interruptible. Keep original JVM Windows workaround comments, but omit that JVM-specific code on CLR. IDisposable calls stop; finalization guards partially constructed timers and decrements only registered instances. CLR interruption of an already terminated worker is harmless. Standalone support classes are internal, matching original private helpers; the worker exposes a read-only snapshot. Preserve source ordering and its post-stop pending-count/no-callback behavior for unprocessed tasks. Returned stop sets are caller-owned native HashSets. Unused unreferenced JDK fixed-pool/callable null stubs are omitted; no JDK utility emulation is required. Both native timeout/cancellation writers and all worker drain paths now share an internal interruption-safe ConcurrentQueue operation boundary. Admission/cancellation publication and later caller interrupt are preserved across real CLR segment monitor waits; no collection/provider wrapper is introduced. Explicit unchecked deadline arithmetic preserves Java long wrap before the original positive-delay saturation guard, including in checked builds. Native Action<Action> callback dispatcher replaces the public/configured IExecutor; default inline execution and CAS/remove-before-dispatch semantics remain, with no IRunnable timeout implementation. docs/common-clr-design.md#native-timer-callback-dispatch",
       "comments": {
         "upstreamCount": 63,
         "required": true,
         "preservedCount": 63,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "in-progress",
+        "evidence": "Callback dispatch and native thread creation are reviewed and applied to real consumers. Raw callback flow follows physical worker Start; external queue/stop ownership remains original. Broader timer/task/timeout result/cancellation API and runtime review remain open; docs/common-clr-design.md#native-timer-callback-dispatch"
       }
     },
     {
@@ -2653,11 +2659,13 @@
         "src/Netty.NET.Common/Concurrent/ThreadPerTaskExecutor.cs",
         "docs/common-clr-design.md",
         "test/Netty.NET.Common.Tests/Porting/NativeThreadFactoryContractTest.cs",
-        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeTimerDispatchContractTest.cs"
       ],
       "evidence": [
         "Native Action-to-Thread creation boundary applied to actual common consumers; existing fixture identities/scenarios/comments retained. Design/lifetime/flow scope: common-clr-design.md#native-thread-creation-and-invocation-ownership; current common-porting.md and native-thread-* validation records. Other APIs of this source are not certified by this unit.",
-        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md.",
+        "NativeTimerDispatchContractTest verifies Execute(Action) as a real HashedWheelTimer callback dispatcher, with host-owned physical callback thread distinct from the timer worker. docs/common-clr-design.md#native-timer-callback-dispatch"
       ],
       "adaptation": "Sealed native Execute(Action) starts the configured fresh Thread. No IExecutor/Runnable facade or Task completion owner. Native null/factory/start errors and actual bootstrap consumers verified; docs/common-clr-design.md#native-worker-bootstrap-boundary",
       "comments": {
@@ -5096,13 +5104,15 @@
       ],
       "implementation": [
         "test/Netty.NET.Common.Tests/HashedWheelTimerTest.cs",
-        "test/Netty.NET.Common.Tests/Porting/TimerQueuePublicationContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/TimerQueuePublicationContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeTimerDispatchContractTest.cs"
       ],
       "evidence": [
         "All 16 original source cases execute in xUnit, including the missing shutdown race and the cancellation callback method annotated only with JUnit Timeout. All pass in Debug and Release, together with 12 CLR contracts.",
         "Preserve all nine original comments, 100,000 scheduled tasks, timing bounds, recursive task identity and original cancellation/pending-count assertions.",
         "Full net10.0 PortingBatch: 926 passed, 14 skipped, zero failed. Default full test build now reports 286 diagnostics, all in AsciiStringCharacterTest.",
-        "Two new CLR interruption publication scenarios fail before repair and retain all original identities/comments. Expanded checked selection also reproduces then repairs the original maximum-delay overflow and native saturation fixtures. See current common-porting.md and mpsc-retirement-* validation records."
+        "Two new CLR interruption publication scenarios fail before repair and retain all original identities/comments. Expanded checked selection also reproduces then repairs the original maximum-delay overflow and native saturation fixtures. See current common-porting.md and mpsc-retirement-* validation records.",
+        "Original testExecutionOnTaskExecutor (pinned 195-218) now configures Action<Action> directly; original assertions, all 16 identities and 100,000-task timing scenario remain. Native dispatcher/context/ownership coverage is in NativeTimerDispatchContractTest; full/checked results and comment audit are in docs/common-porting.md. docs/common-clr-design.md#native-timer-callback-dispatch"
       ],
       "adaptation": "Native BlockingCollection<long> replaces the unbounded Java blocking queue; nanoseconds-to-milliseconds truncates by integer division. TimeSpan.MaxValue exercises saturated overflow rather than constructing an invalid native duration. Self-referential TimerTask replaces anonymous-class this, and CountdownEvent avoids Signal after zero like CountDownLatch. Timers are disposed on assertion failure; waits have bounds and global instance counters are serialized. The original start override is a CLR virtual override with the same shutdown sequence.",
       "comments": {

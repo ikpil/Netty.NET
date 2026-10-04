@@ -17,13 +17,12 @@ using System;
 using System.Text;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
-internal sealed class HashedWheelTimeout : ITimeout, IRunnable
+internal sealed class HashedWheelTimeout : ITimeout
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(HashedWheelTimer));
 
@@ -129,7 +128,7 @@ internal sealed class HashedWheelTimeout : ITimeout, IRunnable
         try
         {
             Remove();
-            _timer._taskExecutor.Execute(this);
+            _timer._taskExecutor(Run);
         }
         catch (Exception t)
         {

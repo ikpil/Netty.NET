@@ -122,38 +122,38 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2078 cases** on Windows/x64/net10.0:
-**2064 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: worker-bootstrap-full-debug.trx and worker-bootstrap-full-release.trx.
-All 2063 prior identities/outcomes, including 759 original non-Porting cases and
-every skip, remain. Native worker dispatch now uses Action<Action> in the actual
-single-thread/group constructors and child hooks. ThreadPerTaskExecutor starts
-native Threads with Execute(Action), independent of queued work/result ownership.
-Eleven native cases cover fresh physical workers, synchronous null/factory/start
-errors, deferred mapping restoration and real serial single/group submissions
-with Task termination. Two null-entry/factory failures were reproduced before
-repair. Expanded checked Release exposed an existing timed-drain addition overflow;
-four deterministic budget rows verify its elapsed-time repair. An isolated pinned
-Java deadline/cutoff arithmetic probe documents the intentional huge-budget change.
-Design, source consumers and remaining scope:
-common-clr-design.md#native-worker-bootstrap-boundary.
-Targeted Debug and checked Release each pass 96 cases with no failures or skips.
+The current default suite executes **2083 cases** on Windows/x64/net10.0:
+**2069 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: timer-dispatch-full-debug.trx and timer-dispatch-full-release.trx.
+All 2078 prior identities/outcomes, including 759 original non-Porting cases and
+every skip, remain. HashedWheelTimer's configured callback dispatcher is now
+Action<Action> with default inline execution. The internal timeout supplies its
+bound Run Action and no longer implements IRunnable. Expiration and pending-count
+removal still precede dispatch; rejection stays isolated after expiration.
+The same direct-lambda consumer failed before with CS1660 and compiles/runs after.
+Five native rows verify invalid configuration before worker creation, external
+accepted-callback lifetime and pending capacity, native callback-thread placement,
+and physical first-start ExecutionContext flow with/without suppression.
+Original fixture syntax changes preserve assertions and the 100,000-task timing
+scenario. Existing rejection/cancellation and queue publication contracts remain.
+Design and pinned consumers:
+common-clr-design.md#native-timer-callback-dispatch.
+Targeted Debug and checked Release each pass 45 cases with no failures or skips.
 All 271 original comment totals have no coverage loss. Pinned inventory/paths,
 prior fixtures/provenance, uppercase declarations and no-new-warning checks pass.
-Original fixture bootstrap syntax was adapted without changing identities,
-assertions or outcomes. No exclusion, Markdown file or performance claim is added.
-Source statuses: 56 verified / 49 CLR replacement / 15 not applicable /
-68 pending / 17 in progress. ThreadPerTaskExecutor source/native review is complete;
-other verified behavior entries retain explicit incomplete native design scopes.
-The full common port and untested platforms remain open.
-Records stay in ignored TestResults and artifacts/worker-bootstrap-validation:
-worker-bootstrap-before-debug.trx, before-budget-checked-release.trx,
-worker-bootstrap-identity-and-inventory.json, original comment audit,
-java-budget.csv and BudgetOracle.java. The latter probes arithmetic/cutoff only,
-not the entire Java executor. Prior worker cleanup/BlockHound records remain in
-thread-construction-validation. Next: native queued-execution boundary and actual
-IExecutor/IRunnable consumers, preserving identity, cancellation and rejection
-ownership. Full portable sources build without PortingBatch.
+No new exclusion, Markdown file, result Task policy or performance claim is added.
+Source statuses stay 56 verified / 49 CLR replacement / 15 not applicable /
+68 pending / 17 in progress. This unit completes native callback dispatch;
+HashedWheelTimer retains explicit in-progress broader native API/runtime review.
+Timer/task/timeout Task results, cancellation and lifetime API, core queued
+executors, the full common port and untested platforms remain open.
+Records stay in ignored TestResults and artifacts/timer-dispatch-validation:
+before-consumer.log, unchanged before/after consumer source, after-consumer.log,
+timer-dispatch-identity-and-inventory.json and original comment audit.
+Previous worker-bootstrap and thread-construction records remain in their artifact
+directories. Next: native queued Execute/LazyExecute and remaining inherited
+IExecutor/IRunnable consumers, preserving identity, cancellation, rejection and
+external subclass hooks. Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

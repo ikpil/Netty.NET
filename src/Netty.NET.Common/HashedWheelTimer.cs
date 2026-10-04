@@ -97,7 +97,7 @@ public class HashedWheelTimer : ITimer, IDisposable
     internal readonly ConcurrentQueue<HashedWheelTimeout> _cancelledTimeouts = new();
     internal long _pendingTimeouts;
     private readonly long _maxPendingTimeouts;
-    internal readonly IExecutor _taskExecutor;
+    internal readonly Action<Action> _taskExecutor;
 
     internal long _startTime;
     private int _instanceCounted;
@@ -238,7 +238,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         IThreadFactory threadFactory,
         TimeSpan tickDuration, int ticksPerWheel, bool leakDetection,
         long maxPendingTimeouts)
-        : this(threadFactory, tickDuration, ticksPerWheel, leakDetection, maxPendingTimeouts, ImmediateExecutor.INSTANCE)
+        : this(threadFactory, tickDuration, ticksPerWheel, leakDetection, maxPendingTimeouts, static command => command())
     {
     }
 
@@ -265,10 +265,12 @@ public class HashedWheelTimer : ITimer, IDisposable
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
+    // CLR: taskExecutor dispatches a callback Action. Its queue/lifetime belongs to the caller,
+    // and synchronous admission failures are logged after the timeout has expired.
     public HashedWheelTimer(
         IThreadFactory threadFactory,
         TimeSpan tickDuration, int ticksPerWheel, bool leakDetection,
-        long maxPendingTimeouts, IExecutor taskExecutor)
+        long maxPendingTimeouts, Action<Action> taskExecutor)
     {
         CheckNotNull(threadFactory, "threadFactory");
         CheckPositive(tickDuration, "tickDuration");

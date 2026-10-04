@@ -4514,3 +4514,45 @@ zero, negative and adjacent extreme positive budgets from a nonzero ticker.
 The original metric case that failed checked Release now passes unchanged.
 This fix does not certify other timestamp arithmetic or untested platforms.
 Results, original identity/comment audit and remaining work are in common-porting.md.
+
+
+## Native timer callback dispatch
+
+Pinned HashedWheelTimer.java:247-286/712-737 uses a caller-owned Executor for
+short timeout callbacks, with ImmediateExecutor as the default. The timeout CAS
+and pending-count removal precede dispatch; a synchronous dispatch failure is
+logged after expiration, and task failures are isolated. HashedWheelTimerTest
+.java:195-218 supplies an explicit inline dispatcher. The pinned tree has no
+other production constructor call supplying this custom dispatcher; its public
+extension contract and original test remain meaningful. This differs from the
+long-lived worker-entry role reviewed in the preceding section.
+
+Replace the timer constructor/stored IExecutor with Action<Action> and default
+to a static inline callback. Expiration supplies the bound timeout Run Action;
+the private timeout no longer implements IRunnable. All actual source/fixture
+callers use native delegates. A before-change native consumer fails with CS1660;
+the identical consumer compiles/runs against the changed net10.0 assembly.
+Original comments and timeout/task reference identity remain. Inline execution
+stays on the physical timer worker; ThreadPerTaskExecutor.Execute can also serve
+as a native callback dispatcher without an executor/runnable adapter.
+
+The dispatcher owns its queue and shutdown independently. MaxPendingTimeouts
+limits wheel admission, not already expired callbacks waiting in an external
+queue. Timer.Stop does not withdraw those expired callbacks or stop the supplied
+dispatcher; their original handles are delivered when the host invokes them.
+Cancel after expiration remains unsuccessful. Existing rejection and later-task
+contracts retain the expired state, zero pending count and continued worker use.
+This fire-and-forget boundary has no result Task and must not invent completion
+or retry on rejected dispatch. A Task-returning future timer API will need its
+own explicit result/rejection/cancellation policy; it is not certified here.
+
+For the default raw callback model, native Thread.Start captures the first-start
+caller ExecutionContext unless flow is suppressed, not constructor context or
+every later NewTimeout publisher context. Two native rows verify both policies
+and physical worker identity. No per-callback AsyncLocal isolation is added;
+an externally configured dispatcher determines its own context policy. Five
+native rows cover that flow, null configuration before worker construction,
+external queue/stop/pending ownership and actual native callback-thread dispatch.
+The original 16 timer cases retain assertions, 100,000-task timing scenario and
+identities; broader ITimer/ITimerTask/ITimeout API, core queued executors, lifetime
+and untested-platform review remain open. Results are in common-porting.md.

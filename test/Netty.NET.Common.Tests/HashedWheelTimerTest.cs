@@ -183,17 +183,17 @@ public class HashedWheelTimerTest
 
         CountdownEvent latch = new CountdownEvent(1);
         CountdownEvent timeoutLatch = new CountdownEvent(1);
-        IExecutor executor = new AnonymousExecutor(command =>
+        Action<Action> executor = command =>
         {
             try
             {
-                command.Run();
+                command();
             }
             finally
             {
                 latch.Signal();
             }
-        });
+        };
         using HashedWheelTimer timer = new HashedWheelTimer(Executors.DefaultThreadFactory(),
             TimeSpan.FromMilliseconds(100), 32, true, 2, executor);
         timer.NewTimeout(TimerTask.Create(timeout =>

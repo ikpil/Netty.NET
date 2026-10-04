@@ -185,16 +185,16 @@ public class HashedWheelTimerContractTest
     [Fact]
     public void ExpirationAndPendingCountPrecedeExecutionOnTheSuppliedExecutor()
     {
-        using var submitted = new BlockingCollection<IRunnable>();
+        using var submitted = new BlockingCollection<Action>();
         using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(1), 4, true, 1,
-            new AnonymousExecutor(command => submitted.Add(command)));
+            command => submitted.Add(command));
         int runs = 0;
         ITimeout timeout = timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref runs)), TimeSpan.Zero);
-        Assert.True(submitted.TryTake(out IRunnable command, TimeSpan.FromSeconds(5)));
+        Assert.True(submitted.TryTake(out Action command, TimeSpan.FromSeconds(5)));
         Assert.True(timeout.IsExpired()); Assert.False(timeout.Cancel());
         Assert.Equal(0, timer.PendingTimeouts()); Assert.Equal(0, runs);
         Assert.Empty(timer.Stop());
-        command.Run();
+        command();
         Assert.Equal(1, runs);
     }
 
@@ -204,11 +204,11 @@ public class HashedWheelTimerContractTest
         int submissions = 0, rejectedRuns = 0;
         using var ready = new ManualResetEventSlim();
         using var timer = new HashedWheelTimer(BackgroundFactory(), TimeSpan.FromMilliseconds(1), 4, true, 2,
-            new AnonymousExecutor(command =>
+            command =>
             {
                 if (Interlocked.Increment(ref submissions) == 1) throw new RejectedExecutionException("executor rejected");
-                command.Run();
-            }));
+                command();
+            });
         ITimeout rejected = timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref rejectedRuns)), TimeSpan.Zero);
         timer.NewTimeout(TimerTask.Create(_ => ready.Set()), TimeSpan.Zero);
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
