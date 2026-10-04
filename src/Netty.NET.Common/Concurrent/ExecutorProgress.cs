@@ -178,7 +178,7 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
         var reservation = new DrainReservation(this);
         try
         {
-            if (executor.InEventLoop()) reservation.Run();
+            if (executor.InEventLoop() && ExecutorNotificationScope.CanInline) reservation.Run();
             else executor.Execute(reservation);
         }
         catch (Exception error) { reservation.Reject(error); }
@@ -200,6 +200,7 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
 
     private void Drain()
     {
+        using var scope = new ExecutorNotificationScope();
         for (;;)
         {
             Notification notification;

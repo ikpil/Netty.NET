@@ -58,7 +58,6 @@ public sealed class InternalThreadLocalMap
     private object[] indexedVariables;
 
     // Core thread-locals
-    private int _futureListenerStackDepth;
     private int _localChannelReaderStackDepth;
     private ConditionalWeakTable<Type, StrongBox<bool>> _handlerSharableCache;
     private Dictionary<Type, TypeParameterMatcher> _typeParameterMatcherGetCache;
@@ -161,11 +160,6 @@ public sealed class InternalThreadLocalMap
     {
         int count = 0;
 
-        if (_futureListenerStackDepth != 0)
-        {
-            count++;
-        }
-
         if (_localChannelReaderStackDepth != 0)
         {
             count++;
@@ -245,16 +239,6 @@ public sealed class InternalThreadLocalMap
         list.Clear();
         list.EnsureCapacity(minCapacity);
         return list;
-    }
-
-    public int FutureListenerStackDepth()
-    {
-        return _futureListenerStackDepth;
-    }
-
-    public void SetFutureListenerStackDepth(int futureListenerStackDepth)
-    {
-        _futureListenerStackDepth = futureListenerStackDepth;
     }
 
     public IDictionary<Type, TypeParameterMatcher> TypeParameterMatcherGetCache()

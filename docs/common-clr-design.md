@@ -3603,3 +3603,54 @@ remaining listener/local-channel depth and downstream lifecycle reviews stay ope
 ```java
 // Reference: https://hg.openjdk.java.net/jdk8/jdk8/jdk/file/tip/src/share/classes/java/util/ArrayList.java#l229
 ```
+
+
+## Shared native notification recursion boundary
+
+Reopen progress notification for a concrete cross-instance recursion defect:
+ExecutorProgress's per-owner queue prevented same-instance recursive reporting,
+but its InEventLoop fast path let 64 connected reporters nest 64 callbacks.
+The corresponding mixed completion/progress scenario already passed because
+ExecutorCompletion had a physical-thread depth limit. Preserve that distinction
+in notification-depth-before-debug.trx (one failure/one pass); the old fixture's
+implicit count was 64. Final fixtures also exercise 10,000 pure and mixed links.
+
+Pinned DefaultPromise.java:497-548 bounds ordinary completion listeners through
+InternalThreadLocalMap.futureListenerStackDepth, with finally restoration and
+executor submission at the threshold. Its progressive path at 754-791 invokes
+inline without that guard. The CLR Task/IProgress API need not reproduce that
+unbounded progressive quirk: ordered native notifications now share one physical-
+thread boundary across both kinds and all instances.
+
+ExecutorNotificationScope is an internal non-generic stack-only scope: one native
+ThreadStatic counter, inline threshold eight, and deterministic using disposal.
+Both synchronous drains enter it; both dispatchers defer to their actual executor
+at the threshold. It allocates no thread-local map and flows no AsyncLocal state.
+Using restoration covers return/error paths. Standard ImmediateEventExecutor
+queues reentrant Execute, while event-loop executors submit pending work; like
+the original completion policy, arbitrary executors must provide that dispatch
+boundary rather than recursively invoking Execute without a limit.
+Deep callbacks can therefore be deferred; per-owner ordered batches, original
+Task identity/outcome, admission/backpressure, removal and notification completion
+remain. No observer lock is held while dispatching/invoking callbacks. Existing
+context isolation, rejection, queue-removal, disposal and callback-failure contracts
+remain the surrounding validation; no new Future/Promise result owner is added.
+
+Remove the unused _futureListenerStackDepth field, getter/setter and Size branch
+from InternalThreadLocalMap. The only pinned consumer is DefaultPromise's listener
+backend, already replaced by the native callback owners. CLR tracked call search
+finds no user of those map APIs. Their methods have no original explanatory
+comments; all existing map/source comments stay. Do not remove the distinct
+localChannelReaderStackDepth: pinned transport/local/LocalChannel.java:350-382
+uses it to bound recursive reads, restore depth in finally, submit readTask and
+close both peers on dispatch failure. That real downstream contract remains
+pending native transport integration and does not follow from notification tests.
+The unused deprecated cleanerFlags APIs also have no all-module consumer; their
+unimplemented BitSet bookkeeping is not a required native cleanup mechanism.
+Existing physical-thread map/cleanup policy remains separate.
+
+Four native scenarios assert 64/10,000 pure/mixed delivery identities/order and
+bounded callback depth after returning, without deliberately overflowing the
+process stack. The new boundary exists for this missing shared policy; it is not
+a new configurable Java-style provider. Whole map/common/backend review stays open.
+No original test/comment/provenance is removed, and no new design MD is created.

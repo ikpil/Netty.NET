@@ -35,8 +35,6 @@ namespace Netty.NET.Common.Concurrent;
 public sealed class ExecutorCompletion : IDisposable
 {
     private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(ExecutorCompletion));
-    private const int MaxInlineDepth = 8;
-    [ThreadStatic] private static int _inlineDepth;
     private readonly object _gate = new();
     private readonly LinkedList<CompletionRegistration> _pending = new();
     private IEventExecutor _executor;
@@ -116,7 +114,7 @@ public sealed class ExecutorCompletion : IDisposable
         {
             // The shared CLR thread counter also bounds chains between different observations.
             // Like DefaultPromise, an executor must bound reentrant execute() at the dispatch boundary.
-            if (executor.InEventLoop() && _inlineDepth < MaxInlineDepth) reservation.Run();
+            if (executor.InEventLoop() && ExecutorNotificationScope.CanInline) reservation.Run();
             else executor.Execute(reservation);
         }
         catch (Exception error) { reservation.Reject(error); }
@@ -124,53 +122,49 @@ public sealed class ExecutorCompletion : IDisposable
 
     private void Drain(DrainReservation reservation)
     {
-        ++_inlineDepth;
-        try
+        using var scope = new ExecutorNotificationScope();
+        for (;;)
         {
-            for (;;)
+            CompletionRegistration[] batch;
+            Task operation;
+            lock (_gate)
             {
-                CompletionRegistration[] batch;
-                Task operation;
-                lock (_gate)
+                // Only proceed if there are listeners to notify and we are not already notifying listeners.
+                // CLR: the unique reservation and gate serialize snapshots on every executor.
+                if (_closed || _drain != reservation || _pending.Count == 0)
                 {
-                    // Only proceed if there are listeners to notify and we are not already notifying listeners.
-                    // CLR: the unique reservation and gate serialize snapshots on every executor.
-                    if (_closed || _drain != reservation || _pending.Count == 0)
-                    {
-                        if (_drain == reservation) _drain = null;
-                        return;
-                    }
-                    batch = new CompletionRegistration[_pending.Count];
-                    _pending.CopyTo(batch, 0);
-                    _pending.Clear();
-                    foreach (var registration in batch) registration.Node = null;
-                    operation = _operation;
+                    if (_drain == reservation) _drain = null;
+                    return;
                 }
-                foreach (var registration in batch)
-                {
-                    /**
-                     * Invoked when the operation associated with the {@link Future} has been completed.
-                     *
-                     * @param future  the source {@link Future} which called this callback
-                     */
-                    // CLR: the original source Task is passed through, including its original result/token/error.
-                    foreach (Action<Task> callback in registration.Callback.GetInvocationList())
-                    {
-                        try
-                        {
-                            ExecutionContext.Run(NativeScheduledWork<object>.CaptureExecutorContext(),
-                                _ => callback(operation), null);
-                        }
-                        catch (Exception error) { Logger.Warn("An exception was thrown by a completion observer.", error); }
-                    }
-                    registration.Finish(null, false);
-                }
-                // Nothing can throw from within this method, so setting notifyingListeners back to false does not
-                // need to be in a finally block.
-                // CLR: observer failures are isolated above; the next gate acquisition claims reentrant additions.
+                batch = new CompletionRegistration[_pending.Count];
+                _pending.CopyTo(batch, 0);
+                _pending.Clear();
+                foreach (var registration in batch) registration.Node = null;
+                operation = _operation;
             }
+            foreach (var registration in batch)
+            {
+                /**
+                 * Invoked when the operation associated with the {@link Future} has been completed.
+                 *
+                 * @param future  the source {@link Future} which called this callback
+                 */
+                // CLR: the original source Task is passed through, including its original result/token/error.
+                foreach (Action<Task> callback in registration.Callback.GetInvocationList())
+                {
+                    try
+                    {
+                        ExecutionContext.Run(NativeScheduledWork<object>.CaptureExecutorContext(),
+                            _ => callback(operation), null);
+                    }
+                    catch (Exception error) { Logger.Warn("An exception was thrown by a completion observer.", error); }
+                }
+                registration.Finish(null, false);
+            }
+            // Nothing can throw from within this method, so setting notifyingListeners back to false does not
+            // need to be in a finally block.
+            // CLR: observer failures are isolated above; the next gate acquisition claims reentrant additions.
         }
-        finally { --_inlineDepth; }
     }
 
     internal void Remove(CompletionRegistration registration)

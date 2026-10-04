@@ -121,37 +121,35 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **1970 cases** on Windows/x64/net10.0:
-**1956 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: indexed-storage-full-debug.trx and indexed-storage-full-release.trx.
-All 1960 prior identities/outcomes, including 759 original non-Porting cases,
-the later byte-wrap regression and every skip, remain unchanged. Ten new native
-index/bound/capacity/rejected-write cases are added. The first two fail before
-repair: the old JDK limit issues 52 IDs where only four fit the CLR array bound.
-InternalThreadLocalMap now uses one shared native int/Volatile/CAS counter,
-saturating at Array.MaxLength without wrapping/increment-reset races. Original
-construction-boundary fixture retains its assertions/comments using the native
-limit and scalar reflection. Actual indexed storage uses Array.Fill/Resize and
-bounded unsigned BitOperations capacity calculation; publish only completed
-storage and preserve UNSET/null/old-value/reference semantics.
-Five capacity scenarios include the original 1<<30 branch and the last native
-slot without multi-gigabyte allocation. Three invalid writes preserve existing
-storage; native upper/negative writes fail with ArgumentOutOfRangeException.
-Array.MaxLength is an upper bound; actual type/memory allocation failure still
-propagates. Allocation exhaustion is not forced. The original CI-only huge
-allocation scenario and its local skip condition remain unchanged.
-Targeted Debug and checked Release each pass all 19 cases. All 271 comment
-totals/coverage and prior Java/C# provenance remain; the removed JDK capacity
-reference is archived in common-clr-design.md. Pinned inventory/paths and
-uppercase method/local-function checks pass; no original tests are removed.
+The current default suite executes **1974 cases** on Windows/x64/net10.0:
+**1960 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: notification-depth-full-debug.trx and notification-depth-full-release.trx.
+All 1970 prior identities/outcomes, including 759 original non-Porting cases,
+the later byte-wrap regression and every skip, remain unchanged. Four new native
+notification scenarios cover 64/10,000 pure progress and mixed completion/progress
+chains, delivery identities/order and bounded callback depth. Before repair the
+64-link pure progress chain nested 64 callbacks; mixed links already passed.
+Both native owners now share ExecutorNotificationScope, a stack-only physical-
+thread counter with deterministic restoration and inline threshold eight.
+Actual executors receive work at the threshold; ImmediateEventExecutor queues
+reentrant dispatch. Arbitrary executors must provide a bounded dispatch boundary.
+Task result ownership, ordered batches, rejection/removal/disposal/context and
+admission/backpressure contracts remain. No Java Future result owner is added.
+InternalThreadLocalMap's unused future-listener depth field/getter/setter/Size
+branch is removed. Preserve LocalChannel reader depth: pinned downstream local
+transport still requires its own recursive-read and rejection policy.
+Targeted Debug and checked Release each pass all 49 cases. All 271 comment
+totals/coverage and prior Java/C# provenance remain. Pinned inventory/paths and
+uppercase method/local-function checks pass; no original tests are removed and
+no new compiler-warning identities appear against the prior checkpoint.
 Source statuses stay 52 verified / 47 CLR replacement / 14 not applicable /
 72 pending / 20 in progress. Whole map and common review remain open.
-Records stay in ignored TestResults and artifacts/indexed-storage-validation:
-indexed-storage-before-debug.trx, indexed-storage-identity-and-inventory.json
-and indexed-storage-comment-audit.json. Native decisions are in
-common-clr-design.md#native-indexed-variable-bounds-and-publication.
-Next: remaining thread-local listener/depth policies and actual collection
-purposes, using current CLR backends and pinned downstream consumers.
+Records stay in ignored TestResults and artifacts/notification-depth-validation:
+notification-depth-before-debug.trx, notification-depth-identity-and-inventory.json
+and notification-depth-comment-audit.json. Native decisions are in
+common-clr-design.md#shared-native-notification-recursion-boundary.
+Next: remaining thread-local lifetime policies and actual collection purposes,
+using current CLR backends and pinned downstream consumers.
 Full suites include every portable test source without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
