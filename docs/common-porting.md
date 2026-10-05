@@ -122,48 +122,45 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2157 cases** on Windows/x64/net10.0:
-**2143 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: unordered-stop-snapshot-full-debug.trx and unordered-stop-snapshot-full-release.trx.
-All 2154 prior identities/outcomes and 759 original non-Porting results remain
-unchanged. Three new CLR rows verify atomic pending membership withdrawal before
-native cancellation reentry and mixed raw/submitted/scheduled/periodic/ordered-child
-result settlement while workers and asynchronous stop callbacks drain. No identity
-remap, exclusion or skip change.
+Default Debug/Release each discover **2161 cases** on Windows/x64/net10.0:
+**2147 passed / 0 failed / 14 unchanged skips**. Evidence:
+unordered-graceful-snapshot-full-debug.trx and unordered-graceful-snapshot-full-release.trx.
+All 2157 prior identities/outcomes and 759 original non-Porting results remain.
+Four new CLR rows cover graceful cancellation/reentry with/without a surviving
+deadline and legacy/zero-quiet closure preserving priority/results/raw/child drain.
+No identity remap, exclusion or skip change. Boundary rows fail before repair;
+isolated removal of batch ownership exposes premature termination.
 
-Unordered StopCore clears the BCL heap once before canceling its owned snapshot;
-native removal hooks no longer search past other canceled/raw entries. The existing
-stop notification reservation prevents premature Termination during cancellation
-reentry. Sole Task results, raw callback release, worker/factory ownership, failure
-aggregation, caller context and cooperative token policies remain.
-See common-clr-design.md#immediate-stop-snapshot-withdrawal for pinned Netty/JDK
-behavior and actual original consumers. The boundary regression fails before repair
-(four remaining entries) and passes after withdrawal.
+OnShutdown retains stored one-shot priorities through BCL EnqueueRange before
+canceling withdrawn periodic/canceled memberships; live-one-shot-only queues skip
+snapshot/rebuild. The shared shutdownReservations count owns cancellation batches
+and asynchronous stop notifications, protecting the sole Termination result during
+reentry. Cooperative immediate stop, graceful token policy and worker/factory/result
+ownership remain. See common-clr-design.md#graceful-periodic-snapshot-withdrawal.
 
-Targeted Debug and checked Release each pass 277 cases, zero failed/skipped.
-All 271 comment rows have no coverage loss; the changed source retains 21/21 original
-comments, original pool fixture and earlier provenance remain. Pinned 205 source/66
-test inventory and paths, uppercase declarations and no-new-source/test-warning
-identities pass. Identical non-friend native consumers preserve mixed cancellation,
-callback reentry/drain/failure identity, independent token ownership and persistent
-actual termination before/after.
+Targeted Debug and checked Release each pass 281 cases, zero failed/skipped.
+All 271 comment rows have no coverage loss; changed source retains 21/21 original
+comments. Inventory (205 source/66 test), paths, earlier provenance, uppercase
+declarations and no-new-source/test-warning identities pass. Identical native
+consumers preserve closure policy, priority/results, periodic cancellation, retained
+deadline drain and token ownership before/after.
 
-With 98304 pending entries (65536 cached raw callbacks/32768 native submissions),
-synchronous StopAsync median is 4762.5729 -> 4.5746 ms. Five samples at each
-of five sizes/version, two small warmups, Release/tiering disabled and a workerless
-real pool. Every sample settles results and actually terminates. Setup/admission,
-worker drain, asynchronous notification execution and final observation are outside
-timing; exact rows/current-thread allocation and limitations are documented in the
-design. No general throughput/graceful-periodic/user-callback latency claim.
-Ignored evidence: unordered-stop-snapshot-*.trx/JSON in TestResults and
-artifacts/unordered-stop-snapshot-validation/{before,after}-{consumer,perf}.log,
-stop-cost-evidence.json. Only three canonical records updated, no new MD.
+Mixed 131072-entry synchronous graceful closure median: 6793.1298 -> 16.1229 ms.
+Its stored-priority snapshot adds 2097216 current-thread bytes; retained-only
+98304-entry closure allocation falls 786736 -> 224 bytes. Three samples at four
+sizes in periodic/mixed/retained modes, two small warmups per mode, Release/tiering
+disabled and a workerless pool. Every sample preserves survivor results/membership
+and actually terminates. Setup/admission, worker drain, observation and StopAsync
+cleanup are excluded. Exact rows/variation/limits are in the design and ignored
+artifacts/unordered-graceful-snapshot-validation/*-{consumer,perf}.log,
+graceful-cost-evidence.json and unordered-graceful-snapshot-*.trx/JSON in TestResults.
+No general throughput claim. Only three canonical records updated, no new MD.
 
-Source statuses stay 58 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 16 in progress. Next: review graceful periodic withdrawal costs and
-remaining native submission/Runnable test bridges, then other backend/source/native/
-platform contracts. The earlier focused Global xUnit completion stall remains
-unresolved; current matrices completed. Whole common remains open.
+Source statuses remain 58 verified / 50 CLR replacement / 15 not applicable /
+66 pending / 16 in progress. Next: review remaining native submission/Runnable
+test bridges, then other backend/source/native/platform contracts. The earlier
+focused Global xUnit completion stall remains unresolved; current matrices completed.
+Whole common remains open.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

@@ -5769,3 +5769,61 @@ stop-cost-evidence.json and unordered-stop-snapshot-*.trx/JSON in TestResults.
 Graceful OnShutdown still withdraws periodic entries individually and needs its own
 cost/policy review. Remaining native submission/Runnable test bridges, backend/runtime
 and platform reviews stay open; this scoped repair does not complete common.
+
+## Graceful periodic snapshot withdrawal
+
+Pinned UnorderedThreadPoolEventExecutor.java:145-148,151-166 delegates shutdown to
+the inherited scheduled pool. Local Corretto 21.0.11 ScheduledThreadPoolExecutor.java:
+371-392 traverses a snapshot, cancels periodic/already-canceled tasks, retains delayed
+one-shots under its default policy, then tries termination. The shared ordered-child
+and transport consumers remain those cited in the preceding checkpoint.
+
+CLR OnShutdown previously removed each periodic entry through a linear BCL heap
+search. It now skips snapshot/rebuild when all entries are live one-shots; otherwise
+it snapshots membership with its stored priorities, clears once, and uses BCL
+EnqueueRange to retain live one-shots before canceling withdrawn entries. No custom
+heap, public queue, extra result owner or survivor deadline/sequence rewrite is added.
+Cancellation racing the selection still owns its existing removal hook; callers
+observe the queue under the same gate. Future deadlines, raw/submitted results,
+ordered-child drain and immediate-versus-graceful StopToken policies remain.
+
+The former stopNotifications counter is renamed shutdownReservations: it now counts
+graceful cancellation batches as well as asynchronous immediate-stop notifications.
+This is drain ownership, not a second completion state. A cancellation hook can
+remove membership and reenter shutdown before later periodic results settle; an
+empty rebuilt heap must not publish Termination or dispose StopToken's source yet.
+The batch owns its reservation through cancellation and releases it in finally.
+IsTerminated/AwaitTermination/PublishPoolState consistently use the shared count.
+Four added CLR rows verify withdrawal/reentry with/without a retained deadline and
+legacy/zero-quiet closure preserving submission priority, native results, raw work,
+ordered-child drain and future deadline ownership. Both boundary rows fail before
+repair. Removing only batch ownership in an isolated counterfactual makes the
+workerless no-survivor row fail through premature Termination; its retained-deadline
+control passes. Negative probes are not passing matrices. Existing original cases
+and all 21 source comments remain. Identical non-friend native consumers preserve
+graceful/legacy policy, one-shot priority/results, periodic cancellation, future
+deadline drain and token ownership before/after.
+
+Release Windows/x64/net10.0, tiering disabled, workerless real pool, two small warmups
+per mode and three samples per size/mode/version (128/2048/8192/32768). Largest-size
+medians below measure synchronous ShutdownGracefullyAsync(Zero,Zero); mixed/retained
+modes have two cached raw callbacks and one submitted Task per count, mixed adds one
+periodic Task. Periodic deadlines span seven hour groups. Allocation is current-thread:
+
+| Mode | Pending entries | Before ms | After ms | Before bytes | After bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| periodic | 32768 | 288.9503 | 6.2695 | 2883888 | 3408240 |
+| mixed | 131072 | 6793.1298 | 16.1229 | 3670320 | 5767536 |
+| retained | 98304 | 2.4568 | 2.0117 | 786736 | 224 |
+
+Stored-priority snapshots add approximately 16 bytes per pending entry when batch
+withdrawal is needed (plus small helper costs); the mixed case adds 2097216
+bytes. The retained-only fast path avoids its former snapshot. Exact rows include
+variation without discarding samples. Every sample checks canceled periodic results,
+unchanged survivors, and successful actual termination through StopAsync cleanup.
+Setup/admission, worker drain, observation and cleanup are outside measurement; no
+concurrent throughput or user-code latency claim. Evidence:
+artifacts/unordered-graceful-snapshot-validation/{before,after}-{consumer,perf}.log,
+graceful-cost-evidence.json and unordered-graceful-snapshot-*.trx/JSON in TestResults.
+Remaining native submission/Runnable test bridges and backend/runtime/platform
+reviews stay open; this scoped repair does not complete common.

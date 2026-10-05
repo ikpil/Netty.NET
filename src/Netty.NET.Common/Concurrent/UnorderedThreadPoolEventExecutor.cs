@@ -72,7 +72,8 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private Exception backendFailure;
     private readonly CancellationTokenSource stopSource = new();
     private readonly CancellationToken stopToken;
-    private int stopNotifications;
+    // Cancellation batches and asynchronous stop callbacks both own drain.
+    private int shutdownReservations;
     private AggregateException stopCallbackFailure;
     private static long nextSequence;
 
@@ -126,7 +127,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     public bool IsShutdown() { using (UninterruptibleMonitor.Enter(gate)) return shutdownRequested; }
     public bool IsTerminated()
     {
-        using (UninterruptibleMonitor.Enter(gate)) return shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && stopNotifications == 0;
+        using (UninterruptibleMonitor.Enter(gate)) return shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && shutdownReservations == 0;
     }
     // All callers hold gate. Async continuations cannot run inline while pool
     // state is being published. A start reservation counts even before its
@@ -135,7 +136,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         AdvanceGracefulShutdown();
         Monitor.PulseAll(gate);
-        if (shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && stopNotifications == 0 && !termination.Task.IsCompleted)
+        if (shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && shutdownReservations == 0 && !termination.Task.IsCompleted)
         {
             stopSource.Dispose();
             if (stopCallbackFailure != null)
@@ -189,7 +190,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             DisposeGracefulTimer();
             if (!stopToken.IsCancellationRequested && !termination.Task.IsCompleted)
             {
-                ++stopNotifications;
+                ++shutdownReservations;
                 // CancelAsync requests the token now, but never invokes arbitrary
                 // registered code inline under this gate (including factory reentry).
                 using (ExecutionContext.IsFlowSuppressed() ? default : ExecutionContext.SuppressFlow())
@@ -223,7 +224,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         using (UninterruptibleMonitor.Enter(gate))
         {
             stopCallbackFailure = failure;
-            --stopNotifications;
+            --shutdownReservations;
             PublishPoolState();
         }
     }
@@ -318,7 +319,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         var elapsed = Stopwatch.StartNew();
         using (UninterruptibleMonitor.Enter(gate))
         {
-            while (!shutdownRequested || workers.Count != 0 || startingWorkers != 0 || queue.Count != 0 || stopNotifications != 0)
+            while (!shutdownRequested || workers.Count != 0 || startingWorkers != 0 || queue.Count != 0 || shutdownReservations != 0)
             {
                 TimeSpan remaining = timeout - elapsed.Elapsed;
                 if (remaining <= TimeSpan.Zero) return false;
@@ -583,14 +584,28 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     }
     private void OnShutdown()
     {
-        foreach (var work in queue.UnorderedItems.Select(item => item.Element).ToArray())
+        // A queue containing only live one-shots needs no snapshot or rebuild.
+        if (!queue.UnorderedItems.Any(static item => item.Element.period != 0 || item.Element.IsCancelled()))
         {
-            if (work.period != 0 || work.IsCancelled())
+            PublishPoolState();
+            return;
+        }
+        var pending = queue.UnorderedItems.ToArray();
+        ++shutdownReservations;
+        try
+        {
+            // Rebuild once from stored priorities, retaining only accepted one-shots.
+            // Withdraw periodic/canceled membership before cancellation hooks can
+            // reenter; the batch still owns drain until every result is settled.
+            queue.Clear();
+            queue.EnqueueRange(pending.Where(item => item.Element.period == 0 && !item.Element.IsCancelled()));
+            foreach (var item in pending)
             {
-                Remove(work);
-                work.CancelOuter();
+                Work work = item.Element;
+                if (work.period != 0 || work.IsCancelled()) work.CancelOuter();
             }
         }
+        finally { --shutdownReservations; }
         PublishPoolState();
     }
     private bool Remove(Work work)

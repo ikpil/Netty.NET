@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +16,136 @@ public class UnorderedGracefulShutdownContractTest
     private sealed class WorkerlessFactory : IThreadFactory
     {
         public Thread NewThread(Action task) => null;
+    }
+
+    // Model a result canceled before its membership removal acquires the pool gate.
+    private sealed class DeferredRemoval(Action observe) : ICancelableNativeSubmission
+    {
+        private readonly TaskCompletionSource _result = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private Action _remove;
+        private int _claim;
+        public bool IsCanceled => _result.Task.IsCanceled;
+        public void SetCancellationRemoval(Action remove) => _remove = remove;
+        internal void CancelResult() => _result.TrySetCanceled();
+        public void CancelForShutdown()
+        {
+            if (Interlocked.Exchange(ref _claim, 1) != 0) return;
+            Interlocked.Exchange(ref _remove, null)?.Invoke();
+            observe();
+        }
+        public void Reject(Exception error) => _result.TrySetException(error);
+        public void Run() => Assert.Fail("Canceled reservation ran");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GracefulWithdrawalKeepsOnlyOneShotsAndOwnsCancellationDuringReentry(bool retainOneShot)
+    {
+        var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
+        using var owner = new CancellationTokenSource();
+        Task[] periodic = null;
+        int pendingDuringCancellation = -1;
+        bool completedDuringCancellation = true, completedAfterReentry = true, periodicSettledDuringCancellation = true;
+        var canceled = new DeferredRemoval(() =>
+        {
+            pendingDuringCancellation = executor.PendingTaskCount;
+            completedDuringCancellation = executor.Termination.IsCompleted;
+            periodicSettledDuringCancellation = periodic.All(task => task.IsCompleted);
+            executor.Shutdown();
+            completedAfterReentry = executor.Termination.IsCompleted;
+        });
+        executor.ExecuteNativeSubmission(canceled);
+        periodic = [executor.ScheduleAtFixedRateAsync(() => Assert.Fail("Removed rate ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), owner.Token),
+            executor.ScheduleWithFixedDelayAsync(() => Assert.Fail("Removed delay ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), owner.Token)];
+        Task retained = retainOneShot ? executor.ScheduleAsync(() => 7, TimeSpan.FromDays(1), owner.Token) : Task.CompletedTask;
+        canceled.CancelResult();
+        try
+        {
+            Task closing = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+            Assert.Equal(retainOneShot ? 1 : 0, pendingDuringCancellation);
+            Assert.False(completedDuringCancellation);
+            Assert.False(completedAfterReentry);
+            Assert.False(periodicSettledDuringCancellation);
+            Assert.All(periodic, task => Assert.True(task.IsCanceled));
+            Assert.False(executor.StopToken.IsCancellationRequested);
+            Assert.False(owner.IsCancellationRequested);
+            if (retainOneShot)
+            {
+                Assert.False(retained.IsCompleted);
+                Assert.False(closing.IsCompleted);
+                Assert.Equal(1, executor.PendingTaskCount);
+                owner.Cancel();
+                Assert.True(retained.IsCanceled);
+            }
+            await closing.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.True(executor.IsTerminated());
+            Assert.Equal(0, executor.PendingTaskCount);
+        }
+        finally { await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ClosureCancelsPeriodicWorkAndPreservesOneShotPriorityResultsAndChildDrain(bool legacyShutdown)
+    {
+        const int count = 64;
+        var executor = new UnorderedThreadPoolEventExecutor(1);
+        IEventExecutor child = new NonStickyEventExecutorGroup(executor).Next();
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        using var owner = new CancellationTokenSource();
+        int rawCalls = 0, childCalls = 0;
+        var submittedOrder = new List<int>();
+        var oneShots = new Task<int>[count * 2];
+        var childResults = new Task[count];
+        var periodic = new Task[count];
+        Task running = executor.SubmitAsync(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); }, TestContext.Current.CancellationToken);
+        try
+        {
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+            for (int i = 0; i < count; ++i)
+            {
+                int index = i;
+                executor.Execute(() => ++rawCalls);
+                oneShots[i * 2] = executor.SubmitAsync(() => { submittedOrder.Add(index); return index; }, TestContext.Current.CancellationToken);
+                oneShots[i * 2 + 1] = executor.ScheduleAsync(() => index + count, TimeSpan.Zero, TestContext.Current.CancellationToken);
+                childResults[i] = child.SubmitAsync(() => ++childCalls, TestContext.Current.CancellationToken);
+                periodic[i] = i % 2 == 0
+                    ? executor.ScheduleAtFixedRateAsync(() => Assert.Fail("Removed rate ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), TestContext.Current.CancellationToken)
+                    : executor.ScheduleWithFixedDelayAsync(() => Assert.Fail("Removed delay ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), TestContext.Current.CancellationToken);
+            }
+            Task deadline = executor.ScheduleAsync(() => Assert.Fail("Canceled retained deadline ran"), TimeSpan.FromDays(2), owner.Token);
+            if (legacyShutdown) executor.Shutdown();
+            else Assert.Same(executor.Termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
+            Assert.Equal(count * 3 + 2, executor.PendingTaskCount);
+            Assert.All(periodic, task => Assert.True(task.IsCanceled));
+            Assert.All(oneShots, task => Assert.False(task.IsCompleted));
+            Assert.False(executor.Termination.IsCompleted);
+            Assert.False(executor.StopToken.IsCancellationRequested);
+            release.Set();
+            await running.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            int[] values = await Task.WhenAll(oneShots).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            await Task.WhenAll(childResults).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.Equal(Enumerable.Range(0, count), submittedOrder);
+            for (int i = 0; i < count; ++i) { Assert.Equal(i, values[i * 2]); Assert.Equal(i + count, values[i * 2 + 1]); }
+            Assert.Equal(count, rawCalls);
+            Assert.Equal(count, childCalls);
+            Assert.False(deadline.IsCompleted);
+            Assert.False(executor.Termination.IsCompleted);
+            Assert.Equal(1, executor.PendingTaskCount);
+            owner.Cancel();
+            await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.True(deadline.IsCanceled);
+            Assert.False(executor.StopToken.IsCancellationRequested);
+            Assert.True(executor.IsTerminated());
+        }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        }
     }
 
     [Theory]
