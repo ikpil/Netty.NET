@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -13,6 +14,92 @@ namespace Netty.NET.Common.Tests.Porting;
 
 public class QueuedActionContractTest
 {
+    [Fact]
+    public void ImmediateNativeMulticastFailureKeepsReentrantFifoAndLaterExecution()
+    {
+        var executor = ImmediateEventExecutor.INSTANCE;
+        var order = new List<int>();
+        Action first = () =>
+        {
+            order.Add(3);
+            executor.Execute(() => order.Add(5));
+            throw new InvalidOperationException("multicast");
+        };
+        Action skipped = () => order.Add(-1);
+        executor.Execute(() =>
+        {
+            order.Add(1);
+            executor.Execute(first + skipped);
+            executor.Execute(() => order.Add(4));
+            order.Add(2);
+            throw new InvalidOperationException("outer");
+        });
+        executor.Execute(() => order.Add(6));
+        Assert.Equal(new[] { 1, 2, 3, 4, 5, 6 }, order);
+        Assert.Equal("command", Assert.Throws<ArgumentNullException>(() => executor.Execute((Action)null)).ParamName);
+    }
+
+    [Fact]
+    public void ImmediateNativeReentryBoundsTheStackAndUsesTheCallersThread()
+    {
+        var executor = ImmediateEventExecutor.INSTANCE;
+        Thread caller = Thread.CurrentThread;
+        int runs = 0, depth = 0, maximumDepth = 0;
+        bool callerOnly = true;
+        Action next = null;
+        next = () =>
+        {
+            depth++;
+            maximumDepth = Math.Max(maximumDepth, depth);
+            callerOnly &= ReferenceEquals(caller, Thread.CurrentThread);
+            if (++runs < 100000) executor.Execute(next);
+            depth--;
+        };
+        executor.Execute(next);
+        Assert.Equal(100000, runs);
+        Assert.Equal(1, maximumDepth);
+        Assert.Equal(0, depth);
+        Assert.True(callerOnly);
+    }
+
+    [Fact]
+    public async Task ImmediateRawActionsUseLiveContextWhileNativeSubmissionsCaptureAndCancel()
+    {
+        var executor = ImmediateEventExecutor.INSTANCE;
+        var ambient = new AsyncLocal<string>();
+        using var cancellation = new CancellationTokenSource();
+        string rawValue = null, restoredValue = null;
+        int canceledRuns = 0;
+        Task<string> captured = null;
+        Task canceled = null;
+        try
+        {
+            executor.Execute(() =>
+            {
+                ambient.Value = "enqueue";
+                executor.Execute(() => { rawValue = ambient.Value; ambient.Value = "raw"; });
+                captured = executor.SubmitAsync(() =>
+                {
+                    string value = ambient.Value;
+                    ambient.Value = "submission";
+                    return value;
+                }, TestContext.Current.CancellationToken);
+                canceled = executor.SubmitAsync(() => canceledRuns++, cancellation.Token);
+                cancellation.Cancel();
+                executor.Execute(() => restoredValue = ambient.Value);
+                ambient.Value = "drain";
+            });
+            Assert.Equal("drain", rawValue);
+            Assert.True(captured.IsCompletedSuccessfully);
+            Assert.Equal("enqueue", await captured);
+            Assert.True(canceled.IsCanceled);
+            Assert.Equal(0, canceledRuns);
+            Assert.Equal("raw", restoredValue);
+            Assert.Equal("raw", ambient.Value);
+        }
+        finally { ambient.Value = null; }
+    }
+
     private sealed class HookLoop : SingleThreadEventExecutor
     {
         internal int Executions;

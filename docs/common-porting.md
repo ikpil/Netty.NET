@@ -122,46 +122,32 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2130 cases** on Windows/x64/net10.0:
-**2116 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: scheduled-callback-full-debug.trx and scheduled-callback-full-release.trx.
-All 2128 prior identities/outcomes, every skip and all 759 original non-Porting
-identities/outcomes remain unchanged. Two callback ownership/live-state regressions
-are added; no case removal/remap or original fixture edits. Native scheduling now
-uses its own stable Run delegate and shares four immutable owner callbacks, retaining
-exact issuance guards, full-queue rollback, repeat/id/index, cancel/remove, live
-virtual time/shutdown and Task/context policy. A CLR test observer race is also
-repaired: capture rejection/consume the restored interrupt before xUnit reads
-Exception.Message under a resource lock; exact exception/wake/flag checks remain.
-No new public API or helper class. Expanded checked Release found the original
-TestDeadlineNanosNotOverflow failing before its clamp; explicit unchecked addition
-restores pinned Java long wrap/saturation. Original assertions stay unchanged and
-exact isolated Java/C# method probes validate four matching operand pairs.
-See common-clr-design.md#scheduled-callback-ownership-and-allocation.
-Targeted Debug and checked Release each pass 282 cases, zero failed/skipped.
-The first new test omitted deadline-to-ready transfer before manual invocation;
-that harness step is fixed and final matrices pass. Identical non-friend native
-consumers pass before/after for custom Action hooks, identity, submit/cancel/schedule,
-lazy execution and affinity. All 271 comment rows have no coverage loss; four
-scoped owners retain 50/50 comments. Inventory/paths, old provenance, uppercase
-declarations and no-new-warning checks pass. No exclusions or Markdown files added.
-Source/native review statuses remain 58 verified / 50 CLR replacement / 15 not
-applicable / 66 pending / 16 in progress; optimization does not complete whole files.
-Release allocation comparison: identical programs, tiered compilation disabled,
-5,000 warmups and three 100,000-operation samples per version/mode. Fresh zero-delay
-ScheduleAsync/deadline/ready/run/result inside the loop costs 800 -> 512 bytes.
-Manual mock-clock executor construction without worker start costs 1168 -> 1456
-(+288 once). One owner plus one fresh schedule breaks even against the previous
-commit; repeated scheduling benefits and nonscheduling owners pay the added cost.
-Raw Execute/drain 48, full-queue discard 0, periodic due/run/reinsert 88 and native
-SubmitAsync/drain/result 408 bytes/operation stay unchanged. No controlled throughput
-or contention claim; other scheduling paths/real worker startup are not measured.
-Ignored evidence: scheduled-callback-identity-and-inventory.json, comment audit and
-TRX matrices in TestResults; consumer/allocation records in artifacts/scheduled-callback-validation.
-Next: review remaining Global/Immediate/NonSticky Runnable storage and scheduled/lazy
-marker APIs against real consumers, including ownership/context/lifetime and native
-cost; synchronous Shutdown/AwaitTermination remains separate. Whole common and
-untested platforms remain open. Full portable sources build without PortingBatch.
+The current default suite executes **2133 cases** on Windows/x64/net10.0:
+**2119 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: immediate-action-full-debug.trx and immediate-action-full-release.trx.
+All 2130 prior identities/outcomes, every skip and the 759 original non-Porting
+identities/outcomes remain unchanged. Three CLR regressions added; no original
+fixture edits, case removal/remap or new exclusions. ImmediateEventExecutor now
+stores/invokes native Actions, preserving caller-thread FIFO, bounded reentry,
+failure/drain, FastThreadLocal lifetime and native submission context/cancellation.
+See common-clr-design.md#immediate-native-action-storage for pinned consumers,
+design, measured scope and remaining review. Targeted Debug/checked Release each
+pass 148 cases, zero failed/skipped. All 271 comment rows have no coverage loss;
+ImmediateEventExecutor retains 6/6 original comments. Inventory/paths, old provenance,
+uppercase declarations and no-new-warning checks pass. Identical non-friend native
+consumers pass before/after, including concurrent callers and RemoveAll/reuse.
+Warmed allocation: raw/multicast Execute 24 -> 0 bytes/call; outer+64 reentrant
+callbacks 1560 -> 0 bytes/batch; native SubmitAsync/result remains 360 bytes/call.
+Release, tiered compilation disabled, 5,000 warmups, three 100,000-operation samples;
+cold setup/queue growth/fresh caller delegates/logging/context-bearing submissions
+excluded. No throughput/contention claim. Ignored evidence: immediate-action TRX,
+comment audit and identity/inventory summary in TestResults; native consumer and
+allocation records in artifacts/immediate-action-validation. No Markdown files added.
+Source statuses remain 58 verified / 50 CLR replacement / 15 not
+applicable / 66 pending / 16 in progress; this unit does not complete whole files.
+Next: Global/NonSticky Runnable storage, exact runner/quiet callback ownership,
+scheduled/lazy marker APIs and synchronous Shutdown/AwaitTermination. Whole common
+and untested platforms remain open. Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

@@ -5312,3 +5312,39 @@ consumes/records the pending flag via Sleep(0), then asserts the same exact reje
 wake count and interrupt expectation. Both original operands/scenarios remain;
 no rejection implementation change, new skip or relaxed result assertion. The
 failing stack and final matrices are retained in ignored validation evidence.
+
+## Immediate native Action storage
+
+Pinned ImmediateEventExecutor.java:36-55,104-128 queues reentrant caller-thread
+work FIFO and drains it despite logged callback failures. DefaultPromiseTest.java:
+200-225 exercises chained completion/stack limits; PromiseCombiner.java:74 uses
+the singleton by default. Transport DefaultChannelGroupFuture.java:227-234 also
+exempts it from the owned-worker deadlock check. Those consumers require the
+execution contract even before transport is ported.
+
+ImmediateEventExecutor stores Queue<Action> and invokes the supplied callback
+directly. There is no Runnable recovery or wrapper for native Execute. The same
+FastThreadLocal queue/running identities and cleanup remain, rather than creating
+a separate CLR thread-local lifetime. A failed multicast stops its remaining
+invocations as CLR delegates do; the executor logs it and continues later queued
+callbacks. Raw Execute observes live caller ExecutionContext, including mutations
+by preceding callbacks. SubmitAsync still owns capture/isolation/cooperative cancel
+and Task outcome via the existing submission envelope; queue migration adds no
+second completion path. Unsupported termination retains its existing failed Task.
+
+Three CLR regressions cover native multicast failure/FIFO/null rejection, 100,000
+reentries at callback depth one on the caller thread, and raw-context versus native
+submission capture/cancel. Existing original fixtures stay unchanged. Identical
+non-friend consumers additionally validate concurrent callers and FastThreadLocal
+RemoveAll/reuse. Full/checked results and comment coverage are in the checkpoint.
+
+Allocation comparison against b9d69e9: Windows/x64/net10.0 Release, tiered compilation
+disabled, identical sources, 5,000 warmups and three 100,000-operation samples/mode.
+Reused raw and two-no-op multicast Execute/full-drain each cost 24 -> 0 bytes/call.
+One cached outer callback plus 64 cached queued callbacks costs 1560 -> 0 bytes/batch.
+Native SubmitAsync(cached Func<int>)/invoke/Task result remains 360 bytes/call.
+These are warmed queue/caller-thread paths; cold setup, queue growth, fresh caller
+delegates, exception logging, legacy Runnable producers and context-bearing
+submissions are excluded. No controlled throughput/contention claim. Evidence:
+artifacts/immediate-action-validation/allocation-evidence.json. Shared FastThreadLocal
+and inherited APIs remain under review; Global/NonSticky storage is the next unit.

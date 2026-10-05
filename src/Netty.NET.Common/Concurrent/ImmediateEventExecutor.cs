@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -40,8 +39,8 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
     /**
      * A Runnable will be queued if we are executing a Runnable. This is to prevent a {@link StackOverflowError}.
      */
-    private static readonly FastThreadLocal<Queue<IRunnable>> DELAYED_RUNNABLES =
-        new FastThreadLocalFunc<Queue<IRunnable>>(() => new Queue<IRunnable>());
+    private static readonly FastThreadLocal<Queue<Action>> DELAYED_RUNNABLES =
+        new FastThreadLocalFunc<Queue<Action>>(() => new Queue<Action>());
 
     /**
      * Set to {@code true} if we are executing a runnable.
@@ -100,28 +99,27 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
 
     public override void Execute(Action command)
     {
-        IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
-        ObjectUtil.CheckNotNull(queuedTask, "command");
+        ArgumentNullException.ThrowIfNull(command);
         if (StrongFalse == RUNNING.Get())
         {
             RUNNING.Set(StrongTrue);
             try
             {
-                queuedTask.Run();
+                command();
             }
             catch (Exception cause)
             {
-                logger.Info("Throwable caught while executing Runnable {}", queuedTask, cause);
+                logger.Info("Throwable caught while executing Runnable {}", command, cause);
             }
             finally
             {
                 var delayedRunnables = DELAYED_RUNNABLES.Get();
-                IRunnable runnable;
+                Action runnable;
                 while (delayedRunnables.TryDequeue(out runnable) && null != runnable)
                 {
                     try
                     {
-                        runnable.Run();
+                        runnable();
                     }
                     catch (Exception cause)
                     {
@@ -134,7 +132,7 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
         }
         else
         {
-            DELAYED_RUNNABLES.Get().Enqueue(queuedTask);
+            DELAYED_RUNNABLES.Get().Enqueue(command);
         }
     }
 
