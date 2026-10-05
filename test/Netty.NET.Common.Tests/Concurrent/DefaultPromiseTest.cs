@@ -46,7 +46,7 @@ public class DefaultPromiseTest
         public override bool InEventLoop(Thread thread) => false;
         public override void Execute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            ArgumentNullException.ThrowIfNull(command);
             Interlocked.Increment(ref submissions);
             throw new InvalidOperationException("Cannot schedule commands");
         }

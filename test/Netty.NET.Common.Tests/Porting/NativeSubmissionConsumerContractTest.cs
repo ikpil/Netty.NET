@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -11,7 +10,7 @@ public class NativeSubmissionConsumerContractTest
 {
     private sealed class QueuedExecutor : AbstractEventExecutor
     {
-        private readonly Queue<IRunnable> _queue = new();
+        private readonly Queue<Action> _queue = new();
         private bool _running;
         internal void RunOwned(Action action)
         {
@@ -19,11 +18,11 @@ public class NativeSubmissionConsumerContractTest
             try { action(); }
             finally { _running = false; }
         }
-        internal void RunAll() => RunOwned(() => { while (_queue.TryDequeue(out var task)) task.Run(); });
+        internal void RunAll() => RunOwned(() => { while (_queue.TryDequeue(out var task)) task(); });
         public override void Execute(Action task)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
-            _queue.Enqueue(queuedTask);
+            ArgumentNullException.ThrowIfNull(task);
+            _queue.Enqueue(task);
         }
         public override bool InEventLoop(Thread thread) => _running && thread == Thread.CurrentThread;
         public override Task Termination => Task.CompletedTask;

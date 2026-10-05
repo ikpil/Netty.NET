@@ -8,10 +8,10 @@ namespace Netty.NET.Common.Concurrent;
 // a second public Execute API or changing the queue's membership identity.
 internal sealed class ExecutorWork
 {
-    private readonly IRunnable _work;
+    private readonly INativeSubmission _work;
     private readonly Action _entry;
 
-    private ExecutorWork(IRunnable work)
+    private ExecutorWork(INativeSubmission work)
     {
         _work = work;
         _entry = Invoke;
@@ -19,37 +19,33 @@ internal sealed class ExecutorWork
 
     private void Invoke() => _work.Run();
 
-    internal static Action Wrap(IRunnable work)
+    internal static Action Wrap(INativeSubmission work)
     {
         ArgumentNullException.ThrowIfNull(work);
         return new ExecutorWork(work)._entry;
     }
 
-    internal static IRunnable Unwrap(Action command, string parameterName)
-    {
-        ArgumentNullException.ThrowIfNull(command, parameterName);
-        return GetOwnedWork(command) ?? Runnables.Create(command);
-    }
-
     internal static INativeSubmission GetNativeSubmission(Action command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return GetOwnedWork(command) as INativeSubmission;
-    }
-
-    private static IRunnable GetOwnedWork(Action command)
-    {
         // A multicast or newly composed delegate is ordinary caller work. Never
         // infer queue ownership from an arbitrary Action target or method name.
         if (command.Target is ExecutorWork entry && ReferenceEquals(command, entry._entry)) return entry._work;
         return null;
     }
 
-    internal static void Dispatch(IExecutor executor, IRunnable work) => executor.Execute(Wrap(work));
+    internal static void Dispatch(IExecutor executor, INativeSubmission work) => executor.Execute(Wrap(work));
 }
 
 // Real common producers use this bridge; external consumers see only Action.
 internal static class ExecutorWorkExtensions
 {
-    internal static void Execute(this IExecutor executor, IRunnable work) => ExecutorWork.Dispatch(executor, work);
+    internal static void Execute(this IExecutor executor, INativeSubmission work) => ExecutorWork.Dispatch(executor, work);
+
+    // Remaining Runnable callers need invocation only, without native ownership metadata.
+    internal static void Execute(this IExecutor executor, IRunnable work)
+    {
+        ArgumentNullException.ThrowIfNull(work);
+        executor.Execute(work.Run);
+    }
 }

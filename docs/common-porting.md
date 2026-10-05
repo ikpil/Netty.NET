@@ -124,43 +124,35 @@ Optimization follows behavioral verification and measured performance.
 
 Default Debug/Release each discover **2161 cases** on Windows/x64/net10.0:
 **2147 passed / 0 failed / 14 unchanged skips**. Evidence:
-unordered-graceful-snapshot-full-debug.trx and unordered-graceful-snapshot-full-release.trx.
-All 2157 prior identities/outcomes and 759 original non-Porting results remain.
-Four new CLR rows cover graceful cancellation/reentry with/without a surviving
-deadline and legacy/zero-quiet closure preserving priority/results/raw/child drain.
-No identity remap, exclusion or skip change. Boundary rows fail before repair;
-isolated removal of batch ownership exposes premature termination.
+native-submission-action-full-debug.trx and native-submission-action-full-release.trx.
+All 2161 prior identities/outcomes and 759 original non-Porting results remain;
+no new case, identity remap, exclusion or skip change.
 
-OnShutdown retains stored one-shot priorities through BCL EnqueueRange before
-canceling withdrawn periodic/canceled memberships; live-one-shot-only queues skip
-snapshot/rebuild. The shared shutdownReservations count owns cancellation batches
-and asynchronous stop notifications, protecting the sole Termination result during
-reentry. Cooperative immediate stop, graceful token policy and worker/factory/result
-ownership remain. See common-clr-design.md#graceful-periodic-snapshot-withdrawal.
+Native submission metadata no longer inherits IRunnable. The exact Action envelope
+still carries invocation/cancellation/rejection/ordered drain ownership through the
+public Execute(Action) hook. Ordinary remaining Runnable compatibility callers
+pass their bound Run callback. The unused Unwrap helper and all 12 test call sites
+are removed; eleven fixtures retain or forward Action directly. Original fixture
+scenarios and comments remain. See common-clr-design.md#native-submission-action-bridge.
 
-Targeted Debug and checked Release each pass 281 cases, zero failed/skipped.
-All 271 comment rows have no coverage loss; changed source retains 21/21 original
-comments. Inventory (205 source/66 test), paths, earlier provenance, uppercase
-declarations and no-new-source/test-warning identities pass. Identical native
-consumers preserve closure policy, priority/results, periodic cancellation, retained
-deadline drain and token ownership before/after.
-
-Mixed 131072-entry synchronous graceful closure median: 6793.1298 -> 16.1229 ms.
-Its stored-priority snapshot adds 2097216 current-thread bytes; retained-only
-98304-entry closure allocation falls 786736 -> 224 bytes. Three samples at four
-sizes in periodic/mixed/retained modes, two small warmups per mode, Release/tiering
-disabled and a workerless pool. Every sample preserves survivor results/membership
-and actually terminates. Setup/admission, worker drain, observation and StopAsync
-cleanup are excluded. Exact rows/variation/limits are in the design and ignored
-artifacts/unordered-graceful-snapshot-validation/*-{consumer,perf}.log,
-graceful-cost-evidence.json and unordered-graceful-snapshot-*.trx/JSON in TestResults.
-No general throughput claim. Only three canonical records updated, no new MD.
+Targeted Debug and checked Release each pass 366 cases, zero failed/skipped.
+All 271 comment rows have no coverage loss; eight relevant source/test provenance
+owners retain 107/107 comments. Inventory (205 source/66 test), paths, earlier
+provenance, uppercase declarations and no-new-source/test-warning identities pass.
+Identical public consumers preserve replay/copied/composed single claims, context,
+Task results, cancellation token identity, rejection identity, completion/progress
+order and executor affinity, and ordered child results before/after. Reflection
+separately confirms the internal Runnable inheritance removal. No performance
+claim. Evidence: artifacts/native-submission-action-validation/*-consumer.log,
+verification-summary.json and native-submission-action-*.trx/JSON in TestResults.
+Only three canonical records updated, no new MD.
 
 Source statuses remain 58 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 16 in progress. Next: review remaining native submission/Runnable
-test bridges, then other backend/source/native/platform contracts. The earlier
-focused Global xUnit completion stall remains unresolved; current matrices completed.
-Whole common remains open.
+66 pending / 16 in progress. Next: migrate remaining plain Future/Promise fixtures
+and waiting/listener adapters, reviewing pinned consumers; continue ordinary legacy
+invocation helpers and remaining backend/source/runtime/platform contracts.
+The earlier focused Global xUnit completion stall remains unresolved; current
+matrices completed. Whole common remains open.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

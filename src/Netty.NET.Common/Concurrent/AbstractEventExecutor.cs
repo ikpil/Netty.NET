@@ -72,8 +72,16 @@ public abstract class AbstractEventExecutor : IEventExecutor
     public abstract void Execute(Action task);
 
     // Stateful common work must still pass the public virtual Action hook.
-    internal void Execute(IRunnable task) => Execute(ExecutorWork.Wrap(task));
-    internal void LazyExecute(IRunnable task) => LazyExecute(ExecutorWork.Wrap(task));
+    internal void Execute(IRunnable task)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        Execute(task.Run);
+    }
+    internal void LazyExecute(IRunnable task)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        LazyExecute(task.Run);
+    }
     public abstract bool IsShutdown();
     public abstract bool IsTerminated();
     public abstract bool AwaitTermination(TimeSpan timeout);

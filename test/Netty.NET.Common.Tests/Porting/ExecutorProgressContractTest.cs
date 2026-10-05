@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -15,22 +14,22 @@ public class ExecutorProgressContractTest
 {
     private sealed class QueuedExecutor : AbstractEventExecutor
     {
-        private readonly ConcurrentQueue<IRunnable> _queue = new();
+        private readonly ConcurrentQueue<Action> _queue = new();
         private Thread _running;
         internal Exception rejection;
         internal void RunAll()
         {
             _running = Thread.CurrentThread;
-            try { while (_queue.TryDequeue(out var work)) work.Run(); }
+            try { while (_queue.TryDequeue(out var work)) work(); }
             finally { _running = null; }
         }
         public override bool InEventLoop(Thread thread) => thread == _running;
         public override void Execute(Action work)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(work, nameof(work));
+            ArgumentNullException.ThrowIfNull(work);
             if (rejection != null)
                 throw rejection;
-            _queue.Enqueue(queuedTask);
+            _queue.Enqueue(work);
         }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -14,23 +13,23 @@ public class ExecutorSubmissionContractTest
 {
     private sealed class ManualExecutor : AbstractEventExecutor
     {
-        internal readonly BlockingCollection<IRunnable> tasks = new();
+        internal readonly BlockingCollection<Action> tasks = new();
         private bool running;
         public override bool InEventLoop(Thread thread) => running && thread == Thread.CurrentThread;
         public override void Execute(Action task)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
-            tasks.Add(queuedTask);
+            ArgumentNullException.ThrowIfNull(task);
+            tasks.Add(task);
         }
-        internal IRunnable Take()
+        internal Action Take()
         {
             Assert.True(tasks.TryTake(out var task, TimeSpan.FromSeconds(5)));
             return task;
         }
-        internal void Run(IRunnable task)
+        internal void Run(Action task)
         {
             running = true;
-            try { task.Run(); }
+            try { task(); }
             finally { running = false; }
         }
         public override void Shutdown() { }
@@ -52,7 +51,7 @@ public class ExecutorSubmissionContractTest
         Task observed = null;
         using var registration = observation.Register(task => { onLoop = executor.InEventLoop(); observed = task; });
         Assert.False(operation.IsCompleted);
-        Assert.IsAssignableFrom<INativeSubmission>(executor.tasks.First());
+        Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(executor.tasks.First()));
         executor.Run(executor.Take());
         Assert.Same(result, operation.GetAwaiter().GetResult());
         while (!registration.NotificationCompleted.IsCompleted) executor.Run(executor.Take());

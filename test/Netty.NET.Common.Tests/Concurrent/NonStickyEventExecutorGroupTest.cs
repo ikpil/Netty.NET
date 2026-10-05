@@ -179,13 +179,13 @@ public class NonStickyEventExecutorGroupTest
             underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
         public override void Execute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            ArgumentNullException.ThrowIfNull(command);
             // Reject the 2nd execute() call (the reschedule attempt)
             // 1st call: initial task submission
             // 2nd call: reschedule after maxTaskExecutePerRun
             if (Interlocked.Increment(ref executeCount) == 2)
                 throw new RejectedExecutionException("Simulated queue full");
-            underlying.Execute(queuedTask);
+            underlying.Execute(command);
         }
     }
 

@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common.Concurrent;

@@ -51,7 +51,7 @@ public class NonStickyActionContractTest
         child.Execute(copied);
         child.Execute(prefix + issued);
         child.Execute(() => callerRuns++);
-        var runner = Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.Unwrap(Assert.Single(executor.Pending), "runner"));
+        var runner = Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(Assert.Single(executor.Pending)));
         var cause = new RejectedExecutionException("runner rejected");
         if (reject)
         {

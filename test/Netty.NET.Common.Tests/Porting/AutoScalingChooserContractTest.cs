@@ -107,7 +107,7 @@ public class AutoScalingChooserContractTest
         }
         public override void Execute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            ArgumentNullException.ThrowIfNull(command);
             suspended = false;
             ++wakes;
         }

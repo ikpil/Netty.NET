@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -15,28 +14,28 @@ public class NativeExecutorTaskContractTest
     // A separate test below uses the real event loop and asynchronous suspension.
     private sealed class QueuedExecutor : AbstractEventExecutor
     {
-        private readonly Queue<IRunnable> _queue = new();
+        private readonly Queue<Action> _queue = new();
         private Thread _executingThread;
         internal Exception Rejection;
         internal int Submissions;
         internal int Pending => _queue.Count;
-        internal IRunnable LastSubmission;
+        internal Action LastSubmission;
         internal Action BeforeAdmission;
         public override void Execute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            ArgumentNullException.ThrowIfNull(command);
             ++Submissions;
             BeforeAdmission?.Invoke();
             if (Rejection != null)
                 throw Rejection;
-            LastSubmission = queuedTask;
-            _queue.Enqueue(queuedTask);
+            LastSubmission = command;
+            _queue.Enqueue(command);
         }
         internal void RunNext()
         {
-            IRunnable command = _queue.Dequeue();
+            Action command = _queue.Dequeue();
             _executingThread = Thread.CurrentThread;
-            try { command.Run(); }
+            try { command(); }
             finally { _executingThread = null; }
         }
         public override bool InEventLoop(Thread thread) => ReferenceEquals(thread, _executingThread);
@@ -121,8 +120,8 @@ public class NativeExecutorTaskContractTest
         Assert.Equal(3, await tokenValue);
         Assert.Equal(5, await asyncValue);
         Assert.Equal(7, await tokenAsyncValue);
-        Assert.False((object)first.LastSubmission is System.Threading.Tasks.Task);
-        Assert.False((object)second.LastSubmission is System.Threading.Tasks.Task);
+        Assert.False((object)Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(first.LastSubmission)) is System.Threading.Tasks.Task);
+        Assert.False((object)Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(second.LastSubmission)) is System.Threading.Tasks.Task);
     }
 
     [Fact]
@@ -166,7 +165,7 @@ public class NativeExecutorTaskContractTest
         Task<int> second = group.SubmitAsync(() => 2);
         Assert.Equal(2, source.Selections);
         Assert.Equal(2, underlying.Pending);
-        Assert.False(underlying.LastSubmission is IOrderedEventExecutor);
+        Assert.False(Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(underlying.LastSubmission)) is IOrderedEventExecutor);
         underlying.RunNext();
         underlying.RunNext();
         Assert.Equal(1, await first);
@@ -178,7 +177,7 @@ public class NativeExecutorTaskContractTest
         Assert.Equal(3, source.Selections);
         Assert.Equal(1, underlying.Pending);
         Assert.True(orderedChild is IOrderedEventExecutor);
-        Assert.False((object)underlying.LastSubmission is System.Threading.Tasks.Task);
+        Assert.False((object)Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(underlying.LastSubmission)) is System.Threading.Tasks.Task);
         underlying.RunNext();
         Assert.Equal(3, await third);
         Assert.Equal(4, await fourth);
@@ -306,8 +305,8 @@ public class NativeExecutorTaskContractTest
     {
         public override void Execute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
-            underlying.Execute(queuedTask);
+            ArgumentNullException.ThrowIfNull(command);
+            underlying.Execute(command);
         }
         public override bool InEventLoop(Thread thread) => underlying.InEventLoop(thread);
         public override bool IsShuttingDown() => underlying.IsShuttingDown();

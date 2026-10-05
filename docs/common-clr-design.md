@@ -5827,3 +5827,46 @@ artifacts/unordered-graceful-snapshot-validation/{before,after}-{consumer,perf}.
 graceful-cost-evidence.json and unordered-graceful-snapshot-*.trx/JSON in TestResults.
 Remaining native submission/Runnable test bridges and backend/runtime/platform
 reviews stay open; this scoped repair does not complete common.
+
+## Native submission Action bridge
+
+Pinned AbstractEventExecutor.java:91-112 submits through PromiseTask; its run
+claim (PromiseTask.java:103-112) separates invocation from result publication.
+FlushConsolidationHandler.java:205-219 submits a deferred flush and cancels it
+before invocation. NonStickyEventExecutorGroup.java:138-149 delegates group
+submission; its runner resubmits at :258/:344. These consumers require result,
+claim, cancellation and ordered drain ownership, without requiring a Runnable
+interface in the CLR callback API.
+
+INativeSubmission now describes that internal ownership directly, including its
+Run operation, without inheriting IRunnable. ExecutorWork accepts only native
+submission metadata and retains its exact issued Action envelope. Copied or
+multicast delegates remain ordinary work; native ownership is recognized only
+through reference identity of the issued Action. No additional Task result,
+invocation claim or public Execute overload is introduced. Ordinary remaining
+IRunnable compatibility callers cross Execute/LazyExecute as a bound Run Action,
+without a native ownership envelope.
+
+The unused production Unwrap operation and all 12 test call sites are removed.
+Eleven fixtures now store, invoke or forward the exact Action received by the
+public virtual hook. DefaultPromiseTest, NonStickyEventExecutorGroupTest and
+ThreadExecutorMapTest keep their original scenarios, assertions and comments;
+CLR submission/completion/progress/flush/child harnesses no longer turn callbacks
+back into Java interface instances. Metadata assertions inspect the issued Action
+rather than assert a property that is trivially true of any Action.
+
+Default Debug/Release each retain all 2161 identities/outcomes: 2147 pass,
+zero failures and 14 unchanged skips. Targeted Debug/checked Release each pass
+366 rows; the original 759 non-Porting results remain. All 271 comment rows have
+no coverage loss; these eight source/test provenance owners retain 107 comments.
+Inventory/statuses, casing, and no-new-source/test-warning checks pass. Identical
+non-friend public consumers on baseline 68fdc12 and the new DLL verify direct
+Action queues, replay/copied/composed single claims, ExecutionContext, cancellation
+token identity, rejection identity, completion/progress order and affinity, and
+ordered child results. A separate reflection output confirms only the internal
+Runnable inheritance removal. No performance claim is made.
+
+Evidence: artifacts/native-submission-action-validation/{before,after}-consumer.log,
+verification-summary.json, and native-submission-action-*.trx/JSON in TestResults.
+Plain Future/Promise fixtures, waiting/listener adapters, ordinary legacy invocation
+helpers and remaining backend/runtime/platform/source reviews stay open.

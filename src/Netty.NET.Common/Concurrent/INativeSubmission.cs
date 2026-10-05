@@ -1,12 +1,12 @@
 using System;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
 // Queue removal must finish native submitted work without introducing another
 // result owner. These members describe invocation admission and cancellation.
-internal interface INativeSubmission : IRunnable
+internal interface INativeSubmission
 {
+    void Run();
     bool IsCanceled { get; }
     void CancelForShutdown();
     void Reject(Exception error);
