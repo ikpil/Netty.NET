@@ -122,36 +122,42 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-Default Debug/Release on Windows/x64/net10.0 each discover **2161 cases**:
-**2147 passed / 0 failed / 14 unchanged skips**. Evidence:
-native-supplier-void-full-debug.trx and native-supplier-void-full-release.trx.
+Default Debug/Release on Windows/x64/net10.0 each discover **2177 cases**:
+**2163 passed / 0 failed / 14 unchanged skips**. Evidence:
+native-chooser-full-debug.trx and native-chooser-full-release.trx.
 All 2161 prior identities/outcomes and 759 original non-Porting results remain;
-no new case, identity remap, source exclusion or skip change.
+16 new CLR chooser cases, no identity remap/source exclusion/skip change.
 
-Unused generic supplier/constant helpers and invented Void type are removed.
-Supplier contracts remain Func<bool>/Func<int>; checked-exception distinctions
-need no CLR interface hierarchy. The original ImmediateExecutor FutureTask<Void>
-scenario now executes a non-generic Task and checks successful observation with
-no result object. The migrated fixture alias, five other unused Void aliases and obsolete Functional
-namespace imports are removed. The queue cost tool builds with LibraryPath.
-See common-clr-design.md#native-supplier-and-no-result-cleanup.
+Default chooser implementations are private nested classes with int/long Interlocked
+counters. Unchecked subtraction preserves Java wraparound in checked builds;
+mask and long-remainder-before-Abs preserve pinned child selection order. Native
+null validation is explicit; empty selection remains deferred for auto-scaling
+snapshots. Public factory/interface/child identities remain, and the two implementation
+helper classes are retired. See common-clr-design.md#native-default-executor-chooser.
 
-Targeted Debug/checked Release each pass 121 cases, zero failures/skips. All 271
-comment rows have no coverage loss; three original supplier owners and the original
-ImmediateExecutor fixture retain 15/15 comments. Inventory (205 source/66 test),
-paths, provenance, casing and no-new-source/test-warning identities pass.
-Identical native public consumers preserve result/context/token/notification/timer
-behavior and Func<int> capacity-limited invocation/FIFO plus non-generic Task
-completion. Reflection separately confirms four obsolete helper types become zero.
-No performance claim. Evidence: artifacts/native-supplier-void-validation,
-native-supplier-void-*.trx/JSON in TestResults. Only three canonical records updated,
-no new MD; generated archives/probes/build outputs/logs remain ignored.
+Targeted Debug/checked Release each pass 167 cases, zero failures/skips. The same
+new fixture against isolated previous checked source fails four overflow rows and
+one null exception row; eleven controls pass. All 271 comment rows have no loss;
+chooser comments improve to 5/5 preserved. Inventory (205 source/66 test), paths,
+provenance/casing/no-new-source-test-warning identities pass. Identical public
+consumers preserve real three-child selection, affinity/results and shutdown plus
+existing native callback/cancellation/timer behavior. Reflection separately confirms
+public implementation helpers are removed. No performance claim. Evidence:
+artifacts/native-chooser-validation, native-chooser-*.trx/JSON and isolated baseline
+TestResults. Only three canonical records updated, no new MD; generated assets ignored.
 
-Source statuses remain 58 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 16 in progress. Next: review native backend/runtime/platform contracts
-and remaining inventory in dependency order. The earlier focused Global xUnit
-completion stall remains unresolved; current matrices completed. Whole common
-remains open.
+An initial full Debug failure exposed the existing GlobalAction fixture's assumption
+that the internal idle callback could not precede user work after restart. Baseline
+production source with forced idle expiry reproduces it; revised blocker setup
+passes while retaining queue identity/count/FIFO assertions. Initial results and
+before/after reproduction remain in the same artifact folder; final full runs
+include this fixture repair. Production Global behavior is unchanged.
+
+The chooser owner moves pending -> verified: source statuses now 59 verified /
+50 CLR replacement / 15 not applicable / 65 pending / 16 in progress. Continue
+native backend/runtime/platform and remaining source inventory in dependency order.
+The earlier focused Global xUnit completion stall remains unresolved; current
+matrices completed. Whole common remains open.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

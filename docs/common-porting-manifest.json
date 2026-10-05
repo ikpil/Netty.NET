@@ -1408,18 +1408,27 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/DefaultEventExecutorChooserFactory.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/DefaultEventExecutorChooserFactory.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/DefaultEventExecutorChooserFactory.cs",
+        "test/Netty.NET.Common.Tests/Porting/DefaultChooserContractTest.cs"
+      ],
+      "evidence": [
+        "Pinned DefaultEventExecutorChooserFactory, MultithreadEventExecutorGroup and AutoScaling active/all-child consumers reviewed. Sixteen CLR boundary/identity/concurrency cases: isolated previous source checked run has four OverflowException failures plus one native null-exception mismatch, with eleven controls passing. Current targeted Debug/checked Release each 167 pass; full default Debug/Release each 2163 pass/0 failures/14 unchanged skips (2177 discovered). All 2161 prior identities/outcomes and original 759 remain; inventory/casing/no-new-warning checks pass, all 271 comment rows have no loss and 5/5 chooser comments retained. Identical native group consumers preserve selection/child affinity/results and shutdown; public implementation helpers retired. Initial full Debug exposed an existing GlobalAction idle-callback setup assumption; forced idle expiry reproduces before/fixed-after on baseline production source, with assertions preserved and failed evidence retained. Evidence: common-clr-design.md#native-default-executor-chooser, current common-porting.md and artifacts/native-chooser-validation plus native-chooser-* TRX/JSON. No performance claim; broader common/backend reviews remain open."
+      ],
+      "adaptation": "Private sealed choosers use primitive int/long fields and Interlocked; unchecked subtraction preserves Java atomic get-and-increment wraparound. Keep mask/remainder-before-Abs, original child array/identity, independent positions and deferred empty selection. Null array raises ArgumentNullException(executors). Remove public implementation helper classes; no Atomic wrapper or additional public hierarchy is required.",
       "comments": {
         "upstreamCount": 5,
         "required": true,
-        "preservedCount": 1,
-        "missingCount": 4
+        "preservedCount": 5,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Pinned group and auto-scaling consumers need round-robin child identity with an atomic ticket. Native fields fulfill that contract; explicit wrapping arithmetic supports checked CLR builds. Sixteen CLR cases cover sequential/concurrent selection, int/long boundaries, empty snapshots and native null exceptions. See common-clr-design.md#native-default-executor-chooser."
       }
     },
     {

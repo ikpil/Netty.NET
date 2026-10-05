@@ -5988,3 +5988,60 @@ reports four obsolete helper types become zero. No performance claim or new test
 cases. Evidence: artifacts/native-supplier-void-validation, native-supplier-void-*.trx/
 JSON in TestResults. Only the three canonical records change; no new MD. Remaining
 native backend/platform and pending inventory reviews stay open.
+
+## Native default executor chooser
+
+Pinned DefaultEventExecutorChooserFactory.java uses one atomic ticket per Next:
+a masked int for power-of-two lengths and a long remainder/absolute value for other
+lengths. MultithreadEventExecutorGroup.java:115 selects children through this factory;
+AutoScalingEventExecutorChooserFactory.java:151/:168 builds active/all-child snapshots.
+An empty active snapshot is allowed; the auto-scaling caller wakes a child and uses
+its all-child chooser instead of selecting the empty snapshot.
+
+Private nested chooser implementations now use int/long fields with Interlocked.
+Explicit unchecked subtraction preserves Java getAndIncrement wraparound in checked
+builds. Generic selection keeps its long counter and computes remainder before Abs,
+including long.MinValue; it deliberately preserves pinned order at the long boundary.
+Only native null argument translation is changed: missing executors raises
+ArgumentNullException(executors). Empty-array failure stays deferred to Next.
+The supplied child array and returned child identities remain, with no copy or public
+helper classes. The formerly public Generic/PowerOfTwo implementation helpers are
+removed; consumers continue using the public factory and chooser interface.
+All five original comments now reside with the factory's nested implementations.
+The earlier translated factory comment is retained for CLR provenance:
+
+```csharp
+/**
+ * Default implementation which uses simple round-robin to choose next {@link IEventExecutor}.
+ */
+```
+
+Sixteen CLR cases cover independent chooser positions, child reference identity,
+concurrent ticket distribution, generic selection across the int boundary, both
+counter wraps, empty snapshots and null arguments. Reflection seeds private counters
+only to reach overflow deterministically; expected slots are calculated separately.
+The same fixture against isolated previous source in checked Release fails four
+wrap cases with OverflowException and the null-argument case with its old exception;
+eleven controls pass. Negative evidence is not included in passing matrices.
+
+Full default Debug/Release each: 2177 discovered, 2163 pass/zero failures/14 unchanged
+skips. All 2161 prior identities/outcomes and original 759 remain; targeted Debug/
+checked Release each 167 pass. All 271 comment rows have no coverage loss; this
+owner retains 5/5 original comments. Inventory/paths/casing/no-new-source-test-warning
+checks pass. Identical non-friend public consumers before/after run a real three-child
+group and preserve round-robin reference identity, selected-child affinity/results
+and successful shutdown, alongside existing native invocation/cancellation/timer
+contracts. Reflection separately confirms the two public implementation helpers
+are retired. No performance claim. Evidence: artifacts/native-chooser-validation,
+native-chooser-*.trx/JSON in TestResults and its isolated baseline-source TestResults.
+This owner moves pending -> verified (59 verified/65 pending); remaining common
+and executor backend/runtime/platform reviews stay open. No new Markdown file.
+
+The first full Debug run failed the existing GlobalAction queue-head assertion:
+an expired internal idle callback was legitimately queued behind the first task
+on restart. The fixture now queues its blocker from that task, letting the idle
+callback drain before checking user callback identity/count/FIFO. An isolated
+baseline-production run forcing idle expiry reproduces the original assertion
+failure and passes with the revised setup. No production Global behavior changes;
+all existing assertions remain. Initial failed/passing full runs and deterministic
+before/after idle-expiry evidence are retained in the same ignored artifact folder.

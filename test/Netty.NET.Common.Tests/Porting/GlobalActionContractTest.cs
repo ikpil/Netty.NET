@@ -21,7 +21,14 @@ public class GlobalActionContractTest
         var order = new List<int>();
         var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         bool ownedThread = true;
-        executor.Execute(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); });
+        // An expired idle callback may be fetched alongside the first task after
+        // restart. Queue the blocker from that task so the idle callback drains
+        // first and the queue assertions observe only the user callbacks below.
+        executor.Execute(() => executor.Execute(() =>
+        {
+            entered.Set();
+            release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        }));
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));

@@ -14,10 +14,13 @@
  * under the License.
  */
 
+using System;
+using System.Threading;
+
 namespace Netty.NET.Common.Concurrent;
 
 /**
- * Default implementation which uses simple round-robin to choose next {@link IEventExecutor}.
+ * Default implementation which uses simple round-robin to choose next {@link EventExecutor}.
  */
 public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFactory
 {
@@ -27,6 +30,7 @@ public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFa
 
     public IEventExecutorChooser NewChooser(IEventExecutor[] executors)
     {
+        ArgumentNullException.ThrowIfNull(executors);
         if (IsPowerOfTwo(executors.Length))
         {
             return new PowerOfTwoEventExecutorChooser(executors);
@@ -40,5 +44,38 @@ public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFa
     private static bool IsPowerOfTwo(int val)
     {
         return (val & -val) == val;
+    }
+
+    private sealed class PowerOfTwoEventExecutorChooser : IEventExecutorChooser
+    {
+        private int idx;
+        private readonly IEventExecutor[] executors;
+
+        internal PowerOfTwoEventExecutorChooser(IEventExecutor[] executors) => this.executors = executors;
+
+        public IEventExecutor Next()
+        {
+            // CLR checked builds must preserve Java's wrapping get-and-increment.
+            int ticket = unchecked(Interlocked.Increment(ref idx) - 1);
+            return executors[ticket & executors.Length - 1];
+        }
+    }
+
+    private sealed class GenericEventExecutorChooser : IEventExecutorChooser
+    {
+        // Use a 'long' counter to avoid non-round-robin behaviour at the 32-bit overflow boundary.
+        // The 64-bit long solves this by placing the overflow so far into the future, that no system
+        // will encounter this in practice.
+        private long idx;
+        private readonly IEventExecutor[] executors;
+
+        internal GenericEventExecutorChooser(IEventExecutor[] executors) => this.executors = executors;
+
+        public IEventExecutor Next()
+        {
+            // Take the remainder before Abs, so long.MinValue stays a bounded index.
+            long ticket = unchecked(Interlocked.Increment(ref idx) - 1);
+            return executors[(int)Math.Abs(ticket % executors.Length)];
+        }
     }
 }
