@@ -20,7 +20,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -329,15 +328,14 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 
     public void Execute(Action command)
     {
-        IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
-        ArgumentNullException.ThrowIfNull(queuedTask);
-        if (queuedTask is INativeSubmission native)
+        ArgumentNullException.ThrowIfNull(command);
+        if (ExecutorWork.GetNativeSubmission(command) is { } native)
         {
             ExecuteNativeSubmission(native);
             return;
         }
 
-        var work = new RawWork(this, queuedTask);
+        var work = new RawWork(this, command);
         try
         {
             Enqueue(work);
@@ -376,7 +374,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
         // Keep callback claiming/cancellation with the existing queue membership.
         // A bound Action needs no additional result or replay-envelope object.
-        handler(work.outer.Run, this);
+        handler(work.Run, this);
     }
 
     private bool EnsureWorker()
@@ -472,7 +470,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 if (work == null) { countReleased = true; return; }
                 try
                 {
-                    work.outer.Run();
+                    work.Run();
                 }
                 catch (Exception failure)
                 {
@@ -617,13 +615,13 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
     }
 
-    private interface Work : IRunnable
+    private interface Work
     {
         UnorderedThreadPoolEventExecutor owner { get; }
         long sequence { get; }
         long period { get; }
         long deadline { get; }
-        IRunnable outer { get; }
+        void Run();
         bool IsCancelled();
         void CancelOuter();
         void Reject(Exception error);
@@ -665,7 +663,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         public long sequence { get; }
         public long period => 0;
         public long deadline { get; }
-        public IRunnable outer => this;
         internal NativeSubmissionBackend(UnorderedThreadPoolEventExecutor owner, INativeSubmission submission)
         {
             this.owner = owner;
@@ -747,7 +744,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         public long sequence { get; }
         public long period => _task.PeriodNanos;
         public long deadline => _task.DeadlineNanos();
-        public IRunnable outer => this;
         internal NativeBackend(UnorderedThreadPoolEventExecutor owner, ITaskScheduledWork task)
         {
             this.owner = owner;
@@ -765,13 +761,12 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     // the callback once, including discard during shutdown or clearing.
     private sealed class RawWork : Work
     {
-        private IRunnable command;
+        private Action command;
         public UnorderedThreadPoolEventExecutor owner { get; }
         public long sequence { get; }
         public long period => 0;
         public long deadline { get; }
-        public IRunnable outer => this;
-        internal RawWork(UnorderedThreadPoolEventExecutor owner, IRunnable command)
+        internal RawWork(UnorderedThreadPoolEventExecutor owner, Action command)
         {
             this.owner = owner;
             this.command = command;
@@ -783,9 +778,9 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         public void Reject(Exception error) => CancelOuter();
         public void Run()
         {
-            IRunnable callback = Interlocked.Exchange(ref command, null);
+            Action callback = Interlocked.Exchange(ref command, null);
             if (callback == null || !owner.CanRun(this)) return;
-            try { callback.Run(); }
+            try { callback(); }
             catch (Exception failure) { logger.Warn("Failure during execution of task", failure); }
         }
     }

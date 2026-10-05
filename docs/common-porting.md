@@ -122,41 +122,43 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2149 cases** on Windows/x64/net10.0:
-**2135 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: watcher-action-full-debug.trx and watcher-action-full-release.trx.
-All 2147 prior identities/outcomes and 759 original non-Porting results remain
-unchanged. Two CLR cases add copied multicast failure isolation and thread-specific
-cancellation of one shared callback. No identity remap, new exclusion or skip change.
+The current default suite executes **2154 cases** on Windows/x64/net10.0:
+**2140 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: unordered-raw-action-full-debug.trx and unordered-raw-action-full-release.trx.
+All 2149 prior identities/outcomes and 759 original non-Porting results remain
+unchanged. Five new CLR rows cover exact/copied/composed submission cancellation
+and raw rejection replay/policy failure. No identity remap, exclusion or skip change.
 
-ThreadDeathWatcher Watch/Unwatch accept Action only; registrations retain the exact
-callback, and reference-identity cancellation removes one duplicate for the specified
-thread. Private worker and deferred ReleasingTask no longer implement Runnable.
-ReleaseLater supplies a bound native callback while retaining counted-object/decrement
-ownership and original logging. Original watcher scenarios/assertions/comments and
-the native inactivity timeout policy remain. See
-common-clr-design.md#native-thread-death-watcher-callbacks for pinned consumers,
-delegate identity/context/failure decisions and retained producer state.
+Unordered Execute stores ordinary Action directly; only the exact issued native
+submission envelope carries result/cancellation/stop ownership. RawWork retains
+one-shot claiming and pool run-state checks. Private Work invokes memberships
+without Runnable inheritance or redundant outer properties; scheduling/results,
+factory/replacement, rejection and worker context policies remain. The original
+pool fixture uses Action with unchanged identities/assertions/scenarios/comments.
+See common-clr-design.md#unordered-native-raw-callback-storage.
 
-Targeted Debug and checked Release each pass 39 cases, zero failed/skipped.
-All 271 comment rows have no coverage loss; two source/one original test owners
-retain 55/55 original comments. The pinned 205 source/66 test inventory and paths,
-earlier provenance, uppercase declarations and no-new-source/test-warning identities
-pass. An identical non-friend native Action/Thread/Task consumer fails to compile
-against the fresh baseline's Runnable API, then passes with native callbacks,
-duplicate/copy cancellation, multicast failure, context suppression, actual deferred
-release and worker restart. Ignored evidence: watcher-action-*.trx/JSON in TestResults
-and artifacts/watcher-action-validation/{before-consumer-build,native-consumer}.log.
-No allocation/throughput claim; ReleaseLater creates a bound Action. Only three
-canonical records updated; no new MD file. The prior focused Global xUnit completion
-stall remains unresolved in its design section; current matrices completed.
+Targeted Debug and checked Release each pass 274 cases, zero failed/skipped.
+All 271 comment rows have no coverage loss; source/original fixture retain 29/29
+comments. Pinned 205 source/66 test inventory and paths, earlier provenance,
+uppercase declarations and no-new-source/test-warning identities pass. Identical
+native consumers retain raw/multicast/context/cancellation/scheduled failure and
+rejection replay behavior before/after. Held raw/multicast admission allocation
+medians fall 72 -> 48 bytes/call; native SubmitAsync remains approximately 504.
+Three 100000-operation samples per mode/version after 5000 warmups, Release/tiering
+disabled, cached delegates and a pre-sized real queue with one blocked worker.
+Exact small sample additions and scope/exclusions are documented in the design;
+no throughput claim. Ignored evidence: unordered-raw-action-*.trx/JSON in TestResults
+and artifacts/unordered-raw-action-validation/*-consumer.log, *-perf.log and
+allocation-evidence.json. Final measurement probes successfully drain accepted work.
+Earlier bulk-stop teardowns were explicitly terminated, never counted as passes.
 
 Source statuses stay 58 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 16 in progress. Next: review UnorderedThreadPoolEventExecutor RawWork's
-Action-to-Runnable round trip and submission cancellation/stop ownership, then
-remaining executor producer/backend and source/native reviews in dependency order.
-Whole common and untested platforms remain open; portable sources build without
-PortingBatch.
+66 pending / 16 in progress. Next: fix observed repeated heap scanning during bulk
+StopCore cancellation, reviewing snapshot withdrawal, cancellation reentry and
+termination publication before settling results. Runnable test harness migration
+and remaining backend/source/native/platform reviews remain. The earlier focused
+Global xUnit completion stall is still unresolved; current matrices completed.
+Only three canonical records updated, no new MD. Whole common remains open.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

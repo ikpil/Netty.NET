@@ -17,7 +17,6 @@ using System;
 using System.Threading.Tasks;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 using Void = Netty.NET.Common.Concurrent.Void;
 
@@ -39,12 +38,12 @@ public class UnorderedThreadPoolEventExecutorTest
             // CLR Barrier retains the two-party rendezvous; the exchanged Void value is always null.
             using var exchanger = new Barrier(2);
             using var latch = new CountdownEvent(3);
-            executor.Execute(Runnables.Create(() =>
+            executor.Execute(() =>
             {
                 try { Assert.True(exchanger.SignalAndWait(TimeSpan.FromSeconds(5))); }
                 catch (ThreadInterruptedException e) { throw new InvalidOperationException("interrupted", e); }
                 latch.Signal();
-            }));
+            });
             var future = executor.SubmitAsync(() => latch.Signal());
             using var completion = new ExecutorCompletion(executor, future);
             using var listener = completion.Register(_ => latch.Signal());

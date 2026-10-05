@@ -151,7 +151,8 @@ public class QueuedActionContractTest
     private sealed class ForwardingExecutor(UnorderedThreadPoolEventExecutor owner) : AbstractEventExecutor
     {
         internal int Executions;
-        public override void Execute(Action task) { Executions++; owner.Execute(task); }
+        internal Func<Action, Action> Transform = static task => task;
+        public override void Execute(Action task) { Executions++; owner.Execute(Transform(task)); }
         public override bool InEventLoop(Thread thread) => owner.InEventLoop(thread);
         public override bool IsShuttingDown() => owner.IsShuttingDown();
         public override bool IsShutdown() => owner.IsShutdown();
@@ -199,6 +200,99 @@ public class QueuedActionContractTest
             release.Set();
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero)
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task UnorderedCancellationOwnsOnlyTheExactIssuedSubmissionCallback(int transform)
+    {
+        var owner = new UnorderedThreadPoolEventExecutor(1);
+        var executor = new ForwardingExecutor(owner);
+        int prefixes = 0, calls = 0;
+        Action prefix = () => prefixes++;
+        executor.Transform = transform switch
+        {
+            0 => static task => task,
+            1 => static task => (Action)task.Clone(),
+            _ => task => prefix + task
+        };
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        using var cancellation = new CancellationTokenSource();
+        try
+        {
+            owner.Execute(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); });
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+            Task result = executor.SubmitAsync(() => calls++, cancellation.Token);
+            Assert.Equal(1, owner.PendingTaskCount);
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => result);
+            Assert.Equal(transform == 0 ? 0 : 1, owner.PendingTaskCount);
+            release.Set();
+            await owner.SubmitAsync(static () => { }, TestContext.Current.CancellationToken)
+                .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.Equal(0, calls);
+            Assert.Equal(transform == 2 ? 1 : 0, prefixes);
+        }
+        finally
+        {
+            release.Set();
+            await owner.StopAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UnorderedRawRejectionClaimsOneInvocationAndPreservesPolicyFailure(bool throwPolicy)
+    {
+        Action rejected = null;
+        var policyFailure = new InvalidOperationException("policy failure");
+        Thread policyThread = null;
+        var owner = new UnorderedThreadPoolEventExecutor(1, (task, _) =>
+        {
+            rejected = task;
+            policyThread = Thread.CurrentThread;
+            task();
+            task();
+            if (throwPolicy) throw policyFailure;
+        });
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        int calls = 0, tailCalls = 0, prefixes = 0;
+        try
+        {
+            owner.Execute(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); });
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+            owner.Shutdown();
+            Action callback = () => calls++;
+            callback += () => throw new InvalidOperationException("raw multicast failure");
+            callback += () => tailCalls++;
+            if (throwPolicy) Assert.Same(policyFailure, Assert.Throws<InvalidOperationException>(() => owner.Execute(callback)));
+            else owner.Execute(callback);
+            Assert.Same(Thread.CurrentThread, policyThread);
+            Assert.NotNull(rejected);
+            Action replay = (Action)rejected.Clone();
+            Action composed = (() => prefixes++) + replay;
+            composed();
+            Assert.Equal(1, calls);
+            Assert.Equal(0, tailCalls);
+            Assert.Equal(1, prefixes);
+            Assert.Equal(0, owner.PendingTaskCount);
+            Task stopping = owner.StopAsync();
+            rejected();
+            release.Set();
+            await stopping.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            replay();
+            Assert.Equal(1, calls);
+        }
+        finally
+        {
+            release.Set();
+            await owner.StopAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }
     }
 

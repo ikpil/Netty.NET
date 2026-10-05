@@ -5662,3 +5662,44 @@ build, including deferred release/context/restart. Evidence:
 artifacts/watcher-action-validation/{before-consumer-build,native-consumer}.log.
 Final matrices, 55 original source/test comments and inventory checks are in the
 current common-porting checkpoint. Broader executor/backend/platform review remains open.
+
+## Unordered native raw callback storage
+
+Pinned UnorderedThreadPoolEventExecutor.java:224-228,293-305 separates raw execution
+from Promise decoration to avoid notification recursion. Its inherited JDK scheduled
+queue retains claiming/rejection/run-state ownership (local Corretto 21.0.11
+ScheduledThreadPoolExecutor.java:298-345,704-706). Pinned NonStickyEventExecutorGroupTest
+uses this pool; transport DefaultChannelPipelineTest.java:1549 uses two workers.
+The reopened CLR problem was native Action being demoted through Unwrap into an
+AnonymousRunnable and then another raw membership.
+
+Execute now resolves only the exact issued INativeSubmission envelope, or stores
+the supplied Action directly in RawWork. Interlocked callback claiming, pool run-state
+checks, rejection policy/failure, deadline/sequence, caller context and shutdown release
+remain. Work keeps private invocation/cancellation/membership operations without
+Runnable inheritance or three redundant outer => this properties. Workers and
+rejection policies invoke membership directly. Native result/scheduled backends keep
+their existing sole Task/TCS and cancellation ownership. ExecutorWork.Unwrap remains
+for unfinished Runnable test harnesses; common production no longer uses it.
+
+Five CLR cases cover exact/copied/composed submitted callback cancellation and raw
+rejection replay/policy failure. The original five-test pool fixture uses Action with
+unchanged identities/scenarios/assertions and eight comments. Identical non-friend
+before/after native consumers retain raw/multicast behavior, raw/result/restored context,
+native cancellation, scheduled failure identity and terminated rejection replay.
+
+Release Windows/x64/net10.0, tiering disabled: one blocked worker, pre-sized actual
+priority queue (915003 slots), cached Action/multicast/Func<int>, 5000 warmups and
+three 100000-admission samples per mode/version. Raw and multicast medians fall
+72 -> 48 bytes/call by removing the 24-byte wrapper; SubmitAsync remains approximately
+504 bytes/call. Some samples have 16-56 additional bytes over 100000 operations;
+exact rows are retained. Queue capacity, cold setup, new delegates, result observation,
+execution/drain/shutdown/logging and throughput are outside allocation measurement.
+Final probes close admission and drain accepted work successfully. Earlier bulk-stop
+teardowns were explicitly terminated, never counted as passing probes: StopCore
+cancels the snapshot before clearing, so native cancellation hooks repeatedly scan
+the heap behind many raw entries. This observed bulk-stop cost is the next unit,
+including cancellation/reentry/termination publication review; no fix is claimed here.
+Evidence: artifacts/unordered-raw-action-validation/{before,after}-{consumer,perf}.log,
+allocation-evidence.json and *-perf-bulk-stop.log. Current matrices/comment/inventory
+checks are in common-porting.md; whole backend/common/platform review remains open.
