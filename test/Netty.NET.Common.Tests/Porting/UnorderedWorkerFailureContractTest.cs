@@ -79,13 +79,13 @@ public class UnorderedWorkerFailureContractTest
             Assert.Equal(2, creations);
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
             Assert.Same(executor.Termination, executor.ShutdownGracefullyAsync());
-            Assert.Empty(executor.ShutdownNow());
+            Assert.Same(executor.Termination, executor.StopAsync());
             await Assert.ThrowsAsync<RejectedExecutionException>(() => executor.SubmitAsync(() => 10));
         }
         finally
         {
             release.Set();
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -135,7 +135,7 @@ public class UnorderedWorkerFailureContractTest
         {
             escapedRelease.Set();
             survivorRelease.Set();
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -165,7 +165,7 @@ public class UnorderedWorkerFailureContractTest
         finally
         {
             release.Set();
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -194,7 +194,7 @@ public class UnorderedWorkerFailureContractTest
         finally
         {
             release.Set();
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -211,7 +211,7 @@ public class UnorderedWorkerFailureContractTest
         var factory = new Factory(task =>
         {
             if (Interlocked.Increment(ref creations) == 1) return new Thread(task.Invoke) { IsBackground = true };
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             pendingInsideFactory = !executor.Termination.IsCompleted;
             if (throwAfterClosing) throw expected;
             return null;
@@ -239,7 +239,7 @@ public class UnorderedWorkerFailureContractTest
         finally
         {
             release.Set();
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -274,6 +274,6 @@ public class UnorderedWorkerFailureContractTest
             Assert.Same(escaping.Error, await Assert.ThrowsAsync<InvalidOperationException>(() => escaping.Result));
             Assert.True(executor.IsTerminated());
         }
-        finally { release.Set(); executor.ShutdownNow(); Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5))); }
+        finally { release.Set(); _ = executor.StopAsync(); Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5))); }
     }
 }

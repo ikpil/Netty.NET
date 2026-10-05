@@ -137,7 +137,7 @@ public class NonStickyEventExecutorGroupTest
     private static void Stop(IEventExecutorGroup group)
     {
         group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
-        if (!group.AwaitTermination(TimeSpan.FromSeconds(5))) group.ShutdownNow();
+        if (!group.AwaitTermination(TimeSpan.FromSeconds(5))) _ = group.StopAsync();
         Assert.True(group.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 

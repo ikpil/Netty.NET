@@ -30,7 +30,7 @@ public class UnorderedGracefulShutdownContractTest
             Assert.False(executor.IsShuttingDown());
             Assert.False(executor.Termination.IsCompleted);
         }
-        finally { executor.ShutdownNow(); }
+        finally { _ = executor.StopAsync(); }
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class UnorderedGracefulShutdownContractTest
         {
             release.Set();
             lastRelease.Set();
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
         }
     }
@@ -109,7 +109,7 @@ public class UnorderedGracefulShutdownContractTest
         finally
         {
             release.Set();
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
         }
     }
@@ -133,7 +133,7 @@ public class UnorderedGracefulShutdownContractTest
             Assert.True(scheduled.IsCanceled);
             Assert.True(executor.IsTerminated());
         }
-        finally { executor.ShutdownNow(); }
+        finally { _ = executor.StopAsync(); }
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class UnorderedGracefulShutdownContractTest
             Assert.True(submitted.IsCanceled);
             Assert.True(scheduled.IsCanceled);
         }
-        finally { executor.ShutdownNow(); }
+        finally { _ = executor.StopAsync(); }
     }
 
     [Theory]
@@ -174,12 +174,12 @@ public class UnorderedGracefulShutdownContractTest
             Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
             Assert.True(executor.IsShuttingDown());
             Assert.False(executor.IsShutdown());
-            if (immediate) executor.ShutdownNow();
+            if (immediate) _ = executor.StopAsync();
             else executor.Shutdown();
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(executor.IsTerminated());
         }
-        finally { executor.ShutdownNow(); }
+        finally { _ = executor.StopAsync(); }
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public class UnorderedGracefulShutdownContractTest
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(retained.IsCanceled);
         }
-        finally { executor.ShutdownNow(); }
+        finally { _ = executor.StopAsync(); }
     }
 
     [Theory]
@@ -221,26 +221,26 @@ public class UnorderedGracefulShutdownContractTest
             Assert.False(executor.IsShutdown());
             Assert.False(executor.Termination.IsCompleted);
         }
-        finally { executor.ShutdownNow(); }
+        finally { _ = executor.StopAsync(); }
     }
 
     [Fact]
-    public async Task ShutdownNowPeriodicHandlesCannotRestartATerminatedPool()
+    public async Task RepeatedStopCannotRestartATerminatedPeriodicPool()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
         Task repeating = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromDays(1));
-        Action handle = Assert.Single(executor.ShutdownNow());
+        Assert.Same(executor.Termination, executor.StopAsync());
         try
         {
             Task termination = executor.Termination;
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
-            handle();
+            Assert.Same(executor.Termination, executor.StopAsync());
             Assert.True(executor.IsTerminated());
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.True(repeating.IsCanceled);
             Assert.Same(termination, executor.Termination);
         }
-        finally { executor.ShutdownNow(); }
+        finally { _ = executor.StopAsync(); }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

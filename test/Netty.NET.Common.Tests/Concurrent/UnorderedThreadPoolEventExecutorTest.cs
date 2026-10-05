@@ -117,7 +117,7 @@ public class UnorderedThreadPoolEventExecutorTest
     private static void Stop(UnorderedThreadPoolEventExecutor executor)
     {
         executor.ShutdownGracefullyAsync();
-        if (!executor.AwaitTermination(TimeSpan.FromSeconds(5))) executor.ShutdownNow();
+        if (!executor.AwaitTermination(TimeSpan.FromSeconds(5))) _ = executor.StopAsync();
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 }

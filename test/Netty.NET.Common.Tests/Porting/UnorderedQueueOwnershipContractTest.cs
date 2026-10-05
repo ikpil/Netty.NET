@@ -39,7 +39,7 @@ public class UnorderedQueueOwnershipContractTest
         }
         finally
         {
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -65,15 +65,15 @@ public class UnorderedQueueOwnershipContractTest
         }
         finally
         {
-            owner.ShutdownNow();
-            other.ShutdownNow();
+            _ = owner.StopAsync();
+            _ = other.StopAsync();
             Assert.True(owner.AwaitTermination(TimeSpan.FromSeconds(5)));
             Assert.True(other.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
 
     [Fact]
-    public void ShutdownNowRawHandlesCannotExecuteRemovedCallbacks()
+    public void RepeatedStopCannotExecuteRemovedRawCallbacks()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
         int calls = 0;
@@ -81,20 +81,16 @@ public class UnorderedQueueOwnershipContractTest
         {
             executor.Execute(Runnables.Create(() => ++calls));
             executor.Execute(Runnables.Create(() => ++calls));
-            var removed = executor.ShutdownNow();
-            Assert.Equal(2, removed.Count);
-            foreach (Action handle in removed)
-            {
-                Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(handle);
-                handle();
-                handle();
-            }
+            Assert.Equal(2, executor.PendingTaskCount);
+            Task stopped = executor.StopAsync();
+            Assert.Same(executor.Termination, stopped);
+            Assert.Same(stopped, executor.StopAsync());
             Assert.Equal(0, calls);
             Assert.Equal(0, executor.PendingTaskCount);
         }
         finally
         {
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -127,7 +123,7 @@ public class UnorderedQueueOwnershipContractTest
         }
         finally
         {
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             await executor.Termination.WaitAsync(TimeSpan.FromSeconds(5));
         }
     }

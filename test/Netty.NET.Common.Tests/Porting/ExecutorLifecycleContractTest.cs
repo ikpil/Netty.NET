@@ -528,7 +528,7 @@ public class ExecutorLifecycleContractTest
     }
 
     [Fact]
-    public async Task ChildEnumerationCannotMutateGroupAndShutdownNowUsesInheritedBehavior()
+    public async Task ChildEnumerationCannotMutateGroupAndNativeStopRequestsEveryChild()
     {
         var children = new[] { new Child(), new Child(), new Child() };
         var group = new ManualGroup(children);
@@ -536,8 +536,9 @@ public class ExecutorLifecycleContractTest
         Assert.Equal(children, group.Iterator());
         Assert.Equal(3, group.ExecutorCount());
         for (int i = 0; i < 12; ++i) Assert.Same(children[i % 3], group.Next());
-        Assert.Empty(group.ShutdownNow());
+        Assert.Same(group.Termination, group.StopAsync());
         Assert.True(group.IsShutdown());
+        Assert.All(children, child => Assert.Equal(1, child.stopRequests));
         foreach (var child in children) child.termination.SetResult();
         await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
     }
@@ -618,7 +619,7 @@ public class ExecutorLifecycleContractTest
     }
 
     [Fact]
-    public async Task DefaultGroupCreatesParentedExecutorsAndCanUseShutdownNow()
+    public async Task DefaultGroupCreatesParentedExecutorsAndCanUseNativeStop()
     {
         var group = new DefaultEventExecutorGroup(2, new DefaultThreadFactory("group-contract", true),
             16, RejectedExecutionHandlers.Reject());
@@ -630,7 +631,7 @@ public class ExecutorLifecycleContractTest
             var first = group.SubmitAsync<Thread>(() => Thread.CurrentThread);
             var second = group.SubmitAsync<Thread>(() => Thread.CurrentThread);
             Assert.NotSame(first.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult(), second.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
-            Assert.Empty(group.ShutdownNow());
+            Assert.Same(group.Termination, group.StopAsync());
             Assert.True(group.AwaitTermination(TimeSpan.FromSeconds(5)));
             await group.Termination.WaitAsync(TimeSpan.FromSeconds(5));
         }

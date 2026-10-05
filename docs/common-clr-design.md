@@ -4882,3 +4882,263 @@ adapter remain optimization work. Ignored evidence: artifacts/unordered-action-v
 contains pinned Java/native/compat probes, allocation-evidence.json and logs;
 TestResults contains the final default/targeted TRX, comment audit and inventory
 summary. Whole common, inherited APIs and broader platforms remain incomplete.
+
+## Retiring the inherited shutdown list API
+
+Follow-up to the prior native callback checkpoint: the remaining ShutdownNow
+surface duplicated native StopAsync and exposed canceled memberships as callbacks.
+Pinned all-module searches find only common declarations/delegation, transport
+test forwarding, NioEventLoopTest's stop request ignoring the list, and a benchmark
+stub. SingleThreadEventExecutorTest's executorService is a separate JDK harness.
+No original Netty consumer inspects or replays this list. Thus these signatures
+are retired rather than retained solely for CLR probe compatibility. StopAsync
+already expresses the required stop request, underlying backend policy and actual
+Termination identity; it does not create another result or expose queue entries.
+
+The port-only IExecutorService interface is removed. IEventExecutorGroup inherits
+IExecutor directly and owns shutdown state and the retained synchronous wait.
+The inherited JDK comments for those members remain in place; the full retired
+interface and removed Netty member comments are archived below. Synchronous
+Shutdown/AwaitTermination and protected queue hooks remain distinct open reviews.
+
+Ordered StopAsync still drains accepted work and cancels schedules; unordered
+withdraws waiting work, releases captures and requests only its owned StopToken.
+The existing cancellable snapshot is still required because task cancellation
+can remove membership during enumeration. Only the unused public handle/list
+branch is removed. NonSticky forwards native stop; groups request every child.
+Persistent completion, callback-failure propagation and observer cancellation
+keep their existing policy. Native StopAsync costs are measured before/after,
+without attributing the discarded legacy branch's cost to native execution.
+
+Original Java-derived tests only switch CLR fallback cleanup to a native stop
+request; scenarios, synchronization, workloads, assertions and original comments
+remain. CLR-only list/replay probes now test native canceled results, capture
+release, queue withdrawal and repeated/concurrent stop. Their renamed identities
+are explicitly mapped; no original case is removed or remapped. The former legacy
+stop theory row becomes a repeated native request, including the same two queued
+results and one owned stop notification. Existing stop and raw rejection probes
+remain. There is no replacement diagnostic list or test-only public API.
+
+Retired Netty member comment provenance (pinned e66ce34777f9c4a0c57ac74bb97396ca2f54b43c):
+
+common/src/main/java/io/netty/util/concurrent/AbstractEventExecutor.java:80
+
+```java
+    /**
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    @Override
+    @Deprecated
+    public List<Runnable> shutdownNow() {
+        shutdown();
+        return Collections.emptyList();
+    }
+```
+
+common/src/main/java/io/netty/util/concurrent/AbstractEventExecutorGroup.java:80
+
+```java
+    /**
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    @Override
+    @Deprecated
+    public List<Runnable> shutdownNow() {
+        shutdown();
+        return Collections.emptyList();
+    }
+```
+
+common/src/main/java/io/netty/util/concurrent/EventExecutorGroup.java:74
+
+```java
+    /**
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    @Override
+    @Deprecated
+    List<Runnable> shutdownNow();
+```
+
+common/src/main/java/io/netty/util/concurrent/NonStickyEventExecutorGroup.java:106
+
+```java
+    @Override
+    public List<Runnable> shutdownNow() {
+        return group.shutdownNow();
+    }
+```
+
+common/src/main/java/io/netty/util/concurrent/UnorderedThreadPoolEventExecutor.java:137
+
+```java
+    @Override
+    public List<Runnable> shutdownNow() {
+        List<Runnable> tasks = super.shutdownNow();
+        terminationFuture.trySuccess(null);
+        return tasks;
+    }
+```
+
+Prior CLR spellings and JDK-interface comment provenance (retired APIs):
+
+src/Netty.NET.Common/Concurrent/AbstractEventExecutor.cs
+
+```csharp
+    /**
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    [Obsolete]
+    public virtual List<Action> ShutdownNow()
+    {
+        Shutdown();
+        return new List<Action>();
+    }
+```
+
+src/Netty.NET.Common/Concurrent/AbstractEventExecutorGroup.cs
+
+```csharp
+    /**
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    [Obsolete]
+    public virtual List<Action> ShutdownNow()
+    {
+        Shutdown();
+        return new List<Action>();
+    }
+```
+
+src/Netty.NET.Common/Concurrent/NonStickyEventExecutorGroup.cs
+
+```csharp
+    //@SuppressWarnings("deprecation")
+    public List<Action> ShutdownNow()
+    {
+        return _group.ShutdownNow();
+    }
+```
+
+src/Netty.NET.Common/Concurrent/IEventExecutorGroup.cs
+
+```csharp
+    /**
+     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     */
+    [Obsolete]
+    new List<Action> ShutdownNow();
+```
+
+src/Netty.NET.Common/Concurrent/IExecutorService.cs
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Netty.NET.Common.Concurrent;
+
+public interface IExecutorService : IExecutor
+{
+    /**
+     * Initiates an orderly shutdown in which previously submitted
+     * tasks are executed, but no new tasks will be accepted.
+     * Invocation has no additional effect if already shut down.
+     *
+     * <p>This method does not wait for previously submitted tasks to
+     * complete execution.  Use {@link #awaitTermination awaitTermination}
+     * to do that.
+     *
+     * @throws SecurityException if a security manager exists and
+     *         shutting down this ExecutorService may manipulate
+     *         threads that the caller is not permitted to modify
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
+     *         or the security manager's {@code checkAccess} method
+     *         denies access.
+     */
+    void Shutdown();
+
+    /**
+     * Attempts to stop all actively executing tasks, halts the
+     * processing of waiting tasks, and returns a list of the tasks
+     * that were awaiting execution.
+     *
+     * <p>This method does not wait for actively executing tasks to
+     * terminate.  Use {@link #awaitTermination awaitTermination} to
+     * do that.
+     *
+     * <p>There are no guarantees beyond best-effort attempts to stop
+     * processing actively executing tasks.  For example, typical
+     * implementations will cancel via {@link Thread#interrupt}, so any
+     * task that fails to respond to interrupts may never terminate.
+     *
+     * @return list of tasks that never commenced execution
+     * @throws SecurityException if a security manager exists and
+     *         shutting down this ExecutorService may manipulate
+     *         threads that the caller is not permitted to modify
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
+     *         or the security manager's {@code checkAccess} method
+     *         denies access.
+     */
+    List<Action> ShutdownNow();
+
+    /**
+     * Returns {@code true} if this executor has been shut down.
+     *
+     * @return {@code true} if this executor has been shut down
+     */
+    bool IsShutdown();
+
+    /**
+     * Returns {@code true} if all tasks have completed following shut down.
+     * Note that {@code isTerminated} is never {@code true} unless
+     * either {@code shutdown} or {@code shutdownNow} was called first.
+     *
+     * @return {@code true} if all tasks have completed following shut down
+     */
+    bool IsTerminated();
+
+    /**
+     * Blocks until all tasks have completed execution after a shutdown
+     * request, or the timeout occurs, or the current thread is
+     * interrupted, whichever happens first.
+     *
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @return {@code true} if this executor terminated and
+     *         {@code false} if the timeout elapsed before termination
+     * @throws ThreadInterruptedException if interrupted while waiting
+     */
+    bool AwaitTermination(TimeSpan timeout);
+
+}
+
+```
+
+src/Netty.NET.Common/Concurrent/UnorderedThreadPoolEventExecutor.cs
+
+```csharp
+    // Legacy stop diagnostics expose native callbacks over canceled memberships.
+    // StopAsync remains the result-bearing stop API; these callbacks cannot revive work.
+    public List<Action> ShutdownNow() => StopCore(true);
+```
+
+Final retirement validation: default Debug/Release each 2,120 cases with 2,106
+passed, zero failed and the same 14 skips; targeted Debug/checked Release each 304
+passed. Original 759 non-Porting identities/outcomes remain; 19 CLR-only mappings
+are explicit in stop-api-identity-and-inventory.json. All 271 comment rows have no
+coverage loss, including 92/92 comments across the seven changed owners. The
+identical non-friend consumer's native ordered/unordered/wrapper/group stops pass
+before and after; only the exported-surface removal check fails before/passes after.
+Suffix and four isolated worker-failure modes pass using the updated scripts.
+Native stop allocation is unchanged at approximately 1,976 bytes per whole
+null-worker construction/admission/StopAsync/drain operation: Release, tiered
+compilation disabled, 5,000 warmups and three 100,000-operation samples per version.
+No exception/result-bearing submission or controlled throughput claim. Ignored
+consumer/perf evidence: artifacts/stop-api-validation/allocation-evidence.json.
+Raw rejection and ordered replay/SubmitAsync callback costs remain; the deleted
+legacy returned-handle path no longer exists. Broader API/queue/common review
+remains open. Earlier legacy-list callback sections describe historical checkpoints.

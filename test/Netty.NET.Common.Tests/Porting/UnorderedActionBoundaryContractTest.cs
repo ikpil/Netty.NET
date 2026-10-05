@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -22,12 +21,17 @@ public class UnorderedActionBoundaryContractTest
         => Assert.True(gate.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
 
     [Fact]
-    public void PublicStopHandlesAndUnorderedRejectionUseNativeDelegates()
+    public void PublicStopUsesThePersistentTaskWithoutAJdkServiceOrMembershipList()
     {
-        Type[] types = [typeof(IExecutorService), typeof(IEventExecutorGroup), typeof(AbstractEventExecutor),
+        Type[] types = [typeof(IEventExecutorGroup), typeof(AbstractEventExecutor),
             typeof(AbstractEventExecutorGroup), typeof(NonStickyEventExecutorGroup), typeof(UnorderedThreadPoolEventExecutor)];
         foreach (Type type in types)
-            Assert.Equal(typeof(List<Action>), type.GetMethod("ShutdownNow").ReturnType);
+        {
+            Assert.Null(type.GetMethod("ShutdownNow"));
+            Assert.Equal(typeof(Task), type.GetMethod("StopAsync").ReturnType);
+        }
+        Assert.Null(typeof(IEventExecutorGroup).Assembly.GetType("Netty.NET.Common.Concurrent.IExecutorService"));
+        Assert.Equal(typeof(IExecutor), Assert.Single(typeof(IEventExecutorGroup).GetInterfaces()));
         var callbacks = typeof(UnorderedThreadPoolEventExecutor).GetConstructors()
             .SelectMany(constructor => constructor.GetParameters()).Where(parameter => parameter.Name == "handler").ToArray();
         Assert.Equal(2, callbacks.Length);
@@ -177,7 +181,7 @@ public class UnorderedActionBoundaryContractTest
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static (UnorderedThreadPoolEventExecutor Owner, List<Action> Handles, Task Result, WeakReference Payload)
+    private static (UnorderedThreadPoolEventExecutor Owner, Task Termination, Task Result, WeakReference Payload)
         StopCapturedPayload(string kind)
     {
         var owner = new UnorderedThreadPoolEventExecutor(1, new NoWorkerFactory());
@@ -191,18 +195,18 @@ public class UnorderedActionBoundaryContractTest
             case "schedule": result = owner.ScheduleAsync(() => GC.KeepAlive(payload), TimeSpan.FromDays(1)); break;
             default: throw new ArgumentException(nameof(kind));
         }
-        return (owner, owner.ShutdownNow(), result, weak);
+        return (owner, owner.StopAsync(), result, weak);
     }
 
     [Theory]
     [InlineData("raw")]
     [InlineData("submit")]
     [InlineData("schedule")]
-    public async Task RetainedNativeShutdownHandlesReleasePayloadsAndCannotReviveCanceledWork(string kind)
+    public async Task RetainedNativeStopResultsReleasePayloadsAndConcurrentRequestsCannotReviveWork(string kind)
     {
         var stopped = StopCapturedPayload(kind);
-        Action handle = Assert.Single(stopped.Handles);
-        await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(handle, TestContext.Current.CancellationToken)))
+        await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(
+                () => Assert.Same(stopped.Termination, stopped.Owner.StopAsync()), TestContext.Current.CancellationToken)))
             .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         await stopped.Owner.Termination.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         if (kind != "raw") Assert.True(stopped.Result.IsCanceled);
@@ -212,21 +216,22 @@ public class UnorderedActionBoundaryContractTest
             GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
         }
         Assert.False(stopped.Payload.IsAlive);
-        GC.KeepAlive(stopped.Owner); GC.KeepAlive(stopped.Handles); GC.KeepAlive(stopped.Result);
+        GC.KeepAlive(stopped.Owner); GC.KeepAlive(stopped.Termination); GC.KeepAlive(stopped.Result);
     }
 
     [Fact]
-    public async Task NonStickyWrapperExposesTheSameCanceledNativeMembershipPolicy()
+    public async Task NonStickyWrapperForwardsTheSameNativeStopAndCancellationPolicy()
     {
         var pool = new UnorderedThreadPoolEventExecutor(1, new NoWorkerFactory());
-        IExecutorService group = new NonStickyEventExecutorGroup(pool);
+        IEventExecutorGroup group = new NonStickyEventExecutorGroup(pool);
         int calls = 0;
         group.Execute(() => calls++);
-        List<Action> handles = group.ShutdownNow();
-        Action handle = Assert.Single(handles);
-        handle(); handle();
+        Assert.Equal(1, pool.PendingTaskCount);
+        Task stopping = group.StopAsync();
+        Assert.Same(pool.Termination, stopping);
+        Assert.Same(stopping, group.StopAsync());
         Assert.Equal(0, calls);
         await pool.Termination.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-        Assert.Empty(group.ShutdownNow());
+        Assert.Same(stopping, group.StopAsync());
     }
 }

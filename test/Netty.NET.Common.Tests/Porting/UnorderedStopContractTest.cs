@@ -17,7 +17,7 @@ public class UnorderedStopContractTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ImmediateStopRequestsTheOptedInTokenAndCancelsWaitingWork(bool legacy)
+    public async Task ImmediateStopRequestsTheOptedInTokenAndCancelsWaitingWork(bool repeatRequest)
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new ManualResetEventSlim();
@@ -30,7 +30,8 @@ public class UnorderedStopContractTest
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task queued = executor.SubmitAsync(() => Assert.Fail("Removed work ran"));
             Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
-            if (legacy) Assert.Equal(2, executor.ShutdownNow().Count);
+            Assert.Equal(2, executor.PendingTaskCount);
+            if (repeatRequest) Assert.Same(executor.Termination, executor.StopAsync());
             Task stopping = executor.StopAsync();
             Assert.Same(executor.Termination, stopping);
             Assert.Same(stopping, executor.StopAsync());

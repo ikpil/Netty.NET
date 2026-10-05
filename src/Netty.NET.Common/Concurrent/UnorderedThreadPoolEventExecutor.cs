@@ -177,17 +177,12 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     /// </remarks>
     public Task StopAsync()
     {
-        StopCore(false);
+        StopCore();
         return Termination;
     }
 
-    // Legacy stop diagnostics expose native callbacks over canceled memberships.
-    // StopAsync remains the result-bearing stop API; these callbacks cannot revive work.
-    public List<Action> ShutdownNow() => StopCore(true);
-
-    private List<Action> StopCore(bool returnHandles)
+    private void StopCore()
     {
-        List<Action> tasks;
         Task notifications = null;
         using (UninterruptibleMonitor.Enter(gate))
         {
@@ -202,7 +197,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     notifications = stopSource.CancelAsync();
             }
             Work[] pending = queue.UnorderedItems.Select(item => item.Element).ToArray();
-            tasks = returnHandles ? pending.Select(work => new Action(work.outer.Run)).ToList() : null;
             // Queue handles are membership, not results. Every removed reservation
             // settles cancellation or releases its raw callback before termination.
             // Canceling a submission can remove itself through its membership
@@ -216,7 +210,6 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             using (ExecutionContext.IsFlowSuppressed() ? default : ExecutionContext.SuppressFlow())
                 _ = ObserveStopCallbacksAsync(notifications);
         }
-        return tasks;
     }
 
     private async Task ObserveStopCallbacksAsync(Task notifications)

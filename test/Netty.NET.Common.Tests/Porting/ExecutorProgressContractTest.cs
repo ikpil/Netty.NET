@@ -367,7 +367,7 @@ public class ExecutorProgressContractTest
         try
         {
             Assert.Equal(1, pool.PendingTaskCount);
-            pool.ShutdownNow();
+            _ = pool.StopAsync();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await reporter.NotificationsCompleted.WaitAsync(TimeSpan.FromSeconds(2)));
             Assert.Equal(0, callbacks);

@@ -124,43 +124,48 @@ Optimization follows behavioral verification and measured performance.
 
 The current default suite executes **2120 cases** on Windows/x64/net10.0:
 **2106 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: unordered-action-full-debug.trx and unordered-action-full-release.trx.
-All 2109 prior identities/outcomes, 759 original non-Porting cases and every skip
-remain. Eleven native unordered cases cover Action policy/shared stop shape,
-concurrent replay, caller thread/owner, immediate/graceful termination boundaries,
-throwing/discard policies, stop reentry, canceled payload lifetime and NonSticky.
-Six Porting fixtures adapt handle types/invocation syntax; original Java-derived
-fixture identities, assertions and comments are unchanged.
-Unordered constructors now accept Action<Action, UnorderedThreadPoolEventExecutor>;
-shared legacy ShutdownNow returns List<Action> over canceled memberships.
-No additional result owner, replay envelope, raw context capture or thread interrupt
-is introduced. Native SubmitAsync/ScheduleAsync still report admission failures.
-The pinned execute/NonNotifyRunnable Java shim exposes an existing CanRun gap:
-saved/newly rejected callbacks could start after actual termination. Identical CLR
-probes run two callbacks before and zero after, matching Java. Graceful pending
-drain permits one replay; immediate stop and completed termination prevent it.
-An identical non-friend native C# consumer fails before with CS1660/CS0029 and
-passes after. Pinned all-module consumers and legacy retirement limits are in
-common-clr-design.md#native-unordered-rejection-and-legacy-stop-callbacks.
-Targeted Debug and checked Release each pass 217 cases, no failures or skips.
-All 271 original comment rows have no coverage loss; five modified source owners
-retain 72/72 pinned comments. Inventory/paths, prior comment/provenance, uppercase
-declarations and no-new-warning checks pass. No exclusions or Markdown files added.
-Source statuses remain 57 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 17 in progress; unordered and broader native design remain in progress.
-Release allocation comparison (tiered compilation disabled, identical sources,
-5,000 warmups, three 100,000-operation samples): raw closed rejection rises from
-72 to 136 bytes; whole null-worker pool construction/admission/one-handle stop
-lifecycle rises from 2,088 to 2,152 bytes. Each adds 64 bytes for a bound Action.
-No exception/result-bearing submission, accepted-execution or throughput claim.
-This and the prior 96-byte ordered replay/SubmitAsync adapters remain optimization
-work. Ignored records: unordered-action-identity-and-inventory.json, comment audit
-and final TRX matrices in TestResults; pinned Java/native/compat probes and
-allocation-evidence.json in artifacts/unordered-action-validation.
-Next: remaining protected queue hooks and inherited JDK/legacy shutdown review;
-preserve identity, capacity, ownership, cancellation and subclass policies while
-reducing native adapter costs. Whole common and untested platforms remain open.
-Full portable sources build without PortingBatch.
+Evidence: stop-api-full-debug.trx and stop-api-full-release.trx.
+All 759 original non-Porting identities/outcomes and every skip remain. Of the
+prior 2120 cases, 2101 identities stay unchanged; 19 CLR-only legacy list/service
+probes are explicitly remapped to native canceled results, withdrawn callbacks,
+repeated/concurrent stop and captured payload release. No case is dropped and no
+original case is renamed or remapped. Counts alone are not the conservation check.
+The two original fixtures only change fallback cleanup to StopAsync; original
+workloads, synchronization, assertions and comments remain.
+ShutdownNow and the port-only IExecutorService are removed after pinned all-module
+review finds no Netty consumer inspecting/replaying the returned pending list.
+IEventExecutorGroup now inherits IExecutor directly and owns lifecycle/state/wait
+members. Native StopAsync/Termination preserve ordered drain, scheduled cancellation,
+unordered withdrawal/owned StopToken, every-child requests and backend failures.
+No replacement diagnostic list, additional result owner or thread interrupt.
+Original and previous CLR comments for retired members remain in canonical design
+provenance; retained JDK state/wait comments move beside the native group members.
+See common-clr-design.md#retiring-the-inherited-shutdown-list-api.
+Targeted Debug and checked Release each pass 304 cases, no failures or skips.
+The identical independent native consumer preserves stop policies before/after;
+its removal check fails before and passes after. Updated suffix probe confirms
+actual termination and an un-interrupted custom thread-factory suffix. Isolated
+worker-failure probes pass throw/null/already-started/logger modes. The scripts'
+stale lowercase/generated Runnable API calls are updated to current native APIs.
+All 271 original comment rows have no coverage loss; the seven changed source/test
+owners retain 92/92 pinned comments. Inventory/paths, archived provenance, uppercase
+declarations, unchanged statuses and no-new-warning checks pass. No exclusions or
+Markdown files added. Source statuses remain 57 verified / 50 CLR replacement /
+15 not applicable / 66 pending / 17 in progress; broader design stays in progress.
+Native StopAsync allocation comparison (Release, tiered compilation disabled,
+identical sources, 5,000 warmups, three 100,000-operation samples): whole null-worker
+pool construction/raw admission/native stop/actual drain costs approximately 1,976
+bytes per operation both before and after. Removing the unused list branch is not
+a native-path optimization claim; raw rejection and ordered replay/SubmitAsync
+adapter costs remain. No exception/result-bearing submission or throughput claim.
+Ignored evidence: stop-api-identity-and-inventory.json, comment audit and TRX matrices
+in TestResults; native/consumer/allocation records in artifacts/stop-api-validation;
+suffix and isolated worker-failure outputs in artifacts/stop-api-suffix and
+artifacts/stop-api-worker-failure.
+Next: migrate remaining protected queue hooks against actual transport consumers
+while preserving membership identity, bounded admission, waking and cancellation;
+review synchronous Shutdown/AwaitTermination separately. Whole common and untested
+platforms remain open. Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

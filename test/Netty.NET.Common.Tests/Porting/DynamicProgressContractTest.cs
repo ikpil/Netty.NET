@@ -248,7 +248,7 @@ public class DynamicProgressContractTest
             }
             else reporter.Report(new TransferProgress(1));
             Assert.Equal(1, pool.PendingTaskCount);
-            pool.ShutdownNow();
+            _ = pool.StopAsync();
             foreach (var task in new[] { reporter.NotificationsCompleted, first.NotificationsCompleted, second.NotificationsCompleted })
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, callbacks);
@@ -258,7 +258,7 @@ public class DynamicProgressContractTest
         finally
         {
             release.Set();
-            pool.ShutdownNow();
+            _ = pool.StopAsync();
             await active.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(await Task.Run(() => pool.AwaitTermination(TimeSpan.FromSeconds(5))));
         }

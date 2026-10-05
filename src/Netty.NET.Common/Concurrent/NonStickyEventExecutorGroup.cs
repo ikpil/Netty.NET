@@ -100,12 +100,6 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
         _group.Shutdown();
     }
 
-    //@SuppressWarnings("deprecation")
-    public List<Action> ShutdownNow()
-    {
-        return _group.ShutdownNow();
-    }
-
     public IEventExecutor Next()
     {
         return NewExecutor(_group.Next());

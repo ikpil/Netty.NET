@@ -15,29 +15,28 @@ $library = [Security.SecurityElement]::Escape((Resolve-Path -LiteralPath $Librar
 "@ | Set-Content (Join-Path $probeRoot 'Probe.csproj') -Encoding utf8
 @'
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using var entered = new ManualResetEventSlim();
 using var release = new ManualResetEventSlim();
 var factory = new Factory();
 var executor = new UnorderedThreadPoolEventExecutor(1, factory);
 try
 {
-    executor.execute(Runnables.Create(() => { entered.Set(); while (!release.IsSet) Thread.SpinWait(64); }));
+    executor.Execute(() => { entered.Set(); while (!release.IsSet) Thread.SpinWait(64); });
     if (!entered.Wait(TimeSpan.FromSeconds(5))) return 2;
-    executor.shutdownNow();
+    _ = executor.StopAsync();
     release.Set();
-    if (!executor.awaitTermination(TimeSpan.FromSeconds(5)) || !factory.Worker.Join(TimeSpan.FromSeconds(5))) return 3;
-    Console.WriteLine($"terminated={executor.isTerminated()}; factorySuffixInterrupted={factory.Interrupted}");
+    if (!executor.AwaitTermination(TimeSpan.FromSeconds(5)) || !factory.Worker.Join(TimeSpan.FromSeconds(5))) return 3;
+    Console.WriteLine($"terminated={executor.IsTerminated()}; factorySuffixInterrupted={factory.Interrupted}");
     return factory.Interrupted ? 1 : 0;
 }
-finally { release.Set(); executor.shutdownNow(); }
+finally { release.Set(); _ = executor.StopAsync(); }
 sealed class Factory : IThreadFactory
 {
     internal Thread Worker;
     internal bool Interrupted;
-    public Thread newThread(IRunnable work) => Worker = new Thread(() =>
+    public Thread NewThread(Action work) => Worker = new Thread(() =>
     {
-        work.run();
+        work();
         try { Thread.Sleep(1); }
         catch (ThreadInterruptedException) { Interrupted = true; }
     }) { IsBackground = true };

@@ -432,11 +432,11 @@ public class NativeSchedulingContractTest
     }
 
     [Fact]
-    public async Task PoolShutdownNowCancelsNativeWorkRemovedFromItsQueue()
+    public async Task PoolStopCancelsNativeWorkRemovedFromItsQueue()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         Task task = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
-        executor.ShutdownNow();
+        _ = executor.StopAsync();
         Assert.True(task.IsCanceled);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
         await Stop(executor);

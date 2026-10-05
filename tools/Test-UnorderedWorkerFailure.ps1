@@ -22,7 +22,6 @@ $library = [Security.SecurityElement]::Escape((Join-Path $repositoryRoot 'src/Ne
 "@ | Set-Content (Join-Path $probeRoot 'Probe.csproj') -Encoding utf8
 @'
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal.Logging;
 using System.Reflection;
 
@@ -31,14 +30,14 @@ internal static class Program
     static async Task<int> Main(string[] args)
     {
         string mode = args[0];
-        if (mode == "logger") InternalLoggerFactory.setDefaultFactory(new LoggingFactory());
+        if (mode == "logger") InternalLoggerFactory.SetDefaultFactory(new LoggingFactory());
         var expected = new InvalidOperationException("replacement factory failure");
         var factory = new Factory(mode, expected);
         var executor = new UnorderedThreadPoolEventExecutor(1, factory);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var failed = new EscapingSubmission(entered, release);
-        executor.execute(failed);
+        ExecutorWork.Dispatch(executor, failed);
         if (!entered.Wait(TimeSpan.FromSeconds(5))) return 40;
         Task<int> queued = executor.SubmitAsync(() => 7);
         Task<int> delayed = executor.ScheduleAsync(() => 8, TimeSpan.FromDays(1));
@@ -54,14 +53,14 @@ internal static class Program
                 (mode is not ("throw" or "logger") || ReferenceEquals(queuedFailure, expected)) &&
                 (mode != "started" || queuedFailure is ThreadStateException) &&
                 (mode != "logger" || ThrowingLogger.Calls >= 2) &&
-                executor.isShutdown() && executor.isTerminated() && executor.WorkerCount == 0 && executor.PendingTaskCount == 0;
-            Console.WriteLine($"{mode}: claimed={claimed.GetType().Name}; queued={queuedFailure.GetType().Name}; terminated={executor.isTerminated()}; correct={correct}");
+                executor.IsShutdown() && executor.IsTerminated() && executor.WorkerCount == 0 && executor.PendingTaskCount == 0;
+            Console.WriteLine($"{mode}: claimed={claimed.GetType().Name}; queued={queuedFailure.GetType().Name}; terminated={executor.IsTerminated()}; correct={correct}");
             return correct ? 0 : 42;
         }
         catch (Exception error)
         {
             Console.WriteLine($"{mode}: {error}");
-            executor.shutdownNow();
+            _ = executor.StopAsync();
             return 41;
         }
     }
@@ -76,9 +75,9 @@ internal static class Program
     sealed class Factory(string mode, Exception failure) : IThreadFactory
     {
         int count;
-        public Thread newThread(IRunnable task)
+        public Thread NewThread(Action task)
         {
-            if (Interlocked.Increment(ref count) == 1) return new Thread(task.run) { IsBackground = true };
+            if (Interlocked.Increment(ref count) == 1) return new Thread(task.Invoke) { IsBackground = true };
             if (mode is "throw" or "logger") throw failure;
             if (mode == "null") return null;
             var started = new Thread(() => { }) { IsBackground = true };
@@ -90,7 +89,7 @@ internal static class Program
 
     sealed class LoggingFactory : IInternalLoggerFactory
     {
-        public IInternalLogger newInstance(string name) => DispatchProxy.Create<IInternalLogger, ThrowingLogger>();
+        public IInternalLogger NewInstance(string name) => DispatchProxy.Create<IInternalLogger, ThrowingLogger>();
     }
 
     sealed class EscapingSubmission(ManualResetEventSlim entered, ManualResetEventSlim release) : INativeSubmission
@@ -101,7 +100,7 @@ internal static class Program
         public bool IsCanceled => Result.IsCanceled;
         public void CancelForShutdown() => completion.TrySetCanceled();
         public void Reject(Exception error) => completion.TrySetException(error);
-        public void run() { entered.Set(); release.Wait(); throw Error; }
+        public void Run() { entered.Set(); release.Wait(); throw Error; }
     }
 }
 
@@ -110,7 +109,7 @@ public class ThrowingLogger : DispatchProxy
     public static int Calls;
     protected override object Invoke(MethodInfo method, object[] args)
     {
-        if (method.Name == "warn") { Interlocked.Increment(ref Calls); throw new InvalidOperationException("logging provider failed"); }
+        if (method.Name == "Warn") { Interlocked.Increment(ref Calls); throw new InvalidOperationException("logging provider failed"); }
         return method.ReturnType == typeof(bool) ? false : method.ReturnType == typeof(string) ? "probe" : null;
     }
 }

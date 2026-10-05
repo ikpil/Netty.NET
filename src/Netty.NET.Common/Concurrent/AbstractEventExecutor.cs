@@ -108,16 +108,6 @@ public abstract class AbstractEventExecutor : IEventExecutor
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    public virtual List<Action> ShutdownNow()
-    {
-        Shutdown();
-        return new List<Action>();
-    }
-
-    /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
-     */
-    [Obsolete]
     public abstract void Shutdown();
 
     public abstract bool IsShuttingDown();

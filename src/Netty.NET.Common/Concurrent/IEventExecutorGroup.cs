@@ -26,7 +26,7 @@ namespace Netty.NET.Common.Concurrent;
  * life-cycle and allows shutting them down in a global fashion.
  *
  */
-public interface IEventExecutorGroup : IExecutorService
+public interface IEventExecutorGroup : IExecutor
 {
     /**
      * Returns {@code true} if and only if all {@link EventExecutor}s managed by this {@link EventExecutorGroup}
@@ -92,16 +92,58 @@ public interface IEventExecutorGroup : IExecutorService
     Task Termination { get; }
 
     /**
-     * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
+     * Initiates an orderly shutdown in which previously submitted
+     * tasks are executed, but no new tasks will be accepted.
+     * Invocation has no additional effect if already shut down.
+     *
+     * <p>This method does not wait for previously submitted tasks to
+     * complete execution.  Use {@link #awaitTermination awaitTermination}
+     * to do that.
+     *
+     * @throws SecurityException if a security manager exists and
+     *         shutting down this ExecutorService may manipulate
+     *         threads that the caller is not permitted to modify
+     *         because it does not hold {@link
+     *         java.lang.RuntimePermission}{@code ("modifyThread")},
+     *         or the security manager's {@code checkAccess} method
+     *         denies access.
      */
-    [Obsolete]
-    new void Shutdown();
-
     /**
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
+    /// <remarks>The SecurityManager conditions above describe the JDK source; CLR has no SecurityManager.</remarks>
     [Obsolete]
-    new List<Action> ShutdownNow();
+    void Shutdown();
+
+    /**
+     * Returns {@code true} if this executor has been shut down.
+     *
+     * @return {@code true} if this executor has been shut down
+     */
+    bool IsShutdown();
+
+    /**
+     * Returns {@code true} if all tasks have completed following shut down.
+     * Note that {@code isTerminated} is never {@code true} unless
+     * either {@code shutdown} or {@code shutdownNow} was called first.
+     *
+     * @return {@code true} if all tasks have completed following shut down
+     */
+    /// <remarks>Native StopAsync and ShutdownGracefullyAsync also initiate termination.</remarks>
+    bool IsTerminated();
+
+    /**
+     * Blocks until all tasks have completed execution after a shutdown
+     * request, or the timeout occurs, or the current thread is
+     * interrupted, whichever happens first.
+     *
+     * @param timeout the maximum time to wait
+     * @param unit the time unit of the timeout argument
+     * @return {@code true} if this executor terminated and
+     *         {@code false} if the timeout elapsed before termination
+     * @throws ThreadInterruptedException if interrupted while waiting
+     */
+    bool AwaitTermination(TimeSpan timeout);
 
     /**
      * Returns one of the {@link EventExecutor}s managed by this {@link EventExecutorGroup}.

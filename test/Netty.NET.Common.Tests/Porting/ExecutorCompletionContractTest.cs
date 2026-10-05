@@ -309,7 +309,7 @@ public class ExecutorCompletionContractTest
     {
         var pool = new UnorderedThreadPoolEventExecutor(1, (_, _) => { });
         IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).Next() : pool;
-        pool.ShutdownNow();
+        _ = pool.StopAsync();
         using var observation = new ExecutorCompletion(executor, Task.CompletedTask);
         using var registration = observation.Register(_ => { });
         await Assert.ThrowsAsync<RejectedExecutionException>(async () =>
@@ -374,7 +374,7 @@ public class ExecutorCompletionContractTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ShutdownNowCancelsAQueuedNativeNotificationWithoutAFutureWrapper(bool orderedChild)
+    public async Task StopCancelsAQueuedNativeNotificationWithoutAFutureWrapper(bool orderedChild)
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var started = new ManualResetEventSlim();
@@ -392,9 +392,8 @@ public class ExecutorCompletionContractTest
         try
         {
             Assert.Equal(1, executor.PendingTaskCount);
-            Action queued = Assert.Single(executor.ShutdownNow());
-            Assert.False((object)queued is System.Threading.Tasks.Task);
-            queued();
+            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.Termination, executor.StopAsync());
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);

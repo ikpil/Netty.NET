@@ -216,7 +216,7 @@ public class NativeExecutorTaskContractTest
     }
 
     [Fact]
-    public async Task UnorderedShutdownNowCancelsTheNativeSubmissionRemovedFromTheQueue()
+    public async Task UnorderedStopCancelsTheNativeSubmissionRemovedFromTheQueue()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var release = new ManualResetEventSlim();
@@ -233,9 +233,8 @@ public class NativeExecutorTaskContractTest
             int calls = 0;
             Task queued = executor.SubmitAsync(() => { ++calls; });
             Assert.Equal(1, executor.PendingTaskCount);
-            Action queuedWork = Assert.Single(executor.ShutdownNow());
-            Assert.False((object)queuedWork is System.Threading.Tasks.Task);
-            queuedWork();
+            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.Termination, executor.StopAsync());
             Assert.True(queued.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await queued);
             Assert.Equal(0, calls);
@@ -244,7 +243,7 @@ public class NativeExecutorTaskContractTest
         {
             release.Set();
             await running.WaitAsync(TimeSpan.FromSeconds(5));
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -324,7 +323,7 @@ public class NativeExecutorTaskContractTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task PoolShutdownNowCancelsEveryNativeSubmissionInsideARemovedNonStickyRunner(bool forwarded)
+    public async Task PoolStopCancelsEveryNativeSubmissionInsideARemovedNonStickyRunner(bool forwarded)
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         IEventExecutorGroup underlying = forwarded ? new ForwardingExecutor(executor) : executor;
@@ -344,9 +343,8 @@ public class NativeExecutorTaskContractTest
             Task first = child.SubmitAsync(() => { ++calls; });
             Task second = child.SubmitAsync(() => { ++calls; });
             Assert.Equal(1, executor.PendingTaskCount);
-            Action runner = Assert.Single(executor.ShutdownNow());
-            Assert.False((object)runner is System.Threading.Tasks.Task);
-            runner();
+            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.Termination, executor.StopAsync());
             Assert.True(first.IsCanceled);
             Assert.True(second.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);
@@ -357,7 +355,7 @@ public class NativeExecutorTaskContractTest
         {
             release.Set();
             await running.WaitAsync(TimeSpan.FromSeconds(5));
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -389,7 +387,7 @@ public class NativeExecutorTaskContractTest
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Task first = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); calls.Add(1); });
             Task second = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); calls.Add(2); });
-            if (immediate) executor.ShutdownNow();
+            if (immediate) _ = executor.StopAsync();
             else executor.Shutdown();
             release.Set();
             Assert.Equal(42, await running.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -411,7 +409,7 @@ public class NativeExecutorTaskContractTest
         {
             release.Set();
             await running.WaitAsync(TimeSpan.FromSeconds(5));
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -479,7 +477,7 @@ public class NativeExecutorTaskContractTest
         }
         finally
         {
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }

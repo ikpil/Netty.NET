@@ -29,7 +29,7 @@ public class UnorderedWorkerIdentityContractTest
         }
         finally
         {
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }
@@ -73,7 +73,7 @@ public class UnorderedWorkerIdentityContractTest
         }
         finally
         {
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
             if (worker != null) Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
         }
@@ -116,7 +116,7 @@ public class UnorderedWorkerIdentityContractTest
         finally
         {
             release.Set();
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
         }
     }

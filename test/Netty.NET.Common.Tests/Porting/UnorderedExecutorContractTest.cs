@@ -31,7 +31,7 @@ public class UnorderedExecutorContractTest
 
     private static void Stop(UnorderedThreadPoolEventExecutor executor)
     {
-        executor.ShutdownNow();
+        _ = executor.StopAsync();
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 
@@ -117,7 +117,7 @@ public class UnorderedExecutorContractTest
     }
 
     [Fact]
-    public void ShutdownNowReturnsQueueWorkAndCancelsItsNativeResult()
+    public void StopWithdrawsQueueWorkAndCancelsItsNativeResult()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
@@ -132,9 +132,8 @@ public class UnorderedExecutorContractTest
             }, executor.StopToken);
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1));
-            Action reservation = Assert.Single(executor.ShutdownNow());
-            Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(reservation);
-            reservation();
+            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Same(executor.Termination, executor.StopAsync());
             Assert.ThrowsAny<OperationCanceledException>(() => running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.True(running.IsCanceled);
             Assert.True(delayed.IsCanceled);
@@ -786,7 +785,7 @@ public class UnorderedExecutorContractTest
             Assert.False(operation.IsCompleted);
             executor.Shutdown();
             Assert.False(executor.AwaitTermination(TimeSpan.FromMilliseconds(1)));
-            executor.ShutdownNow();
+            _ = executor.StopAsync();
             Assert.True(operation.IsCanceled);
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, executor.WorkerCount);
