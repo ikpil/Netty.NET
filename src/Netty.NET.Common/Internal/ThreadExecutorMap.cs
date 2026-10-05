@@ -15,7 +15,6 @@
  */
 
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using System;
 
 namespace Netty.NET.Common.Internal;

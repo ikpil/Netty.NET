@@ -16,7 +16,6 @@
 using System;
 using System.Runtime.ExceptionServices;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests;
 

@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests;

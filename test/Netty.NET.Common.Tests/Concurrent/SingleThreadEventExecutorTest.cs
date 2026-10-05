@@ -22,7 +22,6 @@ using System.Threading;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
 using Xunit;
-using Void = Netty.NET.Common.Concurrent.Void;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 

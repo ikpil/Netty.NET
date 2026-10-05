@@ -18,7 +18,6 @@ using System;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
 using Xunit;
-using Void = Netty.NET.Common.Concurrent.Void;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 
@@ -31,15 +30,16 @@ public class ImmediateExecutorTest
     [Fact]
     public void TestExecuteNonNullRunnable()
     {
-        // CLR: Task.RunSynchronously is the BCL equivalent of executing JDK FutureTask.run.
-        var task = new Task<Void>(() =>
+        // CLR: run the fresh, uncanceled Task once through the native Action hook.
+        var task = new Task(() =>
         {
             // NOOP
-            return null;
         });
         ImmediateExecutor.INSTANCE.Execute(() => task.RunSynchronously());
         Assert.True(task.IsCompleted);
         Assert.False(task.IsCanceled);
-        Assert.Null(task.GetAwaiter().GetResult());
+        // CLR: an operation with no result returns Task, without a fabricated Void value.
+        task.GetAwaiter().GetResult();
+        Assert.True(task.IsCompletedSuccessfully);
     }
 }

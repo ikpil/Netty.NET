@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;

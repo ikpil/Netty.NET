@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;

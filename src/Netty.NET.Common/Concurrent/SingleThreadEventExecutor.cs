@@ -22,7 +22,6 @@ using System.Threading.Tasks;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 

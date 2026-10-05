@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 // The deprecated original pool backend remains part of the execution contract matrix.
 #pragma warning disable CS0612

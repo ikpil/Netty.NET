@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 

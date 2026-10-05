@@ -5929,3 +5929,62 @@ provenance, and their fixtures already use Task/TCS/native notifications. Contin
 reviewing native notification/backend/runtime contracts and remaining public helper
 purposes (including supplier/Void helpers), then pending inventory in dependency
 order; this does not complete common or close the earlier focused Global runner stall.
+
+## Native supplier and no-result cleanup
+
+Pinned BooleanSupplier/UncheckedBooleanSupplier/IntSupplier remain CLR Func<bool>/
+Func<int> replacements. DefaultSelectStrategy.java:30-32 invokes selection lazily;
+DefaultMaxMessagesRecvByteBufAllocator.java:147-150 preserves short-circuit read
+conditions, and DefaultMaxBytesRecvByteBufAllocator.java:86-88 preserves its byte
+budget before invoking the predicate. These transport consumers are reviewed,
+not implemented by this common cleanup. CLR delegates may throw; checked/unchecked
+Java interface distinctions need no separate CLR hierarchy.
+
+Unused Functional.ISupplier<T>/TrueSupplier/FalseSupplier are leftovers of the
+previous replacement and are now removed; no new predicate facade is introduced.
+The old entry's removal decision applied to separate primitive interfaces and
+left these generic helpers behind. The Functional namespace's unused imports
+are removed, including the queue-cost tool. Current MpscIntQueue Fill already uses
+Func<int> and retains its reservation/callback-count/FIFO contract.
+
+The invented Concurrent.Void type and six fixture aliases are removed.
+ImmediateExecutorTest's original FutureTask<Void>(Runnable, null) becomes a
+non-generic Task. It verifies completion, non-cancellation and successful observation
+without an invented result object. Both original cases and the NOOP comment remain.
+Other fixture aliases were unused. No new cases or changes to native producer state.
+The original supplier license/constants are already archived under the native
+primitive supplier decision. These two earlier bool-spelling CLR comments are
+retained here with their deleted ISupplier.cs provenance:
+
+```csharp
+/**
+ * Represents a supplier of {@code bool}-valued results.
+ */
+/**
+ * Gets a bool value.
+ * @return a bool value.
+ * @throws Exception If an exception occurs.
+ */
+```
+
+The old fixture comment overstated general FutureTask.run equivalence: native
+RunSynchronously is used here only for a fresh, uncanceled Task invoked once.
+Its retired CLR wording is preserved for provenance:
+
+```csharp
+// CLR: Task.RunSynchronously is the BCL equivalent of executing JDK FutureTask.run.
+```
+
+Validation on Windows/x64/net10.0: full Debug/Release each retain 2161 identities,
+2147 pass/zero failures/14 unchanged skips; targeted Debug/checked Release each
+121 pass with no skips. All 759 original non-Porting results and all 271 comment
+rows remain; three supplier owners plus ImmediateExecutorTest retain 15 original
+comments. Inventory/status/casing/no-new-source/test-warning checks pass. The queue
+cost tool builds with its required LibraryPath pointing at the new library.
+Identical public consumers before/after preserve native submissions/context/token/
+notifications/timer behavior, verify Func<int> reservation-limited invocation and
+FIFO, and observe successful non-generic Task execution. Reflection separately
+reports four obsolete helper types become zero. No performance claim or new test
+cases. Evidence: artifacts/native-supplier-void-validation, native-supplier-void-*.trx/
+JSON in TestResults. Only the three canonical records change; no new MD. Remaining
+native backend/platform and pending inventory reviews stay open.

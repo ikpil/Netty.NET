@@ -14,7 +14,6 @@
  * under the License.
  */
 
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using System;
 
