@@ -6646,3 +6646,131 @@ Only three canonical records, no new MD or performance claim. Whole common and
 the preceding focused Global xUnit completion stall remain open; blocking whole
 mode was not rerun for this unit. Continue remaining native sequence/public API,
 executor/backend/platform and pending inventory reviews in dependency order.
+
+## Native synchronous domain selection
+
+Pinned Mapping.java:17-27 is a single synchronous conversion method. Real callers
+are SniHandler.java:206-225 (calls once, converts a thrown failure to failed lookup)
+and QUIC BoringSSLTlsextServernameCallback.java:23-48 (calls once, preserves a null
+selection). Func<TIn,TOut> retains stateful method groups, variance, caller-thread
+execution, result identity, arbitrary null results and exception propagation.
+Remove IMapping; DomainNameMapping retains its Map method for method-group use.
+Existing async selection remains a separate Task/cancellation boundary; neither
+SNI nor QUIC is implemented by this common unit.
+
+DomainWildcardMappingBuilder.java:50-169 uses put replacement, insertion order,
+normalized exact lookup before first-dot wildcard lookup, non-null registration
+values and an independent shallow build snapshot. The preceding custom
+LinkedHashMap.Add already replaces duplicate keys; this is preserved behavior,
+not a repaired duplicate-registration defect. Native OrderedDictionary<string,T>
+with StringComparer.Ordinal supplies explicit order and indexer replacement.
+The constructor copy preserves registration order (Microsoft API reference:
+https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ordereddictionary-2.-ctor?view=net-10.0).
+Builder mutation does not affect a published snapshot; stored value references
+and default identity remain shared. Concurrent mutation of the builder itself
+is not supported or claimed; snapshot reads may run concurrently.
+
+Build returns Func<string,T>, bound to a private snapshot's Map method. The
+previously exported ImmutableDomainWildcardMapping helper retires into that
+private implementation, rather than another public Java-style adapter. A native
+delegate's own ToString follows the CLR; the original diagnostic scenario now
+checks its snapshot Target.ToString, keeping the original expected text/assertion
+and eight original case identities. Seven nonempty diagnostic rows agree across
+Java and CLR. Empty snapshot text repairs the observed Java/baseline trailing
+separator truncation: map:}) becomes map: {}). This is an explicit diagnostic
+correction, not a preserved original quirk or buffer/protocol certification.
+
+Executed full pinned Mapping/DomainWildcardMappingBuilder/DomainNameMapping sources
+in an isolated Java probe with exact extracted ObjectUtil.checkNotNull and
+StringUtil dependency methods: 224 lookup rows plus eight later-registration
+snapshot rows agree across Java/baseline/native CLR. Six registration failures
+agree after native null/argument exception mapping. This includes normalized
+duplicate replacement, both exact/wildcard orders, first-dot/deep/empty-label and
+trailing-dot rules, null/default input and bücher/punycode interoperability.
+Identical direct Func consumer fails baseline compilation and runs native
+selection/identity/snapshot/method-group/ordered-storage checks. Exported interface
+and snapshot helpers both go one -> zero; Build is now a native Func boundary.
+Native snapshot metadata confirms OrderedDictionary storage, no legacy wrapper.
+
+The original first-dot rule still accepts an empty leading query label; this unit
+does not invent complete DNS validation. Shared normalization remains the existing
+CLR IdnMapping policy in DomainNameMapping, which is still in progress. The bücher
+fixture does not certify all Java IDNA2003/native IDNA differences or platforms.
+Broader legacy domain builder/normalization/API review is the next domain unit.
+
+All original wildcard builder comments (8) and original fixture license (1) remain
+in code; generic Mapping's three comments and retired CLR variants follow.
+
+```java
+/*
+ * Copyright 2014 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Maintains the mapping from the objects of one type to the objects of the other type.
+ */
+
+/**
+     * Returns mapped value of the specified input.
+     */
+```
+
+Retired CLR comment variants:
+
+```csharp
+/**
+     * Constructor with default initial capacity of the map holding the mappings
+     *
+     * @param defaultValue the default value for {@link Mapping#map(object)} )} to return
+     *                     when nothing matches the input
+     */
+
+/**
+     * Constructor with initial capacity of the map holding the mappings
+     *
+     * @param initialCapacity initial capacity for the internal map
+     * @param defaultValue    the default value for {@link Mapping#map(object)} to return
+     *                        when nothing matches the input
+     */
+
+/**
+     * Adds a mapping that maps the specified (optionally wildcard) host name to the specified output value.
+     * {@code null} values are forbidden for both hostnames and values.
+     * <p>
+     * <a href="https://tools.ietf.org/search/rfc6125#section-6.4">DNS wildcard</a> is supported as hostname. The
+     * wildcard will only match one sub-domain deep and only when wildcard is used as the most-left label.
+     *
+     * For example:
+     *
+     * <p>
+     *  *.netty.io will match xyz.netty.io but NOT abc.xyz.netty.io
+     * </p>
+     *
+     * @param hostname the host name (optionally wildcard)
+     * @param output   the output value that will be returned by {@link Mapping#map(object)}
+     *                 when the specified host name matches the specified input host name
+     */
+```
+
+Verification: default Debug/Release each 2272 discovered, 2258 passed/0 failed/14
+unchanged skips; all 2251 prior identities/outcomes and 759 original non-Porting
+cases retained. Affected baseline 60 passes remain in targeted Debug/checked
+Release 81 passes (21 new CLR cases); original assertion counts/case identities
+and 271 comment rows retained without loss. Scoped comment total 20 including
+the unchanged DomainNameMapping's eight comments. Source/test warning identities
+and casing unchanged. Raw evidence: artifacts/native-domain-mapping-validation
+and native-domain-mapping-* TRX/JSON. Whole blocking mode not rerun; whole common,
+backend/platform reviews and the prior focused Global completion stall remain
+open. No performance or additional-OS claim; only three existing records updated.

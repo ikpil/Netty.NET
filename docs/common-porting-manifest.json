@@ -397,9 +397,10 @@
       ],
       "evidence": [
         "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
-        "Actual string wildcard comparison uses explicit Ordinal prefix and bounded UTF-16 span equality; pinned short-host/empty prefix and raw suffix rules retained. 160 executed pinned Java domain rows agree including null/range outcomes. IDNA/full mapping API review remains open. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips."
+        "Actual string wildcard comparison uses explicit Ordinal prefix and bounded UTF-16 span equality; pinned short-host/empty prefix and raw suffix rules retained. 160 executed pinned Java domain rows agree including null/range outcomes. IDNA/full mapping API review remains open. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips.",
+        "Synchronous mapping interface removed after actual SNI/QUIC consumer review; eight original wildcard identities/assertions and all original comments retained. Native source and CLR-specific snapshot/order/identity cases validated; current common-porting.md and common-clr-design.md#native-synchronous-domain-selection record the scope. This does not close shared IDNA or full legacy domain review."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Native synchronous selection uses Func; domain Map remains a method group and original snapshot diagnostics are checked through delegate Target. Shared normalization/legacy builders remain under review.",
       "comments": {
         "upstreamCount": 8,
         "required": true,
@@ -427,18 +428,23 @@
     {
       "upstream": "common/src/main/java/io/netty/util/DomainWildcardMappingBuilder.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/DomainWildcardMappingBuilder.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/DomainWildcardMappingBuilder.cs",
+        "test/Netty.NET.Common.Tests/DomainWildcardMappingBuilderTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/DomainMappingNativeContractTest.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned SNI/QUIC consumers and full source/tests reviewed; exact Java/baseline/native probes agree on 224 lookup and eight snapshot rows plus six mapped registration failures; seven nonempty diagnostics agree, empty diagnostic repaired explicitly. Identical native Func consumer fails baseline compilation and passes native; exported interface/snapshot helpers retired and native ordered storage verified. Original eight wildcard case identities/assertions/license retained, 21 CLR cases added. Current full/targeted/comment/inventory results and remaining scope are in common-porting.md; source/consumer choices and original provenance in common-clr-design.md#native-synchronous-domain-selection; raw native-domain-mapping-* evidence. Shared normalization and full common remain open."
+      ],
+      "adaptation": "Native Func<TIn,TOut> replaces the single-method mapping interface; domain method groups and snapshot-bound delegates preserve synchronous selection/identity/state/failure. Wildcard builder uses ordinal OrderedDictionary indexer replacement and independent shallow snapshots, exact-before-first-dot matching, null/default conventions and private implementation ownership. Delegate ToString is native; original snapshot diagnostics retained with an explicit empty-text correction. Shared IDNA/legacy domain owners remain in progress.",
       "comments": {
         "upstreamCount": 8,
         "required": true,
-        "preservedCount": 3,
-        "missingCount": 5
+        "preservedCount": 8,
+        "missingCount": 0
       }
     },
     {
@@ -574,16 +580,20 @@
     {
       "upstream": "common/src/main/java/io/netty/util/Mapping.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/IMapping.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/DomainWildcardMappingBuilder.cs",
+        "test/Netty.NET.Common.Tests/Porting/DomainMappingNativeContractTest.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned SNI/QUIC consumers and full source/tests reviewed; exact Java/baseline/native probes agree on 224 lookup and eight snapshot rows plus six mapped registration failures; seven nonempty diagnostics agree, empty diagnostic repaired explicitly. Identical native Func consumer fails baseline compilation and passes native; exported interface/snapshot helpers retired and native ordered storage verified. Original eight wildcard case identities/assertions/license retained, 21 CLR cases added. Current full/targeted/comment/inventory results and remaining scope are in common-porting.md; source/consumer choices and original provenance in common-clr-design.md#native-synchronous-domain-selection; raw native-domain-mapping-* evidence. Shared normalization and full common remain open."
+      ],
+      "adaptation": "Native Func<TIn,TOut> replaces the single-method mapping interface; domain method groups and snapshot-bound delegates preserve synchronous selection/identity/state/failure. Wildcard builder uses ordinal OrderedDictionary indexer replacement and independent shallow snapshots, exact-before-first-dot matching, null/default conventions and private implementation ownership. Delegate ToString is native; original snapshot diagnostics retained with an explicit empty-text correction. Shared IDNA/legacy domain owners remain in progress.",
       "comments": {
         "upstreamCount": 3,
-        "required": true,
+        "required": false,
         "preservedCount": 3,
         "missingCount": 0
       }
@@ -5303,9 +5313,10 @@
         "test/Netty.NET.Common.Tests/DomainWildcardMappingBuilderTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "Synchronous mapping interface removed after actual SNI/QUIC consumer review; eight original wildcard identities/assertions and all original comments retained. Native source and CLR-specific snapshot/order/identity cases validated; current common-porting.md and common-clr-design.md#native-synchronous-domain-selection record the scope. This does not close shared IDNA or full legacy domain review."
       ],
-      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
+      "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class. Native synchronous selection uses Func; domain Map remains a method group and original snapshot diagnostics are checked through delegate Target. Shared normalization/legacy builders remain under review.",
       "comments": {
         "upstreamCount": 1,
         "required": true,

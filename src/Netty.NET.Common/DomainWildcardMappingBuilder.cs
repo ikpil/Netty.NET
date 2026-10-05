@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using Netty.NET.Common.Collections;
+using System.Text;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Common;
@@ -29,12 +29,12 @@ namespace Netty.NET.Common;
 public class DomainWildcardMappingBuilder<T> where T : class
 {
     private readonly T defaultValue;
-    private readonly IDictionary<string, T> map;
+    private readonly OrderedDictionary<string, T> map;
 
     /**
      * Constructor with default initial capacity of the map holding the mappings
      *
-     * @param defaultValue the default value for {@link Mapping#map(object)} )} to return
+     * @param defaultValue the default value for {@link Mapping#map(Object)} )} to return
      *                     when nothing matches the input
      */
     public DomainWildcardMappingBuilder(T defaultValue)
@@ -46,13 +46,13 @@ public class DomainWildcardMappingBuilder<T> where T : class
      * Constructor with initial capacity of the map holding the mappings
      *
      * @param initialCapacity initial capacity for the internal map
-     * @param defaultValue    the default value for {@link Mapping#map(object)} to return
+     * @param defaultValue    the default value for {@link Mapping#map(Object)} to return
      *                        when nothing matches the input
      */
     public DomainWildcardMappingBuilder(int initialCapacity, T defaultValue)
     {
         this.defaultValue = CheckNotNull(defaultValue, "defaultValue");
-        map = new LinkedHashMap<string, T>(initialCapacity);
+        map = new OrderedDictionary<string, T>(initialCapacity, StringComparer.Ordinal);
     }
 
     /**
@@ -69,13 +69,12 @@ public class DomainWildcardMappingBuilder<T> where T : class
      * </p>
      *
      * @param hostname the host name (optionally wildcard)
-     * @param output   the output value that will be returned by {@link Mapping#map(object)}
+     * @param output   the output value that will be returned by {@link Mapping#map(Object)}
      *                 when the specified host name matches the specified input host name
      */
     public DomainWildcardMappingBuilder<T> Add(string hostname, T output)
     {
-        map.Add(NormalizeHostName(hostname),
-            CheckNotNull(output, "output"));
+        map[NormalizeHostName(hostname)] = CheckNotNull(output, "output");
         return this;
     }
 
@@ -87,7 +86,7 @@ public class DomainWildcardMappingBuilder<T> where T : class
             throw new ArgumentException("Hostname '" + hostname + "' not valid");
         }
 
-        hostname = ImmutableDomainWildcardMapping<T>.Normalize(CheckNotNull(hostname, "hostname"));
+        hostname = DomainNameMapping<T>.NormalizeHostname(CheckNotNull(hostname, "hostname"));
         if (hostname[0] == '*')
         {
             if (hostname.Length < 3 || hostname[1] != '.')
@@ -106,8 +105,59 @@ public class DomainWildcardMappingBuilder<T> where T : class
      *
      * @return new {@link Mapping} instance
      */
-    public IMapping<string, T> Build()
+    // CLR: the result is a synchronous function over an independent, shallow snapshot.
+    // Delegate.ToString follows CLR behavior; its private Target retains the snapshot diagnostics.
+    public Func<string, T> Build()
     {
-        return new ImmutableDomainWildcardMapping<T>(defaultValue, map);
+        var snapshot = new ImmutableDomainWildcardMapping(defaultValue, map);
+        return snapshot.Map;
+    }
+
+    // The delegate owns a private snapshot; the builder and its future registrations are not captured.
+    private sealed class ImmutableDomainWildcardMapping
+    {
+        private readonly T defaultValue;
+        private readonly OrderedDictionary<string, T> map;
+
+        internal ImmutableDomainWildcardMapping(T defaultValue, OrderedDictionary<string, T> map)
+        {
+            this.defaultValue = defaultValue;
+            this.map = new OrderedDictionary<string, T>(map, StringComparer.Ordinal);
+        }
+
+        internal T Map(string hostname)
+        {
+            if (hostname != null)
+            {
+                hostname = DomainNameMapping<T>.NormalizeHostname(hostname);
+
+                // Let's try an exact match first
+                if (map.TryGetValue(hostname, out var value))
+                    return value;
+
+                // No exact match, let's try a wildcard match.
+                int index = hostname.IndexOf('.');
+                if (index != -1 && map.TryGetValue(hostname.Substring(index), out value))
+                    return value;
+            }
+
+            return defaultValue;
+        }
+
+        public override string ToString()
+        {
+            var text = new StringBuilder();
+            text.Append("ImmutableDomainWildcardMapping(default: ").Append(defaultValue).Append(", map: {");
+            bool first = true;
+            foreach (var entry in map)
+            {
+                if (!first) text.Append(", ");
+                first = false;
+                if (entry.Key[0] == '.') text.Append('*');
+                text.Append(entry.Key).Append('=').Append(entry.Value);
+            }
+
+            return text.Append("})").ToString();
+        }
     }
 }

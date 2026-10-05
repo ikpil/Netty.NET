@@ -32,7 +32,7 @@ namespace Netty.NET.Common;
  * </p>
  * @deprecated Use {@link DomainWildcardMappingBuilder}}
  */
-public class DomainNameMapping<T> : IMapping<string, T> where T : class
+public class DomainNameMapping<T> where T : class
 {
     protected readonly T _defaultValue;
     private readonly IDictionary<string, T> _map;

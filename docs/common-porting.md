@@ -122,40 +122,38 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-Default Debug/Release on Windows/x64/net10.0 each discover **2251 cases**:
-**2237 passed / 0 failed / 14 unchanged skips**. Evidence:
-native-byte-callback-full-debug.trx and native-byte-callback-full-release.trx.
-All 2228 prior identities/outcomes and 759 original non-Porting results remain;
-23 new byte callback cases, no identity remap/source exclusion/skip change.
+Windows/x64/net10.0 default Debug/Release each: **2272 discovered, 2258 passed /
+0 failed / 14 unchanged skips**. All 2251 prior identities/outcomes and 759 original
+non-Porting cases retained. Evidence: native-domain-mapping-full-{debug,release}.trx.
 
-AsciiString traversal now accepts Func<byte,bool>; the 13 shared delimiter predicates
-are readonly delegates. Four Java-shaped visitor/constant helpers are removed.
-State, caller thread, order, logical slice/stop indices, exception identity and
-shared views remain. Native null validation, unsigned bytes and intrinsic multicast
-return semantics are explicit. Source/consumer decisions:
-common-clr-design.md#native-byte-traversal-callbacks. Full AsciiString remains open.
+Synchronous mapping now uses Func<TIn,TOut>; IMapping retires and DomainNameMapping.Map
+remains directly usable as a method group. Wildcard Build returns a delegate bound
+to a private independent snapshot, replacing an exported implementation helper.
+Native ordinal OrderedDictionary preserves duplicate replacement and explicit
+registration order; exact-before-first-dot matching and stored reference identity
+remain. Source/consumer decisions, original comments and intentional diagnostic
+difference: common-clr-design.md#native-synchronous-domain-selection.
 
-Exact original Java classes/traversal methods agree with baseline/native CLR on
-6496 predicate/scan/visited-order rows; an independent CLR oracle also agrees.
-Eight null rows record intentional CLR argument-boundary changes. Identical direct
-Func consumer fails baseline compilation and compiles/runs native. Metadata confirms
-helper retirement and native overload/predicate shape; no compatibility adapter ships.
-All 11 prior memory fixture identities/scenarios/assertions/comments remain.
-Baseline Ascii selection: 335 pass; final targeted Debug/checked Release: 358 pass.
-Two original buffer delimiter vectors are verified through common-owned AsciiString
-tests with their license; this does not claim implementation of the buffer module.
+Executed full pinned Java owners agree with baseline/native CLR on 224 lookups,
+eight snapshot rows and six registration failures after exception mapping. Seven
+nonempty snapshot diagnostics agree; malformed empty text is explicitly repaired.
+Identical native consumer fails baseline compilation and passes native Func,
+snapshot/identity/method-group/native-storage checks. Baseline affected selection
+60 passes; final targeted Debug/checked Release 81 passes, with 21 added cases.
+All eight original wildcard case identities and assertion counts remain.
 
-All 271 comment rows without loss; 120 scoped common originals and the borrowed
-buffer license are retained. Inventory (205 source/66 test), paths, casing and
-no-new-warning identities pass. No performance claim. Evidence:
-artifacts/native-byte-callback-validation and native-byte-callback-* TRX/JSON.
-Only three canonical records updated; no new MD, generated evidence ignored.
+All 271 original comment rows without loss; 20 scoped originals preserved.
+Inventory still 205 source/66 test, paths/casing valid and no new source/test warning
+identities. Only three existing records updated; generated raw evidence ignored:
+artifacts/native-domain-mapping-validation and native-domain-mapping-* TRX/JSON.
 
-ByteProcessor/ByteProcessorUtils move pending -> CLR replacement: source statuses
-63 verified / 53 CLR replacement / 15 not applicable / 58 pending / 16 in progress.
-Broader sequence/public API, source/backend/runtime/platform and the prior focused
-Global xUnit completion stall stay open. Whole blocking mode is not rerun here;
-the previous dual-mode checkpoint remains historical. Whole common is unfinished.
+Mapping moves pending -> CLR replacement and wildcard builder pending -> verified
+for this recorded boundary. Source counts: 64 verified / 54 CLR replacement /
+15 not applicable / 56 pending / 16 in progress. Shared IDNA normalization and
+legacy domain builders remain open; continue their order/replacement/snapshot and
+native API review. Whole blocking mode was not rerun; whole common/backend/platform
+reviews and the earlier focused Global completion stall remain open. No additional
+OS or performance certification.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.
