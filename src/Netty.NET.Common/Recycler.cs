@@ -68,6 +68,19 @@ public static class Recycler
      * <p>
      */
     public static void UnpinOwner<T>(Recycler<T> recycler) where T : class => recycler.UnpinOwner();
+
+    // CLR counterpart of Netty's anonymous Recycler subclass: use a native
+    // factory delegate without an ObjectPool/ObjectCreator adapter hierarchy.
+    public static Recycler<T> Create<T>(Func<IRecyclerHandle<T>, T> factory) where T : class
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+        return new FactoryRecycler<T>(factory);
+    }
+
+    private sealed class FactoryRecycler<T>(Func<IRecyclerHandle<T>, T> factory) : Recycler<T> where T : class
+    {
+        protected override T NewObject(IRecyclerHandle<T> handle) => factory(handle);
+    }
 }
 
 /**

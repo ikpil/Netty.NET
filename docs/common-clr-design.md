@@ -6099,3 +6099,185 @@ inventory/paths/casing/no-new-source-test-warning checks pass. Evidence:
 artifacts/native-recyclable-list-validation and native-recyclable-list-* TRX/JSON.
 This owner moves pending -> verified (60 verified/64 pending). Whole common and
 backend/runtime/platform reviews stay open; only the three canonical records change.
+
+## Native recycler factory and handle
+
+Pinned ObjectPool.java explicitly deprecates Get/ObjectCreator/NewPool for removal
+in favor of Recycler. All-module factory searches find no ObjectPool.newPool caller;
+common PendingWrite/RecyclableArrayList, buffer PooledDirectByteBuf and transport
+PendingWriteQueue/ChannelOutboundBuffer plus handler FlowControlHandler use anonymous
+Recycler subclasses. ObjectPool.Handle is their shared return token, not a separate
+pool policy. Those downstream modules are evidence only, not claimed CLR ports.
+
+Recycler.Create<T>(Func<IRecyclerHandle<T>,T>) supplies the native factory delegate
+through a private sealed Recycler subclass, with no extra pool wrapper. It validates
+factory at creation, invokes it lazily on Get and passes the existing non-null handle.
+Factory exceptions propagate; pooling eligibility, ratio, identity/duplicate guards,
+owner batches, external returns and cleanup retain existing Recycler rules. T remains
+a reference type. Independent Recycler instances/types retain their own factories
+and storage; no Java erased generic/static sharing is assumed. The delegate caller
+must construct the value associated with its handle, just like NewObject overrides.
+
+PendingWrite and RecyclableArrayList now use this factory and IRecyclerHandle directly.
+The native handle declares Recycle without the deprecated Java compatibility base.
+Its two original Handle comments and license stay beside the ported declaration.
+Existing pooled-node payload/TCS transfer and list reference/history reset remain.
+Seven public facade/helper types from six files are retired: static/generic ObjectPool,
+IObjectCreator, IObjectPoolHandle, AnonymousObjectCreator, AnonymousRecycler and
+RecyclerObjectPool. No Java compatibility alias or new public implementation helper.
+
+The eight original ObjectPool comments remain here with pinned source locations.
+They describe the deprecated Java API; deprecation/links are upstream provenance,
+not instructions to restore a CLR facade:
+
+```java
+// ObjectPool.java:1
+/*
+ * Copyright 2019 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+// ObjectPool.java:20
+/**
+ * Light-weight object pool.
+ *
+ * @param <T> the type of the pooled object
+ */
+
+// ObjectPool.java:29
+/**
+     * Get a {@link Object} from the {@link ObjectPool}. The returned {@link Object} may be created via
+     * {@link ObjectCreator#newObject(Handle)} if no pooled {@link Object} is ready to be reused.
+     *
+     * @deprecated For removal. Please use {@link Recycler#get()} instead.
+     */
+
+// ObjectPool.java:38
+/**
+     * Handle for an pooled {@link Object} that will be used to notify the {@link ObjectPool} once it can
+     * reuse the pooled {@link Object} again.
+     * @param <T>
+     */
+
+// ObjectPool.java:44
+/**
+         * Recycle the {@link Object} if possible and so make it ready to be reused.
+         */
+
+// ObjectPool.java:50
+/**
+     * Creates a new Object which references the given {@link Handle} and calls {@link Handle#recycle(Object)} once
+     * it can be re-used.
+     *
+     * @param <T> the type of the pooled object
+     *
+     * @deprecated For removal. Please use {@link Recycler()} instead.
+     */
+
+// ObjectPool.java:61
+/**
+         * Creates an returns a new {@link Object} that can be used and later recycled via
+         * {@link Handle#recycle(Object)}.
+         *
+         * @param handle can NOT be null.
+         */
+
+// ObjectPool.java:70
+/**
+     * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link Object}
+     * that should be pooled.
+     *
+     * @deprecated For removal. Please use {@link Recycler()} instead.
+     */
+```
+
+Recycler.java:363 retains this Java compatibility annotation comment here; native
+IRecyclerHandle needs no such inheritance requirement:
+
+```java
+// Can't change this due to compatibility.
+```
+
+Six prior translated CLR comments from the retired facade declarations are also
+preserved, separately from the pinned originals:
+
+```csharp
+// src/Netty.NET.Common/Internal/ObjectPool.cs:21
+/**
+     * Creates a new {@link ObjectPool} which will use the given {@link ObjectCreator} to create the {@link object}
+     * that should be pooled.
+     */
+
+// src/Netty.NET.Common/Internal/ObjectPool.cs:42
+/**
+     * Get a {@link object} from the {@link ObjectPool}. The returned {@link object} may be created via
+     * {@link ObjectCreator#newObject(Handle)} if no pooled {@link object} is ready to be reused.
+     */
+
+// src/Netty.NET.Common/Internal/IObjectCreator.cs:3
+/**
+ * Creates a new object which references the given {@link Handle} and calls {@link Handle#recycle(object)} once
+ * it can be re-used.
+ *
+ * @param <T> the type of the pooled object
+ */
+
+// src/Netty.NET.Common/Internal/IObjectCreator.cs:11
+/**
+     * Creates an returns a new {@link object} that can be used and later recycled via
+     * {@link Handle#recycle(object)}.
+     *
+     * @param handle can NOT be null.
+     */
+
+// src/Netty.NET.Common/Internal/IObjectPoolHandle.cs:3
+/**
+ * Handle for an pooled {@link object} that will be used to notify the {@link ObjectPool} once it can
+ * reuse the pooled {@link object} again.
+ * @param <T>
+ */
+
+// src/Netty.NET.Common/Internal/IObjectPoolHandle.cs:10
+/**
+     * Recycle the {@link object} if possible and so make it ready to be reused.
+     */
+```
+
+Seven new CLR cases cover lazy/non-null handles, native null factory validation,
+same/cross-thread guarded returns, factory failure and independent same/closed-generic
+pool storage. Identical non-friend before/after consumers preserve handle guard/reuse,
+list export/reset and PendingWrite release/cause/producer transfer. Reflection records
+obsolete types 7 -> 0, native Create methods 0 -> 1, handle base interfaces 1 -> 0.
+This is API retirement and behavior conservation, not a claimed baseline runtime bug
+or performance improvement. Full default Debug/Release each: 2215 discovered,
+2201 pass/zero failures/14 unchanged skips. All 2208 prior identities/outcomes and
+759 original non-Porting results remain; focused Debug/checked Release each 198
+discovered, 190 pass/zero failures/eight original Recycler skips. All 271 comment
+rows have no loss: scoped ObjectPool 8, Recycler 47, PendingWrite 7 and recyclable
+list 7 originals retained (69 total). Inventory/paths/casing/no-new-source-test-warning
+checks pass. Evidence: artifacts/native-recycler-factory-validation and
+native-recycler-factory-* TRX/JSON. ObjectPool moves pending -> CLR replacement:
+60 verified/51 CLR replacement/63 pending/16 in-progress/15 not applicable.
+Whole common/backend/runtime/platform reviews stay open; no new Markdown file.
+
+Additional blocking=true contracts: 190 discovered, 182 pass/zero failures/eight
+original skips, including all new factory and original recycler cases. The first
+broad blocking selection also included BoundedPoolQueueContractTest's default-only
+ConcurrentQueue segment/rounded-capacity assumptions and failed six rows. Isolated
+baseline production reproduces the identical six failures (191 discovered/177 pass/
+six fail/eight skips); all prior broad outcomes remain, with seven new factory passes.
+The supported blocking contract selection omits that default-queue-specific fixture
+at runtime, not compilation. All eight bounded-pool cases still run and pass in
+default Debug/checked Release and both full runs. Failed broad evidence is retained;
+no claim that the whole test suite supports this alternate configuration.

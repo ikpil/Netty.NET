@@ -28,13 +28,11 @@ public sealed class RecyclableArrayList : Collection<object>
 {
     private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
-    private static readonly ObjectPool<RecyclableArrayList> RECYCLER = ObjectPool.NewPool(
-        new AnonymousObjectCreator<RecyclableArrayList>(x => new RecyclableArrayList(x))
-    );
+    private static readonly Recycler<RecyclableArrayList> RECYCLER = Recycler.Create<RecyclableArrayList>(handle => new RecyclableArrayList(handle));
 
     private bool _insertSinceRecycled;
     private readonly List<object> _list;
-    private readonly IObjectPoolHandle<RecyclableArrayList> _handle;
+    private readonly IRecyclerHandle<RecyclableArrayList> _handle;
 
     /**
      * Create a new empty {@link RecyclableArrayList} instance with the given capacity.
@@ -56,7 +54,7 @@ public sealed class RecyclableArrayList : Collection<object>
         return NewInstance(DEFAULT_INITIAL_CAPACITY);
     }
 
-    private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle)
+    private RecyclableArrayList(IRecyclerHandle<RecyclableArrayList> handle)
         : base(new List<object>(DEFAULT_INITIAL_CAPACITY))
     {
         _handle = handle;

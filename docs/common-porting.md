@@ -122,28 +122,39 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-Default Debug/Release on Windows/x64/net10.0 each discover **2208 cases**:
-**2194 passed / 0 failed / 14 unchanged skips**. Evidence:
-native-recyclable-list-full-debug.trx and native-recyclable-list-full-release.trx.
-All 2177 prior identities/outcomes and 759 original non-Porting results remain;
-31 new CLR pooled-list cases, no identity remap/source exclusion/skip change.
+Default Debug/Release on Windows/x64/net10.0 each discover **2215 cases**:
+**2201 passed / 0 failed / 14 unchanged skips**. Evidence:
+native-recycler-factory-full-debug.trx and native-recycler-factory-full-release.trx.
+All 2208 prior identities/outcomes and 759 original non-Porting results remain;
+seven new CLR factory cases, no identity remap/source exclusion/skip change.
 
-RecyclableArrayList now uses Collection<object>/List<object> for native list access
-and guarded writes. Range inputs are snapshotted once before null validation and
-mutation; empty ranges preserve insertion history. Native nongeneric factory,
-AddRange/InsertRange/indexer/property/void return replace former Java API spellings.
-Ordered export, payload ownership and same/cross-thread pool return follow pinned
-buffer/SSL/embedded/epoll consumers. See common-clr-design.md#native-recyclable-list.
+The pinned deprecated ObjectPool adapter is replaced by direct Recycler with a
+native Func<IRecyclerHandle<T>,T> factory. Common consumers use this factory;
+the return handle directly declares Recycle, with original Handle comments nearby.
+Seven obsolete public facade/helper types are removed. Existing pooling policy,
+payload ownership, node completion transfer and list reset behavior remain.
+See common-clr-design.md#native-recycler-factory-and-handle.
 
-Targeted Debug/checked Release each pass 39 cases, zero failures/skips. A shared
-baseline/current seven-check probe has five failures/two controls before, seven
-passes after. All 271 comment rows have no loss; owner retains 7/7. Inventory
-(205 source/66 test), paths, provenance/casing/no-new-source-test-warning identities
-pass. No performance claim. Evidence: artifacts/native-recyclable-list-validation,
-native-recyclable-list-* TRX/JSON. Only three canonical records updated; no new MD.
+Targeted Debug/checked Release each discover 198: 190 pass / zero failures /
+eight original Recycler skips. Identical non-friend before/after native consumers
+preserve guarded reuse, list export/reset, release/cause and producer transfer.
+All 271 comment rows have no loss; four scoped owners retain 69 original comments,
+including all eight deprecated ObjectPool comments in canonical provenance.
+Inventory (205 source/66 test), paths, casing and no-new-source-test-warning
+identities pass. No performance/baseline-runtime-bug claim. Evidence:
+artifacts/native-recycler-factory-validation and native-recycler-factory-* TRX/JSON.
+Only three canonical records updated; no new MD, generated evidence ignored.
 
-Source statuses now 60 verified / 50 CLR replacement / 15 not applicable /
-64 pending / 16 in progress. Continue remaining source/backend/runtime/platform
+Blocking-mode contracts additionally pass 182 / zero failures / eight original
+skips (190 discovered). An initial broad blocking selection fails six default-only
+BoundedPoolQueue rows; isolated baseline source reproduces the same failures. This
+fixture tests native ConcurrentQueue segment locks and rounded capacity, whereas
+blocking mode uses an exact-capacity monitor queue. Both broad failure records remain;
+default full/targeted matrices still execute all bounded-pool cases successfully.
+The whole suite is not claimed verified with blocking=true.
+
+Source statuses now 60 verified / 51 CLR replacement / 15 not applicable /
+63 pending / 16 in progress. Continue remaining source/backend/runtime/platform
 reviews in dependency order. The earlier focused Global xUnit completion stall
 remains unresolved; current matrices completed. Whole common remains open.
 

@@ -25,9 +25,7 @@ namespace Netty.NET.Common.Internal;
  */
 public sealed class PendingWrite
 {
-    private static readonly ObjectPool<PendingWrite> RECYCLER = ObjectPool.NewPool(
-        new AnonymousObjectCreator<PendingWrite>(x => new PendingWrite(x))
-    );
+    private static readonly Recycler<PendingWrite> RECYCLER = Recycler.Create<PendingWrite>(handle => new PendingWrite(handle));
 
     /**
      * Create a new empty {@link RecyclableArrayList} instance
@@ -45,12 +43,12 @@ public sealed class PendingWrite
         return pending;
     }
 
-    private readonly IObjectPoolHandle<PendingWrite> _handle;
+    private readonly IRecyclerHandle<PendingWrite> _handle;
     private object _msg;
     private TaskCompletionSource _completion;
     private int _active;
 
-    private PendingWrite(IObjectPoolHandle<PendingWrite> handle)
+    private PendingWrite(IRecyclerHandle<PendingWrite> handle)
     {
         _handle = handle;
     }
