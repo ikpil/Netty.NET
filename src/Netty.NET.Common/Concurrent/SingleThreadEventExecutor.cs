@@ -59,7 +59,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     private readonly object _processingLock = new object();
     private readonly CountdownEvent _threadLock = new CountdownEvent(1);
-    private readonly LinkedHashSet<IRunnable> _shutdownHooks = new LinkedHashSet<IRunnable>();
+    // Hooks are loop-confined. Native collections preserve registration order
+    // and indexed removal; delegate equality matches equivalent CLR method groups.
+    private readonly LinkedList<Action> _shutdownHooks = new LinkedList<Action>();
+    private readonly Dictionary<Action, LinkedListNode<Action>> _shutdownHookNodes =
+        new Dictionary<Action, LinkedListNode<Action>>();
     private readonly bool _addTaskWakesUp;
     private readonly int _maxPendingTasks;
     private readonly IRejectedExecutionHandler _rejectedExecutionHandler;
@@ -778,30 +782,38 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * Add a {@link Runnable} which will be executed on shutdown of this instance
      */
-    public void AddShutdownHook(IRunnable task)
+    public void AddShutdownHook(Action task)
     {
+        ArgumentNullException.ThrowIfNull(task);
         if (InEventLoop())
         {
-            _shutdownHooks.Add(task);
+            if (!_shutdownHookNodes.ContainsKey(task))
+            {
+                _shutdownHookNodes.Add(task, _shutdownHooks.AddLast(task));
+            }
         }
         else
         {
-            Execute(Runnables.Create(() => _shutdownHooks.Add(task)));
+            Execute(() => AddShutdownHook(task));
         }
     }
 
     /**
      * Remove a previous added {@link Runnable} as a shutdown hook
      */
-    public void RemoveShutdownHook(IRunnable task)
+    public void RemoveShutdownHook(Action task)
     {
+        ArgumentNullException.ThrowIfNull(task);
         if (InEventLoop())
         {
-            _shutdownHooks.Remove(task);
+            if (_shutdownHookNodes.Remove(task, out var node))
+            {
+                _shutdownHooks.Remove(node);
+            }
         }
         else
         {
-            Execute(Runnables.Create(() => _shutdownHooks.Remove(task)));
+            Execute(() => RemoveShutdownHook(task));
         }
     }
 
@@ -809,15 +821,16 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     {
         bool ran = false;
         // Note shutdown hooks can add / remove shutdown hooks.
-        while (!_shutdownHooks.IsEmpty())
+        while (_shutdownHooks.Count != 0)
         {
-            List<IRunnable> copy = new List<IRunnable>(_shutdownHooks);
+            List<Action> copy = new List<Action>(_shutdownHooks);
             _shutdownHooks.Clear();
-            foreach (IRunnable task in copy)
+            _shutdownHookNodes.Clear();
+            foreach (Action task in copy)
             {
                 try
                 {
-                    RunTask(task);
+                    task();
                 }
                 catch (Exception t)
                 {

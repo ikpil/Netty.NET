@@ -4614,3 +4614,58 @@ contracts while reducing this transitional adapter cost during the native queue
 redesign; do not describe the current bridge as allocation-free or fully optimized.
 Records: artifacts/queued-action-validation/allocation-evidence.json and identical
 before/after Perf.cs sources (ignored artifacts).
+
+## Native shutdown hook delegates
+
+Pinned SingleThreadEventExecutor.java:99/729-784 uses an insertion-ordered set,
+loop-confined edits and a cleared snapshot on each shutdown pass. LocalChannel.java:
+494/555/563 and LocalServerChannel.java:230/251/259 register a channel's close callback
+and remove it on deregistration. An all-module search finds no additional consumers
+of these executor methods; Runtime.addShutdownHook is a separate JVM lifecycle API.
+
+AddShutdownHook/RemoveShutdownHook now take Action. Loop-confined LinkedList<Action>
+and Dictionary<Action, LinkedListNode<Action>> preserve registration order and
+indexed removal, with delegate equality for uniqueness and removal: newly created
+method groups with the same target/method match. This
+adapts Java's stable Runnable/equals keys to normal CLR delegate semantics; multicast
+invocation lists are one key and follow CLR short-circuiting on exceptions. Readding
+after removal moves a hook to the end. Native collections avoid a Java set clone
+and dictionary iteration assumptions. One event loop may host many local channels,
+so a List-only collection's linear membership
+searches would degrade the original hash-indexed admission/deregistration cost.
+The index and ordered chain are cleared together before each snapshot executes;
+hash/equality cost follows CLR delegate invocation-list semantics.
+
+Outside-loop edits pass the actual virtual Execute(Action) hook, in queue order;
+on-loop edits stay inline, including during shutdown after ordinary admission closes.
+Hook exceptions are logged independently and do not fail Termination or suppress
+following registrations. Removing a hook already in the active snapshot cannot
+withdraw that invocation; additions are processed on the next snapshot, and removing
+an addition can still withdraw it. A hook repeatedly registering itself may prevent
+shutdown, as in the original. No new cancellation or context-capture policy is added.
+Null is rejected synchronously before dispatch, including on the event loop, rather
+than accepting a Java null set member and later logging an invocation failure.
+Original license/documentation/implementation comments remain in place.
+
+NativeShutdownHookContractTest covers method-group equality/order, both edit paths,
+snapshot mutation, exception/multicast behavior, null/closed-admission failure and
+release of captured objects after removal or execution with the executor kept alive.
+A standalone Java probe executes the pinned three hook methods with an inline
+dispatch/clock/logging shim and agrees on first,second,third snapshot mutation and
+throw,after failure traces. It is not a substitute for the real executor lifecycle
+tests. An identical non-friend C# consumer fails before with CS1503 and passes after
+using method groups, with no IRunnable import. No original fixture is changed.
+
+Release Windows/x64/net10.0 allocation comparison against 9ec565e uses the real
+DefaultEventExecutor queue with its worker blocked, one precreated hook, 5,000 warmup
+add/remove pairs and three 100,000-pair samples. Both versions drain all accepted
+commands and terminate successfully. Allocations per edit are approximately 264
+before and 168 after, a steady 96-byte reduction by avoiding the intermediate
+Runnable-to-Action envelope; the queue's raw-action wrapper remains. First-sample
+runtime noise is retained in allocation-evidence.json. Elapsed times are recorded
+but not presented as controlled throughput. A separate capture-only virtual-dispatch
+probe measures 216 to 96 bytes/edit; it excludes queue unwrapping and must not be
+substituted for the real-queue result. This does not fix the prior +96-byte
+SubmitAsync envelope cost. Broader queue/rejection/JDK API review remains open.
+Records: artifacts/shutdown-hook-validation (ignored), linked from the current
+common-porting checkpoint; verification outcomes are recorded there after checks.

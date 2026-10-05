@@ -122,40 +122,37 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2089 cases** on Windows/x64/net10.0:
-**2075 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: queued-action-full-debug.trx and queued-action-full-release.trx.
-All 2083 prior identities/outcomes, including 759 original non-Porting cases and
-every skip, remain. IExecutor and actual public/virtual Execute/LazyExecute entry
-points now accept Action. Groups and subclass hooks forward native delegates;
-known queues recover original stateful work from a private exact-delegate envelope.
-No second completion owner or per-raw-callback ExecutionContext policy is added.
-ThreadExecutorMap callback decoration and AnonymousExecutor configuration are native.
-Six cases verify public shape, adapter null validation before dispatch, real pool
-cancel-removal through an Action-only subclass, multicast and normal/lazy hooks.
-An independent non-friend consumer fails before with CS0535/CS0115 and passes after
-for inline execution, submission, scheduling and explicit lazy work without importing
-IRunnable. Original hook syntax changes preserve assertions, identities and comments.
-Design and pinned source/transport consumers:
-common-clr-design.md#native-queued-action-execution.
-Targeted Debug and checked Release each pass 225 cases with no failures or skips.
-All 271 original comment totals have no coverage loss. Pinned inventory/paths,
-prior provenance, uppercase declarations and no-new-warning checks pass.
-No exclusion or Markdown file is added. Small ImmediateExecutor native review is
-verified; broader executor/queue/JDK APIs retain explicit in-progress native review.
-Source statuses stay 56 verified / 49 CLR replacement / 15 not applicable /
-68 pending / 17 in progress. Whole common and untested platforms remain open.
-Release inline SubmitAsync<int> allocation probe: static Func<int>, 5,000 warmups,
-three 100,000-operation samples, 264 to 360 steady bytes/operation (+96 for the
-transitional identity envelope/Action). Raw callback costs and controlled throughput
-are not claimed. Reduce this adapter cost in the native queue redesign.
-Records stay in ignored TestResults and artifacts/queued-action-validation:
-queued-action-identity-and-inventory.json, original comment audit, before/after
-native consumer sources/logs, allocation-evidence.json and identical Perf.cs sources.
-Next: retained queue/rejection/shutdown-hook and inherited JDK public APIs;
-replace their IRunnable surfaces using actual transport requirements, preserving
-capacity, membership, ownership and subclass policies while reducing adapter cost.
-Full portable sources build without PortingBatch.
+The current default suite executes **2096 cases** on Windows/x64/net10.0:
+**2082 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: shutdown-hook-full-debug.trx and shutdown-hook-full-release.trx.
+All 2089 prior identities/outcomes, 759 original non-Porting cases and every skip
+remain. Seven native shutdown-hook cases cover delegate equality/reinserted order,
+snapshot mutation, failure/multicast behavior, native virtual dispatch, synchronous
+null/terminated rejection and captured-object release. Original fixtures are unchanged.
+AddShutdownHook/RemoveShutdownHook accept Action; loop-confined native Dictionary
+and LinkedList preserve registration order and indexed removal without a Java set
+clone. Actual original local transport close/deregister consumers are recorded in
+common-clr-design.md#native-shutdown-hook-delegates. Pinned Java hook-method traces
+agree; the identical independent C# consumer fails before with CS1503 and passes after.
+Targeted Debug and checked Release each pass 30 cases, with no failure or skip.
+All 271 original comment totals have no coverage loss; modified source retains all
+128 pinned comments. Inventory/paths, archived provenance, uppercase declarations
+and no-new-warning checks pass. Initial native test analyzer warnings are corrected
+by forwarding the test cancellation token, and final matrices verify that source.
+No exclusions or Markdown files are added. Source statuses stay 56 verified /
+49 CLR replacement / 15 not applicable / 68 pending / 17 in progress.
+Real Release DefaultEventExecutor queue measurement: blocked worker, one precreated
+hook, 5,000 warmup pairs and three 100,000-pair samples, approximately 264 to 168
+bytes/edit (96 bytes saved). Both queues drain and terminate successfully. Capture-only
+dispatch costs are separate; no controlled throughput claim is made. The preceding
+SubmitAsync +96-byte envelope cost remains open; see native-queued-action-execution.
+Ignored records: shutdown-hook-identity-and-inventory.json and original comment audit
+in TestResults; Java and before/after native consumers, allocation-evidence.json,
+identical real-queue probe sources/logs in artifacts/shutdown-hook-validation.
+Next: retained queue/rejection and inherited JDK public APIs; preserve capacity,
+membership, ownership and subclass policies while reducing stateful adapter costs.
+Whole common and untested platforms remain open. Full portable sources build
+without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.
