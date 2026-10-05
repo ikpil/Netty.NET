@@ -17,20 +17,20 @@
 namespace Netty.NET.Common;
 
 /**
- * Holds {@link IAttribute}s which can be accessed via {@link AttributeKey}.
+ * Holds {@link Attribute}s which can be accessed via {@link AttributeKey}.
  *
  * Implementations must be Thread-safe.
  */
 public interface IAttributeMap
 {
     /**
-     * Get the {@link IAttribute} for the given {@link AttributeKey}. This method will never return null, but may return
-     * an {@link IAttribute} which does not have a value set yet.
+     * Get the {@link Attribute} for the given {@link AttributeKey}. This method will never return null, but may return
+     * an {@link Attribute} which does not have a value set yet.
      */
     IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class;
 
     /**
-     * Returns {@code true} if and only if the given {@link IAttribute} exists in this {@link IAttributeMap}.
+     * Returns {@code true} if and only if the given {@link Attribute} exists in this {@link AttributeMap}.
      */
     bool HasAttr<T>(AttributeKey<T> key) where T : class;
 }

@@ -6338,3 +6338,190 @@ claim or new Markdown file. Source review statuses stay 60 verified/51 CLR repla
 63 pending/16 in-progress/15 not applicable. Whole common and remaining backend/
 runtime/platform/source reviews stay open, including the earlier focused Global
 xUnit completion stall, which is not claimed repaired by these successful runs.
+
+## Native attribute map and atomic slots
+
+Reviewed pinned Attribute.java (10 comments), AttributeMap.java (4),
+DefaultAttributeMap.java (6), and all six DefaultAttributeMapTest scenarios
+(two comments). Actual consumers include transport AbstractChannel.java:41
+(base map), AbstractBootstrap.java:473 (initial values),
+AbstractChannelHandlerContext.java:1026/1031 (delegation), SimpleChannelPool.java:
+238/294/351 (identity checked owner exchange and null clearing), handler
+AbstractTrafficShapingHandler.java:492-504/513-516/540 (shared callback and boxed
+Boolean state), and codec-marshalling ContextBoundUnmarshallerProvider.java:
+46-54 (cached shared unmarshaller). All-module searches establish nullable values,
+typed keys, atomic shared cells and persistent slots; they expose no sorted-array
+iteration or requirement to publish AtomicReference inheritance/helper types.
+
+DefaultAttributeMap now uses ConcurrentDictionary<IAttributeKey,object> with
+ReferenceEqualityComparer. Private sealed generic cells directly use Volatile and
+Interlocked. Existing IAttribute/IAttributeMap operations remain: a BCL dictionary
+alone cannot give a holder an atomically mutable slot identity independent of
+membership. Null clearing retains that identity; removal detaches the old cell,
+and later Attr replaces it. Stale holders can still modify their detached cell.
+HasAttr observes membership (including a transient detached cell), not value
+presence, matching the original race semantics. Different maps own separate cells.
+
+Runtime evidence: [.NET 10 ConcurrentDictionary source](https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/System.Collections.Concurrent/src/System/Collections/Concurrent/ConcurrentDictionary.cs#L386-L452)
+confirms public pair removal enables matchValue, then checks/removes under one
+bucket lock. The private cell has reference equality, so the value comparison is
+its identity. This uses the direct public API available on this project's net10.0
+rather than an explicit collection interface cast.
+
+GetOrAdd factories may create losing empty cells but invoke no user callback and
+perform no registration side effect. Attr inspects the published cell, replacing
+a detached one with TryUpdate. Conditional TryRemove(KeyValuePair<...>)
+matches key and exact private cell reference, so delayed removal cannot delete a
+replacement. Direct CompareAndSet explicitly uses ReferenceEquals; equal records
+and boxed values remain distinct. SetIfAbsent returns the single CAS observation:
+its publication/failure linearizes at that CAS, rather than the Java retry/read
+loop's later observation. This preserves the atomic absent-value contract under
+concurrent null clearing. GetAndSet and owner detachment each use one exchange.
+
+CLR reified keys retain the established reference-type constraint and global
+key registry: absent/null is not default(T) for a struct; Java boxed values use
+object. Key-type/name conflicts remain rejected by AttributeKey, outside this
+unit. Public concurrent DefaultAttribute<T>/IDefaultAttribute implementation
+helpers and their AtomicReference inheritance are retired; no pinned consumer
+uses them (the Java cell was private). Public map/slot signatures are conserved.
+
+The sorted copy-on-write index and its complexity comments below describe the
+retired Java storage implementation. Native lookup/writes follow the BCL dictionary
+model; no allocation, lock-free-write or throughput improvement is claimed. All
+Java interface comments are restored verbatim beside their operations; the map
+license remains in its implementation, with retired implementation commentary
+here. Previous translated comment variants also remain in canonical provenance.
+
+Pinned DefaultAttributeMap.java retired storage commentary:
+
+```java
+/**
+ * Default {@link AttributeMap} implementation which not exibit any blocking behaviour on attribute lookup while using a
+ * copy-on-write approach on the modify path.<br> Attributes lookup and remove exibit {@code O(logn)} time worst-case
+ * complexity, hence {@code attribute::set(null)} is to be preferred to {@code remove}.
+ */
+
+/**
+     * Similarly to {@code Arrays::binarySearch} it perform a binary search optimized for this use case, in order to
+     * save polymorphic calls (on comparator side) and unnecessary class checks.
+     */
+
+// let's walk backward, because as a rule of thumb, toInsert.key.id() tends to be higher for new keys
+
+// let's try replace the removed attribute with a new one
+
+// perform 2 bulk copies
+```
+
+Retired CLR comment variants:
+
+```csharp
+/**
+ * Default {@link IAttributeMap} implementation which not exibit any blocking behaviour on attribute lookup while using a
+ * copy-on-write approach on the modify path.<br> Attributes lookup and remove exibit {@code O(logn)} time worst-case
+ * complexity, hence {@code attribute::set(null)} is to be preferred to {@code remove}.
+ */
+
+//@SuppressWarnings("unchecked")
+
+/**
+     *  Atomically sets to the given value if this {@link IAttribute}'s value is {@code null}.
+     *  If it was not possible to set the value as it contains a value it will just return the current value.
+     */
+
+/**
+     * Removes this attribute from the {@link IAttributeMap} and returns the old value. Subsequent {@link #get()}
+     * calls will return {@code null}.
+     *
+     * If you only want to return the old value and clear the {@link IAttribute} while still keep it in the
+     * {@link IAttributeMap} use {@link #getAndSet(object)} with a value of {@code null}.
+     *
+     * <p>
+     * Be aware that even if you call this method another thread that has obtained a reference to this {@link IAttribute}
+     * via {@link IAttributeMap#attr(AttributeKey)} will still operate on the same instance. That said if now another
+     * thread or even the same thread later will call {@link IAttributeMap#attr(AttributeKey)} again, a new
+     * {@link IAttribute} instance is created and so is not the same as the previous one that was removed. Because of
+     * this special caution should be taken when you call {@link #remove()} or {@link #getAndRemove()}.
+     *
+     * @deprecated please consider using {@link #getAndSet(object)} (with value of {@code null}).
+     */
+
+/**
+     * Removes this attribute from the {@link IAttributeMap}. Subsequent {@link #get()} calls will return @{code null}.
+     *
+     * If you only want to remove the value and clear the {@link IAttribute} while still keep it in
+     * {@link IAttributeMap} use {@link #set(object)} with a value of {@code null}.
+     *
+     * <p>
+     * Be aware that even if you call this method another thread that has obtained a reference to this {@link IAttribute}
+     * via {@link IAttributeMap#attr(AttributeKey)} will still operate on the same instance. That said if now another
+     * thread or even the same thread later will call {@link IAttributeMap#attr(AttributeKey)} again, a new
+     * {@link IAttribute} instance is created and so is not the same as the previous one that was removed. Because of
+     * this special caution should be taken when you call {@link #remove()} or {@link #getAndRemove()}.
+     *
+     * @deprecated please consider using {@link #set(object)} (with value of {@code null}).
+     */
+
+/**
+ * Holds {@link IAttribute}s which can be accessed via {@link AttributeKey}.
+ *
+ * Implementations must be Thread-safe.
+ */
+
+/**
+     * Get the {@link IAttribute} for the given {@link AttributeKey}. This method will never return null, but may return
+     * an {@link IAttribute} which does not have a value set yet.
+     */
+
+/**
+     * Returns {@code true} if and only if the given {@link IAttribute} exists in this {@link IAttributeMap}.
+     */
+
+//@SuppressWarnings("serial")
+```
+
+Ten new CLR cases cover null validation, reference CAS/null, mixed reified keys,
+map isolation, clearing versus detachment, stale holder writes, eight simultaneous
+SetIfAbsent publishers, reference conservation under exchange, concurrent insertion
+of 64 mixed typed keys, and the forced detach-before-conditional-delete window.
+Identical new test source passes all 21 selected cases against isolated baseline
+and native implementation. The private removal probe controls the tiny schedule
+only; published/replacement values are checked via public APIs. Original six
+fixture identities/scenarios/assertions/comments stay unchanged.
+
+Native dictionary bucket monitors can consume Thread.Interrupt and throw, unlike
+the pinned nonblocking CAS storage path. Attr therefore retries from published
+membership after interruption (including a potential post-publication resize);
+conditional removal retries matching the same old cell after detachment/clearing.
+Both restore a consumed interrupt in finally after the non-interruptible operation
+finishes. No user factory is repeated and replacement deletion remains conditional.
+This retains the original pending-interrupt behavior without assuming a BCL write
+is nonblocking. Native monitor contention is not advertised as a lock-free write.
+
+Three additional CLR cases force the real dictionary bucket monitors for initial
+publication, detached-cell replacement and removal. Identical interrupt fixture
+against an isolated unprotected native candidate fails all three with
+ThreadInterruptedException; final Debug/checked Release pass all three, preserving
+membership/value/identity and a pending interrupt for Thread.Sleep(0). Reflection
+only schedules contention; all operations and resulting state use public APIs.
+The candidate failure is a migration hazard, not a claim of an original baseline
+bug. Evidence: unprotected-interrupt.log and isolated unprotected-source TestResults.
+The unit adds 13 cases total; all 21 baseline functional controls remain in the
+24-case final selection. The unprotected candidate fixture source is identical.
+
+Identical non-friend before/after consumers exercise the public typed map/slot
+operations, reference CAS, null clearing and detached-holder isolation. Metadata
+checks retire two exported implementation helpers and establish native dictionary
+storage/private cell, rather than treating functional baseline passes as a defect
+repair. Full default Debug/Release each: 2228 discovered, 2214 passed, zero failed,
+14 unchanged skips; all previous 2215 and original 759 outcomes conserved. Targeted
+Debug/checked Release each 24 pass. All 271 comment rows have no coverage loss,
+with 22/22 scoped original comments; inventory/casing/no-new-warning checks pass.
+
+Attribute, AttributeMap and DefaultAttributeMap move pending -> verified:
+63 verified/51 CLR replacement/60 pending/16 in-progress/15 not applicable.
+Evidence: artifacts/native-attribute-map-validation and native-attribute-map-*
+TRX/JSON. Only three canonical records, no new MD or performance claim. This unit
+does not rerun the whole suite with blocking=true; the preceding dual-mode result
+remains historical. Whole common/source/backend/runtime/platform reviews and the
+earlier focused Global xUnit completion stall remain open.

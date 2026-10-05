@@ -14,174 +14,116 @@
  * under the License.
  */
 
-using System.Diagnostics;
-using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Internal;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Netty.NET.Common;
 
-/**
- * Default {@link IAttributeMap} implementation which not exibit any blocking behaviour on attribute lookup while using a
- * copy-on-write approach on the modify path.<br> Attributes lookup and remove exibit {@code O(logn)} time worst-case
- * complexity, hence {@code attribute::set(null)} is to be preferred to {@code remove}.
- */
+/// <summary>Stores shared, atomically updated reference values under typed attribute keys.</summary>
+/// <remarks>
+/// ConcurrentDictionary publishes one slot per key. Clearing a value retains its slot;
+/// removing a slot detaches it, so existing holders and later lookups become independent.
+/// The original sorted copy-on-write implementation and its comments are recorded in
+/// docs/common-clr-design.md under Native attribute map and atomic slots.
+/// </remarks>
 public class DefaultAttributeMap : IAttributeMap
 {
-    private static readonly IDefaultAttribute[] EMPTY_ATTRIBUTES = new IDefaultAttribute[0];
-    private readonly AtomicReference<IDefaultAttribute[]> _attributes = new AtomicReference<IDefaultAttribute[]>(EMPTY_ATTRIBUTES);
+    private readonly ConcurrentDictionary<IAttributeKey, object> attributes = new(ReferenceEqualityComparer.Instance);
 
-    /**
-     * Similarly to {@code Arrays::binarySearch} it perform a binary search optimized for this use case, in order to
-     * save polymorphic calls (on comparator side) and unnecessary class checks.
-     */
-    private static int SearchAttributeByKey(IDefaultAttribute[] sortedAttributes, IAttributeKey key)
-    {
-        int low = 0;
-        int high = sortedAttributes.Length - 1;
-
-        while (low <= high)
-        {
-            int mid = low + high >>> 1;
-            IDefaultAttribute midVal = sortedAttributes[mid];
-            IAttributeKey midValKey = midVal.Key();
-            if (midValKey == key)
-            {
-                return mid;
-            }
-
-            int midValKeyId = midValKey.Id();
-            int keyId = key.Id();
-            Debug.Assert(midValKeyId != keyId);
-            bool searchRight = midValKeyId < keyId;
-            if (searchRight)
-            {
-                low = mid + 1;
-            }
-            else
-            {
-                high = mid - 1;
-            }
-        }
-
-        return -(low + 1);
-    }
-
-    private static void OrderedCopyOnInsert(IDefaultAttribute[] sortedSrc, int srcLength, IDefaultAttribute[] copy,
-        IDefaultAttribute toInsert)
-    {
-        // let's walk backward, because as a rule of thumb, toInsert.key.id() tends to be higher for new keys
-        int id = toInsert.Key().Id();
-        int i;
-        for (i = srcLength - 1; i >= 0; i--)
-        {
-            IDefaultAttribute attribute = sortedSrc[i];
-            Debug.Assert(attribute.Key().Id() != id);
-            if (attribute.Key().Id() < id)
-            {
-                break;
-            }
-
-            copy[i + 1] = sortedSrc[i];
-        }
-
-        copy[i + 1] = toInsert;
-        int toCopy = i + 1;
-        if (toCopy > 0)
-        {
-            Arrays.Arraycopy(sortedSrc, 0, copy, 0, toCopy);
-        }
-    }
-
-
-    //@SuppressWarnings("unchecked")
     public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class
     {
-        ObjectUtil.CheckNotNull(key, "key");
-        DefaultAttribute<T> newAttribute = null;
-        for (;;)
+        ArgumentNullException.ThrowIfNull(key);
+        DefaultAttribute<T> replacement = null;
+        bool interrupted = false;
+        try
         {
-            IDefaultAttribute[] attributes = _attributes.Get();
-            int index = SearchAttributeByKey(attributes, key);
-            IDefaultAttribute[] newAttributes;
-            if (index >= 0)
+            for (;;)
             {
-                DefaultAttribute<T> attribute = attributes[index] as DefaultAttribute<T>;
-                Debug.Assert(attribute.Key() == key);
-                if (!attribute.IsRemoved())
+                try
                 {
-                    return attribute;
+                    // Factories can run more than once; creating an unpublished empty slot
+                    // has no user callback or side effect. Always inspect the published result.
+                    var attribute = (DefaultAttribute<T>)attributes.GetOrAdd(key,
+                        static (key, map) => new DefaultAttribute<T>(map, (AttributeKey<T>)key), this);
+                    if (!attribute.IsRemoved) return attribute;
+                    replacement ??= new DefaultAttribute<T>(this, key);
+                    if (attributes.TryUpdate(key, replacement, attribute)) return replacement;
                 }
-
-                // let's try replace the removed attribute with a new one
-                if (newAttribute == null)
-                {
-                    newAttribute = new DefaultAttribute<T>(this, key);
-                }
-
-                int count = attributes.Length;
-                newAttributes = Arrays.CopyOf(attributes, count);
-                newAttributes[index] = newAttribute;
+                catch (ThreadInterruptedException) { interrupted = true; }
             }
-            else
-            {
-                if (newAttribute == null)
-                {
-                    newAttribute = new DefaultAttribute<T>(this, key);
-                }
-
-                int count = attributes.Length;
-                newAttributes = new IDefaultAttribute[count + 1];
-                OrderedCopyOnInsert(attributes, count, newAttributes, newAttribute);
-            }
-
-            if (_attributes.CompareAndSet(attributes, newAttributes))
-            {
-                return newAttribute;
-            }
+        }
+        finally
+        {
+            // Native dictionary writes can wait on monitors. Retry from the
+            // published state, then retain the interrupt for a later blocking wait.
+            if (interrupted) Thread.CurrentThread.Interrupt();
         }
     }
 
     public bool HasAttr<T>(AttributeKey<T> key) where T : class
     {
-        ObjectUtil.CheckNotNull(key, "key");
-        return SearchAttributeByKey(_attributes.Get(), key) >= 0;
+        ArgumentNullException.ThrowIfNull(key);
+        return attributes.ContainsKey(key);
     }
 
-    internal void RemoveAttributeIfMatch<T>(AttributeKey<T> key, DefaultAttribute<T> value) where T : class
+    private void RemoveAttributeIfMatch<T>(AttributeKey<T> key, DefaultAttribute<T> attribute) where T : class
     {
-        for (;;)
+        // Conditional removal must match the old slot as well as the key: a
+        // concurrent Attr may already have published its replacement.
+        bool interrupted = false;
+        try
         {
-            IDefaultAttribute[] attributes = _attributes.Get();
-            int index = SearchAttributeByKey(attributes, key);
-            if (index < 0)
+            for (;;)
             {
-                return;
+                try
+                {
+                    attributes.TryRemove(new KeyValuePair<IAttributeKey, object>(key, attribute));
+                    return;
+                }
+                catch (ThreadInterruptedException) { interrupted = true; }
             }
+        }
+        finally
+        {
+            // Detachment and value clearing already happened. Finish the
+            // conditional deletion before restoring any consumed interrupt.
+            if (interrupted) Thread.CurrentThread.Interrupt();
+        }
+    }
 
-            IDefaultAttribute attribute = attributes[index];
-            Debug.Assert(attribute.Key() == key);
-            if (attribute != value)
-            {
-                return;
-            }
+    private sealed class DefaultAttribute<T>(DefaultAttributeMap map, AttributeKey<T> key) : IAttribute<T> where T : class
+    {
+        private DefaultAttributeMap attributeMap = map;
+        private T value;
 
-            int count = attributes.Length;
-            int newCount = count - 1;
-            IDefaultAttribute[] newAttributes =
-                newCount == 0 ? EMPTY_ATTRIBUTES : new IDefaultAttribute[newCount];
+        internal bool IsRemoved => Volatile.Read(ref attributeMap) == null;
+        public AttributeKey<T> Key() => key;
+        public T Get() => Volatile.Read(ref value);
+        public void Set(T value) => Volatile.Write(ref this.value, value);
+        public T GetAndSet(T value) => Interlocked.Exchange(ref this.value, value);
+        public bool CompareAndSet(T oldValue, T newValue) =>
+            ReferenceEquals(Interlocked.CompareExchange(ref value, newValue, oldValue), oldValue);
 
-            // perform 2 bulk copies
-            Arrays.Arraycopy(attributes, 0, newAttributes, 0, index);
-            int remaining = count - index - 1;
-            if (remaining > 0)
-            {
-                Arrays.Arraycopy(attributes, index + 1, newAttributes, index, remaining);
-            }
+        public T SetIfAbsent(T value)
+        {
+            return Interlocked.CompareExchange(ref this.value, value, null);
+        }
 
-            if (_attributes.CompareAndSet(attributes, newAttributes))
-            {
-                return;
-            }
+        public T GetAndRemove()
+        {
+            DefaultAttributeMap owner = Interlocked.Exchange(ref attributeMap, null);
+            T oldValue = GetAndSet(null);
+            owner?.RemoveAttributeIfMatch(key, this);
+            return oldValue;
+        }
+
+        public void Remove()
+        {
+            DefaultAttributeMap owner = Interlocked.Exchange(ref attributeMap, null);
+            Set(null);
+            owner?.RemoveAttributeIfMatch(key, this);
         }
     }
 }

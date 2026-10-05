@@ -122,46 +122,40 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-On Windows/x64/net10.0, full default and blocking-mode Debug/Release each discover
-**2215 cases: 2201 passed / 0 failed / 14 unchanged skips**. Evidence:
-recycler-mode-full-debug.trx, recycler-mode-full-release.trx and
-recycler-mode-blocking-full-debug.trx/recycler-mode-blocking-full-release.trx.
-All 2215 prior identities/outcomes and 759 original non-Porting results remain
-in all four full runs; no added/remapped/excluded case or changed skip.
+Default Debug/Release on Windows/x64/net10.0 each discover **2228 cases**:
+**2214 passed / 0 failed / 14 unchanged skips**. Evidence:
+native-attribute-map-full-debug.trx and native-attribute-map-full-release.trx.
+All 2215 prior identities/outcomes and 759 original non-Porting results remain;
+13 new CLR attribute cases, no identity remap/source exclusion/skip change.
 
-BoundedPoolQueueContractTest now respects both reviewed native backends: blocking
-keeps capacity 17 after the pool minimum; default uses the rounded bound 32.
-The interrupt schedule holds the appropriate queue monitor/ConcurrentQueue segment
-gate while retaining public return/claim, pending-interrupt and FIFO assertions.
-No production/API/pool-policy change. See common-clr-design.md#dual-recycler-mode-contracts.
+DefaultAttributeMap now owns native ConcurrentDictionary membership and private
+Interlocked/Volatile reference cells. Public typed slot operations retain nullable
+values, reference CAS, stable identity, clearing/detachment and replacement-safe
+conditional removal. Two exported implementation helpers and AtomicReference
+inheritance are retired. Source review and real future transport/handler/codec
+consumers: common-clr-design.md#native-attribute-map-and-atomic-slots.
 
-The first blocking Release full run exposed an unrelated watcher fixture race:
-ThreadDeathWatcherContractTest.MulticastFailureStopsThatInvocationButNotOtherRegistrations
-observed [4,1,2] instead of [1,2,4]. Pinned ThreadDeathWatcher.java:212-226 checks
-liveness separately per registration, so an owner can die after the first is skipped
-and before the second is visited. The fixture now requires ordered multicast [1,2]
-with no third invocation and exactly one independent callback 4, without imposing
-cross-registration order. No watcher production change. The initial failed full
-TRX/log remain under artifacts/recycler-mode-contract-validation/initial-blocking-full-release.*;
-all four final full runs use the final fixtures, without changed identities/skips.
+Identical baseline/current new test source passes all 21 selected cases, including
+all six original map fixtures. Final targeted Debug/checked Release each 24 pass.
+Three real bucket-monitor contention cases fail against an isolated unprotected
+native candidate, then pass final publication/replacement/removal and pending
+interrupt assertions. Dictionary writes retry safely and restore Thread.Interrupt
+after completion. This repairs a migration hazard, with no original-baseline-bug
+claim. Identical non-friend public consumers conserve exchange, typed membership/null,
+reference CAS and stale-holder isolation; metadata validates native storage and
+helper retirement. All 271 comment rows have no loss; 22/22 scoped originals are
+preserved, including restored interface docs and archived retired storage comments.
+Inventory (205 source/66 test), paths, casing and no-new-warning identities pass.
+No performance/functional-baseline-bug claim. Evidence:
+artifacts/native-attribute-map-validation and native-attribute-map-* TRX/JSON.
+Only the three canonical records updated; no new MD, generated evidence ignored.
 
-The same isolated baseline eight-case blocking selection fails six/passes two;
-current blocking boundary Debug passes all eight. Targeted default Debug, default
-checked Release and blocking checked Release each discover 198: 190 pass / zero
-failures / eight original Recycler skips. The prior blocking validation limitation
-is resolved for the full project with no runtime fixture filter. Historical failed
-results remain in their original artifact folders.
-
-All 271 comment rows have no loss, including 47/47 Recycler originals and the
-edited CLR fixture's prior comments. Inventory (205 source/66 test), paths, casing
-and no-new-source-test-warning identities pass. No performance claim. Evidence:
-artifacts/recycler-mode-contract-validation and recycler-mode-* TRX/JSON.
-Only three canonical records updated; no new MD, generated evidence ignored.
-
-Source statuses stay 60 verified / 51 CLR replacement / 15 not applicable /
-63 pending / 16 in progress. Continue remaining source/backend/runtime/platform
-reviews in dependency order. The earlier focused Global xUnit completion stall
-remains unresolved; current matrices completed. Whole common remains open.
+Attribute/AttributeMap/DefaultAttributeMap move pending -> verified: source statuses
+63 verified / 51 CLR replacement / 15 not applicable / 60 pending / 16 in progress.
+The preceding dual-recycler-mode full runs (2215 discovered/2201 pass/14 skips)
+remain historical; alternate blocking full mode is not rerun in this attribute unit.
+Remaining source/backend/runtime/platform reviews and the earlier focused Global
+xUnit completion stall stay open. Whole common remains unfinished.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

@@ -151,18 +151,22 @@
     {
       "upstream": "common/src/main/java/io/netty/util/Attribute.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/IAttribute.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/IAttribute.cs",
+        "test/Netty.NET.Common.Tests/Porting/AttributeMapContractTest.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned implementation/tests and real transport/handler/codec consumers reviewed; all six original attribute-map scenarios remain. Identical baseline/native new fixture selects 21 passing cases; ten CLR cases cover reference identity/null, competing publication, exchange conservation, mixed-key insertion and forced delayed removal. Identical non-friend public consumer conserves slot/owner contracts and verifies retirement of two implementation helpers/native storage. Default full Debug/Release each 2214 pass/0 failed/14 unchanged skips (2228 discovered), all prior 2215 and original 759 outcomes retained. Targeted Debug/checked Release each 24 pass; all 271 comment rows without loss, 22 scoped original comments retained; inventory/casing/no-new-warning checks pass. See common-clr-design.md#native-attribute-map-and-atomic-slots and current common-porting.md; artifacts/native-attribute-map-validation and native-attribute-map-* evidence. Whole common and alternate-runtime reviews remain open. Three additional forced native dictionary bucket-monitor cases fail against the isolated unprotected migration candidate with ThreadInterruptedException and pass final publication, replacement, removal and pending-interrupt checks. Writes retry from published state and restore the consumed interrupt after completion, rather than aborting detached-cell cleanup. Thirteen new CLR cases total, all 21 baseline functional controls conserved; no original baseline bug claim."
+      ],
+      "adaptation": "Native reference-key ConcurrentDictionary membership and private reified atomic slots retain nullable reference values, stable published slot identity, exchange/reference CAS, absent publication, clearing versus detachment, stale holders and conditional replacement-safe removal. Existing typed map/slot signatures remain; direct Interlocked/Volatile replace implementation-only AtomicReference inheritance. Java sorted copy-on-write commentary is archived in canonical provenance; interface comments preserved verbatim. No performance claim. Native bucket-monitor writes retry ThreadInterruptedException safely and restore the pending interrupt after membership publication/conditional deletion.",
       "comments": {
         "upstreamCount": 10,
         "required": true,
-        "preservedCount": 7,
-        "missingCount": 3
+        "preservedCount": 10,
+        "missingCount": 0
       }
     },
     {
@@ -191,18 +195,22 @@
     {
       "upstream": "common/src/main/java/io/netty/util/AttributeMap.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/IAttributeMap.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/IAttributeMap.cs",
+        "test/Netty.NET.Common.Tests/Porting/AttributeMapContractTest.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned implementation/tests and real transport/handler/codec consumers reviewed; all six original attribute-map scenarios remain. Identical baseline/native new fixture selects 21 passing cases; ten CLR cases cover reference identity/null, competing publication, exchange conservation, mixed-key insertion and forced delayed removal. Identical non-friend public consumer conserves slot/owner contracts and verifies retirement of two implementation helpers/native storage. Default full Debug/Release each 2214 pass/0 failed/14 unchanged skips (2228 discovered), all prior 2215 and original 759 outcomes retained. Targeted Debug/checked Release each 24 pass; all 271 comment rows without loss, 22 scoped original comments retained; inventory/casing/no-new-warning checks pass. See common-clr-design.md#native-attribute-map-and-atomic-slots and current common-porting.md; artifacts/native-attribute-map-validation and native-attribute-map-* evidence. Whole common and alternate-runtime reviews remain open. Three additional forced native dictionary bucket-monitor cases fail against the isolated unprotected migration candidate with ThreadInterruptedException and pass final publication, replacement, removal and pending-interrupt checks. Writes retry from published state and restore the consumed interrupt after completion, rather than aborting detached-cell cleanup. Thirteen new CLR cases total, all 21 baseline functional controls conserved; no original baseline bug claim."
+      ],
+      "adaptation": "Native reference-key ConcurrentDictionary membership and private reified atomic slots retain nullable reference values, stable published slot identity, exchange/reference CAS, absent publication, clearing versus detachment, stale holders and conditional replacement-safe removal. Existing typed map/slot signatures remain; direct Interlocked/Volatile replace implementation-only AtomicReference inheritance. Java sorted copy-on-write commentary is archived in canonical provenance; interface comments preserved verbatim. No performance claim. Native bucket-monitor writes retry ThreadInterruptedException safely and restore the pending interrupt after membership publication/conditional deletion.",
       "comments": {
         "upstreamCount": 4,
         "required": true,
-        "preservedCount": 1,
-        "missingCount": 3
+        "preservedCount": 4,
+        "missingCount": 0
       }
     },
     {
@@ -334,18 +342,23 @@
     {
       "upstream": "common/src/main/java/io/netty/util/DefaultAttributeMap.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/DefaultAttributeMap.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/DefaultAttributeMap.cs",
+        "test/Netty.NET.Common.Tests/Porting/AttributeMapContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/AttributeMapInterruptContractTest.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned implementation/tests and real transport/handler/codec consumers reviewed; all six original attribute-map scenarios remain. Identical baseline/native new fixture selects 21 passing cases; ten CLR cases cover reference identity/null, competing publication, exchange conservation, mixed-key insertion and forced delayed removal. Identical non-friend public consumer conserves slot/owner contracts and verifies retirement of two implementation helpers/native storage. Default full Debug/Release each 2214 pass/0 failed/14 unchanged skips (2228 discovered), all prior 2215 and original 759 outcomes retained. Targeted Debug/checked Release each 24 pass; all 271 comment rows without loss, 22 scoped original comments retained; inventory/casing/no-new-warning checks pass. See common-clr-design.md#native-attribute-map-and-atomic-slots and current common-porting.md; artifacts/native-attribute-map-validation and native-attribute-map-* evidence. Whole common and alternate-runtime reviews remain open. Three additional forced native dictionary bucket-monitor cases fail against the isolated unprotected migration candidate with ThreadInterruptedException and pass final publication, replacement, removal and pending-interrupt checks. Writes retry from published state and restore the consumed interrupt after completion, rather than aborting detached-cell cleanup. Thirteen new CLR cases total, all 21 baseline functional controls conserved; no original baseline bug claim."
+      ],
+      "adaptation": "Native reference-key ConcurrentDictionary membership and private reified atomic slots retain nullable reference values, stable published slot identity, exchange/reference CAS, absent publication, clearing versus detachment, stale holders and conditional replacement-safe removal. Existing typed map/slot signatures remain; direct Interlocked/Volatile replace implementation-only AtomicReference inheritance. Java sorted copy-on-write commentary is archived in canonical provenance; interface comments preserved verbatim. No performance claim. Native bucket-monitor writes retry ThreadInterruptedException safely and restore the pending interrupt after membership publication/conditional deletion.",
       "comments": {
         "upstreamCount": 6,
         "required": true,
-        "preservedCount": 5,
-        "missingCount": 1
+        "preservedCount": 6,
+        "missingCount": 0
       }
     },
     {
