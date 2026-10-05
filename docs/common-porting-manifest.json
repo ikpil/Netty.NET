@@ -918,18 +918,21 @@
     {
       "upstream": "common/src/main/java/io/netty/util/Signal.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Signal.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Signal.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned common Task-value and codec-base DecoderResult/ReplayingDecoder consumers reviewed. Nine new CLR cases; byte-identical baseline affected fixture 21 passed/4 failed, final Debug/checked Release 25 passed. Executed exact Java and native consumers compare 66 normalized rows (42 baseline differences). Full defaults, original identities/comments/inventory, casing and warning evidence in common-porting.md native replay signal checkpoint and native-signal-* TRX/JSON. Windows/net10.0 only; full codec/backend/platform integration remains separate."
+      ],
+      "adaptation": "Required replay/sentinel identity retained as sealed CLR Exception/IComparable constant with private pooled construction; private helpers nested. Native registry/order algorithms unchanged. Expect(null) uses pinned null text; null comparison is ArgumentNullException. Public StackTrace is empty, name-only ToString and null InnerException retained, but CLR internal throw capture/cost and broad Exception catch behavior differ from Java Error. No initCause/fillInStackTrace facade or JVM serialization field. All eight original comments restored; native doc variants archived. See common-clr-design.md#native-replay-signals.",
       "comments": {
         "upstreamCount": 8,
         "required": true,
-        "preservedCount": 4,
-        "missingCount": 4
+        "preservedCount": 8,
+        "missingCount": 0
       }
     },
     {

@@ -7095,3 +7095,61 @@ TRX/JSON. Only interface/exception owners move pending to verified for this scop
 review; existing counter/util owners retain their prior scoped review.
 Whole common/backend/platform reviews and the preceding focused Global completion
 stall remain open; whole blocking mode and other OS/runtime backends not rerun.
+
+
+## Native replay signals
+
+Signal is a required shared marker, not a JVM-only error placeholder:
+codec-base/.../DecoderResult.java:23-24 stores singleton success/unfinished markers
+in its Throwable slot and tests identity; ReplayingDecoder.java:270,334-336,387-388
+throws/catches the replay signal, verifies it, then restores the checkpoint.
+The original common DefaultPromiseTest signal values remain native Task results.
+Keep the sealed Exception/IComparable constant purpose and the existing native
+ConcurrentDictionary registry/identity comparer. The constructor is now private
+as pinned; its two private helper types live inside Signal instead of separate
+internal source files. Factories alone publish instances; case-sensitive identity,
+type.FullName + '#' naming, allowed typed empty second component, validation,
+reference hashing and native nonzero total order remain. JVM Class.getName naming
+and runtime identity-hash order are not cross-runtime numeric contracts.
+
+Expect rejects a different marker with InvalidOperationException and renders null
+as "unexpected signal: null" rather than CLR empty concatenation. CompareTo(null)
+now uses ArgumentNullException, as the existing native constant comparer does;
+the pinned dereference throws NullPointerException. The public StackTrace is
+empty and ToString is the name before/after repeated throws; InnerException stays
+null. CLR runtime throw-state capture/TargetSite still exists: this is no claim
+of Java fillInStackTrace allocation/cost equivalence, nor concurrent throws of a
+shared Exception being free of native diagnostic mutation. No JVM initCause,
+fillInStackTrace or Error facade is added; serialVersionUID is JVM serialization.
+CLR Exception includes signals in broad catch(Exception), unlike Java Error.
+Future codec ports must catch Signal before wrapping ordinary decoder failures;
+unsupported JVM trace mutation/suppression semantics are not manufactured.
+
+All eight original comments are now present in Signal; previous CLR-adjusted
+doc variants are preserved here:
+
+```csharp
+/**
+     * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
+     */
+
+/**
+     * Check if the given {@link Signal} is the same as this instance. If not an {@link InvalidOperationException} will
+     * be thrown.
+     */
+
+```
+
+Nine new CLR cases cover factory concurrency/publication, ordinal/type naming,
+construction visibility, replay catching/rethrows, unexpected/null markers,
+identity/hash/order collections, comparison null and factory validation. The
+byte-identical affected 25-case fixture has four baseline failures (constructor,
+replay stack diagnostics, null mismatch text and null comparison); final Debug
+and checked Release each pass 25, preserving all 16 prior affected cases.
+Executed exact pinned Signal/Constant/AbstractConstant/ConstantPool/ObjectUtil
+sources and byte-identical baseline/native C# consumers compare 66 rows; final
+matches all after normalizing boolean spelling and the documented JVM null-error
+mapping. Baseline differs on 42 rows. Native Task signal-value identity also passes.
+Raw TRX/JSON/logs: native-signal-* and artifacts/native-signal-validation.
+Windows/net10.0; complete codec/backend/platform integration and the previously
+recorded focused Global completion stall remain open.

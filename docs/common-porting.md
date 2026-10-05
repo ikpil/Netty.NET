@@ -44,6 +44,24 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native replay signal checkpoint
+
+Signal now has a scoped pinned common/codec consumer review and corrected private
+construction, null mismatch text, native null comparison and empty public trace
+diagnostics. See [native replay signals](common-clr-design.md#native-replay-signals)
+for Error/Exception and internal throw-state differences. No new MD file.
+Affected baseline identical fixture: 21 passed/4 failed; final Debug/checked Release
+25 passed. Nine new CLR cases; 66 executed Java/native rows match under documented
+normalization. Default Debug/Release each: 2311 discovered/2297 passed/0 failed/
+14 unchanged skips. All 2302 prior outcomes, 759 original identities, 271 comment
+rows and pinned 205+66 inventory retained; eight scoped original comments restored,
+no new source/test warning identities, casing/collisions zero. Source statuses:
+69 verified/55 CLR replacements/51 pending/15 in-progress/15 not-applicable.
+Evidence: artifacts/native-signal-validation and native-signal-* TRX/JSON.
+Continue remaining constants/public registry API, native executor/backend and
+string/platform inventory. Common completion and the focused Global completion
+stall remain open; other OS/runtime backends and whole blocking mode not rerun.
+
 ## Native reference-count API checkpoint
 
 ReferenceCounted/IllegalReferenceCountException now have scoped pinned-consumer

@@ -36,7 +36,7 @@ public sealed class Signal : Exception, IConstant<Signal>
     }
 
     /**
-     * Shortcut of {@link #valueOf(string) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
+     * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
      */
     public static Signal ValueOf(Type firstNameComponent, string secondNameComponent)
     {
@@ -48,22 +48,31 @@ public sealed class Signal : Exception, IConstant<Signal>
     /**
      * Creates a new {@link Signal} with the specified {@code name}.
      */
-    public Signal(int id, string name)
+    private Signal(int id, string name)
     {
         constant = new SignalConstant(id, name);
     }
 
     /**
-     * Check if the given {@link Signal} is the same as this instance. If not an {@link InvalidOperationException} will
+     * Check if the given {@link Signal} is the same as this instance. If not an {@link IllegalStateException} will
      * be thrown.
      */
     public void Expect(Signal signal)
     {
         if (!ReferenceEquals(this, signal))
         {
-            throw new InvalidOperationException("unexpected signal: " + signal);
+            throw new InvalidOperationException("unexpected signal: " + (signal?.ToString() ?? "null"));
         }
     }
+
+    // Suppress a warning since the method doesn't need synchronization
+    // CLR: Java initCause has no native counterpart. Only the private registry
+    // constructor creates this marker and it never supplies an InnerException.
+
+    // Suppress a warning since the method doesn't need synchronization
+    // CLR: expose empty signal diagnostics as Java fillInStackTrace does. The
+    // runtime still captures throw state; this does not eliminate CLR throw cost.
+    public override string StackTrace => string.Empty;
 
     public int Id()
     {
@@ -87,6 +96,7 @@ public sealed class Signal : Exception, IConstant<Signal>
 
     public int CompareTo(Signal other)
     {
+        ArgumentNullException.ThrowIfNull(other);
         if (ReferenceEquals(this, other))
         {
             return 0;
@@ -98,5 +108,17 @@ public sealed class Signal : Exception, IConstant<Signal>
     public override string ToString()
     {
         return Name();
+    }
+
+    private sealed class SignalConstantPool : ConstantPool<Signal>
+    {
+        protected override Signal NewConstant(int id, string name) => new Signal(id, name);
+    }
+
+    private sealed class SignalConstant : AbstractConstant<SignalConstant>
+    {
+        internal SignalConstant(int id, string name) : base(id, name)
+        {
+        }
     }
 }
