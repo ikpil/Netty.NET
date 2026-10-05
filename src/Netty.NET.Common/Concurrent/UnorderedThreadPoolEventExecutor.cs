@@ -758,7 +758,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         public bool IsCancelled() => _task.IsCanceled;
         public void CancelOuter() => _task.CancelForShutdown();
         public void Reject(Exception error) => _task.Reject(error);
-        public void Run() => _task.Run();
+        public void Run() => _task.QueueCallback();
     }
 
     // Raw execute owns no asynchronous result. Its queue entry claims and releases

@@ -67,7 +67,7 @@ public class NativeLazySchedulingContractTest
             try
             {
                 _clock.Advance(TimeSpan.FromTicks(1));
-                PollScheduledTask().Run();
+                PollScheduledTask().Invoke();
             }
             finally { _inLoop = false; }
         }

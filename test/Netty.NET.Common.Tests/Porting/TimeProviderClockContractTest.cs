@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -24,20 +23,19 @@ public class TimeProviderClockContractTest
     private sealed class ManualExecutor(TimeProvider provider) : AbstractScheduledEventExecutor(null, provider), IDisposable
     {
         private readonly Thread owner = Thread.CurrentThread;
-        private readonly ConcurrentQueue<IRunnable> tasks = new();
+        private readonly ConcurrentQueue<Action> tasks = new();
         private bool stopped;
         internal void Pump()
         {
             Assert.True(InEventLoop());
-            while (tasks.TryDequeue(out var normal)) normal.Run();
-            IRunnable due;
-            while ((due = PollScheduledTask()) != null) due.Run();
+            while (tasks.TryDequeue(out var normal)) normal();
+            Action due;
+            while ((due = PollScheduledTask()) != null) due();
         }
         public override bool InEventLoop(Thread thread) => ReferenceEquals(thread, owner);
         public override void Execute(Action task)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
-            tasks.Enqueue(queuedTask);
+            tasks.Enqueue(task);
         }
         public override bool IsShutdown() => stopped;
         public override bool IsShuttingDown() => stopped;

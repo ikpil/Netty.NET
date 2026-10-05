@@ -163,30 +163,30 @@ public class NativeExecutorQueueContractTest
     }
 
     [Fact]
-    public void ScheduledMetadataRecoveryAcceptsOnlyTheExactIssuedCallback()
+    public void ScheduledCallbacksKeepOneInvocationWhenCopiedOrComposed()
     {
         var executor = new Loop();
         int calls = 0, prefixes = 0;
         Task result = executor.ScheduleAsync(() => calls++, TimeSpan.FromTicks(1), TestContext.Current.CancellationToken);
         IScheduledWork work = executor.Head;
-        Action callback = ExecutorWork.Wrap(work);
-        Assert.Same(work, ExecutorWork.Unwrap(callback, nameof(callback)));
-        Assert.Same(callback, ExecutorWork.Wrap(work));
+        Action callback = work.QueueCallback;
+        Assert.Same(callback, work.QueueCallback);
+        Assert.False((object)work is Netty.NET.Common.Functional.IRunnable);
         Action copied = (Action)callback.Clone();
         Assert.Equal(callback, copied);
         Assert.NotSame(callback, copied);
-        Assert.NotSame(work, ExecutorWork.Unwrap(copied, nameof(copied)));
-        Action run = work.Run;
-        Assert.NotSame(work, ExecutorWork.Unwrap(run, nameof(run)));
+        Action forwarded = () => callback();
         Action composed = (() => prefixes++) + copied;
-        var ordinary = ExecutorWork.Unwrap(composed, nameof(composed));
-        Assert.NotSame(work, ordinary);
+
         executor.Advance(100);
         var ready = new LinkedBlockingQueue<Action>(1);
         Assert.True(executor.Transfer(ready));
         Assert.True(ready.TryDequeue(out var retained));
         Assert.Same(callback, retained);
-        ordinary.Run();
+        composed();
+        retained();
+        copied();
+        forwarded();
         Assert.Equal(1, prefixes);
         Assert.Equal(1, calls);
         Assert.True(result.IsCompletedSuccessfully);

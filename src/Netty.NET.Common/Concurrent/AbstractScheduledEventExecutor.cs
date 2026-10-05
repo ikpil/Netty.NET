@@ -20,7 +20,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Collections;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
@@ -205,7 +204,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * @see #pollScheduledTask(long)
      */
-    protected internal IRunnable PollScheduledTask()
+    protected internal Action PollScheduledTask()
     {
         return PollScheduledTask(GetCurrentTimeNanos());
     }
@@ -229,7 +228,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         long nanoTime = GetCurrentTimeNanos();
         for (;;)
         {
-            IScheduledWork scheduledTask = PollScheduledTask(nanoTime);
+            IScheduledWork scheduledTask = PollScheduledWork(nanoTime);
             if (scheduledTask == null)
             {
                 return true;
@@ -240,7 +239,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
                 continue;
             }
 
-            if (!taskQueue.TryEnqueue(ExecutorWork.Wrap(scheduledTask)))
+            if (!taskQueue.TryEnqueue(scheduledTask.QueueCallback))
             {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
                 _scheduledTaskQueue.TryEnqueue(scheduledTask);
@@ -253,7 +252,11 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * Return the {@link Runnable} which is ready to be executed with the given {@code nanoTime}.
      * You should use {@link #getCurrentTimeNanos()} to retrieve the correct {@code nanoTime}.
      */
-    protected IScheduledWork PollScheduledTask(long nanoTime)
+    protected Action PollScheduledTask(long nanoTime) => PollScheduledWork(nanoTime)?.QueueCallback;
+
+    // Transfer needs the actual membership for capacity rollback; consumers execute
+    // only its native callback. Both polling overloads share this dequeue boundary.
+    private IScheduledWork PollScheduledWork(long nanoTime)
     {
         Debug.Assert(InEventLoop());
 
@@ -379,11 +382,11 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
             // task will add itself to scheduled task queue when run if not expired
             if (BeforeScheduledTaskSubmitted(deadlineNanos))
             {
-                Execute(task);
+                Execute(task.QueueCallback);
             }
             else
             {
-                LazyExecute(task);
+                LazyExecute(task.QueueCallback);
                 // Second hook after scheduling to facilitate race-avoidance
                 if (AfterScheduledTaskSubmitted(deadlineNanos))
                 {
@@ -411,7 +414,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     protected virtual void ScheduleRemoveScheduled(IScheduledWork task)
     {
         // task will remove itself from scheduled task queue when it runs
-        LazyExecute(task);
+        LazyExecute(task.QueueCallback);
     }
 
     /**

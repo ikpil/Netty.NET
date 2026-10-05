@@ -22,7 +22,6 @@ namespace Netty.NET.Common.Concurrent;
 
 internal interface ITaskScheduledWork : IScheduledWork
 {
-    Action QueueCallback { get; }
     long PeriodNanos { get; }
     Task Completion { get; }
     void Reject(Exception error);
@@ -147,7 +146,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         _registration.Unregister();
     }
 
-    public void Run()
+    private void Run()
     {
         if (Completion.IsCompleted) { if (IsCanceled) RemoveCanceled(); return; }
         if (DelayNanos() > 0)

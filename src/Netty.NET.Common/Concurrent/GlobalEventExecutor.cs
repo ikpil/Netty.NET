@@ -82,7 +82,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
             -SCHEDULE_QUIET_PERIOD_INTERVAL, GetCurrentTimeNanos, () => true,
             task => ScheduleFromEventLoop(task), task => RemoveScheduled(task), captureContext: false
         );
-        _quietPeriodCallback = ExecutorWork.Wrap(_quietPeriodTask);
+        _quietPeriodCallback = _quietPeriodTask.QueueCallback;
         ScheduledTaskQueue().TryEnqueue(_quietPeriodTask);
         _threadFactory = ThreadExecutorMap.Apply(new DefaultThreadFactory(
             GetType(), false, ThreadPriority.Normal), this);
@@ -157,10 +157,10 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     private void FetchFromScheduledTaskQueue()
     {
         long nanoTime = GetCurrentTimeNanos();
-        IScheduledWork scheduledTask = PollScheduledTask(nanoTime);
+        Action scheduledTask = PollScheduledTask(nanoTime);
         while (scheduledTask != null)
         {
-            _taskQueue.Add(ExecutorWork.Wrap(scheduledTask));
+            _taskQueue.Add(scheduledTask);
             scheduledTask = PollScheduledTask(nanoTime);
         }
     }

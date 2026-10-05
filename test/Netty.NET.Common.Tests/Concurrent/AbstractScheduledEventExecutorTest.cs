@@ -18,7 +18,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 using Void = Netty.NET.Common.Concurrent.Void;
 
@@ -38,7 +37,7 @@ public class AbstractScheduledEventExecutorTest
         var ready = executor.PollScheduledTask();
         Assert.NotNull(ready);
         Assert.False((object)ready is System.Threading.Tasks.Task);
-        ready.Run();
+        ready();
         Assert.True(future.IsCompletedSuccessfully);
         Assert.Null(executor.PollScheduledTask());
     }
@@ -53,7 +52,7 @@ public class AbstractScheduledEventExecutorTest
         var ready = executor.PollScheduledTask();
         Assert.NotNull(ready);
         Assert.False((object)ready is System.Threading.Tasks.Task);
-        ready.Run();
+        ready();
         Assert.True(future.IsCompletedSuccessfully);
         Assert.Null(executor.PollScheduledTask());
     }
@@ -67,7 +66,7 @@ public class AbstractScheduledEventExecutorTest
         var ready = executor.PollScheduledTask();
         Assert.NotNull(ready);
         Assert.False((object)ready is System.Threading.Tasks.Task);
-        ready.Run();
+        ready();
         Assert.True(future.IsCompletedSuccessfully);
         Assert.Null(executor.PollScheduledTask());
     }
@@ -81,7 +80,7 @@ public class AbstractScheduledEventExecutorTest
         var ready = executor.PollScheduledTask();
         Assert.NotNull(ready);
         Assert.False((object)ready is System.Threading.Tasks.Task);
-        ready.Run();
+        ready();
         Assert.True(future.IsCompletedSuccessfully);
         Assert.Null(executor.PollScheduledTask());
     }
@@ -135,7 +134,7 @@ public class AbstractScheduledEventExecutorTest
         public override bool AwaitTermination(TimeSpan timeout) => false;
         public override void Execute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
+            ArgumentNullException.ThrowIfNull(command);
             throw new NotSupportedException();
         }
     }

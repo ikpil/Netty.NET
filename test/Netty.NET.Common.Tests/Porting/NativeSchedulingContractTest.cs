@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -16,13 +15,12 @@ public class NativeSchedulingContractTest
         private bool _shutdown;
         internal IScheduledWork Head => PeekScheduledTask();
         internal void Advance(long nanos) => _clock.Advance(TimeSpan.FromTicks(nanos / 100));
-        internal IRunnable Poll() => PollScheduledTask();
+        internal Action Poll() => PollScheduledTask();
         public override Ticker Ticker() => _clock;
         public override bool InEventLoop(Thread thread) => true;
         public override void Execute(Action task)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
-            queuedTask.Run();
+            task();
         }
         public override Task Termination => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Shutdown(); return Termination; }
@@ -44,7 +42,7 @@ public class NativeSchedulingContractTest
         Task third = executor.ScheduleAsync(() => { order.Add(3); }, TimeSpan.FromTicks(1));
         Assert.Null(executor.Poll());
         executor.Advance(100);
-        executor.Poll().Run(); executor.Poll().Run(); executor.Poll().Run();
+        executor.Poll().Invoke(); executor.Poll().Invoke(); executor.Poll().Invoke();
         Assert.Equal(new[] { 1, 2, 3 }, order);
         Assert.Equal(42, await first);
         Assert.Equal("text", await second);
@@ -65,12 +63,12 @@ public class NativeSchedulingContractTest
             ? executor.ScheduleWithFixedDelayAsync(callback, TimeSpan.Zero, TimeSpan.FromTicks(2), cancellation.Token)
             : executor.ScheduleAtFixedRateAsync(callback, TimeSpan.Zero, TimeSpan.FromTicks(2), cancellation.Token);
         long sequence = executor.Head.GetId();
-        executor.Poll().Run();
+        executor.Poll().Invoke();
         Assert.Equal(fixedDelay ? 300 : 200, executor.Head.DeadlineNanos());
         Assert.Equal(sequence, executor.Head.GetId());
         Assert.False(task.IsCompleted);
         executor.Advance(fixedDelay ? 200 : 100);
-        executor.Poll().Run();
+        executor.Poll().Invoke();
         Assert.Equal(2, calls);
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
@@ -84,9 +82,9 @@ public class NativeSchedulingContractTest
         using var cancellation = new CancellationTokenSource();
         int calls = 0;
         Task task = executor.ScheduleAsync(() => { ++calls; }, TimeSpan.Zero, cancellation.Token);
-        IRunnable due = executor.Poll();
+        Action due = executor.Poll();
         cancellation.Cancel();
-        due.Run();
+        due();
         Assert.Equal(0, calls);
         var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
         Assert.Equal(cancellation.Token, error.CancellationToken);
@@ -100,7 +98,7 @@ public class NativeSchedulingContractTest
         var executor = new ManualExecutor();
         Task<int> task = executor.ScheduleAsync(() => 7, TimeSpan.FromTicks(ticks));
         Assert.False(task.IsCompleted);
-        executor.Poll().Run();
+        executor.Poll().Invoke();
         Assert.Equal(7, await task);
     }
 
@@ -144,10 +142,10 @@ public class NativeSchedulingContractTest
         }
         else task = executor.ScheduleAtFixedRateAsync(action, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
         ambient.Value = "executor";
-        executor.Poll().Run();
+        executor.Poll().Invoke();
         Assert.Equal("executor", ambient.Value);
         executor.Advance(100);
-        executor.Poll().Run();
+        executor.Poll().Invoke();
         Assert.Equal(new[] { suppressFlow ? "executor" : "caller", suppressFlow ? "executor" : "caller" }, values);
         Assert.Equal("executor", ambient.Value);
         cancellation.Cancel();

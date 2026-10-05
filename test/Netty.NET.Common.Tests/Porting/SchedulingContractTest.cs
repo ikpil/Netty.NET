@@ -122,19 +122,18 @@ public class SchedulingContractTest
         public void Advance(long nanos) => clock.Advance(nanos);
         internal IScheduledWork Head => PeekScheduledTask();
         internal bool holdRemoval;
-        internal readonly List<IRunnable> removals = new();
+        internal readonly List<Action> removals = new();
         protected override void ScheduleRemoveScheduled(IScheduledWork task)
         {
-            if (holdRemoval) removals.Add(task);
+            if (holdRemoval) removals.Add(task.QueueCallback);
             else base.ScheduleRemoveScheduled(task);
         }
-        public IRunnable PollDue() => PollScheduledTask(GetCurrentTimeNanos());
+        public Action PollDue() => PollScheduledTask(GetCurrentTimeNanos());
         public bool TransferDue(IQueue<Action> queue) => FetchFromScheduledTaskQueue(queue);
         public override bool InEventLoop(Thread thread) => !holdRemoval;
         public override void Execute(Action task)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
-            queuedTask.Run();
+            task();
         }
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
         public override Task Termination => Task.CompletedTask;
@@ -160,7 +159,7 @@ public class SchedulingContractTest
             Assert.True(task.IsCanceled);
         }
         executor.Advance(100);
-        executor.PollDue()?.Run();
+        executor.PollDue()?.Invoke();
         Assert.Equal(cancel ? 0 : 1, calls);
         Assert.True(task.IsCompleted);
         if (!cancel) Assert.True(task.IsCompletedSuccessfully);
@@ -200,7 +199,7 @@ public class SchedulingContractTest
         Assert.True(executor.TransferDue(queue));
         Assert.Equal(1, queue.Count);
         Assert.True(queue.TryDequeue(out var task));
-        Assert.NotSame(canceledWork, ExecutorWork.Unwrap(task, nameof(task)));
+        Assert.NotSame(canceledWork.QueueCallback, task);
         task();
         Assert.True(ready.IsCompletedSuccessfully);
         Assert.Null(executor.PollDue());
@@ -216,7 +215,7 @@ public class SchedulingContractTest
         var queue = new LinkedBlockingQueue<Action>(1);
         Assert.True(queue.TryEnqueue(Runnables.Empty.Run));
         Assert.False(executor.TransferDue(queue));
-        Assert.Same(readyWork, executor.PollDue());
+        Assert.Same(readyWork.QueueCallback, executor.PollDue());
     }
 
     [Fact]
@@ -227,14 +226,15 @@ public class SchedulingContractTest
         var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
         var periodicWork = executor.Head;
         long id = periodicWork.GetId();
-        executor.PollDue().Run();
+        executor.PollDue().Invoke();
         Assert.Equal(id, periodicWork.GetId());
         var next = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
         executor.Advance(100);
-        Assert.Same(periodicWork, executor.PollDue());
-        var nextWork = Assert.IsAssignableFrom<IScheduledWork>(executor.PollDue());
+        Assert.Same(periodicWork.QueueCallback, executor.PollDue());
+        var nextWork = executor.Head;
+        Assert.Same(nextWork.QueueCallback, executor.PollDue());
         Assert.Equal(id + 1, nextWork.GetId());
-        nextWork.Run();
+        nextWork.QueueCallback();
         Assert.True(next.IsCompletedSuccessfully);
         cancellation.Cancel();
         Assert.True(periodic.IsCanceled);
@@ -246,18 +246,23 @@ public class SchedulingContractTest
         internal bool after;
         internal int afterCalls;
         internal int lazyCalls;
-        internal readonly List<IRunnable> submissions = new();
-        public override bool InEventLoop(Thread thread) => false;
+        internal readonly List<Action> submissions = new();
+        private bool running;
+        public override bool InEventLoop(Thread thread) => running;
+        internal void RunQueued(Action task)
+        {
+            running = true;
+            try { task(); }
+            finally { running = false; }
+        }
         public override void Execute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
-            submissions.Add(queuedTask);
+            submissions.Add(command);
         }
         public override void LazyExecute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
             ++lazyCalls;
-            submissions.Add(queuedTask);
+            submissions.Add(command);
         }
         protected override bool BeforeScheduledTaskSubmitted(long deadline) => before;
         protected override bool AfterScheduledTaskSubmitted(long deadline) { ++afterCalls; return after; }
@@ -275,13 +280,16 @@ public class SchedulingContractTest
     {
         var executor = new HookExecutor { before = before, after = after };
         var task = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
-        var work = Assert.IsAssignableFrom<IScheduledWork>(executor.submissions[0]);
+        Action issued = Assert.IsType<Action>(executor.submissions[0]);
+        executor.RunQueued(issued);
+        IScheduledWork work = executor.Head;
+        Assert.Same(issued, work.QueueCallback);
         Assert.False((object)work is System.Threading.Tasks.Task);
         Assert.False(task.IsCompleted);
         Assert.Equal(before ? 0 : 1, executor.lazyCalls);
         Assert.Equal(before ? 0 : 1, executor.afterCalls);
         Assert.Equal(!before && after ? 2 : 1, executor.submissions.Count);
-        if (!before && after) Assert.NotSame(work, executor.submissions[1]);
+        if (!before && after) Assert.NotSame(issued, executor.submissions[1]);
     }
 
     [Fact]

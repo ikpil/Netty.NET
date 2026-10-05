@@ -16,7 +16,7 @@ public class ExecutorLifecycleContractTest
     private sealed class Child : AbstractScheduledEventExecutor
     {
         internal readonly TaskCompletionSource termination = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        internal readonly Queue<IRunnable> tasks = new();
+        internal readonly Queue<Action> tasks = new();
         internal bool queued;
         internal int executions;
         internal IScheduledWork scheduledSubmission;
@@ -35,20 +35,21 @@ public class ExecutorLifecycleContractTest
         public override bool InEventLoop(Thread thread) => running && thread == Thread.CurrentThread;
         public override void Execute(Action command)
         {
-            IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
-            if (queuedTask is IScheduledWork scheduled)
-                scheduledSubmission = scheduled;
             if (++executions == rejectExecution)
                 throw new RejectedExecutionException("Simulated queue full");
             if (queued)
-                tasks.Enqueue(queuedTask);
+                tasks.Enqueue(command);
             else
-                Run(queuedTask);
+            {
+                Run(command);
+                scheduledSubmission = _scheduledTaskQueue?.ToArray()
+                    .FirstOrDefault(work => ReferenceEquals(work.QueueCallback, command)) ?? scheduledSubmission;
+            }
         }
-        internal void Run(IRunnable command)
+        internal void Run(Action command)
         {
             running = true;
-            try { command.Run(); }
+            try { command(); }
             finally { running = false; }
         }
         public override Task Termination => termination.Task;
@@ -673,7 +674,7 @@ public class ExecutorLifecycleContractTest
         Assert.Same(child.termination.Task, group.ShutdownGracefullyAsync());
         Assert.Same(child.termination.Task, group.Termination);
         var direct = group.SubmitAsync(() => { });
-        Assert.IsAssignableFrom<INativeSubmission>(child.tasks.Peek());
+        Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(child.tasks.Peek()));
         child.Run(child.tasks.Dequeue());
         direct.GetAwaiter().GetResult();
         var first = group.Next();

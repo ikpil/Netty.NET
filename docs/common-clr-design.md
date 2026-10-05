@@ -5516,3 +5516,60 @@ claim. Fresh HEAD archive is the before build. Evidence and exact sample scope:
 artifacts/lazy-action-validation/allocation-evidence.json; final matrix/inventory/
 comment checks are in the current common-porting checkpoint. No source status or
 broader completion claim changes.
+
+## Native scheduled callback boundary
+
+Pinned AbstractScheduledEventExecutor.java:174-233 returns Runnable from both
+poll overloads and retains ScheduledFutureTask metadata only for heap rollback.
+SingleThreadEventExecutor.java:361-376 and GlobalEventExecutor.java:139-145 execute
+those due tasks. Transport EmbeddedEventLoop.java:73-84 polls with its clock and
+runs each callback; ManualIoEventLoop.java:174-177 transfers into its ready queue.
+ScheduledFutureTask.java:129-160 handles expiry, owned cancellation and periodic
+reinsertion. All-module pollScheduledTask consumers were reviewed.
+
+IScheduledWork keeps deadline/sequence/cancel membership with one stable QueueCallback
+Action and no Runnable inheritance. Both protected poll overloads return Action.
+A private PollScheduledWork retains the exact membership for full-ready-queue rollback;
+consumers do not unwrap metadata from delegate targets. NativeScheduledWork's invocation
+method is private; its existing callback, Task/TCS result and claiming/cancellation/
+context remain. Ordered/global/unordered backends and suspension-aware removal dispatch
+that callback directly. No additional callback or Task is created by the new boundary.
+
+ExecutorWork now bridges only the remaining real Runnable producers. Its scheduled
+fast path and metadata recovery are removed; original exact-envelope checks for native
+submissions/runner reservations remain. Archived retired CLR bridge comments:
+
+```csharp
+        // Construction initializes this once; later scheduled transfers reuse it.
+        if (work is ITaskScheduledWork scheduled && scheduled.QueueCallback is { } callback) return callback;
+
+        // Scheduled work is an assembly-owned marker with an exact issued callback.
+        // A caller's copy of its Run delegate or a multicast is still ordinary work.
+        if (command.Target is ITaskScheduledWork scheduled && ReferenceEquals(command, scheduled.QueueCallback)) return scheduled;
+```
+
+The original AbstractScheduled fixture uses native callbacks with unchanged Java
+scenarios, assertions, identities and comments. Other harnesses store/execute Action;
+forwarding captures metadata only from actual deadline-queue membership. The CLR-only
+ScheduledMetadataRecoveryAcceptsOnlyTheExactIssuedCallback case becomes
+ScheduledCallbacksKeepOneInvocationWhenCopiedOrComposed: stable issued callback, value-equal
+copy, forwarding/composition, due transfer and single-invocation result claiming remain,
+while assertions about the retired Runnable metadata-recovery API are removed.
+All other baseline identities and the original 759 results must remain unchanged.
+
+The identical before/after consumer uses a validation-only Runnable overload for the
+old poll return type; the after build binds its Action overload. A separate non-friend
+consumer imports no Java functional types and compiles both protected poll overloads
+as Action, checking heterogeneous FIFO/context, capacity rollback, multicast single
+claim, detached cancellation and periodic callback/ID stability. Evidence:
+artifacts/scheduled-action-validation/{before,after}-consumer.log and native-consumer.log.
+
+Held ScheduleAsync(Func<int>) admissions in a fixed native Action array remain
+424 bytes/call in both direct and lazy-plus-wakeup hook modes before/after. Release
+Windows/x64/net10.0, tiered compilation disabled, 5,000 warmups and three samples of
+100,000 operations/mode/version, fresh HEAD-archive baseline. Cold setup/array storage/
+new caller delegates/result observation/execution/drain/cancel/stop/logging/real workers
+excluded; no optimization/throughput claim. Sample scope is in ignored
+artifacts/scheduled-action-validation/allocation-evidence.json. Final matrices,
+identity remap and comment audit are in the current common-porting checkpoint;
+source statuses and broader native/backend/platform completion remain unchanged.

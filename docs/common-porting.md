@@ -124,34 +124,39 @@ Optimization follows behavioral verification and measured performance.
 
 The current default suite executes **2143 cases** on Windows/x64/net10.0:
 **2129 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: lazy-action-full-debug.trx and lazy-action-full-release.trx.
-All 2138 prior identities/outcomes, every skip and the 759 original non-Porting
-results remain unchanged. Five CLR cases added; no original fixture changes,
-identity remaps or exclusions. Deprecated lazy marker types/helpers are removed;
-LazyExecute(Action), WakesUpForTask(Action) and before/after submission policy remain.
-The scheduler and single-thread queue share one native wakeup callback; reference
-identity keeps copied Actions ordinary work. Scheduled Task/cancellation/context and
-deadline ownership remain. Reusable wakeup regression fails before changes; both
-poll/take regressions fail before marker sharing. Targeted Debug/checked Release each
-pass 103 cases, zero failed/skipped. All 271 comment rows have no coverage loss;
-the three source owners retain 163/163 comments, including retired-marker provenance.
-Inventory/paths, prior provenance, uppercase declarations and no-new-warning checks
-pass. Identical non-friend C# consumers retain hook/result/context/cancel behavior and
-verify shared-marker consumption. See common-clr-design.md#native-lazy-scheduling-and-wakeup-callbacks.
+Evidence: scheduled-action-full-debug.trx and scheduled-action-full-release.trx.
+All 2142 unaffected prior identities/outcomes and 759 original non-Porting results
+remain unchanged. One CLR-only case is explicitly remapped from retired scheduled
+metadata recovery to copied/composed callback single-invocation ownership; no added
+case, original identity removal/remap or new exclusion. The original AbstractScheduled
+fixture invokes native callbacks with unchanged Java scenarios/comments.
 
-Fixed-array held ScheduleAsync(Func<int>) admission, sample medians: direct stays 424 bytes/call,
-lazy plus after-hook wakeup 520 -> 424. Release, tiered compilation disabled,
-5,000 warmups and three 100,000-operation samples/mode/version. Array/cold setup/
-new caller delegates/result observation/scheduled execution/drain/cancel/stop/logging/
-real workers excluded; no throughput/contention claim. Ignored TRX/audit/identity
-results in TestResults, consumer/allocation evidence in artifacts/lazy-action-validation.
-Prior Global focused xUnit completion stall remains unresolved in its design section;
-this unit's matrices completed. Only the three canonical records updated, no new MD.
+IScheduledWork keeps deadline/sequence/cancellation membership without Runnable.
+Its stable Action crosses submission/removal, both protected polling overloads and
+ordered/global/unordered dispatch. Private membership polling preserves capacity
+rollback; result Task/TCS, periodic ID/deadline, context, worker admission/stop and
+suspension-aware removal remain. Targeted Debug/checked Release each pass 191 cases,
+zero failed/skipped. All 271 comment rows have no coverage loss; six source/one test
+owners retain 243/243 comments, and retired CLR bridge comments remain in provenance.
+Inventory/paths, earlier provenance, uppercase declarations and no-new-warning
+identities pass. See common-clr-design.md#native-scheduled-callback-boundary.
+
+Identical before/after consumers retain native lazy hook/context/cancel/shared-wakeup
+behavior, using a validation-only old-poll overload for the baseline. A separate
+non-friend consumer uses only C# Action/Task and verifies both typed poll overloads,
+FIFO/context, rollback, multicast single claim, detached cancel and periodic callback/ID.
+Held native scheduling admission remains 424 bytes/call in both hook modes. Release,
+tiered compilation disabled, 5,000 warmups, three 100,000-operation samples/mode/version;
+array/cold setup/new delegates/result observation/execution/drain/cancel/stop/logging/
+real workers excluded; no optimization/throughput claim. Ignored TRX/audit/identity
+results in TestResults, consumer/allocation evidence in artifacts/scheduled-action-validation.
+The prior Global focused xUnit completion stall remains unresolved in its design
+section; current matrices completed. Only three canonical records updated, no new MD.
 Source statuses stay 58 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 16 in progress. Next: IScheduledWork Runnable inheritance/protected
-scheduled dequeue API and synchronous Shutdown/AwaitTermination, then remaining
-source/native reviews in dependency order. Whole common and untested platforms
-remain open. Full portable sources build without PortingBatch.
+66 pending / 16 in progress. Next: synchronous Shutdown/AwaitTermination and remaining
+native producer/backend API review, then outstanding source/native reviews in dependency
+order. Whole common and untested platforms remain open; portable sources build without
+PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

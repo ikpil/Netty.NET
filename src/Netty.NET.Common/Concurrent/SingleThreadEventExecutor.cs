@@ -385,7 +385,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
 
         long nanoTime = GetCurrentTimeNanos();
-        IScheduledWork scheduledTask = PollScheduledTask(nanoTime);
+        Action scheduledTask = PollScheduledTask(nanoTime);
         if (scheduledTask == null)
         {
             return false;
@@ -1163,7 +1163,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             // ever re-request suspension and the thread would keep running forever waiting for new tasks.
             Execute(() =>
             {
-                task.Run();
+                task.QueueCallback();
                 if (CanSuspend(ST_SUSPENDED))
                 {
                     // Try suspending again to recover the state before we submitted the new task that will
@@ -1175,7 +1175,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         else
         {
             // task will remove itself from scheduled task queue when it runs
-            Execute(ExecutorWork.Wrap(task), false);
+            Execute(task.QueueCallback, false);
         }
     }
 
