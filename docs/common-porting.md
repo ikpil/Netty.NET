@@ -122,39 +122,38 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2147 cases** on Windows/x64/net10.0:
-**2133 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: inactivity-full-debug.trx and inactivity-full-release.trx.
-All 2138 unaffected prior identities/outcomes and 759 original non-Porting results
-remain unchanged. Five CLR-only rows are explicitly remapped from the former Java
-zero/submillisecond join convention to native finite/negative TimeSpan contracts;
-four new rows cover explicit infinite completion/interruption in both services.
-No original identity removal/remap, new exclusion or skip change.
+The current default suite executes **2149 cases** on Windows/x64/net10.0:
+**2135 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: watcher-action-full-debug.trx and watcher-action-full-release.trx.
+All 2147 prior identities/outcomes and 759 original non-Porting results remain
+unchanged. Two CLR cases add copied multicast failure isolation and thread-specific
+cancellation of one shared callback. No identity remap, new exclusion or skip change.
 
-GlobalEventExecutor and ThreadDeathWatcher AwaitInactivity now poll on zero, bound
-positive waits, accept Timeout.InfiniteTimeSpan explicitly and reject all other
-negative durations. A shared internal native Join helper preserves large timeout
-budgets, worker snapshots and interruption. Java comments and original watcher/
-Global scenarios remain. Shutdown/AwaitTermination stay where pinned transport
-consumers and failure/policy differences establish their purpose beside Task-based
-lifecycle APIs. See common-clr-design.md#native-synchronous-lifecycle-and-inactivity-waits.
+ThreadDeathWatcher Watch/Unwatch accept Action only; registrations retain the exact
+callback, and reference-identity cancellation removes one duplicate for the specified
+thread. Private worker and deferred ReleasingTask no longer implement Runnable.
+ReleaseLater supplies a bound native callback while retaining counted-object/decrement
+ownership and original logging. Original watcher scenarios/assertions/comments and
+the native inactivity timeout policy remain. See
+common-clr-design.md#native-thread-death-watcher-callbacks for pinned consumers,
+delegate identity/context/failure decisions and retained producer state.
 
-Targeted Debug and checked Release each pass 109 cases, zero failed/skipped.
-All 271 comment rows have no coverage loss; the two changed source owners retain
-81/81 original comments, and retired CLR comments remain in existing provenance.
-Pinned 205 source/66 test inventory and paths, earlier provenance, uppercase
-declarations and no-new-source/test-warning identities pass. Identical before/after
-C# consumers reproduce the changed timeout convention, cold watcher validation,
-interruptible infinite/huge waits and completed-worker polling. Ignored evidence:
-inactivity-*.trx/JSON in TestResults and artifacts/inactivity-validation/*-probe.log.
-No timing precision, allocation or throughput claim. Only three canonical records
-updated; no new MD file. The prior focused Global xUnit completion stall remains
-unresolved in its design section; current matrices completed.
+Targeted Debug and checked Release each pass 39 cases, zero failed/skipped.
+All 271 comment rows have no coverage loss; two source/one original test owners
+retain 55/55 original comments. The pinned 205 source/66 test inventory and paths,
+earlier provenance, uppercase declarations and no-new-source/test-warning identities
+pass. An identical non-friend native Action/Thread/Task consumer fails to compile
+against the fresh baseline's Runnable API, then passes with native callbacks,
+duplicate/copy cancellation, multicast failure, context suppression, actual deferred
+release and worker restart. Ignored evidence: watcher-action-*.trx/JSON in TestResults
+and artifacts/watcher-action-validation/{before-consumer-build,native-consumer}.log.
+No allocation/throughput claim; ReleaseLater creates a bound Action. Only three
+canonical records updated; no new MD file. The prior focused Global xUnit completion
+stall remains unresolved in its design section; current matrices completed.
 
 Source statuses stay 58 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 16 in progress. Next: review native Action Watch/Unwatch callback
-ownership against the pinned ReferenceCountUtil producer and watcher registrations,
-preserving duplicate/reference-identity cancellation and worker lifecycle; then
+66 pending / 16 in progress. Next: review UnorderedThreadPoolEventExecutor RawWork's
+Action-to-Runnable round trip and submission cancellation/stop ownership, then
 remaining executor producer/backend and source/native reviews in dependency order.
 Whole common and untested platforms remain open; portable sources build without
 PortingBatch.

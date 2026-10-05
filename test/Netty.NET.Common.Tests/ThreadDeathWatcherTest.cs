@@ -16,7 +16,6 @@
 using System;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests;
@@ -38,7 +37,7 @@ public class ThreadDeathWatcherTest
     {
         using var latch = new CountdownEvent(1);
         Thread thread = CreateThread();
-        IRunnable task = Runnables.Create(() => { if (!thread.IsAlive) latch.Signal(); });
+        Action task = () => { if (!thread.IsAlive) latch.Signal(); };
         Assert.Throws<ArgumentException>(() => ThreadDeathWatcher.Watch(thread, task));
         thread.Start();
         try
@@ -63,7 +62,7 @@ public class ThreadDeathWatcherTest
     {
         int run = 0;
         Thread thread = CreateThread();
-        IRunnable task = Runnables.Create(() => Interlocked.Exchange(ref run, 1));
+        Action task = () => Interlocked.Exchange(ref run, 1);
         thread.Start();
         try
         {

@@ -20,7 +20,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -67,7 +66,12 @@ public static class ThreadDeathWatcher
      *
      * @throws IllegalArgumentException if the specified {@code thread} is not alive
      */
-    public static void Watch(Thread thread, IRunnable task)
+    /// <remarks>
+    /// Keep this Action instance to cancel the registration. Unwatch matches reference identity,
+    /// even when a copied delegate has the same invocation list. Duplicate registrations run separately.
+    /// The callback runs on the watcher thread without capturing the registering ExecutionContext.
+    /// </remarks>
+    public static void Watch(Thread thread, Action task)
     {
         ArgumentNullException.ThrowIfNull(thread);
         ArgumentNullException.ThrowIfNull(task);
@@ -77,13 +81,17 @@ public static class ThreadDeathWatcher
     /**
      * Cancels the task scheduled via {@link #watch(Thread, Runnable)}.
      */
-    public static void Unwatch(Thread thread, IRunnable task)
+    /// <remarks>
+    /// Removes one registration for this exact thread and Action instance. Delegate value equality
+    /// does not cancel another instance, and cancellation does not stop a callback already running.
+    /// </remarks>
+    public static void Unwatch(Thread thread, Action task)
     {
         ArgumentNullException.ThrowIfNull(thread);
         ArgumentNullException.ThrowIfNull(task);
         Schedule(thread, task, false);
     }
-    private static void Schedule(Thread thread, IRunnable task, bool isWatch)
+    private static void Schedule(Thread thread, Action task, bool isWatch)
     {
         pendingEntries.Enqueue(new Entry(thread, task, isWatch));
         if (Interlocked.CompareExchange(ref started, 1, 0) != 0) return;
@@ -123,10 +131,10 @@ public static class ThreadDeathWatcher
         Thread worker = Volatile.Read(ref watcherThread);
         return ThreadJoin.Join(worker, timeout);
     }
-    private sealed class Watcher : IRunnable
+    private sealed class Watcher
     {
         private readonly List<Entry> watchees = new();
-        public void Run()
+        internal void Run()
         {
             for (;;)
             {
@@ -182,15 +190,15 @@ public static class ThreadDeathWatcher
                 Entry entry = watchees[index];
                 if (entry.thread.IsAlive) { index++; continue; }
                 watchees.RemoveAt(index);
-                try { entry.task.Run(); }
+                try { entry.task(); }
                 catch (Exception failure) { logger.Warn("Thread death watcher task raised an exception:", failure); }
             }
         }
     }
-    private sealed class Entry(Thread thread, IRunnable task, bool isWatch)
+    private sealed class Entry(Thread thread, Action task, bool isWatch)
     {
         internal readonly Thread thread = thread;
-        internal readonly IRunnable task = task;
+        internal readonly Action task = task;
         internal readonly bool isWatch = isWatch;
         public override int GetHashCode() => RuntimeHelpers.GetHashCode(thread) ^ RuntimeHelpers.GetHashCode(task);
         public override bool Equals(object value) => value is Entry other &&

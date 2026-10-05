@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -27,7 +27,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
     [Fact]
     public void ValidationRejectsNullAndNonLiveThreadsWhileUnwatchAcceptsUnstartedThreads()
     {
-        var task = Runnables.Empty;
+        Action task = static () => { };
         var thread = new Thread(() => { });
         Assert.Throws<ArgumentNullException>(() => ThreadDeathWatcher.Watch(null, task));
         Assert.Throws<ArgumentNullException>(() => ThreadDeathWatcher.Watch(thread, null));
@@ -40,24 +40,21 @@ public class ThreadDeathWatcherContractTest : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromMilliseconds(-2)));
     }
 
-    private sealed class EqualRunnable(Action action) : IRunnable
-    {
-        public void Run() => action();
-        public override bool Equals(object value) => value is EqualRunnable;
-        public override int GetHashCode() => 0;
-    }
     [Fact]
     public void UnwatchUsesReferenceIdentityAndRemovesOnlyOneDuplicateRegistration()
     {
         using var owner = new LiveThread();
         using var completed = new CountdownEvent(2);
         int firstCount = 0, secondCount = 0;
-        var first = new EqualRunnable(() => { Interlocked.Increment(ref firstCount); completed.Signal(); });
-        var second = new EqualRunnable(() => { Interlocked.Increment(ref secondCount); completed.Signal(); });
+        Action first = () => { Interlocked.Increment(ref firstCount); completed.Signal(); };
+        Action second = () => { Interlocked.Increment(ref secondCount); completed.Signal(); };
+        var copy = (Action)first.Clone();
+        Assert.NotSame(first, copy);
+        Assert.True(first.Equals(copy));
         ThreadDeathWatcher.Watch(owner.Thread, first);
         ThreadDeathWatcher.Watch(owner.Thread, first);
         ThreadDeathWatcher.Watch(owner.Thread, second);
-        ThreadDeathWatcher.Unwatch(owner.Thread, new EqualRunnable(() => { }));
+        ThreadDeathWatcher.Unwatch(owner.Thread, copy);
         ThreadDeathWatcher.Unwatch(owner.Thread, first);
         owner.End();
         Assert.True(completed.Wait(TimeSpan.FromSeconds(5)));
@@ -74,14 +71,14 @@ public class ThreadDeathWatcherContractTest : IDisposable
         ThreadPriority priority = ThreadPriority.Normal;
         bool background = false;
         string name = null;
-        ThreadDeathWatcher.Watch(owner.Thread, Runnables.Create(() => { Interlocked.Increment(ref failures); throw new InvalidOperationException("callback failure"); }));
-        ThreadDeathWatcher.Watch(owner.Thread, Runnables.Create(() =>
+        ThreadDeathWatcher.Watch(owner.Thread, () => { Interlocked.Increment(ref failures); throw new InvalidOperationException("callback failure"); });
+        ThreadDeathWatcher.Watch(owner.Thread, () =>
         {
             priority = Thread.CurrentThread.Priority;
             background = Thread.CurrentThread.IsBackground;
             name = Thread.CurrentThread.Name;
             completed.Set();
-        }));
+        });
         owner.End();
         Assert.True(completed.Wait(TimeSpan.FromSeconds(5)));
         Assert.Equal(1, Volatile.Read(ref failures));
@@ -98,14 +95,14 @@ public class ThreadDeathWatcherContractTest : IDisposable
         using var registered = new ManualResetEventSlim();
         using var completed = new ManualResetEventSlim();
         int cancelled = 0;
-        var cancel = Runnables.Create(() => Interlocked.Increment(ref cancelled));
-        ThreadDeathWatcher.Watch(first.Thread, Runnables.Create(() =>
+        Action cancel = () => Interlocked.Increment(ref cancelled);
+        ThreadDeathWatcher.Watch(first.Thread, () =>
         {
             ThreadDeathWatcher.Watch(second.Thread, cancel);
-            ThreadDeathWatcher.Watch(second.Thread, Runnables.Create(completed.Set));
+            ThreadDeathWatcher.Watch(second.Thread, completed.Set);
             ThreadDeathWatcher.Unwatch(second.Thread, cancel);
             registered.Set();
-        }));
+        });
         first.End();
         Assert.True(registered.Wait(TimeSpan.FromSeconds(5)));
         second.End();
@@ -127,10 +124,10 @@ public class ThreadDeathWatcherContractTest : IDisposable
             ambient.Value = marker;
             try
             {
-                ThreadDeathWatcher.Watch(owner.Thread, Runnables.Create(() =>
+                ThreadDeathWatcher.Watch(owner.Thread, () =>
                 {
                     captured = ambient.Value; firstWorker = Thread.CurrentThread; firstDone.Set();
-                }));
+                });
                 Assert.Same(marker, ambient.Value);
             }
             finally { ambient.Value = null; }
@@ -143,7 +140,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
         {
             using (ExecutionContext.SuppressFlow())
             {
-                ThreadDeathWatcher.Watch(owner.Thread, Runnables.Create(() => { secondWorker = Thread.CurrentThread; secondDone.Set(); }));
+                ThreadDeathWatcher.Watch(owner.Thread, () => { secondWorker = Thread.CurrentThread; secondDone.Set(); });
                 Assert.True(ExecutionContext.IsFlowSuppressed());
             }
             Assert.False(ExecutionContext.IsFlowSuppressed());
@@ -161,8 +158,8 @@ public class ThreadDeathWatcherContractTest : IDisposable
         using var firstDone = new ManualResetEventSlim();
         using var secondDone = new ManualResetEventSlim();
         Thread worker = null;
-        ThreadDeathWatcher.Watch(first.Thread, Runnables.Create(() => { worker = Thread.CurrentThread; firstDone.Set(); }));
-        ThreadDeathWatcher.Watch(second.Thread, Runnables.Create(secondDone.Set));
+        ThreadDeathWatcher.Watch(first.Thread, () => { worker = Thread.CurrentThread; firstDone.Set(); });
+        ThreadDeathWatcher.Watch(second.Thread, secondDone.Set);
         first.End();
         Assert.True(firstDone.Wait(TimeSpan.FromSeconds(5)));
         worker.Interrupt();
@@ -189,7 +186,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
     public void InactivityPollsOrBoundsFiniteWaitsAndRejectsNegativeTicks(long ticks)
     {
         using var owner = new LiveThread();
-        ThreadDeathWatcher.Watch(owner.Thread, Runnables.Empty);
+        ThreadDeathWatcher.Watch(owner.Thread, static () => { });
         if (ticks < 0)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromTicks(ticks)));
@@ -219,7 +216,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
     public void InfiniteInactivityWaitCompletesOrCanBeInterrupted(bool interrupt)
     {
         using var owner = new LiveThread();
-        ThreadDeathWatcher.Watch(owner.Thread, Runnables.Empty);
+        ThreadDeathWatcher.Watch(owner.Thread, static () => { });
         Exception failure = null;
         bool stopped = false;
         var waiter = new Thread(() =>
@@ -247,6 +244,45 @@ public class ThreadDeathWatcherContractTest : IDisposable
     }
 
     [Fact]
+    public void MulticastFailureStopsThatInvocationButNotOtherRegistrations()
+    {
+        using var owner = new LiveThread();
+        var order = new List<int>();
+        Action task = () => order.Add(1);
+        task += () => { order.Add(2); throw new InvalidOperationException("multicast failure"); };
+        task += () => order.Add(3);
+        var copy = (Action)task.Clone();
+        Assert.NotSame(task, copy);
+        Assert.True(task.Equals(copy));
+        ThreadDeathWatcher.Watch(owner.Thread, task);
+        ThreadDeathWatcher.Unwatch(owner.Thread, copy);
+        ThreadDeathWatcher.Watch(owner.Thread, () => order.Add(4));
+        owner.End();
+        Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        Assert.Equal(new[] { 1, 2, 4 }, order);
+    }
+
+    [Fact]
+    public void SharedCallbackCancellationMatchesTheWatchedThread()
+    {
+        using var first = new LiveThread();
+        using var second = new LiveThread();
+        using var firstObserved = new ManualResetEventSlim();
+        int calls = 0;
+        Action task = () => Interlocked.Increment(ref calls);
+        ThreadDeathWatcher.Watch(first.Thread, task);
+        ThreadDeathWatcher.Watch(second.Thread, task);
+        ThreadDeathWatcher.Watch(first.Thread, firstObserved.Set);
+        ThreadDeathWatcher.Unwatch(second.Thread, task);
+        first.End();
+        Assert.True(firstObserved.Wait(TimeSpan.FromSeconds(5)));
+        Assert.Equal(1, Volatile.Read(ref calls));
+        second.End();
+        Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        Assert.Equal(1, Volatile.Read(ref calls));
+    }
+
+    [Fact]
     public void ConcurrentRegistrationsAndCancellationsDeliverEachRemainingTaskExactlyOnce()
     {
         using var owner = new LiveThread();
@@ -259,8 +295,8 @@ public class ThreadDeathWatcherContractTest : IDisposable
             for (int i = 0; i < iterations; i++)
             {
                 bool cancel = (i & 1) == 0;
-                IRunnable task = cancel ? Runnables.Create(() => Interlocked.Increment(ref cancelled)) :
-                    Runnables.Create(() => { Interlocked.Increment(ref fired); completed.Signal(); });
+                Action task = cancel ? () => Interlocked.Increment(ref cancelled) :
+                    () => { Interlocked.Increment(ref fired); completed.Signal(); };
                 ThreadDeathWatcher.Watch(owner.Thread, task);
                 if (cancel) ThreadDeathWatcher.Unwatch(owner.Thread, task);
             }

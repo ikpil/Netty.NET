@@ -15,7 +15,6 @@
  */
 using System;
 using System.Threading;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -118,7 +117,7 @@ public static class ReferenceCountUtil
     public static T ReleaseLater<T>(T msg, int decrement)
     {
         ObjectUtil.CheckPositive(decrement, "decrement");
-        if (msg is IReferenceCounted reference) ThreadDeathWatcher.Watch(Thread.CurrentThread, new ReleasingTask(reference, decrement));
+        if (msg is IReferenceCounted reference) ThreadDeathWatcher.Watch(Thread.CurrentThread, new ReleasingTask(reference, decrement).Run);
         return msg;
     }
     /**
@@ -129,9 +128,9 @@ public static class ReferenceCountUtil
     /**
      * Releases the objects when the thread that called {@link #releaseLater(Object)} has been terminated.
      */
-    private sealed class ReleasingTask(IReferenceCounted obj, int decrement) : IRunnable
+    private sealed class ReleasingTask(IReferenceCounted obj, int decrement)
     {
-        public void Run()
+        internal void Run()
         {
             try
             {

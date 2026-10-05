@@ -5622,3 +5622,43 @@ observers are interrupted for bounded cleanup; production workers are released
 after observation. Evidence: artifacts/inactivity-validation/{before,after}-probe.log.
 No timing precision, allocation or throughput claim; final matrix and comment audit
 are in the current common-porting checkpoint. Broader source/backend review remains open.
+
+## Native thread death watcher callbacks
+
+Pinned ThreadDeathWatcher.java:79-121,146-278 stores Runnable with a Thread,
+removes one matching entry by reference identity, removes dead-thread membership
+before invoking a callback, isolates callback failure and arbitrates one polling
+worker with CAS. ReferenceCountUtil.java:160-165,184-216 is the only production
+caller in an all-module pinned search. The buffer allocator test has an old watcher
+comment, not a production registration. The three original watcher tests cover
+live/dead delivery, unwatch and nonsticky factory group inheritance.
+
+Watch/Unwatch now accept Action only, and Entry stores/invokes that exact delegate.
+Keep the registered Action instance for cancellation: a value-equal clone or
+newly combined delegate is another registration identity. Match both thread and
+callback; remove one duplicate. No inferred delegate-target ownership or wrapper
+is needed. Multicast uses native invocation order/exception semantics, while failure
+of one registration still allows other registrations to run. Raw callback invocation
+does not capture the producer's ExecutionContext; singleton worker startup still
+suppresses inherited context, without promising isolation between callback bodies.
+Private Watcher retains its list/worker loop without Runnable inheritance.
+
+ReleaseLater supplies a bound ReleasingTask.Run delegate. Its state object remains
+because it owns the counted object/decrement and the original diagnostic ToString;
+the pending entry keeps it alive until callback consumption or cancellation.
+Release timing, requested decrement, return identity and failure isolation remain.
+This creates one bound Action for a deferred release, with no allocation reduction
+claim. Deprecation and the original intended test-helper scope remain documented.
+
+The original fixture uses native Action with unchanged identities/scenarios/assertions
+and all nine comments. The existing CLR duplicate/equality probe uses an Action
+clone in place of an equality-overriding Runnable. Two new cases cover thread-specific
+cancellation of a shared callback and copied multicast/failure isolation. Existing
+registration concurrency, reentrancy, worker interrupt/restart/context and deferred
+release cases remain. A separate non-friend C# consumer uses only native Action,
+Thread and Task plus reference-count APIs: it cannot compile against the fresh HEAD
+baseline (Action-to-Runnable argument errors), then passes against the new Release
+build, including deferred release/context/restart. Evidence:
+artifacts/watcher-action-validation/{before-consumer-build,native-consumer}.log.
+Final matrices, 55 original source/test comments and inventory checks are in the
+current common-porting checkpoint. Broader executor/backend/platform review remains open.
