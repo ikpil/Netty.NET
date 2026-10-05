@@ -44,6 +44,12 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     private long nextTaskId;
     private readonly Ticker selectedTicker;
+    // Bind these to the owner once; calls still observe virtual clock and shutdown
+    // state at invocation time. Every native scheduled membership shares them.
+    private readonly Func<long> nativeClock;
+    private readonly Func<bool> nativeCanRun;
+    private readonly Action<ITaskScheduledWork> nativeEnqueue;
+    private readonly Action<ITaskScheduledWork> nativeRemove;
 
     protected AbstractScheduledEventExecutor() : this(null)
     {
@@ -59,6 +65,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         : base(parent)
     {
         selectedTicker = global::Netty.NET.Common.Concurrent.Ticker.FromTimeProvider(timeProvider);
+        nativeClock = GetCurrentTimeNanos;
+        nativeCanRun = () => !IsShutdown();
+        nativeEnqueue = EnqueueNative;
+        nativeRemove = RemoveNative;
     }
 
     public override Ticker Ticker() => selectedTicker;
@@ -102,7 +112,8 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     internal static long DeadlineNanos(long nanoTime, long delay)
     {
-        long deadlineNanos = nanoTime + delay;
+        // Java long addition wraps before the existing saturation check.
+        long deadlineNanos = unchecked(nanoTime + delay);
         // Guard against overflow
         return deadlineNanos < 0 ? long.MaxValue : deadlineNanos;
     }
@@ -334,8 +345,8 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         if (period != 0) ValidateScheduled0(TimeSpan.FromTicks(Math.Abs(period) / 100));
         if (token.IsCancellationRequested) return Task.FromCanceled<T>(token);
         var task = new NativeScheduledWork<T>(function, token,
-            DeadlineNanos(GetCurrentTimeNanos(), ToNanos(delay)), period, GetCurrentTimeNanos,
-            () => !IsShutdown(), EnqueueNative, RemoveNative, captureContext);
+            DeadlineNanos(GetCurrentTimeNanos(), ToNanos(delay)), period, nativeClock,
+            nativeCanRun, nativeEnqueue, nativeRemove, captureContext);
         try { if (!task.Completion.IsCompleted) SubmitScheduled(task); }
         catch (Exception error) { task.Reject(error); }
         task.Publish();

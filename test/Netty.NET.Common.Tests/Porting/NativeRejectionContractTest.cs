@@ -195,9 +195,17 @@ public class NativeRejectionContractTest
                 try
                 {
                     Thread.CurrentThread.Interrupt();
-                    Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
+                    Exception rejection = null;
+                    try { executor.Execute(static () => { }); }
+                    catch (Exception error) { rejection = error; }
+                    // xUnit may acquire a resource lock while reading an exception
+                    // message. Consume the expected pending interrupt before assertions.
+                    bool interrupted = false;
+                    try { Thread.Sleep(0); }
+                    catch (ThreadInterruptedException) { interrupted = true; }
+                    Assert.IsType<RejectedExecutionException>(rejection);
                     Assert.Equal(1, executor.WakeCalls);
-                    Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(0));
+                    Assert.True(interrupted);
                     completion.SetResult(null);
                 }
                 catch (Exception error) { completion.SetResult(error); }

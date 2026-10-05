@@ -16,11 +16,13 @@ public class NativeExecutorQueueContractTest
         internal Action Added;
         internal Action WakeChecked;
         internal int Capacity;
+        internal bool Closed;
 
         internal Loop(Action<Action, SingleThreadEventExecutor> rejected = null)
             : base(null, _ => throw new Exception("unexpected worker start"), false, 16,
                 rejected ?? RejectedExecutionHandlers.Reject()) { }
         public override bool InEventLoop(Thread thread) => thread == Thread.CurrentThread;
+        public override bool IsShutdown() => Closed || base.IsShutdown();
         public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
         protected override IQueue<Action> NewTaskQueue(int maxPendingTasks)
         {
@@ -158,5 +160,60 @@ public class NativeExecutorQueueContractTest
         Assert.True(executor.Drain());
         Assert.Equal(1, calls);
         Assert.Equal(0, executor.PendingTasks());
+    }
+
+    [Fact]
+    public void ScheduledMetadataRecoveryAcceptsOnlyTheExactIssuedCallback()
+    {
+        var executor = new Loop();
+        int calls = 0, prefixes = 0;
+        Task result = executor.ScheduleAsync(() => calls++, TimeSpan.FromTicks(1), TestContext.Current.CancellationToken);
+        IScheduledWork work = executor.Head;
+        Action callback = ExecutorWork.Wrap(work);
+        Assert.Same(work, ExecutorWork.Unwrap(callback, nameof(callback)));
+        Assert.Same(callback, ExecutorWork.Wrap(work));
+        Action copied = (Action)callback.Clone();
+        Assert.Equal(callback, copied);
+        Assert.NotSame(callback, copied);
+        Assert.NotSame(work, ExecutorWork.Unwrap(copied, nameof(copied)));
+        Action run = work.Run;
+        Assert.NotSame(work, ExecutorWork.Unwrap(run, nameof(run)));
+        Action composed = (() => prefixes++) + copied;
+        var ordinary = ExecutorWork.Unwrap(composed, nameof(composed));
+        Assert.NotSame(work, ordinary);
+        executor.Advance(100);
+        var ready = new LinkedBlockingQueue<Action>(1);
+        Assert.True(executor.Transfer(ready));
+        Assert.True(ready.TryDequeue(out var retained));
+        Assert.Same(callback, retained);
+        ordinary.Run();
+        Assert.Equal(1, prefixes);
+        Assert.Equal(1, calls);
+        Assert.True(result.IsCompletedSuccessfully);
+        Assert.False(executor.Drain());
+    }
+
+    [Fact]
+    public void CachedOwnerCallbacksObserveLiveVirtualTimeAndShutdownState()
+    {
+        var executor = new Loop();
+        using var cancellation = new CancellationTokenSource();
+        int calls = 0;
+        Task periodic = executor.ScheduleWithFixedDelayAsync(() =>
+        {
+            calls++;
+            executor.Advance(700);
+        }, TimeSpan.Zero, TimeSpan.FromTicks(3), cancellation.Token);
+        Assert.True(executor.Drain());
+        Assert.Equal(300, executor.Head.DelayNanos());
+        executor.Advance(299);
+        Assert.False(executor.Drain());
+        Assert.Equal(1, calls);
+        executor.Advance(1);
+        executor.Closed = true;
+        Assert.True(executor.Drain());
+        Assert.Equal(1, calls);
+        Assert.True(periodic.IsCanceled);
+        Assert.Null(executor.Head);
     }
 }

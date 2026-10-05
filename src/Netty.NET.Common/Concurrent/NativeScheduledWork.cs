@@ -58,7 +58,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     {
         // One opaque callback owns every submission, due transfer and cancellation
         // dispatch. Periodic execution and a full ready queue do not recreate it.
-        QueueCallback = ExecutorWork.Wrap(this);
+        QueueCallback = Run;
         _function = function;
         _context = captureContext ? ExecutionContext.Capture() : null;
         _token = token;

@@ -5256,3 +5256,59 @@ for this path, while native SubmitAsync's existing callback envelope remains.
 Evidence: artifacts/native-queue-validation/allocation-evidence.json. Global,
 Immediate and NonSticky internal Runnable storage, public scheduled membership,
 obsolete lazy marker interfaces and synchronous shutdown/wait review remain open.
+
+## Scheduled callback ownership and allocation
+
+Reopened the native scheduling boundary for the measured +104-byte fresh on-loop
+schedule cost from the ready-queue migration. Pinned ScheduledFutureTask.java:
+145-203 retains the same membership across delayed admission, repeat/id/index,
+cancel/remove and executor shutdown; AbstractScheduledEventExecutor.java:269-300
+creates the membership with its owning executor. Native Task result/context and
+cancellation policy stay unchanged.
+
+NativeScheduledWork now binds QueueCallback directly to its Run method, avoiding
+the extra ExecutorWork object. ExecutorWork recovers only an assembly-owned
+ITaskScheduledWork's exact issued callback by ReferenceEquals. A cloned Action,
+new method-group delegate or composed multicast remains ordinary work, retaining
+every invocation. Exact issuance, rather than arbitrary target/method inference,
+is the marker contract. The stable callback still serves full-queue rollback,
+periodic transfer and cancellation; existing non-scheduled envelopes remain.
+AbstractScheduledEventExecutor binds clock/can-run/enqueue/remove callbacks once
+in its constructor. Binding invokes no virtual method during construction; calls
+read the live virtual clock/shutdown state and retain each original owner. Readonly
+owner fields avoid a mutable registry or concurrent lazy-initialization path.
+
+Two regressions validate exact issuance/copy/composition and live fixed-delay time
+plus shutdown. The initial test forgot to transfer/dequeue its deadline membership
+before manually invoking the callback; that harness step is repaired without a
+library behavior change. Original fixtures/scenarios/comments are unchanged.
+The identical non-friend native consumer passes before and after. Validation and
+six-mode allocation results are in the current checkpoint and ignored
+artifacts/scheduled-callback-validation. Fresh on-loop scheduling is 800 -> 512
+bytes, while manual executor construction is 1168 -> 1456 (+288 once). Creating
+one executor and one schedule breaks even against the preceding commit; repeated
+scheduling on that owner benefits, owners without scheduling pay the added cost.
+This comparison includes a mock-clock probe subclass, not real worker startup.
+Raw 48, discard 0, periodic 88 and SubmitAsync 408 bytes/operation stay unchanged.
+Release Windows/x64/net10.0, tiered compilation disabled, identical sources,
+5,000 warmups and three 100,000-operation samples per mode/version; no controlled
+throughput/contention claim. The earlier on-loop +104 regression is superseded
+for this measured path; broader backend/API/platform review remains open.
+
+The expanded checked Release selection exposed the existing original
+TestDeadlineNanosNotOverflow failure: the C# addition threw before its saturation
+check. Pinned AbstractScheduledEventExecutor.java:95-99 deliberately wraps Java
+long addition and then clamps a negative result. The CLR addition is now explicitly
+unchecked before the unchanged clamp. Four identical operand pairs in the exact
+isolated pinned Java method and corrected checked C# method pass; the prior checked
+C# method fails the two overflow pairs. Original fixture and assertions are unchanged.
+Ignored deadline-before/after/java probes record this additional contract repair.
+
+A final targeted run also exposed a CLR-only test observer race: xUnit's exception
+recording read Exception.Message under a resource lock while the submitting thread
+still had the expected restored interrupt. The interruption escaped inside xUnit,
+not the rejection policy. NativeRejectionContractTest now captures the rejection,
+consumes/records the pending flag via Sleep(0), then asserts the same exact rejection,
+wake count and interrupt expectation. Both original operands/scenarios remain;
+no rejection implementation change, new skip or relaxed result assertion. The
+failing stack and final matrices are retained in ignored validation evidence.
