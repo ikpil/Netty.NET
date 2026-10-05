@@ -38,7 +38,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
             return delta == 0 ? o1.GetId().CompareTo(o2.GetId()) : delta < 0 ? -1 : 1;
         });
 
-    protected static readonly IRunnable WAKEUP_TASK = Runnables.Empty; // Do nothing
+    protected static readonly Action WAKEUP_TASK = static () => { }; // Do nothing
 
     protected IPriorityQueue<IScheduledWork> _scheduledTaskQueue;
 

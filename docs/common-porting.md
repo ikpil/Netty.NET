@@ -122,32 +122,36 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2138 cases** on Windows/x64/net10.0:
-**2124 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: nonsticky-action-full-debug.trx and nonsticky-action-full-release.trx.
-All 2135 prior identities/outcomes, every skip and the 759 original non-Porting
-results remain unchanged. Three CLR cases added; no original fixture edits or new
-exclusions. NonSticky ready storage uses Action; pending stop/reject recovers only
-the exact issued native callback. Original FIFO, batch/retry/thread-affinity and
-native result/context/stop ownership remain. Targeted Debug/checked Release each
-pass 212 cases, zero failed/skipped. All 271 comment rows have no coverage loss;
-NonSticky/shared AbstractEventExecutor owners retain 37/37 comments. Inventory/paths,
-old provenance, uppercase declarations and no-new-warning checks pass. Identical
-non-friend native consumers pass before/after, including actual pool stop/results.
-See common-clr-design.md#nonsticky-native-action-storage-and-settlement.
-Capacity-primed admission behind an existing reservation: raw/multicast 24 -> 0 bytes,
-native SubmitAsync 360 unchanged. Raw Execute/manual drain with fresh reservation is
-160 -> 136 bytes. Release, tiered compilation disabled, 5,000 warmups and three
-100,000-operation samples/mode/version; queue growth/cold setup/result observation/
-logging/shutdown/real-worker costs excluded. No throughput/contention claim.
-Ignored TRX/audit/identity evidence in TestResults; native consumer/allocation evidence
-in artifacts/nonsticky-action-validation. Prior Global focused xUnit completion stall
-remains unresolved in its design section; this unit's matrices completed.
-Only the three canonical records updated; no new Markdown file. Source statuses stay
-58 verified / 50 CLR replacement / 15 not applicable / 66 pending / 16 in progress.
-Next: remaining scheduled/lazy marker APIs and synchronous Shutdown/AwaitTermination,
-then remaining source/native reviews in dependency order. Whole common and untested
-platforms remain open. Full portable sources build without PortingBatch.
+The current default suite executes **2143 cases** on Windows/x64/net10.0:
+**2129 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: lazy-action-full-debug.trx and lazy-action-full-release.trx.
+All 2138 prior identities/outcomes, every skip and the 759 original non-Porting
+results remain unchanged. Five CLR cases added; no original fixture changes,
+identity remaps or exclusions. Deprecated lazy marker types/helpers are removed;
+LazyExecute(Action), WakesUpForTask(Action) and before/after submission policy remain.
+The scheduler and single-thread queue share one native wakeup callback; reference
+identity keeps copied Actions ordinary work. Scheduled Task/cancellation/context and
+deadline ownership remain. Reusable wakeup regression fails before changes; both
+poll/take regressions fail before marker sharing. Targeted Debug/checked Release each
+pass 103 cases, zero failed/skipped. All 271 comment rows have no coverage loss;
+the three source owners retain 163/163 comments, including retired-marker provenance.
+Inventory/paths, prior provenance, uppercase declarations and no-new-warning checks
+pass. Identical non-friend C# consumers retain hook/result/context/cancel behavior and
+verify shared-marker consumption. See common-clr-design.md#native-lazy-scheduling-and-wakeup-callbacks.
+
+Fixed-array held ScheduleAsync(Func<int>) admission, sample medians: direct stays 424 bytes/call,
+lazy plus after-hook wakeup 520 -> 424. Release, tiered compilation disabled,
+5,000 warmups and three 100,000-operation samples/mode/version. Array/cold setup/
+new caller delegates/result observation/scheduled execution/drain/cancel/stop/logging/
+real workers excluded; no throughput/contention claim. Ignored TRX/audit/identity
+results in TestResults, consumer/allocation evidence in artifacts/lazy-action-validation.
+Prior Global focused xUnit completion stall remains unresolved in its design section;
+this unit's matrices completed. Only the three canonical records updated, no new MD.
+Source statuses stay 58 verified / 50 CLR replacement / 15 not applicable /
+66 pending / 16 in progress. Next: IScheduledWork Runnable inheritance/protected
+scheduled dequeue API and synchronous Shutdown/AwaitTermination, then remaining
+source/native reviews in dependency order. Whole common and untested platforms
+remain open. Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

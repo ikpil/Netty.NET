@@ -50,7 +50,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private static readonly Action NOOP_TASK = static () => { }; // Do nothing.
 
     // Native queue entries retain their exact callback across retries and rollback.
-    private static readonly Action WAKEUP_ACTION = static () => { };
+    private static readonly Action WAKEUP_ACTION = WAKEUP_TASK;
     private readonly IQueue<Action> _taskQueue;
 
     private volatile Thread _thread;
@@ -282,7 +282,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         for (;;)
         {
             taskQueue.TryDequeue(out var task);
-            if (task != WAKEUP_ACTION)
+            if (!ReferenceEquals(task, WAKEUP_ACTION))
             {
                 return task;
             }
@@ -316,7 +316,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 try
                 {
                     task = taskQueue.Take();
-                    if (task == WAKEUP_ACTION)
+                    if (ReferenceEquals(task, WAKEUP_ACTION))
                     {
                         task = null;
                     }
@@ -358,7 +358,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
                 if (task != null)
                 {
-                    if (task == WAKEUP_ACTION)
+                    if (ReferenceEquals(task, WAKEUP_ACTION))
                     {
                         return null;
                     }
@@ -1265,12 +1265,6 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     /**
-     * @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
-     */
-    [Obsolete]
-    protected interface NonWakeupRunnable : ILazyRunnable { }
-
-    /**
      * Can be overridden to control which tasks require waking the {@link EventExecutor} thread
      * if it is waiting so that they can be run immediately.
      */
@@ -1556,7 +1550,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
             // WAKEUP_TASK should be just discarded as these are added internally.
             // The important bit is that we not have any user tasks left.
-            if (WAKEUP_ACTION != runnable)
+            if (!ReferenceEquals(WAKEUP_ACTION, runnable))
             {
                 numTasks++;
             }

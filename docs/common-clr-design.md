@@ -5425,3 +5425,94 @@ Evidence: artifacts/nonsticky-action-validation/allocation-evidence.json. The pr
 Global focused xUnit completion stall remains unresolved in its own design section;
 this unit's matrices completed. Scheduled/lazy markers and broader synchronous
 API/runtime/platform review remain open.
+
+## Native lazy scheduling and wakeup callbacks
+
+Pinned AbstractEventExecutor.java:159-168 and SingleThreadEventExecutor.java:996-1007,
+1122-1134 separate explicit lazy admission from deprecated marker interfaces.
+All-module source/test search finds only the two marker declarations, no implementer
+or runtime check. Transport AbstractChannelHandlerContext.java:1034-1042 uses the
+lazyExecute method. Keep LazyExecute(Action), WakesUpForTask(Action), queue policy
+and submission hooks; remove the unused nested markers and two C# helper interfaces.
+The latter provided no CLR behavior or additional ownership. Their comments remain
+below, together with the original nested-marker comments.
+
+Pinned AbstractScheduledEventExecutor.java:40-44,344-360 sends an empty wakeup after
+lazy admission when the second hook detects a race. Store that callback as one
+static Action, so dispatch reaches Execute(Action) without a new Runnable envelope
+on each wakeup. Scheduled Task/cancellation/deadline ownership remains unchanged.
+SingleThreadEventExecutor.java:286-293,314-321,343-348,1345-1349 uses that same
+inherited marker for poll/take/drain; the C# loop previously had a different no-op
+callback. Point its existing private alias at the shared native callback and use
+ReferenceEquals, preserving Java object identity rather than delegate value equality.
+A copied native Action remains ordinary queue work. Poll skips the marker, take
+returns null on wakeup, and an otherwise empty drain reports no user work.
+IScheduledWork's Runnable inheritance and synchronous lifecycle review stay open.
+
+Retired nested markers from AbstractEventExecutor/SingleThreadEventExecutor:
+
+```java
+    /**
+     *  @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
+     *
+     */
+    public interface LazyRunnable extends Runnable { }
+
+    /**
+     * @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
+     */
+    protected interface NonWakeupRunnable extends LazyRunnable { }
+```
+
+Retired port-only helper interfaces, including their complete comments:
+
+```csharp
+using System;
+
+namespace Netty.NET.Common.Functional;
+
+/**
+ *  @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
+ *
+ */
+[Obsolete]
+public interface ILazyRunnable : IRunnable
+{
+}
+```
+
+```csharp
+using System;
+
+namespace Netty.NET.Common.Functional;
+
+/**
+ * @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
+ */
+[Obsolete]
+internal interface INonWakeupRunnable : ILazyRunnable
+{
+
+}
+```
+
+Five new CLR cases cover three native before/lazy/after hook branches with producer
+context and cancellation before queue transfer, plus poll/take consumption of the
+shared wakeup while retaining a copied Action. Before changes, the reusable-callback
+case fails; before sharing the marker, both poll/take cases fail. Existing original
+fixtures and native queue, scheduled ownership/context/deadline/capacity, and real
+worker lazy/wakeup hook cases remain in the affected matrix. Identical non-friend
+C# consumers retain results/context/cancellation before/after and expose shared-marker
+consumption changing from false to true.
+
+Windows/x64/net10.0 Release, tiered compilation disabled: cached Func<int> schedule
+admission into a fixed native Action array, 5,000 warmups then three 100,000-operation
+samples per mode/version. Three-sample medians: direct remains 424 bytes/call; lazy plus after-hook
+wakeup falls from 520 to 424 (one before sample has eight extra measured bytes over
+100,000 admissions). Thus the wakeup envelope's 96 bytes are removed. Array
+storage/cold setup/new caller delegates/result observation/scheduled execution/drain/
+cancel/stop/logging/real workers are outside measurement; no throughput/contention
+claim. Fresh HEAD archive is the before build. Evidence and exact sample scope:
+artifacts/lazy-action-validation/allocation-evidence.json; final matrix/inventory/
+comment checks are in the current common-porting checkpoint. No source status or
+broader completion claim changes.

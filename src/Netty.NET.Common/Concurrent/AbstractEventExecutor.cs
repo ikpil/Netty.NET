@@ -164,10 +164,4 @@ public abstract class AbstractEventExecutor : IEventExecutor
         Execute(task);
     }
 
-    /**
-     *  @deprecated override {@link SingleThreadEventExecutor#wakesUpForTask} to re-create this behaviour
-     *
-     */
-    [Obsolete]
-    public interface LazyRunnable : ILazyRunnable { }
 }
