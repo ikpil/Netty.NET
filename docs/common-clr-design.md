@@ -6045,3 +6045,57 @@ baseline-production run forcing idle expiry reproduces the original assertion
 failure and passes with the revised setup. No production Global behavior changes;
 all existing assertions remain. Initial failed/passing full runs and deterministic
 before/after idle-expiry evidence are retained in the same ignored artifact folder.
+
+## Native recyclable list
+
+Pinned RecyclableArrayList.java adds non-null validation, insertion history and
+Recycler return to ArrayList<Object>. A bare List<object> would allow null writes
+and lose those lifetime rules. The CLR implementation is a sealed Collection<object>
+over List<object>: Count, indexing, enumeration, copying, removal and Clear use BCL
+contracts; InsertItem/SetItem enforce null/history through both IList interfaces.
+No JDK ArrayList hierarchy, RandomAccess marker or serialization ID is reproduced.
+
+Actual pinned consumers establish the required inherited list behavior:
+FixedCompositeByteBuf.java:569 and CompositeByteBuf.java:1725 export ordered buffer
+arrays before recycle; ApplicationProtocolNegotiationHandler.java buffers messages,
+reads Count/indexes and clears without returning its long-lived list; EmbeddedChannel
+writeOutbound collects/reads completion handles; EpollDatagramChannel.java iterates
+packets and replaces slots before transferring them. A former Set return maps to
+reading list[index] then assigning list[index], preserving the previous payload.
+Only common is implemented here; these modules are evidence, not claimed ports.
+
+NewInstance() replaces the unused generic factory. AddRange/InsertRange accept native
+IEnumerable<object>, snapshot it once and validate all elements before mutating.
+Empty ranges leave insertion history unchanged, including after Clear. The old
+AddAll always marked empty ranges as inserted and traversed a non-indexed collection
+twice. Native snapshots also cover self-ranges and throwing/single-use sources.
+Ordinary Add/Insert/indexer writes use Collection hooks. InsertSinceRecycled is a
+property; Recycle is void rather than returning a constant success value. Native
+negative capacity validation uses minCapacity before borrowing; Java treats a
+negative ensureCapacity hint as a no-op. Actual consumers request nonnegative hints.
+Range null arguments use ArgumentNullException(items); null members use
+ArgumentException(items). CLR index/equality/enumerator rules apply to the inherited
+BCL surface, with no Java compatibility aliases. Seven original comments stay in code.
+
+The list remains unsynchronized with exclusive borrowing. Recycle clears managed
+references/history before returning to the existing Recycler; it does not dispose or
+release payloads. Callers own payload transfer/release and must stop using the list
+after return. Exported arrays are independent list snapshots of the same references.
+Guarded pooled handles still reject duplicate returns; no-op handles retain their
+existing behavior. Cross-thread return occurs after exclusive use, not concurrent
+list mutation. Recycler/ObjectPool redesign is outside this unit.
+
+Thirty-one CLR cases cover native interfaces, null writes/ranges, empty history,
+ordered reads/copies/removal/Clear, single traversal, throwing/self ranges, index
+failures and guarded same/cross-thread return/reuse with non-owned payloads. A shared
+seven-check probe against isolated baseline/current DLLs has five failures/two controls
+before, all seven pass after. Its explicit baseline adapter observes former public
+spellings/private storage because that implementation lacks a read interface; the
+native IList check separately fails before and passes after. No performance claim.
+Full default Debug/Release each: 2208 discovered, 2194 pass/zero failures/14 unchanged
+skips; all 2177 prior identities/outcomes and original 759 retained. Targeted Debug/
+checked Release each 39 pass. All 271 comment rows preserved without loss, owner 7/7;
+inventory/paths/casing/no-new-source-test-warning checks pass. Evidence:
+artifacts/native-recyclable-list-validation and native-recyclable-list-* TRX/JSON.
+This owner moves pending -> verified (60 verified/64 pending). Whole common and
+backend/runtime/platform reviews stay open; only the three canonical records change.

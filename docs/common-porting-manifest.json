@@ -3955,18 +3955,27 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/RecyclableArrayList.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Internal/RecyclableArrayList.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Internal/RecyclableArrayList.cs",
+        "test/Netty.NET.Common.Tests/Porting/RecyclableArrayListContractTest.cs"
+      ],
+      "evidence": [
+        "Pinned source and buffer/SSL/EmbeddedChannel/epoll consumers reviewed. Thirty-one CLR cases cover native interfaces, null/history/failure atomicity, one-shot/self ranges and guarded same/cross-thread return/reuse without disposing payloads. Shared baseline/current seven-check probe: five failures/two controls before, seven passes after. Targeted Debug/checked Release each 39 pass; full Debug/Release each 2194 pass/0 failures/14 unchanged skips (2208 discovered), all 2177 prior identities/outcomes and original 759 retained. All 271 comment rows have no loss, owner 7/7; inventory/casing/no-new-warning checks pass. Evidence: common-clr-design.md#native-recyclable-list, current common-porting.md, artifacts/native-recyclable-list-validation and native-recyclable-list-* TRX/JSON. No performance claim; whole common remains open."
+      ],
+      "adaptation": "Sealed Collection<object> over List<object> provides native Count/indexer/enumeration/copy/removal/Clear. Collection mutation hooks enforce non-null elements/history through both IList interfaces. Native AddRange/InsertRange snapshot once before mutation; empty ranges preserve history. Nongeneric NewInstance, property history and void Recycle replace Java-shaped spellings. Keep existing Recycler lifecycle; payload ownership stays with callers. Negative capacities use native minCapacity argument validation before borrowing; Java negative hints are no-ops.",
       "comments": {
         "upstreamCount": 7,
         "required": true,
         "preservedCount": 7,
         "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Actual buffer, SSL, embedded and epoll consumers require ordered list access/export, slot replacement and clear/recycle with caller-owned payloads. Collection<object> plus native range snapshots preserves these rules without inheriting or recreating JDK APIs. See common-clr-design.md#native-recyclable-list."
       }
     },
     {

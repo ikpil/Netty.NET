@@ -17,14 +17,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
+using System.Linq;
 
 namespace Netty.NET.Common.Internal;
 
 /**
  * A simple list which is recyclable. This implementation does not allow {@code null} elements to be added.
  */
-public class RecyclableArrayList
+public sealed class RecyclableArrayList : Collection<object>
 {
     private static readonly int DEFAULT_INITIAL_CAPACITY = 8;
 
@@ -41,6 +41,8 @@ public class RecyclableArrayList
      */
     public static RecyclableArrayList NewInstance(int minCapacity)
     {
+        // Validate the CLR capacity argument before claiming a pooled instance.
+        ArgumentOutOfRangeException.ThrowIfNegative(minCapacity);
         RecyclableArrayList ret = RECYCLER.Get();
         ret._list.EnsureCapacity(minCapacity);
         return ret;
@@ -49,101 +51,74 @@ public class RecyclableArrayList
     /**
      * Create a new empty {@link RecyclableArrayList} instance
      */
-    public static RecyclableArrayList NewInstance<T>()
+    public static RecyclableArrayList NewInstance()
     {
         return NewInstance(DEFAULT_INITIAL_CAPACITY);
     }
 
     private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle)
-        : this(handle, DEFAULT_INITIAL_CAPACITY)
-    {
-    }
-
-    private RecyclableArrayList(IObjectPoolHandle<RecyclableArrayList> handle, int initialCapacity)
+        : base(new List<object>(DEFAULT_INITIAL_CAPACITY))
     {
         _handle = handle;
-        _list = new List<object>(initialCapacity);
+        _list = (List<object>)Items;
     }
 
-    public bool AddAll<T>(ICollection<T> c) where T : class
+    public void AddRange(IEnumerable<object> items)
     {
-        CheckNullElements(c);
-        _list.AddRange(c);
-        _insertSinceRecycled = true;
-        return true;
+        object[] snapshot = Snapshot(items);
+        _list.AddRange(snapshot);
+        if (snapshot.Length != 0) _insertSinceRecycled = true;
     }
 
-    public bool AddAll<T>(int index, ICollection<T> c) where T : class
+    public void InsertRange(int index, IEnumerable<object> items)
     {
-        CheckNullElements(c);
-        _list.InsertRange(index, c);
-        _insertSinceRecycled = true;
-        return true;
+        object[] snapshot = Snapshot(items);
+        _list.InsertRange(index, snapshot);
+        if (snapshot.Length != 0) _insertSinceRecycled = true;
     }
 
-    private static void CheckNullElements<T>(ICollection<T> c) where T : class
+    private static object[] Snapshot(IEnumerable<object> items)
     {
-        if (c is IList<T> list)
+        ArgumentNullException.ThrowIfNull(items);
+        // Materialize once before mutation: CLR enumerables may be single-use,
+        // throw midway, or alias this list. The snapshot keeps failure atomic.
+        object[] snapshot = items.ToArray();
+        // produce less garbage
+        for (int i = 0; i < snapshot.Length; i++)
         {
-            // produce less garbage
-            int size = list.Count;
-            for (int i = 0; i < size; i++)
-            {
-                if (list[i] == null)
-                {
-                    throw new ArgumentException("c contains null values");
-                }
-            }
+            if (snapshot[i] == null) throw new ArgumentException("items contains null values", nameof(items));
         }
-        else
-        {
-            foreach (object element in c)
-            {
-                if (element == null)
-                {
-                    throw new ArgumentException("c contains null values");
-                }
-            }
-        }
+        return snapshot;
     }
 
-    public bool Add(object element)
+    protected override void InsertItem(int index, object item)
     {
-        _list.Add(ObjectUtil.CheckNotNull(element, "element"));
-        _insertSinceRecycled = true;
-        return true;
-    }
-
-    public void Add(int index, object element)
-    {
-        _list.Insert(index, ObjectUtil.CheckNotNull(element, "element"));
+        // Collection<T> routes both generic and non-generic writes through these
+        // hooks, so interface callers cannot bypass the non-null/tracking rules.
+        ArgumentNullException.ThrowIfNull(item);
+        base.InsertItem(index, item);
         _insertSinceRecycled = true;
     }
 
-    public object Set(int index, object element)
+    protected override void SetItem(int index, object item)
     {
-        object old = _list[index];
-        _list[index] = ObjectUtil.CheckNotNull(element, "element");
+        ArgumentNullException.ThrowIfNull(item);
+        base.SetItem(index, item);
         _insertSinceRecycled = true;
-        return old;
     }
 
     /**
      * Returns {@code true} if any elements where added or set. This will be reset once {@link #recycle()} was called.
      */
-    public bool InsertSinceRecycled()
-    {
-        return _insertSinceRecycled;
-    }
+    public bool InsertSinceRecycled => _insertSinceRecycled;
 
     /**
      * Clear and recycle this instance.
      */
-    public bool Recycle()
+    public void Recycle()
     {
         _list.Clear();
         _insertSinceRecycled = false;
         _handle.Recycle(this);
-        return true;
     }
 }

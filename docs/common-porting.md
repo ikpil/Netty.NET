@@ -122,42 +122,30 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-Default Debug/Release on Windows/x64/net10.0 each discover **2177 cases**:
-**2163 passed / 0 failed / 14 unchanged skips**. Evidence:
-native-chooser-full-debug.trx and native-chooser-full-release.trx.
-All 2161 prior identities/outcomes and 759 original non-Porting results remain;
-16 new CLR chooser cases, no identity remap/source exclusion/skip change.
+Default Debug/Release on Windows/x64/net10.0 each discover **2208 cases**:
+**2194 passed / 0 failed / 14 unchanged skips**. Evidence:
+native-recyclable-list-full-debug.trx and native-recyclable-list-full-release.trx.
+All 2177 prior identities/outcomes and 759 original non-Porting results remain;
+31 new CLR pooled-list cases, no identity remap/source exclusion/skip change.
 
-Default chooser implementations are private nested classes with int/long Interlocked
-counters. Unchecked subtraction preserves Java wraparound in checked builds;
-mask and long-remainder-before-Abs preserve pinned child selection order. Native
-null validation is explicit; empty selection remains deferred for auto-scaling
-snapshots. Public factory/interface/child identities remain, and the two implementation
-helper classes are retired. See common-clr-design.md#native-default-executor-chooser.
+RecyclableArrayList now uses Collection<object>/List<object> for native list access
+and guarded writes. Range inputs are snapshotted once before null validation and
+mutation; empty ranges preserve insertion history. Native nongeneric factory,
+AddRange/InsertRange/indexer/property/void return replace former Java API spellings.
+Ordered export, payload ownership and same/cross-thread pool return follow pinned
+buffer/SSL/embedded/epoll consumers. See common-clr-design.md#native-recyclable-list.
 
-Targeted Debug/checked Release each pass 167 cases, zero failures/skips. The same
-new fixture against isolated previous checked source fails four overflow rows and
-one null exception row; eleven controls pass. All 271 comment rows have no loss;
-chooser comments improve to 5/5 preserved. Inventory (205 source/66 test), paths,
-provenance/casing/no-new-source-test-warning identities pass. Identical public
-consumers preserve real three-child selection, affinity/results and shutdown plus
-existing native callback/cancellation/timer behavior. Reflection separately confirms
-public implementation helpers are removed. No performance claim. Evidence:
-artifacts/native-chooser-validation, native-chooser-*.trx/JSON and isolated baseline
-TestResults. Only three canonical records updated, no new MD; generated assets ignored.
+Targeted Debug/checked Release each pass 39 cases, zero failures/skips. A shared
+baseline/current seven-check probe has five failures/two controls before, seven
+passes after. All 271 comment rows have no loss; owner retains 7/7. Inventory
+(205 source/66 test), paths, provenance/casing/no-new-source-test-warning identities
+pass. No performance claim. Evidence: artifacts/native-recyclable-list-validation,
+native-recyclable-list-* TRX/JSON. Only three canonical records updated; no new MD.
 
-An initial full Debug failure exposed the existing GlobalAction fixture's assumption
-that the internal idle callback could not precede user work after restart. Baseline
-production source with forced idle expiry reproduces it; revised blocker setup
-passes while retaining queue identity/count/FIFO assertions. Initial results and
-before/after reproduction remain in the same artifact folder; final full runs
-include this fixture repair. Production Global behavior is unchanged.
-
-The chooser owner moves pending -> verified: source statuses now 59 verified /
-50 CLR replacement / 15 not applicable / 65 pending / 16 in progress. Continue
-native backend/runtime/platform and remaining source inventory in dependency order.
-The earlier focused Global xUnit completion stall remains unresolved; current
-matrices completed. Whole common remains open.
+Source statuses now 60 verified / 50 CLR replacement / 15 not applicable /
+64 pending / 16 in progress. Continue remaining source/backend/runtime/platform
+reviews in dependency order. The earlier focused Global xUnit completion stall
+remains unresolved; current matrices completed. Whole common remains open.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.
