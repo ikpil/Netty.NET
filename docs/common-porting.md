@@ -122,40 +122,40 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-Default Debug/Release on Windows/x64/net10.0 each discover **2228 cases**:
-**2214 passed / 0 failed / 14 unchanged skips**. Evidence:
-native-attribute-map-full-debug.trx and native-attribute-map-full-release.trx.
-All 2215 prior identities/outcomes and 759 original non-Porting results remain;
-13 new CLR attribute cases, no identity remap/source exclusion/skip change.
+Default Debug/Release on Windows/x64/net10.0 each discover **2251 cases**:
+**2237 passed / 0 failed / 14 unchanged skips**. Evidence:
+native-byte-callback-full-debug.trx and native-byte-callback-full-release.trx.
+All 2228 prior identities/outcomes and 759 original non-Porting results remain;
+23 new byte callback cases, no identity remap/source exclusion/skip change.
 
-DefaultAttributeMap now owns native ConcurrentDictionary membership and private
-Interlocked/Volatile reference cells. Public typed slot operations retain nullable
-values, reference CAS, stable identity, clearing/detachment and replacement-safe
-conditional removal. Two exported implementation helpers and AtomicReference
-inheritance are retired. Source review and real future transport/handler/codec
-consumers: common-clr-design.md#native-attribute-map-and-atomic-slots.
+AsciiString traversal now accepts Func<byte,bool>; the 13 shared delimiter predicates
+are readonly delegates. Four Java-shaped visitor/constant helpers are removed.
+State, caller thread, order, logical slice/stop indices, exception identity and
+shared views remain. Native null validation, unsigned bytes and intrinsic multicast
+return semantics are explicit. Source/consumer decisions:
+common-clr-design.md#native-byte-traversal-callbacks. Full AsciiString remains open.
 
-Identical baseline/current new test source passes all 21 selected cases, including
-all six original map fixtures. Final targeted Debug/checked Release each 24 pass.
-Three real bucket-monitor contention cases fail against an isolated unprotected
-native candidate, then pass final publication/replacement/removal and pending
-interrupt assertions. Dictionary writes retry safely and restore Thread.Interrupt
-after completion. This repairs a migration hazard, with no original-baseline-bug
-claim. Identical non-friend public consumers conserve exchange, typed membership/null,
-reference CAS and stale-holder isolation; metadata validates native storage and
-helper retirement. All 271 comment rows have no loss; 22/22 scoped originals are
-preserved, including restored interface docs and archived retired storage comments.
-Inventory (205 source/66 test), paths, casing and no-new-warning identities pass.
-No performance/functional-baseline-bug claim. Evidence:
-artifacts/native-attribute-map-validation and native-attribute-map-* TRX/JSON.
-Only the three canonical records updated; no new MD, generated evidence ignored.
+Exact original Java classes/traversal methods agree with baseline/native CLR on
+6496 predicate/scan/visited-order rows; an independent CLR oracle also agrees.
+Eight null rows record intentional CLR argument-boundary changes. Identical direct
+Func consumer fails baseline compilation and compiles/runs native. Metadata confirms
+helper retirement and native overload/predicate shape; no compatibility adapter ships.
+All 11 prior memory fixture identities/scenarios/assertions/comments remain.
+Baseline Ascii selection: 335 pass; final targeted Debug/checked Release: 358 pass.
+Two original buffer delimiter vectors are verified through common-owned AsciiString
+tests with their license; this does not claim implementation of the buffer module.
 
-Attribute/AttributeMap/DefaultAttributeMap move pending -> verified: source statuses
-63 verified / 51 CLR replacement / 15 not applicable / 60 pending / 16 in progress.
-The preceding dual-recycler-mode full runs (2215 discovered/2201 pass/14 skips)
-remain historical; alternate blocking full mode is not rerun in this attribute unit.
-Remaining source/backend/runtime/platform reviews and the earlier focused Global
-xUnit completion stall stay open. Whole common remains unfinished.
+All 271 comment rows without loss; 120 scoped common originals and the borrowed
+buffer license are retained. Inventory (205 source/66 test), paths, casing and
+no-new-warning identities pass. No performance claim. Evidence:
+artifacts/native-byte-callback-validation and native-byte-callback-* TRX/JSON.
+Only three canonical records updated; no new MD, generated evidence ignored.
+
+ByteProcessor/ByteProcessorUtils move pending -> CLR replacement: source statuses
+63 verified / 53 CLR replacement / 15 not applicable / 58 pending / 16 in progress.
+Broader sequence/public API, source/backend/runtime/platform and the prior focused
+Global xUnit completion stall stay open. Whole blocking mode is not rerun here;
+the previous dual-mode checkpoint remains historical. Whole common is unfinished.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

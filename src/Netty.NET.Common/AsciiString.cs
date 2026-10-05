@@ -322,7 +322,12 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code -1} if the processor iterated to or beyond the end of the readable bytes.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
-    public int ForEachByte(IByteProcessor visitor)
+    // Original ByteProcessor.process return contract for the visitor argument:
+    /**
+     * @return {@code true} if the processor wants to continue the loop and handle the next byte in the buffer.
+     *         {@code false} if the processor wants to stop handling bytes and abort the loop.
+     */
+    public int ForEachByte(Func<byte, bool> visitor)
     {
         return ForEachByte0(0, Length(), visitor);
     }
@@ -334,7 +339,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code -1} if the processor iterated to or beyond the end of the specified area.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
-    public int ForEachByte(int index, int length, IByteProcessor visitor)
+    public int ForEachByte(int index, int length, Func<byte, bool> visitor)
     {
         if (IsOutOfBounds(index, length, this.Length()))
         {
@@ -345,12 +350,13 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return ForEachByte0(index, length, visitor);
     }
 
-    private int ForEachByte0(int index, int length, IByteProcessor visitor)
+    private int ForEachByte0(int index, int length, Func<byte, bool> visitor)
     {
+        ArgumentNullException.ThrowIfNull(visitor);
         int len = _offset + index + length;
         for (int i = _offset + index; i < len; ++i)
         {
-            if (!visitor.Process(_value[i]))
+            if (!visitor(_value[i]))
             {
                 return i - _offset;
             }
@@ -365,7 +371,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code -1} if the processor iterated to or beyond the beginning of the readable bytes.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
-    public int ForEachByteDesc(IByteProcessor visitor)
+    public int ForEachByteDesc(Func<byte, bool> visitor)
     {
         return ForEachByteDesc0(0, Length(), visitor);
     }
@@ -377,7 +383,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
      * @return {@code -1} if the processor iterated to or beyond the beginning of the specified area.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
      */
-    public int ForEachByteDesc(int index, int length, IByteProcessor visitor)
+    public int ForEachByteDesc(int index, int length, Func<byte, bool> visitor)
     {
         if (IsOutOfBounds(index, length, this.Length()))
         {
@@ -388,12 +394,13 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return ForEachByteDesc0(index, length, visitor);
     }
 
-    private int ForEachByteDesc0(int index, int length, IByteProcessor visitor)
+    private int ForEachByteDesc0(int index, int length, Func<byte, bool> visitor)
     {
+        ArgumentNullException.ThrowIfNull(visitor);
         int end = _offset + index;
         for (int i = _offset + index + length - 1; i >= end; --i)
         {
-            if (!visitor.Process(_value[i]))
+            if (!visitor(_value[i]))
             {
                 return i - _offset;
             }

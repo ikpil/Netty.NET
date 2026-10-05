@@ -1,87 +1,91 @@
+/*
+ * Copyright 2015 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License, version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License. You may obtain a
+ * copy of the License at:
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 using System;
 
 namespace Netty.NET.Common;
 
-public sealed class ByteProcessor : IByteProcessor
+/**
+ * Provides a mechanism to iterate over a collection of bytes.
+ */
+/// <remarks>Predicates return true to continue scanning and false to stop. Stateful visitors use ordinary closures.</remarks>
+public static class ByteProcessor
 {
+
     /**
      * Aborts on a {@code NUL (0x00)}.
      */
-    public static readonly IndexOfProcessor FIND_NUL = new IndexOfProcessor((byte)0);
+    public static readonly Func<byte, bool> FIND_NUL = static value => value != 0;
 
     /**
      * Aborts on a non-{@code NUL (0x00)}.
      */
-    public static readonly IndexNotOfProcessor FIND_NON_NUL = new IndexNotOfProcessor((byte)0);
+    public static readonly Func<byte, bool> FIND_NON_NUL = static value => value == 0;
 
     /**
      * Aborts on a {@code CR ('\r')}.
      */
-    public static readonly IndexOfProcessor FIND_CR = new IndexOfProcessor(ByteProcessorUtils.CARRIAGE_RETURN);
+    public static readonly Func<byte, bool> FIND_CR = static value => value != (byte)'\r';
 
     /**
      * Aborts on a non-{@code CR ('\r')}.
      */
-    public static readonly IndexNotOfProcessor FIND_NON_CR = new IndexNotOfProcessor(ByteProcessorUtils.CARRIAGE_RETURN);
+    public static readonly Func<byte, bool> FIND_NON_CR = static value => value == (byte)'\r';
 
     /**
      * Aborts on a {@code LF ('\n')}.
      */
-    public static readonly IndexOfProcessor FIND_LF = new IndexOfProcessor(ByteProcessorUtils.LINE_FEED);
+    public static readonly Func<byte, bool> FIND_LF = static value => value != (byte)'\n';
 
     /**
      * Aborts on a non-{@code LF ('\n')}.
      */
-    public static readonly IndexNotOfProcessor FIND_NON_LF = new IndexNotOfProcessor(ByteProcessorUtils.LINE_FEED);
+    public static readonly Func<byte, bool> FIND_NON_LF = static value => value == (byte)'\n';
 
     /**
      * Aborts on a semicolon {@code (';')}.
      */
-    public static readonly IndexOfProcessor FIND_SEMI_COLON = new IndexOfProcessor((byte)';');
+    public static readonly Func<byte, bool> FIND_SEMI_COLON = static value => value != (byte)';';
 
     /**
      * Aborts on a comma {@code (',')}.
      */
-    public static readonly IndexOfProcessor FIND_COMMA = new IndexOfProcessor((byte)',');
+    public static readonly Func<byte, bool> FIND_COMMA = static value => value != (byte)',';
 
     /**
      * Aborts on a ascii space character ({@code ' '}).
      */
-    public static readonly IndexOfProcessor FIND_ASCII_SPACE = new IndexOfProcessor(ByteProcessorUtils.SPACE);
+    public static readonly Func<byte, bool> FIND_ASCII_SPACE = static value => value != (byte)' ';
 
     /**
      * Aborts on a {@code CR ('\r')} or a {@code LF ('\n')}.
      */
-    public static readonly ByteProcessor FIND_CRLF
-        = new ByteProcessor(value => value != ByteProcessorUtils.CARRIAGE_RETURN && value != ByteProcessorUtils.LINE_FEED);
+    public static readonly Func<byte, bool> FIND_CRLF = static value => value != (byte)'\r' && value != (byte)'\n';
 
     /**
      * Aborts on a byte which is neither a {@code CR ('\r')} nor a {@code LF ('\n')}.
      */
-    public static readonly ByteProcessor FIND_NON_CRLF
-        = new ByteProcessor(value => value == ByteProcessorUtils.CARRIAGE_RETURN || value == ByteProcessorUtils.LINE_FEED);
+    public static readonly Func<byte, bool> FIND_NON_CRLF = static value => value == (byte)'\r' || value == (byte)'\n';
 
     /**
      * Aborts on a linear whitespace (a ({@code ' '} or a {@code '\t'}).
      */
-    public static readonly ByteProcessor FIND_LINEAR_WHITESPACE
-        = new ByteProcessor(value => value != ByteProcessorUtils.SPACE && value != ByteProcessorUtils.HTAB);
+    public static readonly Func<byte, bool> FIND_LINEAR_WHITESPACE = static value => value != (byte)' ' && value != (byte)'\t';
 
     /**
      * Aborts on a byte which is not a linear whitespace (neither {@code ' '} nor {@code '\t'}).
      */
-    public static readonly ByteProcessor FIND_NON_LINEAR_WHITESPACE
-        = new ByteProcessor(value => value == ByteProcessorUtils.SPACE || value == ByteProcessorUtils.HTAB);
-
-    private readonly Func<byte, bool> _handler;
-
-    public ByteProcessor(Func<byte, bool> handler)
-    {
-        _handler = handler;
-    }
-
-    public bool Process(byte value)
-    {
-        return _handler.Invoke(value);
-    }
+    public static readonly Func<byte, bool> FIND_NON_LINEAR_WHITESPACE = static value => value == (byte)' ' || value == (byte)'\t';
 }

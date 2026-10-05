@@ -85,43 +85,27 @@ public class AsciiStringMemoryTest
         TestNotSharedMemory();
     }
 
-    public class TestByteProcessor : IByteProcessor
-    {
-        public int i;
-        private readonly Func<byte, TestByteProcessor, bool> _processor;
-
-        public TestByteProcessor(int start, Func<byte, TestByteProcessor, bool> processor)
-        {
-            i = start;
-            _processor = processor;
-        }
-
-        public bool Process(byte value)
-        {
-            return _processor.Invoke(value, this);
-        }
-    }
-
-
     [Fact]
     public void ForEachTest()
     {
         int aCount = 0;
         int bCount = 0;
-        aAsciiString.ForEachByte(new TestByteProcessor(0, (value, p) =>
+        int aIndex = 0;
+        int bIndex = 0;
+        aAsciiString.ForEachByte(value =>
         {
-            Assert.Equal(value, bAsciiString.ByteAt(p.i++), "failed at index: " + p.i);
+            Assert.Equal(value, bAsciiString.ByteAt(aIndex++), "failed at index: " + aIndex);
             ++aCount;
             return true;
-        }));
+        });
 
 
-        bAsciiString.ForEachByte(new TestByteProcessor(0, (value, p) =>
+        bAsciiString.ForEachByte(value =>
         {
-            Assert.Equal(value, aAsciiString.ByteAt(p.i++), "failed at index: " + p.i);
+            Assert.Equal(value, aAsciiString.ByteAt(bIndex++), "failed at index: " + bIndex);
             ++bCount;
             return true;
-        }));
+        });
         Assert.Equal(aAsciiString.Length(), aCount);
         Assert.Equal(bAsciiString.Length(), bCount);
     }
@@ -130,14 +114,14 @@ public class AsciiStringMemoryTest
     public void ForEachWithIndexEndTest()
     {
         Assert.NotEqual(-1, aAsciiString.ForEachByte(aAsciiString.Length() - 1,
-            1, new IndexOfProcessor(aAsciiString.ByteAt(aAsciiString.Length() - 1))));
+            1, value => value != aAsciiString.ByteAt(aAsciiString.Length() - 1)));
     }
 
     [Fact]
     public void ForEachWithIndexBeginTest()
     {
         Assert.NotEqual(-1, aAsciiString.ForEachByte(0,
-            1, new IndexOfProcessor(aAsciiString.ByteAt(0))));
+            1, value => value != aAsciiString.ByteAt(0)));
     }
 
     [Fact]
@@ -145,19 +129,21 @@ public class AsciiStringMemoryTest
     {
         int aCount = 0;
         int bCount = 0;
-        aAsciiString.ForEachByteDesc(new TestByteProcessor(1, (value, p) =>
+        int aIndex = 1;
+        int bIndex = 1;
+        aAsciiString.ForEachByteDesc(value =>
         {
-            Assert.Equal(value, bAsciiString.ByteAt(bAsciiString.Length() - (p.i++)), "failed at index: " + p.i);
+            Assert.Equal(value, bAsciiString.ByteAt(bAsciiString.Length() - (aIndex++)), "failed at index: " + aIndex);
             ++aCount;
             return true;
-        }));
+        });
 
-        bAsciiString.ForEachByteDesc(new TestByteProcessor(1, (value, p) =>
+        bAsciiString.ForEachByteDesc(value =>
         {
-            Assert.Equal(value, aAsciiString.ByteAt(aAsciiString.Length() - (p.i++)), "failed at index: " + p.i);
+            Assert.Equal(value, aAsciiString.ByteAt(aAsciiString.Length() - (bIndex++)), "failed at index: " + bIndex);
             ++bCount;
             return true;
-        }));
+        });
         Assert.Equal(aAsciiString.Length(), aCount);
         Assert.Equal(bAsciiString.Length(), bCount);
     }
@@ -166,14 +152,14 @@ public class AsciiStringMemoryTest
     public void ForEachDescWithIndexEndTest()
     {
         Assert.NotEqual(-1, bAsciiString.ForEachByteDesc(bAsciiString.Length() - 1,
-            1, new IndexOfProcessor(bAsciiString.ByteAt(bAsciiString.Length() - 1))));
+            1, value => value != bAsciiString.ByteAt(bAsciiString.Length() - 1)));
     }
 
     [Fact]
     public void ForEachDescWithIndexBeginTest()
     {
         Assert.NotEqual(-1, bAsciiString.ForEachByteDesc(0,
-            1, new IndexOfProcessor(bAsciiString.ByteAt(0))));
+            1, value => value != bAsciiString.ByteAt(0)));
     }
 
     [Fact]

@@ -6525,3 +6525,124 @@ TRX/JSON. Only three canonical records, no new MD or performance claim. This uni
 does not rerun the whole suite with blocking=true; the preceding dual-mode result
 remains historical. Whole common/source/backend/runtime/platform reviews and the
 earlier focused Global xUnit completion stall remain open.
+
+## Native byte traversal callbacks
+
+Pinned ByteProcessor.java:25-157 and ByteProcessorUtils.java:17-25 have one
+boolean callback, 13 shared delimiter predicates, two equality visitor classes
+and four package-private byte constants. AsciiString.java:255-325 invokes the
+visitor directly in logical ascending/descending windows and returns the logical
+index on false, or -1 at exhaustion. Original common traversal tests use stateful
+visitors or one-byte equality searches; no ByteProcessorTest is in common.
+
+All-module consumers: buffer AbstractByteBuf.java:1285-1347 forwards these callback
+semantics; codec-http HttpChunkLineValidatingByteProcessor has parser state and
+failure validation; codec-http2 HpackHuffmanEncoder.java:141-199 uses per-byte state
+and unsigned table indexes (value & 0xff); codec-http2/3 Huffman decoders, Redis,
+STOMP, Base64 and UTF-8 validators consume byte callbacks. This establishes the
+need for synchronous state, stop position and exception propagation, not a Java
+visitor interface. ByteProcessorUtils is referenced only by ByteProcessor imports.
+Other modules are reviewed as consumers and are not implemented in this unit.
+
+AsciiString's four public traversal overloads now take Func<byte,bool> directly.
+ByteProcessor is a static provider of the same 13 named readonly Func predicates.
+Custom equality predicates and stateful processors use ordinary lambdas or method
+groups; no factory/wrapper is required. IByteProcessor, IndexOfProcessor,
+IndexNotOfProcessor and the public ByteProcessorUtils helper are removed.
+Raw comparison bytes replace the four package-private Java constant aliases.
+
+Traversal retains synchronous execution on the caller, per-byte side effects,
+logical slice-relative indices, early false termination, exception identity,
+shared-memory changes and captured state across calls. CLR byte retains unsigned
+bit patterns 0-255; Java byte predicates compare the same bits, and original
+unsigned consumer masks map naturally. A future consumer genuinely requiring
+signed arithmetic must explicitly use unchecked((sbyte)value). Native Func
+multicast invokes entries in order and uses its final return value; exceptions
+abort that invocation/traversal. No custom all-entry false-short-circuit policy.
+
+Null Func is rejected with ArgumentNullException(visitor) even for empty input.
+The pinned lazy Java edge returns -1 for empty/null and throws NullPointerException
+only when a byte is visited. This intentionally adopts a consistent native callback
+boundary. Indexed range validation still precedes callback validation, retaining
+checked-safe out-of-range rejection. Existing traversal loops/range/index formulas
+remain otherwise unchanged; no async execution, snapshot or allocation claim.
+
+Original memory visitor fixtures use independent local indices/counters in closures
+instead of a public TestByteProcessor wrapper, with all 11 prior case identities
+(10 pinned scenarios plus the earlier CLR wrap regression), assertions and comments
+retained. The new common-owned fixture preserves the buffer ByteProcessorTest's
+two 12-assertion delimiter vectors through AsciiString, including its 2013 license.
+This verifies the common predicate contract and does not claim buffer port coverage.
+Other new cases cover all 3328 predefined predicate/byte pairs, slice/thread/order,
+exception identity, empty/null boundaries, invalid-range precedence, native multicast,
+shared high-byte mutation and state across scans: 23 new cases total.
+
+Executed original ByteProcessor/ByteProcessorUtils/MathUtil classes plus exact
+AsciiString traversal methods in an isolated small Java harness. Only harness
+storage/constructor/length are supplied; pinned traversal source is unmodified.
+3328 predicate and 3168 window/value/visited-order rows agree across Java,
+baseline CLR and native CLR, also checked against an independent CLR slice oracle.
+Eight null boundary rows retain the recorded intentional native difference.
+The reflection bridge adapts legacy visitors only in ignored comparison evidence;
+no compatibility adapter ships. Identical non-friend direct Func consumer fails to
+compile baseline (CS1503/CS0029/CS1660) and compiles/runs native closure, slice,
+unsigned byte and failure cases. Metadata: four retired helpers -> zero,
+zero -> four public Func overloads, zero -> 13 delegate predicates/static provider.
+
+The ByteProcessor license, provider/field docs and callback return documentation
+are preserved in code (the return contract sits beside actual AsciiString traversal).
+Retired equality visitor docs and package-private helper license:
+
+```java
+/**
+     * A {@link ByteProcessor} which finds the first appearance of a specific byte.
+     */
+
+/**
+     * A {@link ByteProcessor} which finds the first appearance which is not of a specific byte.
+     */
+
+/*
+ * Copyright 2018 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License, version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License. You may obtain a
+ * copy of the License at:
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+```
+
+Retired CLR visitor comment variants:
+
+```csharp
+/**
+* A {@link IByteProcessor} which finds the first appearance of a specific byte.
+*/
+
+/**
+ * A {@link IByteProcessor} which finds the first appearance which is not of a specific byte.
+ */
+```
+
+Default Debug/Release each: 2251 discovered, 2237 passed/zero failed/14 unchanged
+skips. All 2228 prior and 759 original non-Porting identities/outcomes retained.
+The baseline 335-case Ascii selection remains in the 358-case final Debug/checked
+Release selection, all passed. All 271 comment rows without coverage loss:
+18 ByteProcessor, one ByteProcessorUtils, all 99 AsciiString and two original
+memory fixture comments (120 scoped common originals); borrowed buffer license
+also retained. Inventory/casing/no-new-source-test-warning identities pass.
+
+ByteProcessor and ByteProcessorUtils move pending -> CLR replacement:
+63 verified/53 CLR replacement/58 pending/16 in-progress/15 not applicable.
+AsciiString remains in progress; this is its callback boundary only. Evidence:
+artifacts/native-byte-callback-validation and native-byte-callback-* TRX/JSON.
+Only three canonical records, no new MD or performance claim. Whole common and
+the preceding focused Global xUnit completion stall remain open; blocking whole
+mode was not rerun for this unit. Continue remaining native sequence/public API,
+executor/backend/platform and pending inventory reviews in dependency order.
