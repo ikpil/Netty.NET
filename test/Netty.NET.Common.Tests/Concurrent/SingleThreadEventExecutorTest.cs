@@ -66,15 +66,15 @@ public class SingleThreadEventExecutorTest
         internal Action started;
         internal LoopExecutor(IThreadFactory factory, bool wake = true) : base(null, factory, wake) { }
         internal LoopExecutor(Action<Action> executor, bool wake = true) : base(null, executor, wake) { }
-        internal LoopExecutor(Action<Action> executor, IQueue<IRunnable> queue)
+        internal LoopExecutor(Action<Action> executor, IQueue<Action> queue)
             : base(null, executor, false, queue, RejectedExecutionHandlers.Reject()) { }
         protected override void Run()
         {
             started?.Invoke();
             while (!ConfirmShutdown())
             {
-                IRunnable task = TakeTask();
-                task?.Run();
+                Action task = TakeTask();
+                task?.Invoke();
             }
         }
     }
@@ -84,7 +84,7 @@ public class SingleThreadEventExecutorTest
             : base(null, factory, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
         protected override void Run()
         {
-            while (!ConfirmShutdown() && !CanSuspend()) TakeTask()?.Run();
+            while (!ConfirmShutdown() && !CanSuspend()) TakeTask()?.Invoke();
         }
         public override void Wakeup(bool inEventLoop) => InterruptThread();
     }
@@ -427,7 +427,7 @@ public class SingleThreadEventExecutorTest
     private sealed class LazyExecutor : LoopExecutor
     {
         internal LazyExecutor() : base(new DefaultThreadFactory("lazy"), false) { }
-        protected override bool WakesUpForTask(IRunnable task) => task is not LazyLatchTask;
+        protected override bool WakesUpForTask(Action task) => task.Target is not LazyLatchTask;
         protected override void Run()
         {
             while (!ConfirmShutdown())
@@ -449,17 +449,17 @@ public class SingleThreadEventExecutorTest
         {
             // Ensure event loop is started
             var latch0 = new LatchTask();
-            executor.Execute(latch0);
+            executor.Execute(latch0.Run);
             Assert.True(latch0.latch.Wait(100));
             // Pause to ensure it enters waiting state
             Thread.Sleep(100);
 
             // Submit task via lazyExecute
             var latch1 = new LatchTask();
-            executor.LazyExecute(latch1);
+            executor.LazyExecute(latch1.Run);
             // Sumbit lazy task via regular execute
             var latch2 = new LazyLatchTask();
-            executor.Execute(latch2);
+            executor.Execute(latch2.Run);
 
             // Neither should run yet
             Assert.False(latch1.latch.Wait(100));
@@ -467,7 +467,7 @@ public class SingleThreadEventExecutorTest
 
             // Submit regular task via regular execute
             var latch3 = new LatchTask();
-            executor.Execute(latch3);
+            executor.Execute(latch3.Run);
 
             // Should flush latch1 and latch2 and then run latch3 immediately
             Assert.True(latch3.latch.Wait(100));
@@ -477,17 +477,17 @@ public class SingleThreadEventExecutorTest
         finally { Shutdown(executor); }
     }
 
-    private sealed class NoRemoveQueue : LinkedBlockingQueue<IRunnable>
+    private sealed class NoRemoveQueue : LinkedBlockingQueue<Action>
     {
         internal NoRemoveQueue() : base(int.MaxValue) { }
-        public override bool TryRemove(IRunnable task) => throw new NotSupportedException();
+        public override bool TryRemove(Action task) => throw new NotSupportedException();
     }
     private sealed class AfterShutdownExecutor : LoopExecutor
     {
         internal int attempts;
         internal int rejects;
         internal readonly ConcurrentQueue<Task> submittedTasks = new();
-        internal AfterShutdownExecutor(IQueue<IRunnable> queue)
+        internal AfterShutdownExecutor(IQueue<Action> queue)
             : base(new ThreadPerTaskExecutor(new DefaultThreadFactory("after-shutdown")).Execute, queue) { }
         protected override bool ConfirmShutdown()
         {

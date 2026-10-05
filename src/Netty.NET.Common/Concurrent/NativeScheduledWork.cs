@@ -22,6 +22,7 @@ namespace Netty.NET.Common.Concurrent;
 
 internal interface ITaskScheduledWork : IScheduledWork
 {
+    Action QueueCallback { get; }
     long PeriodNanos { get; }
     Task Completion { get; }
     void Reject(Exception error);
@@ -55,6 +56,9 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         long period, Func<long> clock, Func<bool> canRun, Action<ITaskScheduledWork> enqueue,
         Action<ITaskScheduledWork> remove, bool captureContext = true)
     {
+        // One opaque callback owns every submission, due transfer and cancellation
+        // dispatch. Periodic execution and a full ready queue do not recreate it.
+        QueueCallback = ExecutorWork.Wrap(this);
         _function = function;
         _context = captureContext ? ExecutionContext.Capture() : null;
         _token = token;
@@ -71,6 +75,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     }
 
     internal Task<T> ResultTask => _completion.Task;
+    public Action QueueCallback { get; }
     public Task Completion => _completion.Task;
     public bool IsCanceled => Completion.IsCanceled;
     public long DeadlineNanos() => _deadline;

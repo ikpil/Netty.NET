@@ -137,6 +137,15 @@ public abstract class AbstractEventExecutor : IEventExecutor
         }
     }
 
+    // Native custom loops retain the same exception boundary as the original helper.
+    protected static void SafeExecute(Action task)
+    {
+        try { RunTask(task); }
+        catch (Exception error) { logger.Warn("A task raised an exception. Task: {}", task, error); }
+    }
+
+    protected static void RunTask(Action task) => task();
+
     protected static void RunTask(IRunnable task)
     {
         task.Run();

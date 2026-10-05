@@ -22,6 +22,8 @@ internal sealed class ExecutorWork
     internal static Action Wrap(IRunnable work)
     {
         ArgumentNullException.ThrowIfNull(work);
+        // Construction initializes this once; later scheduled transfers reuse it.
+        if (work is ITaskScheduledWork scheduled && scheduled.QueueCallback is { } callback) return callback;
         return new ExecutorWork(work)._entry;
     }
 

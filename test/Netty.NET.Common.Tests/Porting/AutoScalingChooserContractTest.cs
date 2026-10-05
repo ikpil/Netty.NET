@@ -33,7 +33,7 @@ public class AutoScalingChooserContractTest
         internal void ReportTask(long nanos)
         {
             Volatile.Write(ref reportingThread, Thread.CurrentThread);
-            AddTask(Runnables.Create(() => clock.Advance(nanos)));
+            AddTask(() => clock.Advance(nanos));
             RunAllTasks(1_000_000L);
         }
         internal long Sample() => GetAndResetAccumulatedActiveTimeNanos();

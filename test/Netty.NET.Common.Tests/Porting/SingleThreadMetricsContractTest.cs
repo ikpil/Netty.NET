@@ -25,7 +25,7 @@ public class SingleThreadMetricsContractTest
         internal ActivityClockExecutor()
             : base(null, _ => throw new Exception("must not start"), false, true,
                 int.MaxValue, RejectedExecutionHandlers.Reject()) { }
-        internal ActivityClockExecutor(IQueue<IRunnable> queue)
+        internal ActivityClockExecutor(IQueue<Action> queue)
             : base(null, _ => throw new Exception("must not start"), false, true,
                 queue, RejectedExecutionHandlers.Reject()) { }
         public override Ticker Ticker() => clock;
@@ -44,7 +44,7 @@ public class SingleThreadMetricsContractTest
         executor.UpdateActivity();
         Assert.Equal(now + 123, executor.LastActivity());
         // The pinned constructor accepting an explicit queue does not initialize this field.
-        var explicitQueue = new ActivityClockExecutor(new LinkedBlockingQueue<IRunnable>(int.MaxValue));
+        var explicitQueue = new ActivityClockExecutor(new LinkedBlockingQueue<Action>(int.MaxValue));
         Assert.Equal(0, explicitQueue.LastActivity());
         explicitQueue.UpdateActivity();
         Assert.Equal(now + 123, explicitQueue.LastActivity());

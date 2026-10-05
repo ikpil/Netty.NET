@@ -276,7 +276,7 @@ public class NativeSchedulingContractTest
         {
             while (!ConfirmShutdown())
             {
-                IRunnable task = TakeTask();
+                Action task = TakeTask();
                 if (task != null) { RunTask(task); UpdateLastExecutionTime(); }
             }
         }

@@ -395,8 +395,8 @@ public class DefaultPromiseTest
         {
             for (;;)
             {
-                IRunnable task = TakeTask();
-                if (task != null) { task.Run(); UpdateLastExecutionTime(); }
+                Action task = TakeTask();
+                if (task != null) { task(); UpdateLastExecutionTime(); }
                 if (ConfirmShutdown()) break;
             }
         }

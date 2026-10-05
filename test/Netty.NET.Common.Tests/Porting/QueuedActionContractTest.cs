@@ -30,7 +30,7 @@ public class QueuedActionContractTest
             Interlocked.Increment(ref LazyExecutions);
             base.LazyExecute(task);
         }
-        protected override bool WakesUpForTask(IRunnable task)
+        protected override bool WakesUpForTask(Action task)
         {
             Interlocked.Increment(ref WakeChecks);
             return base.WakesUpForTask(task);

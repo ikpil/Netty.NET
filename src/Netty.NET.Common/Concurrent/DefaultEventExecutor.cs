@@ -81,7 +81,7 @@ public sealed class DefaultEventExecutor : SingleThreadEventExecutor
     {
         for (;;)
         {
-            IRunnable task = TakeTask();
+            Action task = TakeTask();
             if (task != null)
             {
                 RunTask(task);

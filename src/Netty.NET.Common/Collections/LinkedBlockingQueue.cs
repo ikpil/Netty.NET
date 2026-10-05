@@ -14,12 +14,20 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
     private readonly object gate = new();
     private readonly LinkedList<T> queue = new();
     private readonly int capacity;
+    private readonly IEqualityComparer<T> comparer;
     private int count;
 
     public LinkedBlockingQueue(int boundedCapacity)
+        : this(boundedCapacity, EqualityComparer<T>.Default)
+    {
+    }
+
+    public LinkedBlockingQueue(int boundedCapacity, IEqualityComparer<T> comparer)
     {
         if (boundedCapacity <= 0) throw new ArgumentException("capacity must be positive", nameof(boundedCapacity));
+        ArgumentNullException.ThrowIfNull(comparer);
         capacity = boundedCapacity;
+        this.comparer = comparer;
     }
 
     // CLR compatibility overload: import the supplied collection's initial FIFO
@@ -85,7 +93,8 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         if (item is null) return false;
         using (UninterruptibleMonitor.Enter(gate))
         {
-            var node = queue.Find(item);
+            var node = queue.First;
+            while (node != null && !comparer.Equals(node.Value, item)) node = node.Next;
             if (node == null) return false;
             queue.Remove(node);
             Volatile.Write(ref count, queue.Count);

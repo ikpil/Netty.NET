@@ -206,7 +206,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * @return {@code true} if we were able to transfer everything, {@code false} if we need to call this method again
      *         as soon as there is space again in {@code taskQueue}.
      */
-    protected virtual bool FetchFromScheduledTaskQueue(IQueue<IRunnable> taskQueue)
+    protected virtual bool FetchFromScheduledTaskQueue(IQueue<Action> taskQueue)
     {
         Debug.Assert(InEventLoop());
         ObjectUtil.RequireNonNull(taskQueue, "taskQueue");
@@ -218,21 +218,21 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         long nanoTime = GetCurrentTimeNanos();
         for (;;)
         {
-            IRunnable scheduledTask = PollScheduledTask(nanoTime);
+            IScheduledWork scheduledTask = PollScheduledTask(nanoTime);
             if (scheduledTask == null)
             {
                 return true;
             }
 
-            if (((IScheduledWork)scheduledTask).IsCanceled)
+            if (scheduledTask.IsCanceled)
             {
                 continue;
             }
 
-            if (!taskQueue.TryEnqueue(scheduledTask))
+            if (!taskQueue.TryEnqueue(ExecutorWork.Wrap(scheduledTask)))
             {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
-                _scheduledTaskQueue.TryEnqueue((IScheduledWork)scheduledTask);
+                _scheduledTaskQueue.TryEnqueue(scheduledTask);
                 return false;
             }
         }
@@ -242,7 +242,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * Return the {@link Runnable} which is ready to be executed with the given {@code nanoTime}.
      * You should use {@link #getCurrentTimeNanos()} to retrieve the correct {@code nanoTime}.
      */
-    protected IRunnable PollScheduledTask(long nanoTime)
+    protected IScheduledWork PollScheduledTask(long nanoTime)
     {
         Debug.Assert(InEventLoop());
 

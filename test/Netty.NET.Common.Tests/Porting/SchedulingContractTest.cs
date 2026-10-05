@@ -129,7 +129,7 @@ public class SchedulingContractTest
             else base.ScheduleRemoveScheduled(task);
         }
         public IRunnable PollDue() => PollScheduledTask(GetCurrentTimeNanos());
-        public bool TransferDue(IQueue<IRunnable> queue) => FetchFromScheduledTaskQueue(queue);
+        public bool TransferDue(IQueue<Action> queue) => FetchFromScheduledTaskQueue(queue);
         public override bool InEventLoop(Thread thread) => !holdRemoval;
         public override void Execute(Action task)
         {
@@ -196,12 +196,12 @@ public class SchedulingContractTest
         Assert.Single(executor.removals);
         executor.holdRemoval = false;
         executor.Advance(100);
-        var queue = new LinkedBlockingQueue<IRunnable>(1);
+        var queue = new LinkedBlockingQueue<Action>(1);
         Assert.True(executor.TransferDue(queue));
         Assert.Equal(1, queue.Count);
         Assert.True(queue.TryDequeue(out var task));
-        Assert.NotSame(canceledWork, task);
-        task.Run();
+        Assert.NotSame(canceledWork, ExecutorWork.Unwrap(task, nameof(task)));
+        task();
         Assert.True(ready.IsCompletedSuccessfully);
         Assert.Null(executor.PollDue());
     }
@@ -213,8 +213,8 @@ public class SchedulingContractTest
         var ready = executor.ScheduleAsync(() => { }, TimeSpan.FromTicks(1));
         var readyWork = executor.Head;
         executor.Advance(100);
-        var queue = new LinkedBlockingQueue<IRunnable>(1);
-        Assert.True(queue.TryEnqueue(Runnables.Empty));
+        var queue = new LinkedBlockingQueue<Action>(1);
+        Assert.True(queue.TryEnqueue(Runnables.Empty.Run));
         Assert.False(executor.TransferDue(queue));
         Assert.Same(readyWork, executor.PollDue());
     }

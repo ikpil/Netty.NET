@@ -5205,3 +5205,54 @@ warmups and three 100,000-operation samples. No executor/Recycler allocation or
 controlled throughput claim. Evidence: queue-surface-identity-and-inventory.json
 and artifacts/queue-surface-validation/allocation-evidence.json. Empty review is
 complete on Windows/x64/net10.0; protected executor hooks and broader review remain.
+
+## Native executor ready queues
+
+Pinned SingleThreadEventExecutor.java:250-421/482-553/1000-1069 defines overridable
+queue creation/admission/removal/waking and task-taking helpers. Actual transport
+DefaultEventLoop/ThreadPerChannelEventLoop take tasks; SingleThreadIoEventLoop:
+334-342 substitutes a nonblocking queue; SingleThreadEventLoop:135-165 offers,
+removes and drains a tail queue. These hooks remain, now using IQueue<Action> and
+Action directly. DefaultEventExecutor consumes the native callback; native safe
+execution helpers preserve the original exception boundary. Raw execution still
+does not capture ExecutionContext; native SubmitAsync/scheduling keep their own
+result, context, cancellation and invocation policies.
+
+Action value equality can match a different queued method-group instance. The
+default executor queue therefore selects ReferenceEqualityComparer explicitly;
+custom executor queues must preserve exact callback membership for rollback.
+LinkedBlockingQueue's ordinary overload retains native default value equality.
+Capacity, FIFO, interruptible blocking waits, wake filtering, shutdown rollback,
+suspension and virtual hooks remain. Rejection passes the admitted callback
+directly without unwrap/rewrap; a composed multicast Action remains ordinary work.
+The original lazy test uses a native method-group callback to classify its known
+fixture receiver, retaining the original no-wake/flush scenario and assertions.
+
+NativeScheduledWork caches one opaque QueueCallback at construction. The same
+callback crosses virtual submission, due transfer, full-queue rollback, periodic
+reinsertion and cancellation dispatch. Deadline membership remains IScheduledWork
+with its original per-queue index/id. Exact callback recognition in ExecutorWork
+still guards metadata recovery for other backends; no arbitrary Action.Target
+inference, thread-static bridge, alternate public Execute, or per-repeat wrapper.
+Four regressions cover distinct value-equal method-group removal, native tail
+failure isolation/wake filtering, full/periodic/cancel callback lifetime and direct
+rejection/reoffer identity. Existing original fixture scenarios/comments remain.
+The independent non-friend consumer uses real custom Action hooks plus native
+submit/cancel/schedule/lazy execution on the owned worker. Identical source cannot
+compile against the prior IRunnable hooks; this proves an API migration, not an
+upstream behavioral defect. Final matrix/conservation results are in the checkpoint.
+
+Release allocation comparison (Windows/x64/net10.0, tiered compilation disabled,
+identical programs, 5,000 warmups and three 100,000-operation samples per mode):
+raw Execute/drain 72 -> 48 bytes, full-queue discard 120 -> 0, periodic due/run
+88 -> 88, native SubmitAsync/drain/result 408 -> 408. Creating/executing a fresh
+zero-delay schedule from inside the event loop is 696 -> 800 (+104) bytes: the
+cached callback/property is paid once per new membership, outside the periodic
+steady-state measurement. This is a measured tradeoff, not allocation parity for
+all scheduling. No controlled throughput/contention claim. Initial scheduled
+callback cost and broader bridge cleanup remain open. Raw unordered rejection's
+separate +64 cost remains; old ordered rejection/queue-wrap costs are superseded
+for this path, while native SubmitAsync's existing callback envelope remains.
+Evidence: artifacts/native-queue-validation/allocation-evidence.json. Global,
+Immediate and NonSticky internal Runnable storage, public scheduled membership,
+obsolete lazy marker interfaces and synchronous shutdown/wait review remain open.

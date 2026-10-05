@@ -47,9 +47,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     private const int ST_SHUTDOWN = 6;
     private const int ST_TERMINATED = 7;
 
-    private static readonly IRunnable NOOP_TASK = Runnables.Empty; // Do nothing.
+    private static readonly Action NOOP_TASK = static () => { }; // Do nothing.
 
-    private readonly IQueue<IRunnable> _taskQueue;
+    // Native queue entries retain their exact callback across retries and rollback.
+    private static readonly Action WAKEUP_ACTION = static () => { };
+    private readonly IQueue<Action> _taskQueue;
 
     private volatile Thread _thread;
     private readonly AtomicReference<IThreadProperties> _threadProperties = new AtomicReference<IThreadProperties>();
@@ -209,7 +211,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     }
 
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
-        bool addTaskWakesUp, IQueue<IRunnable> taskQueue,
+        bool addTaskWakesUp, IQueue<Action> taskQueue,
         Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : this(parent, executor, addTaskWakesUp, false, taskQueue, rejectedHandler)
     {
@@ -217,7 +219,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, bool supportSuspension,
-        IQueue<IRunnable> taskQueue, Action<Action, SingleThreadEventExecutor> rejectedHandler)
+        IQueue<Action> taskQueue, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : base(parent)
     {
         _addTaskWakesUp = addTaskWakesUp;
@@ -232,7 +234,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @deprecated Please use and override {@link #newTaskQueue(int)}.
      */
     [Obsolete]
-    protected virtual IQueue<IRunnable> NewTaskQueue()
+    protected virtual IQueue<Action> NewTaskQueue()
     {
         return NewTaskQueue(_maxPendingTasks);
     }
@@ -243,9 +245,11 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * calls on the this {@link Queue} it may make sense to {@code @Override} this and return some more performant
      * implementation that does not support blocking operations at all.
      */
-    protected virtual IQueue<IRunnable> NewTaskQueue(int maxPendingTasks)
+    protected virtual IQueue<Action> NewTaskQueue(int maxPendingTasks)
     {
-        return new LinkedBlockingQueue<IRunnable>(maxPendingTasks);
+        // Delegate value equality can match another pending submission. Rollback
+        // removes the exact callback that was admitted, as with Java Runnable identity.
+        return new LinkedBlockingQueue<Action>(maxPendingTasks, ReferenceEqualityComparer.Instance);
     }
 
     /**
@@ -267,18 +271,18 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * @see Queue#poll()
      */
-    protected virtual IRunnable PollTask()
+    protected virtual Action PollTask()
     {
         Debug.Assert(InEventLoop());
         return PollTaskFrom(_taskQueue);
     }
 
-    protected static IRunnable PollTaskFrom(IQueue<IRunnable> taskQueue)
+    protected static Action PollTaskFrom(IQueue<Action> taskQueue)
     {
         for (;;)
         {
             taskQueue.TryDequeue(out var task);
-            if (task != WAKEUP_TASK)
+            if (task != WAKEUP_ACTION)
             {
                 return task;
             }
@@ -294,25 +298,25 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return {@code null} if the executor thread has been interrupted or waken up.
      */
-    protected virtual IRunnable TakeTask()
+    protected virtual Action TakeTask()
     {
         Debug.Assert(InEventLoop());
-        if (!(_taskQueue is IBlockingQueue<IRunnable>))
+        if (!(_taskQueue is IBlockingQueue<Action>))
         {
             throw new NotSupportedException();
         }
 
-        IBlockingQueue<IRunnable> taskQueue = (IBlockingQueue<IRunnable>)_taskQueue;
+        IBlockingQueue<Action> taskQueue = (IBlockingQueue<Action>)_taskQueue;
         for (;;)
         {
             IScheduledWork scheduledTask = PeekScheduledTask();
             if (scheduledTask == null)
             {
-                IRunnable task = null;
+                Action task = null;
                 try
                 {
                     task = taskQueue.Take();
-                    if (task == WAKEUP_TASK)
+                    if (task == WAKEUP_ACTION)
                     {
                         task = null;
                     }
@@ -327,7 +331,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             else
             {
                 long delayNanos = scheduledTask.DelayNanos();
-                IRunnable task = null;
+                Action task = null;
                 if (delayNanos > 0)
                 {
                     try
@@ -354,7 +358,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
                 if (task != null)
                 {
-                    if (task == WAKEUP_TASK)
+                    if (task == WAKEUP_ACTION)
                     {
                         return null;
                     }
@@ -381,7 +385,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
 
         long nanoTime = GetCurrentTimeNanos();
-        IRunnable scheduledTask = PollScheduledTask(nanoTime);
+        IScheduledWork scheduledTask = PollScheduledTask(nanoTime);
         if (scheduledTask == null)
         {
             return false;
@@ -398,7 +402,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * @see Queue#peek()
      */
-    protected virtual IRunnable PeekTask()
+    protected virtual Action PeekTask()
     {
         Debug.Assert(InEventLoop());
         return _taskQueue.TryPeek(out var task) ? task : null;
@@ -425,7 +429,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Add a task to the task queue, or throws a {@link RejectedExecutionException} if this instance was shutdown
      * before.
      */
-    protected virtual void AddTask(IRunnable task)
+    protected virtual void AddTask(Action task)
     {
         ObjectUtil.CheckNotNull(task, "task");
         if (!OfferTask(task))
@@ -438,11 +442,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /// <remarks>Used by synchronous rejection policies. A closed executor throws; retries must reuse the supplied callback.</remarks>
     public bool OfferTask(Action task)
     {
-        return OfferTask(ExecutorWork.Unwrap(task, nameof(task)));
-    }
-
-    internal bool OfferTask(IRunnable task)
-    {
+        ArgumentNullException.ThrowIfNull(task);
         if (IsShutdown())
         {
             Reject();
@@ -454,7 +454,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * @see Queue#remove(Object)
      */
-    protected virtual bool RemoveTask(IRunnable task)
+    protected virtual bool RemoveTask(Action task)
     {
         return _taskQueue.TryRemove(ObjectUtil.CheckNotNull(task, "task"));
     }
@@ -525,9 +525,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return {@code true} if at least one task was executed.
      */
-    protected bool RunAllTasksFrom(IQueue<IRunnable> taskQueue)
+    protected bool RunAllTasksFrom(IQueue<Action> taskQueue)
     {
-        IRunnable task = PollTaskFrom(taskQueue);
+        Action task = PollTaskFrom(taskQueue);
         if (task == null)
         {
             return false;
@@ -549,9 +549,9 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * @param taskQueue the task queue to drain.
      * @return {@code true} if at least {@link Runnable#run()} was called.
      */
-    private bool RunExistingTasksFrom(IQueue<IRunnable> taskQueue)
+    private bool RunExistingTasksFrom(IQueue<Action> taskQueue)
     {
-        IRunnable task = PollTaskFrom(taskQueue);
+        Action task = PollTaskFrom(taskQueue);
         if (task == null)
         {
             return false;
@@ -576,7 +576,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected virtual bool RunAllTasks(long timeoutNanos)
     {
         FetchFromScheduledTaskQueue(_taskQueue);
-        IRunnable task = PollTask();
+        Action task = PollTask();
         if (task == null)
         {
             AfterRunningAllTasks();
@@ -772,7 +772,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         {
             // Use offer as we actually only need this to unblock the thread and if offer fails we do not care as there
             // is already something in the queue.
-            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _taskQueue.TryEnqueue(WAKEUP_ACTION);
         }
     }
 
@@ -925,7 +925,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         if (wakeup)
         {
-            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _taskQueue.TryEnqueue(WAKEUP_ACTION);
             if (!_addTaskWakesUp)
             {
                 this.Wakeup(inEventLoop);
@@ -1072,7 +1072,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                 return true;
             }
 
-            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _taskQueue.TryEnqueue(WAKEUP_ACTION);
             return false;
         }
 
@@ -1087,7 +1087,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         {
             // Check if any tasks were added to the queue every 100ms.
             // TODO: Change the behavior of takeTask() so that it returns on timeout.
-            _taskQueue.TryEnqueue(WAKEUP_TASK);
+            _taskQueue.TryEnqueue(WAKEUP_ACTION);
             try
             {
                 Thread.Sleep(100);
@@ -1130,23 +1130,21 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     public override void Execute(Action task)
     {
-        IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
-        Execute0(queuedTask);
+        Execute0(task);
     }
 
     public override void LazyExecute(Action task)
     {
-        IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
-        LazyExecute0(queuedTask);
+        LazyExecute0(task);
     }
 
-    private void Execute0(IRunnable task)
+    private void Execute0(Action task)
     {
         ObjectUtil.CheckNotNull(task, "task");
         Execute(task, WakesUpForTask(task));
     }
 
-    private void LazyExecute0(IRunnable task)
+    private void LazyExecute0(Action task)
     {
         Execute(ObjectUtil.CheckNotNull(task, "task"), false);
     }
@@ -1163,7 +1161,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             // was requested but not confirmed yet): if the removal task races with doStartThread() re-engaging
             // the thread as ST_STARTED (see the ST_SUSPENDED/ST_STARTED CAS dance below), nobody would otherwise
             // ever re-request suspension and the thread would keep running forever waiting for new tasks.
-            Execute(Runnables.Create(() =>
+            Execute(() =>
             {
                 task.Run();
                 if (CanSuspend(ST_SUSPENDED))
@@ -1172,16 +1170,16 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     // handle cancellation itself.
                     TrySuspend();
                 }
-            }), true);
+            }, true);
         }
         else
         {
             // task will remove itself from scheduled task queue when it runs
-            Execute(task, false);
+            Execute(ExecutorWork.Wrap(task), false);
         }
     }
 
-    private void Execute(IRunnable task, bool immediate)
+    private void Execute(Action task, bool immediate)
     {
         bool inEventLoop = this.InEventLoop();
         AddTask(task);
@@ -1232,7 +1230,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             if (thread == null)
             {
                 Debug.Assert(!InEventLoop());
-                WaitForBootstrap(this.SubmitAsync(NOOP_TASK.Run));
+                WaitForBootstrap(this.SubmitAsync(NOOP_TASK));
                 thread = _thread;
                 Debug.Assert(thread != null);
             }
@@ -1276,7 +1274,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      * Can be overridden to control which tasks require waking the {@link EventExecutor} thread
      * if it is waiting so that they can be run immediately.
      */
-    protected virtual bool WakesUpForTask(IRunnable task)
+    protected virtual bool WakesUpForTask(Action task)
     {
         return true;
     }
@@ -1294,14 +1292,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     // CLR transport subclasses can reject native callbacks from their tail queues.
     protected void Reject(Action task)
     {
-        Reject(ExecutorWork.Unwrap(task, nameof(task)));
-    }
-
-    private void Reject(IRunnable task)
-    {
+        ArgumentNullException.ThrowIfNull(task);
         // Reoffering this exact callback recovers the original payload, including
         // the identity needed by post-admission shutdown rollback and cancellation.
-        _rejectedExecutionHandler(ExecutorWork.Wrap(task), this);
+        _rejectedExecutionHandler(task, this);
     }
 
     // ScheduledExecutorService implementation
@@ -1562,7 +1556,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
             // WAKEUP_TASK should be just discarded as these are added internally.
             // The important bit is that we not have any user tasks left.
-            if (WAKEUP_TASK != runnable)
+            if (WAKEUP_ACTION != runnable)
             {
                 numTasks++;
             }
