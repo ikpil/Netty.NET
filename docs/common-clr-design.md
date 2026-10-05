@@ -6281,3 +6281,60 @@ The supported blocking contract selection omits that default-queue-specific fixt
 at runtime, not compilation. All eight bounded-pool cases still run and pass in
 default Debug/checked Release and both full runs. Failed broad evidence is retained;
 no claim that the whole test suite supports this alternate configuration.
+
+## Dual recycler mode contracts
+
+Pinned Recycler.java:136 normalizes positive shared-pool capacities to at least four;
+createExternalMcPool at :532 selects the requested capacity for BlockingMessageQueue
+and the fixed MPMC queue otherwise. Its blocking offer/poll methods synchronize on
+the queue instance (:644/:652), with capacity enforced before insertion. The current
+CLR CreateQueue preserves exact blocking capacity and a rounded ConcurrentQueue
+bound, with uninterruptible monitor entry to retain pending Thread.Interrupt.
+
+BoundedPoolQueueContractTest previously assumed the default branch in all modes:
+17 -> 32 and a private ConcurrentQueue segment gate. The fixture now selects the
+independent expected capacity from the requested value/configuration (17 blocking,
+32 default; requested 3 remains normalized to 4). Concurrent admission still asserts
+the full bound, accepted-prefix identity, uniqueness, no eviction, FIFO reuse and
+freed-capacity reuse. All eight existing theory identities and assertions remain.
+The interrupt schedule holds the actual segment gate in default mode and the queue
+instance monitor in blocking mode, while public Recycle/Get retain the same claimed
+identity, pending interrupt and remaining membership checks. Reflection schedules
+contention only. No production source, API or pool policy is changed.
+
+The first blocking Release full run exposed an unrelated watcher fixture race:
+ThreadDeathWatcherContractTest.MulticastFailureStopsThatInvocationButNotOtherRegistrations
+observed [4,1,2] instead of [1,2,4]. Pinned ThreadDeathWatcher.java:212-226 checks
+liveness separately per registration, so an owner can die after the first is skipped
+and before the second is visited. The fixture now requires ordered multicast [1,2]
+with no third invocation and exactly one independent callback 4, without imposing
+cross-registration order. No watcher production change. The initial failed full
+TRX/log remain under artifacts/recycler-mode-contract-validation/initial-blocking-full-release.*;
+all four final full runs use the final fixtures, without changed identities/skips.
+
+A deterministic private-loop scheduling probe ends the owner through an intervening
+dead-thread entry after the first liveness check. Identical probe source against the
+isolated baseline and current assemblies produces [4,1,2]: old sequence assertion
+fails, final multicast/exact-once assertions pass, and all entries drain. Reflection
+controls only this isolated schedule; the public fixture is covered by
+the full matrices. Evidence: watcher-baseline-probe.log/watcher-current-probe.log.
+
+Isolated e541855 baseline with blocking=true has six failures/two controls among
+the same eight cases; current blocking boundary selection passes all eight without
+skips. Full default and blocking Debug/Release each: 2215 discovered, 2201 pass/
+zero failures/14 unchanged skips. All 2215 prior identities/outcomes and original
+759 non-Porting outcomes are conserved in all four full runs. Targeted default
+Debug/default checked Release/blocking checked Release each: 198 discovered,
+190 pass/zero failures/eight original Recycler skips, including all 134 original
+recycler rows (126 pass/eight existing skips). No fixture exclusion or new case.
+
+All 271 comment rows have no coverage loss; Recycler retains 47/47 originals and
+the edited CLR fixture retains its prior comments. Inventory (205 sources/66 tests),
+paths/casing/no-new-source-test-warning identities pass. This closes the six-case
+blocking validation limitation from the preceding unit; earlier failed evidence
+remains historical. Evidence: artifacts/recycler-mode-contract-validation and
+recycler-mode-* TRX/JSON, including its isolated baseline TestResults. No performance
+claim or new Markdown file. Source review statuses stay 60 verified/51 CLR replacement/
+63 pending/16 in-progress/15 not applicable. Whole common and remaining backend/
+runtime/platform/source reviews stay open, including the earlier focused Global
+xUnit completion stall, which is not claimed repaired by these successful runs.

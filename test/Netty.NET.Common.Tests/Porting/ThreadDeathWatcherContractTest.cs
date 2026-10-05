@@ -259,7 +259,11 @@ public class ThreadDeathWatcherContractTest : IDisposable
         ThreadDeathWatcher.Watch(owner.Thread, () => order.Add(4));
         owner.End();
         Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
-        Assert.Equal(new[] { 1, 2, 4 }, order);
+        // The watcher may skip a still-live owner and then observe its death for
+        // another registration in the same pass. Registration order therefore
+        // does not order separate callbacks; multicast invocation remains ordered.
+        Assert.Equal(new[] { 1, 2 }, order.FindAll(value => value != 4));
+        Assert.Equal(1, order.FindAll(value => value == 4).Count);
     }
 
     [Fact]

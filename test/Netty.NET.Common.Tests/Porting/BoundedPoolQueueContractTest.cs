@@ -34,8 +34,12 @@ public class BoundedPoolQueueContractTest
         // Reflection controls the schedule only; recycle/borrow use the ordinary public API.
         object localPool = Field(pool, "localPool");
         object returnQueue = Field(localPool, "pooledHandles");
-        object nativeQueue = Field(returnQueue, "queue");
-        object segmentGate = Field(nativeQueue, "_crossSegmentLock");
+        // Blocking mode synchronizes on the return queue itself, as in the
+        // pinned Java implementation. Force that monitor wait instead of a
+        // ConcurrentQueue segment transition; retain the same interrupt/FIFO assertions.
+        object segmentGate = Recycler.BLOCKING_POOL
+            ? returnQueue
+            : Field(Field(returnQueue, "queue"), "_crossSegmentLock");
         Exception failure = null;
         Item claimed = null;
         bool pendingInterrupt = false;
@@ -83,12 +87,15 @@ public class BoundedPoolQueueContractTest
     [InlineData(17, 32, true)]
     public void FullPoolPreservesAcceptedFifoReturnsAndCanReuseFreedCapacity(int requested, int effective, bool unguarded)
     {
+        // The original 'effective' theory value is the default rounded bound.
+        // Blocking mode preserves the requested capacity after the pool's minimum of four.
+        int expectedCapacity = Recycler.BLOCKING_POOL ? Math.Max(4, requested) : effective;
         var pool = new Pool(requested, unguarded);
-        var items = new Item[effective + 2];
+        var items = new Item[expectedCapacity + 2];
         for (int index = 0; index < items.Length; index++) items[index] = pool.Get();
         foreach (Item item in items) item.Handle.Recycle(item);
-        Assert.Equal(effective, pool.ThreadLocalSize());
-        for (int index = 0; index < effective; index++) Assert.Same(items[index], pool.Get());
+        Assert.Equal(expectedCapacity, pool.ThreadLocalSize());
+        for (int index = 0; index < expectedCapacity; index++) Assert.Same(items[index], pool.Get());
         Assert.Equal(0, pool.ThreadLocalSize());
         Item fresh = pool.Get();
         foreach (Item item in items) Assert.NotSame(item, fresh);
@@ -102,6 +109,7 @@ public class BoundedPoolQueueContractTest
     [InlineData(true)]
     public async Task ConcurrentReturnsRespectTheBoundAndDoNotEvictPreviouslyAcceptedObjects(bool unguarded)
     {
+        int expectedCapacity = Recycler.BLOCKING_POOL ? 17 : 32;
         var pool = new Pool(17, unguarded);
         var items = new Item[96];
         for (int index = 0; index < items.Length; index++) items[index] = pool.Get();
@@ -117,10 +125,10 @@ public class BoundedPoolQueueContractTest
             }, TestContext.Current.CancellationToken);
         }
         await Task.WhenAll(workers).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
-        Assert.Equal(32, pool.ThreadLocalSize());
+        Assert.Equal(expectedCapacity, pool.ThreadLocalSize());
         for (int index = 0; index < 4; index++) Assert.Same(items[index], pool.Get());
         var accepted = new HashSet<Item>(ReferenceEqualityComparer.Instance);
-        var borrowed = new Item[28];
+        var borrowed = new Item[expectedCapacity - 4];
         for (int index = 0; index < borrowed.Length; index++)
         {
             Item item = borrowed[index] = pool.Get();
@@ -131,7 +139,7 @@ public class BoundedPoolQueueContractTest
         Item fresh = pool.Get();
         foreach (Item item in items) Assert.NotSame(item, fresh);
         foreach (Item item in borrowed) item.Handle.Recycle(item);
-        Assert.Equal(28, pool.ThreadLocalSize());
+        Assert.Equal(borrowed.Length, pool.ThreadLocalSize());
         foreach (Item item in borrowed) Assert.Same(item, pool.Get());
     }
 

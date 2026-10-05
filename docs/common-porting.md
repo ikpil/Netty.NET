@@ -122,38 +122,43 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-Default Debug/Release on Windows/x64/net10.0 each discover **2215 cases**:
-**2201 passed / 0 failed / 14 unchanged skips**. Evidence:
-native-recycler-factory-full-debug.trx and native-recycler-factory-full-release.trx.
-All 2208 prior identities/outcomes and 759 original non-Porting results remain;
-seven new CLR factory cases, no identity remap/source exclusion/skip change.
+On Windows/x64/net10.0, full default and blocking-mode Debug/Release each discover
+**2215 cases: 2201 passed / 0 failed / 14 unchanged skips**. Evidence:
+recycler-mode-full-debug.trx, recycler-mode-full-release.trx and
+recycler-mode-blocking-full-debug.trx/recycler-mode-blocking-full-release.trx.
+All 2215 prior identities/outcomes and 759 original non-Porting results remain
+in all four full runs; no added/remapped/excluded case or changed skip.
 
-The pinned deprecated ObjectPool adapter is replaced by direct Recycler with a
-native Func<IRecyclerHandle<T>,T> factory. Common consumers use this factory;
-the return handle directly declares Recycle, with original Handle comments nearby.
-Seven obsolete public facade/helper types are removed. Existing pooling policy,
-payload ownership, node completion transfer and list reset behavior remain.
-See common-clr-design.md#native-recycler-factory-and-handle.
+BoundedPoolQueueContractTest now respects both reviewed native backends: blocking
+keeps capacity 17 after the pool minimum; default uses the rounded bound 32.
+The interrupt schedule holds the appropriate queue monitor/ConcurrentQueue segment
+gate while retaining public return/claim, pending-interrupt and FIFO assertions.
+No production/API/pool-policy change. See common-clr-design.md#dual-recycler-mode-contracts.
 
-Targeted Debug/checked Release each discover 198: 190 pass / zero failures /
-eight original Recycler skips. Identical non-friend before/after native consumers
-preserve guarded reuse, list export/reset, release/cause and producer transfer.
-All 271 comment rows have no loss; four scoped owners retain 69 original comments,
-including all eight deprecated ObjectPool comments in canonical provenance.
-Inventory (205 source/66 test), paths, casing and no-new-source-test-warning
-identities pass. No performance/baseline-runtime-bug claim. Evidence:
-artifacts/native-recycler-factory-validation and native-recycler-factory-* TRX/JSON.
+The first blocking Release full run exposed an unrelated watcher fixture race:
+ThreadDeathWatcherContractTest.MulticastFailureStopsThatInvocationButNotOtherRegistrations
+observed [4,1,2] instead of [1,2,4]. Pinned ThreadDeathWatcher.java:212-226 checks
+liveness separately per registration, so an owner can die after the first is skipped
+and before the second is visited. The fixture now requires ordered multicast [1,2]
+with no third invocation and exactly one independent callback 4, without imposing
+cross-registration order. No watcher production change. The initial failed full
+TRX/log remain under artifacts/recycler-mode-contract-validation/initial-blocking-full-release.*;
+all four final full runs use the final fixtures, without changed identities/skips.
+
+The same isolated baseline eight-case blocking selection fails six/passes two;
+current blocking boundary Debug passes all eight. Targeted default Debug, default
+checked Release and blocking checked Release each discover 198: 190 pass / zero
+failures / eight original Recycler skips. The prior blocking validation limitation
+is resolved for the full project with no runtime fixture filter. Historical failed
+results remain in their original artifact folders.
+
+All 271 comment rows have no loss, including 47/47 Recycler originals and the
+edited CLR fixture's prior comments. Inventory (205 source/66 test), paths, casing
+and no-new-source-test-warning identities pass. No performance claim. Evidence:
+artifacts/recycler-mode-contract-validation and recycler-mode-* TRX/JSON.
 Only three canonical records updated; no new MD, generated evidence ignored.
 
-Blocking-mode contracts additionally pass 182 / zero failures / eight original
-skips (190 discovered). An initial broad blocking selection fails six default-only
-BoundedPoolQueue rows; isolated baseline source reproduces the same failures. This
-fixture tests native ConcurrentQueue segment locks and rounded capacity, whereas
-blocking mode uses an exact-capacity monitor queue. Both broad failure records remain;
-default full/targeted matrices still execute all bounded-pool cases successfully.
-The whole suite is not claimed verified with blocking=true.
-
-Source statuses now 60 verified / 51 CLR replacement / 15 not applicable /
+Source statuses stay 60 verified / 51 CLR replacement / 15 not applicable /
 63 pending / 16 in progress. Continue remaining source/backend/runtime/platform
 reviews in dependency order. The earlier focused Global xUnit completion stall
 remains unresolved; current matrices completed. Whole common remains open.
