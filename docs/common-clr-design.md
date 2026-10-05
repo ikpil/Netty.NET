@@ -5703,3 +5703,69 @@ including cancellation/reentry/termination publication review; no fix is claimed
 Evidence: artifacts/unordered-raw-action-validation/{before,after}-{consumer,perf}.log,
 allocation-evidence.json and *-perf-bulk-stop.log. Current matrices/comment/inventory
 checks are in common-porting.md; whole backend/common/platform review remains open.
+
+## Immediate stop snapshot withdrawal
+
+Pinned UnorderedThreadPoolEventExecutor.java:138-142 delegates immediate shutdown
+to the inherited scheduled pool. Local Corretto 21.0.11 ThreadPoolExecutor.java:
+858-868,1421-1434 advances STOP and drains queue membership before tryTerminate.
+Pinned common NonStickyEventExecutorGroupTest.java:74,110,139 and transport
+DefaultChannelPipelineTest.java:1549 establish the shared pool/ordered child use.
+The existing CLR policy cancels pending native results, releases raw callbacks,
+requests cooperative StopToken without thread interruption, and publishes its sole
+Termination Task after workers, start reservations and stop callbacks drain.
+
+StopCore previously took a membership snapshot but left its entries in the BCL
+heap during cancellation. SubmittedTask.CancelForShutdown invokes its one-shot
+removal hook, so each native submission scanned the remaining heap, including
+raw callbacks which release their invocation without removing their entry.
+The owned snapshot now withdraws all membership through one queue.Clear before
+canceling each entry. Reentrant removal sees an empty heap. Snapshot members retain
+their result/callback ownership until individually settled; no new result owner,
+collection, cancellation suppression or public API is introduced.
+
+The existing stopNotifications reservation prevents PublishPoolState from completing
+the lifecycle during synchronous cancellation/removal/stop reentry. Its observer
+starts after the snapshot loop leaves the pool gate. Other callers and workers
+cannot observe a partially canceled snapshot through that gate. Callbacks present
+at the stop request execute asynchronously; executor reentry waits for that gate.
+Factory/start reservations, running invocations, callback failure aggregation,
+ExecutionContext suppression and independent operation token ownership remain.
+
+The added native cancellation-boundary regression fails before repair (four entries
+still pending inside cancellation), then verifies zero membership while Termination
+is still pending and later results remain unsettled. An isolated counterfactual
+which removes only the publication guard fails the same regression because
+Termination is already complete inside cancellation; this is expected negative
+evidence, never a passing matrix. Two public mixed snapshot rows
+include raw/submitted/deadline/periodic work and an ordered child's shared runner,
+with/without racing owner cancellation; callback and worker barriers verify actual
+result settlement and drain. Existing original fixture identities/assertions and
+all 21 source comments remain; broader snapshot/provenance coverage is unchanged.
+An identical non-friend Action/Task/CancellationToken consumer passes before/after:
+all mixed results cancel, raw work never runs, reentrant callbacks retain lifecycle
+ownership, their failures preserve identity, independent owner tokens stay untouched,
+and repeated stop returns the same completed Task.
+
+Release Windows/x64/net10.0, tiering disabled, two small warmups and five samples
+per size/version: a workerless real pool holds two cached raw callbacks per native
+submitted Task. Synchronous StopAsync snapshot/cancellation time medians (milliseconds):
+
+| Pending entries | Before | After |
+| --- | ---: | ---: |
+| 384 | 0.0959 | 0.0221 |
+| 1536 | 1.2038 | 0.0781 |
+| 6144 | 18.2491 | 0.3142 |
+| 24576 | 291.8900 | 1.1260 |
+| 98304 | 4762.5729 | 4.5746 |
+
+All samples settle every result and terminate successfully. The largest case falls
+4762.5729 -> 4.5746 ms in this scope. Setup/admission, worker drain,
+asynchronous stop notification execution and final result observation are outside
+timing. Exact rows/current-thread allocation are retained; this is not a concurrent
+throughput, graceful-periodic cancellation or arbitrary user callback latency claim.
+Evidence: artifacts/unordered-stop-snapshot-validation/{before,after}-{consumer,perf}.log,
+stop-cost-evidence.json and unordered-stop-snapshot-*.trx/JSON in TestResults.
+Graceful OnShutdown still withdraws periodic entries individually and needs its own
+cost/policy review. Remaining native submission/Runnable test bridges, backend/runtime
+and platform reviews stay open; this scoped repair does not complete common.

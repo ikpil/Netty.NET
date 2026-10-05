@@ -200,8 +200,12 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             // settles cancellation or releases its raw callback before termination.
             // Canceling a submission can remove itself through its membership
             // hook. Iterate the owned snapshot rather than a live BCL enumerator.
-            foreach (Work work in pending) work.CancelOuter();
+            // Withdraw all membership first: cancellation hooks then see an empty
+            // heap instead of scanning remaining entries once per submission.
+            // The stop notification reservation stays owned until after this
+            // snapshot settles, including synchronous removal/lifecycle reentry.
             queue.Clear();
+            foreach (Work work in pending) work.CancelOuter();
             PublishPoolState();
         }
         if (notifications != null)

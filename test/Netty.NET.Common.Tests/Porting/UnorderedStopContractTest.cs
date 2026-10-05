@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
@@ -12,6 +13,124 @@ public class UnorderedStopContractTest
     private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
         public Thread NewThread(Action task) => create(task);
+    }
+
+    // Exercise the native cancellation boundary with synchronous membership
+    // removal and lifecycle reentry; this reservation never runs caller work.
+    private sealed class ReentrantCancellation(Action observe) : ICancelableNativeSubmission
+    {
+        private readonly TaskCompletionSource _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private Action _remove;
+        internal int Cancellations;
+        internal Task Result => _completion.Task;
+        public bool IsCanceled => Result.IsCanceled;
+        public void SetCancellationRemoval(Action remove) => _remove = remove;
+        public void CancelForShutdown()
+        {
+            if (!_completion.TrySetCanceled()) return;
+            ++Cancellations;
+            Interlocked.Exchange(ref _remove, null)?.Invoke();
+            observe();
+        }
+        public void Reject(Exception error) => _completion.TrySetException(error);
+        public void Run() => Assert.Fail("Removed reservation ran");
+    }
+
+    [Fact]
+    public async Task SnapshotWithdrawalPrecedesCancellationReentryAndTerminationPublication()
+    {
+        var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
+        Task[] results = null;
+        int pendingInsideCancellation = -1;
+        bool completedInsideCancellation = true, terminatedInsideCancellation = true, settledInsideCancellation = true;
+        Task reentrantStop = null;
+        var reservation = new ReentrantCancellation(() =>
+        {
+            pendingInsideCancellation = executor.PendingTaskCount;
+            completedInsideCancellation = executor.Termination.IsCompleted;
+            terminatedInsideCancellation = executor.AwaitTermination(TimeSpan.Zero);
+            settledInsideCancellation = results.All(task => task.IsCompleted);
+            reentrantStop = executor.StopAsync();
+        });
+        executor.ExecuteNativeSubmission(reservation);
+        executor.Execute(() => Assert.Fail("Removed raw work ran"));
+        results = [executor.SubmitAsync(() => Assert.Fail("Removed submission ran"), TestContext.Current.CancellationToken),
+            executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1), TestContext.Current.CancellationToken),
+            executor.ScheduleAtFixedRateAsync(() => Assert.Fail("Removed periodic work ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), TestContext.Current.CancellationToken)];
+        Task stopping = executor.StopAsync();
+        await stopping.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Equal(0, pendingInsideCancellation);
+        Assert.False(completedInsideCancellation);
+        Assert.False(terminatedInsideCancellation);
+        Assert.False(settledInsideCancellation);
+        Assert.Same(stopping, reentrantStop);
+        Assert.Same(executor.Termination, stopping);
+        Assert.Equal(1, reservation.Cancellations);
+        Assert.True(reservation.Result.IsCanceled);
+        Assert.All(results, task => Assert.True(task.IsCanceled));
+        Assert.True(executor.IsTerminated());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MixedSnapshotSettlesResultsBeforeStopCallbacksFinishAndWorkersDrain(bool cancelOwner)
+    {
+        const int count = 128;
+        var executor = new UnorderedThreadPoolEventExecutor(1);
+        IEventExecutor child = new NonStickyEventExecutorGroup(executor).Next();
+        using var owner = new CancellationTokenSource();
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        using var callbackEntered = new ManualResetEventSlim();
+        using var callbackRelease = new ManualResetEventSlim();
+        int rawCalls = 0;
+        var results = new Task[count * 4];
+        using var registration = executor.StopToken.UnsafeRegister(_ =>
+        {
+            Assert.Same(executor.Termination, executor.StopAsync());
+            Assert.Equal(0, executor.PendingTaskCount);
+            Assert.All(results, task => Assert.True(task.IsCanceled));
+            callbackEntered.Set();
+            Assert.True(callbackRelease.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        }, null);
+        Task<int> running = executor.SubmitAsync(() => { entered.Set(); release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken); return 7; }, TestContext.Current.CancellationToken);
+        try
+        {
+            Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+            for (int i = 0; i < count; ++i)
+            {
+                executor.Execute(() => Interlocked.Increment(ref rawCalls));
+                results[i * 4] = executor.SubmitAsync(() => Assert.Fail("Removed submission ran"), owner.Token);
+                results[i * 4 + 1] = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1), owner.Token);
+                results[i * 4 + 2] = executor.ScheduleWithFixedDelayAsync(() => Assert.Fail("Removed periodic work ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), owner.Token);
+                results[i * 4 + 3] = child.SubmitAsync(() => Assert.Fail("Removed child submission ran"), owner.Token);
+            }
+            // The ordered child shares one runner reservation for its pending results.
+            Assert.Equal(count * 4 + 1, executor.PendingTaskCount);
+            Task canceling = cancelOwner ? Task.Run(owner.Cancel, TestContext.Current.CancellationToken) : Task.CompletedTask;
+            Task stopping = executor.StopAsync();
+            await canceling.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.True(callbackEntered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+            Assert.False(stopping.IsCompleted);
+            Assert.All(results, task => Assert.True(task.IsCanceled));
+            callbackRelease.Set();
+            Assert.False(stopping.IsCompleted);
+            release.Set();
+            Assert.Equal(7, await running.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+            await stopping.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Assert.Equal(cancelOwner, owner.IsCancellationRequested);
+            Assert.Equal(0, rawCalls);
+            Assert.Equal(0, executor.PendingTaskCount);
+            Assert.Equal(0, executor.WorkerCount);
+            Assert.Same(stopping, executor.StopAsync());
+        }
+        finally
+        {
+            callbackRelease.Set();
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        }
     }
 
     [Theory]
