@@ -122,38 +122,37 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-Windows/x64/net10.0 default Debug/Release each: **2272 discovered, 2258 passed /
-0 failed / 14 unchanged skips**. All 2251 prior identities/outcomes and 759 original
-non-Porting cases retained. Evidence: native-domain-mapping-full-{debug,release}.trx.
+Windows/x64/net10.0 default Debug/Release each: **2289 discovered, 2275 passed /
+0 failed / 14 unchanged skips**. All 2272 prior identities/outcomes and original
+759 non-Porting cases retained. Evidence: native-domain-snapshot-full-{debug,release}.trx.
 
-Synchronous mapping now uses Func<TIn,TOut>; IMapping retires and DomainNameMapping.Map
-remains directly usable as a method group. Wildcard Build returns a delegate bound
-to a private independent snapshot, replacing an exported implementation helper.
-Native ordinal OrderedDictionary preserves duplicate replacement and explicit
-registration order; exact-before-first-dot matching and stored reference identity
-remain. Source/consumer decisions, original comments and intentional diagnostic
-difference: common-clr-design.md#native-synchronous-domain-selection.
+Legacy domain owner/builder use native ordinal OrderedDictionary. Immutable AsMap
+now rejects mutations through dictionary casts; paired-entry snapshots retain first
+lookup/last map-view value on normalized collisions, diagnostics, order and shallow
+reference identity. Mutable views stay live/read-only. Redundant alias/exported
+snapshot retire and the original internal map constructor no longer expands the
+public API. Native IDNA policy and explicit Java differences are recorded in
+common-clr-design.md#native-legacy-domain-snapshots-and-idna-policy.
 
-Executed full pinned Java owners agree with baseline/native CLR on 224 lookups,
-eight snapshot rows and six registration failures after exception mapping. Seven
-nonempty snapshot diagnostics agree; malformed empty text is explicitly repaired.
-Identical native consumer fails baseline compilation and passes native Func,
-snapshot/identity/method-group/native-storage checks. Baseline affected selection
-60 passes; final targeted Debug/checked Release 81 passes, with 21 added cases.
-All eight original wildcard case identities and assertion counts remain.
+Executed full pinned Java owners agree with baseline/native CLR on 496 lookup/view/
+diagnostic/snapshot rows; native restores all 16 read-only views, including eight
+writable baseline snapshots. Thirty normalization rows match the native reference;
+seven Java IDNA differences are explicit and unchanged from baseline CLR. Public
+null normalization uses ArgumentNullException. No other-OS/backend equivalence claim.
 
-All 271 original comment rows without loss; 20 scoped originals preserved.
-Inventory still 205 source/66 test, paths/casing valid and no new source/test warning
-identities. Only three existing records updated; generated raw evidence ignored:
-artifacts/native-domain-mapping-validation and native-domain-mapping-* TRX/JSON.
+Identical affected baseline: 98 cases, 95 pass/3 fail; final targeted Debug/checked
+Release: 98 pass. All 81 prior affected cases and 18 original domain scenarios with
+their assertions/comments remain. Seventeen CLR cases added; whole-suite identities
+and existing skips unchanged. All 271 original comment rows without loss, 26 scoped
+originals retained. Inventory 205 source/66 test; paths/casing valid and no new
+source/test warning identities. Only three existing records updated; evidence ignored:
+artifacts/native-domain-snapshot-validation and native-domain-snapshot-* TRX/JSON.
 
-Mapping moves pending -> CLR replacement and wildcard builder pending -> verified
-for this recorded boundary. Source counts: 64 verified / 54 CLR replacement /
-15 not applicable / 56 pending / 16 in progress. Shared IDNA normalization and
-legacy domain builders remain open; continue their order/replacement/snapshot and
-native API review. Whole blocking mode was not rerun; whole common/backend/platform
-reviews and the earlier focused Global completion stall remain open. No additional
-OS or performance certification.
+Owner/builder -> verified for the explicit native policy/contracts, alias -> CLR
+replacement. Source counts: 66 verified / 55 CLR replacement / 15 not applicable /
+54 pending / 15 in progress. Continue remaining native resource/thread/executor,
+platform and source inventory reviews. Whole common and the prior focused Global
+completion stall remain open; whole blocking mode not rerun. No performance claim.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

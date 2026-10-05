@@ -6774,3 +6774,242 @@ and casing unchanged. Raw evidence: artifacts/native-domain-mapping-validation
 and native-domain-mapping-* TRX/JSON. Whole blocking mode not rerun; whole common,
 backend/platform reviews and the prior focused Global completion stall remain
 open. No performance or additional-OS claim; only three existing records updated.
+
+## Native legacy domain snapshots and IDNA policy
+
+Pinned DomainNameMapping.java:39-164 and DomainNameMappingBuilder.java:33-223
+preserve first matching registration, broad legacy wildcard prefix/depth rules,
+normalized ordinal keys, duplicate raw-key replacement, shallow independent builds
+and read-only map views. The builder defers normalization until Build; distinct
+raw spellings may collide after normalization. Keep both scan positions/values:
+lookup returns the first value, AsMap shows the last value at its first position,
+and diagnostics print both entries. A normalized Dictionary-only scan would break
+this contract. The mutable owner's normalized indexer updates the earlier position
+and its stable read-only view remains live. SniHandler.java:73-74 accepts a domain
+mapping directly; original SNI tests use the builder and wildcard-first selection.
+Other module implementations remain outside this unit.
+
+Both mutable owner and builder now use ordinal native OrderedDictionary, matching
+the preceding wildcard unit's explicit order/replacement choice. A private nested
+snapshot stores paired KeyValuePair entries and wraps a separate ordered lookup
+view in ReadOnlyDictionary. The previous public snapshot returned a writable
+LinkedHashMap through IReadOnlyDictionary; callers could cast and mutate it.
+The same added mutation-route fixture fails baseline immutable view and passes
+native indexer/Add/Remove/Clear rejection. It also checks unchanged lookup/view
+values. Mutable view remains read-only and live; builder mutation cannot alter a
+published snapshot. Values/default references retain identity, not deep copies.
+
+DomainMappingBuilder.java:26-76 delegates every operation to DomainNameMappingBuilder;
+an all-module source search finds no consumer of that alias. Retire its CLR alias,
+use the actual builder directly and archive all six original comments. Retire the
+exported ImmutableDomainNameMapping helper into the builder's private implementation.
+The nullable map constructor was package-private upstream; make it internal in CLR
+rather than exposing an incomplete public owner with null storage. Native method
+groups remain the synchronous callback boundary established in the previous unit.
+Keep DomainNameMapping/its builder for actual legacy first-match/view consumers;
+do not replace them with the strict wildcard builder's different matching policy.
+
+Normalization uses a private readonly native IdnMapping with AllowUnassigned=true,
+UseStd3AsciiRules=false, the pinned non-ASCII-only conversion gate and invariant
+ASCII lowercase. A span range search replaces the manual gate loop. ASCII-only
+empty/underscore/empty-label/control inputs still bypass IDNA as upstream; this is
+not complete DNS validation. Public null normalization now throws native
+ArgumentNullException(hostname), replacing the baseline NullReferenceException.
+Mutable/immutable null Map input still returns the same default without conversion.
+
+Java IDN documents Unicode 3.2 Nameprep/RFC3490, while CLR conversion follows its
+runtime globalization implementation. Keep the native CLR policy explicitly:
+https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/IDN.html
+https://learn.microsoft.com/en-us/dotnet/api/system.globalization.idnmapping.getascii?view=net-10.0
+Executed full original domain owners and exact helper methods versus identical
+baseline/native CLR consumers: 448 lookup, 16 view, 16 diagnostic and 16 later-build
+rows (496 total) agree; the alias was compiled and its delegation reviewed.
+Java/native reject all 16 view mutations; baseline exposes
+eight immutable views. Thirty normalization rows agree with the independent native
+IdnMapping reference except the intentionally mapped null boundary. Baseline/native
+non-null results agree, so this unit does not introduce the seven observed Java
+IDNA differences: faß -> fass versus xn--fa-hia; final sigma is folded versus
+preserved; zero-width non-joiner/joiner are removed versus rejected; a mixed control
+label and an unassigned code point are encoded versus rejected. Names/outputs are
+retained in normalization-differences.json. This is Windows/x64/net10.0 with the
+current globalization backend, not cross-platform/Unicode-table equivalence.
+
+Diagnostics use standard StringBuilder object formatting and ordered entries,
+retaining tested original text and collision multiplicity; the speculative size
+estimate helper retires without a performance claim. Original class documentation
+is kept with the paired-entry CLR adaptation; retired estimate documentation,
+separator explanation and alias comments follow, then prior CLR comment variants.
+
+```java
+// 2 for separator ", " and 1 for '='
+
+/**
+         * Estimates the length of string representation of the given instance:
+         * est = lengthOfConstantComponents + defaultValueLength + (estimatedMappingLength * numOfMappings) * 1.10
+         *
+         * @param defaultValueLength     length of string representation of {@link #defaultValue}
+         * @param numberOfMappings       number of mappings the given instance holds,
+         *                               e.g. {@link #domainNamePatterns#length}
+         * @param estimatedMappingLength estimated size taken by one mapping
+         * @return estimated length of string returned by {@link #toString()}
+         */
+
+/*
+ * Copyright 2015 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Builder for immutable {@link DomainNameMapping} instances.
+ *
+ * @param <V> concrete type of value objects
+ * @deprecated Use {@link DomainWildcardMappingBuilder} instead.
+ */
+
+/**
+     * Constructor with default initial capacity of the map holding the mappings
+     *
+     * @param defaultValue the default value for {@link DomainNameMapping#map(String)} to return
+     *                     when nothing matches the input
+     */
+
+/**
+     * Constructor with initial capacity of the map holding the mappings
+     *
+     * @param initialCapacity initial capacity for the internal map
+     * @param defaultValue    the default value for {@link DomainNameMapping#map(String)} to return
+     *                        when nothing matches the input
+     */
+
+/**
+     * Adds a mapping that maps the specified (optionally wildcard) host name to the specified output value.
+     * Null values are forbidden for both hostnames and values.
+     * <p>
+     * <a href="https://en.wikipedia.org/wiki/Wildcard_DNS_record">DNS wildcard</a> is supported as hostname.
+     * For example, you can use {@code *.netty.io} to match {@code netty.io} and {@code downloads.netty.io}.
+     * </p>
+     *
+     * @param hostname the host name (optionally wildcard)
+     * @param output   the output value that will be returned by {@link DomainNameMapping#map(String)}
+     *                 when the specified host name matches the specified input host name
+     */
+
+/**
+     * Creates a new instance of immutable {@link DomainNameMapping}
+     * Attempts to add new mappings to the result object will cause {@link UnsupportedOperationException} to be thrown
+     *
+     * @return new {@link DomainNameMapping} instance
+     */
+```
+
+Retired CLR comment variants:
+
+```csharp
+/**
+     * Constructor with default initial capacity of the map holding the mappings
+     *
+     * @param defaultValue the default value for {@link DomainNameMapping#map(string)} to return
+     *                     when nothing matches the input
+     */
+
+/**
+     * Constructor with initial capacity of the map holding the mappings
+     *
+     * @param initialCapacity initial capacity for the internal map
+     * @param defaultValue    the default value for {@link DomainNameMapping#map(string)} to return
+     *                        when nothing matches the input
+     */
+
+/**
+     * Adds a mapping that maps the specified (optionally wildcard) host name to the specified output value.
+     * Null values are forbidden for both hostnames and values.
+     * <p>
+     * <a href="https://en.wikipedia.org/wiki/Wildcard_DNS_record">DNS wildcard</a> is supported as hostname.
+     * For example, you can use {@code *.netty.io} to match {@code netty.io} and {@code downloads.netty.io}.
+     * </p>
+     *
+     * @param hostname the host name (optionally wildcard)
+     * @param output   the output value that will be returned by {@link DomainNameMapping#map(string)}
+     *                 when the specified host name matches the specified input host name
+     */
+
+/**
+     * Creates a new instance of immutable {@link DomainNameMapping}
+     * Attempts to add new mappings to the result object will cause {@link NotSupportedException} to be thrown
+     *
+     * @return new {@link DomainNameMapping} instance
+     */
+
+/**
+     * Estimates the length of string representation of the given instance:
+     * est = lengthOfConstantComponents + defaultValueLength + (estimatedMappingLength * numOfMappings) * 1.10
+     *
+     * @param defaultValueLength     length of string representation of {@link #defaultValue}
+     * @param numberOfMappings       number of mappings the given instance holds,
+     *                               e.g. {@link #domainNamePatterns#length}
+     * @param estimatedMappingLength estimated size taken by one mapping
+     * @return estimated length of string returned by {@link #ToString()}
+     */
+
+/**
+     * Constructor with default initial capacity of the map holding the mappings
+     *
+     * @param defaultValue the default value for {@link DomainNameMapping#map(string)} to return
+     *                     when nothing matches the input
+     */
+
+/**
+     * Constructor with initial capacity of the map holding the mappings
+     *
+     * @param initialCapacity initial capacity for the internal map
+     * @param defaultValue    the default value for {@link DomainNameMapping#map(string)} to return
+     *                        when nothing matches the input
+     */
+
+/**
+     * Adds a mapping that maps the specified (optionally wildcard) host name to the specified output value.
+     * Null values are forbidden for both hostnames and values.
+     * <p>
+     * <a href="https://en.wikipedia.org/wiki/Wildcard_DNS_record">DNS wildcard</a> is supported as hostname.
+     * For example, you can use {@code *.netty.io} to match {@code netty.io} and {@code downloads.netty.io}.
+     * </p>
+     *
+     * @param hostname the host name (optionally wildcard)
+     * @param output   the output value that will be returned by {@link DomainNameMapping#map(string)}
+     *                 when the specified host name matches the specified input host name
+     */
+
+/**
+     * Creates a new instance of immutable {@link DomainNameMapping}
+     * Attempts to add new mappings to the result object will cause {@link NotSupportedException} to be thrown
+     *
+     * @return new {@link DomainNameMapping} instance
+     */
+```
+
+The identical 98-case affected fixture fails three baseline contracts (immutable
+view mutation, native null boundary, exported helper/constructor shape), with
+95 passes; final Debug/checked Release each pass all 98. All 81 prior affected
+cases and 18 original domain scenarios/assertions/comments remain. Seventeen
+new CLR cases exercise ownership/order/collision/native-policy contracts.
+Default Debug/Release each: 2289 discovered, 2275 passed/0 failed/14 unchanged
+skips; all 2272 prior identities/outcomes and 759 original non-Porting retained.
+All 271 comment rows without loss; scoped originals 26 (8 owner, 9 builder,
+6 alias, 3 original test). Casing/inventory/no-new-source-test-warning identities
+pass. Raw evidence: artifacts/native-domain-snapshot-validation and
+native-domain-snapshot-* TRX/JSON; no new MD. Owner/builder move to verified for
+the explicit native policy and contract scope; alias moves to CLR replacement.
+Whole common/backend/platform and the preceding focused Global completion stall
+remain open; whole blocking mode not rerun. Continue the remaining source inventory,
+native resource/thread/executor boundaries and platform reviews.

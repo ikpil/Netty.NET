@@ -371,36 +371,41 @@
     {
       "upstream": "common/src/main/java/io/netty/util/DomainMappingBuilder.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/DomainMappingBuilder.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/DomainNameMappingBuilder.cs",
+        "test/Netty.NET.Common.Tests/Porting/DomainSnapshotContractTest.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned full owners/tests/alias and real SNI consumers reviewed. Identical Java/baseline/native probes agree on 496 lookup/view/diagnostic/snapshot rows; 16 Java/native read-only views contrast with eight writable baseline immutable views. Thirty normalization rows match native reference, seven non-null Java differences recorded; baseline/native non-null behavior unchanged. Same 98-case baseline fixture has three failing contracts/95 passes, final Debug/checked Release 98 passes; original 18 domain cases/assertions/comments remain. Current full/comment/inventory results and remaining scope: common-porting.md; design/original provenance: common-clr-design.md#native-legacy-domain-snapshots-and-idna-policy; raw native-domain-snapshot-* evidence. Full common and other OS/globalization backend validation remain open."
+      ],
+      "adaptation": "Native ordinal OrderedDictionary, independent paired-entry snapshot and genuinely read-only dictionary views preserve raw/normalized collision ordering, first lookup/last view values, identity, live mutable views and diagnostics. Redundant alias and exported snapshot retire; original package-private nullable-map constructor is internal. Native IdnMapping policy/non-ASCII conversion gate/invariant ASCII lowercase are explicit, including seven executed Java IDNA differences and native null argument validation. Original comments retained in code/canonical provenance; no cross-platform or performance equivalence claim.",
       "comments": {
         "upstreamCount": 6,
-        "required": true,
-        "preservedCount": 2,
-        "missingCount": 4
+        "required": false,
+        "preservedCount": 6,
+        "missingCount": 0
       }
     },
     {
       "upstream": "common/src/main/java/io/netty/util/DomainNameMapping.java",
       "kind": "source",
-      "status": "in-progress",
-      "candidates": [
-        "src/Netty.NET.Common/DomainNameMapping.cs"
-      ],
+      "status": "verified",
+      "candidates": [],
       "implementation": [
-        "src/Netty.NET.Common/DomainNameMapping.cs"
+        "src/Netty.NET.Common/DomainNameMapping.cs",
+        "test/Netty.NET.Common.Tests/Porting/DomainSnapshotContractTest.cs",
+        "docs/common-clr-design.md"
       ],
       "evidence": [
         "Implemented/reviewed portions exercised by PortingBatch: 400 passed, 3 upstream-disabled/CI-only skipped. Remaining APIs/adaptations still require review.",
         "Actual string wildcard comparison uses explicit Ordinal prefix and bounded UTF-16 span equality; pinned short-host/empty prefix and raw suffix rules retained. 160 executed pinned Java domain rows agree including null/range outcomes. IDNA/full mapping API review remains open. Decision/evidence: common-clr-design.md Native string consumers; common-porting.md Native string consumer checkpoint; native-string-identity-comparison.json and native-string-comment-audit.json. Full Debug/Release each 1740 passed/zero failed/14 unchanged skips.",
-        "Synchronous mapping interface removed after actual SNI/QUIC consumer review; eight original wildcard identities/assertions and all original comments retained. Native source and CLR-specific snapshot/order/identity cases validated; current common-porting.md and common-clr-design.md#native-synchronous-domain-selection record the scope. This does not close shared IDNA or full legacy domain review."
+        "Synchronous mapping interface removed after actual SNI/QUIC consumer review; eight original wildcard identities/assertions and all original comments retained. Native source and CLR-specific snapshot/order/identity cases validated; current common-porting.md and common-clr-design.md#native-synchronous-domain-selection record the scope. This does not close shared IDNA or full legacy domain review.",
+        "Pinned full owners/tests/alias and real SNI consumers reviewed. Identical Java/baseline/native probes agree on 496 lookup/view/diagnostic/snapshot rows; 16 Java/native read-only views contrast with eight writable baseline immutable views. Thirty normalization rows match native reference, seven non-null Java differences recorded; baseline/native non-null behavior unchanged. Same 98-case baseline fixture has three failing contracts/95 passes, final Debug/checked Release 98 passes; original 18 domain cases/assertions/comments remain. Current full/comment/inventory results and remaining scope: common-porting.md; design/original provenance: common-clr-design.md#native-legacy-domain-snapshots-and-idna-policy; raw native-domain-snapshot-* evidence. Full common and other OS/globalization backend validation remain open."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Native synchronous selection uses Func; domain Map remains a method group and original snapshot diagnostics are checked through delegate Target. Shared normalization/legacy builders remain under review.",
+      "adaptation": "Native ordinal OrderedDictionary, independent paired-entry snapshot and genuinely read-only dictionary views preserve raw/normalized collision ordering, first lookup/last view values, identity, live mutable views and diagnostics. Redundant alias and exported snapshot retire; original package-private nullable-map constructor is internal. Native IdnMapping policy/non-ASCII conversion gate/invariant ASCII lowercase are explicit, including seven executed Java IDNA differences and native null argument validation. Original comments retained in code/canonical provenance; no cross-platform or performance equivalence claim.",
       "comments": {
         "upstreamCount": 8,
         "required": true,
@@ -411,18 +416,23 @@
     {
       "upstream": "common/src/main/java/io/netty/util/DomainNameMappingBuilder.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/DomainNameMappingBuilder.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/DomainNameMappingBuilder.cs",
+        "test/Netty.NET.Common.Tests/DomainNameMappingTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/DomainSnapshotContractTest.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned full owners/tests/alias and real SNI consumers reviewed. Identical Java/baseline/native probes agree on 496 lookup/view/diagnostic/snapshot rows; 16 Java/native read-only views contrast with eight writable baseline immutable views. Thirty normalization rows match native reference, seven non-null Java differences recorded; baseline/native non-null behavior unchanged. Same 98-case baseline fixture has three failing contracts/95 passes, final Debug/checked Release 98 passes; original 18 domain cases/assertions/comments remain. Current full/comment/inventory results and remaining scope: common-porting.md; design/original provenance: common-clr-design.md#native-legacy-domain-snapshots-and-idna-policy; raw native-domain-snapshot-* evidence. Full common and other OS/globalization backend validation remain open."
+      ],
+      "adaptation": "Native ordinal OrderedDictionary, independent paired-entry snapshot and genuinely read-only dictionary views preserve raw/normalized collision ordering, first lookup/last view values, identity, live mutable views and diagnostics. Redundant alias and exported snapshot retire; original package-private nullable-map constructor is internal. Native IdnMapping policy/non-ASCII conversion gate/invariant ASCII lowercase are explicit, including seven executed Java IDNA differences and native null argument validation. Original comments retained in code/canonical provenance; no cross-platform or performance equivalence claim.",
       "comments": {
         "upstreamCount": 9,
         "required": true,
-        "preservedCount": 2,
-        "missingCount": 7
+        "preservedCount": 9,
+        "missingCount": 0
       }
     },
     {
@@ -5292,7 +5302,8 @@
         "test/Netty.NET.Common.Tests/DomainNameMappingTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "All 18 original scenario identities/assertions and three original comments retained with unchanged test source. Native read-only/order/collision/identity/normalization cases added separately; current full and targeted results in common-porting.md, design in common-clr-design.md#native-legacy-domain-snapshots-and-idna-policy."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {

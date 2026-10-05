@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using Netty.NET.Common.Collections;
+using System.Text;
 using Netty.NET.Common.Internal;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
@@ -59,11 +59,11 @@ public class DomainNameMapping<T> where T : class
      * @deprecated use {@link DomainNameMappingBuilder} to create and fill the mapping instead
      */
     public DomainNameMapping(int initialCapacity, T defaultValue)
-        : this(new LinkedHashMap<string, T>(initialCapacity), defaultValue)
+        : this(new OrderedDictionary<string, T>(initialCapacity, StringComparer.Ordinal), defaultValue)
     {
     }
 
-    public DomainNameMapping(IDictionary<string, T> map, T defaultValue)
+    internal DomainNameMapping(IDictionary<string, T> map, T defaultValue)
     {
         _defaultValue = CheckNotNull(defaultValue, "defaultValue");
         _map = map;
@@ -86,7 +86,7 @@ public class DomainNameMapping<T> where T : class
      */
     public virtual DomainNameMapping<T> Add(string hostname, T output)
     {
-        _map.Add(NormalizeHostname(CheckNotNull(hostname, "hostname")), CheckNotNull(output, "output"));
+        _map[NormalizeHostname(CheckNotNull(hostname, "hostname"))] = CheckNotNull(output, "output");
         return this;
     }
 
@@ -105,7 +105,7 @@ public class DomainNameMapping<T> where T : class
         return template.Equals(hostName);
     }
 
-    private static IdnMapping IDN = new IdnMapping()
+    private static readonly IdnMapping IDN = new IdnMapping()
     {
         AllowUnassigned = true, // ALLOW_UNASSIGNED: 할당되지 않은 유니코드 코드 포인트 허용
         UseStd3AsciiRules = false // IDN.ALLOW_UNASSIGNED에
@@ -116,28 +116,16 @@ public class DomainNameMapping<T> where T : class
      */
     public static string NormalizeHostname(string hostname)
     {
-        if (NeedsNormalization(hostname))
+        ArgumentNullException.ThrowIfNull(hostname);
+        // CLR IDNA follows the runtime IdnMapping policy, not Java Unicode 3.2 Nameprep tables.
+        if (hostname.AsSpan().IndexOfAnyExceptInRange((char)0, (char)127) >= 0)
         {
             hostname = IDN.GetAscii(hostname);
         }
 
-        return hostname.ToLower(CultureInfo.GetCultureInfo("en-US"));
+        return hostname.ToLowerInvariant();
     }
 
-    private static bool NeedsNormalization(string hostname)
-    {
-        int length = hostname.Length;
-        for (int i = 0; i < length; i++)
-        {
-            int c = hostname[i];
-            if (c > 0x7F)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     public virtual T Map(string hostname)
     {
@@ -167,6 +155,15 @@ public class DomainNameMapping<T> where T : class
 
     public override string ToString()
     {
-        return StringUtil.SimpleClassName(this) + "(default: " + _defaultValue + ", map: " + _map + ')';
+        var text = new StringBuilder();
+        text.Append(StringUtil.SimpleClassName(this)).Append("(default: ").Append(_defaultValue).Append(", map: {");
+        bool first = true;
+        foreach (var entry in _map)
+        {
+            if (!first) text.Append(", ");
+            first = false;
+            text.Append(entry.Key).Append('=').Append(entry.Value);
+        }
+        return text.Append("})").ToString();
     }
 }
