@@ -84,7 +84,7 @@ public class AsyncMappingContractTest
                     }
                     catch
                     {
-                        if (registration == null && hello.RefCnt() != 0) hello.Release();
+                        if (registration == null && hello.ReferenceCount != 0) hello.Release();
                         throw;
                     }
                     finally { Started.TrySetResult(); }
@@ -141,7 +141,7 @@ public class AsyncMappingContractTest
                 await executor.SubmitAsync(() =>
                 {
                     Assert.True(consumer.Suppressed);
-                    Assert.Equal(1, hello.RefCnt());
+                    Assert.Equal(1, hello.ReferenceCount);
                 });
                 await consumer.RequestReadAsync();
                 await Task.Run(Finish);
@@ -160,7 +160,7 @@ public class AsyncMappingContractTest
             Assert.True(consumer.CompletionOnLoop);
             Assert.True(hello.ReleasedOnLoop);
             Assert.Equal(1, hello.Releases);
-            Assert.Equal(0, hello.RefCnt());
+            Assert.Equal(0, hello.ReferenceCount);
             Assert.Same(producer.Task, consumer.Operation);
             Assert.False(consumer.Suppressed);
             Assert.False(consumer.ReadPending);
@@ -214,7 +214,7 @@ public class AsyncMappingContractTest
             Assert.Equal(cancellation.Token, received);
             Assert.True(received.IsCancellationRequested);
             Assert.False(lookup.IsCompleted);
-            Assert.Equal(1, hello.RefCnt());
+            Assert.Equal(1, hello.ReferenceCount);
             producer.SetResult(value);
             Assert.Same(value, await lookup.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Same(value, consumer.Selected);
@@ -245,7 +245,7 @@ public class AsyncMappingContractTest
             waitCancellation.Cancel();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await lookup.WaitAsync(waitCancellation.Token));
             Assert.False(producer.Task.IsCompleted);
-            Assert.Equal(1, hello.RefCnt());
+            Assert.Equal(1, hello.ReferenceCount);
             await consumer.RequestReadAsync();
             producer.SetResult(value);
             Assert.Same(value, await lookup.WaitAsync(TimeSpan.FromSeconds(5)));

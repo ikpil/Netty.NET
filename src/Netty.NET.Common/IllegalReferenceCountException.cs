@@ -19,9 +19,10 @@ using System;
 namespace Netty.NET.Common;
 
 /**
- * An {@link InvalidOperationException} which is raised when a user attempts to access a {@link IReferenceCounted} whose
+ * An {@link IllegalStateException} which is raised when a user attempts to access a {@link ReferenceCounted} whose
  * reference count has been decreased to 0 (and consequently freed).
  */
+// CLR: InvalidOperationException preserves a catchable ownership-failure type and native InnerException semantics.
 public class IllegalReferenceCountException : InvalidOperationException
 {
     public IllegalReferenceCountException()
@@ -29,12 +30,15 @@ public class IllegalReferenceCountException : InvalidOperationException
     }
 
     public IllegalReferenceCountException(int refCnt)
-        : this("refCnt: " + refCnt)
+        : this(FormattableString.Invariant($"refCnt: {refCnt}"))
     {
     }
 
     public IllegalReferenceCountException(int refCnt, int increment)
-        : this("refCnt: " + refCnt + ", " + (increment > 0 ? "increment: " + increment : "decrement: " + -increment))
+        // Explicit unchecked negation preserves the pinned Int32.MinValue message even in a checked build.
+        : this(increment > 0
+            ? FormattableString.Invariant($"refCnt: {refCnt}, increment: {increment}")
+            : FormattableString.Invariant($"refCnt: {refCnt}, decrement: {unchecked(-increment)}"))
     {
     }
 

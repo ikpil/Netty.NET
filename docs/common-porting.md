@@ -43,6 +43,24 @@ both still require review.
 
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
+
+## Native reference-count API checkpoint
+
+ReferenceCounted/IllegalReferenceCountException now have scoped pinned-consumer
+reviews: retain/release shared ownership stays explicit; read-only ReferenceCount
+and GetReferenceCount replace RefCnt getters. Numeric failures use invariant ASCII
+formatting and pinned unchecked Int32 negation, with CLR exception/cause semantics.
+See [native reference-count properties](common-clr-design.md#native-reference-count-properties-and-invariant-diagnostics).
+Baseline identical affected fixture: 60 passed/7 failed; final Debug/checked Release
+67 passed. Thirteen new CLR cases; 120 executed Java/native diagnostic rows match.
+Default Debug/Release: 2302 discovered/2288 passed/0 failed/14 unchanged skips.
+All 2289 prior outcomes, 759 original identities, 271 comment rows and 205+66 inventory
+retained; 31 scoped original comments, no new source/test warnings, casing/collisions
+zero. Source statuses: 68 verified/55 CLR replacements/52 pending/15 in-progress/
+15 not-applicable. Evidence: artifacts/native-reference-api-validation and
+native-reference-api-* TRX/JSON. Module/backend/platform work and the previously
+recorded focused Global completion stall remain open; this is not module completion.
+
 ## Translation rules
 
 - Port Netty's useful behavior to CLR, using native generic types, collections,

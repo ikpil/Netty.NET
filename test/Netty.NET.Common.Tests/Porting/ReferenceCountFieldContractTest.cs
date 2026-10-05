@@ -29,10 +29,10 @@ public class ReferenceCountFieldContractTest
     {
         var counted = new Counted();
         counted.SetCount(count);
-        Assert.Equal(0, counted.RefCnt());
+        Assert.Equal(0, counted.ReferenceCount);
         Assert.Throws<IllegalReferenceCountException>(() => counted.Retain());
         Assert.Throws<IllegalReferenceCountException>(() => counted.Release());
-        Assert.Equal(0, counted.RefCnt());
+        Assert.Equal(0, counted.ReferenceCount);
         // Setting a count is a quiescent operation, not a deallocation callback.
         Assert.Equal(0, counted.Deallocations);
     }
@@ -121,7 +121,7 @@ public class ReferenceCountFieldContractTest
         var error = new InvalidOperationException("deallocation failed");
         var counted = new Counted { DeallocationError = error };
         Assert.Same(error, Assert.Throws<InvalidOperationException>(() => counted.Release()));
-        Assert.Equal(0, counted.RefCnt());
+        Assert.Equal(0, counted.ReferenceCount);
         Assert.Equal(1, counted.Deallocations);
         Assert.Throws<IllegalReferenceCountException>(() => counted.Release());
         Assert.Throws<IllegalReferenceCountException>(() => counted.Retain());
@@ -147,9 +147,9 @@ public class ReferenceCountFieldContractTest
             bool retained = await retaining;
             bool released = await releasing;
             Assert.Equal(!retained, released);
-            Assert.Equal(retained ? 1 : 0, counted.RefCnt());
+            Assert.Equal(retained ? 1 : 0, counted.ReferenceCount);
             if (retained) Assert.True(counted.Release());
-            Assert.Equal(0, counted.RefCnt());
+            Assert.Equal(0, counted.ReferenceCount);
             Assert.Equal(1, counted.Deallocations);
         }
     }

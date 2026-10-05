@@ -25,10 +25,8 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
 {
     private int _refCnt = 1;
 
-    public int RefCnt()
-    {
-        return ReferenceCountUpdater.GetCount(ref _refCnt);
-    }
+    // This is an observational read; it does not retain ownership of the resource.
+    public int ReferenceCount => ReferenceCountUpdater.GetCount(ref _refCnt);
 
     /**
      * An unsafe operation intended for use by a subclass that sets the reference count of the object directly

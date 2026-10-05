@@ -41,9 +41,10 @@
       "evidence": [
         "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved.",
         "Native shared ref-int updater replaces duplicate JVM field-updater adapter; nonpositive direct settings normalize to zero (two reproduced failures). Existing original fixture unchanged, plus native composition/lifetime/overflow/publication races. See reference-count-field checkpoint.",
-        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress."
+        "Native reference-count-field final checkpoint: default Debug/Release each 1847 passed / 0 failed / 14 unchanged skipped (1861 total); all prior 1845 outcomes and 759 non-Porting identities retained. Sixteen new native cases, all 75 relevant checked Release cases pass after explicit ThreadLocalRandom seed narrowing fixes the retained intermediate dependency failure. Five original counter/provider files preserve all 35 comments, other comment counts unchanged; pinned 271-path inventory remains valid. See common-porting.md native reference-count fields checkpoint and reference-count-field-*.trx/JSON. Windows/net10.0 only; raw native-address/platform/buffer integration remains in progress.",
+        "Native reference-count API checkpoint: pinned common/buffer/transport consumers reviewed; byte-identical affected baseline fixture 60 passed/7 failed, final Debug/checked Release 67 passed, 13 added CLR cases. Default Debug/Release each 2302 discovered/2288 passed/0 failed/14 unchanged skips; all 2289 prior outcomes and 759 original identities preserved. Executed pinned Java/native diagnostic probes match 120 rows; baseline differs on 57 including 15 checked overflows. Native non-friend property/ownership consumer fails old API compilation and passes final. All 271 comment rows without loss, 31 scoped originals, pinned 205+66 inventory, no new source/test warnings or casing collisions. See common-clr-design.md native reference-count properties and native-reference-api-* records. Whole common/buffer/backend/platform and prior focused Global completion stall remain open."
       ],
-      "adaptation": "Typed caller-owned ref int counters use native Volatile/Interlocked CAS through ReferenceCountUpdater. Full positive Int32 range and actual observed overflow diagnostics retain the existing CLR policy; nonpositive direct settings normalize to released zero. Final live-to-zero Release invokes deallocation once, even if its callback throws. Direct count reset is only for quiescent owner reuse; IsLive does not acquire ownership. Original public fixtures and all four original comments remain unchanged; future buffer/native storage integration remains separate.",
+      "adaptation": "Typed caller-owned ref int counters use native Volatile/Interlocked CAS through ReferenceCountUpdater. Full positive Int32 range and actual observed overflow diagnostics retain the existing CLR policy; nonpositive direct settings normalize to released zero. Final live-to-zero Release invokes deallocation once, even if its callback throws. Direct count reset is only for quiescent owner reuse; IsLive does not acquire ownership. Original public fixtures and all four original comments remain unchanged; future buffer/native storage integration remains separate. Native reference-count API checkpoint replaces RefCnt observation with ReferenceCount/GetReferenceCount, preserving underlying ownership algorithm and all original comments; existing fixture identities/assertions remain, accessor expressions migrate.",
       "comments": {
         "upstreamCount": 4,
         "required": true,
@@ -525,18 +526,21 @@
     {
       "upstream": "common/src/main/java/io/netty/util/IllegalReferenceCountException.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/IllegalReferenceCountException.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/IllegalReferenceCountException.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Native reference-count API checkpoint: pinned common/buffer/transport consumers reviewed; byte-identical affected baseline fixture 60 passed/7 failed, final Debug/checked Release 67 passed, 13 added CLR cases. Default Debug/Release each 2302 discovered/2288 passed/0 failed/14 unchanged skips; all 2289 prior outcomes and 759 original identities preserved. Executed pinned Java/native diagnostic probes match 120 rows; baseline differs on 57 including 15 checked overflows. Native non-friend property/ownership consumer fails old API compilation and passes final. All 271 comment rows without loss, 31 scoped originals, pinned 205+66 inventory, no new source/test warnings or casing collisions. See common-clr-design.md native reference-count properties and native-reference-api-* records. Whole common/buffer/backend/platform and prior focused Global completion stall remain open."
+      ],
+      "adaptation": "Specialized InvalidOperationException retains typed catch/message/InnerException identity and native default/cause-only semantics. Invariant numeric constructors preserve pinned Java ASCII integer messages, explicitly unchecked Int32.MinValue negation even in checked builds. Java serialVersionUID/Throwable stack and suppression APIs are not mechanically ported. Both original comments restored; previous CLR doc variant archived.",
       "comments": {
         "upstreamCount": 2,
         "required": true,
-        "preservedCount": 1,
-        "missingCount": 1
+        "preservedCount": 2,
+        "missingCount": 0
       }
     },
     {
@@ -733,9 +737,10 @@
       "evidence": [
         "All pinned overloads and ReleasingTask reviewed; seven CLR contract cases pass in Debug and Release, including passthrough, validation-before-type-check, forwarding return identity, safe exceptions and actual caller-thread termination.",
         "Restored deprecated releaseLater overloads and touch stack exclusions. Full net10.0 PortingBatch: 898 passed, 14 skipped, zero failed; all 14 original comments preserved.",
-        "Native watcher callback boundary: pinned ThreadDeathWatcher and sole production ReferenceCountUtil consumer reviewed; original fixture identities/scenarios/assertions/comments retained. Existing duplicate/equality CLR probe now uses a value-equal Action clone; two new cases cover thread-specific shared callback cancellation and multicast failure isolation. Default Debug/Release each 2135 passed / 0 failed / 14 unchanged skips (2149 discovered); targeted Debug/checked Release each 39 pass. All prior 2147 outcomes, 759 original identities, 271 comment rows and pinned 205+66 inventory retained; casing and no-new-warning checks pass. A separate non-friend native Action consumer fails against the old Runnable shape and passes native callback/deferred release/context/restart behavior. common-clr-design.md#native-thread-death-watcher-callbacks, current common-porting.md and watcher-action-* records. Broader backend/runtime/platform review remains separate."
+        "Native watcher callback boundary: pinned ThreadDeathWatcher and sole production ReferenceCountUtil consumer reviewed; original fixture identities/scenarios/assertions/comments retained. Existing duplicate/equality CLR probe now uses a value-equal Action clone; two new cases cover thread-specific shared callback cancellation and multicast failure isolation. Default Debug/Release each 2135 passed / 0 failed / 14 unchanged skips (2149 discovered); targeted Debug/checked Release each 39 pass. All prior 2147 outcomes, 759 original identities, 271 comment rows and pinned 205+66 inventory retained; casing and no-new-warning checks pass. A separate non-friend native Action consumer fails against the old Runnable shape and passes native callback/deferred release/context/restart behavior. common-clr-design.md#native-thread-death-watcher-callbacks, current common-porting.md and watcher-action-* records. Broader backend/runtime/platform review remains separate.",
+        "Native reference-count API checkpoint: pinned common/buffer/transport consumers reviewed; byte-identical affected baseline fixture 60 passed/7 failed, final Debug/checked Release 67 passed, 13 added CLR cases. Default Debug/Release each 2302 discovered/2288 passed/0 failed/14 unchanged skips; all 2289 prior outcomes and 759 original identities preserved. Executed pinned Java/native diagnostic probes match 120 rows; baseline differs on 57 including 15 checked overflows. Native non-friend property/ownership consumer fails old API compilation and passes final. All 271 comment rows without loss, 31 scoped originals, pinned 205+66 inventory, no new source/test warnings or casing collisions. See common-clr-design.md native reference-count properties and native-reference-api-* records. Whole common/buffer/backend/platform and prior focused Global completion stall remain open."
       ],
-      "adaptation": "Native pattern matching replaces Java instanceof and erased casts while retaining forwarded return values and validation order. Explicit generic CLR casts preserve actual retain/touch result contracts. Dedicated background ThreadDeathWatcher dispatches releaseLater after the native caller Thread terminates, retaining the requested decrement and no implicit retain. ArgumentException maps argument validation; safeRelease and deferred release consume ordinary managed exceptions and use the native logging adapter. ReleaseLater passes a bound native ReleasingTask.Run Action; its state owner and original diagnostic ToString remain without Runnable inheritance. Pending membership keeps object/decrement alive until callback consumption or cancellation; no allocation improvement claim.",
+      "adaptation": "Native pattern matching replaces Java instanceof and erased casts while retaining forwarded return values and validation order. Explicit generic CLR casts preserve actual retain/touch result contracts. Dedicated background ThreadDeathWatcher dispatches releaseLater after the native caller Thread terminates, retaining the requested decrement and no implicit retain. ArgumentException maps argument validation; safeRelease and deferred release consume ordinary managed exceptions and use the native logging adapter. ReleaseLater passes a bound native ReleasingTask.Run Action; its state owner and original diagnostic ToString remain without Runnable inheritance. Pending membership keeps object/decrement alive until callback consumption or cancellation; no allocation improvement claim. Native reference-count API checkpoint replaces RefCnt observation with ReferenceCount/GetReferenceCount, preserving underlying ownership algorithm and all original comments; existing fixture identities/assertions remain, accessor expressions migrate.",
       "comments": {
         "upstreamCount": 14,
         "required": true,
@@ -746,18 +751,21 @@
     {
       "upstream": "common/src/main/java/io/netty/util/ReferenceCounted.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/IReferenceCounted.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/IReferenceCounted.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Native reference-count API checkpoint: pinned common/buffer/transport consumers reviewed; byte-identical affected baseline fixture 60 passed/7 failed, final Debug/checked Release 67 passed, 13 added CLR cases. Default Debug/Release each 2302 discovered/2288 passed/0 failed/14 unchanged skips; all 2289 prior outcomes and 759 original identities preserved. Executed pinned Java/native diagnostic probes match 120 rows; baseline differs on 57 including 15 checked overflows. Native non-friend property/ownership consumer fails old API compilation and passes final. All 271 comment rows without loss, 31 scoped originals, pinned 205+66 inventory, no new source/test warnings or casing collisions. See common-clr-design.md native reference-count properties and native-reference-api-* records. Whole common/buffer/backend/platform and prior focused Global completion stall remain open."
+      ],
+      "adaptation": "Native read-only int ReferenceCount replaces refCnt getter; observation does not acquire ownership. Retain/Release/Touch preserve shared ownership/final release and hint identity; GC/IDisposable alone cannot replace this purpose. All nine original comments restored; prior CLR comment variants archived. Future buffer/storage integrations remain separate.",
       "comments": {
         "upstreamCount": 9,
         "required": true,
-        "preservedCount": 7,
-        "missingCount": 2
+        "preservedCount": 9,
+        "missingCount": 0
       }
     },
     {
@@ -5167,7 +5175,8 @@
         "test/Netty.NET.Common.Tests/AbstractReferenceCountedTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "Native reference-count API checkpoint: original case identities/assertions and both original comments retained; accessor calls migrate to ReferenceCount. All affected Debug/checked Release cases pass; see native-reference-api-* records."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {

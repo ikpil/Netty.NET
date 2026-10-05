@@ -23,7 +23,7 @@ public class ReferenceCountContractTest
         var counted = new Counted();
         Assert.Throws<ArgumentException>(() => counted.Retain(value));
         Assert.Throws<ArgumentException>(() => counted.Release(value));
-        Assert.Equal(1, counted.RefCnt());
+        Assert.Equal(1, counted.ReferenceCount);
         Assert.Equal(0, counted.Deallocations);
     }
 
@@ -33,7 +33,7 @@ public class ReferenceCountContractTest
         var counted = new Counted();
         counted.Retain(int.MaxValue - 1);
         Assert.Throws<IllegalReferenceCountException>(() => counted.Retain());
-        Assert.Equal(int.MaxValue, counted.RefCnt());
+        Assert.Equal(int.MaxValue, counted.ReferenceCount);
         Assert.True(counted.Release(int.MaxValue));
         Assert.Equal(1, counted.Deallocations);
     }
@@ -54,7 +54,7 @@ public class ReferenceCountContractTest
             start.Set();
             var results = await Task.WhenAll(releases);
             Assert.Equal(1, results.Count(result => result));
-            Assert.Equal(0, counted.RefCnt());
+            Assert.Equal(0, counted.ReferenceCount);
             Assert.Equal(1, counted.Deallocations);
         }
     }

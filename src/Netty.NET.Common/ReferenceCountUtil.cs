@@ -124,7 +124,7 @@ public static class ReferenceCountUtil
      * Returns reference count of a {@link ReferenceCounted} object. If object is not type of
      * {@link ReferenceCounted}, {@code -1} is returned.
      */
-    public static int RefCnt(object msg) => msg is IReferenceCounted reference ? reference.RefCnt() : -1;
+    public static int GetReferenceCount(object msg) => msg is IReferenceCounted reference ? reference.ReferenceCount : -1;
     /**
      * Releases the objects when the thread that called {@link #releaseLater(Object)} has been terminated.
      */
@@ -139,6 +139,6 @@ public static class ReferenceCountUtil
             }
             catch (Exception failure) { logger.Warn("Failed to release an object: {}", obj, failure); }
         }
-        public override string ToString() => StringUtil.SimpleClassName(obj) + ".release(" + decrement + ") refCnt: " + obj.RefCnt();
+        public override string ToString() => StringUtil.SimpleClassName(obj) + ".release(" + decrement + ") refCnt: " + obj.ReferenceCount;
     }
 }

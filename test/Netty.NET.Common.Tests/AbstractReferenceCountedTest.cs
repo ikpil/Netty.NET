@@ -30,7 +30,7 @@ public class AbstractReferenceCountedTest
     {
         AbstractReferenceCounted referenceCounted = NewReferenceCounted();
         referenceCounted.SetRefCnt(int.MaxValue);
-        Assert.Equal(int.MaxValue, referenceCounted.RefCnt());
+        Assert.Equal(int.MaxValue, referenceCounted.ReferenceCount);
         Assert.Throws<IllegalReferenceCountException>(referenceCounted.Retain);
     }
 
@@ -38,7 +38,7 @@ public class AbstractReferenceCountedTest
     public void TestRetainOverflow2()
     {
         AbstractReferenceCounted referenceCounted = NewReferenceCounted();
-        Assert.Equal(1, referenceCounted.RefCnt());
+        Assert.Equal(1, referenceCounted.ReferenceCount);
         Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.Retain(int.MaxValue));
     }
 
@@ -47,7 +47,7 @@ public class AbstractReferenceCountedTest
     {
         AbstractReferenceCounted referenceCounted = NewReferenceCounted();
         referenceCounted.SetRefCnt(0);
-        Assert.Equal(0, referenceCounted.RefCnt());
+        Assert.Equal(0, referenceCounted.ReferenceCount);
         Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.Release(int.MaxValue));
     }
 
@@ -72,7 +72,7 @@ public class AbstractReferenceCountedTest
     {
         AbstractReferenceCounted referenceCounted = NewReferenceCounted();
         Assert.True(referenceCounted.Release());
-        Assert.Equal(0, referenceCounted.RefCnt());
+        Assert.Equal(0, referenceCounted.ReferenceCount);
         Assert.Throws<IllegalReferenceCountException>(referenceCounted.Retain);
     }
 
@@ -81,7 +81,7 @@ public class AbstractReferenceCountedTest
     {
         AbstractReferenceCounted referenceCounted = NewReferenceCounted();
         Assert.True(referenceCounted.Release());
-        Assert.Equal(0, referenceCounted.RefCnt());
+        Assert.Equal(0, referenceCounted.ReferenceCount);
         Assert.Throws<IllegalReferenceCountException>(() => referenceCounted.Retain(2));
     }
 

@@ -7013,3 +7013,85 @@ the explicit native policy and contract scope; alias moves to CLR replacement.
 Whole common/backend/platform and the preceding focused Global completion stall
 remain open; whole blocking mode not rerun. Continue the remaining source inventory,
 native resource/thread/executor boundaries and platform reviews.
+
+
+## Native reference-count properties and invariant diagnostics
+
+Pinned consumers require shared ownership: buffer/ByteBuf.java:248 and
+ByteBufHolder.java:23 implement/extend ReferenceCounted; transport/FileRegion.java:36
+extends it. GC and IDisposable cannot represent multiple retains, intermediate
+releases or the final release result. Keep Retain/Release/Touch and the specialized
+catchable exception (buffer/SimpleLeakAwareByteBuf.java:45-86 catches it).
+IReferenceCounted/AbstractReferenceCounted now expose the observational, read-only
+int ReferenceCount property; the object helper is GetReferenceCount, retaining -1
+for null/non-counted objects. Reading does not acquire ownership or promise that
+the resource stays live. Old RefCnt method aliases are removed; six existing
+fixtures change only accessor expressions, retaining identities/assertions/comments.
+The native Volatile/CAS counter algorithm, reset policy and deallocation behavior
+remain unchanged; future buffer/storage integrations require their own review.
+
+IllegalReferenceCountException.java uses Java integer concatenation, including
+wrapped negation of Int32.MinValue. The C# numeric constructors now format with
+invariant culture and explicitly unchecked negation: even a checked assembly
+returns "refCnt: 0, decrement: -2147483648" for that constructor boundary.
+This arbitrary diagnostic input is not a valid release decrement; retain/release
+validation and ownership state are unchanged. Keep InvalidOperationException
+inheritance, explicit messages and InnerException identity. Native default/null
+messages and cause-only base(null, cause) semantics remain: Java Throwable(cause)
+uses the cause's ToString for its message, whereas CLR supplies its default message.
+JVM serialVersionUID, stack replacement and suppressed-exception machinery are
+not mechanically ported. No new runtime helper or compatibility facade is added.
+
+All 11 original interface/exception comments are restored in their source owners.
+The three previous CLR-adjusted comments are archived below; the other 20 scoped
+counter/util/original-test comments remain unchanged.
+
+```csharp
+/**
+ * A reference-counted object that requires explicit deallocation.
+ * <p>
+ * When a new {@link IReferenceCounted} is instantiated, it starts with the reference count of {@code 1}.
+ * {@link #retain()} increases the reference count, and {@link #release()} decreases the reference count.
+ * If the reference count is decreased to {@code 0}, the object will be deallocated explicitly, and accessing
+ * the deallocated object will usually result in an access violation.
+ * </p>
+ * <p>
+ * If an object that implements {@link IReferenceCounted} is a container of other objects that implement
+ * {@link IReferenceCounted}, the contained objects will also be released via {@link #release()} when the container's
+ * reference count becomes 0.
+ * </p>
+ */
+
+/**
+     * Records the current access location of this object for debugging purposes.
+     * If this object is determined to be leaked, the information recorded by this operation will be provided to you
+     * via {@link ResourceLeakDetector}.  This method is a shortcut to {@link #touch(object) touch(null)}.
+     */
+
+/**
+ * An {@link InvalidOperationException} which is raised when a user attempts to access a {@link IReferenceCounted} whose
+ * reference count has been decreased to 0 (and consequently freed).
+ */
+
+```
+
+The byte-identical 67-case affected fixture on baseline 29dccb32 has 60 passes
+and seven failures (six custom-negative-sign culture cases, one checked Int32
+negation). Final Debug/checked Release pass all 67; all 54 prior affected cases
+remain passing. Thirteen new CLR diagnostic cases cover numeric boundaries,
+all six constructors, cause identity and actual counter failure/state behavior.
+Executed pinned Java/baseline/native probes compare 120 numeric diagnostic rows
+across en-US/ar-EG/tr-TR; final equals Java exactly, baseline differs on 57 rows
+including 15 checked overflows. A byte-identical non-friend native consumer fails
+to compile against the old method API and passes property metadata, identity,
+sentinel, final deallocation and typed failure checks with the new API.
+
+Default Debug/Release each: 2302 discovered, 2288 passed/0 failed/14 unchanged
+skips; all 2289 prior identities/outcomes and 759 original non-Porting retained.
+All 271 comment rows without loss, 31 scoped originals, pinned 205 source/66 test
+inventory, no new source/test warning identities, casing/collisions zero.
+Raw evidence: artifacts/native-reference-api-validation and native-reference-api-*
+TRX/JSON. Only interface/exception owners move pending to verified for this scoped
+review; existing counter/util owners retain their prior scoped review.
+Whole common/backend/platform reviews and the preceding focused Global completion
+stall remain open; whole blocking mode and other OS/runtime backends not rerun.

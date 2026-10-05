@@ -21,12 +21,12 @@ public class ReferenceCountUtilContractTest : IDisposable
         Assert.Same(value, ReferenceCountUtil.ReleaseLater(value, 2));
         Assert.False(ReferenceCountUtil.Release(value));
         Assert.False(ReferenceCountUtil.Release(value, 2));
-        Assert.Equal(-1, ReferenceCountUtil.RefCnt(value));
+        Assert.Equal(-1, ReferenceCountUtil.GetReferenceCount(value));
         Assert.Null(ReferenceCountUtil.Retain<object>(null));
         Assert.Null(ReferenceCountUtil.Touch<object>(null, null));
         Assert.Null(ReferenceCountUtil.ReleaseLater<object>(null));
         Assert.False(ReferenceCountUtil.Release(null));
-        Assert.Equal(-1, ReferenceCountUtil.RefCnt(null));
+        Assert.Equal(-1, ReferenceCountUtil.GetReferenceCount(null));
         Assert.Equal(3, ReferenceCountUtil.Retain(3));
         ReferenceCountUtil.SafeRelease(value); ReferenceCountUtil.SafeRelease(null);
     }
@@ -50,7 +50,7 @@ public class ReferenceCountUtilContractTest : IDisposable
         internal object Hint;
         internal Exception Failure;
         internal int Count = 4;
-        public int RefCnt() => Count;
+        public int ReferenceCount => Count;
         public IReferenceCounted Retain() { Increment = 1; return Result ?? this; }
         public IReferenceCounted Retain(int increment) { Increment = increment; return Result ?? this; }
         public IReferenceCounted Touch() { Hint = null; return Result ?? this; }
@@ -78,7 +78,7 @@ public class ReferenceCountUtilContractTest : IDisposable
         object hint = new();
         Assert.Same(result, ReferenceCountUtil.Touch(value, hint));
         Assert.Same(hint, value.Hint);
-        Assert.Equal(4, ReferenceCountUtil.RefCnt(value));
+        Assert.Equal(4, ReferenceCountUtil.GetReferenceCount(value));
         Assert.False(ReferenceCountUtil.Release(value));
         Assert.Equal(1, value.Decrement);
         Assert.True(ReferenceCountUtil.Release(value, 3));
@@ -130,17 +130,17 @@ public class ReferenceCountUtilContractTest : IDisposable
         {
             Assert.True(queued.Wait(TimeSpan.FromSeconds(5)));
             Assert.Null(error);
-            Assert.Equal(1, first.RefCnt());
-            Assert.Equal(3, second.RefCnt());
+            Assert.Equal(1, first.ReferenceCount);
+            Assert.Equal(3, second.ReferenceCount);
             Assert.Equal(0, first.Deallocations);
         }
         finally { stop.Set(); Assert.True(caller.Join(TimeSpan.FromSeconds(5))); }
         Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
-        Assert.Equal(0, first.RefCnt());
+        Assert.Equal(0, first.ReferenceCount);
         Assert.Equal(1, first.Deallocations);
         Assert.NotSame(caller, first.Deallocator);
         Assert.Contains("threadDeathWatcher", first.Deallocator.Name);
-        Assert.Equal(1, second.RefCnt());
+        Assert.Equal(1, second.ReferenceCount);
         Assert.Equal(0, second.Deallocations);
         Assert.True(second.Release());
     }
