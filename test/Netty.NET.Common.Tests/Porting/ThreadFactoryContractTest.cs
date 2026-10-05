@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -21,7 +20,7 @@ public class ThreadFactoryContractTest
         try
         {
             using var finished = new CountdownEvent(1);
-            executor.Execute(Runnables.Create(() => { observed = local.Value; finished.Signal(); }));
+            executor.Execute(() => { observed = local.Value; finished.Signal(); });
             Assert.True(finished.Wait(TimeSpan.FromSeconds(5)));
             Assert.Null(observed);
             Assert.Same(marker, local.Value);

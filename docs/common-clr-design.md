@@ -5870,3 +5870,62 @@ Evidence: artifacts/native-submission-action-validation/{before,after}-consumer.
 verification-summary.json, and native-submission-action-*.trx/JSON in TestResults.
 Plain Future/Promise fixtures, waiting/listener adapters, ordinary legacy invocation
 helpers and remaining backend/runtime/platform/source reviews stay open.
+
+## Native Action invocation facade
+
+Pinned AbstractEventExecutor.java:137-149 supplies a log-and-continue invocation
+boundary; transport ManualIoEventLoop.java:178-189 uses it for queued work.
+HashedWheelTimer.java:310/:490 passes its stateful worker to a thread factory;
+AutoScalingEventExecutorChooserFactory.java:173-174/:231/:268 schedules its monitor
+and queues a wake-up no-op. Their CLR invocation counterparts are Action callbacks,
+while worker/monitor state, scheduling, cleanup and queue ownership remain separate.
+
+The public IRunnable, AnonymousRunnable, EmptyRunnable, Runnables and unused
+SentinelRunnable facades are removed. Execute/LazyExecute/RunTask/SafeExecute now
+have only native Action invocation paths; ExecutorWork retains its native submission
+metadata bridge. Auto-scaling has one cached no-op Action; the monitor and hashed-wheel
+worker retain their original Run logic without an interface dependency. Original
+fixtures pass bound Run callbacks when they also need their stateful test objects.
+47 wrapper constructions now pass the original callback directly; empty callbacks
+are native lambdas. The mock-clock harness binds a monitor Run Action using reflection,
+without adding a production test hook. The scheduled queue test now asserts its
+stable Action callback rather than refer to the retired interface.
+
+This intentionally removes the remaining Java-shaped invocation API. Existing
+public Action/Task/token consumers require no migration. Functional supplier APIs
+and other runtime/backend contracts are outside this unit. Removed CLR comments
+from EmptyRunnable.cs, SentinelRunnable.cs and the compatibility ExecutorWork overload
+remain here; the original SafeExecute documentation now accompanies the native helper:
+
+```csharp
+// nothing ..
+// no-op
+// Remaining Runnable callers need invocation only, without native ownership metadata.
+```
+
+Default Debug/Release preserve all 2161 prior case identities/outcomes: 2147 pass,
+zero failures, 14 unchanged skips. Targeted Debug/checked Release preserve 596
+identities: 592 pass, zero failures, four existing FastThreadLocal skips. All 759
+original non-Porting results remain. All 271 comment rows have no coverage loss;
+12 changed source/original-test owners retain 264/264 comments. Inventory/status,
+casing and no-new-source/test-warning checks pass. No original case remaps, source
+exclusions or new tests. The obsolete CLR interface-shape assertion is retired;
+stable callback identity and copied/composed invocation assertions remain.
+
+Identical non-friend native consumers before/after verify direct Action queues,
+Task results, single invocation through replay/copied/composed delegates, context,
+token and rejection identity, notification order/affinity and ordered-child drain.
+The actual hashed-wheel timer fires the same timeout object and stops successfully.
+A separate reflection report confirms five public Runnable facade types become zero.
+No performance claim. Initial compilation identified two original Global fixture
+object calls requiring bound Run callbacks; both are corrected before passing matrices.
+Evidence: artifacts/native-action-facade-validation/{before,after}-consumer.log,
+verification-summary.json, initial-build-failure.log and native-action-facade-*.trx/JSON
+in TestResults. Generated archives, probes, build outputs and logs remain ignored.
+
+The preceding checkpoint's generic remaining Future/Promise fixture/adapter item
+was stale: current source searches find the retired names only in original comment
+provenance, and their fixtures already use Task/TCS/native notifications. Continue
+reviewing native notification/backend/runtime contracts and remaining public helper
+purposes (including supplier/Void helpers), then pending inventory in dependency
+order; this does not complete common or close the earlier focused Global runner stall.

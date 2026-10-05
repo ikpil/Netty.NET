@@ -16,13 +16,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
 namespace Netty.NET.Common;
 
-internal sealed class HashedWheelWorker : IRunnable
+internal sealed class HashedWheelWorker
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(HashedWheelTimer));
 

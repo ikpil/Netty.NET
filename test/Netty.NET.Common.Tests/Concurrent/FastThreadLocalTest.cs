@@ -21,7 +21,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests.Concurrent;
@@ -288,12 +287,12 @@ public class FastThreadLocalTest : IDisposable
     private static Thread RunThread(Action runnable, bool fast)
     {
         Exception failure = null;
-        IRunnable target = Runnables.Create(() =>
+        Action target = () =>
         {
             try { runnable(); }
             catch (Exception cause) { failure = cause; }
-        });
-        Thread thread = fast ? new FastThreadLocalThread(target.Run).Thread : new Thread(target.Run);
+        };
+        Thread thread = fast ? new FastThreadLocalThread(target).Thread : new Thread(() => target());
         thread.IsBackground = true;
         thread.Name = "test-local-" + Guid.NewGuid();
         thread.Start();

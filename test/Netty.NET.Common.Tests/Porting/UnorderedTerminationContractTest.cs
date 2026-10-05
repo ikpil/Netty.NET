@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -150,7 +149,7 @@ public class UnorderedTerminationContractTest
         var scheduled = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
         Assert.Same(executor.Termination, executor.StopAsync());
         Assert.True(executor.Termination.IsCompletedSuccessfully);
-        Assert.Throws<RejectedExecutionException>(() => executor.Execute(Runnables.Empty));
+        Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
         Assert.Same(executor.Termination, executor.StopAsync());
         Assert.True(executor.IsTerminated());
         Assert.Equal(0, executor.PendingTaskCount);

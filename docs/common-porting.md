@@ -124,35 +124,41 @@ Optimization follows behavioral verification and measured performance.
 
 Default Debug/Release each discover **2161 cases** on Windows/x64/net10.0:
 **2147 passed / 0 failed / 14 unchanged skips**. Evidence:
-native-submission-action-full-debug.trx and native-submission-action-full-release.trx.
+native-action-facade-full-debug.trx and native-action-facade-full-release.trx.
 All 2161 prior identities/outcomes and 759 original non-Porting results remain;
-no new case, identity remap, exclusion or skip change.
+no new case, identity remap, source exclusion or skip change.
 
-Native submission metadata no longer inherits IRunnable. The exact Action envelope
-still carries invocation/cancellation/rejection/ordered drain ownership through the
-public Execute(Action) hook. Ordinary remaining Runnable compatibility callers
-pass their bound Run callback. The unused Unwrap helper and all 12 test call sites
-are removed; eleven fixtures retain or forward Action directly. Original fixture
-scenarios and comments remain. See common-clr-design.md#native-submission-action-bridge.
+The five public Runnable invocation facades and legacy executor overloads are
+removed. Execute/LazyExecute/RunTask/SafeExecute use Action; native submission
+ownership still crosses the exact issued Action bridge. The hashed-wheel worker
+and utilization monitor retain their state and Run logic without IRunnable.
+47 test wrapper constructions pass the original callback directly; stateful fixture
+objects pass bound Run callbacks, and native no-op callbacks replace Empty wrappers.
+The retired CLR interface-shape assertion is removed; its stable/copy/composed
+callback behavior assertions remain. Original scenarios/comments remain.
+See common-clr-design.md#native-action-invocation-facade.
 
-Targeted Debug and checked Release each pass 366 cases, zero failed/skipped.
-All 271 comment rows have no coverage loss; eight relevant source/test provenance
-owners retain 107/107 comments. Inventory (205 source/66 test), paths, earlier
-provenance, uppercase declarations and no-new-source/test-warning identities pass.
-Identical public consumers preserve replay/copied/composed single claims, context,
-Task results, cancellation token identity, rejection identity, completion/progress
-order and executor affinity, and ordered child results before/after. Reflection
-separately confirms the internal Runnable inheritance removal. No performance
-claim. Evidence: artifacts/native-submission-action-validation/*-consumer.log,
-verification-summary.json and native-submission-action-*.trx/JSON in TestResults.
-Only three canonical records updated, no new MD.
+Targeted Debug/checked Release each discover 596: 592 pass, zero failures and
+four unchanged FastThreadLocal skips. All 271 comment rows have no coverage loss;
+12 changed source/original-test owners retain 264/264 comments. Inventory (205
+source/66 test), paths, earlier provenance, uppercase declarations and no-new-source/
+test-warning checks pass. Identical native public consumers preserve results,
+replay/copied/composed claims, context, token/rejection identity, notification order/
+affinity, ordered child drain and actual timer timeout identity/worker stop.
+Reflection separately confirms five retired public facade types become zero.
+No performance claim. Evidence: artifacts/native-action-facade-validation/*-consumer.log,
+verification-summary.json and native-action-facade-*.trx/JSON in TestResults.
+An initial build exposed two missed Global fixture object calls; bound Run callbacks
+repair both before the passing matrices. Only three canonical records updated,
+no new MD; generated validation assets remain ignored.
 
 Source statuses remain 58 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 16 in progress. Next: migrate remaining plain Future/Promise fixtures
-and waiting/listener adapters, reviewing pinned consumers; continue ordinary legacy
-invocation helpers and remaining backend/source/runtime/platform contracts.
-The earlier focused Global xUnit completion stall remains unresolved; current
-matrices completed. Whole common remains open.
+66 pending / 16 in progress. The previous remaining plain Future/Promise adapter
+item was stale: source references are now original comments and their fixtures
+already use Task/TCS/native notifications. Next: review remaining public helper
+purposes and native notification/backend/runtime/platform contracts, then pending
+inventory in dependency order. The earlier focused Global xUnit completion stall
+remains unresolved; current matrices completed. Whole common remains open.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

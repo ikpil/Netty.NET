@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -29,7 +28,7 @@ public class UnorderedQueueOwnershipContractTest
         try
         {
             Assert.Same(expected, Assert.Throws<InvalidOperationException>(() =>
-                executor.Execute(Runnables.Create(() => ++calls))));
+                executor.Execute(() => ++calls)));
             Assert.Equal(0, executor.WorkerCount);
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.Equal(7, executor.ScheduleAsync(() => 7, TimeSpan.Zero)
@@ -79,8 +78,8 @@ public class UnorderedQueueOwnershipContractTest
         int calls = 0;
         try
         {
-            executor.Execute(Runnables.Create(() => ++calls));
-            executor.Execute(Runnables.Create(() => ++calls));
+            executor.Execute(() => ++calls);
+            executor.Execute(() => ++calls);
             Assert.Equal(2, executor.PendingTaskCount);
             Task stopped = executor.StopAsync();
             Assert.Same(executor.Termination, stopped);

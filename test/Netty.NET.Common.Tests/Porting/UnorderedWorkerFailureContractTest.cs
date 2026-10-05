@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests.Porting;
 
@@ -59,7 +58,7 @@ public class UnorderedWorkerFailureContractTest
             Task<int> forwarded = child.SubmitAsync(() => 9);
             using var observation = new ExecutorCompletion(executor, Task.CompletedTask);
             using var notification = observation.Register(_ => Assert.Fail("Rejected notification ran"));
-            executor.Execute(Runnables.Create(() => Interlocked.Increment(ref rawCalls)));
+            executor.Execute(() => Interlocked.Increment(ref rawCalls));
             release.Set();
 
             Assert.Same(escaping.Error, await Assert.ThrowsAsync<InvalidOperationException>(

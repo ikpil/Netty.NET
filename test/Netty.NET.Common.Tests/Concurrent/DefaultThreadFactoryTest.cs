@@ -17,7 +17,6 @@
 using System;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Concurrent;
@@ -35,7 +34,7 @@ public class DefaultThreadFactoryTest
         // holder for the thread factory, plays the role of a global singleton
         DefaultThreadFactory factory = null;
         int counter = 0;
-        IRunnable task = Runnables.Create(() => Interlocked.Increment(ref counter));
+        Action task = () => Interlocked.Increment(ref counter);
         Exception interrupted = null;
 
         // create the thread factory, since we are running the thread group brother, the thread
@@ -48,7 +47,7 @@ public class DefaultThreadFactoryTest
             try
             {
                 factory = new DefaultThreadFactory("test", false, ThreadPriority.Normal, null);
-                Thread t = factory.NewThread(task.Run);
+                Thread t = factory.NewThread(task);
                 firstCaptured = ThreadGroup.GetThreadGroup(t);
                 t.Start();
                 if (!t.Join(TimeSpan.FromSeconds(2))) throw new TimeoutException();
@@ -69,7 +68,7 @@ public class DefaultThreadFactoryTest
         {
             try
             {
-                Thread t = factory.NewThread(task.Run);
+                Thread t = factory.NewThread(task);
                 secondCaptured = ThreadGroup.GetThreadGroup(t);
                 t.Start();
                 if (!t.Join(TimeSpan.FromSeconds(2))) throw new TimeoutException();

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Netty.NET.Common;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -76,7 +75,7 @@ public class SingleThreadMetricsContractTest
     {
         var executor = new ManualExecutor();
         int calls = 0;
-        for (int i = 0; i < 100; i++) executor.Execute(Runnables.Create(() => { ++calls; executor.clock.Advance(5); }));
+        for (int i = 0; i < 100; i++) executor.Execute(() => { ++calls; executor.clock.Advance(5); });
         Assert.True(executor.Drain(0));
         Assert.Equal(64, calls);
         Assert.Equal(320, executor.ResetActive());
@@ -102,7 +101,7 @@ public class SingleThreadMetricsContractTest
         executor.clock.Advance(320);
         int calls = 0;
         for (int i = 0; i < 100; i++)
-            executor.Execute(Runnables.Create(() => { calls++; executor.clock.Advance(5); }));
+            executor.Execute(() => { calls++; executor.clock.Advance(5); });
         Assert.True(executor.Drain(budget));
         Assert.Equal(expectedCalls, calls);
         Assert.Equal(expectedCalls * 5, executor.ResetActive());
@@ -153,8 +152,8 @@ public class SingleThreadMetricsContractTest
     {
         var executor = new ManualExecutor();
         int calls = 0;
-        executor.Execute(Runnables.Create(() => { executor.clock.Advance(12); throw new InvalidOperationException(); }));
-        executor.Execute(Runnables.Create(() => { executor.clock.Advance(5); ++calls; }));
+        executor.Execute(() => { executor.clock.Advance(12); throw new InvalidOperationException(); });
+        executor.Execute(() => { executor.clock.Advance(5); ++calls; });
         Assert.True(executor.Drain(long.MaxValue));
         Assert.Equal(1, calls);
         Assert.Equal(17, executor.ResetActive());
@@ -180,7 +179,7 @@ public class SingleThreadMetricsContractTest
         Assert.True(executor.IsSuspended());
         Assert.Equal(0, executor.Idle());
         Assert.Equal(0, executor.Busy());
-        executor.Execute(Runnables.Empty);
+        executor.Execute(static () => { });
         Assert.Equal(1, starts);
         Assert.False(executor.IsSuspended());
         Assert.Equal(0, executor.Idle());

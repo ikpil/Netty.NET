@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -82,7 +81,7 @@ public class UnorderedExecutorContractTest
             Assert.True(executor.IsShuttingDown());
             Assert.False(executor.IsTerminated());
             Assert.False(executor.AwaitTermination(TimeSpan.FromMilliseconds(1)));
-            Assert.Throws<RejectedExecutionException>(() => executor.Execute(Runnables.Empty));
+            Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
             release.Signal();
             Assert.Equal(17, work.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
@@ -102,7 +101,7 @@ public class UnorderedExecutorContractTest
         {
             // Keep the one-shot work pending across shutdown independently of
             // machine scheduling; a 100ms deadline can expire before the assertion.
-            executor.Execute(new AnonymousRunnable(() => { entered.Set(); release.Wait(); }));
+            executor.Execute(() => { entered.Set(); release.Wait(); });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 42, TimeSpan.FromMilliseconds(100));
             var periodic = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.FromDays(1), TimeSpan.FromSeconds(1));
@@ -261,7 +260,7 @@ public class UnorderedExecutorContractTest
         UnorderedThreadPoolEventExecutor observed = null;
         var executor = new UnorderedThreadPoolEventExecutor(1, (task, owner) => { rejected = task; observed = owner; });
         Stop(executor);
-        executor.Execute(Runnables.Empty);
+        executor.Execute(static () => { });
         Assert.NotNull(rejected);
         Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(rejected);
         Assert.Same(executor, observed);
@@ -649,7 +648,7 @@ public class UnorderedExecutorContractTest
         using var release = new CountdownEvent(1);
         try
         {
-            executor.Execute(Runnables.Create(() => { entered.Signal(); release.Wait(); }));
+            executor.Execute(() => { entered.Signal(); release.Wait(); });
             var submitted = executor.SubmitAsync<int>(() => { entered.Signal(); release.Wait(); return 7; });
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var queued = executor.SubmitAsync<int>(() => 8);
@@ -734,7 +733,7 @@ public class UnorderedExecutorContractTest
         var factory = new LambdaFactory(task =>
         {
             Assert.Equal(1, ++creations);
-            executor.Execute(Runnables.Create(() => ++reentrantExecutions));
+            executor.Execute(() => ++reentrantExecutions);
             return new Thread(task.Invoke) { IsBackground = true };
         });
         executor = new UnorderedThreadPoolEventExecutor(1, factory);

@@ -18,7 +18,6 @@ using System;
 using System.Threading.Tasks;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Tests.Internal;
@@ -78,25 +77,25 @@ public class ThreadExecutorMapTest
     {
         IExecutor executor = ThreadExecutorMap.Apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
         IExecutor executor2 = ThreadExecutorMap.Apply(ImmediateExecutor.INSTANCE, EVENT_EXECUTOR);
-        executor.Execute(Runnables.Create(() =>
+        executor.Execute(() =>
         {
-            executor2.Execute(Runnables.Create(() =>
+            executor2.Execute(() =>
             {
                 Assert.Same(EVENT_EXECUTOR, ThreadExecutorMap.CurrentExecutor());
-            }));
+            });
 
             Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor());
-        }));
+        });
     }
 
     [Fact]
     public void TestDecorateExecutor()
     {
         IExecutor executor = ThreadExecutorMap.Apply(ImmediateExecutor.INSTANCE, ImmediateEventExecutor.INSTANCE);
-        executor.Execute(Runnables.Create(() =>
+        executor.Execute(() =>
         {
             Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor());
-        }));
+        });
     }
 
     [Fact]

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 using Void = Netty.NET.Common.Concurrent.Void;
 
@@ -604,7 +603,7 @@ public class ExecutorLifecycleContractTest
     {
         var group = new SingleChildGroup(new Child());
         int executed = 0;
-        group.Execute(Runnables.Create(() => ++executed));
+        group.Execute(() => ++executed);
         group.SubmitAsync(() => { ++executed; }).GetAwaiter().GetResult();
         Assert.Equal(42, group.SubmitAsync(() => 42).GetAwaiter().GetResult());
         Assert.Equal(7, group.SubmitAsync(() => 7).GetAwaiter().GetResult());
@@ -696,7 +695,7 @@ public class ExecutorLifecycleContractTest
         for (int i = 0; i < 3; ++i)
         {
             int value = i;
-            executor.Execute(Runnables.Create(() => { Assert.True(executor.InEventLoop()); values.Add(value); }));
+            executor.Execute(() => { Assert.True(executor.InEventLoop()); values.Add(value); });
         }
         Assert.Single(child.tasks);
         for (int i = 0; i < 3; ++i)
@@ -717,8 +716,8 @@ public class ExecutorLifecycleContractTest
         var child = new Child { queued = true, rejectExecution = 2 };
         var executor = new NonStickyEventExecutorGroup(new SingleChildGroup(child), 1).Next();
         int count = 0;
-        executor.Execute(Runnables.Create(() => ++count));
-        executor.Execute(Runnables.Create(() => { Assert.True(executor.InEventLoop()); ++count; }));
+        executor.Execute(() => ++count);
+        executor.Execute(() => { Assert.True(executor.InEventLoop()); ++count; });
         child.Run(child.tasks.Dequeue());
         Assert.Equal(2, count);
         Assert.Equal(3, child.executions);
@@ -732,15 +731,15 @@ public class ExecutorLifecycleContractTest
     {
         var executor = ImmediateEventExecutor.INSTANCE;
         var order = new List<int>();
-        executor.Execute(Runnables.Create(() =>
+        executor.Execute(() =>
         {
             order.Add(1);
-            executor.Execute(Runnables.Create(() => { order.Add(3); throw new InvalidOperationException("queued"); }));
-            executor.Execute(Runnables.Create(() => order.Add(4)));
+            executor.Execute(() => { order.Add(3); throw new InvalidOperationException("queued"); });
+            executor.Execute(() => order.Add(4));
             order.Add(2);
             throw new InvalidOperationException("outer");
-        }));
-        executor.Execute(Runnables.Create(() => order.Add(5)));
+        });
+        executor.Execute(() => order.Add(5));
         Assert.Equal(new[] { 1, 2, 3, 4, 5 }, order);
         Assert.True(executor.InEventLoop());
         Assert.Same(executor, executor.Next());
@@ -766,7 +765,7 @@ public class ExecutorLifecycleContractTest
         var executor = GlobalEventExecutor.INSTANCE;
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
-        executor.Execute(Runnables.Create(() => { entered.Signal(); release.Wait(); }));
+        executor.Execute(() => { entered.Signal(); release.Wait(); });
         Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
         Exception failure = null;
         bool inactive = false;
@@ -793,7 +792,7 @@ public class ExecutorLifecycleContractTest
         var executor = GlobalEventExecutor.INSTANCE;
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
-        executor.Execute(Runnables.Create(() => { entered.Signal(); release.Wait(); }));
+        executor.Execute(() => { entered.Signal(); release.Wait(); });
         Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
         Exception failure = null;
         var waiter = new Thread(() =>

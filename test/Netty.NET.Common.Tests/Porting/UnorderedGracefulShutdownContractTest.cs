@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -184,7 +183,7 @@ public class UnorderedGracefulShutdownContractTest
             await Task.Delay(quiet + TimeSpan.FromMilliseconds(100));
             Assert.False(executor.IsShutdown());
             int calls = 0;
-            executor.Execute(Runnables.Create(() => Interlocked.Increment(ref calls)));
+            executor.Execute(() => Interlocked.Increment(ref calls));
             Task submitted = executor.SubmitAsync(() => Interlocked.Increment(ref calls));
             Task scheduled = executor.ScheduleAsync(() =>
             {
@@ -231,7 +230,7 @@ public class UnorderedGracefulShutdownContractTest
             Assert.False(running.IsCompleted);
             Assert.False(termination.IsCompleted);
             Assert.False(executor.AwaitTermination(TimeSpan.Zero));
-            Assert.Throws<RejectedExecutionException>(() => executor.Execute(Runnables.Empty));
+            Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
             await Assert.ThrowsAsync<RejectedExecutionException>(() => executor.SubmitAsync(() => 1));
             await Assert.ThrowsAsync<RejectedExecutionException>(() => executor.ScheduleAsync(() => 1, TimeSpan.Zero));
             release.Set();

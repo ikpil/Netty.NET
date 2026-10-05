@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -69,19 +68,9 @@ public abstract class AbstractEventExecutor : IEventExecutor
 
     public abstract bool InEventLoop(Thread thread);
 
+    // Stateful common work must still pass the public virtual Action hook.
     public abstract void Execute(Action task);
 
-    // Stateful common work must still pass the public virtual Action hook.
-    internal void Execute(IRunnable task)
-    {
-        ArgumentNullException.ThrowIfNull(task);
-        Execute(task.Run);
-    }
-    internal void LazyExecute(IRunnable task)
-    {
-        ArgumentNullException.ThrowIfNull(task);
-        LazyExecute(task.Run);
-    }
     public abstract bool IsShutdown();
     public abstract bool IsTerminated();
     public abstract bool AwaitTermination(TimeSpan timeout);
@@ -133,7 +122,8 @@ public abstract class AbstractEventExecutor : IEventExecutor
     /**
      * Try to execute the given {@link Runnable} and just log if it throws a {@link Throwable}.
      */
-    protected static void SafeExecute(IRunnable task)
+    // Native custom loops retain the same exception boundary as the original helper.
+    protected static void SafeExecute(Action task)
     {
         try
         {
@@ -145,19 +135,7 @@ public abstract class AbstractEventExecutor : IEventExecutor
         }
     }
 
-    // Native custom loops retain the same exception boundary as the original helper.
-    protected static void SafeExecute(Action task)
-    {
-        try { RunTask(task); }
-        catch (Exception error) { logger.Warn("A task raised an exception. Task: {}", task, error); }
-    }
-
     protected static void RunTask(Action task) => task();
-
-    protected static void RunTask(IRunnable task)
-    {
-        task.Run();
-    }
 
     /**
      * Like {@link #execute(Runnable)} but does not guarantee the task will be run until either

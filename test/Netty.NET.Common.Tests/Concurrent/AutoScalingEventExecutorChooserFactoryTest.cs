@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Concurrent;
@@ -304,7 +303,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
             // Simulate a slow trickle of new work (e.g., new connections) by calling next() a few times.
             for (int i = 0; i < 5; i++)
             {
-                group.Next().Execute(Runnables.Empty);
+                group.Next().Execute(static () => { });
                 Thread.Sleep(20);
             }
 
@@ -390,7 +389,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
         using var startLatch = new CountdownEvent(group.ExecutorCount());
         foreach (IEventExecutor executor in group.Iterator())
         {
-            executor.Execute(Runnables.Create(() => startLatch.Signal()));
+            executor.Execute(() => startLatch.Signal());
         }
         Assert.True(startLatch.Wait(TimeSpan.FromSeconds(5)));
     }

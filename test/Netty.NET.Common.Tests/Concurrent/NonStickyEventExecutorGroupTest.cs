@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Tests.Concurrent;
 
@@ -116,11 +115,11 @@ public class NonStickyEventExecutorGroupTest
                 CountdownEvent latch = new CountdownEvent(2);
                 for (int i = 0; i < 2; i++)
                 {
-                    executor.Execute(Runnables.Create(() =>
+                    executor.Execute(() =>
                     {
                         if (!firstCompleted.IsSet) firstCompleted.Signal();
                         latch.Signal();
-                    }));
+                    });
 
                     Assert.True(firstCompleted.Wait(TimeSpan.FromSeconds(1)));
                 }
@@ -207,18 +206,18 @@ public class NonStickyEventExecutorGroupTest
             // Submit 2 tasks:
             // Task 1: completes, triggers reschedule which will be rejected
             // Task 2: verifies inEventLoop() still works after failed reschedule
-            executor.Execute(Runnables.Create(() =>
+            executor.Execute(() =>
             {
                 // First task - will trigger reschedule attempt that fails
-            }));
-            executor.Execute(Runnables.Create(() =>
+            });
+            executor.Execute(() =>
             {
                 // This runs AFTER the failed rescheduling
                 // WITHOUT line 262 fix: executingThread is null, inEventLoop() returns false
                 // WITH line 262 fix: executingThread restored, inEventLoop() returns true
                 inEventLoopResult = executor.InEventLoop();
                 latch.Signal();
-            }));
+            });
             Assert.True(latch.Wait(TimeSpan.FromSeconds(5)), "Tasks should complete");
             bool? result = inEventLoopResult;
             Assert.NotNull(result, "inEventLoop() should have been called");

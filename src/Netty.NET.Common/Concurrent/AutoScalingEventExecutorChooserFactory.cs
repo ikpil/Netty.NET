@@ -17,7 +17,6 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
@@ -46,7 +45,7 @@ namespace Netty.NET.Common.Concurrent;
 public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChooserFactory
 {
 
-    private static readonly IRunnable NO_OOP_TASK = Runnables.Empty;
+    private static readonly Action NO_OOP_TASK = static () => { };
     private readonly int minChildren;
     private readonly int maxChildren;
     private readonly long utilizationCheckPeriodNanos;
@@ -275,7 +274,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             return utilizationMetrics;
         }
 
-        private sealed class UtilizationMonitor : IRunnable
+        private sealed class UtilizationMonitor
         {
             private readonly AutoScalingEventExecutorChooser chooser;
             private readonly List<SingleThreadEventExecutor> consistentlyIdleChildren;

@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 using Void = Netty.NET.Common.Concurrent.Void;
 
@@ -51,7 +50,7 @@ public class GlobalEventExecutorTest
     public void TestAutomaticStartStop()
     {
         var task = new TestRunnable(500);
-        e.Execute(task);
+        e.Execute(task.Run);
 
         // Ensure the new thread has started.
         Thread thread = e._thread;
@@ -63,7 +62,7 @@ public class GlobalEventExecutorTest
 
         // Ensure another new thread starts again.
         task.ran = false;
-        e.Execute(task);
+        e.Execute(task.Run);
         Assert.NotSame(e._thread, thread);
         thread = e._thread;
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -108,7 +107,7 @@ public class GlobalEventExecutorTest
     {
         //add task
         var beforeTask = new TestRunnable(0);
-        e.Execute(beforeTask);
+        e.Execute(beforeTask.Run);
 
         //add scheduled task
         var scheduledTask = new TestRunnable(0);
@@ -116,7 +115,7 @@ public class GlobalEventExecutorTest
 
         //add task
         var afterTask = new TestRunnable(0);
-        e.Execute(afterTask);
+        e.Execute(afterTask.Run);
         Sync(f);
 
         Assert.True(beforeTask.ran);
@@ -134,11 +133,11 @@ public class GlobalEventExecutorTest
 
         //ensure always has at least one task in taskQueue
         //check if scheduled tasks are triggered
-        IRunnable repeat = null;
-        repeat = Runnables.Create(() =>
+        Action repeat = null;
+        repeat = () =>
         {
             if (!f.IsCompleted) e.Execute(repeat);
-        });
+        };
         e.Execute(repeat);
         Sync(f);
         Assert.True(t.ran);
@@ -172,7 +171,7 @@ public class GlobalEventExecutorTest
         future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
     }
 
-    private sealed class TestRunnable : IRunnable
+    private sealed class TestRunnable
     {
         internal volatile bool ran;
         private readonly int delay;

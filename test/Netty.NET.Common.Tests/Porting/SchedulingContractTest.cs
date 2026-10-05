@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Collections;
 using Xunit;
@@ -17,11 +16,11 @@ public class SchedulingContractTest
     {
         var executor = GlobalEventExecutor.INSTANCE;
         using var first = new CountdownEvent(1);
-        executor.Execute(Runnables.Create(() => first.Signal()));
+        executor.Execute(() => first.Signal());
         Assert.True(first.Wait(TimeSpan.FromSeconds(5)));
         Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         using var second = new CountdownEvent(1);
-        executor.Execute(Runnables.Create(() => second.Signal()));
+        executor.Execute(() => second.Signal());
         Assert.True(second.Wait(TimeSpan.FromSeconds(5)));
         Assert.False(executor.IsShuttingDown());
         Assert.False(executor.IsShutdown());
@@ -69,7 +68,7 @@ public class SchedulingContractTest
             cancellation.Cancel();
             Assert.True(task.IsCanceled);
             using var drained = new CountdownEvent(1);
-            executor.Execute(Runnables.Create(() => drained.Signal()));
+            executor.Execute(() => drained.Signal());
             Assert.True(drained.Wait(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);
         }
@@ -92,7 +91,7 @@ public class SchedulingContractTest
             Assert.True(repeated.Wait(TimeSpan.FromSeconds(5)));
             cancellation.Cancel();
             using var drained = new CountdownEvent(1);
-            executor.Execute(Runnables.Create(() => drained.Signal()));
+            executor.Execute(() => drained.Signal());
             Assert.True(drained.Wait(TimeSpan.FromSeconds(5)));
             int completedCalls = Volatile.Read(ref calls);
             Thread.Sleep(20);
@@ -213,7 +212,7 @@ public class SchedulingContractTest
         var readyWork = executor.Head;
         executor.Advance(100);
         var queue = new LinkedBlockingQueue<Action>(1);
-        Assert.True(queue.TryEnqueue(Runnables.Empty.Run));
+        Assert.True(queue.TryEnqueue(static () => { }));
         Assert.False(executor.TransferDue(queue));
         Assert.Same(readyWork.QueueCallback, executor.PollDue());
     }

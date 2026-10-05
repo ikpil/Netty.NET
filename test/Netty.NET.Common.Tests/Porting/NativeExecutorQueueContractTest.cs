@@ -171,7 +171,6 @@ public class NativeExecutorQueueContractTest
         IScheduledWork work = executor.Head;
         Action callback = work.QueueCallback;
         Assert.Same(callback, work.QueueCallback);
-        Assert.False((object)work is Netty.NET.Common.Functional.IRunnable);
         Action copied = (Action)callback.Clone();
         Assert.Equal(callback, copied);
         Assert.NotSame(callback, copied);

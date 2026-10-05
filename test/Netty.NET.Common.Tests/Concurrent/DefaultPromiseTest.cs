@@ -20,7 +20,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Concurrent;
@@ -164,7 +163,7 @@ public class DefaultPromiseTest
                 listener2 = _ => listeners.Add(listener2);
                 listener4 = _ => listeners.Add(listener4);
                 listener3 = _ => { listeners.Add(listener3); fourth = observer.Register(listener4); };
-                GlobalEventExecutor.INSTANCE.Execute(Runnables.Create(() => source.SetResult(null)));
+                GlobalEventExecutor.INSTANCE.Execute(() => source.SetResult(null));
                 using var first = observer.Register(listener1);
                 using var second = observer.Register(listener2);
                 using var third = observer.Register(listener3);
@@ -302,7 +301,7 @@ public class DefaultPromiseTest
         }
         try
         {
-            if (runTestInExecutorThread) executor.Execute(Runnables.Create(Initialize));
+            if (runTestInExecutorThread) executor.Execute(Initialize);
             else Initialize();
             Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
             foreach (var source in sources) Assert.True(source.Task.IsCompletedSuccessfully);
@@ -341,18 +340,18 @@ public class DefaultPromiseTest
             Assert.Equal(2, Volatile.Read(ref state));
             // This is the important listener. A late listener that is added after all late listeners
             // have completed, and needs to update state before a read operation (on the same executor).
-            executor.Execute(Runnables.Create(() => observer.Register(_ =>
+            executor.Execute(() => observer.Register(_ =>
             {
                 Assert.Equal(2, Interlocked.CompareExchange(ref state, 3, 2));
                 latch2.Signal();
-            })));
+            }));
             // Simulate a read operation being queued up in the executor.
-            executor.Execute(Runnables.Create(() =>
+            executor.Execute(() =>
             {
                 // This is the key, we depend upon the state being set in the next listener.
                 Assert.Equal(3, Volatile.Read(ref state));
                 latch2.Signal();
-            }));
+            });
             Assert.True(latch2.Wait(TimeSpan.FromSeconds(2)));
         }
         finally { Shutdown(executor); }
@@ -377,13 +376,13 @@ public class DefaultPromiseTest
             Action<Task> listener = _ => latch.Signal();
             var source = Source<object>();
             using var observer = new ExecutorCompletion(executor, source.Task);
-            executor.Execute(Runnables.Create(() =>
+            executor.Execute(() =>
             {
                 for (int i = 0; i < numListenersBefore; i++) observer.Register(listener);
                 source.SetResult(null);
-                GlobalEventExecutor.INSTANCE.Execute(Runnables.Create(() => observer.Register(listener)));
+                GlobalEventExecutor.INSTANCE.Execute(() => observer.Register(listener));
                 observer.Register(listener);
-            }));
+            });
             Assert.True(latch.Wait(TimeSpan.FromSeconds(5)), "Should have notified " + expectedCount + " listeners");
         }
         finally { Shutdown(executor); }

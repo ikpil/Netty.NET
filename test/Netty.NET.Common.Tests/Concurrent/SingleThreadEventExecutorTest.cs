@@ -21,7 +21,6 @@ using System.Diagnostics;
 using System.Threading;
 using Netty.NET.Common.Collections;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 using Void = Netty.NET.Common.Concurrent.Void;
 
@@ -94,7 +93,7 @@ public class SingleThreadEventExecutorTest
             : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
         protected override void Run() => throw new Exception("must not run");
     }
-    private class LatchTask : IRunnable
+    private class LatchTask
     {
         internal readonly CountdownEvent latch = new(1);
         public void Run() => latch.Signal();
@@ -125,7 +124,7 @@ public class SingleThreadEventExecutorTest
         try
         {
             var task1 = new LatchTask();
-            executor.Execute(task1);
+            executor.Execute(task1.Run);
             var currentThread = factory.Take();
             Assert.True(executor.TrySuspend());
             task1.Await();
@@ -139,7 +138,7 @@ public class SingleThreadEventExecutorTest
             Assert.Equal(0, factory.threads.Count);
 
             var task2 = new LatchTask();
-            executor.Execute(task2);
+            executor.Execute(task2.Run);
             // Suspendion was reset as a task was executed.
             Assert.False(executor.IsSuspended());
             currentThread = factory.Take();
@@ -169,7 +168,7 @@ public class SingleThreadEventExecutorTest
 
             // recover from suspension by executing a task
             var task1 = new LatchTask();
-            executor.Execute(task1);
+            executor.Execute(task1.Run);
             var currentThread = factory.Take();
             Assert.False(executor.IsSuspended());
             task1.Await();
@@ -212,7 +211,7 @@ public class SingleThreadEventExecutorTest
                 // Only count the requests to start a thread, no thread is ever started.
                 var executor = new CountingExecutor(_ => Interlocked.Increment(ref threadStarts));
                 Volatile.Write(ref executorRef, executor);
-                executor.Execute(Runnables.Empty);
+                executor.Execute(static () => { });
                 Assert.True(SpinWait.SpinUntil(() => Volatile.Read(ref suspended) == i, TimeSpan.FromSeconds(2)));
                 Assert.Equal(1, Volatile.Read(ref threadStarts));
             }
@@ -361,10 +360,10 @@ public class SingleThreadEventExecutorTest
         Assert.True(executor.IsShutdown());
     }
     private static void ExecuteShouldFail(IExecutor executor) =>
-        Assert.Throws<RejectedExecutionException>(() => executor.Execute(Runnables.Create(() =>
+        Assert.Throws<RejectedExecutionException>(() => executor.Execute(() =>
         {
             // Noop.
-        })));
+        }));
 
     [Fact]
     public void TestThreadProperties()
@@ -531,7 +530,7 @@ public class SingleThreadEventExecutorTest
         finally { Shutdown(executor); }
     }
 
-    private sealed class TestRunnable : IRunnable
+    private sealed class TestRunnable
     {
         internal volatile bool ran;
         public void Run() => ran = true;
@@ -544,13 +543,13 @@ public class SingleThreadEventExecutorTest
         {
             //add task
             var beforeTask = new TestRunnable();
-            executor.Execute(beforeTask);
+            executor.Execute(beforeTask.Run);
             //add scheduled task
             var scheduledTask = new TestRunnable();
             var f = executor.ScheduleAsync(scheduledTask.Run, TimeSpan.FromMilliseconds(1500));
             //add task
             var afterTask = new TestRunnable();
-            executor.Execute(afterTask);
+            executor.Execute(afterTask.Run);
             Sync(f);
             Assert.True(beforeTask.ran);
             Assert.True(scheduledTask.ran);
@@ -570,8 +569,8 @@ public class SingleThreadEventExecutorTest
             var f = executor.ScheduleAsync(t.Run, TimeSpan.FromMilliseconds(1500));
             //ensure always has at least one task in taskQueue
             //check if scheduled tasks are triggered
-            IRunnable repeat = null;
-            repeat = Runnables.Create(() => { if (!f.IsCompleted) executor.Execute(repeat); });
+            Action repeat = null;
+            repeat = () => { if (!f.IsCompleted) executor.Execute(repeat); };
             executor.Execute(repeat);
             Sync(f);
             Assert.True(t.ran);
@@ -590,10 +589,10 @@ public class SingleThreadEventExecutorTest
         var exception = new InvalidOperationException();
         var executor = new ThrowingExecutor(exception);
         // Schedule something so we are sure the run() method will be called.
-        executor.Execute(Runnables.Create(() =>
+        executor.Execute(() =>
         {
             // Noop.
-        }));
+        });
         var future = executor.Termination;
         var task = future;
         Assert.Same(exception, await Assert.ThrowsAsync<InvalidOperationException>(() =>

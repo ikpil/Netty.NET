@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 
 namespace Netty.NET.Common.Tests.Porting;
@@ -130,7 +129,7 @@ public class AutoScalingChooserContractTest
         internal readonly MockTicker clock = Ticker.NewMockTicker();
         internal readonly ManualExecutor[] children;
         internal readonly IObservableEventExecutorChooser chooser;
-        private readonly IRunnable monitor;
+        private readonly Action monitor;
         internal Harness(int min, int max, int rampUp = 1, int rampDown = 1, int patience = 0, long initialTime = 0)
         {
             if (initialTime > 0) clock.Advance(initialTime);
@@ -146,11 +145,12 @@ public class AutoScalingChooserContractTest
                 0.4, 0.6, rampUp, rampDown, patience);
             chooser = (IObservableEventExecutorChooser)factory.NewChooser(children);
             Type monitorType = chooser.GetType().GetNestedType("UtilizationMonitor", BindingFlags.NonPublic);
-            monitor = (IRunnable)Activator.CreateInstance(monitorType,
+            object instance = Activator.CreateInstance(monitorType,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
                 new object[] { chooser }, null);
+            monitor = monitorType.GetMethod("Run", BindingFlags.Instance | BindingFlags.Public).CreateDelegate<Action>(instance);
         }
-        internal void Tick(long delta = Period) { clock.Advance(delta); monitor.Run(); }
+        internal void Tick(long delta = Period) { clock.Advance(delta); monitor(); }
         public void Dispose() => children[0].termination.TrySetResult();
     }
 

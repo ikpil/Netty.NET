@@ -17,7 +17,6 @@
 using System;
 using System.Threading.Tasks;
 using Netty.NET.Common.Concurrent;
-using Netty.NET.Common.Functional;
 using Xunit;
 using Void = Netty.NET.Common.Concurrent.Void;
 
@@ -38,7 +37,7 @@ public class ImmediateExecutorTest
             // NOOP
             return null;
         });
-        ImmediateExecutor.INSTANCE.Execute(Runnables.Create(() => task.RunSynchronously()));
+        ImmediateExecutor.INSTANCE.Execute(() => task.RunSynchronously());
         Assert.True(task.IsCompleted);
         Assert.False(task.IsCanceled);
         Assert.Null(task.GetAwaiter().GetResult());

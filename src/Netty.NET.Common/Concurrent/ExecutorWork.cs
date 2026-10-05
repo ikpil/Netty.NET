@@ -1,5 +1,4 @@
 using System;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -42,10 +41,4 @@ internal static class ExecutorWorkExtensions
 {
     internal static void Execute(this IExecutor executor, INativeSubmission work) => ExecutorWork.Dispatch(executor, work);
 
-    // Remaining Runnable callers need invocation only, without native ownership metadata.
-    internal static void Execute(this IExecutor executor, IRunnable work)
-    {
-        ArgumentNullException.ThrowIfNull(work);
-        executor.Execute(work.Run);
-    }
 }
