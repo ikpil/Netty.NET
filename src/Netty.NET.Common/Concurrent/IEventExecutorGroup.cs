@@ -101,7 +101,7 @@ public interface IEventExecutorGroup : IExecutorService
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    new List<Functional.IRunnable> ShutdownNow();
+    new List<Action> ShutdownNow();
 
     /**
      * Returns one of the {@link EventExecutor}s managed by this {@link EventExecutorGroup}.

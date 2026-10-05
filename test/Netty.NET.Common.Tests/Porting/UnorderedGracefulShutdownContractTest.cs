@@ -229,12 +229,12 @@ public class UnorderedGracefulShutdownContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
         Task repeating = executor.ScheduleAtFixedRateAsync(() => { }, TimeSpan.Zero, TimeSpan.FromDays(1));
-        IRunnable handle = Assert.Single(executor.ShutdownNow());
+        Action handle = Assert.Single(executor.ShutdownNow());
         try
         {
             Task termination = executor.Termination;
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
-            handle.Run();
+            handle();
             Assert.True(executor.IsTerminated());
             Assert.Equal(0, executor.PendingTaskCount);
             Assert.True(repeating.IsCanceled);

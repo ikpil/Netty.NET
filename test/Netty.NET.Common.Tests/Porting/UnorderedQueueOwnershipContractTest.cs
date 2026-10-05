@@ -83,11 +83,11 @@ public class UnorderedQueueOwnershipContractTest
             executor.Execute(Runnables.Create(() => ++calls));
             var removed = executor.ShutdownNow();
             Assert.Equal(2, removed.Count);
-            foreach (IRunnable handle in removed)
+            foreach (Action handle in removed)
             {
                 Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(handle);
-                handle.Run();
-                handle.Run();
+                handle();
+                handle();
             }
             Assert.Equal(0, calls);
             Assert.Equal(0, executor.PendingTaskCount);

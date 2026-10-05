@@ -233,9 +233,9 @@ public class NativeExecutorTaskContractTest
             int calls = 0;
             Task queued = executor.SubmitAsync(() => { ++calls; });
             Assert.Equal(1, executor.PendingTaskCount);
-            IRunnable queuedWork = Assert.Single(executor.ShutdownNow());
+            Action queuedWork = Assert.Single(executor.ShutdownNow());
             Assert.False((object)queuedWork is System.Threading.Tasks.Task);
-            queuedWork.Run();
+            queuedWork();
             Assert.True(queued.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await queued);
             Assert.Equal(0, calls);
@@ -344,9 +344,9 @@ public class NativeExecutorTaskContractTest
             Task first = child.SubmitAsync(() => { ++calls; });
             Task second = child.SubmitAsync(() => { ++calls; });
             Assert.Equal(1, executor.PendingTaskCount);
-            IRunnable runner = Assert.Single(executor.ShutdownNow());
+            Action runner = Assert.Single(executor.ShutdownNow());
             Assert.False((object)runner is System.Threading.Tasks.Task);
-            runner.Run();
+            runner();
             Assert.True(first.IsCanceled);
             Assert.True(second.IsCanceled);
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first);

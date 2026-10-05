@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -49,7 +48,7 @@ public interface IExecutorService : IExecutor
      *         or the security manager's {@code checkAccess} method
      *         denies access.
      */
-    List<IRunnable> ShutdownNow();
+    List<Action> ShutdownNow();
 
     /**
      * Returns {@code true} if this executor has been shut down.

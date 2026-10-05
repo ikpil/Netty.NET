@@ -122,46 +122,45 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2109 cases** on Windows/x64/net10.0:
-**2095 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: rejection-action-full-debug.trx and rejection-action-full-release.trx.
-All 2096 prior identities/outcomes, 759 original non-Porting cases and every skip
-remain. Thirteen native rejection cases cover capacity, bounded retry/success,
-on-loop nonblocking rejection, original exception identity, offer/bootstrap/closed
-admission, TimeSpan extremes, interrupt retention and same-payload shutdown rollback.
-Original fixture syntax, assertions and comments are unchanged.
-Single-thread/default/group configuration now uses Action<Action, SingleThreadEventExecutor>.
-Reject/Backoff return native delegates; OfferTask and protected tail rejection accept
-Action. The Java functional interface and two port-only implementation classes are
-retired. Pinned all-module/tail consumers, runtime differences and original interface
-comment provenance remain in common-clr-design.md#native-bounded-rejection-callbacks.
-Java's exact factory sources validate retry/nonpositive/interrupt traces through
-queue/wakeup shims. The identical native C# consumer fails before with CS1503/CS1660
-and passes after for single/group constructors, offer and protected tail policy.
-Before/after CLR probes expose and correct minimum-duration/maximum-duration
-conversion failures and consumed interrupts. An identity-removal mutant fails the
-actual shutdown rollback test; its scoped checked DLL is restored byte-for-byte.
-Targeted Debug and checked Release each pass 43 cases, with no failures or skips.
-The initial capacity-release harness assertion counted a wakeup marker filling
-the freed slot; corrected wake-before-release ordering controls that race without
-changing implementation or original fixtures. Final matrices validate the source.
-All 271 original comment totals have no coverage loss; policy comments improve
-to 3/3 and 7/7 preserved. Modified single-thread source retains 128 pinned comments.
-Inventory/paths, archived provenance, uppercase declarations and no-new-warning
-checks pass. No exclusions or Markdown files are added. Source statuses now:
-57 verified / 50 CLR replacement / 15 not applicable / 66 pending / 17 in progress.
-Release allocation comparison: blocked real 16-slot DefaultEventExecutor queue,
-one static raw command, a counting discard policy, 5,000 warmups and three 100,000
-rejection samples, approximately 24 to 120 bytes/rejection (+96 replay-envelope
-bytes). No exception/result-bearing submission or controlled throughput claim.
-This is an explicit transitional cost to reduce in the remaining queue redesign.
-Ignored records: rejection-action-identity-and-inventory.json, comment audit and
-TRX matrices in TestResults; pinned Java, native/compat/identity-mutant probes,
-allocation-evidence.json and identical perf sources in artifacts/rejection-action-validation.
-Next: remaining protected queue hooks and unordered/JDK rejection/shutdown APIs;
-preserve task identity, capacity, ownership, cancellation and subclass policies
-while reducing replay/SubmitAsync adapter costs. Whole common and untested platforms
-remain open. Full portable sources build without PortingBatch.
+The current default suite executes **2120 cases** on Windows/x64/net10.0:
+**2106 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: unordered-action-full-debug.trx and unordered-action-full-release.trx.
+All 2109 prior identities/outcomes, 759 original non-Porting cases and every skip
+remain. Eleven native unordered cases cover Action policy/shared stop shape,
+concurrent replay, caller thread/owner, immediate/graceful termination boundaries,
+throwing/discard policies, stop reentry, canceled payload lifetime and NonSticky.
+Six Porting fixtures adapt handle types/invocation syntax; original Java-derived
+fixture identities, assertions and comments are unchanged.
+Unordered constructors now accept Action<Action, UnorderedThreadPoolEventExecutor>;
+shared legacy ShutdownNow returns List<Action> over canceled memberships.
+No additional result owner, replay envelope, raw context capture or thread interrupt
+is introduced. Native SubmitAsync/ScheduleAsync still report admission failures.
+The pinned execute/NonNotifyRunnable Java shim exposes an existing CanRun gap:
+saved/newly rejected callbacks could start after actual termination. Identical CLR
+probes run two callbacks before and zero after, matching Java. Graceful pending
+drain permits one replay; immediate stop and completed termination prevent it.
+An identical non-friend native C# consumer fails before with CS1660/CS0029 and
+passes after. Pinned all-module consumers and legacy retirement limits are in
+common-clr-design.md#native-unordered-rejection-and-legacy-stop-callbacks.
+Targeted Debug and checked Release each pass 217 cases, no failures or skips.
+All 271 original comment rows have no coverage loss; five modified source owners
+retain 72/72 pinned comments. Inventory/paths, prior comment/provenance, uppercase
+declarations and no-new-warning checks pass. No exclusions or Markdown files added.
+Source statuses remain 57 verified / 50 CLR replacement / 15 not applicable /
+66 pending / 17 in progress; unordered and broader native design remain in progress.
+Release allocation comparison (tiered compilation disabled, identical sources,
+5,000 warmups, three 100,000-operation samples): raw closed rejection rises from
+72 to 136 bytes; whole null-worker pool construction/admission/one-handle stop
+lifecycle rises from 2,088 to 2,152 bytes. Each adds 64 bytes for a bound Action.
+No exception/result-bearing submission, accepted-execution or throughput claim.
+This and the prior 96-byte ordered replay/SubmitAsync adapters remain optimization
+work. Ignored records: unordered-action-identity-and-inventory.json, comment audit
+and final TRX matrices in TestResults; pinned Java/native/compat probes and
+allocation-evidence.json in artifacts/unordered-action-validation.
+Next: remaining protected queue hooks and inherited JDK/legacy shutdown review;
+preserve identity, capacity, ownership, cancellation and subclass policies while
+reducing native adapter costs. Whole common and untested platforms remain open.
+Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

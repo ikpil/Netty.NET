@@ -392,9 +392,9 @@ public class ExecutorCompletionContractTest
         try
         {
             Assert.Equal(1, executor.PendingTaskCount);
-            IRunnable queued = Assert.Single(executor.ShutdownNow());
+            Action queued = Assert.Single(executor.ShutdownNow());
             Assert.False((object)queued is System.Threading.Tasks.Task);
-            queued.Run();
+            queued();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);

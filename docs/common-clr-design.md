@@ -4818,3 +4818,67 @@ elapsed times are retained without a controlled throughput claim. Preserve the
 rollback/virtual-hook contract while reducing the adapter during the remaining
 queue migration; no allocation-free or fully optimized claim. Ignored evidence:
 artifacts/rejection-action-validation/allocation-evidence.json.
+
+## Native unordered rejection and legacy stop callbacks
+
+Pinned UnorderedThreadPoolEventExecutor.java:79-105 passes the inherited JDK
+rejection policy to its scheduled pool. Its execute at 224-228 wraps raw commands
+in NonNotifyRunnable; decorateTask at 174-178 keeps the JDK scheduled membership
+for this branch. This policy is separate from Netty's bounded single-thread
+policy. The two unordered constructors now accept
+Action<Action, UnorderedThreadPoolEventExecutor>. A bound callback invokes the
+existing membership's Run method without another result owner or ExecutorWork
+envelope. The synchronous policy receives the actual owner on the submitting
+thread, outside the queue gate. Throwing preserves exception identity and clears
+the payload; deliberately discarding raw work remains supported. SubmitAsync
+and ScheduleAsync admission failure still faults the sole Task regardless of a
+raw discard policy. No new ExecutionContext capture or scheduler is introduced.
+
+The exact pinned execute/NonNotifyRunnable fragments, exercised in a Java21 JDK
+scheduled-pool shim, show that replay can claim raw work once during graceful
+drain, but cannot start after actual termination. This exposed an existing CLR
+CanRun gap: a saved callback could run after termination. The gate now also checks
+the persistent Termination state. An identical before/after CLR probe keeps a
+rejected callback across drain and submits another after drain: old 5887742 runs
+two callbacks; the new version and JDK run zero. Immediate stop still suppresses
+replay. These checks concern starting an invocation; a policy running arbitrary
+caller code does not become an owned worker or extend Termination.
+
+Shared ShutdownNow signatures now return List<Action> instead of List<IRunnable>;
+NonSticky forwards the underlying result. AbstractEventExecutor/Group retain
+their original shutdown-and-empty-list policy (original lines 85-88); unordered
+retains the prior cooperative immediate stop and actual drain. Its returned
+callbacks bind the exact canceled memberships. Repeated/concurrent invocation
+cannot revive raw, submitted or scheduled work; retaining the owner/list/result
+does not retain canceled payload captures. No arbitrary CLR thread interrupt is
+introduced. StopAsync and its persistent Task remain the native stop result.
+This list's legacy semantics remain a separate retirement/design-review item:
+all-module original searches find forwarding in NonSticky and transport's
+DefaultChannelPipeline wrapper, a NioEventLoopTest invocation ignoring the result,
+and benchmark stubs. They do not establish a Netty production need to replay
+unordered returned tasks. JDK returned tasks can remain uncanceled; the deliberate
+CLR cancellation policy predates this change and is documented in
+common-unordered-cooperative-stop.md. The broad inherited-API review stays open.
+
+Eleven new CLR cases cover public shape, synchronous policy ownership, concurrent
+one-time replay, immediate/graceful termination boundaries, throwing/discard
+policies, stop reentry on another thread, three canceled payload lifetimes and
+NonSticky forwarding. Six existing Porting fixtures only adapt handle types and
+invocation syntax; original Java-derived fixtures/assertions/comments stay intact.
+An identical non-friend C# consumer fails against 5887742 (CS1660/CS0029) and
+passes against the new assembly for native policy and shared stop handles.
+
+Windows/x64/net10.0 Release allocation probes use identical sources, 5,000 warmups
+and three 100,000-operation samples, with tiered compilation disabled to avoid
+mixed-tier allocation measurements. Closed raw Execute with a counting discard
+policy rises from approximately 72 to 136 bytes per rejection. Constructing a
+null-worker pool, admitting one raw callback, returning/invoking its canceled
+ShutdownNow handle and checking actual drain rises from 2,088 to 2,152 bytes per
+operation. Each difference is 64 bytes for the bound Action; the second includes
+the whole unchanged pool lifecycle. No exception or result-bearing submission is
+measured, and these are not accepted-execution or controlled throughput claims.
+This callback cost and the previously measured 96-byte ordered replay/SubmitAsync
+adapter remain optimization work. Ignored evidence: artifacts/unordered-action-validation
+contains pinned Java/native/compat probes, allocation-evidence.json and logs;
+TestResults contains the final default/targeted TRX, comment audit and inventory
+summary. Whole common, inherited APIs and broader platforms remain incomplete.

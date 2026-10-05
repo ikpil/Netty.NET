@@ -37,10 +37,10 @@ public abstract class AbstractEventExecutorGroup : IEventExecutorGroup
      * @deprecated {@link #shutdownGracefully(long, long, TimeUnit)} or {@link #shutdownGracefully()} instead.
      */
     [Obsolete]
-    public virtual List<IRunnable> ShutdownNow()
+    public virtual List<Action> ShutdownNow()
     {
         Shutdown();
-        return new List<IRunnable>();
+        return new List<Action>();
     }
     public abstract bool IsShutdown();
     public abstract bool IsShuttingDown();

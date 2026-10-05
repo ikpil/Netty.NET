@@ -61,7 +61,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private int workerCount;
     private const long ZeroWorkerIdleNanos = 10_000_000;
     private readonly IThreadFactory threadFactory;
-    private readonly Action<IRunnable, UnorderedThreadPoolEventExecutor> rejectedHandler;
+    private readonly Action<Action, UnorderedThreadPoolEventExecutor> rejectedHandler;
     private bool gracefulRequested;
     private long gracefulStartNanos;
     private long gracefulActivityNanos;
@@ -95,7 +95,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
      * Calls {@link UnorderedThreadPoolEventExecutor#UnorderedThreadPoolEventExecutor(int,
      * ThreadFactory, java.util.concurrent.RejectedExecutionHandler)} using {@link DefaultThreadFactory}.
      */
-    public UnorderedThreadPoolEventExecutor(int workerCount, Action<IRunnable, UnorderedThreadPoolEventExecutor> handler)
+    public UnorderedThreadPoolEventExecutor(int workerCount, Action<Action, UnorderedThreadPoolEventExecutor> handler)
         : this(workerCount, new DefaultThreadFactory(typeof(UnorderedThreadPoolEventExecutor)), handler) { }
 
     /**
@@ -103,7 +103,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
      */
     // CLR represents the JDK rejection handler as a delegate; it is not Netty's SingleThread rejection handler.
     public UnorderedThreadPoolEventExecutor(int workerCount, IThreadFactory threadFactory,
-        Action<IRunnable, UnorderedThreadPoolEventExecutor> handler)
+        Action<Action, UnorderedThreadPoolEventExecutor> handler)
     {
         if (workerCount < 0) throw new ArgumentOutOfRangeException(nameof(workerCount));
         ArgumentNullException.ThrowIfNull(threadFactory);
@@ -181,11 +181,13 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         return Termination;
     }
 
-    public List<IRunnable> ShutdownNow() => StopCore(true);
+    // Legacy stop diagnostics expose native callbacks over canceled memberships.
+    // StopAsync remains the result-bearing stop API; these callbacks cannot revive work.
+    public List<Action> ShutdownNow() => StopCore(true);
 
-    private List<IRunnable> StopCore(bool returnHandles)
+    private List<Action> StopCore(bool returnHandles)
     {
-        List<IRunnable> tasks;
+        List<Action> tasks;
         Task notifications = null;
         using (UninterruptibleMonitor.Enter(gate))
         {
@@ -200,7 +202,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     notifications = stopSource.CancelAsync();
             }
             Work[] pending = queue.UnorderedItems.Select(item => item.Element).ToArray();
-            tasks = returnHandles ? pending.Select(work => work.outer).ToList() : null;
+            tasks = returnHandles ? pending.Select(work => new Action(work.outer.Run)).ToList() : null;
             // Queue handles are membership, not results. Every removed reservation
             // settles cancellation or releases its raw callback before termination.
             // Canceling a submission can remove itself through its membership
@@ -363,7 +365,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 
     private void Enqueue(Work work)
     {
-        Action<IRunnable, UnorderedThreadPoolEventExecutor> handler;
+        Action<Action, UnorderedThreadPoolEventExecutor> handler;
         using (UninterruptibleMonitor.Enter(gate))
         {
             AdvanceGracefulShutdown();
@@ -379,7 +381,9 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 throw new RejectedExecutionException("Executor has been shut down.");
             handler = rejectedHandler;
         }
-        handler(work.outer, this);
+        // Keep callback claiming/cancellation with the existing queue membership.
+        // A bound Action needs no additional result or replay-envelope object.
+        handler(work.outer.Run, this);
     }
 
     private bool EnsureWorker()
@@ -561,8 +565,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 
     private bool CanRun(Work work)
     {
+        // Like the JDK run-state check, a saved rejection callback cannot start
+        // another invocation after the pool has published its actual termination.
         using (UninterruptibleMonitor.Enter(gate))
-            return !stopping && (!shutdownRequested || work.period == 0);
+            return !stopping && !termination.Task.IsCompleted && (!shutdownRequested || work.period == 0);
     }
     private void ReExecutePeriodic(Work work)
     {

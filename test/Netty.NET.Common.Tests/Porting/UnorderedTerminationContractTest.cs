@@ -148,10 +148,10 @@ public class UnorderedTerminationContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
         var scheduled = executor.ScheduleAsync(() => { }, TimeSpan.FromDays(1));
-        IRunnable saved = Assert.Single(executor.ShutdownNow());
+        Action saved = Assert.Single(executor.ShutdownNow());
         Assert.True(executor.Termination.IsCompletedSuccessfully);
         Assert.Throws<RejectedExecutionException>(() => executor.Execute(Runnables.Empty));
-        saved.Run();
+        saved();
         Assert.True(executor.IsTerminated());
         Assert.Equal(0, executor.PendingTaskCount);
         Assert.True(scheduled.IsCanceled);

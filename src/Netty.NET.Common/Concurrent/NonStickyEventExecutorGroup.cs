@@ -18,7 +18,6 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Concurrent;
@@ -102,7 +101,7 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
     }
 
     //@SuppressWarnings("deprecation")
-    public List<IRunnable> ShutdownNow()
+    public List<Action> ShutdownNow()
     {
         return _group.ShutdownNow();
     }

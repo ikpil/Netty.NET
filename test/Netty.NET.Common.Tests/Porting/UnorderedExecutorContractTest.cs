@@ -132,9 +132,9 @@ public class UnorderedExecutorContractTest
             }, executor.StopToken);
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1));
-            IRunnable reservation = Assert.Single(executor.ShutdownNow());
+            Action reservation = Assert.Single(executor.ShutdownNow());
             Assert.IsNotAssignableFrom<System.Threading.Tasks.Task>(reservation);
-            reservation.Run();
+            reservation();
             Assert.ThrowsAny<OperationCanceledException>(() => running.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.True(running.IsCanceled);
             Assert.True(delayed.IsCanceled);
@@ -258,7 +258,7 @@ public class UnorderedExecutorContractTest
     [Fact]
     public void DiscardingRawRejectionHandlerCannotHideNativeScheduleRejection()
     {
-        IRunnable rejected = null;
+        Action rejected = null;
         UnorderedThreadPoolEventExecutor observed = null;
         var executor = new UnorderedThreadPoolEventExecutor(1, (task, owner) => { rejected = task; observed = owner; });
         Stop(executor);
@@ -800,7 +800,7 @@ public class UnorderedExecutorContractTest
         Assert.Throws<ArgumentOutOfRangeException>(() => new UnorderedThreadPoolEventExecutor(-1));
         Assert.Throws<ArgumentNullException>(() => new UnorderedThreadPoolEventExecutor(1, (IThreadFactory)null));
         Assert.Throws<ArgumentNullException>(() => new UnorderedThreadPoolEventExecutor(1,
-            (Action<IRunnable, UnorderedThreadPoolEventExecutor>)null));
+            (Action<Action, UnorderedThreadPoolEventExecutor>)null));
         Assert.Throws<ArgumentNullException>(() => new UnorderedThreadPoolEventExecutor(1, new Factory(), null));
         var executor = new UnorderedThreadPoolEventExecutor(2);
         try
