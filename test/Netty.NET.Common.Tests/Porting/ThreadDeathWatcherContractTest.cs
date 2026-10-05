@@ -37,7 +37,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
         ThreadDeathWatcher.Unwatch(thread, task);
         thread.Start(); Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         Assert.Throws<ArgumentException>(() => ThreadDeathWatcher.Watch(thread, task));
-        Assert.Throws<ArgumentOutOfRangeException>(() => ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromMilliseconds(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromMilliseconds(-2)));
     }
 
     private sealed class EqualRunnable(Action action) : IRunnable
@@ -186,20 +186,64 @@ public class ThreadDeathWatcherContractTest : IDisposable
     [InlineData(0L)]
     [InlineData(9999L)]
     [InlineData(-1L)]
-    public void ZeroAndSubmillisecondAwaitUseJavaUnboundedJoinSemantics(long ticks)
+    public void InactivityPollsOrBoundsFiniteWaitsAndRejectsNegativeTicks(long ticks)
     {
         using var owner = new LiveThread();
         ThreadDeathWatcher.Watch(owner.Thread, Runnables.Empty);
-        using var entered = new ManualResetEventSlim();
-        using var returned = new ManualResetEventSlim();
+        if (ticks < 0)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromTicks(ticks)));
+            return;
+        }
+        Exception failure = null;
         bool stopped = false;
-        var waiter = new Thread(() => { entered.Set(); stopped = ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromTicks(ticks)); returned.Set(); }) { IsBackground = true };
+        var waiter = new Thread(() =>
+        {
+            try { stopped = ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromTicks(ticks)); }
+            catch (Exception error) { failure = error; }
+        }) { IsBackground = true };
         waiter.Start();
-        Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
-        Assert.False(returned.Wait(TimeSpan.FromMilliseconds(50)));
-        owner.End();
+        try
+        {
+            Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
+            Assert.Null(failure);
+            Assert.False(stopped);
+        }
+        finally { owner.End(); }
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
-        Assert.True(stopped);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void InfiniteInactivityWaitCompletesOrCanBeInterrupted(bool interrupt)
+    {
+        using var owner = new LiveThread();
+        ThreadDeathWatcher.Watch(owner.Thread, Runnables.Empty);
+        Exception failure = null;
+        bool stopped = false;
+        var waiter = new Thread(() =>
+        {
+            try { stopped = ThreadDeathWatcher.AwaitInactivity(Timeout.InfiniteTimeSpan); }
+            catch (Exception error) { failure = error; }
+        }) { IsBackground = true };
+        waiter.Start();
+        try
+        {
+            Assert.False(waiter.Join(TimeSpan.FromMilliseconds(50)));
+            if (interrupt)
+            {
+                waiter.Interrupt();
+                Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
+            }
+        }
+        finally
+        {
+            owner.End();
+            Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
+        }
+        if (interrupt) Assert.IsType<ThreadInterruptedException>(failure);
+        else { Assert.Null(failure); Assert.True(stopped); }
     }
 
     [Fact]

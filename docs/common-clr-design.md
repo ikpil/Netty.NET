@@ -5573,3 +5573,52 @@ excluded; no optimization/throughput claim. Sample scope is in ignored
 artifacts/scheduled-action-validation/allocation-evidence.json. Final matrices,
 identity remap and comment audit are in the current common-porting checkpoint;
 source statuses and broader native/backend/platform completion remain unchanged.
+
+## Native synchronous lifecycle and inactivity waits
+
+Pinned transport ThreadPerChannelEventLoopGroup.java:185-188 and 243-267 still
+uses child shutdown and bounded awaitTermination; ManualIoEventLoop.java:516-523
+and common MultithreadEventExecutorGroup construction cleanup also use synchronous
+lifecycle operations. Keep Shutdown/AwaitTermination where their contracts remain
+useful: a bool state wait does not rethrow a failed Termination Task, and legacy
+shutdown policy is distinct from native StopAsync. Async consumers use the existing
+Task lifecycle; this review does not certify all remaining executor APIs.
+
+GlobalEventExecutor.java:214-223 and ThreadDeathWatcher.java:132-142 capture one
+worker and call Java join(unit.toMillis(timeout)). All-module pinned consumers of
+awaitInactivity consist of these declarations and ThreadDeathWatcherTest.java:112,
+which waits for Long.MAX_VALUE seconds. The earlier compatibility translation
+made zero and every submillisecond value, even a small negative, wait indefinitely.
+A fresh baseline build reproduces this while the worker is deliberately held live.
+These public TimeSpan APIs now use the CLR convention: zero polls, a positive
+duration has a bounded budget, Timeout.InfiniteTimeSpan explicitly waits indefinitely,
+and all other negative values throw ArgumentOutOfRangeException. This intentionally
+changes Java's truncation/zero-join convention, rather than claiming Java equivalence.
+
+One internal ThreadJoin helper validates even an absent watcher, rounds positive
+remaining ticks up to native milliseconds, and shares a monotonic deadline across
+Int32-millisecond chunks. It introduces no thread/Task owner. Interrupts propagate
+through native Join; snapshot-thread ownership, watcher polling/restart/context
+suppression, Global's never-started error and unsupported termination remain.
+The result does not promise that a later producer cannot restart the service.
+Archived comments from the superseded CLR join implementations:
+
+```csharp
+        // CLR adaptation: Java join truncates to milliseconds and treats zero as unbounded.
+        // CLR Join(TimeSpan) instead treats zero as a poll and caps its argument at Int32 milliseconds.
+
+        // Java join truncates to milliseconds, treats zero as unbounded, and
+        // permits waits beyond the CLR Join(Int32) range. Keep those semantics.
+```
+
+Only CLR probes for the former Java zero/submillisecond convention are remapped
+to the native finite/negative contract (two Global and three watcher rows). Four
+new rows cover explicit infinite completion and interruption in both services.
+Existing huge interruptible waits, worker restart/context/identity/registration
+cases and original Java fixture identities/comments remain. A separate identical
+before/after C# consumer exercises cold negative validation, live zero/submillisecond/
+negative/infinite/TimeSpan.MaxValue waits and completed-worker polls. Its blocked
+observers are interrupted for bounded cleanup; production workers are released
+after observation. Evidence: artifacts/inactivity-validation/{before,after}-probe.log.
+No timing precision, allocation or throughput claim; final matrix and comment audit
+are in the current common-porting checkpoint. Broader source/backend review remains open.

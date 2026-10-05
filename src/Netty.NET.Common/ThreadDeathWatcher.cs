@@ -112,26 +112,16 @@ public static class ThreadDeathWatcher
      *
      * @return {@code true} if and only if the watcher thread has been terminated
      */
+    /// <remarks>
+    /// Zero polls the current watcher; <see cref="Timeout.InfiniteTimeSpan"/> waits without a deadline.
+    /// Other negative durations are invalid, even before a watcher starts. Positive durations share
+    /// one bounded wait budget, including durations beyond the CLR Join millisecond range.
+    /// Thread interruption propagates. This does not prevent a subsequent Watch from starting a worker.
+    /// </remarks>
     public static bool AwaitInactivity(TimeSpan timeout)
     {
         Thread worker = Volatile.Read(ref watcherThread);
-        if (worker == null) return true;
-        // Java join truncates to milliseconds, treats zero as unbounded, and
-        // permits waits beyond the CLR Join(Int32) range. Keep those semantics.
-        long milliseconds = timeout.Ticks / TimeSpan.TicksPerMillisecond;
-        if (milliseconds < 0) throw new ArgumentOutOfRangeException(nameof(timeout));
-        if (milliseconds == 0) worker.Join();
-        else
-        {
-            var elapsed = Stopwatch.StartNew();
-            long remaining = milliseconds;
-            while (!worker.Join((int)Math.Min(remaining, int.MaxValue)))
-            {
-                remaining = milliseconds - elapsed.ElapsedMilliseconds;
-                if (remaining <= 0) break;
-            }
-        }
-        return !worker.IsAlive;
+        return ThreadJoin.Join(worker, timeout);
     }
     private sealed class Watcher : IRunnable
     {

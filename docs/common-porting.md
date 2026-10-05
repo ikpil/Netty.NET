@@ -122,40 +122,41 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2143 cases** on Windows/x64/net10.0:
-**2129 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: scheduled-action-full-debug.trx and scheduled-action-full-release.trx.
-All 2142 unaffected prior identities/outcomes and 759 original non-Porting results
-remain unchanged. One CLR-only case is explicitly remapped from retired scheduled
-metadata recovery to copied/composed callback single-invocation ownership; no added
-case, original identity removal/remap or new exclusion. The original AbstractScheduled
-fixture invokes native callbacks with unchanged Java scenarios/comments.
+The current default suite executes **2147 cases** on Windows/x64/net10.0:
+**2133 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: inactivity-full-debug.trx and inactivity-full-release.trx.
+All 2138 unaffected prior identities/outcomes and 759 original non-Porting results
+remain unchanged. Five CLR-only rows are explicitly remapped from the former Java
+zero/submillisecond join convention to native finite/negative TimeSpan contracts;
+four new rows cover explicit infinite completion/interruption in both services.
+No original identity removal/remap, new exclusion or skip change.
 
-IScheduledWork keeps deadline/sequence/cancellation membership without Runnable.
-Its stable Action crosses submission/removal, both protected polling overloads and
-ordered/global/unordered dispatch. Private membership polling preserves capacity
-rollback; result Task/TCS, periodic ID/deadline, context, worker admission/stop and
-suspension-aware removal remain. Targeted Debug/checked Release each pass 191 cases,
-zero failed/skipped. All 271 comment rows have no coverage loss; six source/one test
-owners retain 243/243 comments, and retired CLR bridge comments remain in provenance.
-Inventory/paths, earlier provenance, uppercase declarations and no-new-warning
-identities pass. See common-clr-design.md#native-scheduled-callback-boundary.
+GlobalEventExecutor and ThreadDeathWatcher AwaitInactivity now poll on zero, bound
+positive waits, accept Timeout.InfiniteTimeSpan explicitly and reject all other
+negative durations. A shared internal native Join helper preserves large timeout
+budgets, worker snapshots and interruption. Java comments and original watcher/
+Global scenarios remain. Shutdown/AwaitTermination stay where pinned transport
+consumers and failure/policy differences establish their purpose beside Task-based
+lifecycle APIs. See common-clr-design.md#native-synchronous-lifecycle-and-inactivity-waits.
 
-Identical before/after consumers retain native lazy hook/context/cancel/shared-wakeup
-behavior, using a validation-only old-poll overload for the baseline. A separate
-non-friend consumer uses only C# Action/Task and verifies both typed poll overloads,
-FIFO/context, rollback, multicast single claim, detached cancel and periodic callback/ID.
-Held native scheduling admission remains 424 bytes/call in both hook modes. Release,
-tiered compilation disabled, 5,000 warmups, three 100,000-operation samples/mode/version;
-array/cold setup/new delegates/result observation/execution/drain/cancel/stop/logging/
-real workers excluded; no optimization/throughput claim. Ignored TRX/audit/identity
-results in TestResults, consumer/allocation evidence in artifacts/scheduled-action-validation.
-The prior Global focused xUnit completion stall remains unresolved in its design
-section; current matrices completed. Only three canonical records updated, no new MD.
+Targeted Debug and checked Release each pass 109 cases, zero failed/skipped.
+All 271 comment rows have no coverage loss; the two changed source owners retain
+81/81 original comments, and retired CLR comments remain in existing provenance.
+Pinned 205 source/66 test inventory and paths, earlier provenance, uppercase
+declarations and no-new-source/test-warning identities pass. Identical before/after
+C# consumers reproduce the changed timeout convention, cold watcher validation,
+interruptible infinite/huge waits and completed-worker polling. Ignored evidence:
+inactivity-*.trx/JSON in TestResults and artifacts/inactivity-validation/*-probe.log.
+No timing precision, allocation or throughput claim. Only three canonical records
+updated; no new MD file. The prior focused Global xUnit completion stall remains
+unresolved in its design section; current matrices completed.
+
 Source statuses stay 58 verified / 50 CLR replacement / 15 not applicable /
-66 pending / 16 in progress. Next: synchronous Shutdown/AwaitTermination and remaining
-native producer/backend API review, then outstanding source/native reviews in dependency
-order. Whole common and untested platforms remain open; portable sources build without
+66 pending / 16 in progress. Next: review native Action Watch/Unwatch callback
+ownership against the pinned ReferenceCountUtil producer and watcher registrations,
+preserving duplicate/reference-identity cancellation and worker lifecycle; then
+remaining executor producer/backend and source/native reviews in dependency order.
+Whole common and untested platforms remain open; portable sources build without
 PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
@@ -2046,10 +2047,10 @@ Seven CLR metrics/property tests cover these contracts.
 
 A very large fixed-rate period reproduced ordinary work blocked behind a future
 deadline. Signed-difference comparison, wraparound deadlines and adjustment for an
-overdue queue head now follow the JDK clock arithmetic. Global awaitInactivity follows
-Java's millisecond truncation and zero/unbounded join while chunking waits beyond the
-CLR Int32-millisecond limit; zero/submillisecond and interrupted TimeSpan.MaxValue
-regressions pass.
+overdue queue head now follow the JDK clock arithmetic. At that compatibility checkpoint Global awaitInactivity followed
+Java's millisecond truncation and zero/unbounded join while chunking large waits.
+The current native inactivity checkpoint supersedes the zero/submillisecond convention;
+large interruptible waits remain supported.
 
 Next, migrate remaining plain Future/Promise fixtures and waiting/listener
 facades to the native Task and notification policies, checking pinned consumers

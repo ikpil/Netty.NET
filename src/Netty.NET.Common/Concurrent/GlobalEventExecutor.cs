@@ -229,6 +229,12 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
      *
      * @return {@code true} if and only if the worker thread has been terminated
      */
+    /// <remarks>
+    /// Zero polls the current worker; <see cref="Timeout.InfiniteTimeSpan"/> waits without a deadline.
+    /// Other negative durations are invalid. Positive durations share one bounded wait budget,
+    /// including durations beyond the CLR Join millisecond range. Thread interruption propagates.
+    /// This observes the captured worker and does not prevent another worker from starting.
+    /// </remarks>
     public bool AwaitInactivity(TimeSpan timeout)
     {
         Thread thread = _thread;
@@ -237,31 +243,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
             throw new InvalidOperationException("thread was not started");
         }
 
-        // CLR adaptation: Java join truncates to milliseconds and treats zero as unbounded.
-        // CLR Join(TimeSpan) instead treats zero as a poll and caps its argument at Int32 milliseconds.
-        long milliseconds = timeout.Ticks / TimeSpan.TicksPerMillisecond;
-        if (milliseconds < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(timeout));
-        }
-        if (milliseconds == 0)
-        {
-            thread.Join();
-        }
-        else
-        {
-            var elapsed = Stopwatch.StartNew();
-            long remaining = milliseconds;
-            while (!thread.Join((int)Math.Min(remaining, int.MaxValue)))
-            {
-                remaining = milliseconds - elapsed.ElapsedMilliseconds;
-                if (remaining <= 0)
-                {
-                    break;
-                }
-            }
-        }
-        return !thread.IsAlive;
+        return ThreadJoin.Join(thread, timeout);
     }
 
     public override void Execute(Action task)

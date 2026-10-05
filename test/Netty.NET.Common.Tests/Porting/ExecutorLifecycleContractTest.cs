@@ -761,7 +761,7 @@ public class ExecutorLifecycleContractTest
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
-    public void GlobalInactivityUsesUnboundedJoinForZeroWholeMilliseconds(long ticks)
+    public void GlobalInactivityPollsOrBoundsSubmillisecondWaits(long ticks)
     {
         var executor = GlobalEventExecutor.INSTANCE;
         using var entered = new CountdownEvent(1);
@@ -776,11 +776,15 @@ public class ExecutorLifecycleContractTest
             catch (Exception e) { failure = e; }
         }) { IsBackground = true };
         waiter.Start();
-        try { Assert.False(waiter.Join(TimeSpan.FromMilliseconds(50))); }
+        try
+        {
+            Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
+            Assert.Null(failure);
+            Assert.False(inactive);
+        }
         finally { release.Signal(); }
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
-        Assert.Null(failure);
-        Assert.True(inactive);
+        Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
     }
 
     [Fact]
@@ -804,10 +808,48 @@ public class ExecutorLifecycleContractTest
             waiter.Interrupt();
             Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
             Assert.IsType<ThreadInterruptedException>(failure);
-            Assert.Throws<ArgumentOutOfRangeException>(() => executor.AwaitInactivity(TimeSpan.FromMilliseconds(-1)));
+            Assert.Throws<ArgumentOutOfRangeException>(() => executor.AwaitInactivity(TimeSpan.FromMilliseconds(-2)));
+            Assert.Throws<ArgumentOutOfRangeException>(() => executor.AwaitInactivity(TimeSpan.FromTicks(-1)));
         }
         finally { release.Signal(); }
         Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GlobalInfiniteInactivityWaitCompletesOrCanBeInterrupted(bool interrupt)
+    {
+        var executor = GlobalEventExecutor.INSTANCE;
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        executor.Execute(() => { entered.Set(); release.Wait(); });
+        Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+        Exception failure = null;
+        bool inactive = false;
+        var waiter = new Thread(() =>
+        {
+            try { inactive = executor.AwaitInactivity(Timeout.InfiniteTimeSpan); }
+            catch (Exception error) { failure = error; }
+        }) { IsBackground = true };
+        waiter.Start();
+        try
+        {
+            Assert.False(waiter.Join(TimeSpan.FromMilliseconds(50)));
+            if (interrupt)
+            {
+                waiter.Interrupt();
+                Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
+            }
+        }
+        finally
+        {
+            release.Set();
+            Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
+            Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        }
+        if (interrupt) Assert.IsType<ThreadInterruptedException>(failure);
+        else { Assert.Null(failure); Assert.True(inactive); }
     }
 
     [Theory]
