@@ -5348,3 +5348,41 @@ delegates, exception logging, legacy Runnable producers and context-bearing
 submissions are excluded. No controlled throughput/contention claim. Evidence:
 artifacts/immediate-action-validation/allocation-evidence.json. Shared FastThreadLocal
 and inherited APIs remain under review; Global/NonSticky storage is the next unit.
+
+## Global native Action storage
+
+Pinned GlobalEventExecutor.java:100-148 transfers due memberships without starving
+scheduling behind a busy queue; 278-328 detects the exact quiet-period task before
+idle termination and arbitrates restart through the original CAS checks. Production
+consumers include AutoScalingEventExecutorChooserFactory.java:173-175 monitoring and
+transport AbstractBootstrap.java:531-534 fallback notification. Those contracts
+remain required even before transport exists in C#.
+
+The ready queue is LinkedBlockingQueue<Action> with reference identity; raw callbacks
+invoke directly and scheduled work transfers its cached QueueCallback. A readonly
+quiet callback reference, rather than delegate value equality/target inference,
+preserves quiet-stop recognition. Deadline heap, repeat/cancel ownership, execution
+context, exceptions and restart/CAS policy remain. The private worker runner no
+longer implements Runnable. TakeTask is internal Action: upstream is package-private
+on this sealed single-consumer owner and no real caller outside its runner exists.
+The prior C# public Runnable dequeue was accidental exposure and is intentionally
+removed; external code using it must submit work through native Execute/SubmitAsync.
+
+Two CLR cases cover exact queue callback identity, FIFO after multicast failure,
+native scheduling context/cancel and idle restart. Original busy-queue scheduling,
+thread-group, lifecycle and context fixtures remain. Identical non-friend consumers
+pass before/after. Against fresh 3f9a627 source, Windows/x64/net10.0 Release with tiered
+compilation disabled, 5,000 warmups and three 100,000-operation samples per mode:
+producer-thread admission of reused raw/multicast callbacks costs 72 -> 48 bytes;
+native SubmitAsync(cached Func<int>) admission remains 408 bytes. Linked-list nodes
+are included; a blocked worker is released and each batch drained outside measurement.
+Worker/cold/start/restart allocations, new caller delegates, scheduling, logging and
+context-bearing submissions are excluded; no throughput/contention claim.
+
+One focused Debug repeat running alongside other matrices stalled after 91 results
+and was terminated for diagnosis; it is not a passing run. Stacks/heap show xUnit's
+assembly completion wait without executing Netty work. The cause remains unresolved.
+The final isolated repeat with a 90-second hang watchdog passes all 166 cases;
+both full matrices and checked Release also pass. Captured diagnostic/consumer/cost
+evidence is under artifacts/global-action-validation. Broader runtime/API/platform
+review remains open; NonSticky runner storage/ownership is the next unit.

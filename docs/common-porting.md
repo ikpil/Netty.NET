@@ -122,32 +122,32 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2133 cases** on Windows/x64/net10.0:
-**2119 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: immediate-action-full-debug.trx and immediate-action-full-release.trx.
-All 2130 prior identities/outcomes, every skip and the 759 original non-Porting
-identities/outcomes remain unchanged. Three CLR regressions added; no original
-fixture edits, case removal/remap or new exclusions. ImmediateEventExecutor now
-stores/invokes native Actions, preserving caller-thread FIFO, bounded reentry,
-failure/drain, FastThreadLocal lifetime and native submission context/cancellation.
-See common-clr-design.md#immediate-native-action-storage for pinned consumers,
-design, measured scope and remaining review. Targeted Debug/checked Release each
-pass 148 cases, zero failed/skipped. All 271 comment rows have no coverage loss;
-ImmediateEventExecutor retains 6/6 original comments. Inventory/paths, old provenance,
-uppercase declarations and no-new-warning checks pass. Identical non-friend native
-consumers pass before/after, including concurrent callers and RemoveAll/reuse.
-Warmed allocation: raw/multicast Execute 24 -> 0 bytes/call; outer+64 reentrant
-callbacks 1560 -> 0 bytes/batch; native SubmitAsync/result remains 360 bytes/call.
-Release, tiered compilation disabled, 5,000 warmups, three 100,000-operation samples;
-cold setup/queue growth/fresh caller delegates/logging/context-bearing submissions
-excluded. No throughput/contention claim. Ignored evidence: immediate-action TRX,
-comment audit and identity/inventory summary in TestResults; native consumer and
-allocation records in artifacts/immediate-action-validation. No Markdown files added.
-Source statuses remain 58 verified / 50 CLR replacement / 15 not
-applicable / 66 pending / 16 in progress; this unit does not complete whole files.
-Next: Global/NonSticky Runnable storage, exact runner/quiet callback ownership,
-scheduled/lazy marker APIs and synchronous Shutdown/AwaitTermination. Whole common
-and untested platforms remain open. Full portable sources build without PortingBatch.
+The current default suite executes **2135 cases** on Windows/x64/net10.0:
+**2121 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: global-action-full-debug.trx and global-action-full-release.trx.
+All 2133 prior identities/outcomes, every skip and the 759 original non-Porting
+results remain unchanged. Two CLR regressions added; no original fixture edits or
+new exclusions. Global ready storage/runner uses Action, preserving exact scheduled
+and quiet callback ownership, busy-queue fairness, context/cancel and idle restart.
+TakeTask is internal Action, matching the upstream package-private single consumer.
+Final focused Debug/checked Release each pass 166 cases, zero failed/skipped.
+One parallel focused Debug repeat stalled after 91 results and was terminated;
+diagnostics show xUnit assembly completion waiting without executing Netty work.
+Cause unresolved; that run is not a pass. Final isolated repeat has a 90-second hang
+watchdog. See common-clr-design.md#global-native-action-storage for evidence/limits.
+All 271 comment rows have no coverage loss; Global retains 49/49 original comments.
+Inventory/paths, old provenance, uppercase declarations and no-new-warning checks
+pass. Identical non-friend native consumers pass before/after. Producer-thread queue
+admission allocations: cached raw/multicast 72 -> 48 bytes, native SubmitAsync 408
+unchanged; nodes included, blocked-worker drain/completion excluded. Release, tiered
+compilation disabled, 5,000 warmups, three 100,000-operation samples per mode/version.
+No throughput/contention claim. Ignored TRX/audit/identity evidence in TestResults;
+consumer/allocation/diagnostic evidence in artifacts/global-action-validation.
+Only the three canonical records updated; no new Markdown file. Source statuses stay
+58 verified / 50 CLR replacement / 15 not applicable / 66 pending / 16 in progress.
+Next: NonSticky Action storage and exact runner/pending Task ownership, scheduled/lazy
+marker APIs and synchronous Shutdown/AwaitTermination. Whole common and untested
+platforms remain open. Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.

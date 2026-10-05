@@ -15,12 +15,12 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common.Collections;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -40,9 +40,10 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     public static readonly GlobalEventExecutor INSTANCE;
 
-    private readonly LinkedBlockingQueue<IRunnable> _taskQueue = new(int.MaxValue);
+    private readonly LinkedBlockingQueue<Action> _taskQueue = new(int.MaxValue, ReferenceEqualityComparer.Instance);
 
     private readonly IScheduledWork _quietPeriodTask;
+    private readonly Action _quietPeriodCallback;
 
     // because the GlobalEventExecutor is a singleton, tasks submitted to it can come from arbitrary threads and this
     // can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory must not
@@ -81,6 +82,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
             -SCHEDULE_QUIET_PERIOD_INTERVAL, GetCurrentTimeNanos, () => true,
             task => ScheduleFromEventLoop(task), task => RemoveScheduled(task), captureContext: false
         );
+        _quietPeriodCallback = ExecutorWork.Wrap(_quietPeriodTask);
         ScheduledTaskQueue().TryEnqueue(_quietPeriodTask);
         _threadFactory = ThreadExecutorMap.Apply(new DefaultThreadFactory(
             GetType(), false, ThreadPriority.Normal), this);
@@ -96,15 +98,15 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
      *
      * @return {@code null} if the executor thread has been interrupted or waken up.
      */
-    public IRunnable TakeTask()
+    internal Action TakeTask()
     {
-        LinkedBlockingQueue<IRunnable> taskQueue = _taskQueue;
+        LinkedBlockingQueue<Action> taskQueue = _taskQueue;
         for (;;)
         {
             var scheduledTask = PeekScheduledTask();
             if (scheduledTask == null)
             {
-                IRunnable task = null;
+                Action task = null;
                 try
                 {
                     task = taskQueue.Take();
@@ -119,7 +121,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
             else
             {
                 long delayNanos = scheduledTask.DelayNanos();
-                IRunnable task = null;
+                Action task = null;
                 if (delayNanos > 0)
                 {
                     try
@@ -155,10 +157,10 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     private void FetchFromScheduledTaskQueue()
     {
         long nanoTime = GetCurrentTimeNanos();
-        IRunnable scheduledTask = PollScheduledTask(nanoTime);
+        IScheduledWork scheduledTask = PollScheduledTask(nanoTime);
         while (scheduledTask != null)
         {
-            _taskQueue.Add(scheduledTask);
+            _taskQueue.Add(ExecutorWork.Wrap(scheduledTask));
             scheduledTask = PollScheduledTask(nanoTime);
         }
     }
@@ -175,7 +177,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
      * Add a task to the task queue, or throws a {@link RejectedExecutionException} if this instance was shutdown
      * before.
      */
-    private void AddTask(IRunnable task)
+    private void AddTask(Action task)
     {
         _taskQueue.Add(ObjectUtil.CheckNotNull(task, "task"));
     }
@@ -264,12 +266,6 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
 
     public override void Execute(Action task)
     {
-        IRunnable queuedTask = ExecutorWork.Unwrap(task, nameof(task));
-        Execute0(queuedTask);
-    }
-
-    private void Execute0(IRunnable task)
-    {
         AddTask(ObjectUtil.CheckNotNull(task, "task"));
         if (!InEventLoop())
         {
@@ -316,7 +312,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         t.Start();
     }
 
-    private class TaskRunner : IRunnable
+    private sealed class TaskRunner
     {
         private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(TaskRunner));
 
@@ -331,7 +327,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
         {
             for (;;)
             {
-                IRunnable task = _this.TakeTask();
+                Action task = _this.TakeTask();
                 if (task != null)
                 {
                     try
@@ -343,7 +339,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
                         logger.Warn("Unexpected exception from the global event executor: ", t);
                     }
 
-                    if (task != _this._quietPeriodTask)
+                    if (!ReferenceEquals(task, _this._quietPeriodCallback))
                     {
                         continue;
                     }
