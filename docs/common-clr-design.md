@@ -5386,3 +5386,42 @@ The final isolated repeat with a 90-second hang watchdog passes all 166 cases;
 both full matrices and checked Release also pass. Captured diagnostic/consumer/cost
 evidence is under artifacts/global-action-validation. Broader runtime/API/platform
 review remains open; NonSticky runner storage/ownership is the next unit.
+
+## NonSticky native Action storage and settlement
+
+Pinned NonStickyEventExecutorGroup.java:215-292,336-348 orders queued work, limits
+each batch, retries after runner admission failure and restores executingThread.
+Original tests retain four batch sizes, 10,000 tasks/producer, 5,000 two-submission
+races and reschedule-failure affinity. All-module search finds this public utility
+and its common tests, without another production caller to invent or exclude.
+
+The selected child's Queue<Action> stores/invokes native callbacks under the
+existing gate. Batch reservations still carry admission/stop identity for a real
+underlying queue, separate from user Task ownership; inline handoff/stack bounding,
+thread affinity and stale-runner guards remain. FinishPending snapshots/clears the
+queue under the gate and settles native results outside it. ExecutorWork now shares
+one exact issued-callback check between existing Unwrap and GetNativeSubmission.
+The latter allocates no raw Runnable wrapper and accepts only an assembly-owned
+submission's exact callback. Copies/composed delegates remain caller work, so cancel
+or reject must not infer Task ownership from arbitrary targets. No new result owner,
+callback invocation during settlement, thread-local bridge or public facade is added.
+
+Three CLR cases validate exact versus copied/multicast ownership for stop/reject,
+single settlement after stale runner attempts, and native FIFO/reentry/multicast
+failure across one-task batches. Existing actual pool/forwarded stop, admission
+failure/recovery, context, worker handoff and inline stack cases remain. Identical
+non-friend consumers pass before/after for native callbacks/results and actual pool
+stop. All original fixtures and comments remain; matrices/audits are in the checkpoint.
+
+Against fresh 3bcfd15, Windows/x64/net10.0 Release with tiered compilation disabled:
+queue capacity primed with 100,001 admissions, 5,000 warmups/mode, three 100,000-operation
+samples/mode/version. Behind one held reservation, cached raw/multicast admission is
+24 -> 0 bytes/call; native SubmitAsync(cached Func<int>) admission remains 360 bytes.
+Raw Execute/manual native backend drain per operation, including each fresh runner
+reservation/envelope, is 160 -> 136 bytes. Held-path reservation creation/drain,
+cold setup/capacity growth, fresh caller delegates, result observation, logging and
+shutdown allocation are excluded. No real-worker/throughput/contention claim.
+Evidence: artifacts/nonsticky-action-validation/allocation-evidence.json. The prior
+Global focused xUnit completion stall remains unresolved in its own design section;
+this unit's matrices completed. Scheduled/lazy markers and broader synchronous
+API/runtime/platform review remain open.

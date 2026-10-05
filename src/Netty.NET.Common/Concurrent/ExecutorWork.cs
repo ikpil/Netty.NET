@@ -30,13 +30,24 @@ internal sealed class ExecutorWork
     internal static IRunnable Unwrap(Action command, string parameterName)
     {
         ArgumentNullException.ThrowIfNull(command, parameterName);
+        return GetOwnedWork(command) ?? Runnables.Create(command);
+    }
+
+    internal static INativeSubmission GetNativeSubmission(Action command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return GetOwnedWork(command) as INativeSubmission;
+    }
+
+    private static IRunnable GetOwnedWork(Action command)
+    {
         // A multicast or newly composed delegate is ordinary caller work. Never
         // infer queue ownership from an arbitrary Action target or method name.
         if (command.Target is ExecutorWork entry && ReferenceEquals(command, entry._entry)) return entry._work;
         // Scheduled work is an assembly-owned marker with an exact issued callback.
         // A caller's copy of its Run delegate or a multicast is still ordinary work.
         if (command.Target is ITaskScheduledWork scheduled && ReferenceEquals(command, scheduled.QueueCallback)) return scheduled;
-        return Runnables.Create(command);
+        return null;
     }
 
     internal static void Dispatch(IExecutor executor, IRunnable work) => executor.Execute(Wrap(work));

@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Concurrent;
 
@@ -25,7 +24,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
 {
     private readonly IEventExecutor _executor;
     private readonly object _gate = new();
-    private readonly Queue<IRunnable> tasks = new();
+    private readonly Queue<Action> tasks = new();
     private RunnerReservation _reservation;
     private RunnerReservation _executingReservation;
     private bool _stopped;
@@ -62,7 +61,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                         FinishPending(reservation, null, true);
                         return;
                     }
-                    IRunnable task;
+                    Action task;
                     lock (_gate)
                     {
                         if (_stopped || !ReferenceEquals(_reservation, reservation)) return;
@@ -188,14 +187,13 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
 
     public override void Execute(Action command)
     {
-        IRunnable queuedTask = ExecutorWork.Unwrap(command, nameof(command));
-        ArgumentNullException.ThrowIfNull(queuedTask);
+        ArgumentNullException.ThrowIfNull(command);
         RunnerReservation reservation;
         lock (_gate)
         {
             if (_stopped)
                 throw new RejectedExecutionException("Ordered executor has been stopped.");
-            tasks.Enqueue(queuedTask);
+            tasks.Enqueue(command);
             if (_reservation != null)
                 return;
             reservation = new RunnerReservation(this);
@@ -243,7 +241,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
 
     private void FinishPending(RunnerReservation reservation, Exception error, bool stopped)
     {
-        IRunnable[] pending;
+        Action[] pending;
         lock (_gate)
         {
             if (!ReferenceEquals(_reservation, reservation)) return;
@@ -254,9 +252,9 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         }
         // Native outcomes settle outside the child gate. No caller callback is
         // invoked by these cancellation/rejection hooks.
-        foreach (IRunnable command in pending)
+        foreach (Action command in pending)
         {
-            if (command is INativeSubmission native)
+            if (ExecutorWork.GetNativeSubmission(command) is { } native)
             {
                 if (error == null) native.CancelForShutdown();
                 else native.Reject(error);

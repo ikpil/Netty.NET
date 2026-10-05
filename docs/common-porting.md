@@ -122,31 +122,31 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2135 cases** on Windows/x64/net10.0:
-**2121 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: global-action-full-debug.trx and global-action-full-release.trx.
-All 2133 prior identities/outcomes, every skip and the 759 original non-Porting
-results remain unchanged. Two CLR regressions added; no original fixture edits or
-new exclusions. Global ready storage/runner uses Action, preserving exact scheduled
-and quiet callback ownership, busy-queue fairness, context/cancel and idle restart.
-TakeTask is internal Action, matching the upstream package-private single consumer.
-Final focused Debug/checked Release each pass 166 cases, zero failed/skipped.
-One parallel focused Debug repeat stalled after 91 results and was terminated;
-diagnostics show xUnit assembly completion waiting without executing Netty work.
-Cause unresolved; that run is not a pass. Final isolated repeat has a 90-second hang
-watchdog. See common-clr-design.md#global-native-action-storage for evidence/limits.
-All 271 comment rows have no coverage loss; Global retains 49/49 original comments.
-Inventory/paths, old provenance, uppercase declarations and no-new-warning checks
-pass. Identical non-friend native consumers pass before/after. Producer-thread queue
-admission allocations: cached raw/multicast 72 -> 48 bytes, native SubmitAsync 408
-unchanged; nodes included, blocked-worker drain/completion excluded. Release, tiered
-compilation disabled, 5,000 warmups, three 100,000-operation samples per mode/version.
-No throughput/contention claim. Ignored TRX/audit/identity evidence in TestResults;
-consumer/allocation/diagnostic evidence in artifacts/global-action-validation.
+The current default suite executes **2138 cases** on Windows/x64/net10.0:
+**2124 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: nonsticky-action-full-debug.trx and nonsticky-action-full-release.trx.
+All 2135 prior identities/outcomes, every skip and the 759 original non-Porting
+results remain unchanged. Three CLR cases added; no original fixture edits or new
+exclusions. NonSticky ready storage uses Action; pending stop/reject recovers only
+the exact issued native callback. Original FIFO, batch/retry/thread-affinity and
+native result/context/stop ownership remain. Targeted Debug/checked Release each
+pass 212 cases, zero failed/skipped. All 271 comment rows have no coverage loss;
+NonSticky/shared AbstractEventExecutor owners retain 37/37 comments. Inventory/paths,
+old provenance, uppercase declarations and no-new-warning checks pass. Identical
+non-friend native consumers pass before/after, including actual pool stop/results.
+See common-clr-design.md#nonsticky-native-action-storage-and-settlement.
+Capacity-primed admission behind an existing reservation: raw/multicast 24 -> 0 bytes,
+native SubmitAsync 360 unchanged. Raw Execute/manual drain with fresh reservation is
+160 -> 136 bytes. Release, tiered compilation disabled, 5,000 warmups and three
+100,000-operation samples/mode/version; queue growth/cold setup/result observation/
+logging/shutdown/real-worker costs excluded. No throughput/contention claim.
+Ignored TRX/audit/identity evidence in TestResults; native consumer/allocation evidence
+in artifacts/nonsticky-action-validation. Prior Global focused xUnit completion stall
+remains unresolved in its design section; this unit's matrices completed.
 Only the three canonical records updated; no new Markdown file. Source statuses stay
 58 verified / 50 CLR replacement / 15 not applicable / 66 pending / 16 in progress.
-Next: NonSticky Action storage and exact runner/pending Task ownership, scheduled/lazy
-marker APIs and synchronous Shutdown/AwaitTermination. Whole common and untested
+Next: remaining scheduled/lazy marker APIs and synchronous Shutdown/AwaitTermination,
+then remaining source/native reviews in dependency order. Whole common and untested
 platforms remain open. Full portable sources build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
