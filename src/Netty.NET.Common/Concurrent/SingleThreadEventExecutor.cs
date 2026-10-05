@@ -66,7 +66,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         new Dictionary<Action, LinkedListNode<Action>>();
     private readonly bool _addTaskWakesUp;
     private readonly int _maxPendingTasks;
-    private readonly IRejectedExecutionHandler _rejectedExecutionHandler;
+    private readonly Action<Action, SingleThreadEventExecutor> _rejectedExecutionHandler;
     private readonly bool _supportSuspension;
 
     // A running total of nanoseconds this executor has spent in an "active" state.
@@ -121,7 +121,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      */
     protected SingleThreadEventExecutor(
         IEventExecutorGroup parent, IThreadFactory threadFactory,
-        bool addTaskWakesUp, int maxPendingTasks, IRejectedExecutionHandler rejectedHandler)
+        bool addTaskWakesUp, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, maxPendingTasks, rejectedHandler)
     {
     }
@@ -140,7 +140,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     protected SingleThreadEventExecutor(
         IEventExecutorGroup parent, IThreadFactory threadFactory,
         bool addTaskWakesUp, bool supportSuspension,
-        int maxPendingTasks, IRejectedExecutionHandler rejectedHandler)
+        int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : this(parent, new ThreadPerTaskExecutor(threadFactory).Execute, addTaskWakesUp, supportSuspension,
             maxPendingTasks, rejectedHandler)
     {
@@ -171,7 +171,7 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      */
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, int maxPendingTasks,
-        IRejectedExecutionHandler rejectedHandler)
+        Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : this(parent, executor, addTaskWakesUp, false, maxPendingTasks, rejectedHandler)
     {
     }
@@ -189,14 +189,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      */
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, bool supportSuspension,
-        int maxPendingTasks, IRejectedExecutionHandler rejectedHandler)
+        int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : this(parent, executor, addTaskWakesUp, supportSuspension, maxPendingTasks, rejectedHandler, TimeProvider.System)
     {
     }
 
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, bool supportSuspension,
-        int maxPendingTasks, IRejectedExecutionHandler rejectedHandler, TimeProvider timeProvider)
+        int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler, TimeProvider timeProvider)
         : base(parent, timeProvider)
     {
         _addTaskWakesUp = addTaskWakesUp;
@@ -210,14 +210,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, IQueue<IRunnable> taskQueue,
-        IRejectedExecutionHandler rejectedHandler)
+        Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : this(parent, executor, addTaskWakesUp, false, taskQueue, rejectedHandler)
     {
     }
 
     protected SingleThreadEventExecutor(IEventExecutorGroup parent, Action<Action> executor,
         bool addTaskWakesUp, bool supportSuspension,
-        IQueue<IRunnable> taskQueue, IRejectedExecutionHandler rejectedHandler)
+        IQueue<IRunnable> taskQueue, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : base(parent)
     {
         _addTaskWakesUp = addTaskWakesUp;
@@ -434,7 +434,14 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         }
     }
 
-    public bool OfferTask(IRunnable task)
+    /// <summary>Offers a callback without starting or waking the worker. False means the queue is full.</summary>
+    /// <remarks>Used by synchronous rejection policies. A closed executor throws; retries must reuse the supplied callback.</remarks>
+    public bool OfferTask(Action task)
+    {
+        return OfferTask(ExecutorWork.Unwrap(task, nameof(task)));
+    }
+
+    internal bool OfferTask(IRunnable task)
     {
         if (IsShutdown())
         {
@@ -1284,9 +1291,17 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @param task to reject.
      */
-    protected void Reject(IRunnable task)
+    // CLR transport subclasses can reject native callbacks from their tail queues.
+    protected void Reject(Action task)
     {
-        _rejectedExecutionHandler.Rejected(task, this);
+        Reject(ExecutorWork.Unwrap(task, nameof(task)));
+    }
+
+    private void Reject(IRunnable task)
+    {
+        // Reoffering this exact callback recovers the original payload, including
+        // the identity needed by post-admission shutdown rollback and cancellation.
+        _rejectedExecutionHandler(ExecutorWork.Wrap(task), this);
     }
 
     // ScheduledExecutorService implementation

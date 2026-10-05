@@ -55,14 +55,14 @@ public class DefaultEventExecutorGroup : MultithreadEventExecutorGroup
      * @param rejectedHandler   the {@link RejectedExecutionHandler} to use.
      */
     public DefaultEventExecutorGroup(int nThreads, IThreadFactory threadFactory, int maxPendingTasks,
-        IRejectedExecutionHandler rejectedHandler)
+        Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : base(nThreads, threadFactory, maxPendingTasks, rejectedHandler)
     {
     }
 
     protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
     {
-        return new DefaultEventExecutor(this, executor, (int)args[0], (IRejectedExecutionHandler)args[1]);
+        return new DefaultEventExecutor(this, executor, (int)args[0], (Action<Action, SingleThreadEventExecutor>)args[1]);
     }
 
 }

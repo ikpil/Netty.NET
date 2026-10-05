@@ -1337,13 +1337,16 @@
       "implementation": [
         "src/Netty.NET.Common/Concurrent/DefaultEventExecutor.cs",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeRejectionContractTest.cs"
       ],
       "evidence": [
         "All eight constructors and the run/take/update/confirm loop match the pinned source. Default-group and shutdown lifecycle tests pass.",
         "Native provider selection: pinned EmbeddedEventLoop.java clock injection/explicit pump and ManualIoEventLoop.java:145-154 manual wakeup contract reviewed. Ticker.FromTimeProvider, protected ordered scheduler/core constructor and public DefaultEventExecutor(TimeProvider) preserve executor-owned scheduling. Eleven provider rows and existing clock/scheduling/metrics/lifecycle cases pass in 166 affected Debug cases; provider-clock-affected-debug.trx. Final matrix/audit evidence is recorded in docs/common-porting.md.",
         "Final Debug/Release each 1442 passed/zero failed/14 unchanged skips (1456 discovered), with 759 original identities retained and eleven CLR provider rows added; provider-clock-identity-comparison.json. All 107 reviewed comment entries have zero missing; changed seven sources retain 175 comments, and all 271 inventory paths match. Windows/net10.0 only.",
-        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md.",
+        "Native bounded rejection: pinned RejectedExecutionHandlers.java:49-74, SingleThreadEventExecutor.java:400-417/1138-1148 and SingleThreadEventLoop.java:130-149 establish synchronous capacity policy, bounded off-loop wake/park/reoffer and protected tail rejection. NativeRejectionContractTest verifies retained queue identity, exception origin, admission/bootstrap and CLR TimeSpan/interrupt behavior; Java/native before-after/mutation probes and final matrices are recorded in docs/common-porting.md and ignored artifacts/rejection-action-validation. No original fixture changes or broader module completion claim.",
+        "Final default Debug/Release each 2109 discovered, 2095 passed, zero failed, 14 unchanged skips; all 2096 prior identities/outcomes and 759 original non-Porting cases retained. Targeted Debug/checked Release each 43 pass. Identity-removal mutant fails the actual shutdown rollback scenario; native/Java probes agree on retained policy contracts. Comment coverage has no loss across all 271 entries. Raw capacity rejection adds 96 steady bytes for the replay envelope; no optimization/throughput claim. docs/common-porting.md current checkpoint; rejection-action-identity-and-inventory.json."
       ],
       "adaptation": "Uses the documented native-thread and blocking-queue support adapters.",
       "comments": {
@@ -1354,7 +1357,7 @@
       },
       "nativeDesignReview": {
         "status": "in-progress",
-        "evidence": "Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary"
+        "evidence": "Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary Native bounded rejection configuration now uses Action<Action, SingleThreadEventExecutor>; native OfferTask/replay and tail Reject retain capacity and queue-identity rollback. Protected queue/JDK and wider runtime APIs remain open. docs/common-clr-design.md#native-bounded-rejection-callbacks"
       }
     },
     {
@@ -1384,11 +1387,14 @@
       "implementation": [
         "src/Netty.NET.Common/Concurrent/DefaultEventExecutorGroup.cs",
         "docs/common-clr-design.md",
-        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeRejectionContractTest.cs"
       ],
       "evidence": [
         "Constructor argument forwarding and newChild reviewed. Remove incorrect shutdownNow override so inherited shutdown behavior runs. Parented-worker and upstream invalid-group tests pass.",
-        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md."
+        "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md.",
+        "Native bounded rejection: pinned RejectedExecutionHandlers.java:49-74, SingleThreadEventExecutor.java:400-417/1138-1148 and SingleThreadEventLoop.java:130-149 establish synchronous capacity policy, bounded off-loop wake/park/reoffer and protected tail rejection. NativeRejectionContractTest verifies retained queue identity, exception origin, admission/bootstrap and CLR TimeSpan/interrupt behavior; Java/native before-after/mutation probes and final matrices are recorded in docs/common-porting.md and ignored artifacts/rejection-action-validation. No original fixture changes or broader module completion claim.",
+        "Final default Debug/Release each 2109 discovered, 2095 passed, zero failed, 14 unchanged skips; all 2096 prior identities/outcomes and 759 original non-Porting cases retained. Targeted Debug/checked Release each 43 pass. Identity-removal mutant fails the actual shutdown rollback scenario; native/Java probes agree on retained policy contracts. Comment coverage has no loss across all 271 entries. Raw capacity rejection adds 96 steady bytes for the replay envelope; no optimization/throughput claim. docs/common-porting.md current checkpoint; rejection-action-identity-and-inventory.json."
       ],
       "adaptation": "Uses the documented multithread group support; scaling extension methods in the superclass remain in progress.",
       "comments": {
@@ -1399,7 +1405,7 @@
       },
       "nativeDesignReview": {
         "status": "in-progress",
-        "evidence": "Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary"
+        "evidence": "Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary Native bounded rejection configuration now uses Action<Action, SingleThreadEventExecutor>; native OfferTask/replay and tail Reject retain capacity and queue-identity rollback. Protected queue/JDK and wider runtime APIs remain open. docs/common-clr-design.md#native-bounded-rejection-callbacks"
       }
     },
     {
@@ -2439,36 +2445,55 @@
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/RejectedExecutionHandler.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Concurrent/IRejectedExecutionHandler.cs",
-        "src/Netty.NET.Common/Concurrent/RejectedExecutionHandler.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/RejectedExecutionHandlers.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeRejectionContractTest.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Native bounded rejection: pinned RejectedExecutionHandlers.java:49-74, SingleThreadEventExecutor.java:400-417/1138-1148 and SingleThreadEventLoop.java:130-149 establish synchronous capacity policy, bounded off-loop wake/park/reoffer and protected tail rejection. NativeRejectionContractTest verifies retained queue identity, exception origin, admission/bootstrap and CLR TimeSpan/interrupt behavior; Java/native before-after/mutation probes and final matrices are recorded in docs/common-porting.md and ignored artifacts/rejection-action-validation. No original fixture changes or broader module completion claim.",
+        "Final default Debug/Release each 2109 discovered, 2095 passed, zero failed, 14 unchanged skips; all 2096 prior identities/outcomes and 759 original non-Porting cases retained. Targeted Debug/checked Release each 43 pass. Identity-removal mutant fails the actual shutdown rollback scenario; native/Java probes agree on retained policy contracts. Comment coverage has no loss across all 271 entries. Raw capacity rejection adds 96 steady bytes for the replay envelope; no optimization/throughput claim. docs/common-porting.md current checkpoint; rejection-action-identity-and-inventory.json."
+      ],
+      "adaptation": "Standard Action<Action, SingleThreadEventExecutor> replaces the Java functional interface and port-only implementation classes. Actual bounded admission and transport tail-queue policies remain; the replay callback preserves rejected payload identity. Original interface license and comments are archived in the canonical design document. JDK unordered rejection callbacks are a separate open surface.",
       "comments": {
         "upstreamCount": 3,
-        "required": true,
-        "preservedCount": 2,
-        "missingCount": 1
+        "required": false,
+        "preservedCount": 3,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Native constructors/policies, synchronous caller behavior, real queue replay/rollback and pinned comment provenance; docs/common-clr-design.md#native-bounded-rejection-callbacks. Windows/x64/net10.0 validation only."
       }
     },
     {
       "upstream": "common/src/main/java/io/netty/util/concurrent/RejectedExecutionHandlers.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/Concurrent/RejectedExecutionHandlers.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/Concurrent/RejectedExecutionHandlers.cs",
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeRejectionContractTest.cs"
+      ],
+      "evidence": [
+        "Native bounded rejection: pinned RejectedExecutionHandlers.java:49-74, SingleThreadEventExecutor.java:400-417/1138-1148 and SingleThreadEventLoop.java:130-149 establish synchronous capacity policy, bounded off-loop wake/park/reoffer and protected tail rejection. NativeRejectionContractTest verifies retained queue identity, exception origin, admission/bootstrap and CLR TimeSpan/interrupt behavior; Java/native before-after/mutation probes and final matrices are recorded in docs/common-porting.md and ignored artifacts/rejection-action-validation. No original fixture changes or broader module completion claim.",
+        "Final default Debug/Release each 2109 discovered, 2095 passed, zero failed, 14 unchanged skips; all 2096 prior identities/outcomes and 759 original non-Porting cases retained. Targeted Debug/checked Release each 43 pass. Identity-removal mutant fails the actual shutdown rollback scenario; native/Java probes agree on retained policy contracts. Comment coverage has no loss across all 271 entries. Raw capacity rejection adds 96 steady bytes for the replay envelope; no optimization/throughput claim. docs/common-porting.md current checkpoint; rejection-action-identity-and-inventory.json."
+      ],
+      "adaptation": "Reject and Backoff return native delegates. Positive retry count remains required; off-loop wake/offer attempts are bounded, on-loop rejection does not wait. TimeSpan tick arithmetic and chunked monotonic waits replace floating nanosecond conversion; non-positive parks return immediately and consumed CLR interrupts are restored. All original comments remain by the implementation. CLR Sleep rounds positive waits to milliseconds; no sub-millisecond precision claim.",
       "comments": {
         "upstreamCount": 7,
         "required": true,
-        "preservedCount": 1,
-        "missingCount": 6
+        "preservedCount": 7,
+        "missingCount": 0
+      },
+      "nativeDesignReview": {
+        "status": "verified",
+        "evidence": "Exact pinned factory sources exercised through Java shims, original all-module constructor/tail consumers reviewed, CLR negative/extreme/interrupt behavior and bounded native policies tested; docs/common-clr-design.md#native-bounded-rejection-callbacks. Windows/x64/net10.0 only."
       }
     },
     {
@@ -2563,7 +2588,8 @@
         "test/Netty.NET.Common.Tests/Porting/WorkerBootstrapContractTest.cs",
         "src/Netty.NET.Common/Concurrent/ExecutorWork.cs",
         "test/Netty.NET.Common.Tests/Porting/QueuedActionContractTest.cs",
-        "test/Netty.NET.Common.Tests/Porting/NativeShutdownHookContractTest.cs"
+        "test/Netty.NET.Common.Tests/Porting/NativeShutdownHookContractTest.cs",
+        "test/Netty.NET.Common.Tests/Porting/NativeRejectionContractTest.cs"
       ],
       "adaptation": "Interlocked/Volatile replace field updaters. Uninterruptible monitor entry restores consumed interrupts. Timed waits chunk Int32 millisecond limits. ThreadProperties exposes CLR state/id/priority; remote stack and non-destructive interrupt-flag queries throw NotSupportedException. Postmortem priority/daemon values use last observed snapshots. Private non-generic TaskCompletionSource is the sole lifecycle result owner. The persistent Task follows terminal-state publication/cleanup or preserves the original start/worker failure; user continuations run asynchronously. Complete backend/source/platform review remains in progress. Active-time reporting uses Interlocked.Add against the monitor Interlocked.Exchange; volatile read/add/write duplicated consumed samples. Original single event-loop reporting ownership remains. Fatal shutdown-startup failures use bare throw after faulting Termination, preserving original exception identity and origin. Worker bootstrap is native Action<Action>. Timed task drain compares elapsed time rather than an overflowing absolute deadline.",
       "evidence": [
@@ -2588,12 +2614,14 @@
         "Native worker bootstrap: pinned ThreadPerTaskExecutor.java:23-34, SingleThreadEventExecutor.java:225/244/1197-1198 and MultithreadEventExecutorGroup.java:79-88/186 dispatch worker entries. Bootstrap constructors and NewChild now use Action<Action>; source queue/result APIs remain separate. WorkerBootstrapContractTest covers actual mapped single/group workers, fresh Threads and synchronous native failures; original fixture assertions/comments stay intact. docs/common-clr-design.md#native-worker-bootstrap-boundary; final matrices and original identity preservation are recorded in docs/common-porting.md.",
         "Checked Release exposed timed-drain deadline addition overflow. Exact pinned arithmetic/cutoff predicate yields an early 64-task cutoff for Long.MAX_VALUE at clock 320; CLR elapsed-budget comparison preserves intended huge-budget work without overflow. Four extreme/zero/negative budget rows and the unchanged failed metric row verify the repair; docs/common-clr-design.md#native-worker-bootstrap-boundary",
         "Native queued execution: public Execute/LazyExecute and callback decoration now use Action; real stateful producers cross the virtual hook through an internal identity-preserving envelope. Existing queue/cancellation/runner policies and original comments remain. QueuedActionContractTest and a separate non-friend native consumer verify public shape, forwarding, multicast and hooks; docs/common-clr-design.md#native-queued-action-execution",
-        "Native shutdown hooks: pinned SingleThreadEventExecutor.java:99/729-784 and LocalChannel.java:494/555/563, LocalServerChannel.java:230/251/259 establish ordered loop-confined close callbacks. Action with native Dictionary/LinkedList preserves indexed membership, deduplication, snapshot mutation, exception isolation and captured-object release with CLR delegate equality and explicit null validation. Seven native cases, pinned Java method probe and identical before/after non-friend consumer verify contracts. Targeted Debug/checked Release each 30 pass; default Debug/Release each 2082 pass, zero fail, 14 unchanged skips; all prior identities/comments retained. Real queued hook edits reduce steady allocation by 96 bytes/edit; SubmitAsync envelope and broader queue/rejection/JDK review remain open. docs/common-clr-design.md#native-shutdown-hook-delegates"
+        "Native shutdown hooks: pinned SingleThreadEventExecutor.java:99/729-784 and LocalChannel.java:494/555/563, LocalServerChannel.java:230/251/259 establish ordered loop-confined close callbacks. Action with native Dictionary/LinkedList preserves indexed membership, deduplication, snapshot mutation, exception isolation and captured-object release with CLR delegate equality and explicit null validation. Seven native cases, pinned Java method probe and identical before/after non-friend consumer verify contracts. Targeted Debug/checked Release each 30 pass; default Debug/Release each 2082 pass, zero fail, 14 unchanged skips; all prior identities/comments retained. Real queued hook edits reduce steady allocation by 96 bytes/edit; SubmitAsync envelope and broader queue/rejection/JDK review remain open. docs/common-clr-design.md#native-shutdown-hook-delegates",
+        "Native bounded rejection: pinned RejectedExecutionHandlers.java:49-74, SingleThreadEventExecutor.java:400-417/1138-1148 and SingleThreadEventLoop.java:130-149 establish synchronous capacity policy, bounded off-loop wake/park/reoffer and protected tail rejection. NativeRejectionContractTest verifies retained queue identity, exception origin, admission/bootstrap and CLR TimeSpan/interrupt behavior; Java/native before-after/mutation probes and final matrices are recorded in docs/common-porting.md and ignored artifacts/rejection-action-validation. No original fixture changes or broader module completion claim.",
+        "Final default Debug/Release each 2109 discovered, 2095 passed, zero failed, 14 unchanged skips; all 2096 prior identities/outcomes and 759 original non-Porting cases retained. Targeted Debug/checked Release each 43 pass. Identity-removal mutant fails the actual shutdown rollback scenario; native/Java probes agree on retained policy contracts. Comment coverage has no loss across all 271 entries. Raw capacity rejection adds 96 steady bytes for the replay envelope; no optimization/throughput claim. docs/common-porting.md current checkpoint; rejection-action-identity-and-inventory.json."
       ],
       "status": "in-progress",
       "nativeDesignReview": {
         "status": "in-progress",
-        "evidence": "Native StopAsync closes admission, drains accepted invocations and cancels schedules; it can escalate a graceful quiet period. Pinned legacy entry points remain non-escalating. CAS uses the checked state snapshot to prevent reopening admission. Remaining ordered runtime/backend review stays open. Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary Native Action execution entry-point reviewed; retained queue hooks, other legacy APIs and wider runtime review remain open. docs/common-clr-design.md#native-queued-action-execution Shutdown hook Action/Dictionary/LinkedList review preserves actual local transport lifetime and snapshot contracts; remaining queue/rejection/JDK surfaces stay open. docs/common-clr-design.md#native-shutdown-hook-delegates"
+        "evidence": "Native StopAsync closes admission, drains accepted invocations and cancels schedules; it can escalate a graceful quiet period. Pinned legacy entry points remain non-escalating. CAS uses the checked state snapshot to prevent reopening admission. Remaining ordered runtime/backend review stays open. Worker-entry dispatch now uses Action<Action> with actual constructors/child hooks and physical mapping. Remaining queued API/runtime review stays open; docs/common-clr-design.md#native-worker-bootstrap-boundary Native Action execution entry-point reviewed; retained queue hooks, other legacy APIs and wider runtime review remain open. docs/common-clr-design.md#native-queued-action-execution Shutdown hook Action/Dictionary/LinkedList review preserves actual local transport lifetime and snapshot contracts; remaining queue/rejection/JDK surfaces stay open. docs/common-clr-design.md#native-shutdown-hook-delegates Native bounded rejection configuration now uses Action<Action, SingleThreadEventExecutor>; native OfferTask/replay and tail Reject retain capacity and queue-identity rollback. Protected queue/JDK and wider runtime APIs remain open. docs/common-clr-design.md#native-bounded-rejection-callbacks"
       },
       "comments": {
         "upstreamCount": 128,

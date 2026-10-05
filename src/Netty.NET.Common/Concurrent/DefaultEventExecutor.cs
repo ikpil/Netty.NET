@@ -67,12 +67,12 @@ public sealed class DefaultEventExecutor : SingleThreadEventExecutor
     {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory, int maxPendingTasks, IRejectedExecutionHandler rejectedExecutionHandler)
+    public DefaultEventExecutor(IEventExecutorGroup parent, IThreadFactory threadFactory, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
         : base(parent, threadFactory, true, maxPendingTasks, rejectedExecutionHandler)
     {
     }
 
-    public DefaultEventExecutor(IEventExecutorGroup parent, Action<Action> executor, int maxPendingTasks, IRejectedExecutionHandler rejectedExecutionHandler)
+    public DefaultEventExecutor(IEventExecutorGroup parent, Action<Action> executor, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
         : base(parent, executor, true, maxPendingTasks, rejectedExecutionHandler)
     {
     }

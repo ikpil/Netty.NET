@@ -4669,3 +4669,152 @@ substituted for the real-queue result. This does not fix the prior +96-byte
 SubmitAsync envelope cost. Broader queue/rejection/JDK API review remains open.
 Records: artifacts/shutdown-hook-validation (ignored), linked from the current
 common-porting checkpoint; verification outcomes are recorded there after checks.
+
+## Native bounded rejection callbacks
+
+Pinned SingleThreadEventExecutor.java:400-417/1138-1148 runs a synchronous policy
+only for capacity failure; shutdown throws directly. RejectedExecutionHandlers.java:
+49-74 wakes, parks and offers at most the configured number of retries, never
+waiting on the event loop. SingleThreadEventLoop.java:130-149 rejects tail tasks
+through the same protected hook. DefaultEventExecutorGroup passes the policy to
+each child; transport constructors expose the same configuration. The all-module
+search finds no original Netty caller of backoff, but the original public policy
+is useful bounded admission behavior and is retained. JDK rejection callbacks in
+UnorderedThreadPoolEventExecutor are a separate remaining surface.
+
+Single-thread and default/group constructors now accept the standard
+Action<Action, SingleThreadEventExecutor>. Reject/Backoff factories return that
+delegate; the Java functional interface and two port-only implementation classes
+are removed. Public OfferTask(Action) does not start or wake a worker. False means
+capacity failure; shutdown still throws. Protected Reject(Action) supports real
+transport tail-queue consumers. Protected IRunnable queue hooks remain separate
+pending work; there is no second public rejection configuration API.
+
+The policy receives a replay callback for the actual queue payload. It is opaque,
+not necessarily the caller's original delegate object. Reuse it unchanged with
+OfferTask to retain stateful submission/schedule identity across admission and
+post-start shutdown rollback; invoking it is an explicit caller-runs policy.
+Composed/multicast callbacks remain ordinary new work, as at Execute. Policies
+run on the submitting thread and may throw, forward or deliberately discard raw
+work; returning without executing/queuing a result-bearing task can leave its
+Task pending as in the original policy contract. No new result owner or per-raw
+callback ExecutionContext capture is introduced. Synchronous Execute throws the
+original policy exception; SubmitAsync reports it through its existing Task.
+
+Backoff uses TimeSpan ticks and monotonic elapsed time. Non-positive durations
+return immediately, matching parkNanos; positive durations round up to the CLR
+millisecond Sleep granularity and chunk at int.MaxValue without floating-point
+nanosecond overflow. A consumed CLR ThreadInterruptedException is restored and
+the park returns early, matching the original pending Java interrupt behavior.
+This is not per-submission cooperative cancellation, an interrupt-based executor
+shutdown mechanism or a sub-millisecond precision claim. Spurious early Java
+returns have no deterministic CLR counterpart; policy retry counts remain bounded.
+
+NativeRejectionContractTest validates bounded capacity, off/on-loop policy dispatch,
+retry success/exhaustion, negative/extreme durations, interrupt retention, native
+offer/bootstrap/closed-admission behavior, exception identity and shutdown rollback.
+No original fixture/assertion/comment changes. A Java probe compiles both exact
+pinned policy sources against queue/wakeup shims, covering retry and interrupt
+traces. CLR before/after compatibility probes isolate the prior Sleep/time-conversion
+defects; independent native consumers validate delegate-only construction and tail
+rejection. Results, allocation tradeoffs and the next queue API work are recorded
+in the current checkpoint. Whole common and broader runtime reviews remain open.
+
+Replaced RejectedExecutionHandler.java: the original functional-interface license
+and documentation remain here because a BCL delegate has no source body to host them:
+
+```java
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package io.netty.util.concurrent;
+
+/**
+ * Similar to {@link java.util.concurrent.RejectedExecutionHandler} but specific to {@link SingleThreadEventExecutor}.
+ */
+public interface RejectedExecutionHandler {
+
+    /**
+     * Called when someone tried to add a task to {@link SingleThreadEventExecutor} but this failed due capacity
+     * restrictions.
+     */
+    void rejected(Runnable task, SingleThreadEventExecutor executor);
+}
+
+```
+
+Prior port comment provenance for retired interface/link spellings (not current APIs):
+
+```csharp
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+using Netty.NET.Common.Functional;
+
+namespace Netty.NET.Common.Concurrent;
+
+/**
+ * Similar to {@link java.util.concurrent.IRejectedExecutionHandler} but specific to {@link SingleThreadEventExecutor}.
+ */
+public interface IRejectedExecutionHandler
+{
+    /**
+     * Called when someone tried to add a task to {@link SingleThreadEventExecutor} but this failed due capacity
+     * restrictions.
+     */
+    void Rejected(IRunnable task, SingleThreadEventExecutor executor);
+}
+```
+
+```csharp
+/**
+ * Expose helper methods which create different {@link IRejectedExecutionHandler}s.
+ */
+/**
+ * Returns a {@link IRejectedExecutionHandler} that will always just throw a {@link RejectedExecutionException}.
+ */
+/**
+ * Tries to backoff when the task can not be added due restrictions for an configured amount of time. This
+ * is only done if the task was added from outside of the event loop which means
+ * {@link IEventExecutor#inEventLoop()} returns {@code false}.
+ */
+//LockSupport.parkNanos(backOffNanos);
+// 100
+```
+
+Rejection allocation tradeoff (Windows/x64/net10.0 Release): real 16-slot
+DefaultEventExecutor queue with a blocked worker, static raw command, counting
+discard policy, 5,000 warmups and three 100,000-operation samples. Prior d503bcc
+allocates approximately 24 bytes/rejection; native replay callbacks allocate 120,
+a steady additional 96 bytes for ExecutorWork/Action. This deliberately isolates
+capacity rejection without exception or Task costs. Accepted execution is not
+measured by this probe. Queue fullness/policy counts and eventual drain are checked;
+elapsed times are retained without a controlled throughput claim. Preserve the
+rollback/virtual-hook contract while reducing the adapter during the remaining
+queue migration; no allocation-free or fully optimized claim. Ignored evidence:
+artifacts/rejection-action-validation/allocation-evidence.json.
