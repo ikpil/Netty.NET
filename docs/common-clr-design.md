@@ -5142,3 +5142,66 @@ consumer/perf evidence: artifacts/stop-api-validation/allocation-evidence.json.
 Raw rejection and ordered replay/SubmitAsync callback costs remain; the deleted
 legacy returned-handle path no longer exists. Broader API/queue/common review
 remains open. Earlier legacy-list callback sections describe historical checkpoints.
+
+## Required queue membership and native empty queues
+
+The protected executor queue review exposes a lower shared-boundary problem:
+IQueue<T>.Drain(IConsumer<T>, int) and the public Collections.BlockingMessageQueue
+were inherited/port-only message-passing additions, without original Netty callers.
+Pinned DefaultPriorityQueue/EmptyPriorityQueue and PriorityQueue extend Java Queue;
+they do not expose JCTools drain. Recycler.java:557-615 uses relaxedPoll/relaxedOffer,
+size and clear; its private BlockingMessageQueue implements extra JCTools methods
+but no original pool consumer calls drain. Its CLR ReturnQueue and private monitor
+queue already preserve the real pool contract. This private implementation and
+all original Recycler comments remain; the unrelated public duplicate, including
+its NotImplementedException removal stub, is deleted. Shared Drain and the unused
+IConsumer functional interface are retired rather than changed into an unused
+native delegate API. MpscIntQueue's required Drain(int, Action<int>) is separate
+and unchanged. Needed enqueue/dequeue/peek/remove/count/clear and blocking waits
+remain; their atomic membership/finite capacity requirements justify the existing
+queue adapter. No wholesale BCL Queue substitution is claimed.
+
+EmptyPriorityQueue has a real codec-http2 consumer: WeightedFairQueueByteDistributor
+lines 97-106 chooses it when maxStateOnlySize is zero; 127/171-219/249-250/376 use
+typed removal, size, peek/poll/add and priority updates. The native IPriorityQueue
+provides these through Count, TryPeek/TryDequeue/TryEnqueue and typed operations.
+Reference equality at 739-744 determines per-queue node index ownership. The empty
+queue never admits/owns a node and cannot change another queue's stored index.
+Its clear/priority operations deliberately do nothing because caching is disabled;
+this is required disabled behavior, not a missing implementation hidden as success.
+
+The Java singleton is globally shared via an unchecked generic cast; CLR types
+are reified and each T has an immutable typed singleton. No mutable registry or
+global counter is needed. Native Try methods distinguish absent entries from
+default(T), including zero-valued structs. Redundant Size/Offer/Poll/Peek/Element
+and no-argument Remove aliases are retired; bool Try operations carry the required
+contract. Java's equals considers any empty PriorityQueue equal, while a mutable
+queue uses object identity, making equality asymmetric. The exact pinned class
+probe confirms this. No original consumer uses this content equality; actual
+node-index owners use reference equality. CLR empty/mutable queues now both use
+object identity, preserving symmetric equality and stable dictionary keys across
+queue mutations. ToString uses the original simple name without CLR arity suffix.
+This is an intentional documented equality adaptation, not Java parity.
+
+Four CLR cases cover required surface, native delegate capacity/FIFO/first removal,
+value-type absence and stable identity keys/foreign node indices. The initial key
+test supplied a plain object to the indexed heap and correctly failed; the fixture
+now uses an indexed node, without weakening heap admission. All existing original
+fixtures remain unchanged. Before/after native and pinned Java probes plus final
+matrices and allocation evidence are recorded in common-porting.md and ignored
+artifacts/queue-surface-validation. Empty source/native review is scoped complete;
+protected executor IRunnable storage/hooks, wider queue costs and common/platform
+review remain open. No new Markdown file or public drain adapter is added.
+
+Final queue validation: default Debug/Release each 2,124 cases with 2,110 passed,
+zero failed and the same 14 skips; targeted Debug/checked Release each 214 cases
+with 206 passed and eight existing Recycler skips. All 2,120 prior outcomes and
+759 original non-Porting cases remain unchanged; four native queue cases added.
+All 271 comment rows have no coverage loss, including 79/79 scoped owner comments.
+The identical native consumer and exact Java probe support the stated membership,
+disabled-cache and intentional CLR equality policies. Immutable empty membership
+allocates zero bytes before/after: Release, tiered compilation disabled, 5,000
+warmups and three 100,000-operation samples. No executor/Recycler allocation or
+controlled throughput claim. Evidence: queue-surface-identity-and-inventory.json
+and artifacts/queue-surface-validation/allocation-evidence.json. Empty review is
+complete on Windows/x64/net10.0; protected executor hooks and broader review remain.

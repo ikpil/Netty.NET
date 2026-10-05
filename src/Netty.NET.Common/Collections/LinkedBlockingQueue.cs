@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using Netty.NET.Common.Functional;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Common.Collections;
@@ -132,17 +131,5 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
             queue.Clear();
             Volatile.Write(ref count, 0);
         }
-    }
-
-    public int Drain(IConsumer<T> consumer, int limit)
-    {
-        ArgumentNullException.ThrowIfNull(consumer);
-        int count = 0;
-        while (count < limit && TryTake(out T item))
-        {
-            consumer.Accept(item);
-            ++count;
-        }
-        return count;
     }
 }

@@ -19,12 +19,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Internal;
 
 public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
 {
+    // CLR generic types cannot share Java's erased, unchecked-cast singleton.
+    // Each closed T has one immutable instance; queues use object identity.
     private static readonly EmptyPriorityQueue<T> INSTANCE = new EmptyPriorityQueue<T>();
 
     public int Count => 0;
@@ -55,11 +56,6 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
     {
     }
 
-    public int Size()
-    {
-        return 0;
-    }
-
     public bool IsEmpty()
     {
         return true;
@@ -72,41 +68,6 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
 
     public void ClearIgnoringIndexes()
     {
-    }
-
-    public override bool Equals(object o)
-    {
-        return o is IPriorityQueue<T> q && q.IsEmpty();
-    }
-
-    public override int GetHashCode()
-    {
-        return 0;
-    }
-
-    public bool Offer(T t)
-    {
-        return false;
-    }
-
-    public T Remove()
-    {
-        throw new InvalidOperationException();
-    }
-
-    public T Poll()
-    {
-        return default;
-    }
-
-    public T Element()
-    {
-        throw new InvalidOperationException();
-    }
-
-    public T Peek()
-    {
-        return default;
     }
 
     public IEnumerator<T> GetEnumerator()
@@ -145,13 +106,8 @@ public sealed class EmptyPriorityQueue<T> : IPriorityQueue<T>
     {
     }
 
-    public int Drain(IConsumer<T> consumer, int limit)
-    {
-        return 0;
-    }
-
     public override string ToString()
     {
-        return typeof(EmptyPriorityQueue<T>).Name;
+        return nameof(EmptyPriorityQueue<T>);
     }
 }

@@ -17,7 +17,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Netty.NET.Common.Functional;
 
 namespace Netty.NET.Common.Internal;
 
@@ -99,19 +98,6 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         for (int i = 0; i < _count; i++) SetIndex(_items[i], -1);
         Array.Clear(_items, 0, _count);
         _count = 0;
-    }
-
-    public int Drain(IConsumer<T> consumer, int limit)
-    {
-        ObjectUtil.CheckNotNull(consumer, nameof(consumer));
-        ObjectUtil.CheckPositiveOrZero(limit, nameof(limit));
-        int drained = 0;
-        while (drained < limit && TryDequeue(out var item))
-        {
-            consumer.Accept(item);
-            drained++;
-        }
-        return drained;
     }
 
     public void ClearIgnoringIndexes()

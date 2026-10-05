@@ -122,50 +122,52 @@ Optimization follows behavioral verification and measured performance.
 
 ## Current checkpoint
 
-The current default suite executes **2120 cases** on Windows/x64/net10.0:
-**2106 passed / 0 failed / 14 skipped** in Debug and Release.
-Evidence: stop-api-full-debug.trx and stop-api-full-release.trx.
-All 759 original non-Porting identities/outcomes and every skip remain. Of the
-prior 2120 cases, 2101 identities stay unchanged; 19 CLR-only legacy list/service
-probes are explicitly remapped to native canceled results, withdrawn callbacks,
-repeated/concurrent stop and captured payload release. No case is dropped and no
-original case is renamed or remapped. Counts alone are not the conservation check.
-The two original fixtures only change fallback cleanup to StopAsync; original
-workloads, synchronization, assertions and comments remain.
-ShutdownNow and the port-only IExecutorService are removed after pinned all-module
-review finds no Netty consumer inspecting/replaying the returned pending list.
-IEventExecutorGroup now inherits IExecutor directly and owns lifecycle/state/wait
-members. Native StopAsync/Termination preserve ordered drain, scheduled cancellation,
-unordered withdrawal/owned StopToken, every-child requests and backend failures.
-No replacement diagnostic list, additional result owner or thread interrupt.
-Original and previous CLR comments for retired members remain in canonical design
-provenance; retained JDK state/wait comments move beside the native group members.
-See common-clr-design.md#retiring-the-inherited-shutdown-list-api.
-Targeted Debug and checked Release each pass 304 cases, no failures or skips.
-The identical independent native consumer preserves stop policies before/after;
-its removal check fails before and passes after. Updated suffix probe confirms
-actual termination and an un-interrupted custom thread-factory suffix. Isolated
-worker-failure probes pass throw/null/already-started/logger modes. The scripts'
-stale lowercase/generated Runnable API calls are updated to current native APIs.
-All 271 original comment rows have no coverage loss; the seven changed source/test
-owners retain 92/92 pinned comments. Inventory/paths, archived provenance, uppercase
-declarations, unchanged statuses and no-new-warning checks pass. No exclusions or
-Markdown files added. Source statuses remain 57 verified / 50 CLR replacement /
-15 not applicable / 66 pending / 17 in progress; broader design stays in progress.
-Native StopAsync allocation comparison (Release, tiered compilation disabled,
-identical sources, 5,000 warmups, three 100,000-operation samples): whole null-worker
-pool construction/raw admission/native stop/actual drain costs approximately 1,976
-bytes per operation both before and after. Removing the unused list branch is not
-a native-path optimization claim; raw rejection and ordered replay/SubmitAsync
-adapter costs remain. No exception/result-bearing submission or throughput claim.
-Ignored evidence: stop-api-identity-and-inventory.json, comment audit and TRX matrices
-in TestResults; native/consumer/allocation records in artifacts/stop-api-validation;
-suffix and isolated worker-failure outputs in artifacts/stop-api-suffix and
-artifacts/stop-api-worker-failure.
-Next: migrate remaining protected queue hooks against actual transport consumers
-while preserving membership identity, bounded admission, waking and cancellation;
-review synchronous Shutdown/AwaitTermination separately. Whole common and untested
-platforms remain open. Full portable sources build without PortingBatch.
+The current default suite executes **2124 cases** on Windows/x64/net10.0:
+**2110 passed / 0 failed / 14 skipped** in Debug and Release.
+Evidence: queue-surface-full-debug.trx and queue-surface-full-release.trx.
+All 2120 prior identities/outcomes, every skip and all 759 original non-Porting
+identities/outcomes remain unchanged. Four CLR queue contract cases are added;
+no case is removed or remapped and no original fixture changes. Counts alone
+are not the conservation check.
+Unused IQueue<T>.Drain/IConsumer and the unrelated public BlockingMessageQueue
+duplicate are retired after pinned Queue/PriorityQueue and Recycler consumption
+review. Required atomic membership, finite capacity, indexed heap ownership,
+blocking waits and Recycler's private return queue remain. MpscIntQueue's actual
+Drain(int, Action<int>) contract remains. No generic drain adapter is introduced.
+EmptyPriorityQueue's actual HTTP/2 disabled-cache consumer retains false/no-op
+membership/priority behavior and reference-based node-index ownership. CLR
+Count/Try methods represent absence for value types; erased global generic sharing
+becomes one immutable singleton per T. Reference equality replaces asymmetric
+Java empty-content equality, deliberately documented and independently probed.
+Unused sentinel/throwing aliases retire; ToString retains the original simple name.
+See common-clr-design.md#required-queue-membership-and-native-empty-queues.
+Targeted Debug and checked Release each discover 214 cases: 206 passed, zero
+failed, eight existing Recycler skips. The initial new fixture supplied a plain
+object to the indexed heap and failed correctly; the fixture now uses an indexed
+node and the library's admission policy remains unchanged. Final matrices pass.
+The identical non-friend native consumer retains bounded admission, removal,
+FIFO/exact Action identity and value absence before/after; only the expected
+retirement/symmetric equality check fails before and passes after. Exact pinned
+Java EmptyPriorityQueue and PriorityQueue compile with an EmptyArrays-only shim,
+confirming erased singleton/asymmetric equality and disabled membership.
+All 271 original comment rows have no coverage loss; the four scoped source owners
+retain 79/79 pinned comments. Inventory/paths, old provenance, uppercase declarations
+and no-new-warning checks pass. No exclusions or Markdown files added. Only Empty
+source/native review completes on this platform; source statuses are 58 verified /
+50 CLR replacement / 15 not applicable / 66 pending / 16 in progress.
+Native immutable empty membership comparison (Release, tiered compilation disabled,
+identical sources, 5,000 warmups and three 100,000-operation samples per version)
+allocates zero bytes per operation before/after. This does not measure admitted
+executor work or Recycler allocation and is not an optimization/throughput claim.
+Raw rejection +64 and ordered replay/SubmitAsync +96-byte adapter costs remain.
+Ignored evidence: queue-surface-identity-and-inventory.json, comment audit and TRX
+matrices in TestResults; native consumer, exact Java and allocation records in
+artifacts/queue-surface-validation.
+Next: migrate protected executor IRunnable storage/hooks against actual transport
+consumers while preserving exact membership identity, bounded admission, waking,
+cancellation and virtual-hook behavior; review synchronous Shutdown/AwaitTermination
+separately. Whole common and untested platforms remain open. Full portable sources
+build without PortingBatch.
 
 The auto-scaling monitor now coalesces callbacks within configured fixed-rate
 window boundaries without sampling/resetting activity or patience repeatedly.
