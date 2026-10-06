@@ -39,23 +39,36 @@ public static class MacAddressUtil
      */
     public static byte[] BestAvailableMac()
     {
+        return BestAvailableMac(NetUtil.NETWORK_INTERFACES);
+    }
+
+    internal static byte[] BestAvailableMac(IReadOnlyList<NetworkInterface> interfaces)
+    {
+        ArgumentNullException.ThrowIfNull(interfaces);
         // Find the best MAC address available.
         byte[] bestMacAddr = EmptyArrays.EMPTY_BYTES;
         IPAddress bestInetAddr = NetUtil.LOCALHOST4;
 
         // Retrieve the list of available network interfaces.
-        List<KeyValuePair<NetworkInterface, IPAddress>> ifaces = new List<KeyValuePair<NetworkInterface, IPAddress>>();
-        foreach (NetworkInterface iface in NetUtil.NETWORK_INTERFACES)
+        var ifaces = new OrderedDictionary<NetworkInterface, IPAddress>();
+        foreach (NetworkInterface iface in interfaces)
         {
             // Use the interface with proper INET addresses only.
-            UnicastIPAddressInformationCollection addrs = iface.GetIPProperties().UnicastAddresses;
-            if (0 < addrs.Count)
+            try
             {
-                IPAddress a = addrs[0].Address;
-                if (!IPAddress.IsLoopback(a))
+                UnicastIPAddressInformationCollection addrs = iface.GetIPProperties().UnicastAddresses;
+                if (0 < addrs.Count)
                 {
-                    ifaces.Add(KeyValuePair.Create(iface, a));
+                    IPAddress a = addrs[0].Address;
+                    if (!IPAddress.IsLoopback(a))
+                    {
+                        ifaces[iface] = a;
+                    }
                 }
+            }
+            catch (NetworkInformationException e)
+            {
+                logger.Debug("Failed to get the addresses of a network interface: {}", iface, e);
             }
         }
 
@@ -63,12 +76,7 @@ public static class MacAddressUtil
         {
             NetworkInterface iface = entry.Key;
             IPAddress inetAddr = entry.Value;
-            
-            // Cannot reliably detect virtual interfaces in .NET; no built-in API exists.
-            // if (iface.isVirtual()) {
-            //     continue;
-            // }
-            
+            // CLR exposes no parent/subinterface flag equivalent to Java isVirtual().
             byte[] macAddr;
             try
             {
@@ -122,16 +130,18 @@ public static class MacAddressUtil
         {
             // EUI-48 - convert to EUI-64
             byte[] newAddr = new byte[EUI64_MAC_ADDRESS_LENGTH];
-            Arrays.Arraycopy(bestMacAddr, 0, newAddr, 0, 3);
+            bestMacAddr.AsSpan(0, 3).CopyTo(newAddr);
             newAddr[3] = (byte)0xFF;
             newAddr[4] = (byte)0xFE;
-            Arrays.Arraycopy(bestMacAddr, 3, newAddr, 5, 3);
+            bestMacAddr.AsSpan(3, 3).CopyTo(newAddr.AsSpan(5));
             bestMacAddr = newAddr;
         }
         else
         {
             // Unknown
-            bestMacAddr = Arrays.CopyOf(bestMacAddr, EUI64_MAC_ADDRESS_LENGTH);
+            byte[] newAddr = new byte[EUI64_MAC_ADDRESS_LENGTH];
+            bestMacAddr.AsSpan(0, Math.Min(bestMacAddr.Length, newAddr.Length)).CopyTo(newAddr);
+            bestMacAddr = newAddr;
         }
 
         return bestMacAddr;
@@ -143,7 +153,12 @@ public static class MacAddressUtil
      */
     public static byte[] DefaultMachineId()
     {
-        byte[] bestMacAddr = BestAvailableMac();
+        return DefaultMachineId(NetUtil.NETWORK_INTERFACES);
+    }
+
+    internal static byte[] DefaultMachineId(IReadOnlyList<NetworkInterface> interfaces)
+    {
+        byte[] bestMacAddr = BestAvailableMac(interfaces);
         if (bestMacAddr == null)
         {
             bestMacAddr = new byte[EUI64_MAC_ADDRESS_LENGTH];
@@ -234,7 +249,7 @@ public static class MacAddressUtil
      * @return positive - current is better, 0 - cannot tell from MAC addr, negative - candidate is better.
      */
     // visible for testing
-    public static int CompareAddresses(byte[] current, byte[] candidate)
+    internal static int CompareAddresses(byte[] current, byte[] candidate)
     {
         if (candidate == null || candidate.Length < EUI48_MAC_ADDRESS_LENGTH)
         {

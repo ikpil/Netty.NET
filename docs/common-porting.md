@@ -44,6 +44,25 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native MAC selection checkpoint
+
+Failed address/hardware providers now allow healthy peers to supply the machine ID.
+Native OrderedDictionary preserves insertion position and repeated-key address updates;
+Span copies return independent eight-byte IDs. Test-only comparator becomes internal.
+See [selection and ownership](common-clr-design.md#native-mac-selection-and-owned-machine-identity)
+for native equality/subinterface differences, fallback and probe boundaries.
+31 added CLR cases; affected Debug/checked Release 63 pass. Identical baseline export
+check fails then passes; 30 new-overload cases final-only. Executed Java/native matrix:
+61 rows, 60 match, one explicit address-failure recovery; old duplicate-update mismatch
+fixed. Default Debug/Release each: 2400 discovered/2386 passed/0 failed/14 unchanged
+skips; all 2369 prior outcomes, 759 originals, 271 comment rows, 205+66 inventory and
+warning/casing identities retained. MAC's 24 originals retained. Source statuses stay
+72 verified/56 CLR replacements/46 pending/16 in-progress/15 not-applicable.
+Evidence: native-mac-selection-* and artifacts/native-mac-selection-validation; no
+new MD. Next: MAC scoring allocations/mapped addresses and provider equality;
+broader NetUtil/Graal/backend/platform reviews and focused Global completion stall
+remain open. This checkpoint does not complete common.
+
 ## Native loopback selection checkpoint
 
 Loopback selection now skips failed native interfaces, preserves first-address/

@@ -7541,3 +7541,61 @@ Its verified status is scoped to these source decisions and Windows validation.
 NetUtil, Graal/lazy facades, MAC filtering/ranking/normalization/fallback, other OS/
 runtime/backend and whole common remain open, as does the focused Global completion
 stall. No allocation/throughput claim and no new MD.
+
+
+## Native MAC selection and owned machine identity
+
+Pinned MacAddressUtil.java:39-147 ranks hardware uniqueness before IP quality,
+then length; exact ties retain interface order. DefaultChannelId.java:95-107 uses
+the chosen/random machine identity, independently of configured six/eight-byte
+parsing. All-module lookup finds no comparator consumer outside common tests.
+The original package-private byte comparator becomes internal with friend-test
+access; public BestAvailableMac/DefaultMachineId remain available for transport.
+
+Native OrderedDictionary<NetworkInterface,IPAddress> replaces the candidate List:
+indexer updates retain first insertion order and fetch hardware once per key, as
+Java LinkedHashMap does. It uses native default key equality; the CLR interface
+provider has no Java name/address-set equality contract. The repeated-identical-
+instance scenario is verified; distinct wrapper/provider equality remains open.
+Internal IReadOnlyList overloads accept controlled native interfaces without global
+mutation; public calls use the existing read-only system snapshot. First unicast
+address filtering remains deliberate: a first loopback excludes the interface even
+if later addresses are public. Enumeration order is preserved, not assumed stable
+between system snapshots.
+
+Address and hardware NetworkInformationException log and skip the failed interface;
+other errors propagate. Address recovery is a deliberate native resilience policy:
+Java's unchecked address getter has no declared corresponding retrieval failure.
+MAC/IP/length ordering, invalid/zero-one/multicast rejection and high-byte masks
+remain unchanged. Span copies produce a fresh eight-byte result: EUI-48 inserts
+FF FE without flipping the unique bit; other lengths pad/truncate. Default fallback
+uses Random.Shared for eight independently owned bytes, like Java's noncryptographic
+ThreadLocalRandom purpose; tests check ownership/size, not random sequence equality
+or collision guarantees.
+
+Java isVirtual means a child/subinterface, not all VM adapters or tunnels
+([JDK contract](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/NetworkInterface.html#isVirtual())).
+CLR exposes no equivalent parent flag. No name/type heuristic excludes otherwise
+usable adapters; the provider-specific capability remains an explicit difference.
+Retired CLR placeholder comments, from MacAddressUtil.cs before this unit:
+
+```csharp
+// Cannot reliably detect virtual interfaces in .NET; no built-in API exists.
+// if (iface.isVirtual()) {
+//     continue;
+// }
+```
+
+Thirty-one added CLR cases; thirty new-overload cases are final-only, one identical
+export check fails on baseline and passes finally. Affected Debug/checked Release:
+63 pass. Controlled probes execute six byte-exact pinned Java methods and complete
+native before/after source with only snapshot dispatch substituted. Twenty selection/
+fallback rows plus 41 real InetAddress/IPAddress score boundaries: 60 final matches,
+one explicit address-failure continuation. Baseline instead disagrees on duplicate
+updates; final fixes that result. Fixture interface/socket/logger containers do not
+prove OS/JVM permission, subinterface or logger behavior. Fallback comparison checks
+length only. Original 24 comments retained; no allocation/throughput claim. Evidence:
+native-mac-selection-* and artifacts/native-mac-selection-validation. The initial
+mock-sequence setup failure is retained separately and excluded from final results.
+Scorer allocation/mapped-address handling, distinct provider equality, other OS/
+backend integration and whole common remain open; source stays in-progress.
