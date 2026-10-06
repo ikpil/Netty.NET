@@ -44,6 +44,28 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native socket operations checkpoint
+
+SocketUtils's JVM privilege forwarding class is retired; native Socket/DNS/endpoints
+replace its operations. Five current common call sites use native network-interface
+collections directly. Native loopback fallback exceptions are now handled; old
+timeout-as-port and failure-as-pending contracts are removed. See
+[native socket operations](common-clr-design.md#native-socket-operations-and-network-interface-access)
+for all-module consumer mappings, deferred resolution and future transport ownership.
+Nine CLR cases: identical affected baseline 44 pass/two fail, final Debug/checked
+Release 46 pass. A compiled identical native consumer reproduces both old connection
+bugs; seven executed byte-exact Java/socket outcomes match native consumers.
+Default Debug/Release each: 2349 discovered/2335 passed/0 failed/14 unchanged skips.
+All 2340 prior outcomes, 759 original identities, 271 comment rows and pinned 205+66
+inventory retained; five retired SocketUtils comments archived, all 18 initialization
+comments preserved including four formerly missing, MAC's 24 retained. No new
+source/test warning identities or casing collisions. Source statuses: 71 verified/
+56 CLR replacements/46 pending/17 in-progress/15 not-applicable. Evidence:
+native-socket-operations-* and artifacts/native-socket-operations-validation; no new MD.
+NetUtil initialization failures/snapshots and MAC selection/normalization/fallback
+remain open, as do future transport/backend integration, other OS/runtime and the
+focused Global completion stall. This checkpoint does not complete common.
+
 ## Native MAC text conversion checkpoint
 
 MacAddressUtil's machine-ID parser/display now has scoped common/transport

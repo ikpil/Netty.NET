@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 
@@ -79,7 +78,7 @@ internal static class NetUtilInitializations
         foreach (NetworkInterface iface in networkInterfaces)
         {
             // Use the interface with proper INET addresses only.
-            if (SocketUtils.AddressesFromNetworkInterface(iface).Count != 0)
+            if (iface.GetIPProperties().UnicastAddresses.Count != 0)
             {
                 ifaces.Add(iface);
             }
@@ -92,9 +91,10 @@ internal static class NetUtilInitializations
         IPAddress loopbackAddr = null;
         foreach (NetworkInterface iface in ifaces)
         {
-            var addrs = SocketUtils.AddressesFromNetworkInterface(iface);
-            foreach (IPAddress addr in addrs)
+            var addrs = iface.GetIPProperties().UnicastAddresses;
+            foreach (UnicastIPAddressInformation address in addrs)
             {
+                IPAddress addr = address.Address;
                 if (IPAddress.IsLoopback(addr))
                 {
                     // Found
@@ -117,9 +117,10 @@ internal static class NetUtilInitializations
                 {
                     if (iface.NetworkInterfaceType == NetworkInterfaceType.Loopback)
                     {
-                        var addrs = SocketUtils.AddressesFromNetworkInterface(iface);
-                        foreach (IPAddress addr in addrs)
+                        var addrs = iface.GetIPProperties().UnicastAddresses;
+                        foreach (UnicastIPAddressInformation address in addrs)
                         {
+                            IPAddress addr = address.Address;
                             // Found the one with INET address.
                             loopbackIface = iface;
                             loopbackAddr = addr;
@@ -136,7 +137,7 @@ internal static class NetUtilInitializations
                     logger.Warn("Failed to find the loopback interface");
                 }
             }
-            catch (SocketException e)
+            catch (NetworkInformationException e)
             {
                 logger.Warn("Failed to find the loopback interface", e);
             }

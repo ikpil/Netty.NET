@@ -637,18 +637,21 @@
     {
       "upstream": "common/src/main/java/io/netty/util/NetUtilInitializations.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/NetUtilInitializations.cs"
+      "status": "in-progress",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/NetUtilInitializations.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Native socket operations: identical affected baseline 44 pass/two fail; focused Debug/checked Release 46 pass, nine added CLR cases. Identical native consumer reproduces legacy timeout-as-port and disposed-client false failure; seven byte-exact pinned Java socket rows match native operations. Default Debug/Release 2349 discovered/2335 pass/0 fail/14 unchanged skips; all 2340 prior outcomes, 759 original identities, 271 comments and 205+66 inventory retained; source/test warnings/casing unchanged. docs/common-clr-design.md#native-socket-operations-and-network-interface-access, docs/common-porting.md and native-socket-operations-* evidence. Future transport/backend/platform integration and whole common remain open."
+      ],
+      "adaptation": "Scoped native interface access migration: direct UnicastAddresses iteration preserves order/address values and handles NetworkInformationException at loopback fallback. Injected real fallback error reproduced before repair. All 18 original comments preserved (four retired JVM/constructor comments archived). Initial enumeration failure, snapshot/lazy initialization and broader provider/platform policies remain open.",
       "comments": {
         "upstreamCount": 18,
         "required": true,
-        "preservedCount": 14,
-        "missingCount": 4
+        "preservedCount": 18,
+        "missingCount": 0
       }
     },
     {
@@ -3628,9 +3631,10 @@
         "src/Netty.NET.Common/Internal/MacAddressUtil.cs"
       ],
       "evidence": [
-        "Native MAC text conversion: identical affected baseline 27 pass/8 fail; final focused Debug/checked Release 35 pass, nine added CLR cases. 8461 executed pinned-method rows: 8458 exact matches, three explicit empty/null policy differences; 2004 previous formatting case mismatches repaired. Warmed 10000 six-byte formats allocate 3680000 -> 560000 bytes, no throughput claim. Default Debug/Release 2340 discovered/2326 pass/0 fail/14 unchanged skips; 2331 prior outcomes, 759 original identities, 271 comment rows, 205+66 pinned inventory, warnings/casing preserved. docs/common-clr-design.md#native-mac-address-text-conversion, docs/common-porting.md and native-mac-codec-* evidence. Whole source and module/backend/platform review remain open."
+        "Native MAC text conversion: identical affected baseline 27 pass/8 fail; final focused Debug/checked Release 35 pass, nine added CLR cases. 8461 executed pinned-method rows: 8458 exact matches, three explicit empty/null policy differences; 2004 previous formatting case mismatches repaired. Warmed 10000 six-byte formats allocate 3680000 -> 560000 bytes, no throughput claim. Default Debug/Release 2340 discovered/2326 pass/0 fail/14 unchanged skips; 2331 prior outcomes, 759 original identities, 271 comment rows, 205+66 pinned inventory, warnings/casing preserved. docs/common-clr-design.md#native-mac-address-text-conversion, docs/common-porting.md and native-mac-codec-* evidence. Whole source and module/backend/platform review remain open.",
+        "Native socket operations: identical affected baseline 44 pass/two fail; focused Debug/checked Release 46 pass, nine added CLR cases. Identical native consumer reproduces legacy timeout-as-port and disposed-client false failure; seven byte-exact pinned Java socket rows match native operations. Default Debug/Release 2349 discovered/2335 pass/0 fail/14 unchanged skips; all 2340 prior outcomes, 759 original identities, 271 comments and 205+66 inventory retained; source/test warnings/casing unchanged. docs/common-clr-design.md#native-socket-operations-and-network-interface-access, docs/common-porting.md and native-socket-operations-* evidence. Future transport/backend/platform integration and whole common remain open."
       ],
-      "adaptation": "Native byte[] ownership and direct string.Create Span<char> formatting preserve six/eight-byte machine-ID parsing and lowercase colon display for actual DefaultChannelId consumers. Null parameters identify value/addr; empty byte-array display is string.Empty, deliberate CLR policies. All 24 original comments exact; interface selection, ranking/normalization, physical-address failures, fallback and platform behavior remain open.",
+      "adaptation": "Native byte[] ownership and direct string.Create Span<char> formatting preserve six/eight-byte machine-ID parsing and lowercase colon display for actual DefaultChannelId consumers. Null parameters identify value/addr; empty byte-array display is string.Empty, deliberate CLR policies. All 24 original comments exact; interface selection, ranking/normalization, physical-address failures, fallback and platform behavior remain open. SocketUtils retirement: direct native unicast/physical address reads, NetworkInformationException catch and empty physical address rejection preserve existing candidate policy; hardware catch is reviewed, not fault-injected. Broader provider/ranking/normalization remains open.",
       "comments": {
         "upstreamCount": 24,
         "required": true,
@@ -4177,16 +4181,19 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/SocketUtils.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Internal/SocketUtils.cs"
+      "status": "clr-replacement",
+      "candidates": [],
+      "implementation": [
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/NativeSocketOperationsContractTest.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Native socket operations: identical affected baseline 44 pass/two fail; focused Debug/checked Release 46 pass, nine added CLR cases. Identical native consumer reproduces legacy timeout-as-port and disposed-client false failure; seven byte-exact pinned Java socket rows match native operations. Default Debug/Release 2349 discovered/2335 pass/0 fail/14 unchanged skips; all 2340 prior outcomes, 759 original identities, 271 comments and 205+66 inventory retained; source/test warnings/casing unchanged. docs/common-clr-design.md#native-socket-operations-and-network-interface-access, docs/common-porting.md and native-socket-operations-* evidence. Future transport/backend/platform integration and whole common remain open."
+      ],
+      "adaptation": "JVM privileged socket forwarding replaced by native Socket ConnectAsync/AcceptAsync/Bind/LocalEndPoint, endpoint-owned port and operation cancellation; Dns/AddressFamily selection and DnsEndPoint retain resolver ownership. All-module source consumers reviewed, five current common uses migrated to native interface collections; no false-on-error or timeout-as-port facade. Five original comments archived exactly. Transport completion/affinity/lifetime/backend integration remains future module work.",
       "comments": {
         "upstreamCount": 5,
-        "required": true,
+        "required": false,
         "preservedCount": 5,
         "missingCount": 0
       }

@@ -48,10 +48,10 @@ public static class MacAddressUtil
         foreach (NetworkInterface iface in NetUtil.NETWORK_INTERFACES)
         {
             // Use the interface with proper INET addresses only.
-            List<IPAddress> addrs = SocketUtils.AddressesFromNetworkInterface(iface);
+            UnicastIPAddressInformationCollection addrs = iface.GetIPProperties().UnicastAddresses;
             if (0 < addrs.Count)
             {
-                IPAddress a = addrs[0];
+                IPAddress a = addrs[0].Address;
                 if (!IPAddress.IsLoopback(a))
                 {
                     ifaces.Add(KeyValuePair.Create(iface, a));
@@ -72,9 +72,9 @@ public static class MacAddressUtil
             byte[] macAddr;
             try
             {
-                macAddr = SocketUtils.HardwareAddressFromNetworkInterface(iface);
+                macAddr = iface.GetPhysicalAddress().GetAddressBytes();
             }
-            catch (SocketException e)
+            catch (NetworkInformationException e)
             {
                 logger.Debug("Failed to get the hardware address of a network interface: {}", iface, e);
                 continue;

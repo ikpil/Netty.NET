@@ -7323,3 +7323,113 @@ Retired CLR documentation spelling, preserved as provenance:
      * @return The byte representation of the MAC address.
      */
 ```
+
+
+## Native socket operations and network interface access
+
+SocketUtils is a Java AccessController/SocketPermission forwarding layer, not a
+Netty connection state machine. CLR socket/DNS operations already enforce OS
+permissions without a JVM privileged-call stack. The public CLR forwarding class
+is retired in favor of native facilities; all five original comments are archived
+below. This is a CLR replacement, not removal of the networking requirements.
+
+All-module pinned call/member/import search records 85 matching lines in
+artifacts/native-socket-operations-validation/upstream-consumers.txt. Reviewed
+consumer categories: bootstrap host/port binding; NIO/OIO/domain/UDT connection,
+accept and local endpoint; io_uring/epoll/datagram interface address selection;
+handler IP filters; DNS/proxy/codec/test/example resolution. Important mappings:
+
+| Original operation | Native operation and ownership policy |
+| --- | --- |
+| Socket connect(endpoint, timeout milliseconds) | Socket.ConnectAsync(EndPoint, CancellationToken), with a TimeSpan budget owned by the transport; endpoint port remains separate. Pass cancellation into the operation, rather than abandoning it through Task.WaitAsync alone. Java zero timeout means no deadline; use CancellationToken.None rather than a zero-duration CancellationTokenSource. |
+| SocketChannel connect/finishConnect | Await native connection completion or observe its Task from the event loop. Java false means pending, not failed; faults propagate. The transport owns failure close and completion dispatch/affinity. |
+| Channel accept | Socket.AcceptAsync with cancellation, or SocketAsyncEventArgs in the future backend. Java nonblocking accept can return null; native async acceptance remains pending. No null/failure/pending boolean facade is retained. |
+| Bind / local address | Socket.Bind on a resolved IPEndPoint (or UnixDomainSocketEndPoint); LocalEndPoint. Resolve host names for local bind before calling Bind. UDP native socket Bind also covers DatagramChannel. |
+| Host/port address construction | Numeric IPAddress plus IPEndPoint; unresolved names use DnsEndPoint and retain the host/port for the owning resolver. CLR deferred resolution is explicit; Java InetSocketAddress attempts resolution during construction and can retain an unresolved name. |
+| Single/all hostname resolution | Dns.GetHostAddresses[Async]; choose a matching family in the owning resolver. Numeric IPAddress.Parse/TryParse avoids name lookup. No forced IPv4 preference, reverse lookup through GetHostEntry, or fabricated IPAddress.None success. |
+| Interface addresses / hardware | GetIPProperties().UnicastAddresses, preserving native collection iteration order and .Address values; GetPhysicalAddress().GetAddressBytes(). Native NetworkInformationException is handled where the original catches SocketException. |
+| Loopback selection | IPAddress.Loopback or IPv6Loopback chosen explicitly by the address family/owner. Do not claim a Java runtime preferred-family selector in CLR. |
+
+These are common replacement decisions and future consumer requirements, not a
+claim that unported transports/resolvers, event-loop integration, UDT or Unix socket
+backends have been implemented or verified. Domain/nonblocking/multicast/platform
+behavior and real connect-deadline expiration require their own backend checks.
+
+Current common migrations: MacAddressUtil keeps first-address filtering and its
+ranking/normalization policy, reads native unicast and physical-address collections
+directly, and skips native physical-address retrieval failures. PhysicalAddress.None
+now supplies zero bytes rather than null; both are rejected by the existing minimum
+six-byte candidate rule. NetUtilInitializations reads the same native collections
+without an explicit LINQ projection/ToList copy and catches NetworkInformationException
+at its loopback-type fallback. This is not a total provider-allocation or performance
+claim; collection creation/OS reads are still owned by the native implementation.
+
+Nine new CLR cases cover loopback connect/accept endpoints, failure propagation,
+disposal, cancellation, deferred hostname ownership, IPv4/IPv6 literal resolution
+and an injected NetworkInformationException in the real common fallback caller.
+Identical baseline affected suite: 44 passed/two failed (facade still exported and
+native fallback exception escaped); final Debug/checked Release: 46 passed. The
+byte-identical compiled before/after native consumer also reproduces the old
+65536-millisecond timeout being treated as invalid port 65536 and the disposed
+TcpClient failure being hidden as false. These calls are absent after retirement.
+
+The byte-exact pinned Java SocketUtils class runs without dependency substitutes.
+Seven loopback bind/connect/accept/refusal, numeric endpoint and IPv4/IPv6 literal
+outcomes match native CLR consumers; only ephemeral port presence and byte-equivalent
+IPv6 spelling are normalized. No DNS request for unknown external hosts is needed;
+the DnsEndPoint test verifies deferred name ownership. Cancellation/disposal/native
+provider fault checks are CLR checks, not a claim of identical Java exception types
+or security-manager behavior. Evidence: native-socket-operations-* TRX/JSON/logs and
+artifacts/native-socket-operations-validation, Windows/x64/net10/JDK21 only.
+
+NetUtilInitializations remains in-progress: initial enumeration failure currently
+rethrows, whereas Java logs and returns its partial collection; immutable snapshot,
+lazy initialization, loopback/family/platform and broader provider failure policies
+still require review. MacAddressUtil ranking/normalization, interface filtering and
+fallback remain in-progress; its hardware-error catch is source-reviewed here, not
+fault-injected through its cached global interface provider. The four pre-existing
+missing initialization comments are preserved below with their original multiplicity.
+Whole common, other OS/runtime and the focused Global completion stall remain open.
+
+SocketUtils original comments (JVM/Android provenance):
+
+```java
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+/**
+ * Provides socket operations with privileges enabled. This is necessary for applications that use the
+ * {@link SecurityManager} to restrict {@link SocketPermission} to their application. By asserting that these
+ * operations are privileged, the operations can proceed even if some code in the calling chain lacks the appropriate
+ * {@link SocketPermission}.
+ */
+
+// Android seems to sometimes return null even if this is not a valid return value by the api docs.
+
+// Just return an empty Enumeration in this case.
+
+// See https://github.com/netty/netty/issues/10045
+```
+
+NetUtilInitializations original comments for replaced address constructors and
+the JVM Android enumeration exception branch:
+
+```java
+// We should not get here as long as the length of the address is correct.
+// We should not get here as long as the length of the address is correct.
+// Might happen on earlier version of Android.
+// See https://developer.android.com/reference/java/net/NetworkInterface#getNetworkInterfaces()
+```
