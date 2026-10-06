@@ -44,6 +44,25 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native NetUtil initialization checkpoint
+
+Retire the public Graal substitution facade and eight helpers: original consumers
+use NetUtil, whose existing CLR static constructor already owns the published state.
+See [runtime and exclusion policy](common-clr-design.md#native-netutil-initialization-and-graal-image-exclusions).
+One identical baseline type-retirement regression fails then passes; affected Debug/
+checked Release 153 pass. Five fresh non-friend processes per actual compiled library,
+16 contending threads per entry order: all 25 native control rows conserved; duplicate
+facade-owned address/snapshot references reproduced before removal. No provider/source
+substitution, NativeAOT/image, throughput or single-OS-discovery-call claim.
+Default Debug/Release: 2465 discovered/2451 pass/0 fail/14 unchanged skips; all 2464
+prior outcomes, 759 originals, 271 comment rows, 205+66 inventory and warning/casing
+identities conserved. Archive all nine Graal comments in the existing design record;
+repair its previous eight-comment coverage deficit. Graal source becomes not-applicable:
+73 verified/56 CLR replacements/45 pending/15 in-progress/16 not-applicable.
+Evidence: native-netutil-initialization-* and artifacts/native-netutil-initialization-validation;
+no new MD. Next: remaining NetUtil CLR preferences/API and backlog handling. Other
+OS/backend, scheduler/focused Global completion stall and whole common remain open.
+
 ## Native loopback address checkpoint
 
 Initializer and MAC selection now share the mapped-127/8/scoped-IPv6 predicate.

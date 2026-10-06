@@ -7751,3 +7751,100 @@ do not imply completion of common. Evidence: native-loopback-address-* and
 artifacts/native-loopback-address-validation. Next: NetUtil CLR API/Graal/lazy-holder
 consumers, other OS/backend and outstanding scheduler review. No new MD, no
 whole-operation allocation/throughput or focused Global completion-stall claim.
+
+
+## Native NetUtil initialization and Graal image exclusions
+
+Pinned common NetUtilSubstitutions.java targets NetUtil using GraalVM TargetClass,
+Alias and InjectAccessors; native-image.properties schedules its four lazy holders
+at image run time. These are image-compiler hooks, not another application address
+API. Original common/MAC, transport family, DNS payload/resolver, multicast and
+even the native-image runtime-init client consume NetUtil fields. Repository-wide
+pinned consumer matches and those representative source files are retained in
+artifacts/native-netutil-initialization-validation.
+
+The C# facade had no substitution metadata: its four getters created separate
+localhost objects/interface snapshots through eight helper classes. It exposed a
+Java package-private image hook publicly and retained unused no-op setters.
+Remove all nine classes instead of introducing another Lazy owner or adapting
+Graal annotations. NetUtil's existing explicit static constructor already publishes
+the native IPAddress values, selected NetworkInterface and read-only list together.
+Its fields, actual initializer, discovery/failure policy and all current callers
+are unchanged. This follows CLR type initialization
+([C# runtime contract](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors)).
+The cached snapshot and independent IPv6 fallback lookup remain distinct operations;
+this unit makes no single-OS-discovery-call or deep provider-immutability claim.
+
+One compiled-type regression fails against the unchanged baseline then passes;
+affected Debug/checked Release each 153 pass. Identical non-friend consumers bind
+the actual before/after libraries with no source/provider substitution. Five fresh
+processes per library start with IPv4/IPv6/interfaces/selected-localhost/mixed access,
+each with 16 barrier-synchronized threads. All 25 native control rows are conserved:
+explicit constructor metadata, shared references, binary family/DNS payloads/native
+endpoints, read-only snapshot/selected-interface membership and subsequent reads.
+All five baseline processes also show three different facade-owned references;
+final assembly has zero of the nine retired types. These are scoped Windows/net10
+runtime observations, not timing, throughput, other-OS or NativeAOT/Graal image tests.
+Do not run Java annotation stubs and treat that as real Graal substitution execution.
+
+Default Debug/Release each: 2465 discovered/2451 pass/0 fail/14 unchanged skips;
+all 2464 prior and 759 original non-Porting outcomes conserved, no source/test
+warning or casing identity added. All 271 comment rows remain; the nine original
+Graal comments are now fully preserved below (the previous manifest missed eight).
+This source becomes not-applicable for the JVM image hook; NetUtil remains
+in-progress. Source counts: 73 verified/56 CLR replacements/45 pending/15 in-progress/
+16 not-applicable. Evidence: native-netutil-initialization-* and the artifact folder
+above. Complete common, remaining NetUtil API/preferences/backlog, other OS/backend
+and scheduler/focused Global completion-stall reviews remain open. No new MD.
+
+### Original Graal image comment provenance
+
+Source: pinned common/src/main/java/io/netty/util/NetUtilSubstitutions.java at
+e66ce34777f9c4a0c57ac74bb97396ca2f54b43c. The JVM image-only source is excluded;
+these are archived original comments, not operational C# setters/lazy holders.
+
+```java
+/*
+ * Copyright 2020 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+```
+
+Original NetUtilLocalhost4Accessor get/set comments:
+
+```java
+// using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
+// a no-op setter to avoid exceptions when NetUtil is initialized at run-time
+```
+
+Original NetUtilLocalhost6Accessor get/set comments:
+
+```java
+// using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
+// a no-op setter to avoid exceptions when NetUtil is initialized at run-time
+```
+
+Original NetUtilLocalhostAccessor get/set comments:
+
+```java
+// using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
+// a no-op setter to avoid exceptions when NetUtil is initialized at run-time
+```
+
+Original NetUtilNetworkInterfacesAccessor get/set comments:
+
+```java
+// using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
+// a no-op setter to avoid exceptions when NetUtil is initialized at run-time
+```
