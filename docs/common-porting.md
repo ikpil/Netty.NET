@@ -44,6 +44,26 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native loopback selection checkpoint
+
+Loopback selection now skips failed native interfaces, preserves first-address/
+interface order, and uses an independent current-system IPv6 assignment lookup.
+Recoverable lookup failures choose IPv4; memory failure propagates as Java's Error
+does. A named internal ValueTuple replaces the exported Java-style result class.
+See [native loopback selection](common-clr-design.md#native-loopback-selection-and-result-ownership).
+Twelve CLR cases: seven identical baseline-compatible methods three pass/four fail;
+all seven finally pass, five new-callback cases final-only. Affected Debug/checked
+Release 43 pass. Eight controlled Java/native rows: seven match, one documented
+type-failure continuation policy; original method/pair exact and probe limits recorded.
+Final default Debug/Release each: 2369 discovered/2355 passed/0 failed/14 unchanged
+skips. All 2357 prior outcomes, 759 original identities, 271 comment rows, pinned
+205+66 inventory, scoped 18+118 original comments and source/test warning/casing
+identities retained. Source statuses: 72 verified/56 CLR replacements/46 pending/
+16 in-progress/15 not-applicable. Evidence: native-loopback-selection-* and
+artifacts/native-loopback-selection-validation. Initializer has a scoped source
+review; broader NetUtil/Graal/MAC/backend/platform and the focused Global completion
+stall remain open. No new MD; this checkpoint does not complete common.
+
 ## Native interface snapshot checkpoint
 
 Interface discovery now logs native NetworkInformationException and returns an

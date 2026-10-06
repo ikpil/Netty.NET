@@ -7482,3 +7482,62 @@ MAC ranking/normalization, backend/other OS/runtime, whole common completion and
 the focused Global completion stall remain open. No throughput/allocation claim.
 Evidence: native-interface-snapshot-* TRX/JSON/logs and
 artifacts/native-interface-snapshot-validation, Windows/x64/net10/JDK21 only.
+
+
+## Native loopback selection and result ownership
+
+Pinned NetUtilInitializations.java:92-189 first selects the first loopback address
+in interface/address enumeration order, then trusts the first usable interface's
+loopback flag. It ignores empty interfaces and consults the current system's
+IPv6-loopback assignment if no interface wins; a lookup exception falls back to
+the supplied IPv4 address. NetUtil.java:160 and Graal's lazy localhost holder consume
+the result. The original private nested pair is now a named internal ValueTuple;
+the unnecessary public CLR NetworkIfaceAndInetAddress class is removed. NetUtil
+and the existing lazy holder use the same tuple names; no compatibility facade.
+
+Native GetIPProperties/NetworkInterfaceType can fail with NetworkInformationException.
+The CLR policy logs/skips a failed interface at filtering, address scanning or type
+fallback and continues with healthy peers. Non-network errors in those passes still
+propagate; provider order and identity remain intact. This resilience is explicit:
+Java's type-fallback SocketException aborts that pass, while its unchecked address
+getter has no equivalent declared native property-retrieval failure.
+
+The final fallback uses a current-system native GetAllNetworkInterfaces/unicast
+address scan rather than searching only the earlier filtered snapshot. Its internal
+Func<IPAddress,bool> boundary permits deterministic assignment/failure checks without
+global mutation. It runs only when no interface has won and leaves Iface null even
+when IPv6 is assigned. Recoverable lookup errors still choose IPv4. OutOfMemoryException
+propagates: CLR's Exception inheritance otherwise differs from Java OutOfMemoryError,
+which the original catch(Exception) does not absorb. Tests inject this failure;
+they do not exhaust real memory. Other corrupted-state/runtime termination behavior
+is not simulated or claimed equivalent.
+
+The existing native Socket fixture retains its four-call provider-failure scenario,
+test identity and assertions; its lookup fault is explicitly injected at the new
+current-system boundary instead of depending on the old snapshot rescan. Twelve
+new CLR cases cover order, empty/type fallback, three failure phases, programming
+errors, assignment/no-assignment, lookup failure/avoidance, native tuple and memory
+failure. Seven unchanged baseline-compatible test methods plus their identical helper
+execute on baseline: three pass/four fail; all seven pass finally. Five new-overload
+cases are final-only. Focused final Debug/checked Release: 43 passed.
+
+Controlled Java execution uses the byte-exact original loopback method and nested
+pair, real InetAddress/IP bytes and fixture-only interface/socket/logger containers.
+Native before executes the unchanged complete initializer source; after substitutes
+only the current-system lookup dispatch. Eight rows: seven final matches with Java
+under address-byte and fatal-error normalization; the one type-failure continuation
+is the deliberate resilience change. Before instead disagrees on current IPv6
+assignment and ignored memory failure. OS provider/security/logging behavior is
+not inferred from these containers; full default builds exercise the actual native
+initialization on Windows/x64/net10. Evidence: native-loopback-selection-* and
+artifacts/native-loopback-selection-validation. The initially empty baseline filter
+attempt is retained as before-empty-filter evidence and is excluded from validation.
+
+Initializer source decisions now cover owned native IPv4/IPv6 binary address
+construction (no Java hostname metadata), immutable snapshots, exception recovery,
+selection, current assignment lookup and native result ownership; all 18 original
+comments retained, including prior archived JVM constructor/Android comments.
+Its verified status is scoped to these source decisions and Windows validation.
+NetUtil, Graal/lazy facades, MAC filtering/ranking/normalization/fallback, other OS/
+runtime/backend and whole common remain open, as does the focused Global completion
+stall. No allocation/throughput claim and no new MD.

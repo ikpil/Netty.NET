@@ -103,7 +103,8 @@ public class NativeSocketOperationsContractTest
             .Throws(new NetworkInformationException(1))
             .Throws(new NetworkInformationException(1));
 
-        var selected = NetUtilInitializations.DetermineLoopback(new[] { iface.Object }, IPAddress.Loopback, IPAddress.IPv6Loopback);
+        var selected = NetUtilInitializations.DetermineLoopback(new[] { iface.Object }, IPAddress.Loopback, IPAddress.IPv6Loopback,
+            _ => { iface.Object.GetIPProperties(); return false; });
         Assert.Null(selected.Iface);
         Assert.Equal(IPAddress.Loopback, selected.Address);
     }

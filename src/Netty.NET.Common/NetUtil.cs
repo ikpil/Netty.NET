@@ -152,7 +152,7 @@ public static class NetUtil
         // Create IPv6 loopback address.
         LOCALHOST6 = NetUtilInitializations.CreateLocalhost6();
 
-        NetworkIfaceAndInetAddress loopback =
+        var loopback =
             NetUtilInitializations.DetermineLoopback(NETWORK_INTERFACES, LOCALHOST4, LOCALHOST6);
         LOOPBACK_IF = loopback.Iface;
         LOCALHOST = loopback.Address;

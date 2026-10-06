@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using Netty.NET.Common.Internal;
@@ -73,17 +72,35 @@ internal static class NetUtilInitializations
         return networkInterfaces.AsReadOnly();
     }
 
-    public static NetworkIfaceAndInetAddress DetermineLoopback(
+    public static (NetworkInterface Iface, IPAddress Address) DetermineLoopback(
         IReadOnlyList<NetworkInterface> networkInterfaces, IPAddress localhost4, IPAddress localhost6)
     {
+        return DetermineLoopback(networkInterfaces, localhost4, localhost6, IsAddressAssigned);
+    }
+
+    internal static (NetworkInterface Iface, IPAddress Address) DetermineLoopback(
+        IReadOnlyList<NetworkInterface> networkInterfaces, IPAddress localhost4, IPAddress localhost6,
+        Func<IPAddress, bool> isAddressAssigned)
+    {
+        ArgumentNullException.ThrowIfNull(networkInterfaces);
+        ArgumentNullException.ThrowIfNull(localhost4);
+        ArgumentNullException.ThrowIfNull(localhost6);
+        ArgumentNullException.ThrowIfNull(isAddressAssigned);
         // Retrieve the list of available network interfaces.
         List<NetworkInterface> ifaces = new List<NetworkInterface>();
         foreach (NetworkInterface iface in networkInterfaces)
         {
             // Use the interface with proper INET addresses only.
-            if (iface.GetIPProperties().UnicastAddresses.Count != 0)
+            try
             {
-                ifaces.Add(iface);
+                if (iface.GetIPProperties().UnicastAddresses.Count != 0)
+                {
+                    ifaces.Add(iface);
+                }
+            }
+            catch (NetworkInformationException e)
+            {
+                logger.Warn("Failed to retrieve the addresses of a network interface: {}", iface, e);
             }
         }
 
@@ -94,17 +111,24 @@ internal static class NetUtilInitializations
         IPAddress loopbackAddr = null;
         foreach (NetworkInterface iface in ifaces)
         {
-            var addrs = iface.GetIPProperties().UnicastAddresses;
-            foreach (UnicastIPAddressInformation address in addrs)
+            try
             {
-                IPAddress addr = address.Address;
-                if (IPAddress.IsLoopback(addr))
+                var addrs = iface.GetIPProperties().UnicastAddresses;
+                foreach (UnicastIPAddressInformation address in addrs)
                 {
-                    // Found
-                    loopbackIface = iface;
-                    loopbackAddr = addr;
-                    break;
+                    IPAddress addr = address.Address;
+                    if (IPAddress.IsLoopback(addr))
+                    {
+                        // Found
+                        loopbackIface = iface;
+                        loopbackAddr = addr;
+                        break;
+                    }
                 }
+            }
+            catch (NetworkInformationException e)
+            {
+                logger.Warn("Failed to retrieve the addresses of a network interface: {}", iface, e);
             }
 
             if (null != loopbackAddr)
@@ -114,9 +138,9 @@ internal static class NetUtilInitializations
         // If failed to find the loopback interface from its INET address, fall back to isLoopback().
         if (loopbackIface == null)
         {
-            try
+            foreach (NetworkInterface iface in ifaces)
             {
-                foreach (NetworkInterface iface in ifaces)
+                try
                 {
                     if (iface.NetworkInterfaceType == NetworkInterfaceType.Loopback)
                     {
@@ -134,15 +158,15 @@ internal static class NetUtilInitializations
                             break;
                     }
                 }
-
-                if (loopbackIface == null)
+                catch (NetworkInformationException e)
                 {
-                    logger.Warn("Failed to find the loopback interface");
+                    logger.Warn("Failed to inspect a possible loopback interface: {}", iface, e);
                 }
             }
-            catch (NetworkInformationException e)
+
+            if (loopbackIface == null)
             {
-                logger.Warn("Failed to find the loopback interface", e);
+                logger.Warn("Failed to find the loopback interface");
             }
         }
 
@@ -159,16 +183,13 @@ internal static class NetUtilInitializations
             {
                 try
                 {
-                    bool same = ifaces.Select(x => x.GetIPProperties())
-                        .SelectMany(x => x.UnicastAddresses)
-                        .Any(x => x.Address.Equals(localhost6));
-                    if (same)
+                    if (isAddressAssigned(localhost6))
                     {
                         logger.Debug($"Using hard-coded IPv6 localhost address: {localhost6}");
                         loopbackAddr = localhost6;
                     }
                 }
-                catch (Exception e)
+                catch (Exception e) when (e is not OutOfMemoryException)
                 {
                     // Ignore
                 }
@@ -183,6 +204,19 @@ internal static class NetUtilInitializations
             }
         }
 
-        return new NetworkIfaceAndInetAddress(loopbackIface, loopbackAddr);
+        return (loopbackIface, loopbackAddr);
+    }
+
+    private static bool IsAddressAssigned(IPAddress address)
+    {
+        foreach (NetworkInterface iface in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            foreach (UnicastIPAddressInformation candidate in iface.GetIPProperties().UnicastAddresses)
+            {
+                if (candidate.Address.Equals(address)) return true;
+            }
+        }
+
+        return false;
     }
 }
