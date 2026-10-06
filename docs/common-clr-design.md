@@ -7703,3 +7703,51 @@ completion stall. Evidence: native-mac-provider-* and
 artifacts/native-mac-provider-validation. No throughput/allocation claim or new MD.
 Next, the initializer's separate IPAddress.IsLoopback scan needs the mapped/scoped
 cases established above; its prior verified checkpoint did not cover those inputs.
+
+
+## Native loopback address classification and assignment
+
+Pinned NetUtilInitializations.java selects the first InetAddress.isLoopbackAddress
+before the interface-type fallback; its last-resort IPv6 lookup uses current-system
+NetworkInterface.getByInetAddress. The earlier scoped review omitted mapped 127/8
+and scoped IPv6 inputs. Those inputs expose another difference from CLR
+IPAddress.IsLoopback, and IPAddress.Equals includes scope in the assignment lookup.
+
+Move the already verified MAC loopback predicate to internal NetUtilInitializations
+and call it from both scanners. Preserve original interface/address order, the exact
+selected IPAddress object and its scope. No additional public facade/helper type or
+address construction is needed. Native IPv4, mapped 127/8 and scoped ::1 are loopback;
+compatible/NAT64/near-mapped prefixes do not preempt a later real loopback address.
+
+Keep independent current-system discovery for the final assignment lookup. An
+internal native-list overload compares address bytes with two stack buffers allocated
+outside its loops: ordinary JDK factories normalize mapped IPv4 to four bytes, and
+IPv6 address equality ignores scope
+([JDK address contract](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/Inet6Address.html)).
+Return after the first match, retain input scopes, and propagate provider failures
+to the existing recoverable IPv4 fallback; OutOfMemoryException still escapes.
+This comparison implements Java address membership at this boundary, not a general
+CLR socket endpoint equality policy: scope remains relevant to native routing.
+
+26 new CLR cases: identical 15-case old-API fixture ten pass/five fail -> all pass;
+11 new internal-boundary cases are final-only. Affected Debug/checked Release each
+152 pass. Controlled execution uses the byte-exact pinned selection method/result
+pair with real JDK literal/numeric-scope addresses and equals. Complete before/after
+native initializer source changes only one global OS-discovery dispatch in the
+probe; the assignment rows invoke its actual private global-lookup method. All
+15 selection and eight assignment rows agree finally; nine baseline differences.
+Java mapped representations are normalized for result comparison; committed CLR
+tests independently require original reference/scope retention. Provider/logger/OS
+integration and forced mapped Inet6Address objects are outside the probe model.
+
+Default net10 Debug/Release: 2464 discovered/2450 passed/0 failed/14 unchanged skips;
+all 2438 prior outcomes and 759 original non-Porting outcomes retained. The initial
+Debug run had one existing autoscaling consolidation-test failure; its isolated
+rerun and subsequent complete Debug rerun pass. Preserve that failure separately:
+the cause and scheduler behavior are not established or fixed by this unit.
+All 271 comment rows and 18 initializer/24 MAC original comments remain; warning/
+casing identities unchanged. Source statuses unchanged; scoped verified decisions
+do not imply completion of common. Evidence: native-loopback-address-* and
+artifacts/native-loopback-address-validation. Next: NetUtil CLR API/Graal/lazy-holder
+consumers, other OS/backend and outstanding scheduler review. No new MD, no
+whole-operation allocation/throughput or focused Global completion-stall claim.

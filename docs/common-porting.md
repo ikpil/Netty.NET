@@ -44,6 +44,24 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native loopback address checkpoint
+
+Initializer and MAC selection now share the mapped-127/8/scoped-IPv6 predicate.
+The final IPv6 assignment lookup compares Java address bytes while keeping native
+scope metadata. See [address policy](common-clr-design.md#native-loopback-address-classification-and-assignment).
+26 added CLR cases; identical old-API baseline 15 cases ten pass/five fail -> all
+pass, 11 new-boundary cases final-only. Affected Debug/checked Release 152 pass;
+23 controlled real-JDK/native rows all match, nine baseline differences repaired.
+Default Debug/Release: 2464 discovered/2450 pass/0 fail/14 unchanged skips. Initial
+Debug had one autoscaling consolidation-test failure; isolated and complete reruns
+pass, cause remains unconfirmed. Failure evidence retained; no scheduler-fix claim.
+All 2438 prior outcomes, 759 originals, 271 comment rows, pinned 205+66 inventory,
+18 initializer/24 MAC comments and warning/casing identities retained. Source counts
+stay 73 verified/56 CLR replacements/46 pending/15 in-progress/15 not-applicable.
+Evidence: native-loopback-address-* and artifacts/native-loopback-address-validation;
+no new MD. Next: NetUtil CLR API/Graal/lazy-holder consumers. Other OS/backend,
+scheduler review, focused Global completion stall and whole common remain open.
+
 ## Native MAC provider checkpoint
 
 Candidate identity now explicitly uses ReferenceEqualityComparer: distinct provider

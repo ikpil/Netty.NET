@@ -60,7 +60,7 @@ public static class MacAddressUtil
                 if (0 < addrs.Count)
                 {
                     IPAddress a = addrs[0].Address;
-                    if (!IsLoopbackAddress(a))
+                    if (!NetUtilInitializations.IsLoopbackAddress(a))
                     {
                         ifaces[iface] = a;
                     }
@@ -313,18 +313,6 @@ public static class MacAddressUtil
     private static int CompareAddresses(IPAddress current, IPAddress candidate)
     {
         return ScoreAddress(current) - ScoreAddress(candidate);
-    }
-
-    private static bool IsLoopbackAddress(IPAddress addr)
-    {
-        if (IPAddress.IsLoopback(addr)) return true;
-        Span<byte> bytes = stackalloc byte[16];
-        addr.TryWriteBytes(bytes, out int written);
-        if (written != 16) return false;
-
-        // Java treats the whole mapped 127/8 range as IPv4 loopback.
-        if (addr.IsIPv4MappedToIPv6) return bytes[12] == 127;
-        return bytes[15] == 1 && bytes[..15].IndexOfAnyExcept((byte)0) < 0;
     }
 
     private static int ScoreAddress(IPAddress addr)

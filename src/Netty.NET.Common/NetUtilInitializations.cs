@@ -117,7 +117,7 @@ internal static class NetUtilInitializations
                 foreach (UnicastIPAddressInformation address in addrs)
                 {
                     IPAddress addr = address.Address;
-                    if (IPAddress.IsLoopback(addr))
+                    if (IsLoopbackAddress(addr))
                     {
                         // Found
                         loopbackIface = iface;
@@ -207,13 +207,41 @@ internal static class NetUtilInitializations
         return (loopbackIface, loopbackAddr);
     }
 
+    internal static bool IsLoopbackAddress(IPAddress address)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        if (IPAddress.IsLoopback(address)) return true;
+        Span<byte> bytes = stackalloc byte[16];
+        address.TryWriteBytes(bytes, out int written);
+        if (written != 16) return false;
+
+        // Java treats the whole mapped 127/8 range as IPv4 loopback.
+        if (address.IsIPv4MappedToIPv6) return bytes[12] == 127;
+        return bytes[15] == 1 && bytes[..15].IndexOfAnyExcept((byte)0) < 0;
+    }
+
     private static bool IsAddressAssigned(IPAddress address)
     {
-        foreach (NetworkInterface iface in NetworkInterface.GetAllNetworkInterfaces())
+        return IsAddressAssigned(address, NetworkInterface.GetAllNetworkInterfaces());
+    }
+
+    internal static bool IsAddressAssigned(IPAddress address, IReadOnlyList<NetworkInterface> interfaces)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        ArgumentNullException.ThrowIfNull(interfaces);
+        Span<byte> requestedBytes = stackalloc byte[16];
+        address.TryWriteBytes(requestedBytes, out int requestedLength);
+        ReadOnlySpan<byte> requested = address.IsIPv4MappedToIPv6 ? requestedBytes[12..] : requestedBytes[..requestedLength];
+        Span<byte> candidateBytes = stackalloc byte[16];
+        // Java factories normalize mapped IPv4; address equality ignores IPv6 scope.
+        foreach (NetworkInterface iface in interfaces)
         {
             foreach (UnicastIPAddressInformation candidate in iface.GetIPProperties().UnicastAddresses)
             {
-                if (candidate.Address.Equals(address)) return true;
+                IPAddress observed = candidate.Address;
+                observed.TryWriteBytes(candidateBytes, out int candidateLength);
+                ReadOnlySpan<byte> bytes = observed.IsIPv4MappedToIPv6 ? candidateBytes[12..] : candidateBytes[..candidateLength];
+                if (bytes.SequenceEqual(requested)) return true;
             }
         }
 
