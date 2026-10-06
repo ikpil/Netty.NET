@@ -7599,3 +7599,53 @@ native-mac-selection-* and artifacts/native-mac-selection-validation. The initia
 mock-sequence setup failure is retained separately and excluded from final results.
 Scorer allocation/mapped-address handling, distinct provider equality, other OS/
 backend integration and whole common remain open; source stays in-progress.
+
+
+## Native MAC IP categories and mapped addresses
+
+Pinned MacAddressUtil.java:245-265 compares any/loopback (0), multicast (1), link
+local (2), site local (3), then other (4); BestAvailableMac's first-address filter
+also excludes loopback. The existing DefaultChannelId consumer mapping remains
+unchanged. Private CLR extension methods previously allocated up to three IPv4
+arrays and treated mapped private/multicast/link-local/any addresses as ordinary
+IPv6. Native IPAddress.IsLoopback also misses mapped 127/8 variants and scoped ::1.
+
+ScoreAddress now writes network-order bytes once into a 16-byte stack Span, reads
+native/mapped IPv4's four bytes, and uses native IPv6 flags for remaining categories.
+Java normalizes mapped byte/text inputs to IPv4
+([JDK contract](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/Inet6Address.html#special-ipv6-address)).
+The CLR keeps its original IPAddress object and scope; only ranking/filtering
+normalizes the embedded IPv4 meaning. First-address loopback filtering explicitly
+covers mapped 127/8 and scoped ::1. IPv6 any/loopback classification ignores scope,
+as real JDK predicates do. IPv4-compatible, NAT64 and near-mapped prefixes stay
+IPv6; fc00/fd00 remain category 4 and obsolete fec0/10 category 3, preserving the
+original policy rather than substituting a modern private-network classification.
+TryWriteBytes receives enough space for either supported native address length.
+All 24 Java comments and existing CLR range comments remain beside implementation;
+no public API or new helper type, no input mutation or DNS lookup.
+
+The same 26 CLR regression cases execute against the unchanged baseline: 12 pass/
+14 fail, then all pass. They exercise real selection before length tie-breaking,
+mapped loopback hardware-probe avoidance, scoped IPv6 and unrelated prefixes.
+Affected Debug/checked Release: 89 pass. An initial revision still missed scoped
+IPv6 loopback; its failure evidence is separate from final results.
+
+Binary oracle matrix: 198748 unique address/scope inputs, including all 65536 IPv4
+first/second-byte prefixes and mapped forms, all 65536 IPv6 first-word prefixes,
+exact boundaries/scopes and 2048 fixed-seed IPv6 inputs. Java executes the byte-exact
+original score method with real InetAddress.getByAddress objects and native IPv6
+numeric scope construction. Mapped inputs become Inet4Address before scope applies;
+forced mapped Inet6Address factory objects are outside this normal factory model.
+Native probes bind private delegates in the actual before/after compiled libraries,
+without source/provider substitution. Every final score and loopback result matches;
+baseline differs on 4652 scores, including 262 loopback results. This matrix compares
+categories, not representation/factory/provider/OS equivalence.
+
+After 5000 warm-up cycles, 10000 cycles across six pre-created native IPv4 addresses
+(any/loopback/global/site/multicast/link) make 60000 delegate calls: three samples
+each allocate 2880000 bytes before, zero after, with equal 100000 score checksums.
+Parsing, interface selection and probe I/O are outside the measured region; no
+whole-operation or throughput claim. Evidence: native-mac-scoring-* and
+artifacts/native-mac-scoring-validation. Provider equality/subinterface capability,
+other OS/backend and wider NetUtil/Graal/common work remain open. Source stays
+in-progress; no new MD.

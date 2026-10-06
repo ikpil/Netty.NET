@@ -16,7 +16,6 @@
 
 using System;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Net;
 using Netty.NET.Common.Internal.Logging;
@@ -60,7 +59,7 @@ public static class MacAddressUtil
                 if (0 < addrs.Count)
                 {
                     IPAddress a = addrs[0].Address;
-                    if (!IPAddress.IsLoopback(a))
+                    if (!IsLoopbackAddress(a))
                     {
                         ifaces[iface] = a;
                     }
@@ -315,88 +314,46 @@ public static class MacAddressUtil
         return ScoreAddress(current) - ScoreAddress(candidate);
     }
 
+    private static bool IsLoopbackAddress(IPAddress addr)
+    {
+        if (IPAddress.IsLoopback(addr)) return true;
+        Span<byte> bytes = stackalloc byte[16];
+        addr.TryWriteBytes(bytes, out int written);
+        if (written != 16) return false;
+
+        // Java treats the whole mapped 127/8 range as IPv4 loopback.
+        if (addr.IsIPv4MappedToIPv6) return bytes[12] == 127;
+        return bytes[15] == 1 && bytes[..15].IndexOfAnyExcept((byte)0) < 0;
+    }
+
     private static int ScoreAddress(IPAddress addr)
     {
-        if (addr.IsAny() || IPAddress.IsLoopback(addr))
+        Span<byte> buffer = stackalloc byte[16];
+        addr.TryWriteBytes(buffer, out int written);
+        // Java InetAddress normalizes IPv4-mapped IPv6 inputs to IPv4.
+        if (written == 4 || addr.IsIPv4MappedToIPv6)
         {
-            return 0;
-        }
+            ReadOnlySpan<byte> bytes = buffer.Slice(written - 4, 4);
+            if ((bytes[0] | bytes[1] | bytes[2] | bytes[3]) == 0 || bytes[0] == 127) return 0;
 
-        if (addr.IsMulticast())
-        {
-            return 1;
-        }
-
-        if (addr.IsLinkLocal())
-        {
-            return 2;
-        }
-
-        if (addr.IsSiteLocal())
-        {
-            return 3;
-        }
-
-        return 4;
-    }
-
-    private static bool IsAny(this IPAddress addr)
-    {
-        return addr.Equals(IPAddress.Any) || addr.Equals(IPAddress.IPv6Any);
-    }
-
-    private static bool IsMulticast(this IPAddress addr)
-    {
-        if (addr.AddressFamily == AddressFamily.InterNetwork)
-        {
             // IPv4 Multicast: 224.0.0.0 ~ 239.255.255.255
-            byte[] bytes = addr.GetAddressBytes();
-            return bytes[0] >= 224 && bytes[0] <= 239;
-        }
-        else if (addr.AddressFamily == AddressFamily.InterNetworkV6)
-        {
-            return addr.IsIPv6Multicast;
-        }
-
-        return false;
-    }
-
-    private static bool IsLinkLocal(this IPAddress addr)
-    {
-        if (addr.AddressFamily == AddressFamily.InterNetwork)
-        {
+            if (bytes[0] >= 224 && bytes[0] <= 239) return 1;
             // IPv4 Link-local: 169.254.0.0/16
-            byte[] bytes = addr.GetAddressBytes();
-            return bytes[0] == 169 && bytes[1] == 254;
-        }
-        else if (addr.AddressFamily == AddressFamily.InterNetworkV6)
-        {
-            return addr.IsIPv6LinkLocal;
-        }
-
-        return false;
-    }
-
-    private static bool IsSiteLocal(this IPAddress addr)
-    {
-        if (addr.AddressFamily == AddressFamily.InterNetwork)
-        {
-            byte[] bytes = addr.GetAddressBytes();
+            if (bytes[0] == 169 && bytes[1] == 254) return 2;
             // 10.0.0.0/8
-            if (bytes[0] == 10)
-                return true;
+            if (bytes[0] == 10) return 3;
             // 172.16.0.0/12
-            if (bytes[0] == 172 && (bytes[1] >= 16 && bytes[1] <= 31))
-                return true;
+            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return 3;
             // 192.168.0.0/16
-            if (bytes[0] == 192 && bytes[1] == 168)
-                return true;
-        }
-        else if (addr.AddressFamily == AddressFamily.InterNetworkV6)
-        {
-            return addr.IsIPv6SiteLocal; // obsolete, but available
+            if (bytes[0] == 192 && bytes[1] == 168) return 3;
+            return 4;
         }
 
-        return false;
+        // Scope IDs do not change the address category.
+        if (buffer[..15].IndexOfAnyExcept((byte)0) < 0 && buffer[15] <= 1) return 0;
+        if (addr.IsIPv6Multicast) return 1;
+        if (addr.IsIPv6LinkLocal) return 2;
+        if (addr.IsIPv6SiteLocal) return 3; // obsolete, but available
+        return 4;
     }
 }

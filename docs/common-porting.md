@@ -44,6 +44,25 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native MAC IP classification checkpoint
+
+Mapped IPv4 now keeps IPv4 ranking and full 127/8 loopback filtering; IPv6 any/loopback
+ignores scope. Native Span byte access removes repeated IPv4 arrays. See
+[IP categories](common-clr-design.md#native-mac-ip-categories-and-mapped-addresses)
+for preserved prefixes, factory limits and allocation measurement.
+Identical 26-case baseline: 12 pass/14 fail -> all pass; affected Debug/checked
+Release 89 pass. All 198748 executed Java/native score and loopback rows agree;
+4652 baseline score differences fixed. Six-address, 10000-cycle warmed classification
+allocation: 2880000 -> 0 bytes, equal score checksums; no throughput claim.
+Default Debug/Release each: 2426 discovered/2412 passed/0 failed/14 unchanged skips.
+All 2400 prior outcomes, 759 originals, 271 comment rows, pinned 205+66 inventory,
+24 MAC original comments and warning/casing identities retained. Statuses unchanged:
+72 verified/56 CLR replacements/46 pending/16 in-progress/15 not-applicable.
+Evidence: native-mac-scoring-* and artifacts/native-mac-scoring-validation; no new MD.
+Next: native interface equality and remaining MAC provider/subinterface decisions,
+then NetUtil/Graal/backend/platform reviews. Focused Global completion stall and
+whole common remain open.
+
 ## Native MAC selection checkpoint
 
 Failed address/hardware providers now allow healthy peers to supply the machine ID.
