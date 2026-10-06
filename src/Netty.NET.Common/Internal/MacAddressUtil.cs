@@ -17,7 +17,6 @@
 using System;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
 using System.Collections.Generic;
 using System.Net;
 using Netty.NET.Common.Internal.Logging;
@@ -158,12 +157,13 @@ public static class MacAddressUtil
     }
 
     /**
-     * Parse a EUI-48, MAC-48, or EUI-64 MAC address from a {@link string} and return it as a {@code byte[]}.
+     * Parse a EUI-48, MAC-48, or EUI-64 MAC address from a {@link String} and return it as a {@code byte[]}.
      * @param value The string representation of the MAC address.
      * @return The byte representation of the MAC address.
      */
     public static byte[] ParseMAC(string value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         byte[] machineId;
         char separator;
         switch (value.Length)
@@ -214,13 +214,20 @@ public static class MacAddressUtil
      */
     public static string FormatAddress(byte[] addr)
     {
-        var buf = new StringBuilder(24);
-        foreach (byte b in addr)
-        {
-            buf.Append((b & 0xFF).ToString("X2")).Append(":");
-        }
+        ArgumentNullException.ThrowIfNull(addr);
+        if (addr.Length == 0) return string.Empty;
 
-        return buf.ToString(0, buf.Length - 1);
+        return string.Create(checked(addr.Length * 3 - 1), addr, static (chars, bytes) =>
+        {
+            const string digits = "0123456789abcdef";
+            int position = 0;
+            foreach (byte value in bytes)
+            {
+                if (position != 0) chars[position++] = ':';
+                chars[position++] = digits[value >> 4];
+                chars[position++] = digits[value & 15];
+            }
+        });
     }
 
     /**

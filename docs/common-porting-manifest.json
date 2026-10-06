@@ -3622,18 +3622,20 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/MacAddressUtil.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
+      "status": "in-progress",
+      "candidates": [],
+      "implementation": [
         "src/Netty.NET.Common/Internal/MacAddressUtil.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Native MAC text conversion: identical affected baseline 27 pass/8 fail; final focused Debug/checked Release 35 pass, nine added CLR cases. 8461 executed pinned-method rows: 8458 exact matches, three explicit empty/null policy differences; 2004 previous formatting case mismatches repaired. Warmed 10000 six-byte formats allocate 3680000 -> 560000 bytes, no throughput claim. Default Debug/Release 2340 discovered/2326 pass/0 fail/14 unchanged skips; 2331 prior outcomes, 759 original identities, 271 comment rows, 205+66 pinned inventory, warnings/casing preserved. docs/common-clr-design.md#native-mac-address-text-conversion, docs/common-porting.md and native-mac-codec-* evidence. Whole source and module/backend/platform review remain open."
+      ],
+      "adaptation": "Native byte[] ownership and direct string.Create Span<char> formatting preserve six/eight-byte machine-ID parsing and lowercase colon display for actual DefaultChannelId consumers. Null parameters identify value/addr; empty byte-array display is string.Empty, deliberate CLR policies. All 24 original comments exact; interface selection, ranking/normalization, physical-address failures, fallback and platform behavior remain open.",
       "comments": {
         "upstreamCount": 24,
         "required": true,
-        "preservedCount": 23,
-        "missingCount": 1
+        "preservedCount": 24,
+        "missingCount": 0
       }
     },
     {

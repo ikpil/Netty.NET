@@ -7257,3 +7257,69 @@ on Windows/net10.0; throughput and other runtimes are not certified. Evidence:
 native-adaptive-sizing-* TRX/JSON and artifacts/native-adaptive-sizing-validation.
 Full allocator/backend/OS integration and the prior focused Global completion
 stall remain open; whole-suite success does not close those reviews.
+
+
+## Native MAC address text conversion
+
+Pinned MacAddressUtil.java:146-196 and StringUtil.java:255-284 establish the
+ASCII parser and lowercase colon-delimited display. All-module call/member
+search finds transport DefaultChannelId.java:95 consuming configured six/eight
+byte machine IDs, and :107 displaying auto-detected IDs; common's random fallback
+also calls formatAddress. The parser preserves input width, accepts either one
+consistent colon or hyphen separator and either ASCII hex case, and returns a
+fresh owned byte array. It does not expand six bytes to EUI-64 during parsing;
+BestAvailableMac's separate normalization remains unchanged.
+
+Native byte[] is appropriate for machine-ID ownership. No Java byte/signed-byte
+facade or temporary per-byte string is needed. FormatAddress uses string.Create
+with a static Span<char> callback, unsigned native byte indexing and one exact
+result allocation. Leading zeroes, lowercase digits and colon separators now
+match the pinned source; formatting retains the existing arbitrary nonempty
+byte-array length contract (the parser alone restricts width to six/eight).
+ParseMAC keeps its existing name/signature and ASCII decoding dependency.
+
+Deliberate native policies: null value/addr raise ArgumentNullException with the
+correct ParamName; an empty byte array formats as string.Empty instead of
+reproducing Java's negative substring bound. An empty string still cannot parse
+as a machine ID. Output-length arithmetic is explicitly checked independently
+of build configuration; oversized allocation/overflow failure is reviewed, not
+forced with a huge input. No caller should mutate an input array concurrently
+with formatting; no snapshot allocation or thread-safety guarantee is added.
+
+The isolated Java probe executes three byte-exact pinned MAC methods, two
+byte-exact StringUtil ASCII decoding methods and the exact HEX2B initialization.
+Probe envelopes supply only original 6/8 constants and dependency containers;
+they omit network discovery, provider logging and random generation. Original
+files, extracted-methods.json and generated probe sources are retained under
+artifacts/native-mac-codec-validation. Java signed parse bytes are rendered with
+native HexFormat and CLR unsigned bytes with Convert.ToHexStringLower for the
+comparison, not with the production formatter being tested.
+
+Across 8461 executed rows (all 256 byte values in one/six/eight byte addresses,
+both parser widths/separators/cases in en-US/ar-SA/tr-TR, ten invalid forms and
+three native policies), 8458 match Java exactly; only empty/null policy rows
+differ. The old formatter differs in 2004 additional rows. The identical warmed
+10000 six-byte formatting probe allocates 3680000 bytes before versus 560000 after,
+with equal length checksums; this Windows/x64/net10 observation measures allocated
+bytes, not throughput. Nine new CLR cases expose eight old failures. All original
+MAC/hex fixture source bytes remain unchanged, and all 24 MAC source comments are
+now exact. The pre-existing translated parser documentation is archived below.
+
+MacAddressUtil remains in-progress: interface ordering/filtering, physical-address
+exception handling, ranking/normalization, fallback generation and platform behavior
+are not certified by this text conversion unit. SocketUtils remains pending;
+its current IPAddress/int connect maps the purported timeout to a native port,
+its TcpClient catch-all conflates failed connection with Java's pending state,
+and its eager endpoint resolution requires a native DNS/endpoint ownership review.
+These require separate consumer-backed native API decisions. Other OS/runtime,
+whole common completion and the prior focused Global completion stall remain open.
+
+Retired CLR documentation spelling, preserved as provenance:
+
+```csharp
+    /**
+     * Parse a EUI-48, MAC-48, or EUI-64 MAC address from a {@link string} and return it as a {@code byte[]}.
+     * @param value The string representation of the MAC address.
+     * @return The byte representation of the MAC address.
+     */
+```

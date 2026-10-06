@@ -44,6 +44,25 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native MAC text conversion checkpoint
+
+MacAddressUtil's machine-ID parser/display now has scoped common/transport
+consumer review: lowercase colon formatting matches Java; string.Create removes
+per-byte temporary strings. Native null arguments and empty-array display are
+explicit policies. See [native MAC text conversion](common-clr-design.md#native-mac-address-text-conversion).
+Nine new CLR cases: identical affected baseline 27 pass/8 fail, final Debug/checked
+Release 35 pass. Executed Java matrix: 8461 rows/8458 exact matches/three documented
+native differences; baseline also had 2004 case mismatches. Warmed 10000 formats:
+3680000 to 560000 allocated bytes, equal length checksums; no throughput claim.
+Default Debug/Release each: 2340 discovered/2326 passed/0 failed/14 unchanged skips.
+All 2331 prior outcomes, 759 original identities, 271 comment rows and pinned
+205+66 inventory retained; all 24 scoped comments, no new source/test warning
+identities or casing collisions. Source statuses: 71 verified/55 CLR replacements/
+48 pending/16 in-progress/15 not-applicable. Evidence: native-mac-codec-* and
+artifacts/native-mac-codec-validation; no new MD. MacAddressUtil backend/ranking/
+normalization remains open, as do SocketUtils endpoint/timeout/native connection
+semantics, other pending work/platforms and the focused Global completion stall.
+
 ## Native adaptive sizing checkpoint
 
 AdaptiveCalculator now has scoped receive/io_uring consumer review and bounded
