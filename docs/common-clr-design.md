@@ -7848,3 +7848,52 @@ Original NetUtilNetworkInterfacesAccessor get/set comments:
 // using https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
 // a no-op setter to avoid exceptions when NetUtil is initialized at run-time
 ```
+
+
+## Native backlog lookup and process ownership
+
+Pinned NetUtil.java:169-258 reads the bounded kernel file before optional sysctl,
+uses nullable Integer to distinguish unavailable data from zero, and preserves
+200/128/4096 platform defaults on recoverable failures. Original server configs
+(transport, epoll, kqueue, io_uring, SCTP and domain sockets) consume SOMAXCONN as
+their configurable integer backlog; an implicit Socket.Listen default would not
+replace that option contract. The sysctl helper is private in Java, with no other
+module callers; retire its accidental public C# exposure.
+
+Native internal int? retains zero and queries the second key only for null. Read
+kernel integers with invariant sign parsing and no whitespace trimming; oversized
+input remains bounded by the existing stream. Give the reader sole file-stream
+ownership. File/provider recovery stays inside the catch; OutOfMemoryException
+escapes instead of becoming a plausible platform value, matching Java's Error
+boundary. OperatingSystem supplies native Windows/macOS detection. Internal Func
+boundaries control discovery/open/config/query in tests; public initialization
+still uses actual native operations and cached SOMAXCONN.
+
+Process.Start must succeed before the child enters cleanup ownership. ArgumentList
+passes one literal key, and the existing bounded stream now also protects stdout
+([native argument contract](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.argumentlist?view=net-10.0)).
+Dispose the owned readers/Process and terminate a still-running child, tolerating
+the observed-state/exit race. Termination is asynchronous
+([Process.Kill contract](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process.kill?view=net-10.0));
+tests independently wait on an already opened observer and verify the native owner
+handle closes after success and parse failure. No timeout or process-tree policy
+is introduced. Native standard decoding/numeric parsing is validated on ASCII OS
+output, not arbitrary Java Unicode-digit/charset equivalence.
+
+Evidence: artifacts/native-backlog-validation contains byte-exact pinned action,
+sysctl and bounded class excerpts. Controlled Java I/O/logger/platform containers
+and complete before/after native source probes use the archived dispatch mappings;
+old unavailable-query data is represented by its int-zero API, final by int?. No
+Java process/OS/logger integration claim. The action rows include values, query
+counts and stream-close counts; all 20 final rows agree, 12 baseline differences.
+Actual compiled methods are additionally invoked by reflection in fresh processes
+against an actual fixture sysctl executable via child-local PATH: eight rows per
+version reproduce null/zero, start-error masking, single argument and byte limit.
+There is no production reflection or provider substitution in those process rows.
+The fixture emits controlled output, not kernel sysctl queries. Twenty-four new
+internal-boundary cases are final-only; the identical export-retirement case fails
+baseline then passes. Results/inventory: current common-porting.md checkpoint and
+native-backlog-* records. All 118 original NetUtil comments retained. Source stays
+in-progress: IP preferences/DNS policy, remaining API, OS/backend/common and known
+scheduler/focused Global completion-stall reviews remain open. No new MD or
+performance, other-OS, NativeAOT or real BSD sysctl validation claim.

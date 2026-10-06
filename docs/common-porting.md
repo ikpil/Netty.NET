@@ -44,6 +44,25 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native backlog checkpoint
+
+Preserve zero vs unavailable sysctl values and native process startup exceptions;
+use one native argument, bounded stdout, invariant kernel-file parsing and owned
+streams. Narrow the Java-private sysctl implementation to internal C#.
+See [contract and probe limits](common-clr-design.md#native-backlog-lookup-and-process-ownership).
+25 added CLR cases; affected Debug/checked Release 157 pass. Identical API-retirement
+baseline one fail -> pass; 24 new-boundary cases final-only. All 20 controlled
+pinned-Java/native action rows match, 12 prior differences including close counts.
+Eight actual-child compiled-method rows per version verify startup/argument/bounds
+changes; real native child exit/handle cleanup tested after success and failure.
+Default Debug/Release: 2490 discovered/2476 pass/0 fail/14 unchanged skips; all 2465
+prior outcomes, original 759, 271 comment rows, 118 NetUtil comments, pinned 205+66
+inventory and warning/casing identities conserved. Source statuses unchanged:
+73 verified/56 CLR replacements/45 pending/15 in-progress/16 not-applicable.
+Evidence: native-backlog-* and artifacts/native-backlog-validation; no new MD.
+Next: IP preference settings and actual DNS family-selection consumers. Remaining
+NetUtil API, other OS/backend, scheduler/Global completion stall and common stay open.
+
 ## Native NetUtil initialization checkpoint
 
 Retire the public Graal substitution facade and eight helpers: original consumers

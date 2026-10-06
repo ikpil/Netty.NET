@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -169,24 +170,30 @@ public static class NetUtil
      * @param sysctlKey The key which the return value corresponds to.
      * @return The <a href ="https://www.freebsd.org/cgi/man.cgi?sysctl(8)">sysctl</a> value for {@code sysctlKey}.
      */
-    public static int SysctlGetInt(string sysctlKey)
+    internal static int? SysctlGetInt(string sysctlKey)
     {
+        return SysctlGetInt(sysctlKey, Process.Start);
+    }
+
+    internal static int? SysctlGetInt(string sysctlKey, Func<ProcessStartInfo, Process> startProcess)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(sysctlKey);
+        ArgumentNullException.ThrowIfNull(startProcess);
         var processInfo = new ProcessStartInfo
         {
             FileName = "sysctl",
-            Arguments = sysctlKey,
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        processInfo.ArgumentList.Add(sysctlKey);
 
-        using Process process = new Process { StartInfo = processInfo };
+        // Own only a successfully started child; startup failures retain their original exception.
+        using Process process = startProcess(processInfo);
         try
         {
-            process.Start();
-
             // Suppress warnings about resource leaks since the buffered reader is closed below
-            using StreamReader reader = process.StandardOutput;
+            using StreamReader reader = new StreamReader(new BoundedStream(process.StandardOutput.BaseStream));
             {
                 string line = reader.ReadLine();
                 if (line != null && line.StartsWith(sysctlKey, StringComparison.Ordinal))
@@ -195,12 +202,12 @@ public static class NetUtil
                     {
                         if (!char.IsDigit(line[i]))
                         {
-                            return int.Parse(line.Substring(i + 1));
+                            return int.Parse(line.AsSpan(i + 1), NumberStyles.None, CultureInfo.InvariantCulture);
                         }
                     }
                 }
 
-                return 0;
+                return null;
             }
         }
         finally
@@ -210,7 +217,14 @@ public static class NetUtil
             // raised will directly lead to throwable.
             if (!process.HasExited)
             {
-                process.Kill();
+                try
+                {
+                    process.Kill();
+                }
+                catch (InvalidOperationException) when (process.HasExited)
+                {
+                    // The child exited between the state check and termination request.
+                }
             }
         }
     }
@@ -1204,11 +1218,11 @@ internal static class SoMaxConnAction
         // - Mac OS X: 128
         // - Linux kernel > 5.4 : 4096
         int somaxconn;
-        if (PlatformDependent.IsWindows())
+        if (OperatingSystem.IsWindows())
         {
             somaxconn = 200;
         }
-        else if (PlatformDependent.IsOsx())
+        else if (OperatingSystem.IsMacOS())
         {
             somaxconn = 128;
         }
@@ -1217,52 +1231,62 @@ internal static class SoMaxConnAction
             somaxconn = 4096;
         }
 
+        return Run(somaxconn, File.Exists,
+            path => File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read),
+            () => SystemPropertyUtil.GetBoolean("io.netty.net.somaxconn.trySysctl", false), NetUtil.SysctlGetInt);
+    }
+
+    internal static int Run(int somaxconn, Func<string, bool> fileExists, Func<string, Stream> openFile,
+        Func<bool> trySysctl, Func<string, int?> sysctlGetInt)
+    {
+        ArgumentNullException.ThrowIfNull(fileExists);
+        ArgumentNullException.ThrowIfNull(openFile);
+        ArgumentNullException.ThrowIfNull(trySysctl);
+        ArgumentNullException.ThrowIfNull(sysctlGetInt);
         string file = "/proc/sys/net/core/somaxconn";
-        bool exists = File.Exists(file);
         try
         {
             // file.exists() may throw a SecurityException if a SecurityManager is used, so execute it in the
             // try / catch block.
             // See https://github.com/netty/netty/issues/4936
-            if (exists)
+            if (fileExists(file))
             {
-                using var fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var reader = new StreamReader(new BoundedStream(fs));
+                using var reader = new StreamReader(new BoundedStream(openFile(file)));
                 var line = reader.ReadLine();
-                somaxconn = int.Parse(line);
+                somaxconn = int.Parse(line, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
                 if (logger.IsDebugEnabled())
                 {
-                    logger.Debug("{}: {}", fs, somaxconn);
+                    logger.Debug("{}: {}", file, somaxconn);
                 }
             }
             else
             {
                 // Try to get from sysctl
-                int tmp = 0;
-                if (SystemPropertyUtil.GetBoolean("io.netty.net.somaxconn.trySysctl", false))
+                int? tmp = null;
+                if (trySysctl())
                 {
-                    tmp = NetUtil.SysctlGetInt("kern.ipc.somaxconn");
-                    if (tmp == 0)
+                    tmp = sysctlGetInt("kern.ipc.somaxconn");
+                    if (tmp == null)
                     {
-                        tmp = NetUtil.SysctlGetInt("kern.ipc.soacceptqueue");
-                        if (tmp != 0)
+                        tmp = sysctlGetInt("kern.ipc.soacceptqueue");
+                        if (tmp != null)
                         {
-                            somaxconn = tmp;
+                            somaxconn = tmp.Value;
                         }
                     }
                     else
                     {
-                        somaxconn = tmp;
+                        somaxconn = tmp.Value;
                     }
                 }
 
-                if (tmp == 0)
+                if (tmp == null)
                 {
                     logger.Debug($"Failed to get SOMAXCONN from sysctl and file {file}. Default: {somaxconn}");
                 }
             }
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OutOfMemoryException)
         {
             if (logger.IsDebugEnabled())
             {
