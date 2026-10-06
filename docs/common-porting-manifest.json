@@ -4258,18 +4258,21 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/SystemPropertyUtil.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Internal/SystemPropertyUtil.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/SystemPropertyUtil.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned source, all 15 original property tests, common runtime/global and buffer allocator consumers reviewed. Eight new CLR cases; byte-identical baseline affected fixture 26 passed/4 failed; final Debug/checked Release 30 pass. Exact Java parser/ObjectUtil execute with probe-only logger capture; 111 rows: 93 match/18 explicit CLR differences. Native consumer snapshot/live/case paths pass. Whole defaults, identity/comment/inventory/casing/warning results: common-porting.md native environment settings checkpoint and native-environment-settings-* TRX/JSON. Windows/net10.0 only; broader provider/security/OS/backend reviews remain separate."
+      ],
+      "adaptation": "Native live process environment replaces JVM properties/privileged access; host name/value semantics remain. Invariant decimal TryParse fixes culture-specific signs, preserves native Unicode whitespace/ASCII digit policy and warning/default behavior. Redundant lowercase copy and added GetProperties facade removed; native Environment snapshot API supplies enumeration. Get access-error fallback returns its explicit default; permission denial code-reviewed, not forced. All 11 original comments preserved including archived JVM private constructor. See common-clr-design.md#native-environment-configuration-parsing for six deliberate text-input differences.",
       "comments": {
         "upstreamCount": 11,
         "required": true,
-        "preservedCount": 10,
-        "missingCount": 1
+        "preservedCount": 11,
+        "missingCount": 0
       }
     },
     {
@@ -6410,7 +6413,8 @@
         "test/Netty.NET.Common.Tests/Internal/SystemPropertyUtilTest.cs"
       ],
       "evidence": [
-        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited."
+        "Pinned Java test reviewed and translated; PortingBatch run: 400 passed, 3 upstream-disabled/CI-only skipped; original comments audited.",
+        "Native environment settings checkpoint: original source, all 15 case identities/assertions and license unchanged. All affected 30 Debug/checked Release cases pass; original environment fixture cleanup retained. See native-environment-settings-* records."
       ],
       "adaptation": "Java/.NET fixture and exception adaptations are recorded in docs/common-porting.md. This verifies this test file, not every API of its target class.",
       "comments": {

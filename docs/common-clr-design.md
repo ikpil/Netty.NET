@@ -7153,3 +7153,57 @@ mapping. Baseline differs on 42 rows. Native Task signal-value identity also pas
 Raw TRX/JSON/logs: native-signal-* and artifacts/native-signal-validation.
 Windows/net10.0; complete codec/backend/platform integration and the previously
 recorded focused Global completion stall remain open.
+
+
+## Native environment configuration parsing
+
+Pinned SystemPropertyUtil.java and all 15 original SystemPropertyUtilTest scenarios
+were reviewed with common/NettyRuntime.java:67-69, GlobalEventExecutor.java:50 and
+buffer/PooledByteBufAllocator.java:69-149 consumers: processor counts, queue limits,
+memory limits and boolean switches require typed lookup/defaults, not JVM property
+storage. Existing CLR callers use Environment.GetEnvironmentVariable with the same
+configuration keys; keep live process reads and native argument validation.
+Host names/casing and embedded NUL handling follow the OS/runtime. On this Windows
+net10.0 run names are case-insensitive, an explicitly set empty value is present,
+and values containing NUL are truncated. No JVM -D/SecurityManager/AccessController
+or duplicate property store is introduced; no AppContext precedence is invented.
+
+GetInt/GetLong now use native TryParse(NumberStyles.Integer, InvariantCulture),
+retaining native Unicode whitespace trimming and ASCII decimal digits/signs.
+CurrentCulture's custom NEG/POS signs must neither reject '-'/'+' nor admit
+localized configuration syntax. Malformed/out-of-range text logs a warning and
+returns the caller's default without using exception-driven parsing. GetBoolean
+uses the existing ordinal ASCII token comparisons and trim, dropping a redundant
+lowercase copy; both fallback values remain. Get returns value ?? default after
+the existing ordinary managed access-error handler, repairing its reviewed error
+fallback branch. Permission denial is not forced on net10.0: that branch is code
+reviewed, not an executed security/backend certification.
+
+The added GetProperties facade has no pinned SystemPropertyUtil API or original/
+CLR callsite. Retire it and use Environment.GetEnvironmentVariables directly for
+native detached snapshots. All original test source/assertions/identities stay
+unchanged. All 11 original source comments remain in code except the JVM-only
+private-constructor comment archived here; the original test license also remains.
+
+```java
+    private SystemPropertyUtil() {
+        // Unused
+    }
+```
+
+Eight new CLR cases cover culture signs, live/missing/default reads, numeric bounds
+and malformed syntax, explicit Unicode policy, boolean tokens and native snapshot
+API. The byte-identical 30-case baseline affected fixture has 26 passes/four failures
+(three culture cases and duplicate API shape); final Debug/checked Release each
+pass all 30, preserving the 22 prior affected cases including all 15 original
+property scenarios and processor-count consumers. A byte-identical non-friend CLR
+consumer and executed byte-exact pinned SystemPropertyUtil/ObjectUtil compare
+111 rows over three cultures: 93 match Java, 18 deliberately retain CLR policy
+for six inputs (Unicode whitespace numeric/boolean, Arabic/fullwidth digits,
+U+001F controls, embedded NUL). Baseline/native differ on 24 culture-sensitive rows.
+Boolean spelling is normalized, not configuration values. Java warning calls use
+a probe-only capturing logger dependency; provider/formatting semantics are outside
+this comparison. Native snapshots/live reads/case behavior are separately executed.
+Details: artifacts/native-environment-settings-validation and
+native-environment-settings-* TRX/JSON. Windows/net10.0 only; other OS/runtime,
+logger/backend/platform work and the prior focused Global completion stall remain.

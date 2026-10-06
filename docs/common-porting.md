@@ -44,6 +44,26 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native environment settings checkpoint
+
+SystemPropertyUtil now has scoped original/consumer review: Environment supplies
+live configuration; invariant native TryParse removes culture-dependent integer
+interpretation and parsing exceptions. Redundant lowercase allocation and the
+unneeded whole-environment facade are removed. Access-error fallback now returns
+the supplied default; that permission-denial path is reviewed, not forced.
+See [native environment parsing](common-clr-design.md#native-environment-configuration-parsing)
+for six explicit JVM/CLR text-policy differences and native source semantics.
+Eight CLR cases: identical affected baseline 26 passed/4 failed; final Debug/checked
+Release 30 passed. Executed Java/native matrix: 111 rows, 93 matches/18 documented
+differences. Default Debug/Release each: 2319 discovered/2305 passed/0 failed/
+14 unchanged skips. All 2311 prior outcomes, 759 original identities, 271 comment
+rows and pinned 205+66 inventory retained; 12 scoped originals, no new source/test
+warnings or casing collisions. Source statuses: 70 verified/55 CLR replacements/
+50 pending/15 in-progress/15 not-applicable. Evidence: native-environment-settings-*
+and artifacts/native-environment-settings-validation; no new MD.
+Continue remaining executor/backend, resource, string/encoding and platform reviews.
+Module completion, other OS/runtime and the focused Global completion stall remain open.
+
 ## Native replay signal checkpoint
 
 Signal now has a scoped pinned common/codec consumer review and corrected private

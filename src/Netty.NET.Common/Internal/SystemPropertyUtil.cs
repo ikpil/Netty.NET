@@ -15,8 +15,7 @@
  */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Globalization;
 using Netty.NET.Common.Internal.Logging;
 using static Netty.NET.Common.Internal.ObjectUtil;
 
@@ -27,6 +26,8 @@ namespace Netty.NET.Common.Internal;
  */
 public static class SystemPropertyUtil
 {
+    // CLR: process environment variables replace JVM system properties. Names
+    // follow the host OS; numeric configuration must not depend on caller culture.
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SystemPropertyUtil));
 
     /**
@@ -36,18 +37,6 @@ public static class SystemPropertyUtil
     public static bool Contains(string key)
     {
         return Get(key) != null;
-    }
-
-    public static Dictionary<string, string> GetProperties()
-    {
-        var properties = new Dictionary<string, string>();
-        foreach (var kvp in Environment.GetEnvironmentVariables())
-        {
-            var entry = (DictionaryEntry)kvp;
-            properties.Add((string)entry.Key, (string)entry.Value);
-        }
-
-        return properties;
     }
 
     /**
@@ -77,14 +66,14 @@ public static class SystemPropertyUtil
         string value = null;
         try
         {
-            value = Environment.GetEnvironmentVariable(key) ?? def;
+            value = Environment.GetEnvironmentVariable(key);
         }
         catch (Exception e)
         {
             logger.Warn($"Unable to retrieve a system property '{key}'; default values will be used.", e);
         }
 
-        return value;
+        return value ?? def;
     }
 
     /**
@@ -104,7 +93,9 @@ public static class SystemPropertyUtil
             return def;
         }
 
-        value = value.Trim().ToLowerInvariant();
+        // CLR configuration retains native Unicode whitespace trimming. Ordinal
+        // comparisons recognize the ASCII tokens without allocating a lowercase copy.
+        value = value.Trim();
         if (string.IsNullOrEmpty(value))
         {
             return def;
@@ -147,14 +138,12 @@ public static class SystemPropertyUtil
         }
 
         value = value.Trim();
-        try
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed))
         {
-            return int.Parse(value);
+            return parsed;
         }
-        catch (Exception e)
-        {
-            // Ignore
-        }
+        // Ignore
+        // CLR: malformed/out-of-range configuration is a TryParse result, not an exception.
 
         logger.Warn($"Unable to parse the integer system property '{key}':{value} - using the default value: {def}");
 
@@ -179,14 +168,12 @@ public static class SystemPropertyUtil
         }
 
         value = value.Trim();
-        try
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long parsed))
         {
-            return long.Parse(value);
+            return parsed;
         }
-        catch (Exception e)
-        {
-            // Ignore
-        }
+        // Ignore
+        // CLR: use the same invariant decimal grammar and explicit fallback as GetInt.
 
         logger.Warn($"Unable to parse the long integer system property '{key}':{value} - using the default value: {def}");
 
