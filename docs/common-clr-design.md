@@ -7649,3 +7649,57 @@ whole-operation or throughput claim. Evidence: native-mac-scoring-* and
 artifacts/native-mac-scoring-validation. Provider equality/subinterface capability,
 other OS/backend and wider NetUtil/Graal/common work remain open. Source stays
 in-progress; no new MD.
+
+
+## Native MAC provider identity and subinterface policy
+
+Pinned MacAddressUtil.java:54-71 uses LinkedHashMap and isVirtual. JDK interface
+equality compares name/address sets and can change across snapshots
+([JDK contract](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/NetworkInterface.html#equals(java.lang.Object))).
+CLR NetworkInterface is extensible, its base has no such equality contract, and
+the Windows provider creates one object per native adapter record
+([runtime v10.0.0 source](https://raw.githubusercontent.com/dotnet/runtime/v10.0.0/src/libraries/System.Net.NetworkInformation/src/System/Net/NetworkInformation/SystemNetworkInterface.cs)).
+The inspected source is this release tag; live net10 reflection independently
+found 52 current objects, zero Equals/GetHashCode overrides and no base parent/
+isVirtual members. Those counts describe one Windows snapshot, not an OS guarantee.
+
+Candidate OrderedDictionary now explicitly uses ReferenceEqualityComparer.Instance:
+each snapshot object remains an independent candidate; repeated references update
+the address in the original insertion position and query hardware once. Provider
+Equals/GetHashCode overrides cannot collapse healthy peers, abort insertion or turn
+changing hashes into duplicate hardware probes. No new comparator/identity DTO,
+name/address-set/Id key, cross-snapshot deduplication or metadata lookup is needed.
+Public methods consume the existing native snapshot; internal native-list overloads
+make this policy testable. DefaultChannelId's machine-byte consumer is unchanged;
+all-module NETWORK_INTERFACES consumers include DNS and multicast enumeration,
+so discovery itself retains its original ordered objects rather than deduplicating.
+
+Java isVirtual is a child/subinterface flag, not adapter type, VM-looking name or
+operational status. CLR has no equivalent standard capability. Retain native
+candidates satisfying IP/MAC rules regardless of Id/Name/Description/type/status;
+do not infer the Java flag from eth0:1, Tunnel, Loopback type or Down status. This
+is a deliberate provider-model difference; no fabricated native flag or silently
+excluded adapter. Native child-specific backend integration would need new evidence.
+
+Twelve identical baseline CLR cases: five pass/seven fail -> all pass; affected
+Debug/checked Release 109 pass. Cases cover value-equal peers/order, throwing value
+callbacks, changing hashes, repeated identity, five metadata categories, snapshot
+integration and failed-peer recovery. Controlled Java execution uses six byte-exact
+pinned methods and real JDK NetworkInterface.equals/isVirtual objects constructed
+by fixture-only private reflection/module opening. Hardware/logger access is a
+fixture boundary, not native permission/OS validation. Native probes bind the real
+compiled internal method with the identical CLR provider class. Eight rows including
+hardware-probe counts: five final matches; three explicit differences for equal
+distinct snapshots, true children and failed equal peers. The initial child fixture
+overlapped equality and child filtering; it is retained separately, excluded from
+the final separated observations. No production reflection/module opening.
+
+Together with existing text, snapshot, ranking, byte ownership/fallback and prefix
+reviews, MacAddressUtil now has a scoped verified source decision with 24 original
+comments preserved. It includes these native policies; verified does not mean
+every JVM observable behavior or every OS/backend is identical. Wider NetUtil/Graal,
+other platforms/backend and whole common remain open, including focused Global
+completion stall. Evidence: native-mac-provider-* and
+artifacts/native-mac-provider-validation. No throughput/allocation claim or new MD.
+Next, the initializer's separate IPAddress.IsLoopback scan needs the mapped/scoped
+cases established above; its prior verified checkpoint did not cover those inputs.

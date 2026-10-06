@@ -44,6 +44,25 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native MAC provider checkpoint
+
+Candidate identity now explicitly uses ReferenceEqualityComparer: distinct provider
+objects remain independent, repeated objects retain order, and provider equality/
+hash callbacks cannot hide healthy peers. Adapter metadata is not a Java child flag.
+See [provider policy](common-clr-design.md#native-mac-provider-identity-and-subinterface-policy).
+Twelve identical baseline cases: five pass/seven fail -> all pass; affected Debug/
+checked Release 109 pass. Eight controlled real-JDK/native rows: five match, three
+documented native provider-model differences. Live Windows reflection supports the
+scoped review; provider/factory/OS limits are recorded. Default Debug/Release each:
+2438 discovered/2424 passed/0 failed/14 unchanged skips; all 2426 prior outcomes,
+759 originals, 271 comment rows, pinned 205+66 inventory, 24 MAC originals and
+warning/casing identities retained. MAC source becomes verified for the recorded
+native decisions: 73 verified/56 CLR replacements/46 pending/15 in-progress/15
+not-applicable. Evidence: native-mac-provider-* and artifacts/native-mac-provider-validation;
+no new MD. Next: check the initializer's remaining IPAddress.IsLoopback scan against
+the mapped/scoped cases established by MAC review, then NetUtil CLR API/Graal/lazy
+consumers. Other OS/backend, focused Global completion stall and whole common remain open.
+
 ## Native MAC IP classification checkpoint
 
 Mapped IPv4 now keeps IPv4 ranking and full 127/8 loopback filtering; IPv6 any/loopback

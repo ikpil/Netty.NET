@@ -49,7 +49,8 @@ public static class MacAddressUtil
         IPAddress bestInetAddr = NetUtil.LOCALHOST4;
 
         // Retrieve the list of available network interfaces.
-        var ifaces = new OrderedDictionary<NetworkInterface, IPAddress>();
+        // Each native snapshot object is a candidate; provider value equality cannot merge peers.
+        var ifaces = new OrderedDictionary<NetworkInterface, IPAddress>(ReferenceEqualityComparer.Instance);
         foreach (NetworkInterface iface in interfaces)
         {
             // Use the interface with proper INET addresses only.
