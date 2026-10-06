@@ -144,8 +144,7 @@ public static class NetUtil
         logger.Debug("-Djava.net.preferIPv4Stack: {}", IPV4_PREFERRED);
         logger.Debug("-Djava.net.preferIPv6Addresses: {}", prefer);
 
-        NETWORK_INTERFACES = new System.Collections.ObjectModel.ReadOnlyCollection<NetworkInterface>(
-            NetUtilInitializations.NetworkInterfaces().ToArray());
+        NETWORK_INTERFACES = NetUtilInitializations.NetworkInterfaces();
 
         // Create IPv4 loopback address.
         LOCALHOST4 = NetUtilInitializations.CreateLocalhost4();

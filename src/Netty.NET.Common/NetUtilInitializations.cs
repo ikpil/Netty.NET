@@ -49,25 +49,28 @@ internal static class NetUtilInitializations
         return localhost6;
     }
 
-    public static List<NetworkInterface> NetworkInterfaces()
+    public static IReadOnlyList<NetworkInterface> NetworkInterfaces()
     {
+        return NetworkInterfaces(NetworkInterface.GetAllNetworkInterfaces);
+    }
+
+    internal static IReadOnlyList<NetworkInterface> NetworkInterfaces(Func<IEnumerable<NetworkInterface>> getInterfaces)
+    {
+        ArgumentNullException.ThrowIfNull(getInterfaces);
         List<NetworkInterface> networkInterfaces = new List<NetworkInterface>();
         try
         {
-            NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
-            if (0 < interfaces.Length)
+            foreach (NetworkInterface iface in getInterfaces())
             {
-                foreach (var iface in interfaces)
-                    networkInterfaces.Add(iface);
+                networkInterfaces.Add(iface);
             }
         }
-        catch (Exception e)
+        catch (NetworkInformationException e)
         {
             logger.Warn("Failed to retrieve the list of available network interfaces", e);
-            throw;
         }
 
-        return networkInterfaces;
+        return networkInterfaces.AsReadOnly();
     }
 
     public static NetworkIfaceAndInetAddress DetermineLoopback(

@@ -7433,3 +7433,52 @@ the JVM Android enumeration exception branch:
 // Might happen on earlier version of Android.
 // See https://developer.android.com/reference/java/net/NetworkInterface#getNetworkInterfaces()
 ```
+
+
+## Native network interface snapshots
+
+Pinned NetUtilInitializations.networkInterfaces (:70-90) logs SocketException and
+returns an unmodifiable collection, including an already observed enumeration
+prefix. NetUtil.java:152 and MacAddressUtil.java:55 consume the snapshot; the
+Graal substitutions also obtain it from the same initializer. All current CLR
+callers (NetUtil, its existing lazy holder and substitutions, and MAC discovery)
+now receive one native IReadOnlyList backed by a privately owned List.AsReadOnly.
+NetUtil no longer adds a second ToArray/ReadOnlyCollection copy. Read-only is an
+enforced native collection contract, not an assumption from the interface alone.
+
+NetworkInterfaces logs NetworkInformationException and returns the observed
+prefix/empty result, allowing the owning localhost initializer to proceed.
+Non-network exceptions retain their identity and propagate. The internal
+Func<IEnumerable<NetworkInterface>> boundary permits deterministic provider fault
+and lifetime verification without changing global state or introducing a public
+provider abstraction. It invokes the provider once and enumerates/disposes it once;
+snapshots preserve order, duplicates and reference identity and detach from later
+provider collection changes. Interface objects themselves retain native live OS
+semantics; this does not promise a deep snapshot of interface properties.
+
+Eight CLR cases cover default immutability, aliasing/order, retrieval/enumeration
+failures, failure identity, iterator cleanup, empty/null factory input and independent
+snapshots. Focused Debug/checked Release: 31 passed. The byte-identical fixture
+cannot compile on baseline (CS1501, missing internal provider overload); it is not
+reported as a before-test failure count. Separate before/after provider-boundary
+probes compile the full actual initializer source with exactly one substitution of
+the native GetAllNetworkInterfaces dispatch. They change no algorithm/return/catch
+or collection policy: old results are mutable and query failure propagates; final
+empty/ordered/failure/policy outcomes match 13 executed Java observations.
+
+The Java enumeration method is byte-exact at the pin. Fixture-only NetworkInterface
+and logger containers and a false Android selector make retrieval deterministic;
+JDK collections/Enumeration and SocketException are actual. This compares the
+algorithm boundary, not OS discovery, logging providers or Android behavior.
+IllegalStateException/InvalidOperationException are normalized as programming
+failure; no claim of equal cross-runtime exception types. The CLR default provider
+returns a non-null array atomically, so partial-prefix/lifetime cases verify the
+internal IEnumerable boundary, not an OS partial-discovery simulation.
+
+All 18 initializer/118 NetUtil original comments retained with existing provenance.
+Source statuses remain unchanged: initializer and NetUtil remain in-progress.
+Loopback/address selection, cached provider failures, Graal facades/lazy ownership,
+MAC ranking/normalization, backend/other OS/runtime, whole common completion and
+the focused Global completion stall remain open. No throughput/allocation claim.
+Evidence: native-interface-snapshot-* TRX/JSON/logs and
+artifacts/native-interface-snapshot-validation, Windows/x64/net10/JDK21 only.

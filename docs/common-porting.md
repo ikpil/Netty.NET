@@ -44,6 +44,27 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native interface snapshot checkpoint
+
+Interface discovery now logs native NetworkInformationException and returns an
+empty/observed-prefix snapshot instead of poisoning NetUtil initialization.
+Owned List.AsReadOnly enforces immutability for all callers; NetUtil removes its
+redundant snapshot copy. Non-network errors propagate. See
+[native interface snapshots](common-clr-design.md#native-network-interface-snapshots)
+for provider ownership, partial results, iterator lifetime and precise probe limits.
+Eight CLR cases; affected Debug/checked Release 31 passed. Identical baseline fixture
+fails compilation because the internal provider boundary is new (CS1501); separate
+source probes substitute exactly one provider dispatch and reproduce old mutability
+and retrieval rethrow. Thirteen controlled pinned-Java/native observations match.
+Default Debug/Release each: 2357 discovered/2343 passed/0 failed/14 unchanged skips.
+All 2349 prior outcomes, 759 original identities, 271 comment rows, 205+66 pinned
+inventory, scoped 18+118 original comments and source/test warning/casing identities
+retained. Source statuses unchanged: 71 verified/56 CLR replacements/46 pending/
+17 in-progress/15 not-applicable. Evidence: native-interface-snapshot-* and
+artifacts/native-interface-snapshot-validation; no new MD. Initializer/NetUtil and
+broader loopback/MAC/Graal/backend/platform reviews and focused Global completion
+stall remain open; this unit does not complete common.
+
 ## Native socket operations checkpoint
 
 SocketUtils's JVM privilege forwarding class is retired; native Socket/DNS/endpoints
