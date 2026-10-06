@@ -7207,3 +7207,53 @@ this comparison. Native snapshots/live reads/case behavior are separately execut
 Details: artifacts/native-environment-settings-validation and
 native-environment-settings-* TRX/JSON. Windows/net10.0 only; other OS/runtime,
 logger/backend/platform work and the prior focused Global completion stall remain.
+
+
+## Native bounded adaptive sizing
+
+Pinned AdaptiveCalculator.java has no direct common test fixture. Actual owners
+are transport/.../AdaptiveRecvByteBufAllocator.java:46-69 (full-read feedback and
+read-cycle totals) and transport-classes-io_uring/.../IoUringAdaptiveBufferRingAllocator.java:31,72-90
+(full attempted/actual reads). AdaptiveRecvByteBufAllocatorTest's ramp, interval,
+partial-read and bound scenarios inform this primitive review; channel/buffer/ring
+integration itself remains outside common. Keep one mutable predictor per serial
+owner: four-bucket growth, one-bucket decrease after two small samples, middle-band
+samples retaining the pending decrease, full growth clearing it and floor rounding
+of nonaligned maximums. Negative feedback still counts as underfilled, as pinned.
+
+The original legal positive constructor domain is larger than its table: initial
+below 16 indexes -1; narrow/nonaligned minimum ceil can exceed maximum floor;
+high minimum above 2^30 can index past the table. These are reproduced in both
+executed Java and baseline CLR, not intentional allocation contracts. Do not copy
+out-of-range guesses or array failures into the port. The native shared private
+table adds 1..15 and Int32.MaxValue to the original 53 buckets (69 total), with
+List<int>.ToArray and Array.BinarySearch replacing manual copy/search. Floor
+indices keep minimum <= initial <= maximum ordered, and each published size is
+clamped to the inclusive requested bounds. A filled 16-byte bucket can now grow
+instead of being classified as small; the first 1-byte bucket has a zero predecessor
+so it can also grow. No per-instance table copy, CLR field-offset facade or locking
+is added. Constructor ordering violations use ArgumentOutOfRangeException with
+native parameter/value metadata. The observational NextSize property replaces the
+getter method; Record remains the state mutation, and both require serial ownership.
+
+All three original source comments remain verbatim, including the Java overflow
+warning beside the retained shifting table loop. All 12 new CLR fixture cases
+are byte-identical across before/after assemblies: a test-only bound query delegate
+supports the old method solely for comparison; no production compatibility alias.
+They cover consumer ramp/hysteresis, six tiny/narrow/terminal intervals, invalid
+arguments, readonly API and 117 boundary configurations with directional feedback.
+Baseline checked Release has three passes/nine failures; final Debug/checked Release
+pass all 12. The one-byte predecessor fix was followed by fresh final whole runs.
+
+Executed byte-exact pinned Java/CLR baseline trace rows match all 360; native differs
+on 166 rows in ten affected small/nonaligned/terminal configurations. All 360 native
+rows match a separate value-based predecessor/successor specification, and five
+conventional aligned consumer traces remain exact. Differences are captured per row
+in artifacts/native-adaptive-sizing-validation/native-policy-differences.json.
+A byte-identical external native property consumer fails old API compilation and
+passes default receive-feedback, narrow/terminal and argument metadata checks.
+Warmed 100000 Record/query calls allocate zero measured bytes in baseline and final
+on Windows/net10.0; throughput and other runtimes are not certified. Evidence:
+native-adaptive-sizing-* TRX/JSON and artifacts/native-adaptive-sizing-validation.
+Full allocator/backend/OS integration and the prior focused Global completion
+stall remain open; whole-suite success does not close those reviews.

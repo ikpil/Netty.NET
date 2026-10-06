@@ -3082,13 +3082,16 @@
     {
       "upstream": "common/src/main/java/io/netty/util/internal/AdaptiveCalculator.java",
       "kind": "source",
-      "status": "pending",
-      "candidates": [
-        "src/Netty.NET.Common/Internal/AdaptiveCalculator.cs"
+      "status": "verified",
+      "candidates": [],
+      "implementation": [
+        "src/Netty.NET.Common/Internal/AdaptiveCalculator.cs",
+        "docs/common-clr-design.md"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "evidence": [
+        "Pinned source and actual receive/io_uring consumers plus transport sizing scenarios reviewed. Twelve new CLR cases; byte-identical baseline checked Release three passed/nine failed, final Debug/checked Release 12 passed. Executed Java/baseline 360 rows exact; final 360 rows match independent value-based specification, 166 documented boundary differences. Native external property consumer fails baseline API compilation and passes final contracts. Warmed 100000 feedback/query calls allocate zero bytes on Windows/net10.0. Final defaults/identity/comment/inventory/casing/warning evidence: common-porting.md native adaptive sizing checkpoint and native-adaptive-sizing-* TRX/JSON. Full allocators/backend/OS/throughput and prior focused Global completion stall remain separate."
+      ],
+      "adaptation": "Shared native 69-bucket table (original 53 plus 1..15 and Int32.MaxValue), List.ToArray/Array.BinarySearch floor selection and inclusive size clamping repair reproduced original tiny/narrow/nonaligned/high-bound failures. Four-step growth/two-sample decrease preserved for conventional consumers; full 16/1-byte buckets can grow. Native ArgumentOutOfRangeException metadata and readonly NextSize replace Java argument/getter shape; no alias. Serial owner required; negative feedback remains underfilled. All three original comments retained. See common-clr-design.md#native-bounded-adaptive-sizing for explicit changes and limits.",
       "comments": {
         "upstreamCount": 3,
         "required": true,

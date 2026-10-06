@@ -44,6 +44,26 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native adaptive sizing checkpoint
+
+AdaptiveCalculator now has scoped receive/io_uring consumer review and bounded
+native bucket selection: fixes tiny, narrow/nonaligned and terminal Int32 failures;
+retains conventional ramp/hysteresis and exposes readonly NextSize without an alias.
+See [native adaptive sizing](common-clr-design.md#native-bounded-adaptive-sizing)
+for original bug reproduction and deliberate behavior changes. Twelve CLR cases:
+identical baseline three pass/nine fail, final Debug/checked Release 12 pass.
+360 Java/baseline trace rows match; all 360 native rows match the independent
+value-based specification, with 166 documented Java differences. Warmed 100000
+feedback/query calls allocate zero measured bytes; no throughput claim.
+Final default Debug/Release each: 2331 discovered/2317 passed/0 failed/14 unchanged
+skips. All 2319 prior outcomes, 759 original identities, 271 comment rows and pinned
+205+66 inventory retained; all three scoped original comments, no new source/test
+warnings or casing collisions. Source statuses: 71 verified/55 CLR replacements/
+49 pending/15 in-progress/15 not-applicable. Evidence: native-adaptive-sizing-*
+and artifacts/native-adaptive-sizing-validation; no new MD.
+Continue executor/backend, constants, resource, string/encoding and platform reviews.
+Full allocators/other OS/runtime and the focused Global completion stall remain open.
+
 ## Native environment settings checkpoint
 
 SystemPropertyUtil now has scoped original/consumer review: Environment supplies
