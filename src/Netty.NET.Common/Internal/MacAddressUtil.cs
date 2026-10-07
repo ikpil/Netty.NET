@@ -38,7 +38,7 @@ public static class MacAddressUtil
      */
     public static byte[] BestAvailableMac()
     {
-        return BestAvailableMac(NetUtil.NETWORK_INTERFACES);
+        return BestAvailableMac(NetUtil.NetworkInterfaces);
     }
 
     internal static byte[] BestAvailableMac(IReadOnlyList<NetworkInterface> interfaces)
@@ -153,7 +153,7 @@ public static class MacAddressUtil
      */
     public static byte[] DefaultMachineId()
     {
-        return DefaultMachineId(NetUtil.NETWORK_INTERFACES);
+        return DefaultMachineId(NetUtil.NetworkInterfaces);
     }
 
     internal static byte[] DefaultMachineId(IReadOnlyList<NetworkInterface> interfaces)

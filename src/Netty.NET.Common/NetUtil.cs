@@ -60,24 +60,36 @@ public static class NetUtil
     /// <summary>
     /// Gets an independent copy of the loopback address selected during initialization.
     /// Compare address values rather than references; caller mutation does not change later reads.
+    /// A recursive read from an initialization callback can observe null before selection completes.
     /// </summary>
-    public static IPAddress LoopbackAddress => CopyAddress(localhost);
+    public static IPAddress LoopbackAddress => localhost == null ? null : CopyAddress(localhost);
 
     /**
      * The loopback {@link NetworkInterface} of the current machine
      */
-    public static readonly NetworkInterface LOOPBACK_IF;
+    /// <summary>
+    /// Gets the native loopback interface selected during initialization, or null if none was found.
+    /// </summary>
+    public static NetworkInterface LoopbackInterface { get; }
 
     /**
      * An unmodifiable Collection of all the interfaces on this machine.
      */
-    public static readonly IReadOnlyList<NetworkInterface> NETWORK_INTERFACES;
+    /// <summary>
+    /// Gets the read-only interface snapshot captured during initialization, in provider order.
+    /// Collection membership is fixed; the entries retain their native NetworkInterface behavior.
+    /// </summary>
+    public static IReadOnlyList<NetworkInterface> NetworkInterfaces { get; }
 
     /**
      * The SOMAXCONN value of the current machine.  If failed to get the value,  {@code 200} is used as a
      * default value for Windows and {@code 128} for others.
      */
-    public static readonly int SOMAXCONN;
+    /// <summary>
+    /// Gets the default listen backlog captured from the OS during initialization, with a platform fallback.
+    /// This is an initial server setting; it does not impose a limit on caller-supplied backlog values.
+    /// </summary>
+    public static int DefaultListenBacklog { get; }
 
     /**
      * This defines how many words (represented as ints) are needed to represent an IPv6 address
@@ -179,7 +191,7 @@ public static class NetUtil
         logger.Debug("java.net.preferIPv4Stack: {}", PreferIPv4Stack);
         logger.Debug("java.net.preferIPv6Addresses: {}", prefer);
 
-        NETWORK_INTERFACES = NetUtilInitializations.NetworkInterfaces();
+        NetworkInterfaces = NetUtilInitializations.NetworkInterfaces();
 
         // Create IPv4 loopback address.
         IPAddress localhost4 = IPAddress.Loopback;
@@ -188,14 +200,14 @@ public static class NetUtil
         IPAddress localhost6 = IPAddress.IPv6Loopback;
 
         var loopback =
-            NetUtilInitializations.DetermineLoopback(NETWORK_INTERFACES, localhost4, localhost6);
-        LOOPBACK_IF = loopback.Iface;
+            NetUtilInitializations.DetermineLoopback(NetworkInterfaces, localhost4, localhost6);
+        LoopbackInterface = loopback.Iface;
         localhost = CopyAddress(loopback.Address);
 
         // As a SecurityManager may prevent reading the somaxconn file we wrap this in a privileged block.
         //
         // See https://github.com/netty/netty/issues/3680
-        SOMAXCONN = SoMaxConnAction.Run();
+        DefaultListenBacklog = SoMaxConnAction.Run();
     }
 
     private static IPAddress CopyAddress(IPAddress address)

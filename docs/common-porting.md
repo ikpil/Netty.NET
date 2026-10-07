@@ -44,6 +44,30 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native network defaults checkpoint
+
+Expose cached interfaces/loopback/backlog through native get-only properties and
+fix recursive logger access poisoning NetUtil initialization. See
+[source contracts, migration and callback semantics](common-clr-design.md#native-cached-network-defaults).
+Seven byte-identical baseline contracts: five pass/two fail -> all pass. Related
+checked Release and supplemental workspace Debug: 155 pass each. Three fresh native
+consumer processes per version conserve all 15 ordinary rows and real Windows
+listen; a fourth reproduces/fixes logger reentry. Three pinned-Java callback/
+publication controls match after boolean-text normalization; probe-only providers
+do not establish real Java interface/backlog or other OS integration.
+
+Full unfiltered default Debug/Release in an isolated copy of the commit's code and
+committed test configuration: 2658 discovered/2644 pass/0 fail/14 unchanged skips.
+All 2651 prior outcomes, original 759, 271 comment rows, 118 NetUtil comments,
+205+66 inventory and committed-configuration warning/casing identities conserved.
+The separately edited workspace test-package project is preserved and excluded
+from this commit. Its default invocation failed the MTP runner-configuration check;
+the supplemental 155-case run uses IsTestingPlatformApplication=false. Full results
+do not claim that the edited project passes its unmodified default command.
+Evidence: native-network-defaults-* and artifacts/native-network-defaults-validation;
+no new MD or source-status promotion. Next: final NetUtil source/API review, then
+remaining common work; scheduler/focused Global completion stall remains open.
+
 ## Native loopback ownership checkpoint
 
 Use framework read-only loopback constants and a caller-owned LoopbackAddress copy;

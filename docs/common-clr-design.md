@@ -8188,3 +8188,45 @@ loopback ownership checkpoint; evidence native-loopback-ownership-* and
 artifacts/native-loopback-ownership-validation. Probe providers do not establish real
 selector/other OS/backend integration. NetUtil/common and the focused Global stall
 remain open; next: remaining interface/backlog API and final NetUtil review.
+
+
+## Native cached network defaults
+
+Pinned NetUtil.java:73-84,152-168 publishes one interface collection, the selected
+interface and an OS-derived listen backlog. MacAddressUtil.java:55 and
+DnsNameResolver.java:213 enumerate that collection; server TCP/SCTP/epoll/kqueue/
+io_uring/domain configs initialize their mutable backlog from SOMAXCONN. The value
+is a default setting, not a new restriction on caller overrides.
+
+Replace LOOPBACK_IF/NETWORK_INTERFACES/SOMAXCONN with get-only native properties
+LoopbackInterface/NetworkInterfaces/DefaultListenBacklog. Keep the explicit static
+constructor, its ordering, the existing read-only snapshot and native interface
+identity. Membership is cached; NetworkInterface entries retain their native
+behavior and are not deep immutable objects. A missing loopback interface remains
+null. Snapshot/selection/backlog algorithms do not change; getters do not perform
+new network enumeration, process execution or policy reads. Migrate the two real
+MAC call sites and the original loopback test symbol; rebuild field consumers.
+
+The preceding address ownership change introduced a concrete initialization
+regression: a configured logger factory reading LoopbackAddress during its creation
+called CopyAddress on the not-yet-selected address and permanently failed NetUtil
+initialization. The [C# static-constructor model](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors)
+permits recursive initialization paths; do not turn this ordinary partial-state
+read into a new error. Return null until selection has completed, then retain the
+independent address copy contract. Do not supply a fabricated early address,
+reorder logging or add another initialization/cache wrapper. The original Java
+logger callback observes null/null/null/0 for address/interface/collection/backlog;
+the native callback now agrees and subsequent ordinary reads complete normally.
+
+Compiled before/after non-friend consumers differ only at three property mappings.
+Three fresh ordinary processes per version preserve all 15 observations, including
+cached identity, rejected collection mutation, preference capture and actual Windows
+socket listen. A fourth process reproduces/fixes logger reentry; byte-exact pinned
+NetUtil and three dependencies with probe-only Java providers match the three
+callback/publication controls after boolean text normalization. These providers do
+not establish real Java interface/backlog equivalence or other OS integration.
+Exact tests, unchanged comments and validation-configuration limits are in the
+Native network defaults checkpoint of common-porting.md; evidence
+native-network-defaults-* and artifacts/native-network-defaults-validation.
+NetUtil remains in-progress pending its final overall review; common and the
+focused Global completion stall remain open.

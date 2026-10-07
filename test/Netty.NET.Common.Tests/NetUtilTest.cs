@@ -619,7 +619,7 @@ public class NetUtilTest
     [Fact]
     public void TestLoopback()
     {
-        Assert.NotNull(LOOPBACK_IF);
+        Assert.NotNull(LoopbackInterface);
     }
 
     [Fact]
