@@ -262,6 +262,16 @@ public static class NetUtil
      */
     public static byte[] CreateByteArrayFromIpAddressString(string ipAddressString)
     {
+        ArgumentNullException.ThrowIfNull(ipAddressString);
+        return CreateByteArrayFromIpAddressString(ipAddressString.AsSpan());
+    }
+
+    /// <summary>
+    /// Parses the selected literal into an owned four- or sixteen-byte array.
+    /// IPv6 brackets and scope text are omitted from the wire bytes; invalid input returns null.
+    /// </summary>
+    public static byte[] CreateByteArrayFromIpAddressString(ReadOnlySpan<char> ipAddressString)
+    {
         if (IsValidIpV4Address(ipAddressString))
         {
             return ValidIpV4ToBytes(ipAddressString);
@@ -277,7 +287,7 @@ public static class NetUtil
             int percentPos = ipAddressString.IndexOf('%');
             if (percentPos >= 0)
             {
-                ipAddressString = ipAddressString.Substring(0, percentPos);
+                ipAddressString = ipAddressString[..percentPos];
             }
 
             return GetIPv6ByName(ipAddressString, true);
@@ -293,6 +303,15 @@ public static class NetUtil
     public static IPAddress CreateInetAddressFromIpAddressString(string ipAddressString)
     {
         ArgumentNullException.ThrowIfNull(ipAddressString);
+        return CreateInetAddressFromIpAddressString(ipAddressString.AsSpan());
+    }
+
+    /// <summary>
+    /// Parses the selected literal without DNS lookup into an owned native address.
+    /// IPv6 numeric scopes use invariant unsigned 32-bit syntax; invalid input returns null.
+    /// </summary>
+    public static IPAddress CreateInetAddressFromIpAddressString(ReadOnlySpan<char> ipAddressString)
+    {
         if (IsValidIpV4Address(ipAddressString))
         {
             byte[] bytes = ValidIpV4ToBytes(ipAddressString);
@@ -313,7 +332,7 @@ public static class NetUtil
             {
                 // CLR scope IDs cover the unsigned 32-bit range. Malformed zones are
                 // parse failures, not exceptions or interface-name/DNS lookups.
-                ReadOnlySpan<char> scope = ipAddressString.AsSpan(percentPos + 1);
+                ReadOnlySpan<char> scope = ipAddressString[(percentPos + 1)..];
                 if (scope.IndexOf('\0') >= 0 || !uint.TryParse(scope, NumberStyles.AllowLeadingSign,
                         CultureInfo.InvariantCulture, out uint scopeId))
                 {
@@ -346,12 +365,12 @@ public static class NetUtil
         return null;
     }
 
-    private static int DecimalDigit(string str, int pos)
+    private static int DecimalDigit(ReadOnlySpan<char> str, int pos)
     {
         return str[pos] - '0';
     }
 
-    private static byte Ipv4WordToByte(string ip, int from, int toExclusive)
+    private static byte Ipv4WordToByte(ReadOnlySpan<char> ip, int from, int toExclusive)
     {
         int ret = DecimalDigit(ip, from);
         from++;
@@ -371,14 +390,20 @@ public static class NetUtil
     }
 
     // visible for tests
-    internal static byte[] ValidIpV4ToBytes(string ip)
+    internal static byte[] ValidIpV4ToBytes(ReadOnlySpan<char> ip)
     {
+        static int FindDot(ReadOnlySpan<char> source, int from)
+        {
+            int relative = source[from..].IndexOf('.');
+            return relative < 0 ? -1 : from + relative;
+        }
+
         int i;
         return new byte[]
         {
-            Ipv4WordToByte(ip, 0, i = ip.IndexOf('.', 1)),
-            Ipv4WordToByte(ip, i + 1, i = ip.IndexOf('.', i + 2)),
-            Ipv4WordToByte(ip, i + 1, i = ip.IndexOf('.', i + 2)),
+            Ipv4WordToByte(ip, 0, i = FindDot(ip, 1)),
+            Ipv4WordToByte(ip, i + 1, i = FindDot(ip, i + 2)),
+            Ipv4WordToByte(ip, i + 1, i = FindDot(ip, i + 2)),
             Ipv4WordToByte(ip, i + 1, ip.Length)
         };
     }

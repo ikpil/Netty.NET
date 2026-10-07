@@ -8116,3 +8116,35 @@ throughput or real SOCKS/PCAP/subnet integration is not established. Exact test 
 baseline results and conserved identities are in the Native wire-address checkpoint
 of common-porting.md; evidence native-ip-bytes-* and artifacts/native-ip-bytes-validation.
 NetUtil stays in-progress; next: remaining native literal-to-byte/address creation.
+
+
+## Native literal creation views
+
+Pinned NetUtil.java:285-385 strips IPv6 brackets/scopes for wire bytes but parses
+numeric scope for InetAddress. HostsFileEntriesProvider.java:237 and SOCKS/HAProxy
+encoders require the byte contract; DnsNameResolver.java:1069,1203 consumes the
+address/null result. Keep these contracts distinct, including named/malformed zone
+text ignored for wire bytes but rejected for native scoped addresses.
+
+Add ReadOnlySpan<char> overloads for both creation methods, with the existing string
+signatures dispatching after native null checks. Byte-creation null errors now identify
+ipAddressString rather than the validator's ip argument. Native
+[string views](https://learn.microsoft.com/en-us/dotnet/api/system.memoryextensions.asspan?view=net-10.0)
+and slices avoid bracket/scope substring copies; IPv4 byte helpers consume views
+internally, without adding a string alias or public helper. Original strict grammar,
+native unsigned/ASCII scope policy and mapped IPv6-family decisions stay unchanged;
+see the prior numeric-scope section. Empty/default views return null. Arrays and
+native addresses own their payloads and remain independent of input buffers and
+other results; scope mutation cannot affect another result. Preserve original tests
+and all 118 comments. No wrapper, pooling, DNS/interface lookup or parser replacement.
+
+Actual compiled-library before/after consumers differ only at the documented
+substring-to-view input calls; all result/error rows remain equal after null-name
+mapping. Byte-exact pinned NetUtil/dependencies with probe-only Java providers retain
+the prior declared native differences. Warm 1000 calls on [fe80::1%42] reduce byte
+creation allocation from 128000 to 40000 bytes and native address creation from
+208000 to 120000. Bare IPv6 and IPv4 controls remain unchanged. Owned results still
+allocate; no throughput or real resolver/encoder integration claim. Exact counts,
+baseline outcomes and identity checks: common-porting.md Native literal creation
+checkpoint; evidence native-ip-literal-* and artifacts/native-ip-literal-validation.
+NetUtil remains in-progress; next review: static address ownership and remaining API.

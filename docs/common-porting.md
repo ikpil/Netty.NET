@@ -44,6 +44,24 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native literal creation checkpoint
+
+Add byte/address creation Span overloads and eliminate bracket/scope substring
+copies; retain distinct wire-byte vs native numeric-scope behavior and result ownership.
+See [contracts, mapping and measured limits](common-clr-design.md#native-literal-creation-views).
+26 added CLR cases: three identical baseline cases fail -> pass; 23 new-view cases
+final-only. Affected Debug/checked Release 186 pass. Compiled before/after libraries
+conserve 2103 rows for 350 inputs after null-name mapping. Pinned Java matches 1803;
+remaining 300 preserve declared unsigned-scope (24), negative-scope (24), ASCII-scope
+(24) and mapped-family (228) differences. All wire bytes match; three native null
+rows change only the byte API argument name. Default Debug/Release: 2643 discovered/
+2629 pass/0 fail/14 unchanged skips. Preserve all 2617 prior outcomes, original 759,
+271 comment rows, 118 NetUtil comments, 205+66 inventory and warning/casing identities.
+Original NetUtilTest unchanged; source statuses unchanged. Evidence: native-ip-literal-*
+and artifacts/native-ip-literal-validation; no new MD. Next: static address ownership/
+remaining NetUtil API. Common, real resolver/encoder/other OS/backend and scheduler/
+focused Global completion stall remain open.
+
 ## Native wire-address checkpoint
 
 Add bounded byte-span formatting, use native big-endian primitives and stack address/
