@@ -44,6 +44,20 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native numeric IP scope checkpoint
+
+Restore null on malformed IPv6 scopes; use invariant ASCII parsing and native
+UInt32 scope bounds without interface lookup. See [source contract/native differences](common-clr-design.md#native-ipv6-numeric-scope-parsing).
+38 identical baseline cases 15 pass/23 fail -> all pass; affected Debug/checked
+Release 75 pass. Actual-library/pinned-Java comparison: 138/177 rows match after
+null-argument mapping; 39 documented native differences. All wire-byte rows conserved.
+Default Debug/Release: 2566 discovered/2552 pass/0 fail/14 unchanged skips. Preserve
+all 2528 prior outcomes, original 759, 271 comment rows, 118 NetUtil comments,
+205+66 inventory and warning/casing identities; source statuses unchanged.
+Evidence: native-ip-scope-* and artifacts/native-ip-scope-validation; no new MD.
+Next: remaining literal/helper API. NetUtil/common, real resolver/encoder/other OS/
+backend and scheduler/focused Global completion stall remain open.
+
 ## Native endpoint formatting checkpoint
 
 Support standard EndPoint inputs (IPEndPoint/DnsEndPoint) without resolution and

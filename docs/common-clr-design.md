@@ -8002,3 +8002,44 @@ transport/HTTP integration, other OS/backend and scheduler work remain unverifie
 Exact full-suite/inventory results are in common-porting.md; raw evidence in
 native-endpoint-format-* and artifacts/native-endpoint-format-validation.
 NetUtil remains in-progress; next review is its strict literal parsing/native API.
+
+
+## Native IPv6 numeric scope parsing
+
+Pinned NetUtil.java:330-352 catches Integer.parseInt's NumberFormatException and
+returns null. DnsNameResolver.java:1069-1075,1203-1209 uses this result to choose
+its immediate-literal path or normal resolution path. The CLR port lost that
+failure contract by using throwing, culture-sensitive int.Parse. Named/empty/
+overflow scopes threw; whitespace and localized signs could become numeric scopes.
+
+CreateInetAddressFromIpAddressString now uses span-based UInt32.TryParse with
+AllowLeadingSign and InvariantCulture. Malformed, empty, named, negative nonzero,
+whitespace, localized sign/digit and overflowing scopes return null. Explicitly
+reject embedded NUL: native numeric parsing otherwise permits trailing NULs even
+without whitespace styles. Keep +42, leading zeros and -0; no interface-name or DNS
+lookup is added. Null input is ArgumentNullException, matching native argument
+validation. Original comments and the whole byte/parser/formatter core are retained.
+
+Use [.NET's ScopeId range](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.scopeid),
+0..4294967295, instead of Java's signed-int bound. Java negative IDs become an
+unspecified scope; CLR rejects them, so negative nonzero text is a parse failure.
+Java's Unicode decimal digits are deliberately rejected under the CLR ASCII
+numeric policy. Existing native IPv6 family preservation for unscoped mapped
+addresses remains: Java InetAddress.getByAddress collapses them to IPv4.
+Wire-address extraction still ignores scope text, as required by HostsFileEntriesProvider,
+Socks5AddressEncoder and HAProxyMessageEncoder; scope never changes the address bytes.
+
+38 byte-identical baseline regressions: 15 pass/23 fail -> all pass; affected
+Debug/checked Release 75 pass. Cases cover zone bounds/syntax, three custom cultures,
+brackets, family/payload ownership, mutable scope isolation, strict nonliteral
+failures and native null errors. Identical non-friend before/after consumers plus
+byte-exact pinned NetUtil/SystemPropertyUtil/ObjectUtil/BoundedInputStream compare
+177 rows: 138 match after declared null-argument mapping. Remaining 39 rows explicitly
+cover unsigned bounds (12), negative sentinel (12), Unicode digits (12) and mapped
+family (3). Of 129 changed native rows, 90 repair prior Java differences and 39
+implement the stated native result/error policy. Java initialization/logger/platform/
+AsciiString dependencies are probe-only; no resolver, wire encoder, interface binding,
+external DNS or other OS/backend integration claim.
+Full counts and conserved identities: common-porting.md; evidence native-ip-scope-*
+and artifacts/native-ip-scope-validation. NetUtil/common and the prior scheduler/
+focused Global completion stall remain open. Next: remaining native literal/helper API.

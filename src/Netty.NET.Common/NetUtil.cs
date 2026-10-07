@@ -291,6 +291,7 @@ public static class NetUtil
      */
     public static IPAddress CreateInetAddressFromIpAddressString(string ipAddressString)
     {
+        ArgumentNullException.ThrowIfNull(ipAddressString);
         if (IsValidIpV4Address(ipAddressString))
         {
             byte[] bytes = ValidIpV4ToBytes(ipAddressString);
@@ -309,7 +310,14 @@ public static class NetUtil
             int percentPos = ipAddressString.IndexOf('%');
             if (percentPos >= 0)
             {
-                int scopeId = int.Parse(ipAddressString[(percentPos + 1)..]);
+                // CLR scope IDs cover the unsigned 32-bit range. Malformed zones are
+                // parse failures, not exceptions or interface-name/DNS lookups.
+                ReadOnlySpan<char> scope = ipAddressString.AsSpan(percentPos + 1);
+                if (scope.IndexOf('\0') >= 0 || !uint.TryParse(scope, NumberStyles.AllowLeadingSign,
+                        CultureInfo.InvariantCulture, out uint scopeId))
+                {
+                    return null;
+                }
                 ipAddressString = ipAddressString[0..percentPos];
                 byte[] bytes = GetIPv6ByName(ipAddressString, true);
                 if (bytes == null)
