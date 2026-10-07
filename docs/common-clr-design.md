@@ -8084,3 +8084,35 @@ or throughput. Full results and conserved identities: common-porting.md; evidenc
 native-ip-span-* and artifacts/native-ip-span-validation. Native providers, external
 DNS, transport, other OS/backend and scheduler/focused Global completion stall remain
 open. NetUtil/common stay in-progress; next: remaining byte/integer/format APIs.
+
+
+## Native wire-address byte views
+
+Pinned NetUtil.java:391-453 and its IPv6 formatter define network-order, signed
+32-bit IPv4 conversion and canonical scope-free IPv6 text. Socks5AddressDecoder.java:
+40,49-56 consumes bounded packet bytes; IpSubnetFilterRule.java:176-185 masks signed
+bits, and PcapWriteHandler.java:442-443 forwards them to packet writers. Retain int
+and these bits rather than introducing an unsigned compatibility facade.
+
+Use [BinaryPrimitives](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.binary.binaryprimitives.readint32bigendian?view=net-10.0)
+and [IPAddress.TryWriteBytes](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.trywritebytes?view=net-10.0)
+with fixed four/sixteen-byte stack buffers. BytesToIpAddress(ReadOnlySpan<byte>)
+accepts exactly one address; existing array signatures delegate without copying.
+Array null is ArgumentNullException; unsupported lengths remain ArgumentException,
+and invalid supported-length slices use native ArgumentOutOfRangeException. Null
+IPAddress inputs also use native argument errors. Stack-backed IPv6 words retain
+the original compression/tie/mapped policy; returned strings own their content.
+No IPAddress.ToString substitution for the IPv6 formatter, borrowed result, pooling,
+extra wrapper or transport API is added. Original tests and all comments stay intact.
+
+Actual non-friend before/after consumers differ only at one documented array-slice
+to Span call. Byte-exact pinned NetUtil and dependencies with probe-only Java
+providers match every wire/formatter/integer row across three cultures. Inputs include
+pinned byte vectors, all 256 zero-word masks, mapped boundaries and seeded payloads.
+Warm allocation measurements cover 1000 calls each: integer extraction 32000 -> 0
+bytes; IPv6 address formatting 384000 -> 288000; byte formatting 344000 -> 288000.
+These are temporary-array reductions; owned strings/builders still allocate, and
+throughput or real SOCKS/PCAP/subnet integration is not established. Exact test counts,
+baseline results and conserved identities are in the Native wire-address checkpoint
+of common-porting.md; evidence native-ip-bytes-* and artifacts/native-ip-bytes-validation.
+NetUtil stays in-progress; next: remaining native literal-to-byte/address creation.

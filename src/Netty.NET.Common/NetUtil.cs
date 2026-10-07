@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -387,14 +388,12 @@ public static class NetUtil
      */
     public static int Ipv4AddressToInt(IPAddress ipAddress)
     {
+        ArgumentNullException.ThrowIfNull(ipAddress);
         if (ipAddress.AddressFamily != AddressFamily.InterNetwork)
             throw new ArgumentException("An IPv4 address is required.", nameof(ipAddress));
-        byte[] octets = ipAddress.GetAddressBytes();
-
-        return (octets[0] & 0xff) << 24 |
-               (octets[1] & 0xff) << 16 |
-               (octets[2] & 0xff) << 8 |
-               octets[3] & 0xff;
+        Span<byte> octets = stackalloc byte[4];
+        ipAddress.TryWriteBytes(octets, out _);
+        return BinaryPrimitives.ReadInt32BigEndian(octets);
     }
 
     /**
@@ -402,15 +401,9 @@ public static class NetUtil
      */
     public static string IntToIpAddress(int i)
     {
-        StringBuilder buf = new StringBuilder(15);
-        buf.Append(i >> 24 & 0xff);
-        buf.Append('.');
-        buf.Append(i >> 16 & 0xff);
-        buf.Append('.');
-        buf.Append(i >> 8 & 0xff);
-        buf.Append('.');
-        buf.Append(i & 0xff);
-        return buf.ToString();
+        Span<byte> bytes = stackalloc byte[4];
+        BinaryPrimitives.WriteInt32BigEndian(bytes, i);
+        return BytesToIpAddress(bytes);
     }
 
     /**
@@ -421,7 +414,8 @@ public static class NetUtil
      */
     public static string BytesToIpAddress(byte[] bytes)
     {
-        return BytesToIpAddress(bytes, 0, bytes.Length);
+        ArgumentNullException.ThrowIfNull(bytes);
+        return BytesToIpAddress(bytes.AsSpan());
     }
 
     /**
@@ -432,23 +426,35 @@ public static class NetUtil
      */
     public static string BytesToIpAddress(byte[] bytes, int offset, int length)
     {
-        switch (length)
+        ArgumentNullException.ThrowIfNull(bytes);
+        if (length != 4 && length != 16)
+            throw new ArgumentException("length: " + length + " (expected: 4 or 16)", nameof(length));
+        return BytesToIpAddress(bytes.AsSpan(offset, length));
+    }
+
+    /// <summary>
+    /// Formats exactly four or sixteen network-order bytes without copying the selected view.
+    /// IPv6 uses Netty's canonical compression with hexadecimal mapped-address output.
+    /// </summary>
+    public static string BytesToIpAddress(ReadOnlySpan<byte> bytes)
+    {
+        switch (bytes.Length)
         {
             case 4:
             {
                 return new StringBuilder(15)
-                    .Append(bytes[offset] & 0xff)
+                    .Append(bytes[0])
                     .Append('.')
-                    .Append(bytes[offset + 1] & 0xff)
+                    .Append(bytes[1])
                     .Append('.')
-                    .Append(bytes[offset + 2] & 0xff)
+                    .Append(bytes[2])
                     .Append('.')
-                    .Append(bytes[offset + 3] & 0xff).ToString();
+                    .Append(bytes[3]).ToString();
             }
             case 16:
-                return ToAddressString(bytes, offset, false);
+                return ToAddressString(bytes, false);
             default:
-                throw new ArgumentException("length: " + length + " (expected: 4 or 16)");
+                throw new ArgumentException("length: " + bytes.Length + " (expected: 4 or 16)", nameof(bytes));
         }
     }
 
@@ -1085,6 +1091,7 @@ public static class NetUtil
      */
     public static string ToAddressString(IPAddress ip, bool ipv4Mapped)
     {
+        ArgumentNullException.ThrowIfNull(ip);
         if (ip.AddressFamily == AddressFamily.InterNetwork)
             return ip.ToString();
 
@@ -1093,15 +1100,17 @@ public static class NetUtil
             throw new ArgumentException("Unhandled type: " + ip);
         }
 
-        return ToAddressString(ip.GetAddressBytes(), 0, ipv4Mapped);
+        Span<byte> bytes = stackalloc byte[IPV6_BYTE_COUNT];
+        ip.TryWriteBytes(bytes, out _);
+        return ToAddressString(bytes, ipv4Mapped);
     }
 
-    private static string ToAddressString(byte[] bytes, int offset, bool ipv4Mapped)
+    private static string ToAddressString(ReadOnlySpan<byte> bytes, bool ipv4Mapped)
     {
-        int[] words = new int[IPV6_WORD_COUNT];
+        Span<int> words = stackalloc int[IPV6_WORD_COUNT];
         for (int i = 0; i < words.Length; ++i)
         {
-            int idx = (i << 1) + offset;
+            int idx = i << 1;
             words[i] = ((bytes[idx] & 0xff) << 8) | (bytes[idx + 1] & 0xff);
         }
 

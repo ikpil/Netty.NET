@@ -44,6 +44,22 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native wire-address checkpoint
+
+Add bounded byte-span formatting, use native big-endian primitives and stack address/
+word buffers, retain signed IPv4 bits and Netty canonical IPv6 text. See
+[contracts, allocation measurements and limits](common-clr-design.md#native-wire-address-byte-views).
+26 added CLR cases: identical ten-case baseline six pass/four fail -> all pass;
+16 new view-boundary cases final-only. Affected Debug/checked Release 160 pass.
+533 wire payloads produce 1599 matching rows per pinned-Java/compiled-native version;
+10,000 seeded values also verify packet bytes, signed conversion and subnet masks.
+Default Debug/Release: 2617 discovered/2603 pass/0 fail/14 unchanged skips. Preserve
+all 2591 prior outcomes, original 759, 271 comment rows, 118 NetUtil comments,
+205+66 inventory and warning/casing identities. Original NetUtilTest unchanged;
+source statuses unchanged. Evidence: native-ip-bytes-* and artifacts/native-ip-bytes-validation;
+no new MD. Next: literal-to-byte/address creation. NetUtil/common, real consumer/
+other OS/backend and scheduler/focused Global completion stall remain open.
+
 ## Native IP text-view checkpoint
 
 Replace NetUtil Java sequence overloads with bounded ReadOnlySpan<char> input;
