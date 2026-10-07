@@ -46,18 +46,22 @@ public static class NetUtil
     /**
      * The {@link Inet4Address} that represents the IPv4 loopback address '127.0.0.1'
      */
-    public static readonly IPAddress LOCALHOST4;
+    // CLR adaptation: use the standard read-only IPAddress.Loopback directly.
 
     /**
      * The {@link Inet6Address} that represents the IPv6 loopback address '::1'
      */
-    public static readonly IPAddress LOCALHOST6;
+    // CLR adaptation: use the standard read-only IPAddress.IPv6Loopback directly.
 
     /**
      * The {@link InetAddress} that represents the loopback address. If IPv6 stack is available, it will refer to
      * {@link #LOCALHOST6}.  Otherwise, {@link #LOCALHOST4}.
      */
-    public static readonly IPAddress LOCALHOST;
+    /// <summary>
+    /// Gets an independent copy of the loopback address selected during initialization.
+    /// Compare address values rather than references; caller mutation does not change later reads.
+    /// </summary>
+    public static IPAddress LoopbackAddress => CopyAddress(localhost);
 
     /**
      * The loopback {@link NetworkInterface} of the current machine
@@ -156,6 +160,8 @@ public static class NetUtil
      */
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(NetUtil));
 
+    private static readonly IPAddress localhost;
+
     static NetUtil()
     {
         PreferIPv4Stack = SystemPropertyUtil.GetBoolean("java.net.preferIPv4Stack", false);
@@ -176,20 +182,29 @@ public static class NetUtil
         NETWORK_INTERFACES = NetUtilInitializations.NetworkInterfaces();
 
         // Create IPv4 loopback address.
-        LOCALHOST4 = NetUtilInitializations.CreateLocalhost4();
+        IPAddress localhost4 = IPAddress.Loopback;
 
         // Create IPv6 loopback address.
-        LOCALHOST6 = NetUtilInitializations.CreateLocalhost6();
+        IPAddress localhost6 = IPAddress.IPv6Loopback;
 
         var loopback =
-            NetUtilInitializations.DetermineLoopback(NETWORK_INTERFACES, LOCALHOST4, LOCALHOST6);
+            NetUtilInitializations.DetermineLoopback(NETWORK_INTERFACES, localhost4, localhost6);
         LOOPBACK_IF = loopback.Iface;
-        LOCALHOST = loopback.Address;
+        localhost = CopyAddress(loopback.Address);
 
         // As a SecurityManager may prevent reading the somaxconn file we wrap this in a privileged block.
         //
         // See https://github.com/netty/netty/issues/3680
         SOMAXCONN = SoMaxConnAction.Run();
+    }
+
+    private static IPAddress CopyAddress(IPAddress address)
+    {
+        Span<byte> bytes = stackalloc byte[16];
+        address.TryWriteBytes(bytes, out int length);
+        return address.AddressFamily == AddressFamily.InterNetworkV6
+            ? new IPAddress(bytes[..length], address.ScopeId)
+            : new IPAddress(bytes[..length]);
     }
 
     /**

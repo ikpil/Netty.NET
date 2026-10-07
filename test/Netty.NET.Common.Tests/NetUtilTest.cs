@@ -613,7 +613,7 @@ public class NetUtilTest
     [Fact]
     public void TestLocalhost()
     {
-        Assert.NotNull(LOCALHOST);
+        Assert.NotNull(LoopbackAddress);
     }
 
     [Fact]

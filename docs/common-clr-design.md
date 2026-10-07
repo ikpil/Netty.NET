@@ -8148,3 +8148,43 @@ allocate; no throughput or real resolver/encoder integration claim. Exact counts
 baseline outcomes and identity checks: common-porting.md Native literal creation
 checkpoint; evidence native-ip-literal-* and artifacts/native-ip-literal-validation.
 NetUtil remains in-progress; next review: static address ownership and remaining API.
+
+
+## Native loopback address ownership
+
+Pinned NetUtil.java:58-71 publishes final InetAddress values; its resolver, DNS ECS,
+QUIC, transport and MacAddressUtil consumers use address values/family/bytes.
+CLR readonly fields instead leaked mutable IPAddress instances through Address and
+ScopeId setters. Existing endpoints and later readers observed caller mutations.
+
+Replace LOCALHOST4/LOCALHOST6 with standard IPAddress.Loopback/IPv6Loopback directly,
+including the real MacAddressUtil call. [.NET 10's implementation](https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/System.Net.Primitives/src/System/Net/IPAddress.cs)
+guards these read-only constants against both setters. Remove the two redundant
+internal factories; their original exception comments already remain in the earlier
+NetUtilInitializations provenance block. Keep all original comments. No native
+aliases or custom immutable-address wrapper is added.
+
+LOCALHOST becomes LoopbackAddress: the explicit initializer privately copies the
+selected provider address once, preserving native family, bytes and scope; each
+getter returns an independent IPAddress through a fixed stack buffer. Caller,
+endpoint and provider mutation cannot reach the cached value. Selection and network
+snapshot/backlog/preferences algorithms remain unchanged. Rebuild consumers and
+migrate all three former fields; compare values rather than selected-address reference
+identity. NetUtilTest changes one symbol; the preference first-access case retains
+its historical label but reads the selected native property. Framework constant
+reads themselves no longer require NetUtil initialization.
+
+Actual before/after consumers in 27 fresh processes each preserve all controls and
+repair 27 mutation leaks, including six controlled provider mutations. Real Windows
+IPv4/IPv6/selected loopback binds agree. Controlled library builds keep NetUtil.cs
+byte-exact, substituting only the provider dependency. Pinned Java with probe-only
+providers matches 16/18 control values; two retain the previously declared unsigned
+scope policy, and all detached-byte controls match. Warm 1000 reads of native fixed
+constants allocate zero; independent selected-address copies add 40000 IPv4 or
+80000 IPv6 bytes versus zero for the old shared reference. This is the ownership
+cost, with no throughput claim. Reuse a caller-owned result when appropriate.
+Exact regression/full counts and conserved identities: common-porting.md Native
+loopback ownership checkpoint; evidence native-loopback-ownership-* and
+artifacts/native-loopback-ownership-validation. Probe providers do not establish real
+selector/other OS/backend integration. NetUtil/common and the focused Global stall
+remain open; next: remaining interface/backlog API and final NetUtil review.

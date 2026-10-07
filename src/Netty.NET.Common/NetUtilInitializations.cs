@@ -30,24 +30,6 @@ internal static class NetUtilInitializations
      */
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(NetUtilInitializations));
 
-    public static IPAddress CreateLocalhost4()
-    {
-        byte[] LOCALHOST4_BYTES = { 127, 0, 0, 1 };
-
-        IPAddress localhost4 = new IPAddress(LOCALHOST4_BYTES);
-
-        return localhost4;
-    }
-
-    public static IPAddress CreateLocalhost6()
-    {
-        byte[] LOCALHOST6_BYTES = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
-
-        IPAddress localhost6 = new IPAddress(LOCALHOST6_BYTES);
-
-        return localhost6;
-    }
-
     public static IReadOnlyList<NetworkInterface> NetworkInterfaces()
     {
         return NetworkInterfaces(NetworkInterface.GetAllNetworkInterfaces);

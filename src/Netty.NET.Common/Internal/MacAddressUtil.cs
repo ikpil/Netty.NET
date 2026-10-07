@@ -46,7 +46,7 @@ public static class MacAddressUtil
         ArgumentNullException.ThrowIfNull(interfaces);
         // Find the best MAC address available.
         byte[] bestMacAddr = EmptyArrays.EMPTY_BYTES;
-        IPAddress bestInetAddr = NetUtil.LOCALHOST4;
+        IPAddress bestInetAddr = IPAddress.Loopback;
 
         // Retrieve the list of available network interfaces.
         // Each native snapshot object is a candidate; provider value equality cannot merge peers.

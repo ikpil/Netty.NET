@@ -44,6 +44,24 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native loopback ownership checkpoint
+
+Use framework read-only loopback constants and a caller-owned LoopbackAddress copy;
+remove the old three fields and two redundant factories. See
+[source contract, migration and ownership cost](common-clr-design.md#native-loopback-address-ownership).
+Eight byte-identical regressions: baseline two pass/six fail -> all pass. Affected
+final Debug/checked Release 116 pass. Initial ten-case/67-case runs are historical
+design probes; final records use the eight-case fixture and native-constant design.
+27 fresh actual-native consumer observations each conserve control values and repair
+all 27 mutation leaks; real loopback binds agree. Pinned-Java controls match 16/18,
+with two declared unsigned-scope differences. Default Debug/Release: 2651 discovered/
+2637 pass/0 fail/14 unchanged skips. All 2643 prior outcomes and original 759 conserved
+with two test call migrations; 271 comment rows, 118 NetUtil comments, 205+66 inventory
+and warning/casing identities conserved. Source statuses unchanged. Evidence:
+native-loopback-ownership-* and artifacts/native-loopback-ownership-validation;
+no new MD. Next: interface/backlog API and final NetUtil review. Real provider/other
+OS/backend, whole common and scheduler/focused Global completion stall remain open.
+
 ## Native literal creation checkpoint
 
 Add byte/address creation Span overloads and eliminate bracket/scope substring

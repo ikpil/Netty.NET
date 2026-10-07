@@ -62,7 +62,7 @@ public class IpPreferenceContractTest
         WithFreshNetUtil("true", "false", type =>
         {
             if (firstMember == "LOCALHOST4")
-                Assert.NotNull(type.GetField(firstMember).GetValue(null));
+                Assert.NotNull(type.GetProperty(nameof(NetUtil.LoopbackAddress)).GetValue(null));
             else
                 Assert.NotNull(type.GetProperty(firstMember).GetValue(null));
 
