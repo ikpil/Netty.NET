@@ -8043,3 +8043,44 @@ external DNS or other OS/backend integration claim.
 Full counts and conserved identities: common-porting.md; evidence native-ip-scope-*
 and artifacts/native-ip-scope-validation. NetUtil/common and the prior scheduler/
 focused Global completion stall remain open. Next: remaining native literal/helper API.
+
+
+## Native IP text views and helper visibility
+
+Pinned NetUtil.java:378,726 declares the byte helpers package-private, visible for
+tests. Their native equivalents are now internal; the existing friend test assembly
+keeps the original NetUtilTest access. Public validators and GetByName keep all four
+string signatures and replace Java ICharSequence overloads with ReadOnlySpan<char>.
+Consumers of sequence overloads must rebuild and pass their native AsSpan view.
+No compatibility alias, extra wrapper or public test-only byte helper is retained.
+
+Use [.NET text views](https://learn.microsoft.com/en-us/dotnet/api/system.readonlyspan-1?view=net-10.0)
+to inspect bounded UTF-16 input directly, including stack buffers and sliced
+StringCharSequence.AsSpan. Explicit string null guards preserve native argument
+errors instead of silently treating null as an empty span. Empty views are invalid.
+Static FindDot receives its span explicitly, avoiding ref-struct closure capture.
+GetByName retains IPv6 results, optional IPv4 mapping, null on invalid text and its
+unbracketed/unscoped grammar. Each result owns its payload; no borrowed input survives.
+
+Retain Netty's strict decimal-octet and IPv6 grammar: the standard
+[IPAddress.TryParse contract](https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.tryparse?view=net-10.0)
+admits IPv4 shorthand and hexadecimal input unsuitable for the existing literal
+consumers in DNS, hosts-file, HTTP/TLS/QUIC, HAProxy and SOCKS. The parser core stays
+unchanged; only native view input, dispatch and helper visibility change. Preserve
+all 118 original comments beside the code. Original NetUtilTest stays unchanged;
+one existing Porting test uses native views without changing its case identity.
+
+25 added CLR cases: two byte-identical baseline-compatible metadata/null cases
+fail before and pass after; 23 new view-boundary cases final-only. Affected Debug/
+checked Release each pass 134. Pinned NetUtilTest maps plus seven additional inputs
+give 297 distinct literals. Non-friend consumers execute the actual before/after
+libraries; byte-exact pinned NetUtil/SystemPropertyUtil/ObjectUtil/BoundedInputStream
+with probe-only Java providers executes the same String/CharBuffer inputs. All 594
+string/view rows match across Java and both native libraries, including validators,
+mapped/unmapped results and payloads. Only the documented view-call migration differs.
+Warm 1000 iterations of two sliced-sequence validations allocate 112000 bytes before,
+zero after; this measures temporary validation input only, not parsing/output cost
+or throughput. Full results and conserved identities: common-porting.md; evidence
+native-ip-span-* and artifacts/native-ip-span-validation. Native providers, external
+DNS, transport, other OS/backend and scheduler/focused Global completion stall remain
+open. NetUtil/common stay in-progress; next: remaining byte/integer/format APIs.

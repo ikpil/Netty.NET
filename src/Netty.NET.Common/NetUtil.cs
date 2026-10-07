@@ -370,7 +370,7 @@ public static class NetUtil
     }
 
     // visible for tests
-    public static byte[] ValidIpV4ToBytes(string ip)
+    internal static byte[] ValidIpV4ToBytes(string ip)
     {
         int i;
         return new byte[]
@@ -452,9 +452,14 @@ public static class NetUtil
         }
     }
 
-    public static bool IsValidIpV6Address(ICharSequence ip) => IsValidIpV6Address(ip.ToString());
-
     public static bool IsValidIpV6Address(string ip)
+    {
+        ArgumentNullException.ThrowIfNull(ip);
+        return IsValidIpV6Address(ip.AsSpan());
+    }
+
+    /// <summary>Validates the selected UTF-16 view using Netty's IPv6 literal grammar without copying.</summary>
+    public static bool IsValidIpV6Address(ReadOnlySpan<char> ip)
     {
         int end = ip.Length;
         if (end < 2)
@@ -581,7 +586,7 @@ public static class NetUtil
 
                     // 7 - is minimum IPv4 address length
                     int scopeStart = Math.Min(ipv4Start + 7, ip.Length);
-                    int scopeIndex = ip.AsSpan(scopeStart).IndexOf('%');
+                    int scopeIndex = ip[scopeStart..].IndexOf('%');
                     int ipv4End = scopeIndex < 0 ? -1 : scopeStart + scopeIndex;
                     if (ipv4End < 0)
                     {
@@ -610,7 +615,7 @@ public static class NetUtil
                wordLen > 0 && (colons < 8 || compressBegin <= start);
     }
 
-    private static bool IsValidIpV4Word(string word, int from, int toExclusive)
+    private static bool IsValidIpV4Word(ReadOnlySpan<char> word, int from, int toExclusive)
     {
         int len = toExclusive - from;
         char c0, c1, c2;
@@ -668,7 +673,11 @@ public static class NetUtil
      * @return true, if the string represents an IPV4 address in dotted
      *         notation, false otherwise
      */
-    public static bool IsValidIpV4Address(ICharSequence ip) => IsValidIpV4Address(ip.ToString());
+    /// <summary>Validates the selected UTF-16 view as four decimal IPv4 octets without copying.</summary>
+    public static bool IsValidIpV4Address(ReadOnlySpan<char> ip)
+    {
+        return IsValidIpV4Address(ip, 0, ip.Length);
+    }
 
     /**
      * Takes a {@link String} and parses it to see if it is a valid IPV4 address.
@@ -678,29 +687,30 @@ public static class NetUtil
      */
     public static bool IsValidIpV4Address(string ip)
     {
-        return IsValidIpV4Address(ip, 0, ip.Length);
+        ArgumentNullException.ThrowIfNull(ip);
+        return IsValidIpV4Address(ip.AsSpan());
     }
 
     //@SuppressWarnings("DuplicateBooleanBranch")
-    private static bool IsValidIpV4Address(string ip, int from, int toExcluded)
+    private static bool IsValidIpV4Address(ReadOnlySpan<char> ip, int from, int toExcluded)
     {
-        int FindDot(int start)
+        static int FindDot(ReadOnlySpan<char> source, int start)
         {
-            if (start >= ip.Length)
+            if (start >= source.Length)
             {
                 return -1;
             }
 
-            int relative = ip.AsSpan(start).IndexOf('.');
+            int relative = source[start..].IndexOf('.');
             return relative < 0 ? -1 : start + relative;
         }
 
         int len = toExcluded - from;
         int i;
         return len <= 15 && len >= 7 &&
-               (i = FindDot(from + 1)) > 0 && IsValidIpV4Word(ip, from, i) &&
-               (i = FindDot(from = i + 2)) > 0 && IsValidIpV4Word(ip, from - 1, i) &&
-               (i = FindDot(from = i + 2)) > 0 && IsValidIpV4Word(ip, from - 1, i) &&
+               (i = FindDot(ip, from + 1)) > 0 && IsValidIpV4Word(ip, from, i) &&
+               (i = FindDot(ip, from = i + 2)) > 0 && IsValidIpV4Word(ip, from - 1, i) &&
+               (i = FindDot(ip, from = i + 2)) > 0 && IsValidIpV4Word(ip, from - 1, i) &&
                IsValidIpV4Word(ip, i + 1, toExcluded);
     }
 
@@ -711,11 +721,13 @@ public static class NetUtil
      * @param ip {@link CharSequence} IP address to be converted to a {@link Inet6Address}
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
-    public static IPAddress GetByName(ICharSequence ip) => GetByName(ip.ToString());
+    /// <summary>Parses an unbracketed, unscoped literal as an owned IPv6 address, mapping IPv4 input.</summary>
+    public static IPAddress GetByName(ReadOnlySpan<char> ip) => GetByName(ip, true);
 
     public static IPAddress GetByName(string ip)
     {
-        return GetByName(ip, true);
+        ArgumentNullException.ThrowIfNull(ip);
+        return GetByName(ip.AsSpan(), true);
     }
 
     /**
@@ -732,9 +744,17 @@ public static class NetUtil
      * </ul>
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
-    public static IPAddress GetByName(ICharSequence ip, bool ipv4Mapped) => GetByName(ip.ToString(), ipv4Mapped);
-
     public static IPAddress GetByName(string ip, bool ipv4Mapped)
+    {
+        ArgumentNullException.ThrowIfNull(ip);
+        return GetByName(ip.AsSpan(), ipv4Mapped);
+    }
+
+    /// <summary>
+    /// Parses the selected literal without DNS lookup. When ipv4Mapped is false,
+    /// plain IPv4 and dotted IPv4-in-IPv6 forms are rejected. Invalid text returns null.
+    /// </summary>
+    public static IPAddress GetByName(ReadOnlySpan<char> ip, bool ipv4Mapped)
     {
         byte[] bytes = GetIPv6ByName(ip, ipv4Mapped);
         if (bytes == null)
@@ -762,9 +782,7 @@ public static class NetUtil
      * @return byte array representation of the {@code ip} or {@code null} if not a valid IP address.
      */
     // visible for test
-    public static byte[] GetIPv6ByName(ICharSequence ip, bool ipv4Mapped) => GetIPv6ByName(ip.ToString(), ipv4Mapped);
-
-    public static byte[] GetIPv6ByName(string ip, bool ipv4Mapped)
+    internal static byte[] GetIPv6ByName(ReadOnlySpan<char> ip, bool ipv4Mapped)
     {
         byte[] bytes = new byte[IPV6_BYTE_COUNT];
         int ipLength = ip.Length;

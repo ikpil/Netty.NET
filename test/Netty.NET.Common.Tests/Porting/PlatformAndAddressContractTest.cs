@@ -46,10 +46,10 @@ public class PlatformAndAddressContractTest
     [Fact]
     public void AddressParsingAcceptsCharSequencesWithoutDnsAndFormattingOmitsTheZone()
     {
-        ICharSequence mapped = new StringCharSequence("::ffff:5.6.7.8");
+        ReadOnlySpan<char> mapped = "::ffff:5.6.7.8".AsSpan();
         Assert.True(NetUtil.IsValidIpV6Address(mapped));
         Assert.Equal("::ffff:5.6.7.8", NetUtil.ToAddressString(NetUtil.GetByName(mapped), true));
-        Assert.True(NetUtil.IsValidIpV4Address(new StringCharSequence("127.0.0.1")));
+        Assert.True(NetUtil.IsValidIpV4Address("127.0.0.1".AsSpan()));
         var scoped = NetUtil.CreateInetAddressFromIpAddressString("[fe80::1%42]");
         Assert.Equal(42, scoped.ScopeId);
         Assert.Equal("[fe80::1]:0", NetUtil.ToSocketAddressString(new IPEndPoint(scoped, 0)));

@@ -44,6 +44,23 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native IP text-view checkpoint
+
+Replace NetUtil Java sequence overloads with bounded ReadOnlySpan<char> input;
+keep public string calls, restore internal byte helpers and retain strict grammar.
+See [native API migration and evidence limits](common-clr-design.md#native-ip-text-views-and-helper-visibility).
+25 added CLR cases: two identical baseline metadata/null cases fail -> pass;
+23 new view-boundary cases final-only. Affected Debug/checked Release 134 pass.
+All 594 rows for 297 literals match pinned Java and compiled before/after libraries.
+Warm sliced-view validation allocation: 112000 -> 0 bytes for 2000 calls; no parsing/
+output allocation or throughput claim. Default Debug/Release: 2591 discovered/2577
+pass/0 fail/14 unchanged skips. Preserve all 2566 prior outcomes, original 759,
+271 comment rows, 118 NetUtil comments, 205+66 inventory and warning/casing identities.
+Original NetUtilTest unchanged; one existing Porting case input migrated to Span.
+Source statuses unchanged. Evidence: native-ip-span-* and artifacts/native-ip-span-validation;
+no new MD. Next: remaining byte/integer/format APIs. NetUtil/common, real consumer/
+other OS/backend and scheduler/focused Global completion stall remain open.
+
 ## Native numeric IP scope checkpoint
 
 Restore null on malformed IPv6 scopes; use invariant ASCII parsing and native
