@@ -7897,3 +7897,63 @@ native-backlog-* records. All 118 original NetUtil comments retained. Source sta
 in-progress: IP preferences/DNS policy, remaining API, OS/backend/common and known
 scheduler/focused Global completion-stall reviews remain open. No new MD or
 performance, other-OS, NativeAOT or real BSD sysctl validation claim.
+
+
+## Native IP preference policy
+
+Pinned NetUtil.java:129-150,267-280 stores two independent startup settings.
+DnsNameResolver.java:160-170 chooses IPv4-only when IPv4 is forced or no interface
+supports IPv6, then IPv6-preferred or IPv4-preferred. DefaultDnsServerAddressStreamProvider.java:126-138
+uses a different fallback condition: IPv6 preference OR (IPv6 localhost AND no
+IPv4 force). Both flags may therefore be true; collapsing them into one enum or
+using one universal family-selection predicate would lose original consumer policy.
+DnsResolveContext.java:208 refers to the preference in documentation. Unix
+Socket.java:595 passes only IPv4 force to netty_unix_socket.c:252-277, whose IPv6
+socket creation and ::1 bind independently determine capability. These future
+consumers establish a common requirement even though no current C# caller exists.
+
+Expose PreferIPv4Stack and PreferIPv6Addresses as get-only static bool properties,
+removing the two Java-style getter methods and duplicate private flags. The explicit
+NetUtil initializer captures both values once, including when a loopback field is
+accessed first. Keep the existing process-environment keys java.net.preferIPv4Stack
+and java.net.preferIPv6Addresses; no alias, AppContext precedence or new property
+store is introduced. IPv4 uses SystemPropertyUtil's true/yes/1 tokens; IPv6 only
+accepts true (ordinal, ignoring case). Empty, invalid and system use false.
+Native Trim continues to accept Unicode space and reject U+001F controls, unlike
+Java trim. Configure the environment before NetUtil's first use.
+
+These are Netty policy inputs. They neither report capability nor mutate global
+System.Net behavior; consumers must explicitly apply their own selection rules.
+Retain all original Java comments beside the new properties and add native XML
+documentation clarifying the JVM-only global-disable statement. Drop the JVM -D
+prefix from environment-setting debug messages. .NET's separate
+[IPv6 runtime switch](https://devblogs.microsoft.com/dotnet/dotnet-6-networking-improvements/)
+and [OS name resolution](https://learn.microsoft.com/dotnet/api/system.net.dns.gethostaddresses)
+must not silently become Netty preference values.
+
+18 added CLR cases exercise read-only metadata, 14 setting pairs and three first
+access orders with subsequent environment changes and native capability controls.
+An exclusive collection and collectible assembly context isolate actual initializers;
+no successful garbage collection/unload timing is claimed. The identical metadata
+baseline fails once then passes; 17 new-boundary cases are final-only. Initial
+Debug/checked Release each failed one new case because its empty-value expectation
+was incorrectly true; correcting the test to the reviewed false default gives 58/58
+affected passes. Keep the initial failure logs; no runtime repair is claimed for it.
+
+Fifteen fresh non-friend processes per actual compiled before/after library migrate
+only getter calls to property reads: all 105 configuration/caching/controlled-consumer/
+real loopback-socket rows remain identical. Execute byte-exact pinned preference
+fields, initializer prefix, getters and SystemPropertyUtil/ObjectUtil with probe-only
+logger dependencies: 82 of 90 rows match; eight deliberate Unicode/control-whitespace
+differences arise from two inputs. DNS conditions are controlled reproductions of
+the reviewed consumers, not execution of the full Java/C# resolver. Actual Windows
+IPv4/IPv6 loopback binds and stable Socket.OSSupportsIPv6 pass for all 15 settings.
+No Unix capability probe, external DNS, other OS/backend or resolver integration claim.
+
+Default Debug/Release: 2508 discovered/2494 pass/0 fail/14 unchanged skips; preserve
+all 2490 prior outcomes, original 759, 271 comment rows, 118 NetUtil comments and
+pinned 205+66 inventory. No new source/test warning identity, lowercase declaration
+or casing collision. Source statuses unchanged; NetUtil remains in-progress.
+Evidence: native-ip-preferences-* and artifacts/native-ip-preferences-validation.
+Next: remaining NetUtil parsing/formatting and endpoint APIs. Scheduler/focused
+Global completion stall, other backend/platform work and whole common remain open.

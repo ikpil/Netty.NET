@@ -44,6 +44,26 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native IP preference checkpoint
+
+Expose independent startup policies as PreferIPv4Stack/PreferIPv6Addresses get-only
+properties; retain environment keys, remove Java getter aliases and clarify that
+consumers apply policy without changing System.Net capability.
+See [consumer rules and limits](common-clr-design.md#native-ip-preference-policy).
+18 added CLR cases; affected Debug/checked Release 58 pass. Identical metadata
+baseline one fail -> pass; 17 new-boundary cases final-only. Initial one-case
+empty-value expectation failure in each configuration retained and corrected.
+15 fresh processes per compiled library conserve all 105 control rows; pinned
+parser/controlled DNS predicates: 82/90 match, eight documented whitespace differences.
+Real Windows IPv4/IPv6 loopback binds pass; full resolver/Unix integration stays open.
+Default Debug/Release: 2508 discovered/2494 pass/0 fail/14 unchanged skips; all 2490
+prior outcomes, original 759, 271 comment rows, 118 NetUtil comments, 205+66 inventory
+and warning/casing identities conserved. Statuses unchanged: 73 verified/56 CLR
+replacements/45 pending/15 in-progress/16 not-applicable. NetUtil/common stay open.
+Evidence: native-ip-preferences-* and artifacts/native-ip-preferences-validation;
+no new MD. Next: remaining NetUtil parsing/formatting and endpoint APIs. Other
+OS/backend and scheduler/focused Global completion stall remain open.
+
 ## Native backlog checkpoint
 
 Preserve zero vs unavailable sysctl values and native process startup exceptions;

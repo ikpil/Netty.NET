@@ -117,12 +117,38 @@ public static class NetUtil
     /**
      * {@code true} if IPv4 should be used even if the system supports both IPv4 and IPv6.
      */
-    private static readonly bool IPV4_PREFERRED = SystemPropertyUtil.GetBoolean("java.net.preferIPv4Stack", false);
+    /**
+     * Returns {@code true} if IPv4 should be used even if the system supports both IPv4 and IPv6. Setting this
+     * property to {@code true} will disable IPv6 support. The default value of this property is {@code false}.
+     *
+     * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Java SE
+     *      networking properties</a>
+     */
+    // CLR adaptation: these environment keys configure Netty policy, not System.Net itself.
+    // Values are captured once by this type's explicit static constructor.
+    /// <summary>
+    /// Gets the IPv4-only policy captured from the java.net.preferIPv4Stack environment variable.
+    /// Consumers must apply this policy when resolving addresses or creating sockets;
+    /// it does not disable IPv6 in System.Net.
+    /// </summary>
+    public static bool PreferIPv4Stack { get; }
 
     /**
      * {@code true} if an IPv6 address should be preferred when a host has both an IPv4 address and an IPv6 address.
      */
-    private static readonly bool IPV6_ADDRESSES_PREFERRED;
+    /**
+     * Returns {@code true} if an IPv6 address should be preferred when a host has both an IPv4 address and an IPv6
+     * address. The default value of this property is {@code false}.
+     *
+     * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Java SE
+     *      networking properties</a>
+     */
+    // CLR adaptation: only true forces IPv6 preference; system/yes/1 do not.
+    /// <summary>
+    /// Gets the IPv6 address preference captured from the java.net.preferIPv6Addresses environment variable.
+    /// This is independent of PreferIPv4Stack and does not describe runtime IPv6 capability.
+    /// </summary>
+    public static bool PreferIPv6Addresses { get; }
 
     /**
      * The logger being used by this class
@@ -131,19 +157,20 @@ public static class NetUtil
 
     static NetUtil()
     {
+        PreferIPv4Stack = SystemPropertyUtil.GetBoolean("java.net.preferIPv4Stack", false);
         string prefer = SystemPropertyUtil.Get("java.net.preferIPv6Addresses", "false");
         if (string.Equals("true", prefer.Trim(), StringComparison.OrdinalIgnoreCase))
         {
-            IPV6_ADDRESSES_PREFERRED = true;
+            PreferIPv6Addresses = true;
         }
         else
         {
             // Let's just use false in this case as only true is "forcing" ipv6.
-            IPV6_ADDRESSES_PREFERRED = false;
+            PreferIPv6Addresses = false;
         }
 
-        logger.Debug("-Djava.net.preferIPv4Stack: {}", IPV4_PREFERRED);
-        logger.Debug("-Djava.net.preferIPv6Addresses: {}", prefer);
+        logger.Debug("java.net.preferIPv4Stack: {}", PreferIPv4Stack);
+        logger.Debug("java.net.preferIPv6Addresses: {}", prefer);
 
         NETWORK_INTERFACES = NetUtilInitializations.NetworkInterfaces();
 
@@ -227,30 +254,6 @@ public static class NetUtil
                 }
             }
         }
-    }
-
-    /**
-     * Returns {@code true} if IPv4 should be used even if the system supports both IPv4 and IPv6. Setting this
-     * property to {@code true} will disable IPv6 support. The default value of this property is {@code false}.
-     *
-     * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Java SE
-     *      networking properties</a>
-     */
-    public static bool IsIpV4StackPreferred()
-    {
-        return IPV4_PREFERRED;
-    }
-
-    /**
-     * Returns {@code true} if an IPv6 address should be preferred when a host has both an IPv4 address and an IPv6
-     * address. The default value of this property is {@code false}.
-     *
-     * @see <a href="https://docs.oracle.com/javase/8/docs/api/java/net/doc-files/net-properties.html">Java SE
-     *      networking properties</a>
-     */
-    public static bool IsIpV6AddressesPreferred()
-    {
-        return IPV6_ADDRESSES_PREFERRED;
     }
 
     /**
