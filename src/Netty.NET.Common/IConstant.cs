@@ -26,10 +26,10 @@ public interface IConstant<in T> : IComparable<T>
     /**
      * Returns the unique number assigned to this {@link Constant}.
      */
-    int Id();
+    int Id { get; }
 
     /**
      * Returns the name of this {@link Constant}.
      */
-    string Name();
+    string Name { get; }
 }

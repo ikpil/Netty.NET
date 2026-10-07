@@ -44,6 +44,37 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native constant checkpoint
+
+Move constant Id()/Name() metadata to native get-only properties, preserving
+IComparable<T>, reference identity and existing ordering/registry behavior.
+Reject null factory results before publication and unnamed Type name composition.
+Details and original-source consumers:
+[native constant contracts](common-clr-design.md#native-constant-metadata-and-pool-failure-boundaries).
+Eighteen identical baseline cases: six pass/twelve fail -> all pass. Affected
+Debug/checked Release 59 pass. Exact final unfiltered Debug/Release 2690 discovered/
+2676 pass/0 fail/14 unchanged skips; all 2672 prior outcomes and original 759
+conserved. Two initial full Debug runs each had 2675 pass/1 fail/14 skip: the
+existing ResourceLeakDetector 50-worker/five-million-pair stress workload exceeded
+its 120-second bound. Keep those logs/results and a pristine tracked-source
+stress control (one pass, about 110 seconds in isolation). A shared five-minute
+CLR test/join budget lets the full original workload and assertions finish;
+detector behavior and hint timeouts are unchanged.
+Final full Debug/Release pass with that explicitly recorded test-policy change.
+
+Pinned Java and compiled native consumers compare eight normalized contract rows;
+five ordinary native rows are conserved and four factory/retry rows repaired.
+Measured warm cached-lookup allocation: 960000 -> 0 bytes/10000 reads. All 271
+comment rows are conserved (Constant 4, pool 8, base 3, attribute key 6, signal 8).
+Constant pending -> verified after source/native API review; source totals 75
+verified/56 clr-replacement/44 pending/14 in-progress/16 not-applicable. Inventory
+remains 205 Java sources + 66 tests. Full validation uses an isolated exact code
+copy with tracked test configuration; the separate edited test-package project
+and default MTP issue remain preserved/excluded. Evidence: native-constant-* and
+artifacts/native-constant-validation; no new MD or warning/casing identities.
+Next: remaining native API reviews in dependency order, including ThreadProperties
+and executor metadata. Whole common and the focused Global completion stall remain open.
+
 ## Native numeric formatting checkpoint
 
 Repair derived IPAddress display callbacks entering numeric address/host formatting;

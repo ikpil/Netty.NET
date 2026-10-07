@@ -29,6 +29,7 @@ public class LeakDetectorGlobalsCollection { }
 [Collection("Leak detector globals")]
 public class ResourceLeakDetectorTest : IDisposable
 {
+    private const int ConcurrentUsageTimeoutMilliseconds = 300000;
     private static volatile int sink;
     private readonly ResourceLeakDetectorLevel previous = ResourceLeakDetector.GetLevel();
     public ResourceLeakDetectorTest() => ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.SIMPLE);
@@ -36,7 +37,9 @@ public class ResourceLeakDetectorTest : IDisposable
 
     // The JVM's @Timeout is 60 seconds. CLR conditional weak values and captured
     // managed stacks need a wider bound; retain all 50 threads and 5,000,000 pairs.
-    [Fact(Timeout = 120000)]
+    // Ten million creation/close stack captures can exceed two minutes under
+    // full-suite load; preserve the workload with one bounded CLR time budget.
+    [Fact(Timeout = ConcurrentUsageTimeoutMilliseconds)]
     public void TestConcurrentUsage()
     {
         int finished = 0;
@@ -88,7 +91,7 @@ public class ResourceLeakDetectorTest : IDisposable
         // Just wait until all threads are done.
         var elapsed = Stopwatch.StartNew();
         foreach (Thread thread in threads)
-            Assert.True(thread.Join(TimeSpan.FromSeconds(120) - elapsed.Elapsed));
+            Assert.True(thread.Join(TimeSpan.FromMilliseconds(ConcurrentUsageTimeoutMilliseconds) - elapsed.Elapsed));
         // Check if we had any leak reports in the ResourceLeakDetector itself
         DefaultResource.detector.AssertNoErrors();
         AssertNoErrors(error);

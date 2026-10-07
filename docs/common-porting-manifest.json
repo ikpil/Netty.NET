@@ -14,12 +14,14 @@
         "src/Netty.NET.Common/AbstractConstant.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/AbstractConstant.cs"
+        "src/Netty.NET.Common/AbstractConstant.cs",
+        "test/Netty.NET.Common.Tests/Porting/ConstantPoolNativeContractTest.cs"
       ],
       "evidence": [
-        "Pinned source and Constant/AttributeKey/Signal consumers reviewed; ConstantIdentityContractTest (6), original ConstantPoolTest and registry tests. Four of six identity regressions failed before repair and pass afterwards."
+        "Pinned source and Constant/AttributeKey/Signal consumers reviewed; ConstantIdentityContractTest (6), original ConstantPoolTest and registry tests. Four of six identity regressions failed before repair and pass afterwards.",
+        "Native metadata property migration retains readonly storage, sealed identity/description overrides, shared non-generic uniqueness sequence and native ordering. Existing identity contracts and compiled metadata/collection consumers remain unchanged except property syntax. Exact results/comments, retained initial stress timeouts and configuration limits: common-porting.md Native constant checkpoint; design: common-clr-design.md#native-constant-metadata-and-pool-failure-boundaries; native-constant-* and artifacts/native-constant-validation. Scoped evidence, not whole common completion."
       ],
-      "adaptation": "Sealed CLR identity/description overrides implement Java final Object methods. RuntimeHelpers.GetHashCode supplies identity hashing. A non-generic Interlocked long sequence avoids CLR per-closed-generic static storage. Native integer CompareTo avoids subtraction overflow; null comparison is ArgumentNullException. Original three comment blocks preserved.",
+      "adaptation": "Sealed CLR identity/description overrides implement Java final Object methods. RuntimeHelpers.GetHashCode supplies identity hashing. A non-generic Interlocked long sequence avoids CLR per-closed-generic static storage. Native integer CompareTo avoids subtraction overflow; null comparison is ArgumentNullException. Original three comment blocks preserved. Get-only Id/Name properties replace getter methods; readonly storage, sealed identity overrides, shared sequence and runtime-local ordering remain unchanged.",
       "comments": {
         "upstreamCount": 3,
         "required": true,
@@ -181,12 +183,14 @@
       ],
       "implementation": [
         "src/Netty.NET.Common/AttributeKey.cs",
-        "src/Netty.NET.Common/IAttributeKey.cs"
+        "src/Netty.NET.Common/IAttributeKey.cs",
+        "test/Netty.NET.Common.Tests/Porting/ConstantPoolNativeContractTest.cs"
       ],
       "evidence": [
-        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved."
+        "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved.",
+        "Both native type-composition entry points now reject absent FullName before registry publication; named open/closed generic controls and the global typed registry retain identity. Native Id property on the non-generic bridge is verified by compiled consumers. Exact results/comments, retained initial stress timeouts and configuration limits: common-porting.md Native constant checkpoint; design: common-clr-design.md#native-constant-metadata-and-pool-failure-boundaries; native-constant-* and artifacts/native-constant-validation. Scoped evidence, not whole common completion."
       ],
-      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence.",
+      "adaptation": "See docs/common-porting.md; passing batch tests do not establish full file equivalence. Id is a get-only property on IAttributeKey. Type composition rejects absent FullName rather than register an ambiguous #component name, retaining null argument order and named generic types. Shared typed registry behavior remains unchanged.",
       "comments": {
         "upstreamCount": 6,
         "required": true,
@@ -309,13 +313,18 @@
     {
       "upstream": "common/src/main/java/io/netty/util/Constant.java",
       "kind": "source",
-      "status": "pending",
+      "status": "verified",
       "candidates": [
         "src/Netty.NET.Common/IConstant.cs"
       ],
-      "implementation": [],
-      "evidence": [],
-      "adaptation": "",
+      "implementation": [
+        "src/Netty.NET.Common/IConstant.cs",
+        "test/Netty.NET.Common.Tests/Porting/ConstantPoolNativeContractTest.cs"
+      ],
+      "evidence": [
+        "Both pinned metadata members become native get-only properties; retain IComparable<T> and the required metadata interface, supporting both base constants and Exception-derived Signal. Native property fixture and compiled non-friend consumers verify the public migration. Exact results/comments, retained initial stress timeouts and configuration limits: common-porting.md Native constant checkpoint; design: common-clr-design.md#native-constant-metadata-and-pool-failure-boundaries; native-constant-* and artifacts/native-constant-validation. Scoped evidence, not whole common completion."
+      ],
+      "adaptation": "Native Id/Name properties replace getter methods; native IComparable<T> supplies ordering. The metadata interface remains necessary for constants with different base classes. CLR consumers use ReferenceEquals for singleton identity.",
       "comments": {
         "upstreamCount": 4,
         "required": true,
@@ -331,14 +340,16 @@
         "src/Netty.NET.Common/ConstantPool.cs"
       ],
       "implementation": [
-        "src/Netty.NET.Common/ConstantPool.cs"
+        "src/Netty.NET.Common/ConstantPool.cs",
+        "test/Netty.NET.Common.Tests/Porting/ConstantPoolNativeContractTest.cs"
       ],
       "evidence": [
         "Pinned Java public contract reviewed; upstream tests plus CLR regression tests passed in PortingBatch; all original comments preserved.",
         "ConstantPoolTest (5 original) plus ConstantPoolConcurrencyContractTest (3 CLR cases); deterministic competing factories and 10,000 concurrent ID allocations pass.",
-        "Debug/Release PortingBatch: 956 passed, 14 skipped, zero failed; original 8 comment blocks preserved."
+        "Debug/Release PortingBatch: 956 passed, 14 skipped, zero failed; original 8 comment blocks preserved.",
+        "Pinned null publication, duplicate factory/ID rules and ChannelOption.java:164 NextId consumer reviewed. Null results are rejected before publication; static GetOrAdd state removes measured cached-hit closure allocation. Unnamed Type inputs cannot alias a shared name. Exact results/comments, retained initial stress timeouts and configuration limits: common-porting.md Native constant checkpoint; design: common-clr-design.md#native-constant-metadata-and-pool-failure-boundaries; native-constant-* and artifacts/native-constant-validation. Scoped evidence, not whole common completion."
       ],
-      "adaptation": "ConcurrentDictionary publishes the winning constant identity; Interlocked supplies unchecked get-and-increment IDs. Reference-type constraint implements Java constant singleton/null semantics. Concurrent factories may allocate unused constants/IDs just as pinned get/create/putIfAbsent does. Native identity design is documented in docs/common-task-composition.md.",
+      "adaptation": "ConcurrentDictionary publishes the winning constant identity; Interlocked supplies unchecked get-and-increment IDs. Reference-type constraint implements Java constant singleton/null semantics. Concurrent factories may allocate unused constants/IDs just as pinned get/create/putIfAbsent does. Native identity design is documented in docs/common-task-composition.md. Null factory results throw InvalidOperationException before publication; static GetOrAdd state preserves competing factories/winning identity/consumed IDs. Type composition rejects absent FullName while preserving named open/closed generic types and null argument order. Public NextId remains required by pinned ChannelOption.",
       "designReview": "Native collection, reference identity and generic storage decisions verified; remaining global public naming/API decisions are tracked in common-clr-design.md.",
       "comments": {
         "upstreamCount": 8,
@@ -958,12 +969,14 @@
       "candidates": [],
       "implementation": [
         "src/Netty.NET.Common/Signal.cs",
-        "docs/common-clr-design.md"
+        "docs/common-clr-design.md",
+        "test/Netty.NET.Common.Tests/Porting/ConstantPoolNativeContractTest.cs"
       ],
       "evidence": [
-        "Pinned common Task-value and codec-base DecoderResult/ReplayingDecoder consumers reviewed. Nine new CLR cases; byte-identical baseline affected fixture 21 passed/4 failed, final Debug/checked Release 25 passed. Executed exact Java and native consumers compare 66 normalized rows (42 baseline differences). Full defaults, original identities/comments/inventory, casing and warning evidence in common-porting.md native replay signal checkpoint and native-signal-* TRX/JSON. Windows/net10.0 only; full codec/backend/platform integration remains separate."
+        "Pinned common Task-value and codec-base DecoderResult/ReplayingDecoder consumers reviewed. Nine new CLR cases; byte-identical baseline affected fixture 21 passed/4 failed, final Debug/checked Release 25 passed. Executed exact Java and native consumers compare 66 normalized rows (42 baseline differences). Full defaults, original identities/comments/inventory, casing and warning evidence in common-porting.md native replay signal checkpoint and native-signal-* TRX/JSON. Windows/net10.0 only; full codec/backend/platform integration remains separate.",
+        "Native Id/Name properties delegate to the private constant; composition inherits the pool unnamed-type guard. Existing replay identity, diagnostics and collection controls remain; compiled native interface consumers verify property dispatch. Exact results/comments, retained initial stress timeouts and configuration limits: common-porting.md Native constant checkpoint; design: common-clr-design.md#native-constant-metadata-and-pool-failure-boundaries; native-constant-* and artifacts/native-constant-validation. Scoped evidence, not whole common completion."
       ],
-      "adaptation": "Required replay/sentinel identity retained as sealed CLR Exception/IComparable constant with private pooled construction; private helpers nested. Native registry/order algorithms unchanged. Expect(null) uses pinned null text; null comparison is ArgumentNullException. Public StackTrace is empty, name-only ToString and null InnerException retained, but CLR internal throw capture/cost and broad Exception catch behavior differ from Java Error. No initCause/fillInStackTrace facade or JVM serialization field. All eight original comments restored; native doc variants archived. See common-clr-design.md#native-replay-signals.",
+      "adaptation": "Required replay/sentinel identity retained as sealed CLR Exception/IComparable constant with private pooled construction; private helpers nested. Native registry/order algorithms unchanged. Expect(null) uses pinned null text; null comparison is ArgumentNullException. Public StackTrace is empty, name-only ToString and null InnerException retained, but CLR internal throw capture/cost and broad Exception catch behavior differ from Java Error. No initCause/fillInStackTrace facade or JVM serialization field. All eight original comments restored; native doc variants archived. See common-clr-design.md#native-replay-signals. Get-only Id/Name properties delegate to the private constant; Type composition inherits the pool guard for absent FullName. Replay/exception/identity policies remain unchanged.",
       "comments": {
         "upstreamCount": 8,
         "required": true,
@@ -5556,9 +5569,10 @@
       "evidence": [
         "All three original cases pass in the full batch; setup/broken-hint cases also pass in Release and with close tracing disabled.",
         "Preserved 50 native threads, 1,000 batches per thread and 100 tracked resources per batch; no iteration reduction.",
-        "All 21 upstream comments are preserved; additional 28 CLR contract cases pass."
+        "All 21 upstream comments are preserved; additional 28 CLR contract cases pass.",
+        "Native constant checkpoint retained two full Debug 120-second stress timeouts and a pristine tracked-source stress control. Shared bounded 300-second test/total-join budget preserves 50 threads, 1000 batches/thread, 100 tracked resources/batch, creation/close stack information and all assertions; final complete Debug/Release pass. No detector algorithm/performance change; exact results in native-constant-* and artifacts/native-constant-validation, common-porting.md Native constant checkpoint."
       ],
-      "adaptation": "xUnit and native Thread/Barrier/Queue/GC replace JUnit and Java concurrency/collection calls. CLR GC.Collect plus WaitForPendingFinalizers triggers the conditional-value notifier. The original 60-second concurrency timeout was exceeded in a full CLR batch; use a documented 120-second bound without reducing workload, stack information or assertions. Hint tests retain their original 10-second bound. Restore detector level and hint state for fixture isolation.",
+      "adaptation": "xUnit and native Thread/Barrier/Queue/GC replace JUnit and Java concurrency/collection calls. CLR GC.Collect plus WaitForPendingFinalizers triggers the conditional-value notifier. The original 60-second concurrency timeout was exceeded in a full CLR batch; the initial documented 120-second bound was later exceeded in two full Debug runs; use a shared bounded 300-second test/total-join budget without reducing workload, stack information or assertions. Hint tests retain their original 10-second bound. Restore detector level and hint state for fixture isolation.",
       "comments": {
         "upstreamCount": 21,
         "required": true,

@@ -8278,3 +8278,55 @@ numeric formatting checkpoint; native-numeric-format-* and
 artifacts/native-numeric-format-validation/final-source-review.json. Real Java
 providers, other OS/backend integration, whole common and the focused Global
 completion stall remain open.
+
+
+## Native constant metadata and pool failure boundaries
+
+Review pinned Constant.java, ConstantPool.java and their AbstractConstant,
+AttributeKey and Signal consumers. Retain a small IConstant<T> metadata contract:
+IComparable<T> supplies standard CLR ordering but does not carry the required
+identifier/name; Signal already inherits Exception and cannot inherit the common
+constant base. Use get-only Id/Name properties on interfaces, base constants and
+signals, including the non-generic attribute-key bridge. All in-repository uses
+are migrated; external callers must change Id()/Name() to property reads. Preserve
+the original Java documentation verbatim. CLR callers use ReferenceEquals for
+singleton identity; do not infer Java operator semantics for arbitrary C# types.
+Keep CLR comparer variance, sealed base identity/description overrides, shared
+non-generic uniqueness storage and runtime-local identity ordering.
+
+Pinned ConstantPool.java:68,101 publishes through ConcurrentHashMap, which rejects
+null. ConcurrentDictionary accepts null reference values; the previous port could
+reserve a name permanently with no constant. Explicitly reject a null factory
+result with InvalidOperationException before either publication path. Preserve
+factory exception identity, consumed IDs, retries, winning-instance publication
+and competing-factory ID gaps. Use the native GetOrAdd overload with a static
+factory and explicit state to remove per-lookup closure allocation. Keep public
+NextId: pinned ChannelOption.java:164 still consumes it. Do not add a Java atomic
+or collection wrapper, or enforce new constraints on custom factory metadata.
+
+[Type.FullName](https://learn.microsoft.com/en-us/dotnet/api/system.type.fullname?view=net-10.0)
+can be absent for CLR generic parameters and partially constructed types. Reject
+that input with ArgumentException(firstNameComponent) in both composing paths;
+otherwise different types collapse to the same '#component' name. Preserve null
+argument order and ordinary native FullName composition, including open generic
+definitions with a name. Do not invent fallback names or assembly-based identity.
+Signal delegates to the same pool; both attribute-key entry points are covered.
+
+Existing deterministic factory races, ID allocation, identity, native collections,
+attribute-map and replay contracts are retained. Direct compiled non-friend
+consumers compare the native migration against exact pinned Java sources; normalize
+only boolean text and the native null-factory exception category. CLR-only unnamed
+types and property syntax are tested directly rather than simulated as Java classes. Warm 10,000 cached
+lookups allocate 960000 -> 0 bytes on this Windows/net10 run; no throughput claim
+or cold/all-operation zero-allocation claim. Evidence: native-constant-* and
+artifacts/native-constant-validation. Full counts, the retained initial stress
+timeout, comment/inventory conservation and configuration limits: common-porting.md
+Native constant checkpoint. Constant source becomes verified for this native API
+scope; existing verified files receive follow-up evidence. Preserve the original
+50-worker/five-million-pair leak stress workload and assertions; ten million CLR
+creation/close stack captures exceeded the existing two-minute budget in two full
+Debug runs. Keep both failed runs, and use a shared bounded five-minute budget
+for the test and total worker joins. This changes test timing policy, not detector
+behavior or production performance. The pristine tracked-source stress control is
+retained separately. Whole common, the separate package/MTP configuration and
+focused Global completion stall remain open.

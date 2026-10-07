@@ -19,8 +19,8 @@ public class SignalContractTest
         foreach (Signal value in values)
         {
             Assert.Same(values[0], value);
-            Assert.Equal(name, value.Name());
-            Assert.Equal(values[0].Id(), value.Id());
+            Assert.Equal(name, value.Name);
+            Assert.Equal(values[0].Id, value.Id);
         }
         Assert.Same(values[0], Signal.ValueOf(name));
     }
@@ -31,7 +31,7 @@ public class SignalContractTest
         string component = "scope-" + Guid.NewGuid();
         Signal value = Signal.ValueOf(typeof(SignalContractTest), component);
         string name = typeof(SignalContractTest).FullName + '#' + component;
-        Assert.Equal(name, value.Name());
+        Assert.Equal(name, value.Name);
         Assert.Equal(name, value.ToString());
         Assert.Same(value, Signal.ValueOf(name));
         Assert.NotSame(value, Signal.ValueOf(name.ToUpperInvariant()));
@@ -62,7 +62,7 @@ public class SignalContractTest
                 caught.Expect(replay);
                 Assert.Null(caught.InnerException);
                 Assert.Equal(string.Empty, caught.StackTrace);
-                Assert.Equal(replay.Name(), caught.ToString());
+                Assert.Equal(replay.Name, caught.ToString());
             }
         }
     }
@@ -75,7 +75,7 @@ public class SignalContractTest
         Signal expected = Signal.ValueOf("expected-" + Guid.NewGuid());
         Signal actual = useNull ? null : Signal.ValueOf("actual-" + Guid.NewGuid());
         var failure = Assert.Throws<InvalidOperationException>(() => expected.Expect(actual));
-        Assert.Equal("unexpected signal: " + (actual?.Name() ?? "null"), failure.Message);
+        Assert.Equal("unexpected signal: " + (actual?.Name ?? "null"), failure.Message);
         expected.Expect(expected);
     }
 
@@ -99,7 +99,7 @@ public class SignalContractTest
         Signal previous = null;
         foreach (Signal value in ordered)
         {
-            Assert.Equal(keys[value], keys[Signal.ValueOf(value.Name())]);
+            Assert.Equal(keys[value], keys[Signal.ValueOf(value.Name)]);
             if (previous != null)
             {
                 Assert.False(previous.Equals(value));

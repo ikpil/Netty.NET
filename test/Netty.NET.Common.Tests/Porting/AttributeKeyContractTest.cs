@@ -14,7 +14,7 @@ public class AttributeKeyContractTest
         string name = Guid.NewGuid().ToString();
         var textKey = AttributeKey.ValueOf<string>(name);
         var valueKey = AttributeKey.ValueOf<Value>(Guid.NewGuid().ToString());
-        Assert.NotEqual(textKey.Id(), valueKey.Id());
+        Assert.NotEqual(textKey.Id, valueKey.Id);
         Assert.True(AttributeKey.Exists<Value>(name));
         Assert.Throws<ArgumentException>(() => AttributeKey.NewInstance<Value>(name));
         Assert.Throws<ArgumentException>(() => AttributeKey.ValueOf<Value>(name));

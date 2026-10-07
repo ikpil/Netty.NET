@@ -74,15 +74,9 @@ public sealed class Signal : Exception, IConstant<Signal>
     // runtime still captures throw state; this does not eliminate CLR throw cost.
     public override string StackTrace => string.Empty;
 
-    public int Id()
-    {
-        return constant.Id();
-    }
+    public int Id => constant.Id;
 
-    public string Name()
-    {
-        return constant.Name();
-    }
+    public string Name => constant.Name;
 
     public override bool Equals(object obj)
     {
@@ -107,7 +101,7 @@ public sealed class Signal : Exception, IConstant<Signal>
 
     public override string ToString()
     {
-        return Name();
+        return Name;
     }
 
     private sealed class SignalConstantPool : ConstantPool<Signal>

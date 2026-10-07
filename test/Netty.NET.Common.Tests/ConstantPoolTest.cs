@@ -64,7 +64,7 @@ public class ConstantPoolTest
     {
         TestConstant one = pool.ValueOf("one");
         TestConstant two = pool.ValueOf("two");
-        Assert.NotEqual(one.Id(), two.Id());
+        Assert.NotEqual(one.Id, two.Id);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class ConstantPoolTest
         Assert.Equal(5, array.Count);
 
         // Sort by name
-        array.Sort((o1, o2) => string.Compare(o1.Name(), o2.Name(), StringComparison.Ordinal));
+        array.Sort((o1, o2) => string.Compare(o1.Name, o2.Name, StringComparison.Ordinal));
 
         Assert.Same(a, array[0]);
         Assert.Same(b, array[1]);
@@ -100,6 +100,6 @@ public class ConstantPoolTest
     public void TestComposedName()
     {
         TestConstant a = pool.ValueOf(typeof(object), "A");
-        Assert.Equal(typeof(object).FullName + "#A", a.Name());
+        Assert.Equal(typeof(object).FullName + "#A", a.Name);
     }
 }

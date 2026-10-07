@@ -40,19 +40,13 @@ public abstract class AbstractConstant<T> : IConstant<T>
         _uniquifier = ConstantIdentitySequence.Next();
     }
 
-    public string Name()
-    {
-        return _name;
-    }
+    public string Name => _name;
 
-    public int Id()
-    {
-        return _id;
-    }
+    public int Id => _id;
 
     public sealed override string ToString()
     {
-        return Name();
+        return Name;
     }
 
     // Java final Object identity methods cannot be replaced with value equality

@@ -39,10 +39,13 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
      */
     public T ValueOf(Type firstNameComponent, string secondNameComponent)
     {
-        return ValueOf(
-            CheckNotNull(firstNameComponent, "firstNameComponent").FullName +
-            '#' +
-            CheckNotNull(secondNameComponent, "secondNameComponent"));
+        CheckNotNull(firstNameComponent, nameof(firstNameComponent));
+        CheckNotNull(secondNameComponent, nameof(secondNameComponent));
+        // Java Class.getName is always present; CLR generic parameters and
+        // partially constructed types can lack FullName and must not alias "#name".
+        string firstName = firstNameComponent.FullName ?? throw new ArgumentException(
+            "A type with a full name is required.", nameof(firstNameComponent));
+        return ValueOf(firstName + '#' + secondNameComponent);
     }
 
     /**
@@ -68,7 +71,11 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
         // CLR adaptation: competing factories may create unused constants, just
         // as upstream get/newConstant/putIfAbsent does. Return the published value,
         // not the factory's temporary instance; ID gaps are allowed.
-        return _constants.GetOrAdd(name, k => NewConstant(NextId(), name));
+        // ConcurrentDictionary permits null values, unlike Java ConcurrentHashMap.
+        // Reject a failed factory before publication; consumed IDs are not reused.
+        return _constants.GetOrAdd(name, static (n, pool) =>
+            pool.NewConstant(pool.NextId(), n) ?? throw new InvalidOperationException(
+                "The constant factory returned null."), this);
     }
 
     /**
@@ -98,7 +105,8 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
         _constants.TryGetValue(name, out var constant);
         if (constant == null)
         {
-            T tempConstant = NewConstant(NextId(), name);
+            T tempConstant = NewConstant(NextId(), name) ?? throw new InvalidOperationException(
+                "The constant factory returned null.");
             bool added = _constants.TryAdd(name, tempConstant);
             if (added)
             {

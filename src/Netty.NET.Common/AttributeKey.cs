@@ -103,7 +103,10 @@ public class AttributeKey<T> : AbstractConstant<AttributeKey<T>>, IAttributeKey 
     {
         ObjectUtil.CheckNotNull(firstNameComponent, nameof(firstNameComponent));
         ObjectUtil.CheckNotNull(secondNameComponent, nameof(secondNameComponent));
-        return ValueOf(firstNameComponent.FullName + '#' + secondNameComponent);
+        // Reject unnamed CLR types rather than publish an ambiguous "#name" key.
+        string firstName = firstNameComponent.FullName ?? throw new ArgumentException(
+            "A type with a full name is required.", nameof(firstNameComponent));
+        return ValueOf(firstName + '#' + secondNameComponent);
     }
 
     internal AttributeKey(int id, string name)

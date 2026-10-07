@@ -2,5 +2,5 @@ namespace Netty.NET.Common;
 
 public interface IAttributeKey
 {
-    int Id();
+    int Id { get; }
 }
