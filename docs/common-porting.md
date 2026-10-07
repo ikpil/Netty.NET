@@ -44,6 +44,22 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native endpoint formatting checkpoint
+
+Support standard EndPoint inputs (IPEndPoint/DnsEndPoint) without resolution and
+format host/port numbers invariantly; preserve original host text and comments.
+See [native mapping, consumer migration and limits](common-clr-design.md#native-endpoint-and-host-port-formatting).
+20 added CLR cases; identical 11-case baseline six pass/five fail -> all pass;
+nine new-boundary cases final-only. Affected Debug/checked Release 37 pass.
+Compiled-library/pinned-Java comparison: 258/271 rows match, 120 prior differences
+repaired and 13 deliberate native host-text differences recorded.
+Default Debug/Release: 2528 discovered/2514 pass/0 fail/14 unchanged skips. Preserve
+all 2508 prior outcomes, original 759, 271 comment rows, 118 NetUtil comments,
+205+66 inventory and warning/casing identities. Source statuses unchanged.
+Evidence: native-endpoint-format-* and artifacts/native-endpoint-format-validation;
+no new MD. Next: strict literal parsing/native NetUtil API. NetUtil/common,
+other OS/backend and scheduler/focused Global completion stall remain open.
+
 ## Native IP preference checkpoint
 
 Expose independent startup policies as PreferIPv4Stack/PreferIPv6Addresses get-only

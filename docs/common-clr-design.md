@@ -7957,3 +7957,48 @@ or casing collision. Source statuses unchanged; NetUtil remains in-progress.
 Evidence: native-ip-preferences-* and artifacts/native-ip-preferences-validation.
 Next: remaining NetUtil parsing/formatting and endpoint APIs. Scheduler/focused
 Global completion stall, other backend/platform work and whole common remain open.
+
+
+## Native endpoint and host-port formatting
+
+Pinned NetUtil.java:899-938,1079-1081 supports resolved addresses and unresolved
+host strings without DNS lookup. HttpUtil.java:613-625 needs the original host
+for HTTP authority; WebSocketClientHandshaker.java:731-766 formats host/port pairs.
+Current IPEndPoint-only signatures omitted the unresolved contract, while plain
+Int32.ToString admitted a culture-specific negative sign in the unrestricted
+host/port overload. String.valueOf(int) in Java is invariant.
+
+Generalize ToSocketAddressString/GetHostname to EndPoint, accepting standard
+IPEndPoint and DnsEndPoint. Existing IPEndPoint source calls still compile; compiled
+consumers must rebuild for the changed signature. No duplicate overload, Java
+address wrapper, DNS lookup, reverse lookup or host-name cache is added.
+DnsEndPoint.Host stays verbatim: case, Unicode, zone and existing IPv6 brackets;
+the address-family hint does not decide whether host text needs brackets. Resolved
+addresses retain Netty's RFC 5952 formatter and scope omission. The host/port
+overload keeps the whole int domain, using invariant ASCII decimal output; native
+endpoint constructors retain their own port validation. Null arguments use native
+ArgumentNullException; unsupported endpoints use ArgumentException without querying
+their AddressFamily or ToString. Original comments stay beside the implementation.
+
+Unlike Java named InetAddress, IPEndPoint has no original host-name metadata.
+GetHostname therefore returns its native numeric address text, including any scope.
+Future HTTP callers must retain DnsEndPoint separately from the resolved connection
+address when preserving authority is required. Native IPv6 numeric compression/
+mapped display remains intentional; no claim of identical JDK getHostString text.
+See [.NET endpoint contract](https://learn.microsoft.com/en-us/dotnet/api/system.net.dnsendpoint)
+and [integer formatting](https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
+
+20 added CLR cases: 11 byte-identical baseline-compatible cases six pass/five fail
+-> all pass; nine new EndPoint-boundary cases final-only. Affected Debug/checked
+Release each pass 37. Identical non-friend consumers exercise actual compiled
+before/after libraries in three cultures. Execute byte-exact pinned NetUtil,
+SystemPropertyUtil/ObjectUtil/BoundedInputStream and the HTTP host-format method
+with probe-only initialization/logging/platform/AsciiString dependencies. Of 271
+rows, 258 match Java; 120 prior differences repaired, 13 deliberate native host-text
+differences retained (12 IPv6 rows plus one named resolved address). All raw/resolved/
+unresolved socket text and HTTP rows match; the native HTTP algorithm is a controlled
+adaptation, not a ported HTTP module. Initialization providers, external DNS,
+transport/HTTP integration, other OS/backend and scheduler work remain unverified.
+Exact full-suite/inventory results are in common-porting.md; raw evidence in
+native-endpoint-format-* and artifacts/native-endpoint-format-validation.
+NetUtil remains in-progress; next review is its strict literal parsing/native API.

@@ -964,13 +964,23 @@ public static class NetUtil
      * @param addr {@link InetSocketAddress} to be converted to an address string
      * @return {@code String} containing the text-formatted IP address
      */
-    public static string ToSocketAddressString(IPEndPoint addr)
+    /// <summary>
+    /// Formats an IPEndPoint or DnsEndPoint without DNS lookup. Resolved IPv6
+    /// addresses omit their scope; unresolved host text is preserved.
+    /// </summary>
+    public static string ToSocketAddressString(EndPoint addr)
     {
-        string port = addr.Port.ToString();
+        ArgumentNullException.ThrowIfNull(addr);
+        if (addr is DnsEndPoint dnsAddress)
+            return ToSocketAddressString(dnsAddress.Host, dnsAddress.Port);
+        if (addr is not IPEndPoint ipAddress)
+            throw new ArgumentException("Unsupported endpoint type.", nameof(addr));
+
+        string port = ipAddress.Port.ToString(CultureInfo.InvariantCulture);
         StringBuilder sb;
 
         // CLR adaptation: IPEndPoint always contains a resolved address; formatting needs no DNS lookup.
-        IPAddress address = addr.Address;
+        IPAddress address = ipAddress.Address;
         string hostString = ToAddressString(address);
         sb = NewSocketAddressStringBuilder(hostString, port, address.AddressFamily == AddressFamily.InterNetwork);
         return sb.Append(':').Append(port).ToString();
@@ -981,7 +991,8 @@ public static class NetUtil
      */
     public static string ToSocketAddressString(string host, int port)
     {
-        string portStr = port.ToString();
+        ArgumentNullException.ThrowIfNull(host);
+        string portStr = port.ToString(CultureInfo.InvariantCulture);
         return NewSocketAddressStringBuilder(
             host, portStr, !IsValidIpV6Address(host)).Append(':').Append(portStr).ToString();
     }
@@ -1187,9 +1198,20 @@ public static class NetUtil
      * @param addr The address
      * @return the host string
      */
-    public static string GetHostname(IPEndPoint addr)
+    /// <summary>
+    /// Gets DnsEndPoint.Host or the numeric IPEndPoint address without DNS lookup.
+    /// Preserve the DnsEndPoint separately when the original host name is needed
+    /// after resolving it to an IPEndPoint.
+    /// </summary>
+    public static string GetHostname(EndPoint addr)
     {
-        return addr.Address.ToString();
+        ArgumentNullException.ThrowIfNull(addr);
+        return addr switch
+        {
+            DnsEndPoint dnsAddress => dnsAddress.Host,
+            IPEndPoint ipAddress => ipAddress.Address.ToString(),
+            _ => throw new ArgumentException("Unsupported endpoint type.", nameof(addr))
+        };
     }
 
     /**
