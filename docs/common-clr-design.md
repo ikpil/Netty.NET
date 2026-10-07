@@ -8230,3 +8230,51 @@ Native network defaults checkpoint of common-porting.md; evidence
 native-network-defaults-* and artifacts/native-network-defaults-validation.
 NetUtil remains in-progress pending its final overall review; common and the
 focused Global completion stall remain open.
+
+
+## Native numeric address formatting and NetUtil review
+
+Pinned NetUtil.java:977-985 formats Inet4Address.getHostAddress, not a display
+override; its Inet4Address/Inet6Address types are final. NetUtil.java:899-912,1079
+and HttpUtil.java:612-625 consume numeric resolved addresses. CLR IPAddress is
+inheritable and ToString is overridable. Reproduction returned a display hostname
+or threw through IPv4 address/socket and resolved-host formatting.
+
+Use the non-virtual [IPAddress.TryFormat](https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/System.Net.Primitives/src/System/Net/IPAddress.cs)
+for derived address objects. Reuse the cached numeric ToString only for the exact
+IPAddress base type. A shared private helper serves IPv4 ToAddressString and
+resolved GetHostname, preserving the latter's native scope/mapped/embedded-IPv4
+text. Its fixed 65-character stack buffer matches .NET 10's formatter bound,
+including the 53-character scoped ISATAP control; a 50-character assumption would
+be insufficient. Existing IPv6 wire formatting still uses Netty compression,
+mapping flags and scope omission. DnsEndPoint host text remains unchanged. No
+display callback, address wrapper, reflection cache or address mutation is added.
+
+Replace the remaining raw IPv6 parser Arrays calls with overlap-safe Span.CopyTo
+and Span.Clear, retaining the exact ranges and all original comments. Compiled
+before/after non-friend consumers preserve 8820 parse rows for 1470 inputs over
+three cultures and two input forms. 1121 independently constructed compression
+inputs verify bytes directly. Byte-exact pinned NetUtil and three dependencies
+match 8520 rows; 300 retain the earlier recorded mapped-family/unsigned/negative/
+ASCII-scope differences. Numeric consumers preserve 18 ordinary rows and repair
+36 derived-object rows, including a controlled adaptation of the pinned HTTP
+consumer. This is not a port or integration test of the HTTP module.
+
+Warm 1000 reads preserve all measured ordinary-base allocation controls, including
+zero for cached IPv4/native host strings. Inherited/framework-read-only loopback
+subtypes now allocate 40000 bytes for IPv4 numeric/host text and 32000 for IPv6
+host text, instead of zero. IPv6 Netty formatting allocation is unchanged. This
+is the cost of bypassing arbitrary subtype display callbacks; no throughput or
+zero-allocation claim for all address objects. Preliminary all-TryFormat runs are
+retained as design evidence; final runs include the exact-base cache path.
+
+All 19 pinned public method signatures and six published fields now have explicit
+native mappings. Private parser/formatter helpers, internal raw conversion helpers,
+process/backlog policy and initialization/construction were also reviewed against
+their existing recorded evidence. NetUtil becomes verified for this native source/
+API scope, including the declared CLR differences, not because of passing counts.
+Exact tests, comment conservation and configuration limits: common-porting.md Native
+numeric formatting checkpoint; native-numeric-format-* and
+artifacts/native-numeric-format-validation/final-source-review.json. Real Java
+providers, other OS/backend integration, whole common and the focused Global
+completion stall remain open.

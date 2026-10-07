@@ -44,6 +44,35 @@ both still require review.
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
 
 
+## Native numeric formatting checkpoint
+
+Repair derived IPAddress display callbacks entering numeric address/host formatting;
+retain the exact native base type's string cache. Replace the two remaining IPv6
+parser array facade calls with bounded Span operations. See
+[contracts, allocation costs and final source review](common-clr-design.md#native-numeric-address-formatting-and-netutil-review).
+Fourteen byte-identical baseline contracts: four pass/ten fail -> all pass.
+Affected Debug/checked Release 163 pass; final full unfiltered default Debug/Release
+2672 discovered/2658 pass/0 fail/14 unchanged skips. All 2658 prior outcomes and
+original 759 conserved, along with 271 comment rows and 118 NetUtil comments.
+
+Compiled native versions conserve 8820 parser rows for 1470 inputs; pinned Java
+matches 8520, with the prior 300 declared native differences retained. Independent
+1121 compression controls verify bytes. Numeric consumers conserve 18 ordinary
+rows and repair 36 derived-object rows. Ordinary-base warm allocation controls
+remain unchanged; subtype formatting costs and preliminary design runs are in the
+linked design record. Evidence: native-numeric-format-* and
+artifacts/native-numeric-format-validation, including final-source-review.json.
+
+NetUtil source becomes verified after the 19-method/six-field native API and internal
+source review. Source totals: 74 verified/56 clr-replacement/45 pending/14 in-progress/
+16 not-applicable; inventory remains 205 Java sources + 66 Java tests. This does
+not complete common. Full tests use an isolated copy of the exact final code and
+committed test configuration; the separate workspace package edit remains preserved
+and excluded. Its previously recorded default MTP configuration issue stays open.
+Warning/casing identities are conserved; no new MD. Next: remaining source review
+in dependency order, starting with Constant/constant-pool contracts. Real providers/
+other OS/backend and the scheduler/focused Global completion stall remain open.
+
 ## Native network defaults checkpoint
 
 Expose cached interfaces/loopback/backlog through native get-only properties and

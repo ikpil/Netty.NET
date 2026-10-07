@@ -1025,9 +1025,9 @@ public static class NetUtil
         {
             int toBeCopiedLength = currentIndex - compressBegin;
             int targetIndex = bytes.Length - toBeCopiedLength;
-            Arrays.Arraycopy(bytes, compressBegin, bytes, targetIndex, toBeCopiedLength);
+            bytes.AsSpan(compressBegin, toBeCopiedLength).CopyTo(bytes.AsSpan(targetIndex));
             // targetIndex is also the `toIndex` to fill 0
-            Arrays.Fill(bytes, compressBegin, targetIndex, (byte)0);
+            bytes.AsSpan(compressBegin, targetIndex - compressBegin).Clear();
         }
 
         if (ipv4Separators > 0)
@@ -1145,7 +1145,7 @@ public static class NetUtil
     {
         ArgumentNullException.ThrowIfNull(ip);
         if (ip.AddressFamily == AddressFamily.InterNetwork)
-            return ip.ToString();
+            return FormatNativeAddress(ip);
 
         if (ip.AddressFamily != AddressFamily.InterNetworkV6)
         {
@@ -1296,9 +1296,21 @@ public static class NetUtil
         return addr switch
         {
             DnsEndPoint dnsAddress => dnsAddress.Host,
-            IPEndPoint ipAddress => ipAddress.Address.ToString(),
+            IPEndPoint ipAddress => FormatNativeAddress(ipAddress.Address),
             _ => throw new ArgumentException("Unsupported endpoint type.", nameof(addr))
         };
+    }
+
+    private static string FormatNativeAddress(IPAddress address)
+    {
+        // The exact base type's cached string is numeric; derived types can override display text.
+        if (address.GetType() == typeof(IPAddress)) return address.ToString();
+        // The non-virtual formatter reads the native value without a derived display callback.
+        // Match .NET 10's buffer bound, including embedded IPv4 text and an unsigned scope ID.
+        Span<char> text = stackalloc char[65];
+        bool formatted = address.TryFormat(text, out int length);
+        Debug.Assert(formatted);
+        return new string(text[..length]);
     }
 
     /**
