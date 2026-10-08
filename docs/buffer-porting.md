@@ -70,13 +70,55 @@ project's ignored TestResults, and artifacts/buffer-foundation-validation.
 The new projects add no source exclusion or synthetic skip. Common source and
 its test configuration are unchanged. Existing common warnings remain.
 
+## Native storage and the shared empty buffer
+
+Unpooled.DirectBuffer and UnpooledDirectByteBuf connect actual Buffer operations
+to common NativeMemoryAllocator/Owner. Allocation is explicitly native and zeroed;
+a constructor can accept an independent reservation domain. Capacity replacement
+allocates/copies before publication, preserves the prefix, trims indices and frees
+the previous owner. Failure leaves the original memory and indices usable. The
+budget covers the transient old/new allocations; no in-place realloc cost or
+allocator performance equivalence is claimed. Copy preserves native storage and
+has independent lifetime.
+
+Retained ByteBuf views preserve logical ownership; MemoryHandle pins preserve
+physical allocation. Final Release rejects new buffer access and invalidates new
+native-memory access, while outstanding pins keep their original bytes and quota
+alive until disposed. A saved Memory is invalid after native owner replacement;
+an acquired pin remains bound to the previous allocation. This differs from a
+managed array view, which GC can keep alive after replacement.
+
+Growing WriteBytes(ReadOnlySpan<byte>) pins its current native allocation across
+replacement. That covers a source span aliasing the old storage, including writes
+through a duplicate. Otherwise disposing the previous owner could invalidate the
+source span before copying. This protects self-aliasing growth; it does not acquire
+ownership of an arbitrary external span or make data access thread-safe.
+
+Unpooled.EmptyBuffer restores Netty's shared zero-capacity sentinel for empty
+factories/reads/views. Its reference count is permanently one and Release returns
+false. As in original EmptyByteBuf, ownership increments/decrements are ignored,
+including nonpositive values. Capacity changes are unsupported even for zero.
+Explicit native construction at zero capacity remains an owned, growable buffer
+and uses common's documented one-byte physical allocation/accounting policy.
+
+The selected heap index/capacity/compaction/derived-view scenarios now also run
+against native memory. Additional cases check quota restoration, allocation failure,
+independent native copies, retained ownership, old-allocation pins and aliased growth.
+Buffer.Tests passes all 95 cases in Debug, Release and checked Release, with no
+skips. Both CLR heap and native consumers match all 1000 pinned Java word rows.
+Evidence: buffer-native-*.trx and artifacts/buffer-foundation-validation.
+Focused solution Debug/Release integration runs each pass Buffer 95 and Common
+101 native-memory/reference-count cases, with zero failures or skips.
+The common source, tests and configuration remain unchanged from the preceding
+full Debug/Release checkpoint; no repeated whole-common run is claimed here.
+
 ## Remaining work
 
 The initial Unpooled factory covers heap allocation and a single wrapped/copied
-byte range. Empty singleton policy, allocator interfaces/metrics, native storage,
+byte range, native allocation and the shared empty sentinel. Allocator interfaces/metrics,
 read-only/swapped/composite buffers, encoding/search/utilities, streams/native I/O,
-leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
+borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement native storage/shared lifetime and broaden original buffer
-tests, then utilities/composite and real allocator/cache integration. Common
+Next units implement encoding/search/utilities, read-only/composite views and
+broaden original tests, then real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

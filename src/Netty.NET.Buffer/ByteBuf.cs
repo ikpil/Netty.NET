@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using Netty.NET.Common;
 
@@ -252,6 +253,9 @@ public abstract class ByteBuf : IReferenceCounted
     }
 
     protected abstract Memory<byte> GetMemoryCore(int index, int length);
+    // A growing span write may read this buffer's old allocation. Native owners
+    // pin it across replacement, so aliasing source spans stay physically valid.
+    internal virtual MemoryHandle PinMemoryForWrite() => default;
     /**
          * Returns the number of bytes (octets) this buffer can contain.
          */
@@ -1373,6 +1377,7 @@ public abstract class ByteBuf : IReferenceCounted
     // CLR: The CLR source is an explicit span range; only this buffer writer advances.
     public ByteBuf WriteBytes(ReadOnlySpan<byte> source)
     {
+        using MemoryHandle lease = PinMemoryForWrite();
         EnsureWritable(source.Length);
         SetBytes(_writerIndex, source); _writerIndex += source.Length;
         return this;
@@ -1510,7 +1515,7 @@ public abstract class ByteBuf : IReferenceCounted
     public virtual ByteBuf Copy(int index, int length)
     {
         var source = AsSpan(index, length);
-        return new UnpooledHeapByteBuf(length, MaxCapacity).WriteBytes(source);
+        return Unpooled.Buffer(length, MaxCapacity).WriteBytes(source);
     }
     /**
          * Transfers this buffer's data to a newly created buffer starting at
@@ -1529,6 +1534,7 @@ public abstract class ByteBuf : IReferenceCounted
     public ByteBuf ReadBytes(int length)
     {
         CheckReadableBytes(length);
+        if (length == 0) return Unpooled.EmptyBuffer;
         ByteBuf result = new UnpooledHeapByteBuf(length, MaxCapacity).WriteBytes(AsSpan(_readerIndex, length));
         _readerIndex += length;
         return result;
@@ -1555,7 +1561,7 @@ public abstract class ByteBuf : IReferenceCounted
          * Also be aware that this method will NOT call {@link #retain()} and so the
          * reference count will NOT be increased.
          */
-    public ByteBuf Slice(int index, int length)
+    public virtual ByteBuf Slice(int index, int length)
     { CheckIndex(index, length); return new ByteBufView(this, index, length); }
     /**
          * Returns a retained slice of this buffer's readable bytes. Modifying the content
@@ -1595,7 +1601,7 @@ public abstract class ByteBuf : IReferenceCounted
          * However this buffer will share the capacity of the underlying buffer, and therefore allows access to all of the
          * underlying content if necessary.
          */
-    public ByteBuf Duplicate()
+    public virtual ByteBuf Duplicate()
     { EnsureAccessible(); return new ByteBufView(this); }
     /**
          * Returns a retained buffer which shares the whole region of this buffer.

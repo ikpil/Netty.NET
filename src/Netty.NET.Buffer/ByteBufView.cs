@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Buffers;
 
 namespace Netty.NET.Buffer;
 
@@ -43,6 +44,7 @@ internal sealed class ByteBufView : ByteBuf
         WriterIndex = length;
     }
     protected override Memory<byte> GetMemoryCore(int index, int length) => _parent.AsMemory(_offset + index, length);
+    internal override MemoryHandle PinMemoryForWrite() => _parent.PinMemoryForWrite();
     public override bool IsDirect => _parent.IsDirect;
     public override int Capacity
     {

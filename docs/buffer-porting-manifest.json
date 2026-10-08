@@ -321,10 +321,21 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/EmptyByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/EmptyByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Actual Buffer-to-Common native-memory integration; direct shared-view tests, failed allocation, aliases across growth, pins after logical release and empty lifetime. docs/buffer-porting.md; buffer-native-* and artifacts/buffer-foundation-validation. Partial source/API only."
+      ],
+      "adaptation": "Shared zero-capacity sentinel retains constant reference count and no-op ownership, fixed capacity, empty copies/views and zero-length reads. NIO/address, equality/hash, encoding, read-only/swapped and broader API remain pending.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 2,
+        "missingCount": 1,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/FixedCompositeByteBuf.java",
@@ -608,11 +619,11 @@
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
       ],
-      "adaptation": "Heap constructor, one array wrap and one span copy only; empty/native/composite/read-only factories remain pending.",
+      "adaptation": "Heap and native buffer allocation, one array wrap/span copy and the shared empty singleton. Allocator/composite/read-only and remaining overloads are pending.",
       "comments": {
         "upstreamCount": 67,
-        "preservedCount": 4,
-        "missingCount": 63,
+        "preservedCount": 5,
+        "missingCount": 62,
         "coverage": "partial source; remaining operations not ported"
       }
     },
@@ -627,10 +638,21 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledDirectByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Actual Buffer-to-Common native-memory integration; direct shared-view tests, failed allocation, aliases across growth, pins after logical release and empty lifetime. docs/buffer-porting.md; buffer-native-* and artifacts/buffer-foundation-validation. Partial source/API only."
+      ],
+      "adaptation": "NativeMemoryAllocator/Owner provide storage, explicit budget, zeroed allocation and physical pin lifetime. Prefix-copy/resize publishes after success. Native copy has independent storage. Existing-byte-buffer wrapping, allocator interfaces, address/NIO/I/O and diagnostics remain pending.",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 3,
+        "missingCount": 4,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledDuplicatedByteBuf.java",
@@ -887,12 +909,13 @@
       "status": "in-progress",
       "implementation": [
         "test/Netty.NET.Buffer.Tests/HeapByteBufTest.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufWireContractTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufWireContractTest.cs",
+        "test/Netty.NET.Buffer.Tests/DirectByteBufTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
       ],
-      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded.",
+      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage.",
       "comments": {
         "upstreamCount": 112,
         "preservedCount": 6,
@@ -1033,10 +1056,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianDirectByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/DirectByteBufTest.cs"
+      ],
+      "evidence": [
+        "Scoped native-memory/empty integration tests in Buffer.Tests; docs/buffer-porting.md. No full original fixture coverage claim."
+      ],
+      "adaptation": "The same selected AbstractByteBufTest scenarios run against native memory via the native fixture override; additional CLR ownership/quota/pin cases. Remaining original test methods and I/O are pending.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 1,
+        "missingCount": 1,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianHeapByteBufTest.java",
@@ -1129,10 +1162,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/EmptyByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/EmptyByteBufTest.cs"
+      ],
+      "evidence": [
+        "Scoped native-memory/empty integration tests in Buffer.Tests; docs/buffer-porting.md. No full original fixture coverage claim."
+      ],
+      "adaptation": "Selected original empty lifecycle/writable/readable contracts plus factory/shared-view and zero-length-read identities. Remaining original equality/hash, NIO/address, encoding and I/O scenarios are pending.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 1,
+        "missingCount": 1,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/FixedCompositeByteBufTest.java",

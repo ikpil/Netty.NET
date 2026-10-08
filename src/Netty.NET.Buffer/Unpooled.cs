@@ -21,6 +21,7 @@ namespace Netty.NET.Buffer;
 // Heap factory subset of Unpooled; direct/composite/read-only factories follow separately.
 public static class Unpooled
 {
+    public static ByteBuf EmptyBuffer { get; } = new EmptyByteBuf();
     /**
          * Creates a new big-endian Java heap buffer with the specified
          * {@code initialCapacity}, that may grow up to {@code maxCapacity}
@@ -28,19 +29,31 @@ public static class Unpooled
          * {@code 0}.
          */
     public static ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
-        => new UnpooledHeapByteBuf(initialCapacity, maxCapacity);
+        => initialCapacity == 0 && maxCapacity == 0 ? EmptyBuffer : new UnpooledHeapByteBuf(initialCapacity, maxCapacity);
     /**
          * Creates a new big-endian buffer which wraps the specified {@code array}.
          * A modification on the specified array's content will be visible to the
          * returned buffer.
          */
     public static ByteBuf WrappedBuffer(byte[] bytes)
-        => new UnpooledHeapByteBuf(bytes);
+    {
+        ArgumentNullException.ThrowIfNull(bytes);
+        return bytes.Length == 0 ? EmptyBuffer : new UnpooledHeapByteBuf(bytes);
+    }
     /**
          * Creates a new big-endian buffer whose content is a copy of the
          * specified {@code array}.  The new buffer's {@code readerIndex} and
          * {@code writerIndex} are {@code 0} and {@code array.length} respectively.
          */
     public static ByteBuf CopiedBuffer(ReadOnlySpan<byte> bytes)
-        => Buffer(bytes.Length).WriteBytes(bytes);
+        => bytes.IsEmpty ? EmptyBuffer : Buffer(bytes.Length).WriteBytes(bytes);
+
+    /**
+         * Creates a new big-endian direct buffer with the specified
+         * {@code initialCapacity}, that may grow up to {@code maxCapacity}.
+         * The new buffer's {@code readerIndex} and {@code writerIndex} are
+         * {@code 0}.
+         */
+    public static ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+        => initialCapacity == 0 && maxCapacity == 0 ? EmptyBuffer : new UnpooledDirectByteBuf(initialCapacity, maxCapacity);
 }

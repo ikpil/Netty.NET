@@ -28,10 +28,16 @@ public class HeapByteBufTest
 {
     private const int Capacity = 4096; // Must be even
 
+    protected virtual ByteBuf NewBuffer(int initialCapacity, int maxCapacity = int.MaxValue)
+        => Unpooled.Buffer(initialCapacity, maxCapacity);
+    protected virtual bool UsesDirectMemory => false;
+    private ByteBuf NewCopiedBuffer(ReadOnlySpan<byte> bytes)
+        => NewBuffer(bytes.Length).WriteBytes(bytes);
+
     [Fact]
     public void InitialState()
     {
-        ByteBuf buffer = Unpooled.Buffer(Capacity);
+        ByteBuf buffer = NewBuffer(Capacity);
         try
         {
             Assert.Equal(Capacity, buffer.Capacity);
@@ -42,7 +48,7 @@ public class HeapByteBufTest
             Assert.False(buffer.IsReadable);
             Assert.True(buffer.IsWritable);
             Assert.Equal(1, buffer.ReferenceCount);
-            Assert.False(buffer.IsDirect);
+            Assert.Equal(UsesDirectMemory, buffer.IsDirect);
         }
         finally { Assert.True(buffer.Release()); }
     }
@@ -56,7 +62,7 @@ public class HeapByteBufTest
     [InlineData(int.MaxValue, int.MaxValue)]
     public void IndexBoundaryChecksAreAtomic(int reader, int writer)
     {
-        ByteBuf buffer = Unpooled.Buffer(Capacity);
+        ByteBuf buffer = NewBuffer(Capacity);
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.SetIndex(reader, writer));
@@ -69,7 +75,7 @@ public class HeapByteBufTest
     [Fact]
     public void ReaderAndWriterIndexBoundaryChecks()
     {
-        ByteBuf buffer = Unpooled.Buffer(8);
+        ByteBuf buffer = NewBuffer(8);
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ReaderIndex = -1);
@@ -87,7 +93,7 @@ public class HeapByteBufTest
     [Fact]
     public void CapacityDecreaseAndIncreasePreserveDataAndTrimIndices()
     {
-        ByteBuf buffer = Unpooled.Buffer(10, 13);
+        ByteBuf buffer = NewBuffer(10, 13);
         try
         {
             for (int i = 0; i < 10; ++i) buffer.WriteByte(i);
@@ -117,7 +123,7 @@ public class HeapByteBufTest
     [InlineData(129, 130, 2)]
     public void EnsureWritableKeepsTheOriginalGrowthPolicy(int requested, int capacity, int status)
     {
-        ByteBuf buffer = Unpooled.Buffer(0, 130);
+        ByteBuf buffer = NewBuffer(0, 130);
         try
         {
             Assert.Equal(status, buffer.EnsureWritable(requested, false));
@@ -130,7 +136,7 @@ public class HeapByteBufTest
     [Fact]
     public void EnsureWritableForceStatusAndIntegerOverflow()
     {
-        ByteBuf buffer = Unpooled.Buffer(8, 13);
+        ByteBuf buffer = NewBuffer(8, 13);
         try
         {
             buffer.WriterIndex = 8;
@@ -148,7 +154,7 @@ public class HeapByteBufTest
     [Fact]
     public void TestDiscardReadBytes()
     {
-        ByteBuf buffer = Unpooled.Buffer(Capacity);
+        ByteBuf buffer = NewBuffer(Capacity);
         ByteBuf copy = null;
         try
         {
@@ -188,7 +194,7 @@ public class HeapByteBufTest
     [Fact]
     public void DiscardSomeReadBytesUsesHalfCapacityThreshold()
     {
-        ByteBuf buffer = Unpooled.CopiedBuffer(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
+        ByteBuf buffer = NewCopiedBuffer(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
         try
         {
             buffer.ReaderIndex = 3;
@@ -208,7 +214,7 @@ public class HeapByteBufTest
     [Fact]
     public void ClearResetsIndicesWithoutClearingBytesOrMarks()
     {
-        ByteBuf buffer = Unpooled.CopiedBuffer(new byte[] { 1, 2, 3, 4 });
+        ByteBuf buffer = NewCopiedBuffer(new byte[] { 1, 2, 3, 4 });
         try
         {
             buffer.ReaderIndex = 2;
@@ -227,7 +233,7 @@ public class HeapByteBufTest
     [Fact]
     public void CopyIsIndependentWhileDuplicateSharesDataAndSeparateIndices()
     {
-        ByteBuf buffer = Unpooled.CopiedBuffer(new byte[] { 1, 2, 3, 4, 5, 6 });
+        ByteBuf buffer = NewCopiedBuffer(new byte[] { 1, 2, 3, 4, 5, 6 });
         ByteBuf copy = null;
         try
         {
@@ -253,7 +259,7 @@ public class HeapByteBufTest
     [InlineData(true)]
     public void TestDuplicateOfSliceHasTheSameCapacityAsTheSlice(bool retain)
     {
-        ByteBuf buffer = Unpooled.Buffer(Capacity);
+        ByteBuf buffer = NewBuffer(Capacity);
         try
         {
             foreach (ByteBuf slice in new[] { buffer.Slice(), buffer.Slice(0, Capacity - 2) })
@@ -270,7 +276,7 @@ public class HeapByteBufTest
     [Fact]
     public void TestRetainedSliceOfNonRetainedDerivedBufferCoversTheReadableBytes()
     {
-        ByteBuf buffer = Unpooled.Buffer(Capacity);
+        ByteBuf buffer = NewBuffer(Capacity);
         try
         {
             for (int i = 0; i < Capacity; ++i) buffer.SetByte(i, i);
@@ -311,7 +317,7 @@ public class HeapByteBufTest
     [Fact]
     public void RetainedViewsOwnLifetimeButOrdinaryViewsDoNot()
     {
-        ByteBuf buffer = Unpooled.CopiedBuffer(new byte[] { 1, 2, 3 });
+        ByteBuf buffer = NewCopiedBuffer(new byte[] { 1, 2, 3 });
         ByteBuf ordinary = buffer.Slice(1, 2);
         ByteBuf retained = buffer.RetainedSlice(1, 2);
         Assert.Equal(2, buffer.ReferenceCount);
@@ -325,7 +331,7 @@ public class HeapByteBufTest
     [Fact]
     public void ReadSlicesAdvanceOnlyTheSourceReaderAndRespectReadableBytes()
     {
-        ByteBuf buffer = Unpooled.CopiedBuffer(new byte[] { 1, 2, 3, 4 });
+        ByteBuf buffer = NewCopiedBuffer(new byte[] { 1, 2, 3, 4 });
         try
         {
             ByteBuf slice = buffer.ReadSlice(2);
@@ -347,7 +353,7 @@ public class HeapByteBufTest
     [Fact]
     public void ParentResizeIsVisibleToDuplicateAndValidSlicePrefixes()
     {
-        ByteBuf buffer = Unpooled.CopiedBuffer(new byte[] { 1, 2, 3, 4, 5, 6 });
+        ByteBuf buffer = NewCopiedBuffer(new byte[] { 1, 2, 3, 4, 5, 6 });
         try
         {
             ByteBuf duplicate = buffer.Duplicate();
