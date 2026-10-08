@@ -27,12 +27,14 @@
       "kind": "source",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Buffer/ByteBuf.cs"
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs"
       ],
       "evidence": [
-        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
+        "Text/search unit: original bounds/order/abort fixtures adapted for heap/native; buffer-text-search-* tests and 5000 exact pinned Java UTF-8 wire/count rows per backend. Partial source only."
       ],
-      "adaptation": "Native index/mark/compaction/growth/accessibility rules combined into ByteBuf. Remaining search/encoding/I/O/utilities are pending.",
+      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending.",
       "comments": {
         "upstreamCount": 17,
         "preservedCount": 2,
@@ -190,16 +192,18 @@
       "kind": "source",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Buffer/ByteBuf.cs"
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs"
       ],
       "evidence": [
-        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
+        "Text/search unit: original bounds/order/abort fixtures adapted for heap/native; buffer-text-search-* tests and 5000 exact pinned Java UTF-8 wire/count rows per backend. Partial source only."
       ],
-      "adaptation": "Native indices, BE/LE words, bulk span transfers, copy and shared derived views. Remaining public API is pending.",
+      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending.",
       "comments": {
         "upstreamCount": 191,
-        "preservedCount": 120,
-        "missingCount": 71,
+        "preservedCount": 133,
+        "missingCount": 58,
         "coverage": "partial source; remaining operations not ported"
       }
     },
@@ -270,10 +274,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufUtil.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBufUtil.cs"
+      ],
+      "evidence": [
+        "Selected original UTF-8/ASCII and search scenarios in ByteBufTextSearchTest. Exact pinned scalar writer/count methods executed against 5000 input rows for both CLR storage backends; artifacts/buffer-text-search-validation."
+      ],
+      "adaptation": "Only directional/subsequence search, UTF-8 maximum/exact length, UTF-8 writes/reservations and ASCII writes are implemented. Span.IndexOf/LastIndexOf replace Java SWAR/Two-Way internals. UTF-8 malformed-surrogate and ASCII octet rules, AsciiString raw bytes and public writeUtf8 worst-case reservation are preserved. Checked sizes and undersized reservation rejection are CLR safety adaptations. Slice a ReadOnlySpan<char> instead of duplicating start/end overloads. Allocator-returning overloads, hex/hash/compare/validation/I/O and other utilities remain pending.",
+      "comments": {
+        "upstreamCount": 165,
+        "preservedCount": 27,
+        "missingCount": 138,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ChunkInfo.java",
@@ -324,12 +338,13 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Buffer/EmptyByteBuf.cs",
-        "src/Netty.NET.Buffer/ByteBuf.cs"
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs"
       ],
       "evidence": [
         "Actual Buffer-to-Common native-memory integration; direct shared-view tests, failed allocation, aliases across growth, pins after logical release and empty lifetime. docs/buffer-porting.md; buffer-native-* and artifacts/buffer-foundation-validation. Partial source/API only."
       ],
-      "adaptation": "Shared zero-capacity sentinel retains constant reference count and no-op ownership, fixed capacity, empty copies/views and zero-length reads. NIO/address, equality/hash, encoding, read-only/swapped and broader API remain pending.",
+      "adaptation": "Shared zero-capacity sentinel retains constant reference count/no-op ownership, fixed capacity, empty copies/views and zero-length reads. IndexOf validates both endpoints as original EmptyByteBuf does. Native text methods consistently allow empty input and require non-null Encoding/Func, explicitly adapting Java empty CharSequence/null early returns. NIO/address, equality/hash, read-only/swapped and broader API remain pending.",
       "comments": {
         "upstreamCount": 3,
         "preservedCount": 2,
@@ -910,16 +925,17 @@
       "implementation": [
         "test/Netty.NET.Buffer.Tests/HeapByteBufTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufWireContractTest.cs",
-        "test/Netty.NET.Buffer.Tests/DirectByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/DirectByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
       ],
-      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage.",
+      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending.",
       "comments": {
         "upstreamCount": 112,
-        "preservedCount": 6,
-        "missingCount": 106,
+        "preservedCount": 9,
+        "missingCount": 103,
         "coverage": "partial source; remaining operations not ported"
       }
     },
@@ -1122,10 +1138,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ByteBufUtilTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs"
+      ],
+      "evidence": [
+        "UTF-8 valid/malformed surrogate rows, ASCII/AsciiString mapping, worst-case/exact reservations and readable subsequence search on heap/native; original supported heap/native fixtures only."
+      ],
+      "adaptation": "Selected text/search cases and additional native aliasing/safety contracts. Numeric UTF-16 units preserve malformed input across test discovery serialization. Composite/read-only/wrapped/pooled and remaining original fixture cases are pending.",
+      "comments": {
+        "upstreamCount": 29,
+        "preservedCount": 2,
+        "missingCount": 27,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ByteProcessorTest.java",
@@ -1164,12 +1190,13 @@
       "kind": "test",
       "status": "in-progress",
       "implementation": [
-        "test/Netty.NET.Buffer.Tests/EmptyByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/EmptyByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs"
       ],
       "evidence": [
         "Scoped native-memory/empty integration tests in Buffer.Tests; docs/buffer-porting.md. No full original fixture coverage claim."
       ],
-      "adaptation": "Selected original empty lifecycle/writable/readable contracts plus factory/shared-view and zero-length-read identities. Remaining original equality/hash, NIO/address, encoding and I/O scenarios are pending.",
+      "adaptation": "Selected original empty lifetime/writable/readable contracts plus factory/shared-view/zero-length-read identities. New search-endpoint/sentinel text cases also follow pinned EmptyByteBuf source. Remaining original equality/hash, NIO/address and I/O cases are pending.",
       "comments": {
         "upstreamCount": 2,
         "preservedCount": 1,

@@ -40,4 +40,11 @@ internal sealed class EmptyByteBuf : ByteBuf
     public override ByteBuf Copy(int index, int length) { CheckIndex(index, length); return this; }
     public override ByteBuf Slice(int index, int length) { CheckIndex(index, length); return this; }
     public override ByteBuf Duplicate() => this;
+    // Unlike an owned zero-capacity buffer, Netty's shared empty sentinel validates both search endpoints.
+    public override int IndexOf(int fromIndex, int toIndex, byte value)
+    {
+        CheckIndex(fromIndex, 0);
+        CheckIndex(toIndex, 0);
+        return -1;
+    }
 }

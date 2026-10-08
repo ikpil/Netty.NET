@@ -112,13 +112,91 @@ Focused solution Debug/Release integration runs each pass Buffer 95 and Common
 The common source, tests and configuration remain unchanged from the preceding
 full Debug/Release checkpoint; no repeated whole-common run is claimed here.
 
+## Text and search
+
+ByteBuf.GetString/ReadString/SetString/WriteString use Encoding and
+ReadOnlySpan<char>; CharSequence/Charset do not gain a second CLR hierarchy.
+Indexed operations leave reader/writer indices unchanged. SetString cannot grow
+the buffer; WriteString reserves the exact encoded size and advances the writer
+only after successful encoding. ReadString validates written/readable bytes before
+decoding and advances the reader only after success. This follows ByteBuf's
+documented contract, while pinned AbstractByteBuf.readString lacks that explicit
+readability check. Zero-length indexed access and BytesBefore ranges retain the
+CLR buffer's consistent bounds/lifetime checks instead of Java's unchecked early
+returns or index+length overflow. Capacity-bounded searches can inspect unwritten
+bytes; readable searches inspect the current reader/writer interval.
+
+EmptyByteBuf validates both IndexOf endpoints, preserving the original sentinel
+override rather than inheriting the owned zero-capacity search shortcut.
+Native text APIs accept empty input consistently, including the sentinel; pinned
+EmptyByteBuf.setCharSequence/writeCharSequence instead throw for every input.
+CLR callbacks and encodings must be non-null even on an empty range.
+
+Encoding controls fallback, endian order and replacement. No preamble is emitted:
+choose UTF-16BE explicitly for Java's UTF-16 byte order and write a preamble
+explicitly if the protocol requires it. Default CLR UTF-8 replaces malformed
+UTF-16 with U+FFFD; strict/custom fallback is honored. Encoding.ASCII replaces
+octets above 127 on decode, whereas pinned ByteBufUtil.decodeString's deprecated
+ASCII fast path maps all octets as Latin-1. Encoding.Latin1 provides that mapping.
+Generic text writes deliberately use exact sizing rather than Java's specialized
+UTF-8 3-times-UTF-16 reservation. These are explicit Encoding API adaptations,
+consistent with the common module's existing encoding decision, not a claim that
+all Java charset paths produce identical bytes. Encoding failures preserve
+indices; arbitrary custom Encoding implementations can still write partial data
+before throwing. Borrowed memory follows the existing buffer access rules.
+
+ByteBufUtil.WriteUtf8, Utf8Bytes/Utf8MaxBytes, ReserveAndWriteUtf8 and WriteAscii
+preserve Netty's specialized wire contracts separately. UTF-8 writes reserve
+3 bytes per UTF-16 unit, write '?' for lone surrogates, and preserve the original
+consumption/truncation rule for a high surrogate followed by a non-low surrogate.
+AsciiString input copies raw octets, including bytes above 127. As in pinned
+writeUtf8, the public AsciiString write also reserves 3 times its length even
+though Utf8MaxBytes(AsciiString) reports its raw length. ASCII char-span writes
+preserve Latin-1 octets and replace code units above 255 with '?'. Size arithmetic
+is checked; an undersized explicit reservation is rejected before writing.
+Slice a char span to select text rather than add Java subsequence facades.
+Native text writes pin the old allocation across growth when their UTF-16 input
+span aliases that storage, including writes through a duplicate.
+
+Directional IndexOf retains the original exclusive upper bound, lower-bound
+clamping on forward search and upper-bound clamping on reverse search.
+BytesBefore returns a relative distance. Func<byte,bool> replaces ByteProcessor;
+false stops at the buffer-relative index and exceptions propagate unchanged.
+Callbacks reacquire bytes after each invocation so releasing/resizing native
+memory cannot leave a captured span targeting freed storage.
+ByteBufUtil.IndexOf(needle,haystack) searches readable ranges and returns a
+haystack-relative index; original null/not-found (-1) and empty-needle (0)
+contracts remain. Span.IndexOf/LastIndexOf supply CLR search strategies without
+recreating JVM SWAR/Two-Way internals or claiming equivalent performance.
+
+Selected original AbstractByteBufTest and ByteBufUtilTest scenarios run on both
+heap/native storage. Literal byte fixtures cover encoding order, malformed
+surrogates, ASCII raw octets, strict/custom fallback, failure indices, slice
+coordinates, callback order/abort/mutation, and native aliasing during growth.
+Numeric UTF-16 test data avoids test discovery replacing lone surrogates.
+The ignored Java probe executes exact pinned safeArrayWriteUtf8 and
+utf8ByteCount/utf8BytesNonAscii methods on 5000 inputs (single units, pairs and
+longer boundary-heavy sequences). Both CLR backends match every wire/count row.
+Probe scaffolding supplies only compilation dependencies; this is scalar-kernel
+evidence, not full Java buffer/Unsafe/allocator execution.
+
+Validation: Buffer.Tests 153 passed, zero failed/skipped in Debug, Release and
+checked Release. Focused solution Debug/Release pass 118 common native-memory,
+reference-count and EncodingConstructor cases; unchanged Common's whole suite
+is not rerun for this unit. Evidence: buffer-text-search-*.trx and
+artifacts/buffer-text-search-validation. All 159 original paths remain inventoried;
+140 pending, 17 in-progress, 2 verified. Partial APIs/fixtures stay in-progress.
+Original documentation/licenses and comments for the implemented operations are
+preserved; comment counts across each entire original file stay explicitly partial.
+Common source, tests and configuration remain unchanged.
+
 ## Remaining work
 
 The initial Unpooled factory covers heap allocation and a single wrapped/copied
 byte range, native allocation and the shared empty sentinel. Allocator interfaces/metrics,
-read-only/swapped/composite buffers, encoding/search/utilities, streams/native I/O,
+read-only/swapped/composite buffers, remaining encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement encoding/search/utilities, read-only/composite views and
+Next units implement read-only/composite views, further utilities and
 broaden original tests, then real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

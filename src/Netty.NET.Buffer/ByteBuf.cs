@@ -242,7 +242,7 @@ namespace Netty.NET.Buffer;
 // This first stage implements indices, primitive/bulk access and shared views.
 // Memory and Span are borrowed, not retain tokens. Exclude release/reallocation
 // throughout their use; a saved Memory is a view of its original allocation.
-public abstract class ByteBuf : IReferenceCounted
+public abstract partial class ByteBuf : IReferenceCounted
 {
     private int _readerIndex, _writerIndex, _markedReaderIndex, _markedWriterIndex;
 
