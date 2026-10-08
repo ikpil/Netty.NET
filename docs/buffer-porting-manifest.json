@@ -28,13 +28,15 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Buffer/ByteBuf.cs",
-        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs"
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
-        "Text/search unit: original bounds/order/abort fixtures adapted for heap/native; buffer-text-search-* tests and 5000 exact pinned Java UTF-8 wire/count rows per backend. Partial source only."
+        "Text/search unit: original bounds/order/abort fixtures adapted for heap/native; buffer-text-search-* tests and 5000 exact pinned Java UTF-8 wire/count rows per backend. Partial source only.",
+        "Read-only unit: Buffer.Tests 172 cases on heap/native; readonly lifetime/mutation/index/compaction/memory contracts in ReadOnlyByteBufTest. Partial original source/fixture; docs/buffer-porting.md; artifacts/buffer-readonly-validation."
       ],
-      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending.",
+      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining comparison/utilities still pending.",
       "comments": {
         "upstreamCount": 17,
         "preservedCount": 2,
@@ -193,17 +195,19 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Buffer/ByteBuf.cs",
-        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs"
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
-        "Text/search unit: original bounds/order/abort fixtures adapted for heap/native; buffer-text-search-* tests and 5000 exact pinned Java UTF-8 wire/count rows per backend. Partial source only."
+        "Text/search unit: original bounds/order/abort fixtures adapted for heap/native; buffer-text-search-* tests and 5000 exact pinned Java UTF-8 wire/count rows per backend. Partial source only.",
+        "Read-only unit: Buffer.Tests 172 cases on heap/native; readonly lifetime/mutation/index/compaction/memory contracts in ReadOnlyByteBufTest. Partial original source/fixture; docs/buffer-porting.md; artifacts/buffer-readonly-validation."
       ],
-      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending.",
+      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining comparison/utilities still pending.",
       "comments": {
         "upstreamCount": 191,
-        "preservedCount": 133,
-        "missingCount": 58,
+        "preservedCount": 137,
+        "missingCount": 54,
         "coverage": "partial source; remaining operations not ported"
       }
     },
@@ -339,12 +343,13 @@
       "implementation": [
         "src/Netty.NET.Buffer/EmptyByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.cs",
-        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs"
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs"
       ],
       "evidence": [
         "Actual Buffer-to-Common native-memory integration; direct shared-view tests, failed allocation, aliases across growth, pins after logical release and empty lifetime. docs/buffer-porting.md; buffer-native-* and artifacts/buffer-foundation-validation. Partial source/API only."
       ],
-      "adaptation": "Shared zero-capacity sentinel retains constant reference count/no-op ownership, fixed capacity, empty copies/views and zero-length reads. IndexOf validates both endpoints as original EmptyByteBuf does. Native text methods consistently allow empty input and require non-null Encoding/Func, explicitly adapting Java empty CharSequence/null early returns. NIO/address, equality/hash, read-only/swapped and broader API remain pending.",
+      "adaptation": "Shared zero-capacity sentinel retains constant reference count/no-op ownership, fixed capacity, empty copies/views and zero-length reads. IndexOf validates both endpoints as original EmptyByteBuf does. Native text methods consistently allow empty input and require non-null Encoding/Func, explicitly adapting Java empty CharSequence/null early returns. NIO/address, equality/hash, read-only/swapped and broader API remain pending. Empty.IsReadOnly remains false; AsReadOnly creates a distinct shared-count read-only view and CanWrite always returns false, including zero.",
       "comments": {
         "upstreamCount": 3,
         "preservedCount": 2,
@@ -539,18 +544,42 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ReadOnlyAbstractByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Buffer/ReadOnlyByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Heap/native/derived read-only word reads use bounded CLR ReadOnlyMemory and BinaryPrimitives; literal unaligned/endian fixtures in ReadOnlyByteBufTest and original word tests pass. Both original comments preserved. No unchecked JVM subtype or performance equivalence claim."
+      ],
+      "adaptation": "The package-private subtype only specializes unchecked _get word access and unwrap casting. The CLR view uses the same bounded read-memory path for all buffer types, so a second subtype/cast-based factory has no CLR purpose. The source purpose is represented by the sealed native view and inherited word getters; no placeholder class is created.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "entire source purpose; CLR replacement"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ReadOnlyByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ReadOnlyByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBufView.cs"
+      ],
+      "evidence": [
+        "Selected original ReadOnlyByteBufTest scenarios and additional CLR mutable-borrow/source-copy/native-owner tests execute for heap/native. All two original source comments preserved. docs/buffer-porting.md; artifacts/buffer-readonly-validation."
+      ],
+      "adaptation": "Internal sealed live view exposes bounded ReadOnlyMemory/Span and shares parent reference count; independent copied indices with fresh marks, read-only slices/duplicates, writable copies. Nested read-only wrappers flatten; exact private slice/duplicate parents are otherwise retained to preserve offsets. Standard NotSupportedException replaces JVM ReadOnlyBufferException. ByteBuf.AsReadOnly replaces deprecated public wrapper construction/Unpooled.unmodifiableBuffer facade. Allocation/NIO/byte-order/I/O APIs remain pending; no complete Java API claim.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ReadOnlyByteBufferBuf.java",
@@ -629,16 +658,18 @@
       "kind": "source",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Buffer/Unpooled.cs"
+        "src/Netty.NET.Buffer/Unpooled.cs",
+        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs",
+        "src/Netty.NET.Buffer/ReadOnlyByteBuf.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
       ],
-      "adaptation": "Heap and native buffer allocation, one array wrap/span copy and the shared empty singleton. Allocator/composite/read-only and remaining overloads are pending.",
+      "adaptation": "Heap and native buffer allocation, one array wrap/span copy and the shared empty singleton. Allocator/composite/read-only and remaining overloads are pending. Deprecated single-buffer unmodifiableBuffer is represented by ByteBuf.AsReadOnly; no public legacy alias/unchecked subtype factory is added. Composite read-only factory remains pending.",
       "comments": {
         "upstreamCount": 67,
-        "preservedCount": 5,
-        "missingCount": 62,
+        "preservedCount": 8,
+        "missingCount": 59,
         "coverage": "partial source; remaining operations not ported"
       }
     },
@@ -1335,10 +1366,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ReadOnlyByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs"
+      ],
+      "evidence": [
+        "19 heap/native/empty/owner test cases, including a mutation matrix for every currently implemented setter/writer/mutable borrow, selected original copy/view/ensure-writable/ownership rules. Both original comments preserved."
+      ],
+      "adaptation": "Tests the public native AsReadOnly factory rather than the deprecated Java public constructor. Native literal getter fixtures replace mock/Java NIO forwarding cases. Byte-order objects, channel/stream APIs, public-constructor null testing and remaining original cases are pending/adapted; the full fixture is not marked complete.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ReadOnlyByteBufferBufTest.java",

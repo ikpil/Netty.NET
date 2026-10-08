@@ -44,7 +44,7 @@ public abstract partial class ByteBuf
     public string GetString(int index, int length, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(encoding);
-        return encoding.GetString(AsSpan(index, length));
+        return encoding.GetString(AsReadOnlySpan(index, length));
     }
 
     /**
@@ -81,7 +81,7 @@ public abstract partial class ByteBuf
     public int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(encoding);
-        EnsureAccessible();
+        EnsureCanWrite();
         int length = encoding.GetByteCount(text);
         return encoding.GetBytes(text, AsSpan(index, length));
     }
@@ -135,14 +135,14 @@ public abstract partial class ByteBuf
         {
             fromIndex = Math.Max(fromIndex, 0);
             if (fromIndex >= toIndex || Capacity == 0) return -1;
-            int found = AsSpan(fromIndex, checked(toIndex - fromIndex)).IndexOf(value);
+            int found = AsReadOnlySpan(fromIndex, checked(toIndex - fromIndex)).IndexOf(value);
             return found < 0 ? -1 : fromIndex + found;
         }
 
         fromIndex = Math.Min(fromIndex, Capacity);
         if (fromIndex <= 0) return -1; // fromIndex is the exclusive upper bound.
         CheckIndex(toIndex, 0);
-        int reverseFound = AsSpan(toIndex, checked(fromIndex - toIndex)).LastIndexOf(value);
+        int reverseFound = AsReadOnlySpan(toIndex, checked(fromIndex - toIndex)).LastIndexOf(value);
         return reverseFound < 0 ? -1 : toIndex + reverseFound;
     }
 
@@ -196,7 +196,7 @@ public abstract partial class ByteBuf
     public int BytesBefore(int index, int length, byte value)
     {
         CheckIndex(index, length);
-        return AsSpan(index, length).IndexOf(value);
+        return AsReadOnlySpan(index, length).IndexOf(value);
     }
 
     /**

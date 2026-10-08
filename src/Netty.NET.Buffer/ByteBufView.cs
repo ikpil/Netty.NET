@@ -44,13 +44,17 @@ internal sealed class ByteBufView : ByteBuf
         WriterIndex = length;
     }
     protected override Memory<byte> GetMemoryCore(int index, int length) => _parent.AsMemory(_offset + index, length);
+    protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
+        => _parent.AsReadOnlyMemory(_offset + index, length);
     internal override MemoryHandle PinMemoryForWrite() => _parent.PinMemoryForWrite();
     public override bool IsDirect => _parent.IsDirect;
+    public override bool IsReadOnly => _parent.IsReadOnly;
     public override int Capacity
     {
         get => _fixedCapacity ? MaxCapacity : _parent.Capacity;
         set
         {
+            EnsureCanWrite();
             if (_fixedCapacity) throw new NotSupportedException("A slice has fixed capacity.");
             _parent.Capacity = value;
         }

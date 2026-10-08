@@ -253,9 +253,10 @@ public abstract partial class ByteBuf : IReferenceCounted
     }
 
     protected abstract Memory<byte> GetMemoryCore(int index, int length);
+    protected virtual ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length) => GetMemoryCore(index, length);
     // A growing span write may read this buffer's old allocation. Native owners
     // pin it across replacement, so aliasing source spans stay physically valid.
-    internal virtual MemoryHandle PinMemoryForWrite() => default;
+    internal virtual MemoryHandle PinMemoryForWrite() { EnsureCanWrite(); return default; }
     /**
          * Returns the number of bytes (octets) this buffer can contain.
          */
@@ -353,7 +354,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          * if and only if {@code (this.capacity - this.writerIndex)} is greater
          * than {@code 0}.
          */
-    public bool IsWritable => Capacity > _writerIndex;
+    public bool IsWritable => !IsReadOnly && Capacity > _writerIndex;
 
     private void CheckIndices(int reader, int writer)
     {
@@ -470,11 +471,11 @@ public abstract partial class ByteBuf : IReferenceCounted
          */
     public ByteBuf DiscardReadBytes()
     {
-        EnsureAccessible();
+        EnsureCanWrite();
         if (_readerIndex == 0) return this;
         int consumed = _readerIndex;
         if (_readerIndex != _writerIndex)
-            AsSpan(_readerIndex, ReadableBytes).CopyTo(AsSpan(0, ReadableBytes));
+            AsReadOnlySpan(_readerIndex, ReadableBytes).CopyTo(AsSpan(0, ReadableBytes));
         _writerIndex -= consumed;
         AdjustMarkers(consumed);
         _readerIndex = 0;
@@ -489,7 +490,13 @@ public abstract partial class ByteBuf : IReferenceCounted
     public ByteBuf DiscardSomeReadBytes()
     {
         EnsureAccessible();
-        if (_readerIndex > 0 && (_readerIndex == _writerIndex || _readerIndex >= (Capacity >>> 1)))
+        if (_readerIndex > 0 && _readerIndex == _writerIndex)
+        {
+            // All bytes were consumed; only indices and marks need adjustment, including on read-only views.
+            AdjustMarkers(_readerIndex);
+            _readerIndex = _writerIndex = 0;
+        }
+        else if (_readerIndex > 0 && _readerIndex >= (Capacity >>> 1))
             DiscardReadBytes();
         return this;
     }
@@ -523,7 +530,7 @@ public abstract partial class ByteBuf : IReferenceCounted
     public ByteBuf EnsureWritable(int minimumWritableBytes)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minimumWritableBytes);
-        EnsureAccessible();
+        EnsureCanWrite();
         if (minimumWritableBytes <= WritableBytes) return this;
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
             throw new ArgumentOutOfRangeException(nameof(minimumWritableBytes));
@@ -553,6 +560,7 @@ public abstract partial class ByteBuf : IReferenceCounted
     {
         EnsureAccessible();
         ArgumentOutOfRangeException.ThrowIfNegative(minimumWritableBytes);
+        if (IsReadOnly) return 1;
         if (minimumWritableBytes <= WritableBytes) return 0;
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
         {
@@ -607,11 +615,12 @@ public abstract partial class ByteBuf : IReferenceCounted
     }
     public Memory<byte> AsMemory(int index, int length)
     {
+        EnsureCanWrite();
         CheckIndex(index, length);
         return GetMemoryCore(index, length);
     }
     public Span<byte> AsSpan(int index, int length) => AsMemory(index, length).Span;
-    public ReadOnlyMemory<byte> ReadableMemory => AsMemory(_readerIndex, ReadableBytes);
+    public ReadOnlyMemory<byte> ReadableMemory => AsReadOnlyMemory(_readerIndex, ReadableBytes);
 
     /**
          * Gets a byte at the specified absolute {@code index} in this buffer.
@@ -622,7 +631,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 1} is greater than {@code this.capacity}
          */
-    public byte GetByte(int index) => AsSpan(index, 1)[0];
+    public byte GetByte(int index) => AsReadOnlySpan(index, 1)[0];
     /**
          * Gets a boolean at the specified absolute (@code index) in this buffer.
          * This method does not modify the {@code readerIndex} or {@code writerIndex}
@@ -664,7 +673,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public short GetShort(int index) => BinaryPrimitives.ReadInt16BigEndian(AsSpan(index, 2));
+    public short GetShort(int index) => BinaryPrimitives.ReadInt16BigEndian(AsReadOnlySpan(index, 2));
     /**
          * Sets the specified 16-bit short integer at the specified absolute
          * {@code index} in this buffer.  The 16 high-order bits of the specified
@@ -686,7 +695,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public short GetShortLE(int index) => BinaryPrimitives.ReadInt16LittleEndian(AsSpan(index, 2));
+    public short GetShortLE(int index) => BinaryPrimitives.ReadInt16LittleEndian(AsReadOnlySpan(index, 2));
     /**
          * Sets the specified 16-bit short integer at the specified absolute
          * {@code index} in this buffer with the Little Endian Byte Order.
@@ -708,7 +717,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public int GetInt(int index) => BinaryPrimitives.ReadInt32BigEndian(AsSpan(index, 4));
+    public int GetInt(int index) => BinaryPrimitives.ReadInt32BigEndian(AsReadOnlySpan(index, 4));
     /**
          * Sets the specified 32-bit integer at the specified absolute
          * {@code index} in this buffer.
@@ -729,7 +738,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public int GetIntLE(int index) => BinaryPrimitives.ReadInt32LittleEndian(AsSpan(index, 4));
+    public int GetIntLE(int index) => BinaryPrimitives.ReadInt32LittleEndian(AsReadOnlySpan(index, 4));
     /**
          * Sets the specified 32-bit integer at the specified absolute
          * {@code index} in this buffer with Little Endian byte order
@@ -751,7 +760,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public long GetLong(int index) => BinaryPrimitives.ReadInt64BigEndian(AsSpan(index, 8));
+    public long GetLong(int index) => BinaryPrimitives.ReadInt64BigEndian(AsReadOnlySpan(index, 8));
     /**
          * Sets the specified 64-bit long integer at the specified absolute
          * {@code index} in this buffer.
@@ -772,7 +781,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public long GetLongLE(int index) => BinaryPrimitives.ReadInt64LittleEndian(AsSpan(index, 8));
+    public long GetLongLE(int index) => BinaryPrimitives.ReadInt64LittleEndian(AsReadOnlySpan(index, 8));
     /**
          * Sets the specified 64-bit long integer at the specified absolute
          * {@code index} in this buffer in Little Endian Byte Order.
@@ -795,7 +804,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          */
     public int GetUnsignedMedium(int index)
     {
-        var bytes = AsSpan(index, 3);
+        var bytes = AsReadOnlySpan(index, 3);
         return bytes[0] << 16 | bytes[1] << 8 | bytes[2];
     }
     /**
@@ -810,7 +819,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          */
     public int GetUnsignedMediumLE(int index)
     {
-        var bytes = AsSpan(index, 3);
+        var bytes = AsReadOnlySpan(index, 3);
         return bytes[2] << 16 | bytes[1] << 8 | bytes[0];
     }
     /**
@@ -1337,7 +1346,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          */
     // CLR: The CLR destination is an explicit span range with no writer index.
     public ByteBuf GetBytes(int index, Span<byte> destination)
-    { AsSpan(index, destination.Length).CopyTo(destination); return this; }
+    { AsReadOnlySpan(index, destination.Length).CopyTo(destination); return this; }
     /**
          * Transfers the specified source array's data to this buffer starting at
          * the specified absolute {@code index}.
@@ -1402,7 +1411,7 @@ public abstract partial class ByteBuf : IReferenceCounted
     public ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
-        var source = AsSpan(index, length);
+        var source = AsReadOnlySpan(index, length);
         source.CopyTo(destination.AsSpan(destinationIndex, length));
         return this;
     }
@@ -1426,7 +1435,7 @@ public abstract partial class ByteBuf : IReferenceCounted
     public ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
-        source.AsSpan(sourceIndex, length).CopyTo(AsSpan(index, length));
+        source.AsReadOnlySpan(sourceIndex, length).CopyTo(AsSpan(index, length));
         return this;
     }
     /**
@@ -1514,7 +1523,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          */
     public virtual ByteBuf Copy(int index, int length)
     {
-        var source = AsSpan(index, length);
+        var source = AsReadOnlySpan(index, length);
         return Unpooled.Buffer(length, MaxCapacity).WriteBytes(source);
     }
     /**
@@ -1535,7 +1544,7 @@ public abstract partial class ByteBuf : IReferenceCounted
     {
         CheckReadableBytes(length);
         if (length == 0) return Unpooled.EmptyBuffer;
-        ByteBuf result = new UnpooledHeapByteBuf(length, MaxCapacity).WriteBytes(AsSpan(_readerIndex, length));
+        ByteBuf result = new UnpooledHeapByteBuf(length, MaxCapacity).WriteBytes(AsReadOnlySpan(_readerIndex, length));
         _readerIndex += length;
         return result;
     }

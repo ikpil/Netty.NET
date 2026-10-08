@@ -190,13 +190,66 @@ Original documentation/licenses and comments for the implemented operations are
 preserved; comment counts across each entire original file stay explicitly partial.
 Common source, tests and configuration remain unchanged.
 
+## Read-only derived views
+
+ByteBuf.AsReadOnly returns a live, borrowed view without retaining its parent.
+IsReadOnly/IsWritable and CanWrite distinguish permission from the original
+WritableBytes/MaxWritableBytes metadata. Reader/writer indices are copied and
+then independent; constructor marks start at zero. Parent writes remain visible.
+Slices/duplicates stay read-only, retained derivatives share parent ownership,
+and copies use the parent's writable-copy policy. AsReadOnly on a read-only view
+returns the same instance. The empty singleton stays non-read-only; its read-only
+view is distinct and shares the permanently-one reference count.
+
+Getters, source transfers, decoding, searching and copying now use bounded
+ReadOnlyMemory/ReadOnlySpan. Mutable AsMemory/AsSpan, setters/writers, capacity
+changes and DiscardReadBytes reject access with standard NotSupportedException.
+EnsureWritable(n,force) returns 1 on a read-only view even when n is zero; its
+throwing overload rejects write permission. CLR argument/lifetime checks remain
+consistent. All mutable borrows/writes reject even an empty range, instead of
+reproducing Java helpers whose zero-length early returns bypass write overrides.
+DiscardSomeReadBytes retains the original distinction: fully consumed content
+resets only indices/marks, a below-threshold prefix is left alone, and real
+compaction requires write permission. This corrects the earlier delegation to
+DiscardReadBytes which would have rejected the index-only read-only case.
+
+The internal sealed ReadOnlyByteBuf replaces public deprecated wrapper creation
+and the type/cast-based factory. ByteBuf.AsReadOnly is the supported CLR entry
+point; no Unpooled.unmodifiableBuffer alias is added. Nested read-only wrappers
+flatten, while private slice/duplicate parents are preserved to keep offset and
+capacity semantics. ReadOnlyAbstractByteBuf's sole unchecked-word optimization
+is a CLR replacement: all types use bounded read memory and BinaryPrimitives;
+there is no second unchecked subtype or JVM performance claim. Its original
+license/class comments and the read-only wrapper/API/fixture comments are retained.
+
+Read-only memory is a borrowed API view, not immutable ownership or a snapshot.
+Unwrap, other owner views and deliberate MemoryMarshal/pointer operations can
+access the shared storage. Native saved memory becomes invalid after owner resize
+or final release; an acquired ReadOnlyMemory pin preserves physical storage and
+quota until disposed, exactly as for writable memory. Access remains subject to
+the existing exclusion of concurrent resize/release. Segmented/composite memory
+and wrapping external read-only storage are separate pending source contracts.
+
+The new heap/native fixtures cover every implemented mutation family, mutable
+borrows, literal unaligned/endian word reads, text/search/visitor access, source
+transfers, independent indices/marks, retained/nested views, writable copies,
+parent resize, index-only compaction, empty lifetime and native pins. Original
+ReadOnlyByteBufTest is still in-progress: JVM channels/NIO/order objects, public
+constructor tests and other unported cases are not represented by stubs or skips.
+Buffer.Tests passes 172/172 in Debug, Release and checked Release, zero skips.
+Focused solution Debug/Release also validate the existing common native-memory,
+reference-count and EncodingConstructor contracts; common source/configuration
+are unchanged and no new whole-common run is claimed. Evidence:
+buffer-readonly-*.trx and artifacts/buffer-readonly-validation. Inventory remains
+159 paths: 137 pending, 19 in-progress, 2 verified and 1 CLR replacement.
+
 ## Remaining work
 
 The initial Unpooled factory covers heap allocation and a single wrapped/copied
 byte range, native allocation and the shared empty sentinel. Allocator interfaces/metrics,
-read-only/swapped/composite buffers, remaining encoding/search/utilities, streams/native I/O,
+external read-only storage/swapped/composite buffers, remaining encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement read-only/composite views, further utilities and
+Next units implement composite storage/views, further utilities and
 broaden original tests, then real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

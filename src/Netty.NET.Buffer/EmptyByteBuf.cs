@@ -27,6 +27,11 @@ internal sealed class EmptyByteBuf : ByteBuf
     internal EmptyByteBuf() : base(0) { }
     protected override Memory<byte> GetMemoryCore(int index, int length) => Memory<byte>.Empty;
     public override bool IsDirect => true;
+    public override bool CanWrite(int byteCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(byteCount);
+        return false;
+    }
     public override int Capacity
     {
         get => 0;
