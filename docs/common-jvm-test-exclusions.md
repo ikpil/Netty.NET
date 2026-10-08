@@ -1,8 +1,8 @@
 # JVM-only test exclusions
 
-Baseline: e66ce34777f9c4a0c57ac74bb97396ca2f54b43c in D:/workspace/netty.
+Baseline: 64cc10f38ea5f5bd7eae48507817c66680d0afdc in D:/workspace/netty.
 
-The eight files below were untranslated C# placeholders, excluded from the test
+The eight retired files below were untranslated C# placeholders, excluded from the test
 project or containing commented-out assertions. They are removed together with
 the Compile Remove rules. Their upstream entries remain not-applicable in the
 manifest; removing a placeholder does not establish that a contract was tested.
@@ -18,6 +18,39 @@ The temporary PortingBatch.props and its import are also removed. All remaining
 C# test sources compile by default. Run dotnet test Netty.NET.sln in Debug and
 with -c Release for Release; use --filter to focus execution when needed.
 Historical batch verification records retain their original commands.
+
+## SystemTicker native-image configuration test
+
+Upstream: common/src/test/java/io/netty/util/concurrent/SystemTickerNativeImageConfigurationTest.java
+
+Added in the 4.2.19.Final baseline. Its only test loads the GraalVM
+native-image.properties resource and asserts that Args includes SystemTicker in
+an --initialize-at-run-time list. This verifies Java native-image metadata,
+not ticker arithmetic or executor scheduling. The CLR project has no GraalVM
+resource or build-time JVM static initialization, so this entry is not-applicable;
+no C# placeholder or skipped test is added. Existing TickerContractTest and
+TimeProviderClockContractTest cover the CLR clock separately and do not claim
+GraalVM or CLR NativeAOT configuration validation.
+
+The new test's only original comment, its license header, is preserved exactly:
+
+```java
+/*
+ * Copyright 2026 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+```
 
 ## Cleanup verification
 

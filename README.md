@@ -1,5 +1,5 @@
 # Netty.NET
-- https://github.com/netty/netty/commit/e66ce34777f9c4a0c57ac74bb97396ca2f54b43c
+- https://github.com/netty/netty/commit/64cc10f38ea5f5bd7eae48507817c66680d0afdc
 
 The common port is in progress. See [porting status](docs/common-porting.md),
 [CLR design decisions](docs/common-clr-design.md),

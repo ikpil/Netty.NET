@@ -1,8 +1,14 @@
 # Netty common: CLR design decisions
 
-Baseline: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` in `../netty`.
+Baseline: `64cc10f38ea5f5bd7eae48507817c66680d0afdc` in `../netty`.
 Implementation scope: common and its tests. Other original modules are read to
 establish consumers; their implementations are outside this stage.
+
+The 4.2.19.Final baseline update changes no common Java implementation. Its
+SystemTicker fix changes GraalVM native-image initialization metadata only; the
+CLR port has no corresponding configuration. See the baseline update checkpoint
+in common-porting.md. Earlier checkpoint results retain their original baseline
+and validation scope; no new CLR NativeAOT validation is claimed.
 
 The destination is a .NET Netty with usable native APIs and the required Netty
 execution/resource contracts. A matching Java class hierarchy, a green translated

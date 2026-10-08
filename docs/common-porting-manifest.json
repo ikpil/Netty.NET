@@ -1,5 +1,5 @@
 {
-  "baseline": "e66ce34777f9c4a0c57ac74bb97396ca2f54b43c",
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
   "scope": [
     "common/src/main/java",
     "common/src/test/java"
@@ -6043,6 +6043,26 @@
         "upstreamCount": 57,
         "required": true,
         "preservedCount": 57,
+        "missingCount": 0
+      }
+    },
+    {
+      "upstream": "common/src/test/java/io/netty/util/concurrent/SystemTickerNativeImageConfigurationTest.java",
+      "kind": "test",
+      "status": "not-applicable",
+      "candidates": [],
+      "implementation": [
+        "docs/common-jvm-test-exclusions.md"
+      ],
+      "evidence": [
+        "Upstream 658b5701cc, included in baseline 64cc10f38ea5f5bd7eae48507817c66680d0afdc, adds SystemTicker to GraalVM's --initialize-at-run-time list. The only new test checks that Java resource configuration, not the clock implementation; no common Java implementation changes from the preceding baseline.",
+        "CLR SystemTicker uses runtime static initialization and SystemTimer's TimeProvider.System clock without GraalVM metadata. Existing TickerContractTest and TimeProviderClockContractTest cover CLR clock behavior separately. No CLR NativeAOT validation is claimed. Original license comment retained in docs/common-jvm-test-exclusions.md."
+      ],
+      "adaptation": "GraalVM native-image.properties is JVM build configuration and has no counterpart in this CLR project. Do not add a C# placeholder or skipped test to reproduce Java resource inspection. Preserve the upstream test inventory, exclusion rationale and original comment; retain the existing CLR ticker implementation.",
+      "comments": {
+        "upstreamCount": 1,
+        "required": false,
+        "preservedCount": 1,
         "missingCount": 0
       }
     },

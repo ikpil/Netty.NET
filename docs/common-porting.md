@@ -1,6 +1,6 @@
 # Netty common port
 
-Upstream: `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` (local `../netty`).
+Upstream: `64cc10f38ea5f5bd7eae48507817c66680d0afdc` (local `../netty`).
 Scope: `common/src/main/java` and `common/src/test/java` at that commit.
 
 ## Verification
@@ -42,6 +42,42 @@ check does not establish behavioral compatibility or correct comment placement;
 both still require review.
 
 Comment sources are read as UTF-8 explicitly, including on Windows PowerShell 5.
+
+## Netty 4.2.19.Final baseline update
+
+Compare `e66ce34777f9c4a0c57ac74bb97396ca2f54b43c` with
+`64cc10f38ea5f5bd7eae48507817c66680d0afdc` using pinned Git objects.
+Only three common files change: common/pom.xml selects 4.2.19.Final;
+native-image.properties adds SystemTicker to GraalVM's runtime-initialization
+list; SystemTickerNativeImageConfigurationTest checks that resource setting.
+No common/src/main/java implementation changes, so no C# runtime change is
+required. CLR static fields use the existing runtime initialization and
+TimeProvider.System clock; GraalVM resource arguments are not a CLR facility.
+This decision does not establish CLR NativeAOT behavior.
+
+The new JVM configuration test is explicitly not-applicable, with its original
+license comment retained in common-jvm-test-exclusions.md. Inventory now contains
+205 Java sources and 67 Java tests; existing review decisions are retained.
+README, manifest and inventory generator use the requested release commit.
+Local netty HEAD is the following development-version commit `014ef8d7031f9f1015020095421a659ced36cc8a`;
+it is not substituted for the requested baseline. Its only additional common
+change is the parent POM version.
+
+Validation on Windows/net10.0: focused DefaultMockTickerTest, TickerContractTest
+and TimeProviderClockContractTest pass all 33 cases in both Debug and Release.
+The 272-entry inventory matches the requested Git objects; all 271 existing
+manifest entries and their actual comment coverage are unchanged. The new test's
+one license comment is preserved. git diff --check passes. Evidence is in
+artifacts/upstream-common-baseline-validation and upstream-common-baseline-*.trx.
+No full-suite rerun is claimed for this documentation/inventory-only update.
+
+One pre-existing bookkeeping discrepancy is retained for separate review:
+PlatformDependent's manifest records ten missing comments, while auditing both
+the preceding tracked state and this update finds nine. Its source and review
+status are unchanged; this baseline update does not repair or certify that file.
+
+Earlier checkpoints below are historical results at their stated baseline;
+this update does not rerun or extend those behavioral claims.
 
 
 ## Native constant checkpoint

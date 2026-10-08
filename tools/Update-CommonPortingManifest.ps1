@@ -3,7 +3,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$baseline = 'e66ce34777f9c4a0c57ac74bb97396ca2f54b43c'
+$baseline = '64cc10f38ea5f5bd7eae48507817c66680d0afdc'
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $manifestPath = Join-Path $repositoryRoot 'docs/common-porting-manifest.json'
 $previous = @{}
