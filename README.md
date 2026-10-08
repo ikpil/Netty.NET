@@ -1,6 +1,7 @@
 # Netty.NET
 - https://github.com/netty/netty/commit/64cc10f38ea5f5bd7eae48507817c66680d0afdc
 
+The buffer port has started; see [buffer porting status](docs/buffer-porting.md).
 The common port is in progress. See [porting status](docs/common-porting.md),
 [CLR design decisions](docs/common-clr-design.md),
 [native Task scheduling](docs/common-native-scheduling.md),

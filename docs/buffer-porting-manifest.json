@@ -1,0 +1,1418 @@
+{
+  "baseline": "64cc10f38ea5f5bd7eae48507817c66680d0afdc",
+  "scope": [
+    "buffer/src/main/java",
+    "buffer/src/test/java"
+  ],
+  "statusMeaning": "pending: no completed review; in-progress: only stated API/scenarios are implemented; verified: the stated complete source/test contract is reviewed; clr-replacement/not-applicable require an explicit consumer-based decision. Building a project or translating selected scenarios does not complete buffer.",
+  "entries": [
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractAllocatorEvent.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractBufferEvent.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractByteBuf.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Native index/mark/compaction/growth/accessibility rules combined into ByteBuf. Remaining search/encoding/I/O/utilities are pending.",
+      "comments": {
+        "upstreamCount": 17,
+        "preservedCount": 2,
+        "missingCount": 15,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractByteBufAllocator.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Only calculateNewCapacity growth policy is implemented; allocator interface, policy, metrics and leak wrappers remain pending.",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 4,
+        "missingCount": 6,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractChunkEvent.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractDerivedByteBuf.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBufView.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Private view delegates ownership and memory to parent; remaining broader derived API is pending.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractPooledDerivedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractReferenceCountedByteBuf.java",
+      "kind": "source",
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/AbstractReferenceCountedByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Full ref-count/deallocation/reset contract uses common ReferenceCountUpdater. Volatile observational reads and caller-owned ref-int replace the separate RefCnt object; all original comments preserved.",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 8,
+        "missingCount": 0,
+        "coverage": "entire file"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractUnpooledSlicedByteBuf.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBufView.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Fixed slices with range-local access and shared ref count; no complete source/API claim.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 0,
+        "missingCount": 3,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AbstractUnsafeSwappedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AdaptiveByteBufAllocator.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AdaptivePoolingAllocator.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AdvancedLeakAwareByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AdvancedLeakAwareCompositeByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AllocateBufferEvent.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/AllocateChunkEvent.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBuf.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Native indices, BE/LE words, bulk span transfers, copy and shared derived views. Remaining public API is pending.",
+      "comments": {
+        "upstreamCount": 191,
+        "preservedCount": 120,
+        "missingCount": 71,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufAllocator.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufAllocatorMetric.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufAllocatorMetricProvider.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufConvertible.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufHolder.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufInputStream.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufOutputStream.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufProcessor.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ChunkInfo.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/CompositeByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/DefaultByteBufHolder.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/DuplicatedByteBuf.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBufView.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Independent copied indices/marks with dynamic parent capacity and shared memory; remaining API pending.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 1,
+        "missingCount": 1,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/EmptyByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/FixedCompositeByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/FreeBufferEvent.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/FreeChunkEvent.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/HeapByteBufUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/IntPriorityQueue.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolArena.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolArenaMetric.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolChunk.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolChunkList.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolChunkListMetric.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolChunkMetric.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolSubpage.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolSubpageMetric.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PoolThreadCache.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledByteBufAllocator.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledByteBufAllocatorMetric.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledDirectByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledDuplicatedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledHeapByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledSlicedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledUnsafeDirectByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/PooledUnsafeHeapByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ReadOnlyAbstractByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ReadOnlyByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ReadOnlyByteBufferBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ReadOnlyUnsafeDirectByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/ReallocateBufferEvent.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/SimpleLeakAwareByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/SimpleLeakAwareCompositeByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/SizeClasses.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/SizeClassesMetric.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/SlicedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/SwappedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/Unpooled.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/Unpooled.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Heap constructor, one array wrap and one span copy only; empty/native/composite/read-only factories remain pending.",
+      "comments": {
+        "upstreamCount": 67,
+        "preservedCount": 4,
+        "missingCount": 63,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledByteBufAllocator.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledDirectByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledDuplicatedByteBuf.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBufView.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Native duplicate view replaces primitive forwarding specialization; remaining API pending.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledHeapByteBuf.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/UnpooledHeapByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Heap allocation/wrapping, capacity replacement, raw byte access, copying and release implemented. CLR Memory/Span replace NIO/Unsafe; allocator and I/O overloads remain pending.",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledSlicedByteBuf.java",
+      "kind": "source",
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBufView.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Native span slices replace Java primitive forwarding specialization; complete API review remains pending.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 0,
+        "missingCount": 2,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledUnsafeDirectByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledUnsafeHeapByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledUnsafeNoCleanerDirectByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnreleasableByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnsafeByteBufUtil.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnsafeDirectSwappedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/UnsafeHeapSwappedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/VarHandleByteBufferAccess.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/WrappedByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/WrappedCompositeByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/WrappedUnpooledUnsafeDirectByteBuf.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/AbstractMultiSearchProcessorFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/AbstractSearchProcessorFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/AhoCorasicSearchProcessorFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/BitapSearchProcessorFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/KmpSearchProcessorFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/MultiSearchProcessor.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/MultiSearchProcessorFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/SearchProcessor.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/SearchProcessorFactory.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/main/java/io/netty/buffer/search/package-info.java",
+      "kind": "source",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AbstractAdaptiveByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AbstractByteBufAllocatorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AbstractByteBufTest.java",
+      "kind": "test",
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/HeapByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufWireContractTest.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded.",
+      "comments": {
+        "upstreamCount": 112,
+        "preservedCount": 6,
+        "missingCount": 106,
+        "coverage": "partial source; remaining operations not ported"
+      }
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AbstractCompositeByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AbstractPooledByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AbstractReferenceCountedByteBufTest.java",
+      "kind": "test",
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/AbstractReferenceCountedByteBufTest.cs"
+      ],
+      "evidence": [
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+      ],
+      "adaptation": "All six original scenarios retained. Resurrection variants share a two-case theory; Java stub helper is replaced by real managed storage. Additional CLR ref-count validation and concurrency tests.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "entire file"
+      }
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveBigEndianDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveBigEndianHeapByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveByteBufAllocatorGrowthTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveByteBufAllocatorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveByteBufAllocatorUseCacheForNonEventLoopThreadsTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveLittleEndianDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdaptiveLittleEndianHeapByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdaptivePoolingAllocatorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdvancedLeakAwareByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AdvancedLeakAwareCompositeByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/AlignedPooledByteBufAllocatorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianCompositeByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianHeapByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianUnsafeDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/BigEndianUnsafeNoCleanerDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ByteBufAllocatorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ByteBufDerivationTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ByteBufStreamTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ByteBufUtilTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ByteProcessorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ConsolidationTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/DefaultByteBufHolderTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/DuplicatedByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/EmptyByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/FixedCompositeByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/IntPriorityQueueTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/JfrEventsTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/LittleEndianCompositeByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/LittleEndianDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/LittleEndianHeapByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/LittleEndianUnsafeDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/LittleEndianUnsafeNoCleanerDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/NoopResourceLeakTracker.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/PoolArenaTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/PooledAlignedBigEndianDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/PooledBigEndianDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/PooledBigEndianHeapByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/PooledByteBufAllocatorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/PooledLittleEndianDirectByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/PooledLittleEndianHeapByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ReadOnlyByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ReadOnlyByteBufferBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ReadOnlyDirectByteBufferBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/ReadOnlyUnsafeDirectByteBufferBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/RetainedDuplicatedByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/RetainedSlicedByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/SimpleLeakAwareByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/SimpleLeakAwareCompositeByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/SizeClassedChunkCacheTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/SlicedByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/UnpooledByteBufAllocatorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/UnpooledTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/UnreleaseableByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/UnsafeByteBufUtilTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/WrappedCompositeByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/WrappedUnpooledUnsafeByteBufTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/search/BitapSearchProcessorFactoryTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/search/MultiSearchProcessorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    },
+    {
+      "upstream": "buffer/src/test/java/io/netty/buffer/search/SearchProcessorTest.java",
+      "kind": "test",
+      "status": "pending",
+      "implementation": [],
+      "evidence": [],
+      "adaptation": ""
+    }
+  ]
+}
