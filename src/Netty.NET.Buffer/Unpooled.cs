@@ -18,7 +18,7 @@ using System;
 
 namespace Netty.NET.Buffer;
 
-// Heap factory subset of Unpooled; direct/composite/read-only factories follow separately.
+// Implemented unpooled factories; allocator policy and remaining wrapping overloads are pending.
 public static class Unpooled
 {
     public static ByteBuf EmptyBuffer { get; } = new EmptyByteBuf();
@@ -56,4 +56,8 @@ public static class Unpooled
          */
     public static ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
         => initialCapacity == 0 && maxCapacity == 0 ? EmptyBuffer : new UnpooledDirectByteBuf(initialCapacity, maxCapacity);
+    /**
+     * Returns a new big-endian composite buffer with no components.
+     */
+    public static CompositeByteBuf CompositeBuffer(int maxNumComponents = 16) => new(maxNumComponents);
 }

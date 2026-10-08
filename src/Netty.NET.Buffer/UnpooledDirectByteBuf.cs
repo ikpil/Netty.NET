@@ -51,10 +51,10 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         _owner = _allocator.Allocate(initialCapacity, clear: true);
     }
     protected override Memory<byte> GetMemoryCore(int index, int length) => _owner.Memory.Slice(index, length);
-    internal override MemoryHandle PinMemoryForWrite()
+    internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
-        return _owner.Memory.Pin();
+        return new BufferMemoryLease(_owner.Memory.Pin());
     }
     public override bool IsDirect => true;
     public override int Capacity

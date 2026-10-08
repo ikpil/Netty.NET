@@ -243,13 +243,93 @@ are unchanged and no new whole-common run is claimed. Evidence:
 buffer-readonly-*.trx and artifacts/buffer-readonly-validation. Inventory remains
 159 paths: 137 pending, 19 in-progress, 2 verified and 1 CLR replacement.
 
+## Composite storage and segmented access
+
+CompositeByteBuf owns each original source buffer with its captured readable
+start/length. AddComponent transfers one existing reference without retaining or
+moving source indices; its optional increaseWriterIndex defaults to false. Indexed
+insertion, empty components, checked capacity overflow, original duplicate views,
+fresh captured ComponentSlice views, borrowed Decompose slices, component/offset
+mapping, removal and final release are implemented. Retain before adding when the
+caller needs separate ownership. Validation failure releases an incoming reference;
+null/cyclic ownership is rejected before transfer. Explicit removal leaves indices
+unchanged like Netty; callers must repair any stale indices before further use.
+
+List replaces JVM manual component-array growth. Bounded component transfers and
+an eight-byte stack fallback let the existing primitive, sequential, bulk, zero,
+copy, derived/read-only view, encoding/search and visitor APIs cross boundaries.
+Contiguous root/range access still uses Memory/Span and BinaryPrimitives. AsMemory,
+AsSpan and their read-only counterparts never silently materialize disjoint ranges:
+they reject a multi-segment range with NotSupportedException. AsReadOnlySequence
+and ReadableSequence expose live borrowed segments, including nested views, without
+retain or pin. Their layout is captured; exclude layout changes/resize/release while
+borrowing them. AsReadOnly explicitly forbids writes. A composite containing some
+read-only components remains IsReadOnly=false like Netty; writes to those component
+ranges fail, and a multi-component write can modify an earlier writable prefix before
+failing. No all-or-nothing write guarantee is added.
+
+Segmented bulk operations snapshot when needed to preserve overlap; cross-segment
+text encoding/decoding and multi-byte needle search can allocate temporary byte
+arrays. Text is decoded as a whole so multibyte characters spanning components are
+not broken. This is a correctness port, without JVM performance equivalence claims.
+Small scalar operations use stack bytes, not heap arrays. Native root leases remain
+value types; composite groups pin every native source allocation, including through
+read-only/derived/nested components, across growing aliased byte/UTF-16 span writes.
+Logical ownership can be released during consolidation while physical native storage
+and quota survive until the write's leases end. A failed group acquisition disposes
+all pins already acquired.
+
+Capacity grows through owned padding and shrinks by trimming/releasing tail
+components; source indices remain independent. Automatic consolidation occurs only
+when component count exceeds the configured maximum. Full/ranged consolidation
+preserves composite indices and copies captured component ranges before publishing
+and releasing old ownership. CLR allocation/source-read failure leaves the original
+layout intact; a failed automatic consolidation leaves the successfully inserted
+component attached and owned. IsDirect reflects actual components (false when empty
+or mixed), while the constructor's direct flag/domain selects padding, consolidation
+and Copy allocation. DiscardReadComponents/DiscardSomeReadBytes remove fully read
+components; DiscardReadBytes also trims the partial leading range without copying.
+Both adjust source coordinates, indices and marks. Retaining a composite slice keeps
+the composite alive, but does not retain components removed from it; invalid old
+coordinates fail CLR bounds checks without exposing freed storage.
+
+The new 39 fixtures cover selected AbstractCompositeByteBufTest contracts plus
+literal boundary/endian/NaN wire values, readonly/nested views, empty components,
+independent indices/marks, ownership/shrink/discard/decompose, allocation rollback,
+failed automatic consolidation, native quota/pins and aliased growth/text. A one-MiB
+shared owner reproduces the original signed-capacity overflow without allocating
+GiB of backing memory. Two seeded 100-layout cases compare every eight-byte offset
+against independently assembled flat wire bytes and verify discard/consolidation.
+All implemented original operation documentation/licenses and rationale comments
+are retained, with CLR changes explained. Whole source/fixture coverage stays partial.
+
+The ignored probe compiles 293 exact pinned common/buffer Java sources with cached
+real dependencies; five GraalVM substitution sources are excluded from this ordinary
+JVM probe. All 93 buffer sources are compiled unchanged, with Unsafe disabled for
+this probe's heap/direct runtime. Across 200 randomized captured/empty-component
+layouts on each backend, 400 Java/CLR rows agree on byte order, views, search,
+Decompose segment lengths, capacity/indices/component counts, discard/marks,
+consolidation and final source reference counts. This validates those contracts;
+pooled/Unsafe/channel/flattening behavior is not claimed. Evidence is in
+artifacts/buffer-composite-validation (ignored), including inputs, runtime rows,
+compilation log and zero mismatches.
+
+Buffer.Tests passes 211/211 with zero skips in Debug, Release and rebuilt checked
+Release. Focused common native-memory/reference-count/EncodingConstructor tests
+pass 118/118 with zero skips in Debug/Release; common source/tests/configuration
+are unchanged and its whole suite is not rerun. Evidence: buffer-composite-*.trx.
+All 159 original paths remain inventoried: 135 pending, 21 in-progress, 2 verified
+and 1 CLR replacement. Multi-add/flatten, iterator/cached internal component APIs,
+constructor variants, allocator/leak wrappers, array/address and I/O integration,
+and the remaining original composite tests stay pending.
+
 ## Remaining work
 
 The initial Unpooled factory covers heap allocation and a single wrapped/copied
 byte range, native allocation and the shared empty sentinel. Allocator interfaces/metrics,
-external read-only storage/swapped/composite buffers, remaining encoding/search/utilities, streams/native I/O,
+external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement composite storage/views, further utilities and
+Next units implement remaining composite operations, further utilities and
 broaden original tests, then real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

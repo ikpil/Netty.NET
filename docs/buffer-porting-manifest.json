@@ -29,14 +29,16 @@
       "implementation": [
         "src/Netty.NET.Buffer/ByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
-        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs"
+        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Segmented.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
         "Text/search unit: original bounds/order/abort fixtures adapted for heap/native; buffer-text-search-* tests and 5000 exact pinned Java UTF-8 wire/count rows per backend. Partial source only.",
-        "Read-only unit: Buffer.Tests 172 cases on heap/native; readonly lifetime/mutation/index/compaction/memory contracts in ReadOnlyByteBufTest. Partial original source/fixture; docs/buffer-porting.md; artifacts/buffer-readonly-validation."
+        "Read-only unit: Buffer.Tests 172 cases on heap/native; readonly lifetime/mutation/index/compaction/memory contracts in ReadOnlyByteBufTest. Partial original source/fixture; docs/buffer-porting.md; artifacts/buffer-readonly-validation.",
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
       ],
-      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining comparison/utilities still pending.",
+      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining comparison/utilities still pending. Composite consumer adds bounded segment hooks, stack crossing-word access, borrowed ReadOnlySequence, and cross-component bulk/overlap/text/search/view behavior. Contiguous memory borrowing never silently copies; unsupported multi-segment Memory ranges are actual CLR representation limits. Existing standalone ReadBytes allocation policy is retained.",
       "comments": {
         "upstreamCount": 17,
         "preservedCount": 2,
@@ -196,18 +198,20 @@
       "implementation": [
         "src/Netty.NET.Buffer/ByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
-        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs"
+        "src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Segmented.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
         "Text/search unit: original bounds/order/abort fixtures adapted for heap/native; buffer-text-search-* tests and 5000 exact pinned Java UTF-8 wire/count rows per backend. Partial source only.",
-        "Read-only unit: Buffer.Tests 172 cases on heap/native; readonly lifetime/mutation/index/compaction/memory contracts in ReadOnlyByteBufTest. Partial original source/fixture; docs/buffer-porting.md; artifacts/buffer-readonly-validation."
+        "Read-only unit: Buffer.Tests 172 cases on heap/native; readonly lifetime/mutation/index/compaction/memory contracts in ReadOnlyByteBufTest. Partial original source/fixture; docs/buffer-porting.md; artifacts/buffer-readonly-validation.",
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
       ],
-      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining comparison/utilities still pending.",
+      "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility/comparison and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining comparison/utilities still pending. Composite consumer adds bounded segment hooks, stack crossing-word access, borrowed ReadOnlySequence, and cross-component bulk/overlap/text/search/view behavior. Contiguous memory borrowing never silently copies; unsupported multi-segment Memory ranges are actual CLR representation limits. Existing standalone ReadBytes allocation policy is retained.",
       "comments": {
         "upstreamCount": 191,
-        "preservedCount": 137,
-        "missingCount": 54,
+        "preservedCount": 138,
+        "missingCount": 53,
         "coverage": "partial source; remaining operations not ported"
       }
     },
@@ -283,9 +287,10 @@
         "src/Netty.NET.Buffer/ByteBufUtil.cs"
       ],
       "evidence": [
-        "Selected original UTF-8/ASCII and search scenarios in ByteBufTextSearchTest. Exact pinned scalar writer/count methods executed against 5000 input rows for both CLR storage backends; artifacts/buffer-text-search-validation."
+        "Selected original UTF-8/ASCII and search scenarios in ByteBufTextSearchTest. Exact pinned scalar writer/count methods executed against 5000 input rows for both CLR storage backends; artifacts/buffer-text-search-validation.",
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
       ],
-      "adaptation": "Only directional/subsequence search, UTF-8 maximum/exact length, UTF-8 writes/reservations and ASCII writes are implemented. Span.IndexOf/LastIndexOf replace Java SWAR/Two-Way internals. UTF-8 malformed-surrogate and ASCII octet rules, AsciiString raw bytes and public writeUtf8 worst-case reservation are preserved. Checked sizes and undersized reservation rejection are CLR safety adaptations. Slice a ReadOnlySpan<char> instead of duplicating start/end overloads. Allocator-returning overloads, hex/hash/compare/validation/I/O and other utilities remain pending.",
+      "adaptation": "Only directional/subsequence search, UTF-8 maximum/exact length, UTF-8 writes/reservations and ASCII writes are implemented. Span.IndexOf/LastIndexOf replace Java SWAR/Two-Way internals. UTF-8 malformed-surrogate and ASCII octet rules, AsciiString raw bytes and public writeUtf8 worst-case reservation are preserved. Checked sizes and undersized reservation rejection are CLR safety adaptations. Slice a ReadOnlySpan<char> instead of duplicating start/end overloads. Allocator-returning overloads, hex/hash/compare/validation/I/O and other utilities remain pending. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending.",
       "comments": {
         "upstreamCount": 165,
         "preservedCount": 27,
@@ -304,10 +309,22 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/CompositeByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/CompositeByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+        "src/Netty.NET.Buffer/BufferMemoryLease.cs"
+      ],
+      "evidence": [
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
+      ],
+      "adaptation": "Native List of original source ownership plus captured readable coordinates; default AddComponent preserves writer index, optional bool increments it, insertion rejects overflow and releases failed incoming ownership, cycle checks reject before transfer. Shared ownership, component/offset mapping, Component duplicate and fresh ComponentSlice, borrowed Decompose slices, ranged/full/automatic consolidation, capacity padding/trimming, structural discard/marker adjustment, actual IsDirect and allocation-policy Copy are implemented. All words/bulk/text/search/views can cross component boundaries. Memory/Span require one contiguous range; ReadOnlySequence exposes borrowed segments without retain/pin. Native group leases preserve aliased spans across consolidation. Segmented bulk overlap/text/needle search may materialize temporary bytes, unlike Java unchecked dispatch/performance strategies. Consolidation prepares before publish/release for allocation/source-read rollback; failed automatic consolidation leaves successfully inserted components attached. Explicit removal preserves indices like Netty; callers must repair stale indices before subsequent indexed use. CLR bounds exceptions replace JVM types. Internal cached-slice mutation APIs, iterator, multi-add/flatten, constructor-array variants, allocator/leak wrappers, array/address access and NIO/channel/stream operations remain pending.",
+      "comments": {
+        "upstreamCount": 107,
+        "preservedCount": 52,
+        "missingCount": 55,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/DefaultByteBufHolder.java",
@@ -571,9 +588,10 @@
         "src/Netty.NET.Buffer/ByteBufView.cs"
       ],
       "evidence": [
-        "Selected original ReadOnlyByteBufTest scenarios and additional CLR mutable-borrow/source-copy/native-owner tests execute for heap/native. All two original source comments preserved. docs/buffer-porting.md; artifacts/buffer-readonly-validation."
+        "Selected original ReadOnlyByteBufTest scenarios and additional CLR mutable-borrow/source-copy/native-owner tests execute for heap/native. All two original source comments preserved. docs/buffer-porting.md; artifacts/buffer-readonly-validation.",
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
       ],
-      "adaptation": "Internal sealed live view exposes bounded ReadOnlyMemory/Span and shares parent reference count; independent copied indices with fresh marks, read-only slices/duplicates, writable copies. Nested read-only wrappers flatten; exact private slice/duplicate parents are otherwise retained to preserve offsets. Standard NotSupportedException replaces JVM ReadOnlyBufferException. ByteBuf.AsReadOnly replaces deprecated public wrapper construction/Unpooled.unmodifiableBuffer facade. Allocation/NIO/byte-order/I/O APIs remain pending; no complete Java API claim.",
+      "adaptation": "Internal sealed live view exposes bounded ReadOnlyMemory/Span and shares parent reference count; independent copied indices with fresh marks, read-only slices/duplicates, writable copies. Nested read-only wrappers flatten; exact private slice/duplicate parents are otherwise retained to preserve offsets. Standard NotSupportedException replaces JVM ReadOnlyBufferException. ByteBuf.AsReadOnly replaces deprecated public wrapper construction/Unpooled.unmodifiableBuffer facade. Allocation/NIO/byte-order/I/O APIs remain pending; no complete Java API claim. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending.",
       "comments": {
         "upstreamCount": 2,
         "preservedCount": 2,
@@ -663,13 +681,14 @@
         "src/Netty.NET.Buffer/ReadOnlyByteBuf.cs"
       ],
       "evidence": [
-        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer."
+        "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
       ],
-      "adaptation": "Heap and native buffer allocation, one array wrap/span copy and the shared empty singleton. Allocator/composite/read-only and remaining overloads are pending. Deprecated single-buffer unmodifiableBuffer is represented by ByteBuf.AsReadOnly; no public legacy alias/unchecked subtype factory is added. Composite read-only factory remains pending.",
+      "adaptation": "Heap and native buffer allocation, one array wrap/span copy and the shared empty singleton. Allocator/composite/read-only and remaining overloads are pending. Deprecated single-buffer unmodifiableBuffer is represented by ByteBuf.AsReadOnly; no public legacy alias/unchecked subtype factory is added. Composite read-only factory remains pending. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending.",
       "comments": {
         "upstreamCount": 67,
-        "preservedCount": 8,
-        "missingCount": 59,
+        "preservedCount": 9,
+        "missingCount": 58,
         "coverage": "partial source; remaining operations not ported"
       }
     },
@@ -690,9 +709,10 @@
         "src/Netty.NET.Buffer/ByteBuf.cs"
       ],
       "evidence": [
-        "Actual Buffer-to-Common native-memory integration; direct shared-view tests, failed allocation, aliases across growth, pins after logical release and empty lifetime. docs/buffer-porting.md; buffer-native-* and artifacts/buffer-foundation-validation. Partial source/API only."
+        "Actual Buffer-to-Common native-memory integration; direct shared-view tests, failed allocation, aliases across growth, pins after logical release and empty lifetime. docs/buffer-porting.md; buffer-native-* and artifacts/buffer-foundation-validation. Partial source/API only.",
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
       ],
-      "adaptation": "NativeMemoryAllocator/Owner provide storage, explicit budget, zeroed allocation and physical pin lifetime. Prefix-copy/resize publishes after success. Native copy has independent storage. Existing-byte-buffer wrapping, allocator interfaces, address/NIO/I/O and diagnostics remain pending.",
+      "adaptation": "NativeMemoryAllocator/Owner provide storage, explicit budget, zeroed allocation and physical pin lifetime. Prefix-copy/resize publishes after success. Native copy has independent storage. Existing-byte-buffer wrapping, allocator interfaces, address/NIO/I/O and diagnostics remain pending. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending.",
       "comments": {
         "upstreamCount": 7,
         "preservedCount": 3,
@@ -973,10 +993,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AbstractCompositeByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufTest.cs"
+      ],
+      "evidence": [
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
+      ],
+      "adaptation": "Selected original empty/component/offset/index/ownership/auto/full/ranged consolidation/shrink/discard/decompose/nested word/visitor/overflow contracts run alongside CLR borrowed sequence, native pin/quota/failure and aliasing tests. Retained slices use the existing shared root count; Java pooled independent-count hierarchy is not claimed. Old retained composite views fail checked access after all components are discarded rather than exposing freed storage. Two seeded 100-layout fixtures independently assemble word bytes and check discard/consolidate; 400 full pinned-Java/CLR rows cover heap/direct structural behaviors. Original entire fixture, multi-add/flatten/iterator, array/NIO/gathering/allocator/pooled cases remain pending; no stubs or skipped tests.",
+      "comments": {
+        "upstreamCount": 121,
+        "preservedCount": 7,
+        "missingCount": 114,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AbstractPooledByteBufTest.java",

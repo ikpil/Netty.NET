@@ -44,7 +44,9 @@ public abstract partial class ByteBuf
     public string GetString(int index, int length, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(encoding);
-        return encoding.GetString(AsReadOnlySpan(index, length));
+        if (TryGetReadOnlyMemory(index, length, out var memory)) return encoding.GetString(memory.Span);
+        byte[] bytes = new byte[length]; GetBytesCore(index, bytes);
+        return encoding.GetString(bytes);
     }
 
     /**
@@ -83,7 +85,15 @@ public abstract partial class ByteBuf
         ArgumentNullException.ThrowIfNull(encoding);
         EnsureCanWrite();
         int length = encoding.GetByteCount(text);
-        return encoding.GetBytes(text, AsSpan(index, length));
+        return EncodeString(index, text, encoding, length);
+    }
+
+    private int EncodeString(int index, ReadOnlySpan<char> text, Encoding encoding, int length)
+    {
+        if (TryGetMemory(index, length, out var memory)) return encoding.GetBytes(text, memory.Span);
+        byte[] bytes = new byte[length];
+        int written = encoding.GetBytes(text, bytes);
+        SetBytesCore(index, bytes.AsSpan(0, written)); return written;
     }
 
     /**
@@ -107,7 +117,7 @@ public abstract partial class ByteBuf
         EnsureAccessible();
         int length = encoding.GetByteCount(text);
         EnsureWritable(length);
-        int written = encoding.GetBytes(text, AsSpan(_writerIndex, length));
+        int written = EncodeString(_writerIndex, text, encoding, length);
         _writerIndex += written;
         return written;
     }
@@ -135,14 +145,26 @@ public abstract partial class ByteBuf
         {
             fromIndex = Math.Max(fromIndex, 0);
             if (fromIndex >= toIndex || Capacity == 0) return -1;
-            int found = AsReadOnlySpan(fromIndex, checked(toIndex - fromIndex)).IndexOf(value);
+            int length = checked(toIndex - fromIndex);
+            if (!TryGetReadOnlyMemory(fromIndex, length, out var memory))
+            {
+                for (int i = fromIndex; i < toIndex; ++i) if (GetByte(i) == value) return i;
+                return -1;
+            }
+            int found = memory.Span.IndexOf(value);
             return found < 0 ? -1 : fromIndex + found;
         }
 
         fromIndex = Math.Min(fromIndex, Capacity);
         if (fromIndex <= 0) return -1; // fromIndex is the exclusive upper bound.
         CheckIndex(toIndex, 0);
-        int reverseFound = AsReadOnlySpan(toIndex, checked(fromIndex - toIndex)).LastIndexOf(value);
+        int reverseLength = checked(fromIndex - toIndex);
+        if (!TryGetReadOnlyMemory(toIndex, reverseLength, out var reverseMemory))
+        {
+            for (int i = fromIndex - 1; i >= toIndex; --i) if (GetByte(i) == value) return i;
+            return -1;
+        }
+        int reverseFound = reverseMemory.Span.LastIndexOf(value);
         return reverseFound < 0 ? -1 : toIndex + reverseFound;
     }
 
@@ -196,7 +218,8 @@ public abstract partial class ByteBuf
     public int BytesBefore(int index, int length, byte value)
     {
         CheckIndex(index, length);
-        return AsReadOnlySpan(index, length).IndexOf(value);
+        int found = IndexOf(index, index + length, value);
+        return found < 0 ? -1 : found - index;
     }
 
     /**

@@ -75,6 +75,8 @@ public abstract partial class ByteBuf
          */
     /// <summary>Returns a borrowed capacity-bounded read-only range without changing indices.</summary>
     /// <remarks>This is a live view, not a snapshot. Exclude concurrent resize/release while borrowing it.</remarks>
+    /// <exception cref="NotSupportedException">The range spans multiple components;
+    /// use AsReadOnlySequence or GetBytes for such ranges.</exception>
     public ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
     {
         CheckIndex(index, length);

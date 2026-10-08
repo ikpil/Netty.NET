@@ -46,7 +46,18 @@ internal sealed class ByteBufView : ByteBuf
     protected override Memory<byte> GetMemoryCore(int index, int length) => _parent.AsMemory(_offset + index, length);
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         => _parent.AsReadOnlyMemory(_offset + index, length);
-    internal override MemoryHandle PinMemoryForWrite() => _parent.PinMemoryForWrite();
+    internal override BufferMemoryLease PinMemoryForWrite() => _parent.PinMemoryForWrite();
+    protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
+        => _parent.TryGetReadOnlyMemory(_offset + index, length, out memory);
+    protected override void GetBytesCore(int index, Span<byte> destination)
+        => _parent.GetBytes(_offset + index, destination);
+    protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
+        => _parent.AsReadOnlySequence(_offset + index, length);
+    internal override BufferMemoryLease AcquireReadLease() => _parent.AcquireReadLease();
+    protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
+        => _parent.TryGetMemory(_offset + index, length, out memory);
+    protected override void SetBytesCore(int index, ReadOnlySpan<byte> source) => _parent.SetBytes(_offset + index, source);
+    protected override void SetZeroCore(int index, int length) => _parent.SetZero(_offset + index, length);
     public override bool IsDirect => _parent.IsDirect;
     public override bool IsReadOnly => _parent.IsReadOnly;
     public override int Capacity

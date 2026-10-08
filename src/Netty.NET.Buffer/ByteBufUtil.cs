@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Buffers;
 using Netty.NET.Common;
 
 namespace Netty.NET.Buffer;
@@ -36,7 +37,12 @@ public static class ByteBufUtil
     {
         if (needle == null || haystack == null || needle.ReadableBytes > haystack.ReadableBytes) return -1;
         if (needle.ReadableBytes == 0) return 0;
-        int found = haystack.ReadableMemory.Span.IndexOf(needle.ReadableMemory.Span);
+        // CLR: materialize only non-contiguous ranges; keep the contiguous Span search path.
+        ReadOnlySpan<byte> input = needle.TryGetReadOnlyMemory(needle.ReaderIndex, needle.ReadableBytes, out var needleMemory)
+            ? needleMemory.Span : needle.ReadableSequence.ToArray();
+        ReadOnlySpan<byte> data = haystack.TryGetReadOnlyMemory(haystack.ReaderIndex, haystack.ReadableBytes, out var haystackMemory)
+            ? haystackMemory.Span : haystack.ReadableSequence.ToArray();
+        int found = data.IndexOf(input);
         return found < 0 ? -1 : haystack.ReaderIndex + found;
     }
 
@@ -165,7 +171,13 @@ public static class ByteBufUtil
         if (reserveBytes < length) throw new ArgumentOutOfRangeException(nameof(reserveBytes));
         using var lease = buffer.PinMemoryForWrite();
         buffer.EnsureWritable(reserveBytes);
-        int written = EncodeUtf8(text, buffer.AsSpan(buffer.WriterIndex, length));
+        int written;
+        if (buffer.TryGetMemory(buffer.WriterIndex, length, out var memory)) written = EncodeUtf8(text, memory.Span);
+        else
+        {
+            byte[] bytes = new byte[length]; written = EncodeUtf8(text, bytes);
+            buffer.SetBytes(buffer.WriterIndex, bytes.AsSpan(0, written));
+        }
         buffer.WriterIndex += written;
         return written;
     }
@@ -250,8 +262,10 @@ public static class ByteBufUtil
         using var lease = buffer.PinMemoryForWrite();
         // ASCII uses 1 byte per char
         buffer.EnsureWritable(text.Length);
-        Span<byte> destination = buffer.AsSpan(buffer.WriterIndex, text.Length);
+        bool contiguous = buffer.TryGetMemory(buffer.WriterIndex, text.Length, out var memory);
+        Span<byte> destination = contiguous ? memory.Span : new byte[text.Length];
         for (int i = 0; i < text.Length; ++i) destination[i] = AsciiString.C2b(text[i]);
+        if (!contiguous) buffer.SetBytes(buffer.WriterIndex, destination);
         buffer.WriterIndex += text.Length;
         return text.Length;
     }

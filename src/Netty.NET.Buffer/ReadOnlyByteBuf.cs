@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Buffers;
 
 namespace Netty.NET.Buffer;
 
@@ -59,6 +60,13 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     }
 
     public override bool IsReadOnly => true;
+    protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
+        => _parent.TryGetReadOnlyMemory(index, length, out memory);
+    protected override void GetBytesCore(int index, Span<byte> destination)
+        => _parent.GetBytes(index, destination);
+    protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
+        => _parent.AsReadOnlySequence(index, length);
+    internal override BufferMemoryLease AcquireReadLease() => _parent.AcquireReadLease();
     public override bool IsDirect => _parent.IsDirect;
     public override int Capacity
     {
