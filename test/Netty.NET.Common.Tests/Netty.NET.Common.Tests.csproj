@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>false</IsPackable>
+    <!-- Keep dotnet test on the configured VSTest adapter. -->
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
     <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
   </PropertyGroup>
 
@@ -17,11 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageReference Include="Moq" Version="4.20.72" />
-    <PackageReference Include="xunit.v3" Version="3.2.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5"/>
-    <PackageReference Include="Xunit.v3.AssertMessages" Version="3.2.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="Moq" Version="4.21.0" />
+    <PackageReference Include="xunit.v3" Version="4.0.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Xunit.v3.AssertMessages" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
