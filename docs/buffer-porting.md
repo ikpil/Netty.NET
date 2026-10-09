@@ -527,13 +527,55 @@ contains all 159 paths: 134 pending, 22 in-progress, 2 verified and 1 CLR replac
 Unpooled and its original fixture remain in-progress because other factories and
 original tests are still unported.
 
+## Unpooled text copying factories
+
+CopiedBuffer now accepts string/char[] whole input and UTF-16 subregions, plus
+ReadOnlySpan<char> in place of Java CharBuffer ranges. Results have independent
+writable heap storage and can grow to int.MaxValue. Whole empty strings keep an
+independent growable owner; empty arrays/ranges/spans use the shared sentinel.
+Nonempty input whose custom fallback emits no bytes still has its own owner.
+Sizing failure allocates no buffer; encoding failure releases the newly allocated
+owner. Original public operation comments and shared allocation rationale are kept.
+
+All forms consistently honor the caller's Encoding and fallback, as ByteBuf.WriteString
+already does, and emit no preamble. Java selects specialized UTF-8/ASCII paths for
+whole strings, while regions/arrays use CharsetEncoder. These can produce different
+bytes: whole ASCII "é" becomes E9 in Java, but Encoding.ASCII uses 3F; a lone
+surrogate becomes 3F in Java UTF-8, but Encoding.UTF8 uses EF BF BD. Strict/custom
+fallback must not be bypassed by selecting a fast path from a CLR code page.
+Existing ByteBufUtil.WriteUtf8/WriteAscii preserve Netty's specialized byte mappings.
+UTF-16 offsets can split surrogate pairs; the supplied fallback handles those ranges.
+Null encoding and empty-range bounds are validated even where Java returns early.
+Capacity is the exact encoded byte count instead of CharsetEncoder's upper-bound
+reservation (e.g. UTF-8 string region "A": Java capacity 3, CLR capacity 1); maximum
+capacity and growth behavior remain the same. This is an explicit CLR adaptation.
+
+58 new cases cover the three original UTF-8/ASCII/Latin-1 roundtrips, seven encodings
+across five input shapes with golden bytes, BOM omission, mutable-array/native-span
+independence, bounds/overflow/split pairs, fallback policies, empty ownership, nulls
+and encoding failure/retry. 1785 exact pinned Java/CLR runtime rows match bytes,
+indices, maxima, ownership, growth and release for 50 seeded layouts plus empties
+across seven encodings and five shapes. The 615 upper-bound capacity differences
+are recorded separately, along with ten CLR Encoding policy rows, five matching
+specialized ByteBufUtil rows and two empty-validation differences. This does not
+claim byte equivalence for malformed or unmappable text under differing policies.
+Evidence: artifacts/buffer-unpooled-text-copying-validation (ignored) and
+buffer-unpooled-text-copying-*.trx.
+
+Buffer.Tests passes 382/382 in Debug, Release and rebuilt checked Release, no failures
+or skips. Checked build: zero errors, 51 existing Common warnings. Common files are
+unchanged and its suite is not rerun. All 159 upstream paths remain in JSON: 134
+pending, 22 in-progress, 2 verified and 1 CLR replacement. Unpooled and its original
+fixture remain in-progress; primitive/allocator/external-storage factories and other
+original scenarios remain pending.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying and the shared empty sentinel. Allocator interfaces/metrics,
+single and multiple-input copying, encoded text copying and the shared empty sentinel. Allocator interfaces/metrics,
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement string/Encoding copy factories and remaining composite operations, further utilities and
-broaden original tests, then real allocator/cache integration. Common
+Next units cover remaining composite operations and Unpooled factories, further utilities and
+broader original tests, followed by real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
