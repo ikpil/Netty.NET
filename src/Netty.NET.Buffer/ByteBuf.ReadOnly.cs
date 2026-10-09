@@ -38,7 +38,7 @@ public abstract partial class ByteBuf
          * Returns a read-only version of this buffer.
          */
     /// <summary>Returns a borrowed read-only view with independent indices and shared reference count.</summary>
-    public ByteBuf AsReadOnly()
+    public virtual ByteBuf AsReadOnly()
     {
         EnsureAccessible();
         // We can only use ReadOnlyAbstractByteBuf if we either have nothing to unwrap or the unwrapped buffer is of

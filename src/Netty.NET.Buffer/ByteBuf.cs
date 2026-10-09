@@ -242,12 +242,32 @@ namespace Netty.NET.Buffer;
 // throughout their use; a saved Memory is a view of its original allocation.
 public abstract partial class ByteBuf : IReferenceCounted
 {
-    private int _readerIndex, _writerIndex, _markedReaderIndex, _markedWriterIndex;
+    private int _readerIndexValue, _writerIndexValue, _markedReaderIndexValue, _markedWriterIndexValue;
+    private readonly ByteBuf _indexOwner;
+    // CLR: transparent wrappers share indices/marks without a second state allocation
+    // or hundreds of forwarding overrides. Ordinary buffers and derived views own theirs.
+    private ref int _readerIndex => ref (_indexOwner ?? this)._readerIndexValue;
+    private ref int _writerIndex => ref (_indexOwner ?? this)._writerIndexValue;
+    private ref int _markedReaderIndex => ref (_indexOwner ?? this)._markedReaderIndexValue;
+    private ref int _markedWriterIndex => ref (_indexOwner ?? this)._markedWriterIndexValue;
 
     protected ByteBuf(int maxCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(maxCapacity);
         MaxCapacity = maxCapacity;
+    }
+
+    /**
+     * Wraps another {@link ByteBuf}.
+     *
+     * It's important that the {@link #readerIndex()} and {@link #writerIndex()} will not do any adjustments on the
+     * indices on the fly because of internal optimizations made by {@link ByteBufUtil#writeAscii(ByteBuf, CharSequence)}
+     * and {@link ByteBufUtil#writeUtf8(ByteBuf, CharSequence)}.
+     */
+    private protected ByteBuf(ByteBuf indexOwner)
+        : this(indexOwner?.MaxCapacity ?? throw new ArgumentNullException(nameof(indexOwner)))
+    {
+        _indexOwner = indexOwner._indexOwner ?? indexOwner;
     }
 
     protected abstract Memory<byte> GetMemoryCore(int index, int length);
@@ -1567,7 +1587,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          * Also be aware that this method will NOT call {@link #retain()} and so the
          * reference count will NOT be increased.
          */
-    public ByteBuf Slice() => Slice(_readerIndex, ReadableBytes);
+    public virtual ByteBuf Slice() => Slice(_readerIndex, ReadableBytes);
     /**
          * Returns a slice of this buffer's sub-region. Modifying the content of
          * the returned buffer or this buffer affects each other's content while
@@ -1592,7 +1612,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          * This method behaves similarly to {@code slice().retain()} except that this method may return
          * a buffer implementation that produces less garbage.
          */
-    public ByteBuf RetainedSlice() => Slice().Retain();
+    public virtual ByteBuf RetainedSlice() => Slice().Retain();
     /**
          * Returns a retained slice of this buffer's sub-region. Modifying the content of
          * the returned buffer or this buffer affects each other's content while
@@ -1604,7 +1624,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          * This method behaves similarly to {@code slice(...).retain()} except that this method may return
          * a buffer implementation that produces less garbage.
          */
-    public ByteBuf RetainedSlice(int index, int length) => Slice(index, length).Retain();
+    public virtual ByteBuf RetainedSlice(int index, int length) => Slice(index, length).Retain();
     /**
          * Returns a buffer which shares the whole region of this buffer.
          * Modifying the content of the returned buffer or this buffer affects
@@ -1632,7 +1652,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          * This method behaves similarly to {@code duplicate().retain()} except that this method may return
          * a buffer implementation that produces less garbage.
          */
-    public ByteBuf RetainedDuplicate() => Duplicate().Retain();
+    public virtual ByteBuf RetainedDuplicate() => Duplicate().Retain();
     /**
          * Returns a new slice of this buffer's sub-region starting at the current
          * {@code readerIndex} and increases the {@code readerIndex} by the size
@@ -1648,7 +1668,7 @@ public abstract partial class ByteBuf : IReferenceCounted
          * @throws IndexOutOfBoundsException
          *         if {@code length} is greater than {@code this.readableBytes}
          */
-    public ByteBuf ReadSlice(int length)
+    public virtual ByteBuf ReadSlice(int length)
     { CheckReadableBytes(length); ByteBuf result = Slice(_readerIndex, length); _readerIndex += length; return result; }
     /**
          * Returns a new retained slice of this buffer's sub-region starting at the current
@@ -1666,6 +1686,6 @@ public abstract partial class ByteBuf : IReferenceCounted
          * @throws IndexOutOfBoundsException
          *         if {@code length} is greater than {@code this.readableBytes}
          */
-    public ByteBuf ReadRetainedSlice(int length)
+    public virtual ByteBuf ReadRetainedSlice(int length)
     { CheckReadableBytes(length); ByteBuf result = RetainedSlice(_readerIndex, length); _readerIndex += length; return result; }
 }

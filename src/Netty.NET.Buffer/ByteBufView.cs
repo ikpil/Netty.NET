@@ -71,6 +71,13 @@ internal sealed class ByteBufView : ByteBuf
         }
     }
     public override ByteBuf Unwrap() => _parent;
+    public override ByteBuf Copy(int index, int length)
+    {
+        CheckIndex(index, length);
+        // AbstractUnpooledSlicedByteBuf/DuplicatedByteBuf preserve the parent's
+        // allocation policy and maximum; only the source coordinates are adjusted.
+        return _parent.Copy(_offset + index, length);
+    }
     public override int ReferenceCount => _parent.ReferenceCount;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => _parent.Release(decrement);

@@ -600,13 +600,55 @@ files are unchanged and its suite is not rerun. Inventory remains 159 paths: 134
 pending, 22 in-progress, 2 verified and 1 CLR replacement. Unpooled and its original
 test fixture remain in-progress; remaining factories and fixture scenarios are pending.
 
+## Unreleasable wrappers and shared index state
+
+Unpooled.UnreleasableBuffer now returns a borrowed lifetime-suppressing facade.
+It acquires no reference and does not make the parent immortal: the actual owner
+must stay alive and perform the final release. Retain/Release ignore even invalid
+counts, Touch never reaches the parent, and reported references/accessibility follow
+the actual owner. Nested wrappers remove the redundant layer. Slices, duplicates,
+read-slices and read-only views retain this policy; their retained variants acquire
+no reference, preserving all four original leak rationale comments. Copies keep
+ordinary independent ownership. Parent-specific discard/search, flags, resizing,
+segmented memory and native pin leases are delegated. Original factory/class comments
+are preserved. Explicit BE/LE operations replace Java mutable order/SwappedByteBuf.
+
+Transparent wrappers must share parent indices and marks. ByteBuf now has a private
+shared-index constructor and ref-return access to the existing index owner's fields;
+no separate state allocation or Java-style full forwarding class is introduced.
+Ordinary buffers and derived views keep independent state. View conveniences and
+AsReadOnly allow overrides to preserve unreleasable ownership. This is driven by the
+pinned WrappedByteBuf contract, whose class documentation is retained.
+
+The Java probe exposed an existing derived-copy mismatch: ByteBufView used heap
+storage and its fixed slice maximum. Pinned AbstractUnpooledSlicedByteBuf/DuplicatedByteBuf
+delegate Copy to their parent. The CLR view now validates/translates the source range
+and delegates likewise, preserving native/heap policy and the parent maximum.
+
+67 new cases include both original UnreleaseableByteBufTest scenarios (complete),
+36 original retained-view combinations across heap/native/composite owners, and
+shared indices/marks, readonly permissions, ignored counts/Touch, failed ranges,
+native alias growth/shrink, composite discard/ownership, bulk aliasing and copy
+lifetime/policy. 2700 exact pinned Java/CLR rows cover 50 seeded layouts, three
+storage kinds, writable/readonly sources and nine derived-view forms. They compare
+indices/marks, bytes, maxima, flags, nested-wrapper identity, ordinary copy policy
+and lifetime after the parent dies. 64 further rows match live/dead invalid-count,
+empty and structural-discard behavior (exception types normalized). Evidence:
+artifacts/buffer-unreleasable-validation (ignored) and buffer-unreleasable-*.trx.
+
+Buffer.Tests passes 511/511 in Debug, Release and rebuilt checked Release, with no
+failures/skips. Checked build: zero errors, 51 existing Common warnings. Common files
+are unchanged and its suite is not rerun. All 159 paths remain inventoried: 131
+pending, 24 in-progress, 3 verified and 1 CLR replacement. The dedicated two-test
+fixture is verified; generic wrapper/allocator/NIO/I/O surface remains partial.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text/primitive copying and the shared empty sentinel. Allocator interfaces/metrics,
+single and multiple-input copying, encoded text/primitive copying, unreleasable views and the shared empty sentinel. Allocator interfaces/metrics,
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover unreleasable/fixed read-only composite wrappers and remaining Unpooled factories,
+Next units cover fixed read-only composite wrappers and remaining Unpooled factories,
 further utilities and original tests, followed by allocator/cache and I/O integration. Common
 changes must cite the actual buffer contract that requires them.
