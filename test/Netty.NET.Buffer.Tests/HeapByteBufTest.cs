@@ -384,7 +384,7 @@ public class HeapByteBufTest
             Assert.Equal(8, input[2]);
             Assert.Equal(3, wrapped.WriterIndex);
             Assert.Equal(3, wrapped.MaxCapacity);
-            Assert.Throws<ArgumentNullException>(() => Unpooled.WrappedBuffer(null));
+            Assert.Throws<ArgumentNullException>(() => Unpooled.WrappedBuffer((byte[])null));
         }
         finally { wrapped.Release(); copied.Release(); }
     }

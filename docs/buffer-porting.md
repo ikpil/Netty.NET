@@ -438,13 +438,62 @@ unit. All 159 paths remain inventoried: 135 pending, 21 in-progress, 2 verified 
 1 CLR replacement. CompositeByteBuf and its abstract fixture remain in-progress;
 constructor/wrapper/allocator/array/address/I/O and remaining tests are pending.
 
+## Unpooled single and multiple-input wrapping factories
+
+WrappedBuffer now covers byte-array subregions, a single ByteBuf readable slice,
+and params byte[][]/ByteBuf[] with optional component limits. Single-buffer wrapping
+transfers one existing reference without retaining; unreadable inputs are released
+and return the shared empty sentinel. Indices remain independent and content is
+shared until consolidation. C# zero-input overloads resolve the two params choices;
+null tests use typed casts. Byte order remains explicit BE/LE operations rather than
+introducing JVM swapped-buffer state.
+
+ByteBuf arrays release leading unreadable inputs, then transfer the entire suffix,
+including later empty components. Null in that suffix stops insertion and safely
+releases the unvisited tail. A null before the first readable input throws after
+already skipped inputs have been released, leaving later inputs caller-owned.
+Byte-array lists instead skip every empty array and stop at null. One-item/all-empty
+paths ignore unused component limits as in Java; multi-item paths create composites
+even if only one nonempty input remains. Default limits equal input array length.
+Consolidation runs once after adding the batch. It uses heap storage, matching the
+original factory, and can produce a writable copy of readonly input components.
+Without consolidation, original native flags, permissions and sharing are preserved.
+Internal offset loops reuse composite array preflight without copying arrays or
+adding Java's generic ByteWrapper hierarchy. Original operation comments are kept.
+
+A factory cannot return its partial composite after failure. CLR cleanup releases
+already acquired component references while preserving the original exception;
+preflight failure leaves the untransferred suffix caller-owned. The exact pinned
+Java probe with readable prefix/dead input/tail ends with reference counts 1/0/0,
+retaining the unreachable prefix; C# ends with 0/0/0. Source-read/consolidation failure
+also releases acquired ownership. CLR region null/bounds checks apply even to zero
+length; the original accepts invalid empty ranges through its early-empty shortcut.
+These two adaptations are reproduced and recorded separately from matching rows.
+
+31 new cases cover selected original UnpooledTest wrapping/release/issue-5597
+contracts plus CLR regions, empty/null/overload paths, captured indices, sharing vs
+consolidation, native/readonly/nested/repeated sources, failure cleanup and overflow
+with one-MiB shared backing. 2000 exact pinned Java/CLR runtime rows compare 50 seeded
+layouts, default/1/2/128 limits, heap/direct and writable/readonly sources, byte arrays,
+component counts, capacity/indices, mutation sharing and final references. Eight more
+rows match null/preflight/single/empty/region/overflow ownership, with exception types
+normalized. Evidence: artifacts/buffer-unpooled-wrapping-validation (ignored) and
+buffer-unpooled-wrapping-*.trx. NIO/address/swapped/pooled variants remain pending.
+
+Buffer.Tests passes 297/297 in Debug, Release and rebuilt checked Release, no failures
+or skips. The checked build has zero errors and 51 existing Common warnings. Common
+source/tests/configuration are unchanged and its suite is not rerun. All 159 original
+paths remain inventoried: 134 pending, 22 in-progress, 2 verified, 1 CLR replacement.
+Unpooled and its original test fixture remain in-progress; this implements wrapping
+overloads rather than the whole factory class or fixture.
+
 ## Remaining work
 
-The initial Unpooled factory covers heap allocation and a single wrapped/copied
-byte range, native allocation and the shared empty sentinel. Allocator interfaces/metrics,
+Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
+a single copied byte range and the shared empty sentinel. Allocator interfaces/metrics,
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement multi-buffer Unpooled wrapping factories and remaining composite operations, further utilities and
+Next units implement multiple-input CopiedBuffer factories and remaining composite operations, further utilities and
 broaden original tests, then real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

@@ -19,7 +19,7 @@ using System;
 namespace Netty.NET.Buffer;
 
 // Implemented unpooled factories; allocator policy and remaining wrapping overloads are pending.
-public static class Unpooled
+public static partial class Unpooled
 {
     public static ByteBuf EmptyBuffer { get; } = new EmptyByteBuf();
     /**

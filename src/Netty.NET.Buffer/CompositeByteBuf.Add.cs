@@ -66,12 +66,16 @@ public partial class CompositeByteBuf
     /// failure keeps the successful prefix, including its writer-index increase.
     /// Consolidation runs once after the complete batch.</remarks>
     public CompositeByteBuf AddComponents(int componentIndex, ByteBuf[] buffers, bool increaseWriterIndex = false)
+        => AddComponentsCore(componentIndex, buffers, 0, increaseWriterIndex);
+
+    private CompositeByteBuf AddComponentsCore(int componentIndex, ByteBuf[] buffers, int offset, bool increaseWriterIndex)
     {
         ArgumentNullException.ThrowIfNull(buffers);
         int readableBytes = 0;
         int capacity = Capacity;
-        foreach (ByteBuf buffer in buffers)
+        for (int i = offset; i < buffers.Length; ++i)
         {
+            ByteBuf buffer = buffers[i];
             if (buffer == null) break;
             int length = buffer.ReadableBytes;
             // Check if we would overflow.
@@ -82,14 +86,17 @@ public partial class CompositeByteBuf
         }
         CheckComponentRange(componentIndex, 0);
         // CLR: cyclic references, including discarded tails, cannot transfer ownership.
-        foreach (ByteBuf buffer in buffers)
+        for (int i = offset; i < buffers.Length; ++i)
+        {
+            ByteBuf buffer = buffers[i];
             if (buffer != null && ContainsBuffer(buffer, this))
                 throw new ArgumentException("Component ownership must be acyclic.", nameof(buffers));
+        }
 
         // only set ci after we've shifted so that finally block logic is always correct
         // CLR: List insertion needs no shifted null slots. Track the next unconsumed
         // entry explicitly; AddComponentCore consumes a failing entry itself.
-        int next = 0, addedBytes = 0;
+        int next = offset, addedBytes = 0;
         try
         {
             while (next < buffers.Length)
@@ -110,6 +117,27 @@ public partial class CompositeByteBuf
             if (increaseWriterIndex && addedBytes != 0) WriterIndex += addedBytes;
         }
         ConsolidateIfNeeded();
+        return this;
+    }
+
+    // CLR: factory-only offset entry points avoid copying arrays or replacing
+    // the original array preflight with streaming ownership semantics.
+    internal CompositeByteBuf AddWrappedComponents(ByteBuf[] buffers, int offset)
+        => AddComponentsCore(0, buffers, offset, true);
+
+    internal CompositeByteBuf AddWrappedArrays(byte[][] arrays, int offset)
+    {
+        // No need for consolidation
+        // CLR: the Java ByteWrapper<byte[]> strategy is a direct byte-array loop.
+        // Delay consolidation until every nonempty array has been wrapped.
+        for (int i = offset; i < arrays.Length; ++i)
+        {
+            byte[] array = arrays[i];
+            if (array == null) break;
+            if (array.Length != 0) AddComponentCore(_components.Count, Unpooled.WrappedBuffer(array), false);
+        }
+        ConsolidateIfNeeded();
+        WriterIndex = Capacity;
         return this;
     }
 
