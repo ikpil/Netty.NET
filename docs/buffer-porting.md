@@ -323,6 +323,69 @@ and 1 CLR replacement. Multi-add/flatten, iterator/cached internal component API
 constructor variants, allocator/leak wrappers, array/address and I/O integration,
 and the remaining original composite tests stay pending.
 
+## Composite batch additions and shallow flattening
+
+AddComponents now accepts params/ByteBuf[] and IEnumerable<ByteBuf>, with indexed
+insertion and a C# writer-increase option following the existing buffer-first API.
+Default additions leave the writer index unchanged. Arrays preflight total capacity
+and insertion index before transferring references; failures there leave all inputs
+caller-owned. Streaming insertion instead keeps each successful prefix and consumes
+the failing incoming reference, then safely drains remaining yielded inputs. Null
+ends additions and releases the unvisited tail. Both preserve prefix writer updates
+on later failure, add ordinary empty components, and consolidate once after the batch.
+SafeRelease failure on a dead tail does not prevent later entries being released.
+No temporary collection is built for IEnumerable; its single enumerator is disposed.
+Its own MoveNext/Current/Dispose error behavior governs what can still be yielded and
+released. A ByteBuf also implementing IEnumerable is transferred as a single buffer,
+matching the original dispatch rule instead of enumerating its contents. C# extends
+the indexed public overloads with the same optional writer increase; Java's public
+indexed forms otherwise require the caller to update that index explicitly.
+
+AddFlattenedComponents performs the original shallow operation: an actual composite
+contributes only intersections of its readable range with non-empty components.
+Each original component source is retained with captured coordinates, preserving
+slice-specific ownership, indices and permissions. Nested component composites stay
+nested. Slices/duplicates/read-only wrappers passed as input are ordinary single
+components, including read-only protection; they are not peeled into writable roots.
+An unreadable input is released without adding a component. Successful composite
+transfer releases one input-container reference; separately retained containers stay
+alive. Composite retain/allocation/source-read failures release all new references,
+restore destination layout/indices and leave the input caller-owned. Existing failure
+behavior for an ordinary single component is preserved. A source already separately
+retained and owned by the destination also survives automatic consolidation correctly.
+Cyclic/self-containing input graphs remain rejected without consuming those references.
+JVM WrappedCompositeByteBuf and pooled independent-count hierarchy variants are still
+pending; the native derived/read-only tests do not claim those specific subtype cases.
+
+The pinned Java addFlattenedComponents path lacks a capacity-overflow check. An exact
+runtime probe appends one MiB to a 2146435072-byte virtual composite and obtains
+capacity -2147483648 while consuming the input. The backing allocation is only one
+MiB shared through retained duplicates. CLR preflight rejects this addition before
+retaining components or transferring the input; destination state and caller ownership
+remain unchanged. Array total checking also avoids signed accumulator wrap by checking
+remaining capacity before each addition. Original documentation/licenses and all
+comments from the implemented batch/flatten/consolidation kernels are preserved;
+List storage, enumerator disposal and checked arithmetic adaptations are explained.
+
+The new 31 test cases cover original batch/null/overflow/flatten/offset contracts,
+heap/native ownership, prefix and tail failures, single consolidation observed during
+third-source access, native quota rollback, retained and read-only views, unreadable
+input, a retained source already in the destination, and retry after source repair.
+The prior exact pinned Java runtime is reused: 1202 normal heap/direct batch/flatten
+rows and six preflight/prefix/tail/overflow failure rows match CLR bytes, capacity,
+indices, component counts and source/final reference counts. Normal indexed writer
+increase uses the equivalent Java indexed insertion plus explicit index update.
+Native enumerator disposal, rollback and checked-overflow tests separately cover
+CLR adaptations. Evidence: artifacts/buffer-composite-add-validation (ignored).
+
+Buffer.Tests passes 242/242, zero failed/skipped, in Debug, Release and rebuilt
+checked Release. Common source/tests/configuration are unchanged; the whole or
+focused Common suite is not rerun for this Buffer-only unit. All 159 original paths
+remain in the JSON: 135 pending, 21 in-progress, 2 verified and 1 CLR replacement.
+Both CompositeByteBuf and its original abstract fixture remain in-progress because
+constructor variants, enumeration/internal component APIs, allocator/wrapper/I/O
+integration and the remaining original test contracts are still pending.
+
 ## Remaining work
 
 The initial Unpooled factory covers heap allocation and a single wrapped/copied
@@ -330,6 +393,6 @@ byte range, native allocation and the shared empty sentinel. Allocator interface
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement remaining composite operations, further utilities and
+Next units implement composite enumeration/wrapping and remaining operations, further utilities and
 broaden original tests, then real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

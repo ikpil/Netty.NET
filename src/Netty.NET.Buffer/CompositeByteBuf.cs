@@ -29,7 +29,7 @@ namespace Netty.NET.Buffer;
 /// <remarks>Adding a component transfers one existing reference without retaining it.
 /// Retain before adding if the caller needs independent ownership. Component layout
 /// changes, storage resizing and release must be excluded while borrowing memory.</remarks>
-public class CompositeByteBuf : AbstractReferenceCountedByteBuf
+public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly List<ComponentEntry> _components = new();
     private readonly bool _direct;
@@ -112,6 +112,13 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf
     /// failure leaves the successfully inserted component owned by this buffer.</remarks>
     public CompositeByteBuf AddComponent(int componentIndex, ByteBuf buffer, bool increaseWriterIndex = false)
     {
+        AddComponentCore(componentIndex, buffer, increaseWriterIndex);
+        ConsolidateIfNeeded();
+        return this;
+    }
+
+    private int AddComponentCore(int componentIndex, ByteBuf buffer, bool increaseWriterIndex)
+    {
         ArgumentNullException.ThrowIfNull(buffer);
         // CLR: cycles have no valid reference-counted ownership. Reject them before consuming a reference.
         if (ContainsBuffer(buffer, this)) throw new ArgumentException("Component ownership must be acyclic.", nameof(buffer));
@@ -136,10 +143,9 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf
             wasAdded = true;
             UpdateOffsets();
             if (increaseWriterIndex) WriterIndex += length;
+            return length;
         }
         finally { if (!wasAdded) buffer.Release(); }
-        if (_components.Count > MaxNumComponents) Consolidate();
-        return this;
     }
 
     private static bool ContainsBuffer(ByteBuf buffer, ByteBuf target)
