@@ -249,7 +249,7 @@ CompositeByteBuf owns each original source buffer with its captured readable
 start/length. AddComponent transfers one existing reference without retaining or
 moving source indices; its optional increaseWriterIndex defaults to false. Indexed
 insertion, empty components, checked capacity overflow, original duplicate views,
-fresh captured ComponentSlice views, borrowed Decompose slices, component/offset
+captured ComponentSlice views (cached by the later enumeration unit), borrowed Decompose slices, component/offset
 mapping, removal and final release are implemented. Retain before adding when the
 caller needs separate ownership. Validation failure releases an incoming reference;
 null/cyclic ownership is rejected before transfer. Explicit removal leaves indices
@@ -386,6 +386,58 @@ Both CompositeByteBuf and its original abstract fixture remain in-progress becau
 constructor variants, enumeration/internal component APIs, allocator/wrapper/I/O
 integration and the remaining original test contracts are still pending.
 
+## Composite enumeration and cached component views
+
+CompositeByteBuf implements IEnumerable<ByteBuf> and the nongeneric enumeration
+interface. Enumeration includes empty components and returns borrowed cached
+component views without retaining or releasing them. It checks accessibility when
+created. A nonempty enumerator compares the component count captured at creation,
+matching Java: additions/removals/consolidation that change count invalidate it,
+while same-count replacements can be observed. An empty enumerator remains empty
+after additions or release. This is not thread synchronization. CLR MoveNext returns
+false on exhaustion, Current rejects invalid positioning, Reset is unsupported,
+and Dispose ends enumeration without releasing components. Java exception classes
+map to InvalidOperationException/NotSupportedException and CLR bounds errors.
+
+InternalComponent/InternalComponentAtOffset and ComponentSlice now share the
+original per-component slice cache. This corrects the earlier fresh-slice behavior:
+repeated access and enumeration return the same object and do not reset indices.
+An ordinary full-source component reuses its source, including the empty sentinel;
+partial components lazily slice captured coordinates. Flattened entries start with
+no cached view even for a full source, matching the original flatten constructor.
+Component/ComponentAtOffset still return fresh full-source duplicates. Cached
+indices can affect later view access; original undefined-behavior documentation
+for internal index mutation is retained. Retain before keeping any borrowed view
+past removal/consolidation/release. Original readonly permissions are preserved.
+
+Capacity shrink and partial discard replace an existing cache with a derived slice,
+preserving old view coordinates and reference ownership. CLR prepares that view
+before publishing new coordinates. An unmaterialized cache uses updated captured
+coordinates; offset shifts preserve surviving cache identities. Free clears cache
+references and releases only the original transferred ownership. Failed slice
+materialization does not poison the cache and can be retried after source repair.
+All original documentation and rationale for these operations is preserved.
+
+The 24 new cases cover selected original iterator/internal-view contracts and the
+flatten/componentSlice retain-remove-add-back regression on heap/native storage,
+plus CLR protocol, readonly nested views, retained/borrowed ownership, cache trim
+and retry cases. The reused exact pinned Java source runtime (Unsafe disabled)
+matches 1603 Java/CLR rows: 50 seeded layouts on heap/direct, writable/readonly,
+full/partial sources and ordinary/flattened composition, before shrink, after shrink
+and discard, and after release; three rows cover empty/count-change/same-count
+iteration. The comparison checks cache/source/iterator identities, bytes, indices,
+offset lookup, component counts and source references. CLR enumerator lifecycle
+is verified separately. Evidence: artifacts/buffer-composite-enumeration-validation
+(ignored); buffer-composite-enumeration-*.trx. WrappedCompositeByteBuf and pooled
+independent-reference-count variants are not claimed by these tests.
+
+Buffer.Tests passes 266/266, no failures/skips, in Debug, Release and rebuilt checked
+Release. The checked build has zero errors and 51 existing Common warnings. Common
+source/tests/configuration are unchanged; its suite is not rerun for this Buffer-only
+unit. All 159 paths remain inventoried: 135 pending, 21 in-progress, 2 verified and
+1 CLR replacement. CompositeByteBuf and its abstract fixture remain in-progress;
+constructor/wrapper/allocator/array/address/I/O and remaining tests are pending.
+
 ## Remaining work
 
 The initial Unpooled factory covers heap allocation and a single wrapped/copied
@@ -393,6 +445,6 @@ byte range, native allocation and the shared empty sentinel. Allocator interface
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement composite enumeration/wrapping and remaining operations, further utilities and
+Next units implement multi-buffer Unpooled wrapping factories and remaining composite operations, further utilities and
 broaden original tests, then real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

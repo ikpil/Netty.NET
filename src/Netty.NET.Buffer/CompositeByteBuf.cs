@@ -35,7 +35,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     private readonly bool _direct;
     private readonly NativeMemoryAllocator _allocator;
 
-    // CLR: List replaces the Java component-array growth/iterator machinery.
+    // CLR: List replaces Java component-array growth.
     // The allocation policy affects padding, copies and consolidation. IsDirect
     // describes the actual components, including nested composites.
     public CompositeByteBuf(int maxNumComponents = 16, bool direct = false, NativeMemoryAllocator allocator = null)
@@ -137,7 +137,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             // We don't need to slice later to expose the internal component if the readable range
             // is already the entire buffer
             // CLR: preserve the original rationale, but keep source views and captured
-            // coordinates. There is no unchecked hierarchy to unwrap or cached slice.
+            // coordinates instead of unwrapping into an unchecked hierarchy.
             var component = new ComponentEntry(buffer, buffer.ReaderIndex, length);
             _components.Insert(componentIndex, component);
             wasAdded = true;
@@ -218,11 +218,14 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
      * @param cIndex the index for which the sliced {@link ByteBuf} should be returned
      * @return a sliced {@link ByteBuf} representing the component's view
      */
+    /// <remarks>Returns the shared cached borrowed view, as in Netty. Repeated
+    /// calls do not reset its indices. A whole-source component can return the
+    /// source itself; retain the result before taking independent ownership.</remarks>
     public ByteBuf ComponentSlice(int componentIndex)
     {
         CheckComponentRange(componentIndex, 1);
         ComponentEntry component = _components[componentIndex];
-        return component.Source.Slice(component.SourceIndex, component.Length);
+        return component.Slice();
     }
     /**
      * Return the {@link ByteBuf} on the specified index
@@ -282,7 +285,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
                 if (bytesToTrim < component.Length)
                 {
                     // Trim the last component
-                    component.Length -= bytesToTrim;
+                    component.Trim(0, component.Length - bytesToTrim);
                     break;
                 }
                 bytesToTrim -= component.Length;
@@ -374,10 +377,9 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         // Replace the first readable component with a new slice.
         // We must replace the cached slice with a derived one to ensure that
         // it can later be released properly in the case of PooledSlicedByteBuf.
-        // CLR: captured source coordinates avoid allocating/caching a slice.
+        // CLR: update captured coordinates and replace any cached borrowed view together.
         int trimmedBytes = readerIndex - component.Offset;
-        component.SourceIndex += trimmedBytes;
-        component.Length -= trimmedBytes;
+        component.Trim(trimmedBytes, component.Length - trimmedBytes);
         RemoveComponents(0, first);
         // Update indexes and markers.
         SetIndex(0, WriterIndex - readerIndex); AdjustMarkers(readerIndex);
@@ -529,11 +531,28 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         internal int SourceIndex; // captured readable start within the original source
         internal int Offset; // offset of this component within this CompositeByteBuf
         internal int Length;
+        private ByteBuf _slice;
         internal int EndOffset => Offset + Length;
-        internal ComponentEntry(ByteBuf source, int sourceIndex, int length)
-        { Source = source; SourceIndex = sourceIndex; Length = length; }
+        internal ComponentEntry(ByteBuf source, int sourceIndex, int length, bool reuseWholeSource = true)
+        {
+            Source = source; SourceIndex = sourceIndex; Length = length;
+            // We don't need to slice later to expose the internal component if the readable range
+            // is already the entire buffer
+            if (reuseWholeSource && sourceIndex == 0 && length == source.Capacity) _slice = source;
+        }
+        internal ByteBuf Slice() => _slice ??= Source.Slice(SourceIndex, Length);
+        internal void Trim(int start, int length)
+        {
+            // We must replace the cached slice with a derived one to ensure that
+            // it can later be released properly in the case of PooledSlicedByteBuf.
+            ByteBuf replacement = _slice?.Slice(start, length);
+            SourceIndex += start;
+            Length = length;
+            _slice = replacement;
+        }
         internal void Free()
         {
+            _slice = null;
             // Release the original buffer since it may have a different
             // refcount to the unwrapped buf (e.g. if PooledSlicedByteBuf)
             Source.Release();

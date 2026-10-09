@@ -232,7 +232,7 @@ public partial class CompositeByteBuf
                 if (count > 0) // skip empty components
                 {
                     var addition = new ComponentEntry(component.Source,
-                        component.SourceIndex + fromIndex - component.Offset, count);
+                        component.SourceIndex + fromIndex - component.Offset, count, reuseWholeSource: false);
                     // Retain the original source, not an unwrapped parent with possibly different ownership.
                     component.Source.Retain();
                     additions.Add(addition); // capacity is reserved before any retain
