@@ -260,10 +260,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufInputStream.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBufInputStream.cs"
+      ],
+      "evidence": [
+        "Input stream unit: Buffer.Tests 606/606 passed in Debug, Release and rebuilt checked Release, no failures/skips; 56 new cases. 800 pinned Java/CLR range/primitive/mark/skip/line/ownership rows and 1336 modified-UTF framing/decoding/error rows match after explicit bulk-EOF and exception-type normalization. Independent encoding covers all 65536 UTF-16 code units and the maximum 65535-byte payload. All original ByteBufInputStream comments preserved. docs/buffer-porting.md; artifacts/buffer-input-stream-validation; buffer-input-stream-*.trx. Input adapter is reviewed; output and original combined stream fixture remain incomplete."
+      ],
+      "adaptation": "All original input operations mapped to a sealed nonseekable System.IO.Stream: captured start/end, shared reader and buffer marks, Available/BytesRead diagnostics, byte/array/Span reads, Mark/Reset and bounded Skip/SkipBytes, typed binary reads, atomic ReadFully, Latin1-style byte lines with CR/LF/CRLF, and length-prefixed Java modified UTF-8. Original comments preserved verbatim. Numeric helper names use CLR widths (ReadInt16/ReadUInt16/ReadInt32/ReadInt64/ReadSingle/ReadSByte); ReadByte is the standard Stream octet-or-minus-one API, while ReadUnsignedByte is the throwing required-byte operation. Explicit BE wire order replaces Java mutable underlying order. Modified UTF is deliberately not Encoding.UTF8/BinaryReader.ReadString: raw NUL, overlong forms and individual surrogate units follow DataInputStream, malformed payloads throw InvalidDataException after framed bytes are consumed, and truncation throws EndOfStreamException with original index advancement. Default disposal borrows; releaseOnDispose returns one transferred reference without retaining, exactly once, including invalid-length construction cleanup. CLR adaptations: bulk EOF/empty reads return zero; argument checks apply at EOF; all disposed adapters reject operations even when borrowed; dead construction and reader escape outside captured range fail explicitly. BytesRead remains diagnostic after disposal. Memory/array ReadAsync honor cancellation before consuming and complete from synchronous memory reads; inherited CopyTo/ReadExactly/BinaryReader integration uses standard Stream contracts. CanSeek/CanWrite are false; no fake seeking or writer interface. Standard BinaryReader chooses its own little-endian numeric policy. Caller excludes concurrent use and external cursor/content-discard changes; appending does not extend captured end.",
+      "comments": {
+        "upstreamCount": 11,
+        "preservedCount": 11,
+        "missingCount": 0,
+        "coverage": "entire file"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufOutputStream.java",
@@ -1249,10 +1259,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ByteBufStreamTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/ByteBufInputStreamTest.cs"
+      ],
+      "evidence": [
+        "Input stream unit: Buffer.Tests 606/606 passed in Debug, Release and rebuilt checked Release, no failures/skips; 56 new cases. 800 pinned Java/CLR range/primitive/mark/skip/line/ownership rows and 1336 modified-UTF framing/decoding/error rows match after explicit bulk-EOF and exception-type normalization. Independent encoding covers all 65536 UTF-16 code units and the maximum 65535-byte payload. All original ByteBufInputStream comments preserved. docs/buffer-porting.md; artifacts/buffer-input-stream-validation; buffer-input-stream-*.trx. Input adapter is reviewed; output and original combined stream fixture remain incomplete."
+      ],
+      "adaptation": "Input half of testAll, testSkipNegativeLength, testReadLine, testRead, testReadLineLengthRespected1/2 and testReadByteLengthRespected is mapped, with standard CLR EOF/disposal changes explicit. The original closed-stream readLine assertion is replaced by the active input EOF check because disposed CLR streams reject reads. 56 new executed cases cover heap/native/mutable/fixed composites and readonly views, bounded indices/marks/skip, typed/fully EOF atomicity, line boundaries, writer append/growth, ownership/invalid construction, repeated Dispose/DisposeAsync, argument validation, escaped external cursor, modified UTF/NUL/overlong/surrogate/malformed/truncated data, canceled reads, CopyToAsync and BinaryReader. Test expected isolated surrogates are expressed as UTF-16 code-unit hex because attribute serialization changes unpaired surrogate strings. Original fixture comments are preserved for ported scenarios only; output/pooled scenarios and whole combined fixture remain pending. No skipped tests/placeholders.",
+      "comments": {
+        "upstreamCount": 17,
+        "preservedCount": 3,
+        "missingCount": 14,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ByteBufUtilTest.java",

@@ -679,13 +679,49 @@ warnings. Common is unchanged and its suite was not rerun. Inventory: 159 paths,
 remain in-progress: allocator, pooled/channel/stream/file tests and raw address/array
 consumer mapping are still incomplete.
 
+## Input stream adapter
+
+ByteBufInputStream is a nonseekable System.IO.Stream over the original captured
+readable range. Reads advance the supplied buffer's reader; Mark/Reset share its
+mark, appending bytes never extends the captured end, and Skip is bounded. Default
+disposal borrows; releaseOnDispose returns one existing reference exactly once,
+including original invalid-length construction cleanup. BytesRead stays diagnostic
+after disposal. All original source comments are preserved.
+
+All input operations are mapped. Typed helpers use CLR width names and explicit BE
+wire order; ReadByte is the Stream octet-or-minus-one operation and ReadUnsignedByte
+is the required-byte operation. ReadFully checks the whole field before consuming; inherited Stream.ReadExactly keeps
+its standard partial-read-on-EOF contract.
+ReadLine maps bytes to UTF-16 units and respects CR/LF/CRLF within the captured end.
+ReadUtf preserves Java DataInput modified UTF-8 framing, NUL/overlong/surrogate rules,
+full-payload consumption on malformed data and prefix-only consumption on truncation.
+Encoding.UTF8 and BinaryReader.ReadString have different wire contracts.
+
+CLR bulk reads return zero at EOF/empty input and validate arguments even at EOF.
+Disposed adapters reject access even when borrowing; dead construction and external
+reader escape fail explicitly. Memory/array async reads honor cancellation without
+consuming; CopyToAsync and BinaryReader use the ordinary Stream interface. BinaryReader
+selects its own little-endian policy. No fake seeking or writable interface is added.
+Concurrent use, external cursor changes and content discard remain caller exclusions.
+
+56 tests cover original input scenarios and CLR integration across heap/native and
+mutable/fixed composite storage. 800 pinned Java/CLR range/primitive/mark/line/lifetime
+rows and 1336 modified UTF rows match after bulk-EOF and exception normalization.
+An independent encoder covers all 65536 UTF-16 code units and a 65535-byte payload.
+Evidence: artifacts/buffer-input-stream-validation (ignored), buffer-input-stream-*.trx.
+Debug, Release and rebuilt checked Release pass 606/606, no failures/skips. Checked
+build has zero errors and 51 existing Common warnings; Common is unchanged and its
+suite was not rerun. Inventory stays 159: 127 pending, 27 in-progress, 4 verified,
+1 CLR replacement. Input source is verified; the combined original stream fixture
+remains in-progress because output/pooled scenarios are still unported.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Allocator interfaces/metrics,
-external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
+external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, output streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover remaining Unpooled factories, utilities and original tests,
-followed by allocator/cache and I/O integration. Common
+Next units cover the output stream adapter and remaining byte-transfer I/O,
+Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
