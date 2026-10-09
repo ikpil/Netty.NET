@@ -964,7 +964,46 @@ net10.0 Debug, Release and rebuilt checked Release pass 866/866, no failures/ski
 Checked build: zero errors and 51 existing Common warnings; no new Buffer/test
 warnings. Common is unchanged and its suite was not rerun. Inventory remains 159:
 126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Original sources/fixtures
-remain partial; text validation and broader utility/allocator APIs are still pending.
+remain partial; broader utility/allocator APIs are still pending.
+
+## Text validation
+
+Both ByteBufUtil.IsText overloads use native Encoding. Default input is the readable
+range; explicit ranges may precede ReaderIndex but must end at WriterIndex, using
+subtraction bounds checks. The original range comment says readableBytes, while
+its implementation actually bounds the end by WriterIndex; CLR remarks clarify this.
+
+Canonical UTF8/ASCII use BCL Utf8.IsValid/Ascii.IsValid. Segmented UTF8 and other
+encodings use a fresh Decoder, strict ExceptionFallback and fixed 256-char stack
+scratch, retaining decoder state across segments and flushing once at the end.
+There is no whole-buffer flattening or decoded string allocation. Caller Encoding
+and fallback stay unchanged; custom same-code-page encodings keep their own decoder.
+Only malformed/unmappable decoding returns false; other decoder errors propagate,
+and a nonprogressing custom decoder throws. Original API/helper/RFC and algorithm
+comments remain with the CLR replacement rationale. No Java ByteProcessor facade is needed.
+
+Null, writer-overrun and released ranges are checked, including empty requests.
+Four pinned edge rows show Java returning true for released empty UTF8 on heap,
+native, mutable and fixed composites; CLR consistently rejects these accesses.
+Indices, marks and reference counts stay unchanged. Keep bytes/layout/lifetime
+stable during validation; independent local decoders support concurrent readers.
+
+47 tests retain all original IsText vectors, bounds and concurrent-use scenarios,
+adding seven storage/view layouts, scalar/overlong/surrogate/truncation rules,
+every component split, UTF16/32 flush, large inputs, strict fallback isolation,
+custom decoder/failure/nonprogress contracts and lifetime/index guards.
+204544 Java rows match per Debug/Release for UTF8, ASCII, UTF16LE/BE, Latin1 and
+UTF32LE/BE, with four range masks and index/mark/reference checks per row. The
+inputs include all 256 one-byte and 65536 two-byte combinations on heap/mutable/fixed
+storage, plus 1024 mixed random/encoded/truncated cases across seven layouts.
+Independent Python strict decoders agree without normalization; 24 edge rows
+record the four adaptations. This does not claim equivalence for every JVM charset.
+Evidence: artifacts/buffer-text-validation (ignored), buffer-text-validation-*.trx.
+net10.0 Debug, Release and rebuilt checked Release pass 913/913, no failures/skips.
+Checked build: zero errors and 51 existing Common warnings; no new Buffer/test
+warnings. Common is unchanged and its suite was not rerun. Inventory remains 159:
+126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Sources/fixture remain
+partial; remaining byte utilities, allocator/cache integration and broader APIs are pending.
 
 ## Remaining work
 
@@ -973,6 +1012,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover ByteBufUtil text validation/remaining byte utilities and I/O consumer mapping,
+Next units cover ByteBufUtil remaining byte utilities and I/O consumer mapping,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
