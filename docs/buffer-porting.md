@@ -1143,6 +1143,56 @@ policy; the other five allocator source/test entries remain in-progress. Allocat
 global default selection, pooled/adaptive allocators and original remaining test
 scenarios are pending; creating an allocation interface does not complete them.
 
+## Allocator-returning utilities
+
+ByteBufUtil.ReadBytes, allocator WriteUtf8/WriteAscii and both EncodeString forms
+now return buffers from IByteBufAllocator, retaining all five original API comments
+and both allocation comments. UTF-16 input uses ReadOnlySpan<char>; AsciiString has
+its own offset-aware raw-octet overloads. The returned reference belongs to the
+caller. Every failure after allocation releases the new buffer, including native
+storage, read bounds/permission failure and encoding exceptions after partial writes.
+Pinned Java UTF8/ASCII allocation helpers omit this cleanup; four edge rows expose
+their surviving reference and verify the corrected CLR release.
+
+ReadBytes copies exactly length and advances source ReaderIndex/result WriterIndex
+by length, preserving source WriterIndex, marks and reference count. Java instead
+reads the result's writable capacity; two custom overallocating-factory edge rows
+show the CLR correction prevents overread or a spurious short-source failure.
+Null and negative arguments fail before allocation, while readable/lifetime bounds
+are checked by the actual transfer even for empty reads. Empty results are ordinary
+owned zero-capacity buffers with a growable maximum, rather than the shared sentinel.
+
+UTF8 reserves three bytes per UTF-16 code unit and uses the existing Netty malformed
+surrogate mapping; ASCII uses its one-octet-per-code-unit mapping. Raw AsciiString
+copies every octet unchanged. Its allocator UTF8 overload retains the original
+initial length allocation followed by the public writer's 3x reservation and growth.
+EncodeString honors the caller's Encoding/fallback without a preamble. Unlike Java
+maxBytesPerChar sizing, capacity is the exact encoded byte count plus checked,
+nonnegative extraCapacity. ReadOnlySpan replaces the remaining CharBuffer range
+without consuming a mutable cursor. Extra capacity stays unwritten for a suffix;
+strict fallback and size overflow fail before allocation. Source content and Encoding
+configuration must remain stable while sizing/writing. Existing ByteBuf writers
+support heap/native/segmented results; Unpooled keeps its heap-only encoding policy.
+
+47 new cases exercise six source layouts, three destination layouts, independent
+copies/indices/marks, zero/dead/read-only cases, overflow/null/allocation failure,
+native quota failure/cleanup, caller fallback, partial encoding failure, and actual
+codec-base StringEncoder/LineEncoder span-range and separator-reservation consumers.
+The original ByteBufUtilTest has no direct readBytes/encodeString fixtures; these
+are additional Buffer contract tests, not a whole original fixture completion claim.
+6708 pinned Java/CLR byte/index/ownership rows agree per Debug/Release and independent
+models: 524 UTF16 inputs (including malformed pairs), 129 raw inputs, 896 valid text
+inputs across seven encodings, and readable-bound transfers. 5396 rows match fully;
+1312 differ only by documented exact encoding capacity. Nine edge rows record seven
+adaptations (four releases, two exact-length reads and early null validation).
+Evidence: artifacts/buffer-allocated-util-validation (ignored), buffer-allocated-util-*.trx.
+
+net10.0 Debug, Release and rebuilt checked Release pass 1076/1076, no failures/skips.
+Checked build: zero errors and 51 existing Common warnings; no Buffer/test warnings.
+Common is unchanged and its suite was not rerun. Inventory remains 159: 121 pending,
+31 in-progress, 6 verified, 1 CLR replacement. ByteBufUtil remains in-progress;
+remaining scalar/I/O/cache/leak utilities and allocator metrics/pooling are pending.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -1150,6 +1200,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover allocator-returning ByteBufUtil consumers and allocator metrics,
+Next units cover allocator metrics and remaining ByteBufUtil consumers,
 then remaining factories/utilities/original tests, leak wrappers and pooled/adaptive allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
