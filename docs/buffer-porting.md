@@ -841,13 +841,57 @@ warnings. Common is unchanged; its suite was not rerun. Inventory remains 159:
 126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Original source/fixtures
 remain partial; channel/positioned-file APIs still need a separate consumer mapping.
 
+## Positioned file transfers
+
+ByteBuf.Files maps the four original FileChannel overloads to borrowed SafeFileHandle
+and System.IO.RandomAccess, with four CLR ValueTask/CancellationToken counterparts.
+The original four API comments and both original test position comments are retained.
+File position never changes. Absolute operations preserve buffer indices; relative
+output advances reader after successful write, and relative input advances writer
+by the actual count after a successful read/commit.
+
+CLR RandomAccess.Write/WriteAsync completes the requested range or throws, so
+successful output returns length rather than exposing Java's possible partial write
+count. Input performs one bounded read on every backing kind, returns short reads
+immediately and reports EOF as 0. Closed handles throw instead of Java input's -1;
+six original edge rows show even Java's zero-length closed behavior varies by layout.
+Null/closed/invalid handles, negative ranges and signed file-end overflow are checked
+before growth/I/O, including empty requests. A valid empty request skips I/O.
+
+Pooled managed staging snapshots output and commits successful input; temporary
+memory scales with requested length plus pool rounding. No native borrow crosses
+await. Buffers/handles are borrowed through completion; exclude concurrent buffer
+mutation/release and external active-cursor changes. Failed reads do not publish
+staging, but composite commit can change a writable prefix before failure. Failed
+writes may partially modify the file while leaving reader unchanged. Relative input
+reserves requested space before actual I/O and keeps growth on EOF/error. Async
+validation precedes cancellation; pre-cancellation prevents growth/I/O, including
+empty operations. Cancellation remains cooperative, with successful I/O results
+committed and thrown cancellation leaving active indices unchanged.
+
+38 tests include the two original file-channel roundtrips across heap/native/composite
+and sync/async modes, file position plus next sequential read, EOF/large offsets,
+range/overflow/handle/permission failures, pre-cancellation, readonly/fixed/empty/dead
+buffers, views/shared indices, partial composite commit, and 128 concurrent independent
+views writing disjoint offsets. 1200 pinned Java byte/index/count/file-position/content
+rows match per Debug/Release and sync/async mode (4800 CLR comparisons), with independent
+byte checks and EOF normalization. Six closed-input edge rows record adaptations.
+Real-file tests do not claim deterministic mid-I/O cancellation, injected kernel
+partial-write coverage or Java async equivalence. Evidence:
+artifacts/buffer-file-transfer-validation (ignored), buffer-file-transfer-*.trx.
+net10.0 Debug, Release and rebuilt checked Release each pass 779/779 without failures
+or skips. Checked build: zero errors and 51 existing Common warnings; no new Buffer/test
+warnings. Common is unchanged; its suite was not rerun. Inventory remains 159:
+126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Sources/fixtures remain
+partial; gathering/scattering channels still require consumer-based CLR mapping.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Allocator interfaces/metrics,
-external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, byte-transfer/native I/O,
+external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover positioned-file I/O and remaining byte-transfer consumer mapping,
+Next units cover ByteBufUtil hex-dump/byte utilities and remaining I/O consumer mapping,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
