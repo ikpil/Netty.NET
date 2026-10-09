@@ -642,13 +642,50 @@ are unchanged and its suite is not rerun. All 159 paths remain inventoried: 131
 pending, 24 in-progress, 3 verified and 1 CLR replacement. The dedicated two-test
 fixture is verified; generic wrapper/allocator/NIO/I/O surface remains partial.
 
+## Fixed read-only composites
+
+Unpooled.WrappedUnmodifiableBuffer now preserves the original zero/single/multiple
+input split: shared Empty, borrowed AsReadOnly with original indices, or an internal
+fixed-layout read-only owner. Multiple inputs transfer one existing reference each,
+including empties; repeated owners require one reference per occurrence. No component
+slices or content copies are created. As in pinned Java, component lengths come from
+ReadableBytes but map from absolute index zero: use input.Slice() to select a nonzero
+readable range. Storage/layout must remain stable. Derived views share readonly
+ownership; copies are independent writable heap buffers with int.MaxValue maximum.
+Copy follows the current CLR heap default. The Java oracle disables Unsafe and uses
+the same heap default; upstream allocation can prefer direct storage on other JVMs.
+Allocator policy abstraction remains pending.
+Bounded ReadOnlyMemory/ReadOnlySequence expose contiguous/segmented data. Recursive
+native leases keep borrowed spans alive through outer composite consolidation.
+
+Runtime evidence identifies two original flag defects: FixedCompositeByteBuf inherits
+IsReadOnly=false despite rejecting setters, and its IsDirect loop ignores the first
+input. CLR reports readonly and checks all inputs. Descriptors snapshot the caller's
+array/layout instead of lazily replacing its entries; null/dead/overflow preflight
+consumes no references, and single-byte reads retain capacity guards. All original
+FixedCompositeByteBuf comments and the modern factory comment are preserved. Explicit
+BE/LE operations replace mutable Java order; the deprecated factory alias is omitted.
+
+39 new tests cover original portable setters/copy/segmentation plus boundary words,
+heap/native/nested and empty layouts, arity/indices, snapshots/shared data, retained
+ownership/copies, preflight failure/overflow, bounds and native alias consolidation.
+1080 pinned Java/CLR contract rows match, with independently computed bytes. The 1080
+readonly flag and 240 direct flag corrections are recorded separately, not counted
+as exact flag matches. Evidence: artifacts/buffer-fixed-composite-validation (ignored)
+and buffer-fixed-composite-*.trx. Debug, Release and rebuilt checked Release each
+pass 550/550 tests, no failures/skips. Checked build: zero errors, 51 existing Common
+warnings. Common is unchanged and its suite was not rerun. Inventory: 159 paths,
+129 pending, 26 in-progress, 3 verified, 1 CLR replacement. Source and original fixture
+remain in-progress: allocator, pooled/channel/stream/file tests and raw address/array
+consumer mapping are still incomplete.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text/primitive copying, unreleasable views and the shared empty sentinel. Allocator interfaces/metrics,
+single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Allocator interfaces/metrics,
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover fixed read-only composite wrappers and remaining Unpooled factories,
-further utilities and original tests, followed by allocator/cache and I/O integration. Common
+Next units cover remaining Unpooled factories, utilities and original tests,
+followed by allocator/cache and I/O integration. Common
 changes must cite the actual buffer contract that requires them.
