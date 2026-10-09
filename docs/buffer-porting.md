@@ -885,6 +885,47 @@ warnings. Common is unchanged; its suite was not rerun. Inventory remains 159:
 126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Sources/fixtures remain
 partial; gathering/scattering channels still require consumer-based CLR mapping.
 
+## Hex conversion and dumps
+
+ByteBufUtil now covers all 11 original public hex/pretty/decode operations, with
+native byte[]/string and additional ReadOnlySpan<byte>/ReadOnlySpan<char> inputs.
+HexDump returns lowercase ASCII pairs: contiguous ranges use Convert.ToHexStringLower,
+and segmented buffers write directly into the final string through ReadOnlySequence.
+Strict decoding accepts ASCII 0..9/a..f/A..F only, rejects odd lengths, whitespace,
+prefixes/separators and Unicode lookalikes, and reuses Common.StringUtil nibble
+decoding without new facade types or Common changes.
+
+PrettyHexDump/AppendPrettyHexDump retain exact header, 16-byte rows, spacing,
+printable ASCII 32..126, period substitution, partial-row padding, append semantics
+and StringUtil.NEWLINE, without a trailing newline. Formatting copies at most 16
+bytes to stack per row. BCL conversion, computed padding and existing Common byte
+conversion replace Java HexUtil lookup initialization. All selected original API
+and HexUtil implementation comments remain with explicit CLR rationale.
+The pinned row-prefix quirk is preserved for output compatibility: rows below 4096
+are labeled relative to the dump start, while later rows include the absolute buffer
+offset. Tests and large Java probes cover both zero and nonzero offsets at 64KiB.
+
+Default ranges use readable bytes; explicit ranges are absolute and may extend past
+WriterIndex to Capacity. Formatting changes no indices, marks or reference counts.
+Null, empty, released and overflowing ranges are checked consistently before output,
+including builder preflight; seven Java edge rows record the original empty-request
+bypasses deliberately rejected in CLR. Hex output size uses checked arithmetic.
+Buffer contents/lifetime must stay stable during formatting. No Java table/JIT
+performance equivalence is claimed.
+
+42 tests include all original hex decoding scenarios and suffix-loop comment, all
+octets, uppercase/lowercase, array/string/span ranges, seven backing/view layouts,
+exact formatting/ASCII/row widths, empty output and failure guards. 65988 pinned
+Java/CLR rows match in each Debug/Release: 448 formatting/roundtrip rows, four large
+dumps and all 65536 UTF-16 nibble inputs (CLR string and span paths). Every row also
+matches an independent hex/format/ASCII model; native newlines match without
+normalization. Evidence: artifacts/buffer-hex-validation (ignored), buffer-hex-*.trx.
+net10.0 Debug, Release and rebuilt checked Release pass 821/821, no failures/skips.
+Checked build: zero errors and 51 existing Common warnings; no new Buffer/test
+warnings. Common is unchanged and its suite was not rerun. Inventory remains 159:
+126 pending, 27 in-progress, 5 verified, 1 CLR replacement. ByteBufUtil and its
+original fixture remain partial; comparison/hash and broader utilities are pending.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -892,6 +933,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover ByteBufUtil hex-dump/byte utilities and remaining I/O consumer mapping,
+Next units cover ByteBufUtil comparison/hash and remaining I/O consumer mapping,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

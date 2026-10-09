@@ -316,17 +316,19 @@
       "kind": "source",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Buffer/ByteBufUtil.cs"
+        "src/Netty.NET.Buffer/ByteBufUtil.cs",
+        "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs"
       ],
       "evidence": [
         "Selected original UTF-8/ASCII and search scenarios in ByteBufTextSearchTest. Exact pinned scalar writer/count methods executed against 5000 input rows for both CLR storage backends; artifacts/buffer-text-search-validation.",
-        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only."
+        "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only.",
+        "Hex unit: 42 new tests; net10.0 Debug/Release/rebuilt checked Release 821/821, no failures/skips. 65988 pinned Java/CLR rows match per Debug/Release (448 formatting/roundtrip, four large dumps, all 65536 UTF-16 nibble inputs), also checked independently; seven edge rows document stricter empty/null/dead/range guards. All selected hex API/HexUtil comments retained. docs/buffer-porting.md#hex-conversion-and-dumps; artifacts/buffer-hex-validation (ignored); buffer-hex-*.trx. Whole source/fixture remains partial."
       ],
-      "adaptation": "Only directional/subsequence search, UTF-8 maximum/exact length, UTF-8 writes/reservations and ASCII writes are implemented. Span.IndexOf/LastIndexOf replace Java SWAR/Two-Way internals. UTF-8 malformed-surrogate and ASCII octet rules, AsciiString raw bytes and public writeUtf8 worst-case reservation are preserved. Checked sizes and undersized reservation rejection are CLR safety adaptations. Slice a ReadOnlySpan<char> instead of duplicating start/end overloads. Allocator-returning overloads, hex/hash/compare/validation/I/O and other utilities remain pending. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending.",
+      "adaptation": "Only directional/subsequence search, UTF-8 maximum/exact length, UTF-8 writes/reservations and ASCII writes are implemented. Span.IndexOf/LastIndexOf replace Java SWAR/Two-Way internals. UTF-8 malformed-surrogate and ASCII octet rules, AsciiString raw bytes and public writeUtf8 worst-case reservation are preserved. Checked sizes and undersized reservation rejection are CLR safety adaptations. Slice a ReadOnlySpan<char> instead of duplicating start/end overloads. Allocator-returning overloads, hash/compare/validation/I/O and other utilities remain pending. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending. Hex update maps all 11 original public hex/pretty/decode operations to native byte[]/string APIs, with ReadOnlySpan<byte>/ReadOnlySpan<char> forms. Contiguous hex uses Convert.ToHexStringLower; segmented formatting walks ReadOnlySequence directly into the final string. Strict ASCII hex decoding reuses Common.StringUtil nibble decoding; no ICharSequence facade, substring copy or Common modification is needed. Pretty dumps copy at most 16 bytes to stack per row, preserve headers, lowercase octets, ASCII printable 32..126, padding, no trailing newline, append behavior and StringUtil.NEWLINE. Computed padding and existing Common byte conversion replace Java HexUtil lookup initialization; its original comments remain. The pinned cached-prefix quirk is preserved: row labels below row 4096 are relative to the dump start, while later labels use absolute buffer indices. Absolute ranges may extend past WriterIndex to Capacity; default ranges use readable bytes. Indices/marks/refcounts stay unchanged. Null/empty/dead/overflowing ranges are consistently checked before output, deliberately rejecting Java zero-length bypasses; hex output size uses checked arithmetic. Concurrent mutation/release must be excluded during formatting. Source and remaining utility operations remain partial.",
       "comments": {
         "upstreamCount": 165,
-        "preservedCount": 27,
-        "missingCount": 138,
+        "preservedCount": 51,
+        "missingCount": 114,
         "coverage": "partial source; remaining operations not ported"
       }
     },
@@ -1323,16 +1325,18 @@
       "kind": "test",
       "status": "in-progress",
       "implementation": [
-        "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs"
       ],
       "evidence": [
-        "UTF-8 valid/malformed surrogate rows, ASCII/AsciiString mapping, worst-case/exact reservations and readable subsequence search on heap/native; original supported heap/native fixtures only."
+        "UTF-8 valid/malformed surrogate rows, ASCII/AsciiString mapping, worst-case/exact reservations and readable subsequence search on heap/native; original supported heap/native fixtures only.",
+        "Hex unit: 42 new tests; net10.0 Debug/Release/rebuilt checked Release 821/821, no failures/skips. 65988 pinned Java/CLR rows match per Debug/Release (448 formatting/roundtrip, four large dumps, all 65536 UTF-16 nibble inputs), also checked independently; seven edge rows document stricter empty/null/dead/range guards. All selected hex API/HexUtil comments retained. docs/buffer-porting.md#hex-conversion-and-dumps; artifacts/buffer-hex-validation (ignored); buffer-hex-*.trx. Whole source/fixture remains partial."
       ],
-      "adaptation": "Selected text/search cases and additional native aliasing/safety contracts. Numeric UTF-16 units preserve malformed input across test discovery serialization. Composite/read-only/wrapped/pooled and remaining original fixture cases are pending.",
+      "adaptation": "Selected text/search cases and additional native aliasing/safety contracts. Numeric UTF-16 units preserve malformed input across test discovery serialization. Composite/read-only/wrapped/pooled and remaining original fixture cases are pending. Hex update ports decodeRandomHexBytesWithEvenLength/OddLength and odd-length/invalid-character rejection, retaining the original suffix-loop comment. 42 executed cases add all octets, upper/lowercase decoding, string/span/array ranges, heap/native/mutable/fixed/readonly/slice/duplicate layouts, unchanged indices/marks/lifetime, exact header/padding/ASCII/append/row widths, 64KiB cached-prefix fallback, malformed Unicode, null/empty/dead/overflow guards and builder validation preflight. This completes selected hex scenarios, not the full original fixture or pooled/remaining utility cases.",
       "comments": {
         "upstreamCount": 29,
-        "preservedCount": 2,
-        "missingCount": 27,
+        "preservedCount": 3,
+        "missingCount": 26,
         "coverage": "partial source; remaining operations not ported"
       }
     },

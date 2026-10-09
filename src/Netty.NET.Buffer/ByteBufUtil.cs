@@ -24,8 +24,8 @@ namespace Netty.NET.Buffer;
  * A collection of utility methods that is related with handling {@link ByteBuf},
  * such as the generation of hex dump and swapping an integer's byte order.
  */
-/// <summary>Implemented text and search utilities. Other Netty ByteBufUtil operations remain pending.</summary>
-public static class ByteBufUtil
+/// <summary>Implemented text, search and hex utilities. Other Netty ByteBufUtil operations remain pending.</summary>
+public static partial class ByteBufUtil
 {
     // CLR Span supplies the search strategy; no Java SWAR/Two-Way performance equivalence is claimed.
     /**
