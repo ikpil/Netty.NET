@@ -566,16 +566,47 @@ Buffer.Tests passes 382/382 in Debug, Release and rebuilt checked Release, no fa
 or skips. Checked build: zero errors, 51 existing Common warnings. Common files are
 unchanged and its suite is not rerun. All 159 upstream paths remain in JSON: 134
 pending, 22 in-progress, 2 verified and 1 CLR replacement. Unpooled and its original
-fixture remain in-progress; primitive/allocator/external-storage factories and other
+fixture remain in-progress; allocator/external-storage factories and other
 original scenarios remain pending.
+
+## Unpooled primitive copying factories
+
+All 15 original scalar/array CopyInt/Short/Medium/Long/Boolean/Float/Double operations
+are implemented with their original comments, including both short[] and int[]
+CopyShort forms. Eight ReadOnlySpan overloads also support stack and subrange input
+without intermediate arrays. Null/empty arrays and empty spans return the shared
+sentinel. An explicit zero-input CopyShort resolves the two C# params overloads.
+Nonempty copies own independent writable heap storage with exact initial capacity
+and int.MaxValue maximum. Byte order is big-endian; Short/Medium truncate high bits,
+booleans encode as 0/1, and floating point preserves raw IEEE bits, including NaN
+payloads. Byte-count multiplication is checked before allocation rather than using
+Java's wrapping int arithmetic. Original allocation/wire/ownership behavior is kept.
+
+62 new tests cover selected original primitive testWrap scenarios plus Span/stack
+and subrange inputs, null/empty/arity, storage independence, growth/release, signed
+boundaries/truncation and signed zero/subnormal/infinity/quiet/signaling NaN bits.
+3352 exact pinned Java/CLR runtime rows compare 100 seeded layouts, eight input types
+and four scalar/array/Span/range shapes, plus integer/IEEE boundaries and null/empty
+input. Bytes, capacity/maxima, indices, heap/writable flags, growth and release match.
+Span/range forms are compared with equivalent original array copies. 3328 payloads
+also match independent Python integer/IEEE-bit calculations; the remaining 24 rows
+cover null/empty/zero-input behavior. Evidence:
+artifacts/buffer-unpooled-primitive-copying-validation (ignored) and
+buffer-unpooled-primitive-copying-*.trx.
+
+Buffer.Tests passes 444/444 in Debug, Release and rebuilt checked Release, with no
+failures/skips. Checked build: zero errors, 51 existing Common warnings. Common
+files are unchanged and its suite is not rerun. Inventory remains 159 paths: 134
+pending, 22 in-progress, 2 verified and 1 CLR replacement. Unpooled and its original
+test fixture remain in-progress; remaining factories and fixture scenarios are pending.
 
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text copying and the shared empty sentinel. Allocator interfaces/metrics,
+single and multiple-input copying, encoded text/primitive copying and the shared empty sentinel. Allocator interfaces/metrics,
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover remaining composite operations and Unpooled factories, further utilities and
-broader original tests, followed by real allocator/cache integration. Common
+Next units cover unreleasable/fixed read-only composite wrappers and remaining Unpooled factories,
+further utilities and original tests, followed by allocator/cache and I/O integration. Common
 changes must cite the actual buffer contract that requires them.
