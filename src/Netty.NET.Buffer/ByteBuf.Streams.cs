@@ -17,6 +17,8 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Netty.NET.Buffer;
 
@@ -150,6 +152,92 @@ public abstract partial class ByteBuf
         ArgumentNullException.ThrowIfNull(source);
         EnsureWritable(length);
         int count = SetBytes(_writerIndex, source, length);
+        _writerIndex += count;
+        return count;
+    }
+
+    /// <summary>Asynchronously writes a snapshot of an absolute range without changing indices.</summary>
+    /// <remarks>CLR asynchronous counterpart of GetBytes(index, Stream, length).
+    /// Calls the stream's Memory-based WriteAsync directly without wrapping synchronous I/O in Task.Run.
+    /// The stream and buffer are borrowed for the full operation. Exclude concurrent
+    /// mutation, release and external cursor changes until the returned ValueTask completes.
+    /// Temporary managed storage is kept until I/O finishes; native memory is not borrowed across await.</remarks>
+    public async ValueTask GetBytesAsync(int index, Stream destination, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (length == 0) return;
+        byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+        try
+        {
+            GetBytesCore(index, bytes.AsSpan(0, length));
+            await destination.WriteAsync(bytes.AsMemory(0, length), cancellationToken).ConfigureAwait(false);
+        }
+        finally { ArrayPool<byte>.Shared.Return(bytes); }
+    }
+
+    /// <summary>Performs one asynchronous bounded read into an absolute range without changing indices.</summary>
+    /// <returns>The actual count, or zero at EOF or for an empty request.</returns>
+    /// <remarks>Uses the same one-read and staging policy as SetBytes(index, Stream, length).
+    /// Cancellation or failure from the source does not publish staging bytes. Source
+    /// consumption can already have occurred. A valid result is committed even if the
+    /// token was canceled meanwhile: cancellation is cooperative, not a rollback.
+    /// Keep the borrowed buffer and stream alive and exclude concurrent mutation until completion.</remarks>
+    public async ValueTask<int> SetBytesAsync(int index, Stream source, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite();
+        CheckIndex(index, length);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (length == 0) return 0;
+        byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+        try
+        {
+            int count = await source.ReadAsync(bytes.AsMemory(0, length), cancellationToken).ConfigureAwait(false);
+            if (count < 0 || count > length)
+                throw new IOException("The stream returned an invalid byte count.");
+            if (count != 0)
+            {
+                // Resolve storage after I/O; no borrowed native span survives suspension.
+                EnsureCanWrite();
+                CheckIndex(index, count);
+                SetBytesCore(index, bytes.AsSpan(0, count));
+            }
+            return count;
+        }
+        finally { ArrayPool<byte>.Shared.Return(bytes); }
+    }
+
+    /// <summary>Asynchronously writes readable bytes, then advances the reader after success.</summary>
+    /// <remarks>Cancellation or failure leaves the reader unchanged even when the
+    /// destination already accepted a prefix. Exclude external reader changes until completion.</remarks>
+    public async ValueTask ReadBytesAsync(Stream destination, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckReadableBytes(length);
+        await GetBytesAsync(_readerIndex, destination, length, cancellationToken).ConfigureAwait(false);
+        _readerIndex += length;
+    }
+
+    /// <summary>Reserves requested capacity, asynchronously reads once and advances by the actual count.</summary>
+    /// <returns>The actual count, or zero at EOF or for an empty request.</returns>
+    /// <remarks>A pre-canceled token prevents capacity growth and I/O after argument
+    /// and permission validation. Once started, growth is not rolled back on EOF,
+    /// cancellation or failure. Exclude external writer changes until completion.</remarks>
+    public async ValueTask<int> WriteBytesAsync(Stream source, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite();
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
+        if (length > MaxWritableBytes) throw new ArgumentOutOfRangeException(nameof(length));
+        cancellationToken.ThrowIfCancellationRequested();
+        EnsureWritable(length);
+        int count = await SetBytesAsync(_writerIndex, source, length, cancellationToken).ConfigureAwait(false);
         _writerIndex += count;
         return count;
     }

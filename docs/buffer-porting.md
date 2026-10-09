@@ -795,6 +795,52 @@ remains 159: 126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Origina
 sources/fixtures remain partial; async ByteBuf transfers and channel/positioned-file
 contracts remain pending.
 
+## Asynchronous stream transfers
+
+GetBytesAsync, SetBytesAsync, ReadBytesAsync and WriteBytesAsync expose the four
+stream-transfer contracts through ValueTask and CancellationToken. These are CLR
+asynchronous counterparts of the Java synchronous APIs; Java has no matching async
+stream overloads. The original four API comments remain in ByteBuf.Streams.cs.
+The implementation awaits Memory-based Stream.ReadAsync/WriteAsync directly with
+ConfigureAwait(false), without wrapping synchronous calls in Task.Run. Underlying
+streams still determine how their own asynchronous operations execute.
+
+The synchronous CLR policies remain: absolute operations preserve both indices,
+relative operations publish only after success, input performs one bounded read and
+returns 0 at EOF, and output snapshots the whole range. ArrayPool staging is owned
+until the awaited operation finishes and returned in finally on every outcome.
+No borrowed native memory or composite segments cross await. Buffer/stream ownership
+is borrowed for the entire operation; callers must keep them alive and exclude
+concurrent mutation and external changes to the active cursor until completion.
+Controlled stream callbacks can resize storage; input resolves and checks the
+destination again, and output retains its independent snapshot. Existing temporary
+memory/copying costs and partial composite storage-commit limits still apply.
+
+Invalid arguments/access/permissions are checked before pre-cancellation. Valid
+pre-canceled operations, including empty ones, are canceled without I/O or growth.
+Valid empty operations otherwise finish without touching the stream. Once started,
+capacity growth is not rolled back on EOF, cancellation or failure. Cancellation is
+cooperative: a stream returning a valid count/completion commits successfully even
+if its token was canceled meanwhile. A thrown cancellation/failure leaves the active
+index unchanged; staged input is not published, but the source may have consumed
+data and an output may already have accepted a prefix. No implicit Retain, disposal,
+blocking wait or cancellation-as-rollback contract is added.
+
+49 CLR cases use delayed streams whose synchronous operations throw, covering
+publication before/after actual suspension, all cancellation phases, argument
+precedence, short/zero/invalid reads, failure progress, readonly/fixed/empty/dead
+buffers, slice/shared indices, stream adapters, native resizing/composite consolidation
+callbacks and partial commit failure. 1200 pinned synchronous Java wire/index/count
+rows match forced-yield CLR async execution in both Debug and Release after EOF
+normalization; an independent byte model checks every row. This validates the wire
+contract, not Java async scheduling/cancellation. Evidence:
+artifacts/buffer-async-transfer-validation (ignored), buffer-async-transfer-*.trx.
+net10.0 Debug, Release and rebuilt checked Release each pass 741/741 without failures
+or skips. Checked build: zero errors, 51 existing Common warnings, no new Buffer/test
+warnings. Common is unchanged; its suite was not rerun. Inventory remains 159:
+126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Original source/fixtures
+remain partial; channel/positioned-file APIs still need a separate consumer mapping.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -802,6 +848,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, byte-transfer/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover async byte-transfer and positioned-file I/O,
+Next units cover positioned-file I/O and remaining byte-transfer consumer mapping,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
