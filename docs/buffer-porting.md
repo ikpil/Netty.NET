@@ -487,13 +487,53 @@ paths remain inventoried: 134 pending, 22 in-progress, 2 verified, 1 CLR replace
 Unpooled and its original test fixture remain in-progress; this implements wrapping
 overloads rather than the whole factory class or fixture.
 
+## Unpooled single and multiple-input copying factories
+
+CopiedBuffer now accepts byte[], array subregions, a single ByteBuf and params
+byte[][]/ByteBuf[]. Copies produce independent writable heap storage; input indices,
+marks, references and permissions remain unchanged. Array/Span and multiple-input
+results have a maximum equal to copied length. A single ByteBuf, including an array
+containing one ByteBuf, returns a growable heap buffer as in Java. This fixes the
+earlier Span factory's int.MaxValue maximum. The zero-input overload resolves C#
+params ambiguity. Existing explicit BE/LE operations preserve bytes without Java
+mutable byte-order state; original order-check documentation is kept with CLR remarks.
+
+Length preflight rejects overflow before allocating or reading payloads. Null entries
+throw rather than terminating input. Empty-only buffers return the shared sentinel
+without releasing inputs; with readable input, original zero-length source reads
+still validate accessibility. Single-source failure releases its new output, while
+multiple-source output ownership is published only after every copy succeeds.
+Input indices/storage must stay stable during copying. Array-region null/bounds
+checks apply to zero length, retaining the CLR adaptation from wrapping; the pinned
+Java early-empty shortcut accepts invalid empty ranges. Original comments for the
+implemented operations, including both merge rationale comments, are preserved.
+
+27 new tests cover selected original UnpooledTest copy scenarios, capacity differences,
+storage and lifetime independence, native/readonly/segmented/nested/retained inputs,
+marks, endian wire bytes, failure/retry, empty/null/ranges and shared-backing overflow.
+1600 exact pinned Java/CLR rows compare 50 seeded layouts across heap/direct,
+writable/readonly and single/array-of-one/multiple buffer paths, plus array/Span/region
+and multiple-array copies. They check bytes, maxima, indices, source independence and
+reference counts before/after releasing copies and originals. CLR Span is compared
+with the original array-copy contract. Ten further rows match null, accessibility,
+overflow, empty ownership and arity behavior; exception types are normalized.
+Evidence: artifacts/buffer-unpooled-copying-validation (ignored) and
+buffer-unpooled-copying-*.trx. NIO and swapped-order subtype cases remain pending.
+
+Buffer.Tests passes 324/324 in Debug, Release and rebuilt checked Release, no failures
+or skips. The checked build has zero errors and 51 existing Common warnings. Common
+source/tests/configuration are unchanged and its suite is not rerun. The JSON still
+contains all 159 paths: 134 pending, 22 in-progress, 2 verified and 1 CLR replacement.
+Unpooled and its original fixture remain in-progress because other factories and
+original tests are still unported.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-a single copied byte range and the shared empty sentinel. Allocator interfaces/metrics,
+single and multiple-input copying and the shared empty sentinel. Allocator interfaces/metrics,
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, streams/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units implement multiple-input CopiedBuffer factories and remaining composite operations, further utilities and
+Next units implement string/Encoding copy factories and remaining composite operations, further utilities and
 broaden original tests, then real allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

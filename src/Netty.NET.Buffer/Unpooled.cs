@@ -46,7 +46,7 @@ public static partial class Unpooled
          * {@code writerIndex} are {@code 0} and {@code array.length} respectively.
          */
     public static ByteBuf CopiedBuffer(ReadOnlySpan<byte> bytes)
-        => bytes.IsEmpty ? EmptyBuffer : Buffer(bytes.Length).WriteBytes(bytes);
+        => bytes.IsEmpty ? EmptyBuffer : WrappedBuffer(bytes.ToArray());
 
     /**
          * Creates a new big-endian direct buffer with the specified
