@@ -1005,6 +1005,46 @@ warnings. Common is unchanged and its suite was not rerun. Inventory remains 159
 126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Sources/fixture remain
 partial; remaining byte utilities, allocator/cache integration and broader APIs are pending.
 
+## Array extraction
+
+ByteBufUtil.GetBytes now covers all three original overloads and retains their API
+comments. Default input is the readable range and always copied; explicit ranges
+may precede ReaderIndex or extend past WriterIndex up to Capacity. ReadOnlySequence
+copies directly into the result, without a second byte-array flattening buffer.
+Null, bounds and lifetime checks apply even to empty requests. Empty results use
+Array.Empty<byte>(), including copy=true, rather than distinct Java empty arrays.
+
+Copy=false allows sharing only when the requested complete buffer maps to an entire
+writable managed array with offset zero and exact length. Existing Memory borrowing
+and MemoryMarshal.TryGetArray replace Java hasArray/array/arrayOffset APIs. Read-only
+roots/components, native storage, partial underlying arrays and segmented ranges
+copy. Writable probing handles read-only components of an otherwise mutable composite
+without exposing their arrays or failing the read. The returned array keeps managed
+storage alive, but shared content is mutable; resize can detach old storage. Copying
+provides a stable snapshot. No retain occurs; keep content/layout/lifetime stable
+during extraction. Indices, marks and reference counts remain unchanged.
+
+CLR sharing follows the writable contiguous memory mapping. A slice covering the
+first whole array of a multi-component composite, or a single-array composite with
+empty components before/after it, can therefore share where Java hasArray returns
+false. This deliberate policy differs in 384 oracle rows; content still matches.
+No new ByteBuf storage abstraction or Java array facade is introduced.
+
+39 tests port the original GetBytes, nonzero-array-offset and larger-array-than-slice
+scenarios, adding seven storage/view layouts, default/full/partial snapshot isolation,
+absolute capacity ranges, 14 sharing configurations, write-through behavior, marks,
+ownership, null/empty/dead/overflow guards and managed array resize/release behavior.
+28672 Java/CLR content and index/mark/reference rows match per Debug/Release across
+16 layouts, 128 seeds, seven ranges and both copy modes. Independent byte and
+write-through alias models verify each runtime; sharing differences are recorded
+separately. Twenty-four edge rows match except empty-copy identity reuse. Evidence:
+artifacts/buffer-array-extraction-validation (ignored), buffer-array-extraction-*.trx.
+net10.0 Debug, Release and rebuilt checked Release pass 952/952, no failures/skips.
+Checked build: zero errors and 51 existing Common warnings; no new Buffer/test
+warnings. Common is unchanged and its suite was not rerun. Inventory remains 159:
+126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Source/fixture remain
+partial; AsciiString copying, allocator/cache integration and broader APIs are pending.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -1012,6 +1052,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover ByteBufUtil remaining byte utilities and I/O consumer mapping,
+Next units cover ByteBufUtil AsciiString copying and remaining I/O consumer mapping,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
