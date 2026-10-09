@@ -18,10 +18,10 @@ using System;
 
 namespace Netty.NET.Buffer;
 
-// Implemented unpooled factories; allocator policy and remaining wrapping overloads are pending.
+// Implemented unpooled factories use the default allocator; remaining wrapping overloads are pending.
 public static partial class Unpooled
 {
-    public static ByteBuf EmptyBuffer { get; } = new EmptyByteBuf();
+    public static ByteBuf EmptyBuffer { get; } = UnpooledByteBufAllocator.Default.HeapBuffer(0, 0);
     /**
          * Creates a new big-endian Java heap buffer with the specified
          * {@code initialCapacity}, that may grow up to {@code maxCapacity}
@@ -29,7 +29,7 @@ public static partial class Unpooled
          * {@code 0}.
          */
     public static ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
-        => initialCapacity == 0 && maxCapacity == 0 ? EmptyBuffer : new UnpooledHeapByteBuf(initialCapacity, maxCapacity);
+        => UnpooledByteBufAllocator.Default.HeapBuffer(initialCapacity, maxCapacity);
     /**
          * Creates a new big-endian buffer which wraps the specified {@code array}.
          * A modification on the specified array's content will be visible to the
@@ -55,9 +55,9 @@ public static partial class Unpooled
          * {@code 0}.
          */
     public static ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
-        => initialCapacity == 0 && maxCapacity == 0 ? EmptyBuffer : new UnpooledDirectByteBuf(initialCapacity, maxCapacity);
+        => UnpooledByteBufAllocator.Default.DirectBuffer(initialCapacity, maxCapacity);
     /**
      * Returns a new big-endian composite buffer with no components.
      */
-    public static CompositeByteBuf CompositeBuffer(int maxNumComponents = 16) => new(maxNumComponents);
+    public static CompositeByteBuf CompositeBuffer(int maxNumComponents = 16) => UnpooledByteBufAllocator.Default.CompositeHeapBuffer(maxNumComponents);
 }

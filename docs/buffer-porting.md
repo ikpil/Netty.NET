@@ -1089,13 +1089,67 @@ Common is unchanged and its suite was not rerun. Inventory remains 159: 126 pend
 adds no original test completion claim. Remaining utilities, allocator/cache integration
 and broader APIs are pending.
 
+## Allocator policy foundation
+
+IByteBufAllocator and AbstractByteBufAllocator now connect real buffer allocation
+policy to heap/native owners and composites. Optional parameters replace the Java
+zero/one/two-argument factory overloads; IsDirectBufferPooled and ByteBuf.Allocator
+are CLR properties. The interface retains every original comment. Implemented
+class/constructor/growth comments are retained; unrelated instrumentation remains
+upstream with partial coverage recorded in the manifest.
+
+UnpooledByteBufAllocator creates managed heap or explicitly owned native storage,
+with an optional NativeMemoryAllocator reservation domain. Buffer follows the
+explicit preferDirect setting; HeapBuffer and DirectBuffer select their requested
+storage, and IoBuffer selects native storage. CLR native owners reliably free their
+allocations, so Java Unsafe/Cleaner detection does not gate these choices. The
+current Default uses unpooled heap Buffer and native IoBuffer, preserving this
+port's heap default; it does not implement Netty's global pooled/adaptive selection.
+JVM Unsafe/no-cleaner provider switches are not exposed as inert CLR parameters.
+
+Each allocator owns an immutable, permanently accessible (0,0) empty sentinel.
+It is shared across all that allocator's zero/max-zero factories and has no native
+reservation or reference-count cost. (0,positive-max) creates an owned growable
+buffer. Initial/max and composite-limit checks precede allocation hooks. Defaults
+remain 256 bytes, Int32.MaxValue maximum, and 16 composite components.
+
+Heap/native owners, slices, duplicates, read-only/unreleasable views and copies
+retain their creating allocator. Both EnsureWritable paths call its virtual
+capacity calculation hook; the existing exact 64-byte/power-of-two/4-MiB kernel
+is reused. Heap copies remain heap, native copies remain native. Composite padding,
+consolidation and copies call the creator's heap/native factories according to
+the composite's declared allocation policy. Existing constructors accepting a
+native reservation domain keep it for later copies/composite allocations. Quotas
+continue to include transient old/new native storage and outstanding physical pins;
+failed growth/copy keeps original bytes/indices/reservations intact.
+
+23 new cases translate original ByteBufAllocatorTest factory scenarios and
+AbstractByteBufAllocatorTest capacity calculations, adding creator propagation,
+actual custom growth/factory hooks, empty identity, invalid bounds/component limits,
+consolidation/padding, native quotas/failure/pins and concurrent independent allocations.
+16552 pinned Java/CLR capacity rows agree per Debug/Release, including threshold
+and Int32 boundaries; an independent integer model agrees. Seventy-four factory,
+view/copy and custom-growth rows agree on byte/index/reference/creator contracts.
+Seventeen rows differ only in documented direct-storage selection: the Java21
+noUnsafe oracle cannot reliably free direct buffers, while CLR owns native storage.
+Evidence: artifacts/buffer-allocator-validation (ignored), buffer-allocator-*.trx.
+
+net10.0 Debug, Release and rebuilt checked Release pass 1029/1029, no failures/skips.
+Checked build: zero errors and 51 existing Common warnings; no Buffer/test warnings.
+Common is unchanged and its suite was not rerun. Inventory remains 159: 121 pending,
+31 in-progress, 6 verified, 1 CLR replacement. The complete original
+ByteBufAllocatorTest factory scenarios are verified under the stated CLR selection
+policy; the other five allocator source/test entries remain in-progress. Allocation metrics, leak-aware wrappers,
+global default selection, pooled/adaptive allocators and original remaining test
+scenarios are pending; creating an allocation interface does not complete them.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Allocator interfaces/metrics,
+single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Allocator metrics,
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover remaining ByteBufUtil APIs and I/O consumer mapping,
-Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
+Next units cover allocator-returning ByteBufUtil consumers and allocator metrics,
+then remaining factories/utilities/original tests, leak wrappers and pooled/adaptive allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

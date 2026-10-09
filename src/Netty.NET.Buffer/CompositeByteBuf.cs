@@ -33,18 +33,24 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly List<ComponentEntry> _components = new();
     private readonly bool _direct;
-    private readonly NativeMemoryAllocator _allocator;
+    private readonly IByteBufAllocator _bufferAllocator;
+    public override IByteBufAllocator Allocator => _bufferAllocator;
 
     // CLR: List replaces Java component-array growth.
     // The allocation policy affects padding, copies and consolidation. IsDirect
     // describes the actual components, including nested composites.
     public CompositeByteBuf(int maxNumComponents = 16, bool direct = false, NativeMemoryAllocator allocator = null)
+        : this(allocator == null ? UnpooledByteBufAllocator.Default : new UnpooledByteBufAllocator(direct, allocator),
+            direct, maxNumComponents) { }
+
+    public CompositeByteBuf(IByteBufAllocator allocator, bool direct, int maxNumComponents = 16)
         : base(int.MaxValue)
     {
+        ArgumentNullException.ThrowIfNull(allocator);
         if (maxNumComponents < 1) throw new ArgumentOutOfRangeException(nameof(maxNumComponents));
         MaxNumComponents = maxNumComponents;
         _direct = direct;
-        _allocator = allocator ?? NativeMemoryAllocator.Shared;
+        _bufferAllocator = allocator;
     }
 
     /**
@@ -495,7 +501,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     }
 
     private ByteBuf AllocateBuffer(int capacity)
-        => _direct ? new UnpooledDirectByteBuf(capacity, MaxCapacity, _allocator) : new UnpooledHeapByteBuf(capacity, MaxCapacity);
+        => _direct ? Allocator.DirectBuffer(capacity, MaxCapacity) : Allocator.HeapBuffer(capacity, MaxCapacity);
     private void CheckComponentRange(int index, int count)
     {
         EnsureAccessible();

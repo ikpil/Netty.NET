@@ -24,7 +24,10 @@ namespace Netty.NET.Buffer;
 /// <summary>The shared, permanently accessible zero-capacity buffer.</summary>
 internal sealed class EmptyByteBuf : ByteBuf
 {
-    internal EmptyByteBuf() : base(0) { }
+    private readonly IByteBufAllocator _allocator;
+    internal EmptyByteBuf(IByteBufAllocator allocator) : base(0)
+    { ArgumentNullException.ThrowIfNull(allocator); _allocator = allocator; }
+    public override IByteBufAllocator Allocator => _allocator;
     protected override Memory<byte> GetMemoryCore(int index, int length) => Memory<byte>.Empty;
     public override bool IsDirect => true;
     public override bool CanWrite(int byteCount)

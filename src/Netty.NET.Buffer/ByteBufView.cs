@@ -58,6 +58,7 @@ internal sealed class ByteBufView : ByteBuf
         => _parent.TryGetMemory(_offset + index, length, out memory);
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source) => _parent.SetBytes(_offset + index, source);
     protected override void SetZeroCore(int index, int length) => _parent.SetZero(_offset + index, length);
+    public override IByteBufAllocator Allocator => _parent.Allocator;
     public override bool IsDirect => _parent.IsDirect;
     public override bool IsReadOnly => _parent.IsReadOnly;
     public override int Capacity

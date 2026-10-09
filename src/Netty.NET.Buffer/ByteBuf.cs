@@ -270,6 +270,11 @@ public abstract partial class ByteBuf : IReferenceCounted
         _indexOwner = indexOwner._indexOwner ?? indexOwner;
     }
 
+    /**
+     * Returns the {@link ByteBufAllocator} which created this buffer.
+     */
+    public virtual IByteBufAllocator Allocator => UnpooledByteBufAllocator.Default;
+
     protected abstract Memory<byte> GetMemoryCore(int index, int length);
     protected virtual ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length) => GetMemoryCore(index, length);
     // A growing span write may read this buffer's old allocation. Native owners
@@ -552,7 +557,7 @@ public abstract partial class ByteBuf : IReferenceCounted
         if (minimumWritableBytes <= WritableBytes) return this;
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
             throw new ArgumentOutOfRangeException(nameof(minimumWritableBytes));
-        Capacity = CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
+        Capacity = Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
         return this;
     }
     /**
@@ -586,7 +591,7 @@ public abstract partial class ByteBuf : IReferenceCounted
             Capacity = MaxCapacity;
             return 3;
         }
-        Capacity = CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
+        Capacity = Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
         return 2;
     }
     // AbstractByteBufAllocator.calculateNewCapacity: same 64-byte / 4-MiB growth policy.
@@ -1548,7 +1553,7 @@ public abstract partial class ByteBuf : IReferenceCounted
     public virtual ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
-        ByteBuf result = Unpooled.Buffer(length, MaxCapacity);
+        ByteBuf result = Allocator.HeapBuffer(length, MaxCapacity);
         try { result.SetBytes(0, this, index, length); result.WriterIndex = length; return result; }
         catch { result.Release(); throw; }
     }

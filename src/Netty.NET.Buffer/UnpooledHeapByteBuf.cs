@@ -23,19 +23,25 @@ namespace Netty.NET.Buffer;
  * {@link UnpooledByteBufAllocator#heapBuffer(int, int)}, {@link Unpooled#buffer(int)} and
  * {@link Unpooled#wrappedBuffer(byte[])} instead of calling the constructor explicitly.
  */
-// CLR: this stage uses a direct heap constructor and Memory<byte> rather than
-// Java allocator/provider and ByteBuffer hierarchies. Allocator policy is later work.
+// CLR: Memory<byte> replaces Java ByteBuffer; allocation policy is carried by IByteBufAllocator.
 public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
 {
     private byte[] _array;
+    private readonly IByteBufAllocator _bufferAllocator;
+    public override IByteBufAllocator Allocator => _bufferAllocator;
 /**
      * Creates a new heap buffer with a newly allocated byte array.
      *
      * @param initialCapacity the initial capacity of the underlying byte array
      * @param maxCapacity the max capacity of the underlying byte array
      */
-    public UnpooledHeapByteBuf(int initialCapacity = 256, int maxCapacity = int.MaxValue) : base(maxCapacity)
+    public UnpooledHeapByteBuf(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+        : this(UnpooledByteBufAllocator.Default, initialCapacity, maxCapacity) { }
+
+    public UnpooledHeapByteBuf(IByteBufAllocator allocator, int initialCapacity, int maxCapacity) : base(maxCapacity)
     {
+        ArgumentNullException.ThrowIfNull(allocator);
+        _bufferAllocator = allocator;
         if (initialCapacity < 0 || initialCapacity > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
         _array = new byte[initialCapacity];
@@ -48,6 +54,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
      */
     internal UnpooledHeapByteBuf(byte[] initialArray) : base(GetLength(initialArray))
     {
+        _bufferAllocator = UnpooledByteBufAllocator.Default;
         _array = initialArray;
         SetIndex(0, initialArray.Length);
     }

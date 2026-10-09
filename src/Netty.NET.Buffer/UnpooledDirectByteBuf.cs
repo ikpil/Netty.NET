@@ -28,13 +28,14 @@ namespace Netty.NET.Buffer;
 /// <summary>A reference-counted buffer with explicitly owned native storage.</summary>
 /// <remarks>Memory views are borrowed. Pins preserve physical storage across final
 /// release; they do not keep the buffer's logical reference count above zero.</remarks>
-// CLR: a NativeMemoryAllocator reservation domain replaces Java direct-memory
-// provider selection. ByteBufAllocator policy and borrowed-address/I/O APIs remain
-// separate porting work; Memory/Span carry the implemented bounded data contract.
+// CLR: NativeMemoryAllocator supplies the native reservation domain, while
+// IByteBufAllocator controls buffer creation, copies and growth policy.
 public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly NativeMemoryAllocator _allocator;
     private NativeMemoryOwner _owner;
+    private readonly IByteBufAllocator _bufferAllocator;
+    public override IByteBufAllocator Allocator => _bufferAllocator;
 
     /**
          * Creates a new direct buffer.
@@ -43,11 +44,20 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
          * @param maxCapacity     the maximum capacity of the underlying direct buffer
          */
     public UnpooledDirectByteBuf(int initialCapacity = 256, int maxCapacity = int.MaxValue,
-        NativeMemoryAllocator allocator = null) : base(maxCapacity)
+        NativeMemoryAllocator allocator = null)
+        : this(allocator == null ? UnpooledByteBufAllocator.Default : new UnpooledByteBufAllocator(true, allocator),
+            initialCapacity, maxCapacity, allocator) { }
+
+    /// <summary>Creates native storage with an explicit buffer allocation policy and optional reservation domain.</summary>
+    public UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, int initialCapacity, int maxCapacity,
+        NativeMemoryAllocator nativeAllocator = null)
+        : base(maxCapacity)
     {
+        ArgumentNullException.ThrowIfNull(bufferAllocator);
+        _bufferAllocator = bufferAllocator;
         if (initialCapacity < 0 || initialCapacity > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
-        _allocator = allocator ?? NativeMemoryAllocator.Shared;
+        _allocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
         _owner = _allocator.Allocate(initialCapacity, clear: true);
     }
     protected override Memory<byte> GetMemoryCore(int index, int length) => _owner.Memory.Slice(index, length);
@@ -76,7 +86,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         ReadOnlySpan<byte> source = AsSpan(index, length);
-        var result = new UnpooledDirectByteBuf(length, MaxCapacity, _allocator);
+        ByteBuf result = Allocator.DirectBuffer(length, MaxCapacity);
         try { return result.WriteBytes(source); }
         catch { result.Release(); throw; }
     }

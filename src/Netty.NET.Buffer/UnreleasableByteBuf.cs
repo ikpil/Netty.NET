@@ -37,6 +37,7 @@ internal sealed class UnreleasableByteBuf : ByteBuf
     }
 
     public override int Capacity { get => _parent.Capacity; set => _parent.Capacity = value; }
+    public override IByteBufAllocator Allocator => _parent.Allocator;
     public override bool IsDirect => _parent.IsDirect;
     public override bool IsReadOnly => _parent.IsReadOnly;
     public override bool CanWrite(int byteCount) => _parent.CanWrite(byteCount);
