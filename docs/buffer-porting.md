@@ -753,6 +753,48 @@ not rerun. Inventory: 159 paths, 126 pending, 27 in-progress, 5 verified, 1 CLR
 replacement. Both stream sources are reviewed; original pooled stream-test variants
 still need a real pool, so the combined original fixture remains in-progress.
 
+## Synchronous stream transfers
+
+ByteBuf now exposes GetBytes(index, Stream, length), SetBytes(index, Stream, length),
+ReadBytes(Stream, length) and WriteBytes(Stream, length). All four original API
+comments are preserved. Absolute operations leave both indices alone. Relative
+output advances the reader after success; relative input reserves requested capacity
+before reading and advances the writer by the actual returned count. Growth at EOF
+and unchanged indices on exceptions retain the original contract.
+
+The CLR input policy performs one bounded Stream.Read for every backing kind,
+returns short reads immediately and returns 0 at EOF. This deliberately replaces
+Java CompositeByteBuf's fill-until-EOF loop: storage layout no longer determines
+whether a short read triggers more I/O, and CLR EOF cannot cause infinite retries.
+Callers requiring a full field must explicitly loop. Empty requests validate bounds,
+permission, accessibility and null arguments without invoking the stream.
+
+ArrayPool staging snapshots output before one Stream.Write and copies successful
+input after the callback. No native span or borrowed composite segment survives a
+stream callback; same-buffer append remains safe across native growth/consolidation.
+Unlike Java heap input, a throwing read cannot publish its temporary bytes. A later
+composite storage-commit failure may change earlier components while leaving writer
+unchanged, and source input may already be consumed. A throwing output may already
+have accepted a prefix while the buffer reader remains unchanged. Streams and buffer
+references are borrowed. Concurrent mutation/release and external changes to the
+active cursor must be excluded during I/O. Temporary memory is proportional to the
+requested length plus pool rounding; these APIs deliberately copy and make no
+zero-copy or performance claim.
+
+37 tests port selected original block, released access and independent duplicate/
+slice concurrent output scenarios, plus CLR short/zero/invalid reads, readonly/fixed
+composites, views/wrappers, failures, stream ownership and native aliases. 1200 pinned
+Java/CLR count/index/byte rows match in each Debug/Release after EOF normalization,
+also checked against an independent byte model. 12 separate Java/CLR edge rows
+record the intentional short-read, empty EOF, input-failure and output-call-shape
+differences. Evidence: artifacts/buffer-stream-transfer-validation (ignored) and
+buffer-stream-transfer-*.trx. net10.0 Debug, Release and rebuilt checked Release each
+pass 692/692 tests without failures/skips. Checked build has zero errors and 51
+existing Common warnings. Common is unchanged; its suite was not rerun. Inventory
+remains 159: 126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Original
+sources/fixtures remain partial; async ByteBuf transfers and channel/positioned-file
+contracts remain pending.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -760,6 +802,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, byte-transfer/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover remaining byte-transfer I/O,
+Next units cover async byte-transfer and positioned-file I/O,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
