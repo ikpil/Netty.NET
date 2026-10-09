@@ -924,7 +924,47 @@ net10.0 Debug, Release and rebuilt checked Release pass 821/821, no failures/ski
 Checked build: zero errors and 51 existing Common warnings; no new Buffer/test
 warnings. Common is unchanged and its suite was not rerun. Inventory remains 159:
 126 pending, 27 in-progress, 5 verified, 1 CLR replacement. ByteBufUtil and its
-original fixture remain partial; comparison/hash and broader utilities are pending.
+original fixture remain partial; broader utilities are pending.
+
+## Content comparison and hashing
+
+ByteBufUtil.HashCode, both Equals overloads and Compare preserve the pinned content
+contract. ByteBuf now implements IEquatable<ByteBuf>/IComparable<ByteBuf> and overrides
+Equals/GetHashCode, allowing native HashSet lookup/removal and default sorting.
+Readable content determines whole-buffer equality/hash/order regardless of absolute
+indices or backing. C# == and ownership-cycle checks keep reference identity.
+Absolute equality may precede ReaderIndex, but ends at WriterIndex; a nonnegative
+overrun returns false using subtraction to avoid overflow. Contiguous equality uses
+Span.SequenceEqual; segmented comparisons read bounded crossing words without flattening storage.
+
+Hash preserves unchecked signed Int32 big-endian words, signed Java trailing bytes,
+and zero-to-one coercion. Compare preserves unsigned big-endian word comparison and
+its exact Int32-clamped difference, unsigned tail difference and prefix length
+difference. Existing explicit-endian access replaces Java mutable-order branches.
+All seven original API comments, two implementation comments and four selected
+test comment lines are retained. No Java compatibility facade or equality operator is added.
+
+Operations preserve indices, marks and reference counts; callers keep content,
+indices and lifetime stable. Do not mutate/release buffers while used as hash keys.
+Utility self-equality/self-comparison remain reflexive even after release; null/null
+retains the original identity results. Distinct buffers must be accessible, including
+empty or length-mismatched comparisons, and hash/range access rejects released buffers
+consistently. These deliberately replace six Java storage-check bypasses. Typed
+CompareTo(null)=1 follows CLR sorting, replacing the original Java exception.
+
+45 tests port the four original subsection-equality scenarios and selected original
+object equality, comparison/prefix, byte-order-independent and HashSet scenarios.
+They add seven storage/view layouts, signed tails, word overflow/zero coercion,
+unsigned/clamped exact differences, writer/reader bounds, unchanged marks/ownership,
+native sorting and explicit null/released handling. 25088 pinned Java rows match
+per Debug/Release across four Java order combinations and 49 backing pairs, with
+an independent byte/hash/order model; twelve edge rows record seven adaptations.
+Evidence: artifacts/buffer-comparison-validation (ignored), buffer-comparison-*.trx.
+net10.0 Debug, Release and rebuilt checked Release pass 866/866, no failures/skips.
+Checked build: zero errors and 51 existing Common warnings; no new Buffer/test
+warnings. Common is unchanged and its suite was not rerun. Inventory remains 159:
+126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Original sources/fixtures
+remain partial; text validation and broader utility/allocator APIs are still pending.
 
 ## Remaining work
 
@@ -933,6 +973,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover ByteBufUtil comparison/hash and remaining I/O consumer mapping,
+Next units cover ByteBufUtil text validation/remaining byte utilities and I/O consumer mapping,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
