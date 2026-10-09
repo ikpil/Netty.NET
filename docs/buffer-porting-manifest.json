@@ -278,10 +278,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufOutputStream.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBufOutputStream.cs"
+      ],
+      "evidence": [
+        "Output stream unit: Buffer.Tests 655/655 passed in Debug, Release and rebuilt checked Release, no failures/skips; 49 new cases. 775 pinned Java/CLR output rows match in both Debug and Release (600 primitive/string/index/ownership, 172 modified UTF, 3 failure-progress), with capacity/oversized UTF exception types normalized. 772 wire results also match independent integer/IEEE/UTF-16 encoding; all 65536 UTF-16 units and maximum payload covered. 18 separate Java edge rows record disposed and readonly-empty divergences, tested under CLR policy. All 11 original output-source comments preserved. docs/buffer-porting.md; artifacts/buffer-output-stream-validation; buffer-output-stream-*.trx. Output adapter reviewed; pooled allocation and whole combined fixture remain incomplete."
+      ],
+      "adaptation": "All output operations mapped to a sealed nonseekable System.IO.Stream over the supplied writer index, with Buffer and BytesWritten diagnostics. Default disposal borrows; releaseOnDispose returns one existing reference exactly once without Retain, including DisposeAsync/repeated close. Numeric helpers use CLR width names and explicit BE order; WriteByte takes a CLR byte, WriteSByte supports signed octets, WriteInt16(int) preserves original low-16-bit truncation and WriteUInt16 provides the unsigned form, WriteChar takes a CLR char. Int32/Int64 and Single/Double preserve the passed runtime IEEE bits; Release tests materialize signaling NaNs at runtime because constant folding can quiet them before the call. WriteBytes(string) writes low eight bits per UTF-16 unit without fallback, and WriteChars writes two BE bytes per unit with original per-character capacity-failure progress. WriteUtf computes a bounded modified UTF-8 frame (unsigned 16-bit BE byte length, NUL as C080, surrogate units independently encoded), rejects over-65535 payloads before publishing, then transfers prefix/payload together. Direct encoding replaces the lazy JVM DataOutputStream facade; its original rationale comments remain preserved. CLR adaptations: all writes reject disposed adapters even if borrowed or UTF was previously used; readonly empty writes including WriteChars are denied; dead owners fail construction; CanWrite reflects closed/readonly state. Argument bounds follow Stream; unsupported read/seek/length mutation throw, while open Flush is a no-op. Span/Memory writes preserve native aliases across growth/consolidation through existing ByteBuf leases. Async memory/array writes honor cancellation before consumption and complete from synchronous memory transfer; BinaryWriter independently selects its own little-endian/framing policy. All original comments retained; no JVM DataOutput interface/helper wrapper introduced.",
+      "comments": {
+        "upstreamCount": 11,
+        "preservedCount": 11,
+        "missingCount": 0,
+        "coverage": "entire file"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufProcessor.java",
@@ -1261,16 +1271,18 @@
       "kind": "test",
       "status": "in-progress",
       "implementation": [
-        "test/Netty.NET.Buffer.Tests/ByteBufInputStreamTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufInputStreamTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufOutputStreamTest.cs"
       ],
       "evidence": [
-        "Input stream unit: Buffer.Tests 606/606 passed in Debug, Release and rebuilt checked Release, no failures/skips; 56 new cases. 800 pinned Java/CLR range/primitive/mark/skip/line/ownership rows and 1336 modified-UTF framing/decoding/error rows match after explicit bulk-EOF and exception-type normalization. Independent encoding covers all 65536 UTF-16 code units and the maximum 65535-byte payload. All original ByteBufInputStream comments preserved. docs/buffer-porting.md; artifacts/buffer-input-stream-validation; buffer-input-stream-*.trx. Input adapter is reviewed; output and original combined stream fixture remain incomplete."
+        "Input stream unit: Buffer.Tests 606/606 passed in Debug, Release and rebuilt checked Release, no failures/skips; 56 new cases. 800 pinned Java/CLR range/primitive/mark/skip/line/ownership rows and 1336 modified-UTF framing/decoding/error rows match after explicit bulk-EOF and exception-type normalization. Independent encoding covers all 65536 UTF-16 code units and the maximum 65535-byte payload. All original ByteBufInputStream comments preserved. docs/buffer-porting.md; artifacts/buffer-input-stream-validation; buffer-input-stream-*.trx. Input adapter is reviewed; output and original combined stream fixture remain incomplete.",
+        "Output stream unit: Buffer.Tests 655/655 passed in Debug, Release and rebuilt checked Release, no failures/skips; 49 new cases. 775 pinned Java/CLR output rows match in both Debug and Release (600 primitive/string/index/ownership, 172 modified UTF, 3 failure-progress), with capacity/oversized UTF exception types normalized. 772 wire results also match independent integer/IEEE/UTF-16 encoding; all 65536 UTF-16 units and maximum payload covered. 18 separate Java edge rows record disposed and readonly-empty divergences, tested under CLR policy. All 11 original output-source comments preserved. docs/buffer-porting.md; artifacts/buffer-output-stream-validation; buffer-output-stream-*.trx. Output adapter reviewed; pooled allocation and whole combined fixture remain incomplete."
       ],
-      "adaptation": "Input half of testAll, testSkipNegativeLength, testReadLine, testRead, testReadLineLengthRespected1/2 and testReadByteLengthRespected is mapped, with standard CLR EOF/disposal changes explicit. The original closed-stream readLine assertion is replaced by the active input EOF check because disposed CLR streams reject reads. 56 new executed cases cover heap/native/mutable/fixed composites and readonly views, bounded indices/marks/skip, typed/fully EOF atomicity, line boundaries, writer append/growth, ownership/invalid construction, repeated Dispose/DisposeAsync, argument validation, escaped external cursor, modified UTF/NUL/overlong/surrogate/malformed/truncated data, canceled reads, CopyToAsync and BinaryReader. Test expected isolated surrogates are expressed as UTF-16 code-unit hex because attribute serialization changes unpaired surrogate strings. Original fixture comments are preserved for ported scenarios only; output/pooled scenarios and whole combined fixture remain pending. No skipped tests/placeholders.",
+      "adaptation": "Input half of testAll, testSkipNegativeLength, testReadLine, testRead, testReadLineLengthRespected1/2 and testReadByteLengthRespected is mapped, with standard CLR EOF/disposal changes explicit. The original closed-stream readLine assertion is replaced by the active input EOF check because disposed CLR streams reject reads. 56 new executed cases cover heap/native/mutable/fixed composites and readonly views, bounded indices/marks/skip, typed/fully EOF atomicity, line boundaries, writer append/growth, ownership/invalid construction, repeated Dispose/DisposeAsync, argument validation, escaped external cursor, modified UTF/NUL/overlong/surrogate/malformed/truncated data, canceled reads, CopyToAsync and BinaryReader. Test expected isolated surrogates are expressed as UTF-16 code-unit hex because attribute serialization changes unpaired surrogate strings. Original fixture comments are preserved for ported scenarios only; Pooled scenarios and whole combined fixture remain pending. No skipped tests/placeholders. Output update ports the testAll write/read roundtrip, conditional release/default borrowed lifetime and writeStringMustIgnoreHigherOrderByte using heap/native/composite owners. Original output ownership and low-byte comments are preserved. 49 cases cover all writer operations and diagnostics, signed truncation and runtime IEEE payloads, low-byte/raw UTF-16 strings, modified UTF/NUL/surrogate/max/overflow framing, source ranges/Span, readonly/disposed/invalid input, original partial-vs-atomic capacity failure progress, native allocation failure, cancellation/async/BinaryWriter and native alias growth/consolidation. No skipped or placeholder cases. The pooled-allocator variants still require the real pool implementation; substituting unpooled owners does not complete those scenarios or the whole fixture.",
       "comments": {
         "upstreamCount": 17,
-        "preservedCount": 3,
-        "missingCount": 14,
+        "preservedCount": 8,
+        "missingCount": 9,
         "coverage": "partial source; remaining operations not ported"
       }
     },

@@ -27,7 +27,7 @@ namespace Netty.NET.Buffer.Tests;
 /**
  * Tests channel buffer streams
  */
-// Input half of pinned ByteBufStreamTest plus CLR Stream integration. Output remains pending.
+// Input half of pinned ByteBufStreamTest plus CLR Stream integration, paired with ByteBufOutputStreamTest.
 public class ByteBufInputStreamTest
 {
     private static ByteBuf Owner(int kind, byte[] bytes)

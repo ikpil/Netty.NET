@@ -715,13 +715,51 @@ suite was not rerun. Inventory stays 159: 127 pending, 27 in-progress, 4 verifie
 1 CLR replacement. Input source is verified; the combined original stream fixture
 remains in-progress because output/pooled scenarios are still unported.
 
+## Output stream adapter
+
+ByteBufOutputStream maps all original output operations to System.IO.Stream over
+the supplied writer index. Buffer/BytesWritten remain diagnostic after disposal.
+Default disposal borrows; releaseOnDispose returns one existing reference exactly
+once without retaining it. Numeric helpers use CLR width names and explicit BE wire
+order. WriteInt16 retains low-bit truncation; WriteByte/WriteSByte and WriteChar use
+CLR octet/character types. Single/Double preserve passed runtime IEEE bits. Test
+signaling NaNs are materialized at runtime: Release constant folding can quiet a
+constant before the stream receives it.
+
+WriteBytes(string) writes the low eight bits per UTF-16 unit without fallback;
+WriteChars preserves all units as two BE bytes, including its original partial
+progress on capacity failure. WriteUtf directly builds the Java modified UTF-8
+frame, including unsigned length, NUL and individual surrogate units. Oversize
+payloads fail before writing; valid prefix/payload transfer together. All 11 original
+source comments remain, with CLR remarks replacing the lazy DataOutputStream facade.
+
+CLR rejects all disposed writes and readonly empty writes consistently. CanWrite
+reflects permission; dead construction and invalid ranges fail explicitly. Async
+array/Memory writes honor cancellation without consuming. Native aliases remain
+valid across buffer growth/composite consolidation through existing leases.
+BinaryWriter selects its own ordinary little-endian/framing policy. Seeking, reads
+and length mutation are unsupported. 18 original Java edge probes record the closed
+and readonly-empty inconsistencies corrected by these CLR rules.
+
+49 new tests include the original combined roundtrip and output ownership/low-byte
+scenarios across heap/native/composite storage. In both Debug and Release, 775 pinned
+Java/CLR rows match after exception normalization: 600 general writes, 172 modified
+UTF frames and 3 capacity-failure progress cases. 772 wire results also match an
+independent encoder, covering all 65536 UTF-16 units and maximum 65535-byte payloads.
+Evidence: artifacts/buffer-output-stream-validation (ignored), buffer-output-stream-*.trx.
+Debug, Release and rebuilt checked Release each pass 655/655, no failures/skips.
+Checked build: zero errors, 51 existing Common warnings; Common unchanged, its suite
+not rerun. Inventory: 159 paths, 126 pending, 27 in-progress, 5 verified, 1 CLR
+replacement. Both stream sources are reviewed; original pooled stream-test variants
+still need a real pool, so the combined original fixture remains in-progress.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Allocator interfaces/metrics,
-external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, output streams/native I/O,
+external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, byte-transfer/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover the output stream adapter and remaining byte-transfer I/O,
+Next units cover remaining byte-transfer I/O,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
