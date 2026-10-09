@@ -28,6 +28,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
 {
     private byte[] _array;
     private readonly IByteBufAllocator _bufferAllocator;
+    private readonly UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric _metric;
     public override IByteBufAllocator Allocator => _bufferAllocator;
 /**
      * Creates a new heap buffer with a newly allocated byte array.
@@ -38,13 +39,19 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     public UnpooledHeapByteBuf(int initialCapacity = 256, int maxCapacity = int.MaxValue)
         : this(UnpooledByteBufAllocator.Default, initialCapacity, maxCapacity) { }
 
-    public UnpooledHeapByteBuf(IByteBufAllocator allocator, int initialCapacity, int maxCapacity) : base(maxCapacity)
+    public UnpooledHeapByteBuf(IByteBufAllocator allocator, int initialCapacity, int maxCapacity)
+        : this(allocator, initialCapacity, maxCapacity, null) { }
+
+    internal UnpooledHeapByteBuf(IByteBufAllocator allocator, int initialCapacity, int maxCapacity,
+        UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric metric) : base(maxCapacity)
     {
         ArgumentNullException.ThrowIfNull(allocator);
         _bufferAllocator = allocator;
         if (initialCapacity < 0 || initialCapacity > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
         _array = new byte[initialCapacity];
+        _metric = metric;
+        _metric?.AddHeap(_array.Length);
     }
 /**
      * Creates a new heap buffer with an existing byte array.
@@ -72,7 +79,9 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
             byte[] replacement = new byte[value];
             _array.AsSpan(0, Math.Min(value, _array.Length)).CopyTo(replacement);
             // Publish only after successful allocation/copy; failure retains old data and indices.
+            int previousCapacity = _array.Length;
             _array = replacement;
+            _metric?.AddHeap((long)value - previousCapacity);
             TrimIndicesToCapacity(value);
         }
     }
@@ -80,6 +89,8 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     {
         // NOOP
         // CLR GC owns the array; final release drops this buffer's storage reference.
+        int capacity = _array.Length;
         _array = Array.Empty<byte>();
+        _metric?.AddHeap(-capacity);
     }
 }

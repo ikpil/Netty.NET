@@ -14,6 +14,7 @@
  * under the License.
  */
 
+using System.Threading;
 using Netty.NET.Common;
 
 namespace Netty.NET.Buffer;
@@ -21,14 +22,22 @@ namespace Netty.NET.Buffer;
 /**
  * Simplistic {@link ByteBufAllocator} implementation that does not pool anything.
  */
-/// <remarks>This stage implements allocation policy and provenance. Metrics and leak-aware wrappers remain pending.
+/// <remarks>This stage implements allocation policy and provenance. Leak-aware wrappers remain pending.
 /// NativeMemoryAllocator supplies the CLR reservation domain; JVM Unsafe/Cleaner switches are not exposed.</remarks>
-public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator
+public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocatorMetricProvider
 {
     /// <summary>The unpooled default, using heap storage for Buffer and native storage for IoBuffer.</summary>
     public static UnpooledByteBufAllocator Default { get; } = new();
 
     private readonly NativeMemoryAllocator _nativeAllocator;
+    private readonly UnpooledByteBufAllocatorMetric _metric = new();
+
+    /// <summary>Capacity owned by buffers created through this allocator's factories.</summary>
+    /// <remarks>Views and additional references do not allocate storage. Final buffer release
+    /// removes its capacity even if a CLR pin still preserves physical native storage.
+    /// NativeMemoryAllocator.ReservedBytes separately measures those physical reservations.
+    /// Individual counters are atomic; reading both is not a transactional snapshot.</remarks>
+    public IByteBufAllocatorMetric Metric => _metric;
 
     /**
      * Create a new instance which uses leak-detection for direct buffers.
@@ -47,8 +56,22 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator
     public override bool IsDirectBufferPooled => false;
 
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
-        => new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
+        => new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity, _metric);
 
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
-        => new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator);
+        => new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator, _metric);
+
+    // CLR: one optional counter sink replaces Java's provider-specific instrumented subclasses.
+    // Only allocator factories supply it; directly constructed or wrapped storage stays uncharged.
+    internal sealed class UnpooledByteBufAllocatorMetric : IByteBufAllocatorMetric
+    {
+        private long _heapBytes;
+        private long _directBytes;
+        public long UsedHeapMemory => Volatile.Read(ref _heapBytes);
+        public long UsedDirectMemory => Volatile.Read(ref _directBytes);
+        internal void AddHeap(long amount) => Interlocked.Add(ref _heapBytes, amount);
+        internal void AddDirect(long amount) => Interlocked.Add(ref _directBytes, amount);
+        public override string ToString()
+            => $"{nameof(UnpooledByteBufAllocatorMetric)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory})";
+    }
 }

@@ -1193,13 +1193,61 @@ Common is unchanged and its suite was not rerun. Inventory remains 159: 121 pend
 31 in-progress, 6 verified, 1 CLR replacement. ByteBufUtil remains in-progress;
 remaining scalar/I/O/cache/leak utilities and allocator metrics/pooling are pending.
 
+## Unpooled allocation metrics
+
+IByteBufAllocatorMetric and IByteBufAllocatorMetricProvider translate the complete
+original getter/provider interfaces into read-only Int64 properties, preserving
+all original comments. UnpooledByteBufAllocator exposes one stable live metric
+object with separate atomic heap/native counters (Interlocked updates and Volatile
+reads). Reading both properties is not a transactional snapshot.
+
+Factory-created root capacities are charged to their creator. Successful resize
+changes that charge; copies add their independent storage. Slices, duplicates,
+read-only/unreleasable wrappers and additional references do not duplicate storage
+charges. Final logical reference release removes the owner's capacity. Explicit
+raw constructors and external wrapped storage stay uninstrumented as in Java;
+their copies use the creator's charged factories. One optional internal counter
+sink replaces Java's provider-specific instrumented subclasses without exposing
+JVM switches or changing existing public constructor behavior.
+
+Composite capacity itself has no storage charge. Its components remain charged
+to their respective creators until release or consolidation; padding, consolidation
+and copies charge actual new storage to the composite's allocator. Shrinking by
+slicing a component still owns the component's original allocation. Independent
+buffer allocators have independent metrics even when sharing a native reservation
+domain. Rejected allocation/growth/copy and utility read/write failures leave no
+surviving charge for an unsuccessful result.
+
+CLR native pins preserve physical memory after resize/final buffer release, while
+allocator metrics follow logical owned capacity. NativeMemoryAllocator.ReservedBytes
+continues to include those outstanding pins, transient old/new storage and the
+minimum one-byte reservation for a zero-length native owner. The shared (0,0)
+sentinel has neither capacity nor reservation cost. These counters describe buffer
+ownership, not process GC/native heap usage. Concurrent operations on independent
+buffers are supported; this does not make concurrent mutation of one buffer safe.
+
+21 new cases include all four original unpooled metric/32-MiB scenarios and both
+original resize comments, plus growth/shrink/rejected sizes, copy/view/reference
+ownership, raw constructors, composite storage, independent allocators, native
+quota failures, utility cleanup, physical pins and concurrent allocation/release.
+6144 pinned Java/CLR snapshots agree exactly per Debug/Release and an independent
+owner-capacity ledger. Evidence: artifacts/buffer-metric-validation (ignored),
+buffer-metric-*.trx. net10.0 Debug, Release and rebuilt checked Release each pass
+1097/1097, no failures/skips. Checked build has zero errors and 51 existing Common
+warnings; no Buffer/test warnings. Common is unchanged and its tests were not rerun.
+
+Inventory remains 159 pinned Java files: 119 pending, 31 in-progress, 8 verified,
+1 CLR replacement. Only the two small metric interfaces newly become verified.
+Allocator implementations and inherited original fixtures remain partial; leak
+wrappers, global default selection and pooled/adaptive allocators remain pending.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Allocator metrics,
+single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Pooled/adaptive allocator metrics,
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover allocator metrics and remaining ByteBufUtil consumers,
+Next units cover remaining ByteBufUtil consumers and original fixtures,
 then remaining factories/utilities/original tests, leak wrappers and pooled/adaptive allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.

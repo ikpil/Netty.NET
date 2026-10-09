@@ -35,6 +35,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     private readonly NativeMemoryAllocator _allocator;
     private NativeMemoryOwner _owner;
     private readonly IByteBufAllocator _bufferAllocator;
+    private readonly UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric _metric;
     public override IByteBufAllocator Allocator => _bufferAllocator;
 
     /**
@@ -51,6 +52,10 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     /// <summary>Creates native storage with an explicit buffer allocation policy and optional reservation domain.</summary>
     public UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, int initialCapacity, int maxCapacity,
         NativeMemoryAllocator nativeAllocator = null)
+        : this(bufferAllocator, initialCapacity, maxCapacity, nativeAllocator, null) { }
+
+    internal UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, int initialCapacity, int maxCapacity,
+        NativeMemoryAllocator nativeAllocator, UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric metric)
         : base(maxCapacity)
     {
         ArgumentNullException.ThrowIfNull(bufferAllocator);
@@ -59,6 +64,8 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
         _allocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
         _owner = _allocator.Allocate(initialCapacity, clear: true);
+        _metric = metric;
+        _metric?.AddDirect(initialCapacity);
     }
     protected override Memory<byte> GetMemoryCore(int index, int length) => _owner.Memory.Slice(index, length);
     internal override BufferMemoryLease AcquireReadLease()
@@ -81,6 +88,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
             _owner = replacement;
             TrimIndicesToCapacity(value);
             previous.Dispose();
+            _metric?.AddDirect((long)value - previous.Length);
         }
     }
     public override ByteBuf Copy(int index, int length)
@@ -90,5 +98,9 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         try { return result.WriteBytes(source); }
         catch { result.Release(); throw; }
     }
-    protected override void Deallocate() => _owner.Dispose();
+    protected override void Deallocate()
+    {
+        _owner.Dispose();
+        _metric?.AddDirect(-_owner.Length);
+    }
 }
