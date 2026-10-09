@@ -1045,6 +1045,50 @@ warnings. Common is unchanged and its suite was not rerun. Inventory remains 159
 126 pending, 27 in-progress, 5 verified, 1 CLR replacement. Source/fixture remain
 partial; AsciiString copying, allocator/cache integration and broader APIs are pending.
 
+## AsciiString copying
+
+All three ByteBufUtil.Copy overloads retain their original Java API comments.
+AsciiString.AsSpan().Slice supplies logical source bounds and backing-array offsets;
+all 256 octets copy unchanged, without ASCII decoding/re-encoding. Absolute copies
+use SetBytes, may extend past WriterIndex up to Capacity, never grow and change no
+indices. Relative/full copies use WriteBytes, may grow, and advance WriterIndex only
+after success. ReaderIndex, marks and reference counts remain unchanged. Source null
+and range checks precede destination validation, growth and mutation, using CLR
+argument exceptions. Empty requests still validate logical source/destination ranges,
+lifetime and write permission; the shared empty sentinel accepts a valid empty copy.
+
+Existing span writes supply overlap handling: contiguous storage uses memmove and
+segmented writes snapshot before changing components. Pinned Java instead performs
+sequential component array writes; forward overlap where AsciiString and two destination
+components share one array can overwrite later source bytes. Two oracle rows record
+the deliberate CLR snapshot adaptation. Managed source arrays stay alive when heap
+growth replaces destination storage. Composite write failures can leave earlier bytes
+changed, and relative growth can remain, while WriterIndex stays unchanged. Callers
+must exclude concurrent source content and destination content/layout/lifetime changes;
+no reference is retained and no Common or storage API was added.
+
+The pinned ByteBufUtilTest has no dedicated copy fixtures. The new Buffer-owned
+tests cover actual consumer contracts from codec-http HttpHeadersEncoder.encoderHeader
+(absolute name/value writes between colon-space/CRLF writes, followed by one explicit
+WriterIndex publication) and HttpHeaders.encodeAscii (relative AsciiString writing).
+This records consumer evidence without porting HTTP or claiming its fixture coverage.
+54 new cases cover eight storage/view/permission layouts, all octets, copied and
+nested offset sources, marks/ownership, growth/exhaustion, null/negative/overflow/end
+bounds, empty/dead buffers, bidirectional same-array overlap, source aliasing during
+heap growth, partial composite failure and HTTP header byte assembly.
+
+13312 pinned Java/CLR byte/index/mark/reference/source-immutability rows match per
+Debug/Release across eight layouts, 128 seeds and all overloads. An independent
+byte model agrees. Twenty-three edge rows cover growth, aliasing, released buffers
+and the empty sentinel; only the two documented overlap rows differ. Evidence:
+artifacts/buffer-ascii-copy-validation (ignored), buffer-ascii-copy-*.trx.
+net10.0 Debug, Release and rebuilt checked Release pass 1006/1006, no failures/skips.
+Checked build: zero errors and 51 existing Common warnings; no Buffer/test warnings.
+Common is unchanged and its suite was not rerun. Inventory remains 159: 126 pending,
+27 in-progress, 5 verified, 1 CLR replacement. ByteBufUtil remains partial; this unit
+adds no original test completion claim. Remaining utilities, allocator/cache integration
+and broader APIs are pending.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -1052,6 +1096,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover ByteBufUtil AsciiString copying and remaining I/O consumer mapping,
+Next units cover remaining ByteBufUtil APIs and I/O consumer mapping,
 Unpooled factories, utilities and original tests, followed by allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
