@@ -1241,6 +1241,42 @@ Inventory remains 159 pinned Java files: 119 pending, 31 in-progress, 8 verified
 Allocator implementations and inherited original fixtures remain partial; leak
 wrappers, global default selection and pooled/adaptive allocators remain pending.
 
+## Scalar and endian utilities
+
+ByteBufUtil now implements IsAccessible/EnsureAccessible, EnsureWritableSuccess,
+SwapShort/Medium/Int/Long, WriteShortBE, SetShortBE, WriteMediumBE,
+ReadUnsignedShortBE and ReadIntBE, preserving all twelve original API comments.
+BinaryPrimitives handles signed 16/32/64-bit reversal. SwapMedium ignores the
+high byte, reverses the remaining three and sign-extends bit 23; all operations
+remain correct under checked arithmetic. Writes keep the original low-word
+truncation policy. The unsigned 16-bit read uses ushort in C#.
+
+The existing unsuffixed ByteBuf operations are always BE and named LE methods
+select LE explicitly, so BE helpers delegate without a mutable order facade.
+Java BE and LE-view oracle paths produce the same wire bytes as these CLR APIs.
+Writes/read operations retain existing bounds, permissions and index/mark rules;
+SetShortBE is capacity-bounded and does not change indices. Accessibility only
+observes the shared logical reference count; it neither retains nor guards against
+a concurrent final release. EnsureWritableSuccess accepts exactly codes 0 and 2,
+including rejection of forced-but-insufficient code 3. Null is an explicit CLR
+ArgumentNullException. No new Common abstraction or byte-order wrapper is needed.
+
+21 new cases cover five original endian scenarios and all four unsigned-short
+inline comments, every short bit pattern, signed/24-bit boundaries, heap/native/
+segmented/slice storage, read-only reads, unchanged marks, failure behavior,
+borrowed/retained/shared-empty lifetime, actual growth status and HTTP CRLF/chunk
+delimiters. Pinned consumers include HttpObjectEncoder/HttpRequestEncoder.
+70772 pinned Java/CLR rows agree per Debug/Release and independent octet models:
+65536 short patterns, 4108 medium/int/long vectors, 1120 storage/order/wire/lifetime
+rows (560 Java LE-view rows mapped to explicit CLR BE), and eight status values.
+Evidence: artifacts/buffer-scalar-validation (ignored), buffer-scalar-*.trx.
+
+net10.0 Debug, Release and rebuilt checked Release each pass 1118/1118, no failures
+or skips. Checked build: zero errors, 51 existing Common warnings, no Buffer/test
+warnings. Common is unchanged and its tests were not rerun. Inventory remains
+159: 119 pending, 31 in-progress, 8 verified, 1 CLR replacement. ByteBufUtil and its
+original fixture remain in-progress; no full fixture completion is inferred.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -1248,6 +1284,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover remaining ByteBufUtil consumers and original fixtures,
+Next units cover remaining composite/storage APIs and original fixtures,
 then remaining factories/utilities/original tests, leak wrappers and pooled/adaptive allocator/cache integration. Common
 changes must cite the actual buffer contract that requires them.
