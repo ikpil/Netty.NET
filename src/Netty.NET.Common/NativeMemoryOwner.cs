@@ -15,6 +15,7 @@
  */
 using System;
 using System.Buffers;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Netty.NET.Common;
@@ -45,6 +46,21 @@ public sealed unsafe class NativeMemoryOwner : IMemoryOwner<byte>
     public int Length { get; }
     public Memory<byte> Memory => _manager.Memory;
     internal int PinCount => Volatile.Read(ref _pinCount);
+
+    /// <summary>Finds the native owner that created a memory range, including slices.</summary>
+    /// <remarks>This is a metadata lookup and acquires no ownership, pin or lifetime guarantee.
+    /// It can identify previously obtained memory after owner disposal; accessing that memory
+    /// still throws. Other memory managers, including other native providers, return false.</remarks>
+    public static bool TryGetOwner(ReadOnlyMemory<byte> memory, out NativeMemoryOwner owner)
+    {
+        if (MemoryMarshal.TryGetMemoryManager<byte, NativeMemoryManager>(memory, out var manager))
+        {
+            owner = manager.Owner;
+            return true;
+        }
+        owner = null;
+        return false;
+    }
 
     /// <summary>Returns the largest slice whose start and end are aligned.</summary>
     /// <remarks>The source memory is unchanged and retains ownership. If no aligned
@@ -97,6 +113,7 @@ public sealed unsafe class NativeMemoryOwner : IMemoryOwner<byte>
     private sealed class NativeMemoryManager : MemoryManager<byte>
     {
         private readonly NativeMemoryOwner _owner;
+        internal NativeMemoryOwner Owner => _owner;
         internal NativeMemoryManager(NativeMemoryOwner owner) => _owner = owner;
 
         public override Memory<byte> Memory

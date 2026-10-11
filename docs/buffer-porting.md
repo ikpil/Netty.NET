@@ -1277,11 +1277,58 @@ warnings. Common is unchanged and its tests were not rerun. Inventory remains
 159: 119 pending, 31 in-progress, 8 verified, 1 CLR replacement. ByteBufUtil and its
 original fixture remain in-progress; no full fixture completion is inferred.
 
+## External read-only memory
+
+ReadOnlyMemoryByteBuf maps the ReadOnlyByteBufferBuf storage contract to a fixed
+ReadOnlyMemory range, and Unpooled.WrappedBuffer(ReadOnlyMemory<byte>) supplies the
+factory. Slicing memory selects Java's remaining region; the wrapper starts at
+ReaderIndex 0 / WriterIndex length with independent reference counting. It borrows
+external storage without copying, retaining a ByteBuf parent or disposing its owner.
+External writes are visible. Keep the external owner valid throughout all access.
+Final wrapper release clears its memory reference; explicit owner disposal still
+invalidates manager-backed access. Source leases pin through ReadOnlyMemory.Pin.
+
+The original source's three comments, factory comment and both fixture licenses/
+three inline comments are retained. Existing BE/LE primitives, read-only guards,
+Memory/Sequence views, derived ownership, Stream and positioned-file paths are
+reused. Copies use the creating allocator, are writable and independent, and use
+Int32.MaxValue maximum (matching this original source rather than the fixed root
+maximum). Allocated results are released on write failure. Wrapping external storage
+has no allocator-capacity charge; copying and composite consolidation charge their
+actual new storage. Empty factory input shares EmptyBuffer; explicit empty roots
+remain owned/read-only. CLR negative/released EnsureWritable status calls validate
+arguments/lifetime where Java unconditionally returns 1.
+
+Actual Buffer consumers require preserving direct-copy selection. The sole Common
+extension, NativeMemoryOwner.TryGetOwner, identifies its private memory manager via
+MemoryMarshal without reflection, unsafe pointer exposure, pins or lifetime claims.
+It recognizes slices and previously obtained disposed-owner memory as metadata;
+memory access after disposal still fails. Known NativeMemoryOwner memory is direct.
+Unknown managers, even potentially native third-party managers, use heap-copy policy
+because ReadOnlyMemory has no general storage-kind metadata. This is a stated CLR
+limitation, not an inference that every non-array manager is native.
+
+28 new Buffer cases and two Common cases cover arrays/native/custom managers,
+original selected copy/read/write/round-trip/derived-release scenarios, independent
+concurrent copy ranges, Composite consolidation, sync/async Stream output, capacity
+bounds, zero/dead/null cases, native quotas, pins and post-allocation cleanup.
+2232 pinned Java/CLR byte/index/capacity/storage/copy/refcount rows agree per
+Debug/Release and independent models, with two explicit status-guard adaptations.
+Evidence: artifacts/buffer-readonly-memory-validation (ignored), corresponding TRX.
+
+net10.0 Buffer Debug/Release/rebuilt checked Release each pass 1146/1146 without
+failures/skips. Common full Debug/Release each pass 2678, zero failed, 14 existing
+skips; checked NativeMemoryContractTest passes 28/28 with no skips.
+Buffer checked build has zero errors and 51 existing Common warnings; no Buffer/test
+warnings. Inventory: 159 files, 116 pending, 34 in-progress, 8 verified, 1 CLR replacement.
+The source and both original fixtures remain partial; writable external Memory,
+mapped-file/raw-address/provider-specific and remaining inherited scenarios are open.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Pooled/adaptive allocator metrics,
-external read-only storage/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
+writable external memory/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units cover remaining composite/storage APIs and original fixtures,
