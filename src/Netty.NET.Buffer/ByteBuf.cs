@@ -283,8 +283,8 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
 
     protected abstract Memory<byte> GetMemoryCore(int index, int length);
     protected virtual ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length) => GetMemoryCore(index, length);
-    // A growing span write may read this buffer's old allocation. Native owners
-    // pin it across replacement, so aliasing source spans stay physically valid.
+    // A growing span write may read this buffer's old allocation. Storage leases
+    // preserve native owners and defer pooled region reuse across replacement.
     internal virtual BufferMemoryLease PinMemoryForWrite() { EnsureCanWrite(); return AcquireReadLease(); }
     /**
          * Returns the number of bytes (octets) this buffer can contain.
@@ -581,7 +581,12 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         if (minimumWritableBytes <= WritableBytes) return this;
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
             throw new ArgumentOutOfRangeException(nameof(minimumWritableBytes));
-        Capacity = Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
+        // Normalize the target capacity to the power of 2.
+        int fastWritable = MaxFastWritableBytes;
+        int newCapacity = fastWritable >= minimumWritableBytes ? _writerIndex + fastWritable
+            : Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
+        // Adjust to the new capacity.
+        Capacity = newCapacity;
         return this;
     }
     /**
@@ -615,7 +620,11 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
             Capacity = MaxCapacity;
             return 3;
         }
-        Capacity = Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
+        int fastWritable = MaxFastWritableBytes;
+        int newCapacity = fastWritable >= minimumWritableBytes ? _writerIndex + fastWritable
+            : Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
+        // Adjust to the new capacity.
+        Capacity = newCapacity;
         return 2;
     }
     // AbstractByteBufAllocator.calculateNewCapacity: same 64-byte / 4-MiB growth policy.

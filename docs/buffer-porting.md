@@ -1855,6 +1855,52 @@ pooled ByteBuf initialization, arena/destruction hooks and caches are still pend
 Inventory remains 159 (88 pending, 40 in-progress, 28 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-subpage-validation (ignored), buffer-subpage-*.trx.
 
+## Pooled heap storage and buffer lifetimes
+
+Internal PoolHeapArena and PooledHeapByteBuf connect reviewed run/subpage metadata to
+real GC.AllocateUninitializedArray<byte> backing. Small slots bind the actual owner's
+array and original bitmap-relative offset; normal runs use page offsets; huge requests
+use exact dedicated arrays. Logical capacity, normalized reservation, original resize
+thresholds, prefix copying, index trimming, creator allocator and exactly-once returns
+are connected. Both EnsureWritable overloads now consult MaxFastWritableBytes before
+the allocator growth hook, as the original AbstractPooledByteBufTest requires.
+
+Storage reservations have their own atomic lifetime. Internal span-write/composite
+leases defer recycling old regions across buffer replacement or final release; logical
+buffer reference counts still reach zero normally. Public Memory/Span borrows and array
+pins do not retain reservations: callers must exclude replacement/final release during
+access. Wrapper objects are never recycled, so stale CLR references remain released.
+Shared Memory/Span primitives replace Java Unsafe/NIO providers. Existing views retain
+the CLR shared-root count model; independently counted pooled derived classes remain
+pending. Original comments from implemented paths and both selected fixture copyrights
+are preserved. Private Monitor locks serialize capacity changes and arena bookkeeping;
+byte/cursor access and final release still require caller synchronization.
+
+This is an internal heap foundation. A test allocator exercises its real storage;
+public PooledByteBufAllocator/default selection and native pooling are still pending.
+Arena chunk selection currently scans registered chunks and retains pooled chunks for
+the arena lifetime. Utilization lists, eviction/last-destroyed reuse, subpage destruction,
+metrics, caches, event/leak integration and full inherited fixtures remain pending.
+Heap native-address alignment is rejected. A small LCM run that cannot fit a tiny chunk
+uses exact dedicated storage instead of Java's assertion/truncated-run behavior.
+
+40 added cases cover all directly declared original pooled scenarios on heap, all size
+classes in three geometries, nonoverlap/actual-owner binding, resize thresholds, copies,
+views, stale wrappers, alias leases, composite release, primitive/stream offsets and
+eight-worker lifetimes. The original normal-subpage release condition now runs through
+1024 real 8192-byte buffers in one 16-MiB arena, with no caches. 6247 pinned Java/CLR rows
+agree per Debug/Release across page sizes 4096/8192/65536: logical/reserved capacities,
+fast writable space, indices, region reuse and SHA-256 of every preserved byte prefix.
+An independent grouped-size/reservation/cursor/byte model checks every row. Fresh pinned
+Java heap classes run with assertions enabled and Unsafe disabled; allocation selection,
+cache/eviction performance, native storage and independent derived counts are not claimed.
+
+net10.0 Debug/Release/rebuilt checked Release pass 1911/1911, no failures/skips. Checked
+build has zero errors and 51 existing Common warnings, no Buffer/test warnings. Common
+is unchanged. Five entries become in-progress; none are newly marked complete. Inventory
+remains 159 (83 pending, 45 in-progress, 28 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-pooled-heap-validation (ignored), buffer-pooled-heap-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -1862,6 +1908,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units connect the reviewed size classes to pooled arena/chunk/cache storage and
+Next units add pooled native storage, arena utilization lists/eviction, allocator/cache integration and
 continue remaining factories/utilities/original fixtures and leak wrappers. Common
 changes must cite the actual buffer contract that requires them.
