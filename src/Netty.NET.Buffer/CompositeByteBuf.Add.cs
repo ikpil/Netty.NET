@@ -141,6 +141,20 @@ public partial class CompositeByteBuf
         return this;
     }
 
+    // support passing arrays of other types instead of having to copy to a ByteBuf[] first
+    // CLR: cached static delegates replace Java ByteWrapper strategies for the two Memory types.
+    internal CompositeByteBuf AddWrappedMemory<T>(T[] buffers, int offset,
+        Func<T, bool> isEmpty, Func<T, ByteBuf> wrap) where T : struct
+    {
+        // No need for consolidation
+        // CLR: preserve the original batch boundary, rather than consolidating each insertion.
+        for (int i = offset; i < buffers.Length; ++i)
+            if (!isEmpty(buffers[i])) AddComponentCore(_components.Count, wrap(buffers[i]), false);
+        ConsolidateIfNeeded();
+        WriterIndex = Capacity;
+        return this;
+    }
+
     /**
      * Add the given {@link ByteBuf}s.
      * <p>

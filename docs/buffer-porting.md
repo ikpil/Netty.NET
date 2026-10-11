@@ -1402,6 +1402,45 @@ corresponding TRX. Inventory remains 159 files: 116 pending, 34 in-progress, 8 v
 1 CLR replacement. Unpooled and its original fixture remain partial; provider-specific
 and multi-memory wrapping, leak wrappers and pooled/adaptive allocation remain open.
 
+## Multiple external memory wrapping
+
+Unpooled.WrappedBuffer now accepts params Memory<byte>[] and ReadOnlyMemory<byte>[],
+including explicit maximum-component overloads. The two original NIO factory docs
+and generic-strategy comments are retained. Cached static delegates replace Java
+ByteWrapper strategies; no intermediate ByteBuf array is required. Single-array
+arity reuses the single-range wrapper. Multiple supplied ranges with at least one
+nonempty range create a composite, even when only one range is nonempty. Empty
+ranges are skipped; all-empty inputs share the sentinel. Limits are validated only
+when a composite is actually created, matching Java. Null lists fail; default Memory
+values are empty and cannot represent Java's null-element termination.
+
+Ranges borrow external storage, so original writes remain visible until consolidation.
+Keep owners valid throughout access. Each range gets an independent wrapper reference;
+repeated ranges can alias the same bytes without acquiring owner disposal rights.
+Component-limit consolidation runs once after the full batch, copies into owned heap
+storage and ends aliasing for every component. Read-only components reject writes;
+the ordinary composite IsReadOnly flag remains false, and consolidated storage is
+writable. Existing ByteBuf[] wrapping supports explicitly mixed mutability. Memory
+has no mutable NIO cursor/order; explicit slicing and BE/LE access remain the policy.
+
+Insertion/overflow/consolidation failure releases the inaccessible temporary composite
+and its acquired wrapper references, plus any failed owned replacement. External
+owners are neither retained nor disposed, including on failure. CLR source-access
+exceptions remain explicit; a later retry with valid memory works.
+
+27 new cases cover selected original NIO-array wrapping/empty scenarios across
+array/native/custom manager backings, captured offsets, readonly writes, arity,
+full-batch consolidation, repeated wrappers/retained views, limits/nulls, overflow
+without huge allocation and source failure/retry. net10.0 Debug/Release/rebuilt
+checked Release each pass 1223/1223, no failures/skips. 6084 pinned Java/CLR rows
+agree per Debug/Release and independent segment/ownership models, including initial
+allocator charges and final zero balances. Checked build has zero errors and 51
+existing Common warnings; no Buffer/test warnings. Common sources are unchanged.
+Evidence: artifacts/buffer-memory-wrap-validation (ignored), corresponding TRX.
+Inventory remains 159 files: 116 pending, 34 in-progress, 8 verified, 1 CLR replacement.
+Unpooled, CompositeByteBuf and their original fixtures remain partial; provider/raw
+address wrapping, leak detection and pooled/adaptive allocation are still open.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
