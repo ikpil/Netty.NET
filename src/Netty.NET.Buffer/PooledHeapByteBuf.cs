@@ -12,111 +12,12 @@
  * under the License.
  */
 
-using System;
-
 namespace Netty.NET.Buffer;
 
-// CLR: the shared ByteBuf Memory/Span kernel provides heap primitive, bulk and
-// stream access. A wrapper is never recycled: a stale released C# reference must
-// not become a reference to a later live buffer. Only storage regions are pooled.
-internal sealed class PooledHeapByteBuf : AbstractReferenceCountedByteBuf
+internal sealed class PooledHeapByteBuf : PooledByteBuf
 {
-    private readonly PoolHeapArena _arena;
-    private readonly object _resizeLock = new();
-    private PoolHeapArena.Allocation _allocation;
-    private int _length;
-    internal PoolHeapArena.Allocation Allocation => _allocation;
+    internal PooledHeapByteBuf(PoolHeapArena arena, int initialCapacity, int maxCapacity)
+        : base(arena, initialCapacity, maxCapacity) { }
 
-    internal PooledHeapByteBuf(PoolHeapArena arena, int initialCapacity, int maxCapacity) : base(maxCapacity)
-    {
-        ArgumentNullException.ThrowIfNull(arena);
-        if (initialCapacity < 0 || initialCapacity > maxCapacity)
-            throw new ArgumentOutOfRangeException(nameof(initialCapacity));
-        _arena = arena;
-        _allocation = arena.AllocateMemory(initialCapacity);
-        _length = initialCapacity;
-    }
-
-    public override IByteBufAllocator Allocator => _arena.Parent;
     public override bool IsDirect => false;
-    public override bool IsContiguous => true;
-    public override int MaxFastWritableBytes
-        => Math.Min(_allocation?.ReservedLength ?? _length, MaxCapacity) - WriterIndex;
-
-    protected override Memory<byte> GetMemoryCore(int index, int length)
-        => _allocation.Memory.AsMemory(_allocation.Offset + index, length);
-
-    internal override BufferMemoryLease AcquireReadLease()
-    {
-        EnsureAccessible();
-        return _allocation.AcquireLease();
-    }
-
-    public override int Capacity
-    {
-        get => _length;
-        set
-        {
-            // We synchronize on the ByteBuf itself to ensure there is no "concurrent" reallocations for the same buffer.
-            // We do this to ensure the ByteBuf internal fields that are used to allocate / free are not accessed
-            // concurrently. This is important as otherwise we might end up corrupting our internal state of our data
-            // structures.
-            //
-            // Also note we don't use a Lock here but just synchronized even tho this might seem like a bad choice for Loom.
-            // This is done to minimize the overhead per ByteBuf. The time this would block another thread should be
-            // relative small and so not be a problem for Loom.
-            // See https://github.com/netty/netty/issues/13467
-            // CLR: use a private Monitor for all capacity mutations. Data access,
-            // active cursors and final Release still require caller synchronization.
-            lock (_resizeLock)
-            {
-                CheckNewCapacity(value);
-                if (value == _length) return;
-                PoolHeapArena.Allocation previous = _allocation;
-                int maxLength = previous.ReservedLength;
-                if (previous.IsPooled)
-                {
-                    // If the request capacity does not require reallocation, just update the length of the memory.
-                    if (value > _length && value <= maxLength)
-                    {
-                        _length = value;
-                        return;
-                    }
-                    if (value < _length && value > maxLength >> 1 &&
-                        (maxLength > 512 || value > maxLength - 16))
-                    {
-                        // here newCapacity < length
-                        _length = value;
-                        TrimIndicesToCapacity(value);
-                        return;
-                    }
-                }
-
-                // Reallocation required.
-                PoolHeapArena.Allocation replacement = _arena.AllocateMemory(value);
-                try
-                {
-                    // This does not touch buf's reader/writer indices
-                    previous.Memory.AsSpan(previous.Offset, Math.Min(_length, value))
-                        .CopyTo(replacement.Memory.AsSpan(replacement.Offset));
-                }
-                catch
-                {
-                    replacement.Dispose();
-                    throw;
-                }
-                _allocation = replacement;
-                _length = value;
-                TrimIndicesToCapacity(value);
-                previous.Dispose();
-            }
-        }
-    }
-
-    protected override void Deallocate()
-    {
-        PoolHeapArena.Allocation allocation = _allocation;
-        _allocation = null;
-        allocation.Dispose();
-    }
 }

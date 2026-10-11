@@ -1901,6 +1901,49 @@ is unchanged. Five entries become in-progress; none are newly marked complete. I
 remains 159 (83 pending, 45 in-progress, 28 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-pooled-heap-validation (ignored), buffer-pooled-heap-*.trx.
 
+## Pooled native storage and arena lifetimes
+
+Internal PoolDirectArena and PooledDirectByteBuf now connect pooled regions to actual
+NativeMemoryAllocator/NativeMemoryOwner storage. Heap and native arenas/buffers share
+a nongeneric Memory<byte> core and one abstract test fixture. Original owner/offset
+binding, resize thresholds, prefix copying and region leases apply to both. Direct
+copies dispatch through the creator's DirectBuffer policy. Original implemented-path
+comments, including the NIO-copy rationale and aligned-fixture copyright, are retained.
+
+Native backing reserves the original alignment headroom and exposes bounded aligned
+slices. Arena disposal closes new reservations, frees inactive native chunks and lets
+active buffers/internal leases finish before freeing their owners. Dedicated native
+regions return on their last lease. Raw pins defer physical SafeHandle release only;
+they do not retain a pooled slot. Public Memory/Span/pointer access requires keeping
+the logical reservation alive. Allocation limits/overflow fail before publication,
+preserving the old buffer and indices. Open arenas still retain pooled chunks.
+
+Two language/provider differences are explicit. Java aligned huge initialization can
+publish normalized logical capacity above maxCapacity (131073 requested/max becomes
+163840). CLR reserves those same bytes while keeping requested logical capacity and
+Capacity<=MaxCapacity. Three such comparisons are recorded separately. Java's public
+alignment gate requires Unsafe; CLR alignment uses NativeMemoryOwner independently.
+Unaligned tiny-chunk fallback still uses exact dedicated storage; aligned fallback
+reserves the normalized class.
+
+61 added cases comprise 40 shared native scenarios and 21 alignment/ownership/failure
+cases. net10.0 Debug/Release/rebuilt checked Release each pass 1972/1972, no failures or
+skips. Checked build has zero errors and 51 existing Common warnings, no Buffer/test
+warnings. 24984 pinned Java/CLR rows agree per Debug/Release across 12 page/alignment
+domains, plus the three explicit logical-capacity adaptations. An independent grouped
+size/reservation/cursor/SHA-256 model checks the results. Java assertions are enabled;
+the safe direct provider also agrees on all 6246 unaligned rows. Shared-core heap
+regression retains all 6247 prior Java/model rows per Debug/Release. Every native oracle
+arena finishes with zero reserved native bytes. Common is unchanged.
+
+This remains internal allocator infrastructure. Public allocator/default selection,
+utilization lists/normal eviction, counters, caches, event/leak integration, independent
+pooled-derived counts and complete inherited fixtures remain pending. No allocation
+selection/cache/eviction performance equivalence is claimed. Three entries become
+in-progress; none are newly complete. Inventory is 159 (80 pending, 48 in-progress,
+28 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-pooled-native-validation (ignored), buffer-pooled-native-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -1908,6 +1951,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units add pooled native storage, arena utilization lists/eviction, allocator/cache integration and
+Next units add arena utilization lists/eviction, public pooled allocator/cache integration and
 continue remaining factories/utilities/original fixtures and leak wrappers. Common
 changes must cite the actual buffer contract that requires them.

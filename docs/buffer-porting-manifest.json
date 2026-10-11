@@ -588,18 +588,21 @@
       "kind": "source",
       "status": "in-progress",
       "implementation": [
+        "src/Netty.NET.Buffer/PoolArena.cs",
+        "src/Netty.NET.Buffer/PooledByteBuf.cs",
         "src/Netty.NET.Buffer/PoolHeapArena.cs",
-        "src/Netty.NET.Buffer/PooledHeapByteBuf.cs"
+        "src/Netty.NET.Buffer/PoolDirectArena.cs"
       ],
       "evidence": [
-        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending."
+        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
       ],
-      "adaptation": "Internal heap arena owns actual GC.AllocateUninitializedArray<byte> backing, shared small heads, normalized normal runs and exact dedicated huge arrays. Original initBuf/initBufWithSubpage offsets bind the actual owner returned by AllocateSmall. Allocation publishes chunk storage before shared-head mutation; wrapper construction failure returns its handle. Current arena serializes metadata operations and scans registered chunks; utilization lists, eviction/lastDestroyedChunk reuse, native arenas, counters, public allocator and thread caches remain pending. Pooled chunks remain retained for the arena lifetime in this internal foundation. Invalid/mismatched geometry and heap address alignment are rejected. Small LCM runs that cannot fit a tiny chunk use exact dedicated storage rather than Java assertion/truncated-run behavior. Reallocation allocates/copies before publication and returns the old reservation after internal leases finish; capacity setters use a private Monitor, while byte/cursor access and final release require external synchronization.",
+      "adaptation": "Shared nongeneric Memory<byte> arena connects real heap/native storage, chunk/subpage owner offsets, exact unaligned huge allocations and aligned normalized huge reservations. NativeMemoryAllocator/NativeMemoryOwner own native reservations and release them reliably; original alignment headroom and aligned slicing are retained. Invalid heap address alignment is rejected. Current chunk selection scans registered chunks; utilization lists, normal eviction/lastDestroyedChunk reuse, counters, public allocator and thread caches remain pending. Open arenas retain pooled chunks. CLR Dispose closes new reservations, frees inactive native chunks, clears registration/heads and lets active chunk reservations return before freeing their owner. Dedicated native reservations return on their last region lease, independently of arena closure. Outstanding raw native pins defer physical SafeHandle free, not region reuse. Allocation failures clean up newly owned native storage; existing buffer replacement publishes only after successful allocation/copy. Tiny chunks use dedicated storage when a small LCM run cannot fit; unaligned fallback remains exact, aligned fallback reserves its size class. Data/cursor access and final release still require caller synchronization. Java aligned huge initialization can publish normalized length above requested maxCapacity; CLR reserves the same normalized bytes but preserves the requested logical length. Native allocation normalization overflow fails before reserving bytes. All implemented-path comments, including the original NIO copy rationale, are preserved.",
       "comments": {
         "upstreamCount": 33,
-        "preservedCount": 14,
-        "missingCount": 19,
-        "coverage": "all comments from implemented paths preserved; partial source/fixture and remaining integration paths pending"
+        "preservedCount": 15,
+        "missingCount": 18,
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
       }
     },
     {
@@ -617,19 +620,21 @@
       "implementation": [
         "src/Netty.NET.Buffer/PoolChunk.cs",
         "src/Netty.NET.Buffer/PoolChunk.Subpages.cs",
-        "src/Netty.NET.Buffer/PoolHeapArena.cs"
+        "src/Netty.NET.Buffer/PoolHeapArena.cs",
+        "src/Netty.NET.Buffer/PoolArena.cs"
       ],
       "evidence": [
         "Page-run unit: 44 added cases cover splitting/exhaustion/reuse, bucket/offset selection, all three-run free orders, single-page boundaries, non-root queue removal, fragmentation, usage rounding, 24 independent occupancy-model configurations, eight-worker nonoverlap, maximum order/chunk and malformed arguments. net10.0 Debug/Release/rebuilt checked Release each pass 1845/1845, no failures/skips. 37112 pinned Java/CLR rows agree per Debug/Release across 24 configurations with an independent page occupancy/free-span/bucket model; Java assertions enabled. docs/buffer-porting.md#pooled-chunk-page-runs; artifacts/buffer-run-validation (ignored); buffer-run-*.trx.",
         "Subpage unit: 26 added cases cover bitmap word/partial-word boundaries, last-freed/lowest-hole selection, every small class across nine page/alignment settings, last-empty-run retention, single-element eviction, actual owner across shared heads, input/failure bounds and eight-worker nonoverlap. The original testNormalPoolSubpageRelease page-return condition is checked through chunk metadata; full pooled ByteBuf/allocator integration is still pending. net10.0 Debug/Release/rebuilt checked Release each pass 1871/1871, no failures/skips. 79642 pinned Java/CLR rows agree per Debug/Release across nine shared-head domains and 375 small-class configurations with an independent bitmap/list/LCM/page-occupancy model; Java assertions enabled. docs/buffer-porting.md#pooled-subpage-slots; artifacts/buffer-subpage-validation (ignored); buffer-subpage-*.trx.",
-        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending."
+        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
       ],
-      "adaptation": "Page-run and subpage bookkeeping are implemented. Run buckets, lowest-offset priority, split/coalescence and handle layout retain pinned Java; BCL PriorityQueue<int,int>, Dictionary<int,long> and lock(object) replace Java helpers. AllocateSmall consults shared size-class heads, returns the actual owning chunk, reuses available slots, creates LCM runs when needed and fails without publishing a subpage if no run fits. FreeSmall validates the live run/slot, retains the last empty run per size class across shared chunks, unlinks surplus empty subpages, clears their chunk slots and returns runs through the reviewed coalescing path. Caller head arrays are cloned while head objects remain shared; SizeClasses identity prevents mixing domains. The required head-before-run lock order is preserved. LCM arithmetic widens to long; an LCM run larger than the chunk returns allocation failure rather than Java enabled AssertionError or its disabled-assertion shorter-run fallback. Argument validation and invalid/double-slot-free checks precede mutation; callers still must return live handles exactly once to the actual owning chunk. All comments from implemented paths are retained. Heap backing and pooled buffer binding are now connected through PoolHeapArena using the original run/subpage offset formula and actual owner. Exact huge heap arrays live outside the pooled chunk metadata. Native backing, full arena utilization lists/destruction, huge-chunk metrics, pinned-byte accounting and thread/NIO caches remain pending.",
+      "adaptation": "Page-run and subpage bookkeeping are implemented. Run buckets, lowest-offset priority, split/coalescence and handle layout retain pinned Java; BCL PriorityQueue<int,int>, Dictionary<int,long> and lock(object) replace Java helpers. AllocateSmall consults shared size-class heads, returns the actual owning chunk, reuses available slots, creates LCM runs when needed and fails without publishing a subpage if no run fits. FreeSmall validates the live run/slot, retains the last empty run per size class across shared chunks, unlinks surplus empty subpages, clears their chunk slots and returns runs through the reviewed coalescing path. Caller head arrays are cloned while head objects remain shared; SizeClasses identity prevents mixing domains. The required head-before-run lock order is preserved. LCM arithmetic widens to long; an LCM run larger than the chunk returns allocation failure rather than Java enabled AssertionError or its disabled-assertion shorter-run fallback. Argument validation and invalid/double-slot-free checks precede mutation; callers still must return live handles exactly once to the actual owning chunk. All comments from implemented paths are retained. Heap/native backing and pooled buffer binding are connected through shared PoolArena using original run/subpage offset formulas and actual owners. Dedicated huge storage lives outside pooled chunk metadata. CLR arena closure retires native storage after active reservations/leases return. Full arena utilization lists/normal eviction, huge-chunk metrics, pinned-byte accounting and thread/NIO caches remain pending.",
       "comments": {
         "upstreamCount": 45,
         "preservedCount": 36,
         "missingCount": 9,
-        "coverage": "all comments from implemented paths preserved; partial source/fixture and remaining integration paths pending"
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
       }
     },
     {
@@ -715,18 +720,19 @@
       "kind": "source",
       "status": "in-progress",
       "implementation": [
-        "src/Netty.NET.Buffer/PooledHeapByteBuf.cs",
-        "src/Netty.NET.Buffer/PoolHeapArena.cs"
+        "src/Netty.NET.Buffer/PooledByteBuf.cs",
+        "src/Netty.NET.Buffer/PoolArena.cs"
       ],
       "evidence": [
-        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending."
+        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
       ],
-      "adaptation": "Heap lifecycle, initial empty indices/marks, logical/normalized capacities, original growth/shrink thresholds, maxFastWritableBytes, contiguous storage and exactly-once region return are implemented. Wrapper objects are not recycled: CLR stale references remain terminal at count zero. Existing ByteBuf Memory/Span/sequence/stream/file primitives replace NIO/Unsafe dispatch. Internal reference-counted reservations keep old pooled regions unavailable for reuse during aliasing span writes and composite release/consolidation. Public Memory/Span borrows and array pins do not retain a pool reservation; exclude replacement/final release throughout their use. Existing CLR shared-root view lifetimes are used; independently counted/recycled pooled derived-buffer classes remain pending. Native pooling, cache/event/pinned-metric plumbing and public allocator are pending.",
+      "adaptation": "Heap and native buffers now share one nongeneric Memory<byte> lifecycle, original resize thresholds, fast writable hint, prefix copy/index trimming, creator allocator and exactly-once region returns. Atomic region leases defer recycling across replacement and composite operations. CLR wrappers remain terminal after release and are not recycled. Raw Memory/Span borrows and pins do not retain pool reservations; keep the logical buffer/region alive while accessing them. Native owners remain live across arena closure until active buffers/internal leases finish; raw pins preserve physical storage after native owner disposal. Existing shared-root CLR view counts remain; independent/recycled pooled derived classes, cache/event/pinned metric plumbing and public allocator remain pending. The unimplemented recycler-reuse comment remains upstream; other implemented-path comments are preserved.",
       "comments": {
         "upstreamCount": 6,
         "preservedCount": 5,
         "missingCount": 1,
-        "coverage": "all comments from implemented paths preserved; partial source/fixture and remaining integration paths pending"
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
       }
     },
     {
@@ -748,10 +754,27 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/PooledDirectByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/PooledDirectByteBuf.cs",
+        "src/Netty.NET.Buffer/PooledByteBuf.cs",
+        "src/Netty.NET.Buffer/PoolDirectArena.cs",
+        "src/Netty.NET.Buffer/PoolArena.cs",
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Files.cs"
+      ],
+      "evidence": [
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
+      ],
+      "adaptation": "Native owner-backed Memory slices feed shared bounded primitive/bulk/overlap/sequence/stream/file access. IsDirect, contiguous storage and DirectBuffer copy dispatch preserve creator policy. Native allocation and alignment need no JVM Unsafe/NIO/Cleaner strategy tree; public raw array/address facades are not introduced. Borrowed native memory must not outlive its logical reservation. Internal leases delay region reuse and physical disposal; raw pins delay physical free only. Heap/native share base capacity/ownership behavior, including the documented aligned-huge logical length adaptation. Public pooled allocator, caches/events/metrics and independent pooled-derived integration remain pending.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/PooledDuplicatedByteBuf.java",
@@ -767,20 +790,24 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Buffer/PooledHeapByteBuf.cs",
+        "src/Netty.NET.Buffer/PooledByteBuf.cs",
+        "src/Netty.NET.Buffer/PoolHeapArena.cs",
+        "src/Netty.NET.Buffer/PoolArena.cs",
         "src/Netty.NET.Buffer/ByteBuf.cs",
         "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
         "src/Netty.NET.Buffer/ByteBuf.Streams.cs",
         "src/Netty.NET.Buffer/ByteBuf.Files.cs"
       ],
       "evidence": [
-        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending."
+        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
       ],
-      "adaptation": "Actual heap arrays and owner-relative region offsets feed the reviewed shared Memory/Span primitive/bulk/overlap/stream/file kernel. Creator allocator provenance, heap Copy, release, capacity changes and retained-view data ownership are tested. No Java Unsafe/NIO provider tree, reusable wrapper recycler or public raw array/address facade is introduced. Source remains in-progress with parent pooled lifecycle/native/caches/events/allocator and pooled-derived integration pending.",
+      "adaptation": "Thin heap specialization uses the shared pooled arena/buffer core. Existing logical/normalized capacity, owner offsets, prefix copies, fast-space growth, shared-root views, copy provenance and region return contracts remain covered by the common heap/native fixtures and unchanged 6247-row heap model per Debug/Release. Primitive/bulk/stream/file kernels use Memory/Span instead of the Java provider hierarchy. Public pooled allocator, full pooled-derived/caches/events/metrics integration and broader original fixture coverage remain pending.",
       "comments": {
         "upstreamCount": 1,
         "preservedCount": 1,
         "missingCount": 0,
-        "coverage": "all comments from implemented paths preserved; partial source/fixture and remaining integration paths pending"
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
       }
     },
     {
@@ -1508,17 +1535,20 @@
       "kind": "test",
       "status": "in-progress",
       "implementation": [
-        "test/Netty.NET.Buffer.Tests/PooledHeapByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledHeapByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledDirectByteBufTest.cs"
       ],
       "evidence": [
-        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending."
+        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
       ],
-      "adaptation": "All directly declared original scenarios are exercised on the heap foundation: new allocation indices/marks, enough/insufficient ensureWritable, maxFastWritableBytes and same-reservation writes, precise fast-space growth, contiguous storage and distinct-buffer nonoverlap. Both ensureWritable overloads are checked against pinned Java. Reuse identity compares reservation objects, not globally ambiguous handles across chunks. Inherited AbstractByteBufTest suite, direct/LE providers and leak/swapped wrapper integration remain pending; this entry stays in-progress.",
+      "adaptation": "All directly declared original pooled scenarios execute on both heap and native through the shared fixture: initial indices/marks, enough/insufficient ensureWritable, maxFastWritableBytes/same-reservation writes, precise fast-space growth, contiguous storage and nonoverlap. Shared CLR cases also cover resize thresholds, owner routing, views/copies, stale wrappers, alias/composite leases, primitive/stream offsets and concurrency. Factory providers remain test-only; the complete inherited AbstractByteBufTest suite, LE/swapped/leak wrappers and public allocator remain pending. Storage identity comparisons use region/storage objects rather than boxed Memory values or cross-chunk handles.",
       "comments": {
         "upstreamCount": 8,
         "preservedCount": 7,
         "missingCount": 1,
-        "coverage": "all comments from implemented paths preserved; partial source/fixture and remaining integration paths pending"
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
       }
     },
     {
@@ -1929,35 +1959,58 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/PooledAlignedBigEndianDirectByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/PooledDirectByteBufTest.cs"
+      ],
+      "evidence": [
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
+      ],
+      "adaptation": "Selected native alignment contracts execute at alignments 1/8/16/64/page: every normalized size class, huge reservation, aligned pointer and bounded memory, plus native limits and logical-length adaptation. Original fixture copyright is retained. No assumption-based skip is used: CLR native alignment is independent of JVM Unsafe availability. The original aligned allocator configuration/default factory and complete inherited abstract buffer suite remain pending; this entry is partial.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/PooledBigEndianDirectByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/PooledDirectByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs"
+      ],
+      "evidence": [
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
+      ],
+      "adaptation": "Direct child fixture runs the shared pooled scenarios against actual native arena storage, default BE plus explicit LE primitive access, copies, offsets and lifetime contracts. All original comments retained. Public DEFAULT allocator, full inherited AbstractByteBufTest and leak/swapped wrappers remain pending.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/PooledBigEndianHeapByteBufTest.java",
       "kind": "test",
       "status": "in-progress",
       "implementation": [
-        "test/Netty.NET.Buffer.Tests/PooledHeapByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/PooledHeapByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs"
       ],
       "evidence": [
-        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending."
+        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
       ],
-      "adaptation": "The test-only allocator dispatches heap factories into the actual internal PoolHeapArena and PooledHeapByteBuf. Selected inherited pooled and shared-kernel heap scenarios execute. The public PooledByteBufAllocator.DEFAULT factory and complete inherited AbstractByteBufTest suite remain pending; this entry stays in-progress.",
+      "adaptation": "Heap child fixture runs the shared pooled scenarios against the actual internal heap arena. All original comments retained. Public DEFAULT allocator and complete inherited AbstractByteBufTest suite remain pending.",
       "comments": {
         "upstreamCount": 2,
         "preservedCount": 2,
         "missingCount": 0,
-        "coverage": "all original comments preserved; inherited suite and public allocator integration pending"
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
       }
     },
     {
@@ -1966,18 +2019,21 @@
       "status": "in-progress",
       "implementation": [
         "test/Netty.NET.Buffer.Tests/PoolSubpageTest.cs",
-        "test/Netty.NET.Buffer.Tests/PooledHeapByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledHeapByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/PooledDirectByteBufTest.cs"
       ],
       "evidence": [
         "Subpage unit: 26 added cases cover bitmap word/partial-word boundaries, last-freed/lowest-hole selection, every small class across nine page/alignment settings, last-empty-run retention, single-element eviction, actual owner across shared heads, input/failure bounds and eight-worker nonoverlap. The original testNormalPoolSubpageRelease page-return condition is checked through chunk metadata; full pooled ByteBuf/allocator integration is still pending. net10.0 Debug/Release/rebuilt checked Release each pass 1871/1871, no failures/skips. 79642 pinned Java/CLR rows agree per Debug/Release across nine shared-head domains and 375 small-class configurations with an independent bitmap/list/LCM/page-occupancy model; Java assertions enabled. docs/buffer-porting.md#pooled-subpage-slots; artifacts/buffer-subpage-validation (ignored); buffer-subpage-*.trx.",
-        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending."
+        "Pooled heap storage unit: 40 added cases; net10.0 Debug/Release/rebuilt checked Release each pass 1911/1911, no failures/skips. 6247 pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model. Original normal-subpage release condition now executes through 1024 real heap buffers. docs/buffer-porting.md#pooled-heap-storage-and-buffer-lifetimes; artifacts/buffer-pooled-heap-validation (ignored); buffer-pooled-heap-*.trx. Public pooled allocator, native pooling, utilization lists/eviction, metrics, caches and independently counted pooled derived buffers remain pending.",
+        "Pooled native storage unit: 61 added cases (40 shared native scenarios and 21 native ownership/alignment/failure cases); net10.0 Debug/Release/rebuilt checked Release pass 1972/1972, no failures/skips. 24984 native pinned Java/CLR rows agree per Debug/Release with an independent grouped-size/reservation/cursor/SHA-256 byte model across 12 page/alignment domains; safe Java provider agrees on 6246 unaligned rows. Three aligned-huge logical-capacity differences are recorded explicitly. Shared-core heap regression retains all 6247 prior Java/model rows per Debug/Release. docs/buffer-porting.md#pooled-native-storage-and-arena-lifetimes; artifacts/buffer-pooled-native-validation (ignored); buffer-pooled-native-*.trx. Public allocator, lists/eviction, metrics, caches and independent pooled derived counts remain pending."
       ],
-      "adaptation": "Selected testNormalPoolSubpageRelease page-return condition is ported to chunk bookkeeping: 1024 page-sized single-element subpages are released and all but one cached run return to the chunk. Both original scenario comments and the original fixture license are preserved. Additional CLR tests cover standalone bitmap boundaries, all small classes, shared-head owner routing, reuse/coalescence, malformed input and concurrency. Public pooled allocator/cache counters and the rest of the original fixture remain pending. Heap storage update: testNormalPoolSubpageRelease now also executes 1024 real 8192-byte heap buffers in one 16-MiB internal heap arena with no caches; returned pages and last-empty-subpage retention match pinned Java. Public allocator selection and the rest of the original fixture remain pending.",
+      "adaptation": "Selected testNormalPoolSubpageRelease page-return condition is ported to chunk bookkeeping: 1024 page-sized single-element subpages are released and all but one cached run return to the chunk. Both original scenario comments and the original fixture license are preserved. Additional CLR tests cover standalone bitmap boundaries, all small classes, shared-head owner routing, reuse/coalescence, malformed input and concurrency. Public pooled allocator/cache counters and the rest of the original fixture remain pending. Heap storage update: testNormalPoolSubpageRelease now also executes 1024 real 8192-byte heap buffers in one 16-MiB internal heap arena with no caches; returned pages and last-empty-subpage retention match pinned Java. Public allocator selection and the rest of the original fixture remain pending. Native storage update: the real-buffer normal-subpage release scenario and shared consumer cases now also run on native storage. Core arena shutdown, alignment, allocation limits, failure atomicity and SafeHandle pin/region lifetime are CLR cases; they do not complete allocator counters/cache/public selection fixtures.",
       "comments": {
         "upstreamCount": 49,
         "preservedCount": 3,
         "missingCount": 46,
-        "coverage": "all comments from implemented paths preserved; partial source/fixture and remaining integration paths pending"
+        "coverage": "all implemented-path comments preserved; broader source/fixture and public integration remain pending"
       }
     },
     {
