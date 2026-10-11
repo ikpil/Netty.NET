@@ -1669,6 +1669,41 @@ Common is unchanged. All affected original entries remain in-progress; inventory
 159 (110 pending, 36 in-progress, 12 verified, 1 CLR replacement).
 Evidence: artifacts/buffer-decoder-policy-validation (ignored), buffer-decoder-policy-*.trx.
 
+## Stateful single-pattern search
+
+The search subpackage now has ISearchProcessor, ISearchProcessorFactory,
+AbstractSearchProcessorFactory, KmpSearchProcessorFactory and BitapSearchProcessorFactory.
+Factories precompute immutable tables; each processor carries independent mutable session
+state and Reset. Pass processor.Process as the existing Func<byte,bool> visitor to
+ByteBuf.ForEachByte (or AsciiString.ForEachByte). False reports the last byte of a match.
+Continuing at that byte plus one finds overlapping occurrences; retaining the same
+processor across buffer boundaries finds fragmented patterns without assembling input.
+
+KMP uses a copied pattern and safe managed prefix-table reads with int positions.
+Bitap uses ulong masks and the full C# byte alphabet, preserving all 64 bits in checked
+builds. The original byte[] factories reject null; additional ReadOnlySpan<byte> factories
+accept stack/sliced patterns without retaining borrowed memory. Bitap supports 1-64 bytes;
+KMP supports longer managed patterns. Both reject empty patterns at construction. Pinned
+Java no-Unsafe KMP constructs then throws on Process for empty input; Java Bitap silently
+never matches. These two edge behaviors are explicit CLR adaptations. No Common changes
+or new visitor overloads are required. All original comments in the seven mapped files
+are preserved; original Java examples are accompanied by the CLR method-group usage.
+
+63 new cases include all five original SearchProcessorTest methods for KMP/Bitap and both
+Bitap limit tests, eight storage/view/wrapper kinds, every split boundary, binary/high-bit
+patterns, independent state/reset, ownership/marks and concurrent factory reuse. A separate
+sliding-window model checks deterministic random sessions. 3144 pinned Java/CLR sessions
+agree per Debug/Release across six backings, pattern lengths 1-64 plus KMP 65/128/1025,
+pattern mutation after factory creation, fragmented input and reset boundaries. Java uses
+the no-Unsafe provider; no cross-runtime performance equivalence is claimed.
+
+net10.0 Debug/Release/rebuilt checked Release each pass 1660/1660, no failures/skips.
+Checked build has zero errors and 51 existing Common warnings, no Buffer/test warnings.
+The five source entries and Bitap limit fixture become verified. SearchProcessorTest
+remains in-progress because its Aho-Corasick parameter is pending. Inventory remains
+159 (103 pending, 37 in-progress, 18 verified, 1 CLR replacement).
+Evidence: artifacts/buffer-search-validation (ignored), buffer-search-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

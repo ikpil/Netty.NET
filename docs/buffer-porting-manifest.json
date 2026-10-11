@@ -1146,10 +1146,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/AbstractSearchProcessorFactory.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/AbstractSearchProcessorFactory.cs"
+      ],
+      "evidence": [
+        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx."
+      ],
+      "adaptation": "Both KMP and Bitap factory methods are implemented. Original byte[] entry points validate null; additional ReadOnlySpan<byte> entry points accept stack/sliced input without retaining borrowed memory. Empty patterns are rejected at construction for both algorithms. Factories may be reused across concurrent independent sessions. Original documentation is preserved; CLR callers pass processor.Process to ForEachByte.",
+      "comments": {
+        "upstreamCount": 4,
+        "preservedCount": 4,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/AhoCorasicSearchProcessorFactory.java",
@@ -1162,18 +1172,38 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/BitapSearchProcessorFactory.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/BitapSearchProcessorFactory.cs"
+      ],
+      "evidence": [
+        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx."
+      ],
+      "adaptation": "Bitap masks and shift-and state follow the original algorithm. ulong[256] and ulong state replace signed Java long masks without changing the 64-bit bit patterns; C# byte directly indexes the full 0-255 alphabet. Length 64, including the high success bit and overlapping matches, works in checked builds. Length above 64 and empty patterns throw ArgumentException at construction. Empty Java Bitap silently never matches; CLR explicitly rejects that ambiguous input. Tables contain no caller-owned pattern reference. Processor implementations are sealed in CLR.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/KmpSearchProcessorFactory.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/KmpSearchProcessorFactory.cs"
+      ],
+      "evidence": [
+        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx."
+      ],
+      "adaptation": "KMP prefix/jump-table precomputation, cloned pattern, independent processor state, overlap fallback and Reset follow the original algorithm. Safe managed array indexing and int state replace PlatformDependent Unsafe reads and long offsets; all states are bounded by the managed pattern length. Checked table-length addition prevents overflow. Empty patterns fail early with ArgumentException instead of constructing an unusable processor (pinned no-Unsafe Java fails on Process). Processor implementations are sealed in CLR.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/MultiSearchProcessor.java",
@@ -1194,18 +1224,38 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/SearchProcessor.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/ISearchProcessor.cs"
+      ],
+      "evidence": [
+        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx."
+      ],
+      "adaptation": "Stateful ISearchProcessor provides Process(byte) and Reset; Process method groups use the existing Func<byte,bool> ByteBuf/AsciiString visitor contract without adding Java ByteProcessor inheritance. False reports a pattern ending at the current byte. Processors are per-session mutable state, not thread-safe.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/SearchProcessorFactory.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/ISearchProcessorFactory.cs"
+      ],
+      "evidence": [
+        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx."
+      ],
+      "adaptation": "ISearchProcessorFactory.NewSearchProcessor creates independent state while sharing immutable precomputed factory tables. Interface naming follows C# conventions.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/package-info.java",
@@ -1958,10 +2008,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/search/BitapSearchProcessorFactoryTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/BitapSearchProcessorFactoryTest.cs"
+      ],
+      "evidence": [
+        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx."
+      ],
+      "adaptation": "Both original tests are adapted: accepting length 64 and rejecting length 65. The maximum-length case also checks actual success-bit behavior, overlaps and Reset under checked arithmetic.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/search/MultiSearchProcessorTest.java",
@@ -1974,10 +2034,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/search/SearchProcessorTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/SearchProcessorTest.cs"
+      ],
+      "evidence": [
+        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx."
+      ],
+      "adaptation": "All five original single-pattern test methods are adapted for KMP and Bitap, including UTF-8 end indices, repeating/overlapping continuation, 1024-byte input and all original unique length-64 substring checks. Original test comments are preserved. Eight backings/views additionally cover every split boundary, marks/cursors/reference counts, copied/stack patterns, independent Reset and concurrent factory reuse; deterministic random sessions use a separate sliding-window model. Original AHO_CORASIC parameter remains pending until the multi-pattern implementation is ported.",
+      "comments": {
+        "upstreamCount": 7,
+        "preservedCount": 7,
+        "missingCount": 0,
+        "coverage": "all original comments preserved; Aho-Corasick test parameter pending"
+      }
     }
   ]
 }
