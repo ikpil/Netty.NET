@@ -28,13 +28,16 @@ public class SearchProcessorTest
 {
     public static IEnumerable<object[]> Layouts()
     {
-        for (int algorithm = 0; algorithm < 2; algorithm++)
+        for (int algorithm = 0; algorithm < 3; algorithm++)
             for (int layout = 0; layout < 8; layout++) yield return new object[] { algorithm, layout };
     }
 
-    private static AbstractSearchProcessorFactory Factory(int algorithm, byte[] needle) => algorithm == 0
-        ? AbstractSearchProcessorFactory.NewKmpSearchProcessorFactory(needle)
-        : AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(needle);
+    private static ISearchProcessorFactory Factory(int algorithm, byte[] needle) => algorithm switch
+    {
+        0 => AbstractSearchProcessorFactory.NewKmpSearchProcessorFactory(needle),
+        1 => AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(needle),
+        _ => AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(needle)
+    };
 
     private static (ByteBuf Buffer, ByteBuf Owner) Buffer(byte[] data, int layout)
     {
@@ -101,7 +104,7 @@ public class SearchProcessorTest
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void OriginalLongInputs(int algorithm)
     {
         byte[] haystackBytes = new byte[1024]; haystackBytes[^1] = 1;
@@ -121,7 +124,7 @@ public class SearchProcessorTest
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void OriginalUniqueLength64Substrings(int algorithm)
     {
         byte[] haystackBytes = new byte[32 * 65]; // 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, ...
@@ -167,10 +170,10 @@ public class SearchProcessorTest
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void FactoryCopiesPatternAndProcessorsHaveIndependentResettableState(int algorithm)
     {
-        byte[] needle = { 1, 2, 1 }; AbstractSearchProcessorFactory factory = Factory(algorithm, needle);
+        byte[] needle = { 1, 2, 1 }; ISearchProcessorFactory factory = Factory(algorithm, needle);
         Array.Fill(needle, (byte)99);
         ISearchProcessor first = factory.NewSearchProcessor(), second = factory.NewSearchProcessor();
         Assert.NotSame(first, second);
@@ -183,7 +186,7 @@ public class SearchProcessorTest
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void RandomSessionsAgreeWithIndependentSlidingWindowIncludingResets(int algorithm)
     {
         var random = new Random(271828);
@@ -203,10 +206,10 @@ public class SearchProcessorTest
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)]
     public void ConcurrentSessionsShareFactoryButNotState(int algorithm)
     {
-        AbstractSearchProcessorFactory factory = Factory(algorithm, new byte[] { 255, 128, 0 });
+        ISearchProcessorFactory factory = Factory(algorithm, new byte[] { 255, 128, 0 });
         Parallel.For(0, 64, _ =>
         {
             ISearchProcessor processor = factory.NewSearchProcessor();

@@ -1138,10 +1138,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/AbstractMultiSearchProcessorFactory.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/AbstractMultiSearchProcessorFactory.cs"
+      ],
+      "evidence": [
+        "Multi-pattern search unit: 69 added cases (40 multi-pattern and 29 Aho-Corasick single-pattern cases); net10.0 Debug/Release/rebuilt checked Release 1729/1729, no failures/skips. 1578 pinned Java/CLR sessions and 405990 per-byte continuation/match-ID decisions agree per Debug/Release and both Java Unsafe providers with an independent longest-suffix/last-duplicate model. docs/buffer-porting.md#stateful-multiple-pattern-search; artifacts/buffer-multi-search-validation (ignored); buffer-multi-search-*.trx."
+      ],
+      "adaptation": "The params byte[][] Aho-Corasick factory preserves input pattern IDs and original usage documentation. C# callers pass processor.Process to ForEachByte. Longest patterns win at a shared end position; identical patterns select the last supplied index. An empty pattern collection matches nothing. Null collections/elements use ArgumentNullException; empty individual patterns use ArgumentException.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/AbstractSearchProcessorFactory.java",
@@ -1164,10 +1174,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/AhoCorasicSearchProcessorFactory.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/AhoCorasicSearchProcessorFactory.cs"
+      ],
+      "evidence": [
+        "Multi-pattern search unit: 69 added cases (40 multi-pattern and 29 Aho-Corasick single-pattern cases); net10.0 Debug/Release/rebuilt checked Release 1729/1729, no failures/skips. 1578 pinned Java/CLR sessions and 405990 per-byte continuation/match-ID decisions agree per Debug/Release and both Java Unsafe providers with an independent longest-suffix/last-duplicate model. docs/buffer-porting.md#stateful-multiple-pattern-search; artifacts/buffer-multi-search-validation (ignored); buffer-multi-search-*.trx."
+      ],
+      "adaptation": "Dense 256-way trie transitions, breadth-first suffix linking, longest suffix-match inheritance, last-duplicate overwrite, signed match transitions and Reset preserve the pinned algorithm. Managed List<int>/Queue<int>, int array offsets and a value tuple replace boxed ArrayList<Integer>/ArrayDeque, PlatformDependent Unsafe reads, long state offsets and a temporary Java Context class. Checked row-capacity addition prevents index overflow. Tables are immutable after construction; no caller pattern arrays are retained. Sealed per-session processors share only immutable tables and may be created concurrently from one factory. Empty collections build a nonmatching root; invalid individual patterns are rejected before precomputation.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/BitapSearchProcessorFactory.java",
@@ -1208,18 +1228,38 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/MultiSearchProcessor.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/IMultiSearchProcessor.cs"
+      ],
+      "evidence": [
+        "Multi-pattern search unit: 69 added cases (40 multi-pattern and 29 Aho-Corasick single-pattern cases); net10.0 Debug/Release/rebuilt checked Release 1729/1729, no failures/skips. 1578 pinned Java/CLR sessions and 405990 per-byte continuation/match-ID decisions agree per Debug/Release and both Java Unsafe providers with an independent longest-suffix/last-duplicate model. docs/buffer-porting.md#stateful-multiple-pattern-search; artifacts/buffer-multi-search-validation (ignored); buffer-multi-search-*.trx."
+      ],
+      "adaptation": "ISearchProcessor is extended with the readonly FoundNeedleId property. It describes the current processor state, -1 before a match and after Reset/nonmatching input; an empty scan does not clear a previous match. PascalCase/property conventions replace the Java getter.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/MultiSearchProcessorFactory.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/Search/IMultiSearchProcessorFactory.cs"
+      ],
+      "evidence": [
+        "Multi-pattern search unit: 69 added cases (40 multi-pattern and 29 Aho-Corasick single-pattern cases); net10.0 Debug/Release/rebuilt checked Release 1729/1729, no failures/skips. 1578 pinned Java/CLR sessions and 405990 per-byte continuation/match-ID decisions agree per Debug/Release and both Java Unsafe providers with an independent longest-suffix/last-duplicate model. docs/buffer-porting.md#stateful-multiple-pattern-search; artifacts/buffer-multi-search-validation (ignored); buffer-multi-search-*.trx."
+      ],
+      "adaptation": "IMultiSearchProcessorFactory extends ISearchProcessorFactory and redeclares the typed NewSearchProcessor return. The abstract factory explicitly forwards the base CLR interface to the same virtual creation path, preserving typed and single-pattern interface use without changing the existing interface.",
+      "comments": {
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/search/SearchProcessor.java",
@@ -2026,27 +2066,38 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/search/MultiSearchProcessorTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/MultiSearchProcessorTest.cs"
+      ],
+      "evidence": [
+        "Multi-pattern search unit: 69 added cases (40 multi-pattern and 29 Aho-Corasick single-pattern cases); net10.0 Debug/Release/rebuilt checked Release 1729/1729, no failures/skips. 1578 pinned Java/CLR sessions and 405990 per-byte continuation/match-ID decisions agree per Debug/Release and both Java Unsafe providers with an independent longest-suffix/last-duplicate model. docs/buffer-porting.md#stateful-multiple-pattern-search; artifacts/buffer-multi-search-validation (ignored); buffer-multi-search-*.trx."
+      ],
+      "adaptation": "All three original tests and their original comments are ported: multiple matches, overlapping patterns and longest suffix choice in both registration orders. Forty cases cover eight backings/views/wrappers, all fragmentation boundaries, binary/high-bit input, duplicates/suffix fallback, current FoundNeedleId and repeated Reset, base/typed interface dispatch, input mutation, empty/invalid patterns, 1025-byte shared prefixes, independent longest-suffix random models and concurrent factory reuse.",
+      "comments": {
+        "upstreamCount": 12,
+        "preservedCount": 12,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/search/SearchProcessorTest.java",
       "kind": "test",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
         "test/Netty.NET.Buffer.Tests/SearchProcessorTest.cs"
       ],
       "evidence": [
-        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx."
+        "Single-pattern search unit: 63 new tests; net10.0 Debug/Release/rebuilt checked Release 1660/1660, no failures/skips. 3144 pinned Java/CLR search sessions agree per Debug/Release with independent sliding-window, cursor/mark/reference checks across six backings and fragmented/reset sessions. Java no-Unsafe execution explicitly records the two empty-pattern adaptations. docs/buffer-porting.md#stateful-single-pattern-search; artifacts/buffer-search-validation (ignored); buffer-search-*.trx.",
+        "Multi-pattern search unit: 69 added cases (40 multi-pattern and 29 Aho-Corasick single-pattern cases); net10.0 Debug/Release/rebuilt checked Release 1729/1729, no failures/skips. 1578 pinned Java/CLR sessions and 405990 per-byte continuation/match-ID decisions agree per Debug/Release and both Java Unsafe providers with an independent longest-suffix/last-duplicate model. docs/buffer-porting.md#stateful-multiple-pattern-search; artifacts/buffer-multi-search-validation (ignored); buffer-multi-search-*.trx."
       ],
-      "adaptation": "All five original single-pattern test methods are adapted for KMP and Bitap, including UTF-8 end indices, repeating/overlapping continuation, 1024-byte input and all original unique length-64 substring checks. Original test comments are preserved. Eight backings/views additionally cover every split boundary, marks/cursors/reference counts, copied/stack patterns, independent Reset and concurrent factory reuse; deterministic random sessions use a separate sliding-window model. Original AHO_CORASIC parameter remains pending until the multi-pattern implementation is ported.",
+      "adaptation": "All five original single-pattern test methods are adapted for KMP and Bitap, including UTF-8 end indices, repeating/overlapping continuation, 1024-byte input and all original unique length-64 substring checks. Original test comments are preserved. Eight backings/views additionally cover every split boundary, marks/cursors/reference counts, copied/stack patterns, independent Reset and concurrent factory reuse; deterministic random sessions use a separate sliding-window model. The original AHO_CORASIC parameter is now implemented for all five original test methods, completing all three original algorithms. Aho-Corasick additionally runs the existing fragmentation, pattern-copy, independent Reset/random-model and concurrent-factory scenarios (29 added cases). Span-only factory extensions continue to apply to KMP/Bitap.",
       "comments": {
         "upstreamCount": 7,
         "preservedCount": 7,
         "missingCount": 0,
-        "coverage": "all original comments preserved; Aho-Corasick test parameter pending"
+        "coverage": "all original comments preserved"
       }
     }
   ]

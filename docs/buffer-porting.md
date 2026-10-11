@@ -1699,16 +1699,52 @@ the no-Unsafe provider; no cross-runtime performance equivalence is claimed.
 
 net10.0 Debug/Release/rebuilt checked Release each pass 1660/1660, no failures/skips.
 Checked build has zero errors and 51 existing Common warnings, no Buffer/test warnings.
-The five source entries and Bitap limit fixture become verified. SearchProcessorTest
-remains in-progress because its Aho-Corasick parameter is pending. Inventory remains
+The five source entries and Bitap limit fixture become verified. At this stage
+SearchProcessorTest was partial; its Aho-Corasick parameter is completed in the next unit. Inventory remains
 159 (103 pending, 37 in-progress, 18 verified, 1 CLR replacement).
 Evidence: artifacts/buffer-search-validation (ignored), buffer-search-*.trx.
+
+## Stateful multiple-pattern search
+
+IMultiSearchProcessor/IMultiSearchProcessorFactory, AbstractMultiSearchProcessorFactory
+and AhoCorasicSearchProcessorFactory port simultaneous Aho-Corasick search. Original
+Java spelling is retained in the public type/factory name for source traceability.
+Use processor.Process with ForEachByte and read FoundNeedleId at a match. The returned
+buffer index is the match end; continuing at the next byte preserves overlaps and
+retaining the processor across buffers preserves fragmented matches. At the same end
+position the longest registered pattern wins; duplicate patterns choose the last ID.
+FoundNeedleId follows current state and resets to -1. An empty scan leaves it unchanged.
+
+Dense 256-way transitions, breadth-first suffix linking, inherited suffix matches and
+signed success transitions follow pinned Java. CLR List<int>/Queue<int>, checked row
+capacity, int offsets and safe managed array indexing replace boxed collections, Unsafe
+access, long offsets and the temporary Context object. Precomputed arrays retain no
+caller patterns and are shared by independent session processors. Typed/base factory
+interface dispatch reaches the same creation path through explicit CLR implementation.
+An empty collection matches nothing; null collections/elements throw ArgumentNullException,
+and empty patterns throw ArgumentException. Original comments are all preserved.
+
+69 added cases include all three original multi-pattern tests on eight storage/view/wrapper
+kinds and complete the original single-pattern fixture Aho-Corasick parameter. They cover
+longest/duplicate choice, suffix fallback, full binary alphabet, 1025-byte shared prefixes,
+every buffer split, marks/indices/ownership, state/reset, caller mutation, empty/invalid
+patterns, independent random suffix models and concurrent factory reuse.
+1578 pinned Java/CLR sessions and 405990 byte decisions agree per Debug/Release and both
+Java Unsafe providers with an independent longest-suffix/last-duplicate model. Six backing
+kinds include composite and manual leak-aware wrappers; automatic leak wrapping is disabled.
+
+net10.0 Debug/Release/rebuilt checked Release each pass 1729/1729, no failures/skips.
+Checked build has zero errors and 51 existing Common warnings, no Buffer/test warnings.
+Common is unchanged. Four source entries, MultiSearchProcessorTest and the previously
+partial SearchProcessorTest become verified. Inventory remains 159 (98 pending,
+36 in-progress, 24 verified, 1 CLR replacement). Buffer as a whole remains incomplete.
+Evidence: artifacts/buffer-multi-search-validation (ignored), buffer-multi-search-*.trx.
 
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Pooled/adaptive allocator metrics,
-swapped buffers and provider-specific external memory, remaining composite APIs/encoding/search/utilities, channel/native I/O,
+swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units cover remaining composite/storage APIs and original fixtures,
