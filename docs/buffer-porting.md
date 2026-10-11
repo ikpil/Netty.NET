@@ -1532,12 +1532,56 @@ Common sources are unchanged. Evidence: artifacts/buffer-construction-validation
 112 pending, 34 in-progress, 12 verified, 1 CLR replacement. CompositeByteBuf and
 AbstractCompositeByteBufTest remain partial.
 
+## Simple leak-aware buffer wrappers
+
+WrappedByteBuf now provides the forwarding base required by the actual
+SimpleLeakAwareByteBuf consumer. CLR shared index/mark references and bounded memory/
+sequence hooks replace the Java forwarding method table. Storage kind, readonly flags,
+capacity, allocator, ownership, derived views, copy/discard/search and native leases
+delegate to the parent; construction acquires no extra reference. The base returns
+ordinary unwrapped derived views, and the leak-aware subclass wraps them through a
+virtual factory. Existing unpooled/view/composite CLR storage policies remain applicable.
+
+SimpleLeakAwareByteBuf shares the exact original tracked object and tracker across
+Slice/ranged Slice/Duplicate/ReadSlice/AsReadOnly and four retained variants. A final
+Release closes the tracker exactly once; partial release does not close it. Closure
+executes independently of debug assertions. Simple Touch does not record accesses or
+forward hints. Copy has independent ordinary allocation/lifetime and does not close
+the source tracker. Failed Retain/Release and retained-view operations attach the
+original close trace to the same IllegalReferenceCountException and rethrow it.
+Existing Common ThrowableUtil stores CLR suppressed diagnostics; callers retrieve
+them with GetSuppressed rather than relying on Exception.ToString to render them.
+
+94 new cases adapt the original nine view contracts and two double-free release
+mechanisms, including real Common tracking/close-location capture without global
+settings changes. They cover seven storage/view backings, tracked identity, root/view/
+counted final release, copy isolation, shared indices/marks, failed references, wrapper
+factory overrides, null/count errors, immortal/unreleasable parents, native pin lifetime
+and encoding/growth provenance. A native pin can keep physical storage reserved after
+logical final release and tracker closure, matching the existing CLR ownership policy.
+InternalsVisibleTo exposes the internal wrapper only to Buffer.Tests as in Common.
+
+net10.0 Debug/Release/rebuilt checked Release pass 1380/1380 without failures/skips.
+12096 pinned Java/CLR rows match per configuration and independent byte/index/reference/
+tracker models over 2016 scenarios. The probes explicitly disable automatic allocator
+tracking to isolate this wrapper, normalize readonly exceptions and read CLR suppressed
+diagnostics through GetSuppressed. Checked build has zero errors and 51 existing
+Common warnings, no Buffer/test warnings; Common sources are unchanged. Evidence:
+artifacts/buffer-simple-leak-validation (ignored), corresponding buffer-simple-leak-*.trx.
+
+Implemented operation/license comments are preserved. Pooled independent derived-count
+reparenting/forced tracking and swapped-order branches (including their comments),
+advanced access recording, composite wrappers and allocator auto wrapping remain pending.
+The inherited original fixture is incomplete; all three source/test entries remain
+in-progress. Inventory remains 159: 110 pending, 36 in-progress, 12 verified,
+1 CLR replacement. This unit does not enable automatic leak detection for allocations.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Pooled/adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/search/utilities, channel/native I/O,
-borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
+borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units cover remaining composite/storage APIs and original fixtures,
 then remaining factories/utilities/original tests, leak wrappers and pooled/adaptive allocator/cache integration. Common

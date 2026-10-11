@@ -791,10 +791,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/SimpleLeakAwareByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/SimpleLeakAwareByteBuf.cs"
+      ],
+      "evidence": [
+        "Simple leak-wrapper unit: WrappedByteBuf supplies CLR shared-index/bounded-memory forwarding; SimpleLeakAwareByteBuf shares the tracked referent/tracker across nine views, closes only on final release and attaches original-close diagnostics to failed reference operations. 94 new cases; net10.0 Debug/Release/rebuilt checked Release pass 1380/1380 without failures/skips. 12096 pinned Java/CLR rows match per configuration and independent byte/index/reference/tracker models. Allocator auto wrapping is disabled in probes and remains pending, as do pooled-derived and advanced/composite wrappers. docs/buffer-porting.md#simple-leak-aware-buffer-wrappers; artifacts/buffer-simple-leak-validation (ignored); buffer-simple-leak-*.trx. Source/fixture remain partial."
+      ],
+      "adaptation": "Internal CLR wrapper preserves shared-reference ownership: Slice/ranged Slice/Duplicate/ReadSlice/AsReadOnly and four retained variants share the original tracker and exact tracked referent through a virtual wrapper factory. Final Release alone closes the tracker; the close call executes in Release builds independently of Debug.Assert. Retain, Release and four retained-view paths rethrow the same IllegalReferenceCountException after attaching the optional original-close diagnostic through existing Common ThrowableUtil.AddSuppressed. CLR extras are read with ThrowableUtil.GetSuppressed; Exception.ToString does not automatically render Java-style suppressed traces. Simple Touch is a no-op and never records/forwards hints. Copies retain independent ordinary allocator ownership. Original implemented field/close rationale comments retained. CLR shared-root view counts are supported; the original pooled-independent derived tracking/reparenting and swapped-order branches and their comments remain pending. Automatic allocator wrapping, advanced/composite leak wrappers and whole source completion are not claimed. Policy: docs/buffer-porting.md#simple-leak-aware-buffer-wrappers.",
+      "comments": {
+        "upstreamCount": 8,
+        "preservedCount": 4,
+        "missingCount": 4,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/SimpleLeakAwareCompositeByteBuf.java",
@@ -1069,12 +1079,14 @@
       "status": "in-progress",
       "implementation": [
         "src/Netty.NET.Buffer/ByteBuf.cs",
-        "src/Netty.NET.Buffer/UnreleasableByteBuf.cs"
+        "src/Netty.NET.Buffer/UnreleasableByteBuf.cs",
+        "src/Netty.NET.Buffer/WrappedByteBuf.cs"
       ],
       "evidence": [
-        "Unreleasable wrapper unit: Buffer.Tests 511 passed in Debug, Release and rebuilt checked Release, no failures/skips. 2700 pinned Java/CLR shared-index/mark, view, copy-policy and final-lifetime rows and 64 live/dead invalid-count/empty/structural-discard rows match. Derived-copy backend/maximum mismatch reproduced against pinned Java and corrected. docs/buffer-porting.md; artifacts/buffer-unreleasable-validation; buffer-unreleasable-*.trx. The two-test original UnreleaseableByteBufTest is complete; generic wrapper/allocator/I/O scope remains partial."
+        "Unreleasable wrapper unit: Buffer.Tests 511 passed in Debug, Release and rebuilt checked Release, no failures/skips. 2700 pinned Java/CLR shared-index/mark, view, copy-policy and final-lifetime rows and 64 live/dead invalid-count/empty/structural-discard rows match. Derived-copy backend/maximum mismatch reproduced against pinned Java and corrected. docs/buffer-porting.md; artifacts/buffer-unreleasable-validation; buffer-unreleasable-*.trx. The two-test original UnreleaseableByteBufTest is complete; generic wrapper/allocator/I/O scope remains partial.",
+        "Simple leak-wrapper unit: WrappedByteBuf supplies CLR shared-index/bounded-memory forwarding; SimpleLeakAwareByteBuf shares the tracked referent/tracker across nine views, closes only on final release and attaches original-close diagnostics to failed reference operations. 94 new cases; net10.0 Debug/Release/rebuilt checked Release pass 1380/1380 without failures/skips. 12096 pinned Java/CLR rows match per configuration and independent byte/index/reference/tracker models. Allocator auto wrapping is disabled in probes and remains pending, as do pooled-derived and advanced/composite wrappers. docs/buffer-porting.md#simple-leak-aware-buffer-wrappers; artifacts/buffer-simple-leak-validation (ignored); buffer-simple-leak-*.trx. Source/fixture remain partial."
       ],
-      "adaptation": "Actual consumer is UnreleasableBuffer: a private-protected ByteBuf constructor routes four index/mark references to the existing state owner. This avoids a separate state allocation and a Java-style full forwarding class; ordinary owners and derived views keep independent state. The unreleasable facade delegates memory, flags, resizing, copy, discard and search to its parent while inherited primitive/bulk/text operations use the shared indices. WrappedByteBuf class documentation is preserved. No general-purpose public forwarding class or completed Java allocator/NIO/channel/stream surface is claimed.",
+      "adaptation": "Actual consumer is UnreleasableBuffer: a private-protected ByteBuf constructor routes four index/mark references to the existing state owner. This avoids a separate state allocation and a Java-style full forwarding class; ordinary owners and derived views keep independent state. The unreleasable facade delegates memory, flags, resizing, copy, discard and search to its parent while inherited primitive/bulk/text operations use the shared indices. WrappedByteBuf class documentation is preserved. The simple-leak unit introduces the general-purpose forwarding base below; the complete Java forwarding surface is not claimed. Simple-leak consumer adds public WrappedByteBuf with a protected constructor and readonly parent, sharing existing index/mark state. Bounded memory/sequence hooks forward primitive/bulk/text operations without a duplicate Java-sized method table. Allocation flags, capacity, reference operations, views, copy, discard/search and native leases delegate to the parent. No extra retain is acquired; ordinary derived views returned by this base are unwrapped. Original license/class comment retained. Custom Java operation overrides, order/address/NIO facades and whole forwarding surface remain partial. Policy: docs/buffer-porting.md#simple-leak-aware-buffer-wrappers.",
       "comments": {
         "upstreamCount": 2,
         "preservedCount": 2,
@@ -1789,10 +1801,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/SimpleLeakAwareByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/SimpleLeakAwareByteBufTest.cs"
+      ],
+      "evidence": [
+        "Simple leak-wrapper unit: WrappedByteBuf supplies CLR shared-index/bounded-memory forwarding; SimpleLeakAwareByteBuf shares the tracked referent/tracker across nine views, closes only on final release and attaches original-close diagnostics to failed reference operations. 94 new cases; net10.0 Debug/Release/rebuilt checked Release pass 1380/1380 without failures/skips. 12096 pinned Java/CLR rows match per configuration and independent byte/index/reference/tracker models. Allocator auto wrapping is disabled in probes and remains pending, as do pooled-derived and advanced/composite wrappers. docs/buffer-porting.md#simple-leak-aware-buffer-wrappers; artifacts/buffer-simple-leak-validation (ignored); buffer-simple-leak-*.trx. Source/fixture remain partial."
+      ],
+      "adaptation": "Selected original nine view-wrapping contracts and both original-close/double-free release mechanisms are adapted across seven heap/native/readonly/composite/fixed-composite/slice/duplicate backings. Real Common TrackForcibly verifies captured close-call location without changing global detection levels. Additional cases cover exact tracked identity, final release through root/view/count overloads, failed reference operations and same exception identity, virtual wrapper factories, copy ownership, shared indices/marks, Touch no-op, null/count errors, immortal/unreleasable parents, native pins/logical final release, allocator provenance and native text-growth hooks. InternalsVisibleTo only exposes internal wrapper construction to Buffer.Tests, following Common test conventions. The inherited BigEndianHeapByteBufTest/AbstractByteBufTest fixture is not ported in full and remains pending. No Java test comments other than its original license exist; license retained. Policy: docs/buffer-porting.md#simple-leak-aware-buffer-wrappers.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "coverage": "partial source; remaining operations not ported"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/SimpleLeakAwareCompositeByteBufTest.java",
