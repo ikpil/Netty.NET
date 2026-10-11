@@ -1820,6 +1820,41 @@ its private-heap fixture are recorded as CLR replacements. Inventory remains 159
 (91 pending, 38 in-progress, 27 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-run-validation (ignored), buffer-run-*.trx.
 
+## Pooled subpage slots
+
+PoolSubpage and PoolChunk now allocate/free small slots through shared size-class heads,
+bitmap words and available lists. Full subpages leave the list, first frees reinsert them,
+the last freed slot is reused before lowest-hole scanning, and surplus empty subpages
+return their page runs for coalescence. The last available empty run per size class is
+retained across all chunks sharing the heads. AllocateSmall returns the actual owner,
+including reuse from another chunk. IPoolSubpageMetric exposes the four original metrics.
+All PoolSubpage/interface comments and implemented chunk/test comments are preserved.
+
+ulong bitmaps preserve Java logical-shift/high-bit behavior under checked arithmetic.
+Scoped Monitor locks replace ReentrantLock and explicit lock/unlock methods; each subpage
+retains its head directly. Heads carry the immutable SizeClasses identity, and chunk
+constructors capture a copy of caller arrays while sharing the head objects. Mutation
+takes the head lock before any run lock. Invalid/double-slot frees fail before mutation;
+callers still own exactly-once return to the actual chunk, including reissued handles.
+The head sentinel PageSize is zero instead of Java's incidental 1 << -1 negative value.
+LCM arithmetic uses long. For page/chunk=4096 and elem=48, pinned Java asserts that the
+12288-byte LCM run fits; without assertions it accepts a shorter 4096-byte run. CLR
+returns allocation failure without changing chunk/list state when the LCM cannot fit.
+
+26 added cases cover bitmap/partial-word limits through 257 slots, every small class
+in nine page/alignment settings, LCM partitioning, caching/eviction, shared-owner routing,
+failure bounds and eight-worker nonoverlap. The original single-element page-return
+condition from testNormalPoolSubpageRelease is checked with 1024 metadata allocations.
+79642 pinned Java/CLR rows agree per Debug/Release across nine shared-head domains and
+375 small-class configurations with an independent slot/list/gcd/page-occupancy model.
+Java assertions are enabled; both runners exercise bookkeeping without backing storage.
+net10.0 Debug/Release/rebuilt checked Release pass 1871/1871, no failures/skips; zero
+build errors and 51 existing Common warnings, no Buffer/test warnings. Common is unchanged.
+PoolChunk/PoolSubpage and the selected allocator fixture remain in-progress: real storage,
+pooled ByteBuf initialization, arena/destruction hooks and caches are still pending.
+Inventory remains 159 (88 pending, 40 in-progress, 28 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-subpage-validation (ignored), buffer-subpage-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

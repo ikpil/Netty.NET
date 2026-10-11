@@ -129,7 +129,7 @@ namespace Netty.NET.Buffer;
  *
  */
 
-/// <remarks>This stage ports page-run bookkeeping only. Storage, subpages, buffer initialization,
+/// <remarks>This stage ports page-run and subpage bookkeeping. Storage and buffer initialization,
 /// arena lists and thread caches are not connected yet. Allocated handles belong to this chunk;
 /// callers must return each handle exactly once and must not use stale or foreign handles.</remarks>
 internal sealed partial class PoolChunk : IPoolChunkMetric
@@ -155,9 +155,10 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
 
     internal int PageSize => _sizeClass.PageSize;
     internal int PageShifts => _sizeClass.PageShifts;
+    internal SizeClasses SizeClass => _sizeClass;
     public int ChunkSize => _sizeClass.ChunkSize;
 
-    internal PoolChunk(SizeClasses sizeClass)
+    internal PoolChunk(SizeClasses sizeClass, PoolSubpage[] smallSubpagePools = null)
     {
         ArgumentNullException.ThrowIfNull(sizeClass);
         if (sizeClass.PageSize != 1 << sizeClass.PageShifts)
@@ -165,9 +166,21 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
         // The original allocator limits maxOrder to 14; larger offsets make signed handles negative.
         if (sizeClass.ChunkSize / sizeClass.PageSize > 1 << 14)
             throw new ArgumentException("A pooled chunk must contain at most 16384 pages.", nameof(sizeClass));
+        if (smallSubpagePools != null)
+        {
+            if (smallSubpagePools.Length != sizeClass.NSubpages)
+                throw new ArgumentException("Incorrect number of subpage heads.", nameof(smallSubpagePools));
+            for (int i = 0; i < smallSubpagePools.Length; i++)
+                if (smallSubpagePools[i] == null || smallSubpagePools[i].Chunk != null ||
+                    smallSubpagePools[i].HeadIndex != i || !ReferenceEquals(smallSubpagePools[i].SizeClass, sizeClass))
+                    throw new ArgumentException("Subpage heads must share this size-class domain.", nameof(smallSubpagePools));
+        }
         _sizeClass = sizeClass;
         _freeBytes = ChunkSize;
         _runsAvail = NewRunsAvailQueueArray(sizeClass.NPSizes);
+        _smallSubpagePools = smallSubpagePools == null ? PoolSubpage.CreatePoolHeads(sizeClass) :
+            (PoolSubpage[])smallSubpagePools.Clone();
+        _subpages = new PoolSubpage[sizeClass.ChunkSize >> sizeClass.PageShifts];
 
         //insert initial run, offset = 0, pages = chunkSize / pageSize
         int pages = ChunkSize >> PageShifts;
