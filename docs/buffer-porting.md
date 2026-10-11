@@ -1488,6 +1488,50 @@ Inventory remains 159 files: 112 pending, 34 in-progress, 12 verified, 1 CLR rep
 Only these three small sources and original fixture are newly complete; ByteBuf and
 the Buffer module remain partial.
 
+## Composite buffer construction
+
+The public CompositeByteBuf constructors accepting params ByteBuf[] and
+IEnumerable<ByteBuf> now adopt existing references and captured readable ranges.
+ReaderIndex starts at zero and WriterIndex at final capacity. Empty components are
+owned components rather than skipped ranges. Null ends insertion and releases the
+remaining yielded tail. A composite supplied as IEnumerable is adopted as one
+buffer. List storage replaces Java component-array sizing; enumerable inputs are
+streamed without materialization or collection-size inspection. Consolidation runs
+once after the complete batch and follows the creator's heap/native policy.
+
+Ownership preflight follows the existing AddComponents contracts: invalid allocator/
+limit/null arguments do not consume inputs; array length overflow leaves inputs
+caller-owned, whereas a streaming overflow consumes the successfully yielded prefix,
+the failing entry and yielded tail. Retain each supplied reference first if the caller
+needs independent ownership. Source indices/marks are preserved; structural changes
+and storage lifetime remain subject to the existing composite borrowing rules.
+
+Unlike a successful AddComponents call on an existing composite, a failed constructor
+cannot return the partial composite for caller cleanup. CLR construction therefore
+releases acquired components on insertion, enumeration, source-copy or consolidation
+failure. Cleanup bypasses derived Deallocate callbacks before derived initialization,
+and releases each acquired entry safely. A persistently failing enumerator can leave
+unyielded inputs caller-owned; disposal follows IEnumerator. Array preflight failures
+still leave all inputs caller-owned. Four pinned runtime failure rows reproduce Java
+retaining its acquired references when consolidation allocation fails; CLR releases
+them. This is an explicit ownership correction, not an exact failure-behavior match.
+
+26 new cases cover captured ranges/marks, readonly aliases, mixed heap/native creator
+policy and live metrics, params/enumerable/ByteBuf dispatch, owned empties, null tails,
+invalid arguments, overflow without large allocations, insertion/copy/allocation
+failure and retry, enumeration failure/disposal and derived construction cleanup.
+Original constructor-bound/overflow scenarios inform these tests; no original test
+method or entire fixture is claimed newly complete. The pinned public constructors
+have no operation comments; license/class and all reused batch comments are retained.
+net10.0 Debug/Release/rebuilt checked Release pass 1286/1286 without failures/skips.
+4608 pinned Java/CLR rows agree per configuration and independent byte/index/metric/
+reference models over 1152 scenarios, plus the four explicit failure adaptations.
+Checked build has zero errors and 51 existing Common warnings, no Buffer/test warnings.
+Common sources are unchanged. Evidence: artifacts/buffer-construction-validation
+(ignored), corresponding buffer-construction-*.trx. Inventory is unchanged at 159:
+112 pending, 34 in-progress, 12 verified, 1 CLR replacement. CompositeByteBuf and
+AbstractCompositeByteBufTest remain partial.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
