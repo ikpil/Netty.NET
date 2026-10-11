@@ -1603,6 +1603,39 @@ Common is unchanged. Existing utility source/fixture stay partial; inventory rem
 159 (110 pending, 36 in-progress, 12 verified, 1 CLR replacement). Evidence:
 artifacts/buffer-utf8-range-validation (ignored), buffer-utf8-range-*.trx.
 
+## Relative buffer transfers
+
+Eight missing ByteBuf overloads now preserve the original cursor contracts: default/
+length GetBytes append to the destination writer; default/length SetBytes consume the
+source reader; default ReadBytes fills destination WritableBytes and advances both;
+explicit-destination ReadBytes advances only the source reader; default WriteBytes
+consumes all readable input; explicit-source WriteBytes advances only the destination
+writer. Get/Set/Read never grow the destination. Writes may grow, including before an
+invalid absolute source range is detected, as in Java. Marks/counts stay unchanged and
+all methods return their receiver. Pinned ByteToMessageDecoder MERGE_CUMULATOR uses
+the explicit-source write and advances its input separately after success.
+
+The existing bounded bulk kernel supplies CLR span/snapshot overlap semantics and
+native alias safety. Java repeats overwritten bytes in three composite self-copy
+probes; CLR retains memmove behavior. Failed composite writes can change earlier bytes
+without publishing cursor changes. Default Get/Read check destination lifetime before
+reading WritableBytes; Java reports bounds/argument errors in two released-destination
+probes instead. Null arguments fail early. Array ranges continue to use Span slices.
+All eight original API comments and original test license are preserved.
+
+130 new cases cover 48 source/destination pairs, all overloads, capacity/readable bounds,
+48 self-copy combinations, marks/ownership, readonly/null/dead/empty failures, growth,
+partial composite writes and native aliases. net10.0 Debug/Release/rebuilt checked
+Release pass 1554/1554 without failures/skips. 36910 pinned Java/CLR rows agree per
+Debug/Release with independent byte/cursor/mark/capacity/reference models. The primary
+Java probe uses its default Unsafe provider; a separate no-Unsafe probe agrees on 36526
+rows and rejects 128 direct-to-composite copies that CLR supports. These provider limits,
+three overlap differences and two dead-destination diagnostics are explicit adaptations.
+Checked build has zero errors and 51 existing Common warnings, no Buffer/test warnings.
+Common is unchanged. The three affected original source/test entries stay in-progress;
+inventory remains 159 (110 pending, 36 in-progress, 12 verified, 1 CLR replacement).
+Evidence: artifacts/buffer-relative-transfer-validation (ignored), buffer-relative-transfer-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
