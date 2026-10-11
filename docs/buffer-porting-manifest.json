@@ -567,10 +567,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/IntPriorityQueue.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Buffer/PoolChunk.cs"
+      ],
+      "evidence": [
+        "Page-run unit: 44 added cases cover splitting/exhaustion/reuse, bucket/offset selection, all three-run free orders, single-page boundaries, non-root queue removal, fragmentation, usage rounding, 24 independent occupancy-model configurations, eight-worker nonoverlap, maximum order/chunk and malformed arguments. net10.0 Debug/Release/rebuilt checked Release each pass 1845/1845, no failures/skips. 37112 pinned Java/CLR rows agree per Debug/Release across 24 configurations with an independent page occupancy/free-span/bucket model; Java assertions enabled. docs/buffer-porting.md#pooled-chunk-page-runs; artifacts/buffer-run-validation (ignored); buffer-run-*.trx."
+      ],
+      "adaptation": "Its sole production consumer is PoolChunk. The BCL PriorityQueue<int,int> stores each free packed run once, using the entry itself as priority; Enqueue/Dequeue/Count/Remove replace offer/poll/isEmpty/remove. No custom primitive heap is exposed or ported. Unique live free-run handles make duplicate queue values irrelevant to this consumer. Empty queues are checked before Dequeue, and allocation exhaustion remains -1L. Original queue comments/license are retained beside the replacement with an explicit BCL implementation note.",
+      "comments": {
+        "upstreamCount": 3,
+        "preservedCount": 3,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/PoolArena.java",
@@ -591,10 +601,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/PoolChunk.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/PoolChunk.cs"
+      ],
+      "evidence": [
+        "Page-run unit: 44 added cases cover splitting/exhaustion/reuse, bucket/offset selection, all three-run free orders, single-page boundaries, non-root queue removal, fragmentation, usage rounding, 24 independent occupancy-model configurations, eight-worker nonoverlap, maximum order/chunk and malformed arguments. net10.0 Debug/Release/rebuilt checked Release each pass 1845/1845, no failures/skips. 37112 pinned Java/CLR rows agree per Debug/Release across 24 configurations with an independent page occupancy/free-span/bucket model; Java assertions enabled. docs/buffer-porting.md#pooled-chunk-page-runs; artifacts/buffer-run-validation (ignored); buffer-run-*.trx."
+      ],
+      "adaptation": "Page-run bookkeeping only: initial whole run, size-class ceiling/floor buckets, lowest-offset priority, split tails, boundary lookup, two-sided coalescence, free-byte/usage metrics and packed handle helpers. The internal nongeneric partial chunk accepts SizeClasses directly until storage/arena integration exists; no fake arena or ByteBuf is introduced. PriorityQueue<int,int> replaces IntPriorityQueue, Dictionary<int,long> replaces LongLongHashMap for int page offsets with -1L missing lookup, and lock(object) replaces ReentrantLock. The original allocator maxOrder<=14 and matching page-size/shift geometry are checked locally so signed packed handles remain positive. Invalid run sizes and malformed handles fail before mutation; each live handle must be returned exactly once to its owning chunk, with no stale/foreign handle detection guarantee. Original conservative bucket selection is retained: a free 9-page run is in the 8-page floor bucket and cannot satisfy a request starting at the 10-page ceiling bucket. All comments for implemented run methods are retained. Actual heap/native storage, subpages, pooled ByteBuf initialization, unpooled huge chunks, pinned-byte metrics, arena list/destruction and thread/NIO caches remain pending.",
+      "comments": {
+        "upstreamCount": 45,
+        "preservedCount": 23,
+        "missingCount": 22,
+        "coverage": "partial source; storage/subpage/arena/cache paths remain"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/PoolChunkList.java",
@@ -615,10 +635,20 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/PoolChunkMetric.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/IPoolChunkMetric.cs"
+      ],
+      "evidence": [
+        "Page-run unit: 44 added cases cover splitting/exhaustion/reuse, bucket/offset selection, all three-run free orders, single-page boundaries, non-root queue removal, fragmentation, usage rounding, 24 independent occupancy-model configurations, eight-worker nonoverlap, maximum order/chunk and malformed arguments. net10.0 Debug/Release/rebuilt checked Release each pass 1845/1845, no failures/skips. 37112 pinned Java/CLR rows agree per Debug/Release across 24 configurations with an independent page occupancy/free-span/bucket model; Java assertions enabled. docs/buffer-porting.md#pooled-chunk-page-runs; artifacts/buffer-run-validation (ignored); buffer-run-*.trx."
+      ],
+      "adaptation": "All three original metric contracts and comments are preserved as I-prefixed interface and readonly Usage/ChunkSize/FreeBytes properties. Usage retains Java integer percentage rounding, including 99 when positive free bytes round below one percent. Each mutable metric getter takes the run lock; separate property reads are not a transactional snapshot.",
+      "comments": {
+        "upstreamCount": 5,
+        "preservedCount": 5,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/PoolSubpage.java",
@@ -1736,10 +1766,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/IntPriorityQueueTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/PoolChunkRunTest.cs"
+      ],
+      "evidence": [
+        "Page-run unit: 44 added cases cover splitting/exhaustion/reuse, bucket/offset selection, all three-run free orders, single-page boundaries, non-root queue removal, fragmentation, usage rounding, 24 independent occupancy-model configurations, eight-worker nonoverlap, maximum order/chunk and malformed arguments. net10.0 Debug/Release/rebuilt checked Release each pass 1845/1845, no failures/skips. 37112 pinned Java/CLR rows agree per Debug/Release across 24 configurations with an independent page occupancy/free-span/bucket model; Java assertions enabled. docs/buffer-porting.md#pooled-chunk-page-runs; artifacts/buffer-run-validation (ignored); buffer-run-*.trx."
+      ],
+      "adaptation": "All five original private-heap test methods reviewed. Ordering, growth/reuse, removing all entries and removing non-root entries are verified through actual PoolChunk behavior and Java/model differential sequences. The standalone NO_VALUE insertion and duplicate-value contracts are not recreated as a custom CLR queue: packed free runs are unique nonnegative values and the consumer checks emptiness. The original fixture license is preserved. This is a consumer-based BCL replacement decision, not a claim that the Java heap fixture was mechanically translated.",
+      "comments": {
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/JfrEventsTest.java",

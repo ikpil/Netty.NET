@@ -1784,6 +1784,42 @@ in-progress. Inventory remains 159 (95 pending, 37 in-progress, 26 verified,
 1 CLR replacement). Buffer as a whole remains incomplete.
 Evidence: artifacts/buffer-size-classes-validation (ignored), buffer-size-classes-*.trx.
 
+## Pooled chunk page runs
+
+PoolChunk now contains page-run bookkeeping: whole-chunk initialization, size-class
+bucket selection, lowest-offset allocation, trailing splits, boundary lookup and
+two-sided coalescence. IPoolChunkMetric exposes the original usage/chunk/free metrics
+as readonly CLR properties. Original handle bits and percentage rounding are retained.
+This unit does not allocate backing memory or produce pooled ByteBuf instances.
+Subpages, arena lists/destruction, huge chunks, pinned metrics and caches remain pending.
+
+BCL PriorityQueue<int,int> replaces the private Java IntPriorityQueue; Dictionary<int,long>
+replaces the run-boundary LongLongHashMap. Packed free-run values are unique priorities,
+and missing boundaries return -1L. lock(object) provides reentrant mutual exclusion.
+Original run comments and queue/interface comments are preserved, with the original
+binary-heap description explicitly distinguished from the BCL replacement. The original
+standalone queue fixture is replaced by consumer tests: no sentinel-insertion/duplicate
+queue facade is introduced. Constructor checks matching page geometry and maxOrder<=14;
+run calls check basic arguments. Callers still own exactly-once, same-chunk handle return.
+Original conservative floor/ceiling bucket selection is retained, including failure to
+use a 9-page tail for a request that starts at the 10-page bucket. Metric reads each take
+the run lock; multiple property reads are not one atomic snapshot.
+
+44 added cases cover split/reuse/exhaustion, all three-run free orders, one-page edges,
+lowest bucket/offset selection, non-root queue removal, fragmentation, percentage
+rounding, 24 independent page-occupancy configurations, eight-worker nonoverlap,
+maximum 16384-page/1 GiB geometry and invalid arguments. 37112 pinned Java/CLR rows
+agree per Debug/Release and an independent occupancy/free-span/bucket model, with Java
+assertions enabled. Original Java uses an untouched zero-length dummy backing because
+only its actual run bookkeeping methods execute; no storage equivalence is claimed.
+All final chunks coalesce back to one whole run. net10.0 Debug/Release/rebuilt checked
+Release each pass 1845/1845, no failures/skips. Checked build has zero errors and 51
+existing Common warnings, no Buffer/test warnings. Common is unchanged.
+PoolChunk remains in-progress; its metric interface is verified. IntPriorityQueue and
+its private-heap fixture are recorded as CLR replacements. Inventory remains 159
+(91 pending, 38 in-progress, 27 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-run-validation (ignored), buffer-run-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
