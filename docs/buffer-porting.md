@@ -1441,6 +1441,53 @@ Inventory remains 159 files: 116 pending, 34 in-progress, 8 verified, 1 CLR repl
 Unpooled, CompositeByteBuf and their original fixtures remain partial; provider/raw
 address wrapping, leak detection and pooled/adaptive allocation are still open.
 
+## Buffer holders and conversion
+
+IByteBufConvertible, IByteBufHolder and DefaultByteBufHolder port the complete
+three original small source contracts. Every ByteBuf returns itself from AsByteBuf
+without changing reference counts, checking accessibility or changing state, including
+after release. Holder does not implement this conversion interface, matching Java.
+The CLR interface prefix and read-only Content/ReferenceCount properties follow
+existing conventions; ownership remains explicit through IReferenceCounted.
+
+Holder construction adopts the caller's existing buffer reference. Content checks
+accessibility. Copy owns independent readable bytes; Duplicate shares storage and
+the existing reference, with independent indices; RetainedDuplicate acquires one
+reference. All three call virtual Replace on the stored buffer's result, independently
+of an overridden Content accessor. Derived messages can preserve their type/metadata
+by overriding Replace. Replace adopts new content without retaining it or releasing
+old content, and can run after old content release. As in Java, a Replace override
+is responsible for accepting the supplied content, including on failure; clone
+methods do not add rollback around a throwing override. Underlying buffer CLR
+copy/lifetime policies still apply. No IDisposable ownership is inferred.
+
+Retain/Touch return the holder, Release returns the underlying final-release result,
+and explicit IReferenceCounted bridges preserve Common ReferenceCountUtil consumers
+and virtual dispatch. Equality requires exact runtime class before comparing readable
+bytes; identity remains reflexive after release. Derived extra-field equality stays
+symmetric. Hash delegates to the current buffer content and is not stable across
+mutation/index changes. ContentToString is protected and nonvirtual, bypassing Content
+and reference checks. ToString preserves the holder-name/content shape and works
+after release, using the existing CLR ByteBuf diagnostic string; exact Java diagnostic
+formatting is not claimed.
+
+All original comments in the three sources and original fixture are retained, plus
+the ByteBuf.asByteBuf documentation. The complete three-test original fixture uses
+named distinct subclasses for Java anonymous subclasses. 37 new cases also cover
+heap/native/readonly/composite/fixed-composite/slice/duplicate backings, bytes and
+indices/marks, copy/retained lifetime, subclass factories/equality, Common interfaces,
+Touch hints, null/count errors, dead access/diagnostics and empty/unreleasable policies.
+net10.0 Debug/Release/rebuilt checked Release each pass 1260/1260, no failures/skips.
+6272 pinned Java/CLR rows agree per Debug/Release and independent byte/index/hash/
+reference models over 1344 scenarios. Read-only exceptions are normalized to rejected
+writes; the probe compares actual write permission rather than the pinned fixed
+composite's IsReadOnly metadata. Checked build has zero errors and 51 existing Common
+warnings, no Buffer/test warnings. Common sources are unchanged. Evidence:
+artifacts/buffer-holder-validation (ignored), corresponding buffer-holder-*.trx.
+Inventory remains 159 files: 112 pending, 34 in-progress, 12 verified, 1 CLR replacement.
+Only these three small sources and original fixture are newly complete; ByteBuf and
+the Buffer module remain partial.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
