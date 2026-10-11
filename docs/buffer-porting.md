@@ -1576,6 +1576,33 @@ The inherited original fixture is incomplete; all three source/test entries rema
 in-progress. Inventory remains 159: 110 pending, 36 in-progress, 12 verified,
 1 CLR replacement. This unit does not enable automatic leak detection for allocations.
 
+## UTF-8 subsequences and ASCII reservations
+
+Utf8Bytes/WriteUtf8/ReserveAndWriteUtf8 now support [start,end) on ReadOnlySpan<char>
+and AsciiString, alongside explicit full AsciiString reservations. Span slicing reuses
+existing encoding without Java CharSequence/subsequence objects. AsciiString preserves
+raw octets, including 0x80-0xff and nested backing offsets. Range endpoints are checked
+before subtraction or destination growth, including extreme Int32 values. WriteUtf8
+reserves three bytes per selected code unit even for AsciiString; explicit reservations
+can be exact or larger. Only actual bytes advance the writer; marks/counts are preserved.
+Native character aliases survive growth under existing leases. Raw byte overlap follows
+SetBytes. Failed composite writes can change earlier bytes without advancing the writer.
+Six pinned Java probes show undersized reservations can write beyond the reservation
+or fail after changing a byte, depending on storage. CLR consistently rejects them
+before growth/mutation, extending the existing bounded UTF-8 policy to raw AsciiString.
+Original implemented operation and selected test comments are preserved.
+
+44 new cases adapt seven original subsequence/count/invalid-range scenarios and cover
+six backings/views/wrappers, all raw octets, malformed/split surrogates, bounds, growth,
+readonly/dead/empty/null destinations, aliasing and partial-write failures. net10.0
+Debug/Release/rebuilt checked Release pass 1424/1424 without failures/skips. 36536
+pinned Java/CLR rows match per Debug/Release and independent Unicode/octet/index/mark/
+capacity/reference models; six undersized-reservation rows record the CLR adaptation.
+Checked build has zero errors and 51 existing Common warnings, no Buffer/test warnings.
+Common is unchanged. Existing utility source/fixture stay partial; inventory remains
+159 (110 pending, 36 in-progress, 12 verified, 1 CLR replacement). Evidence:
+artifacts/buffer-utf8-range-validation (ignored), buffer-utf8-range-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

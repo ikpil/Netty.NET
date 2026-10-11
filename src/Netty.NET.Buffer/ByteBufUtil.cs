@@ -195,8 +195,7 @@ public static partial class ByteBufUtil
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentNullException.ThrowIfNull(text);
         // The public Java writeUtf8 uses utf8MaxBytes(int), even for AsciiString's raw-octet fast path.
-        buffer.EnsureWritable(Utf8MaxBytes(text.Length()));
-        return WriteAscii(buffer, text);
+        return ReserveAndWriteUtf8Bytes(buffer, text.AsSpan(), Utf8MaxBytes(text.Length()));
     }
 
     // safe byte[] Fast-Path implementation
