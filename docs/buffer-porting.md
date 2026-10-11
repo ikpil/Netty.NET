@@ -1324,11 +1324,51 @@ warnings. Inventory: 159 files, 116 pending, 34 in-progress, 8 verified, 1 CLR r
 The source and both original fixtures remain partial; writable external Memory,
 mapped-file/raw-address/provider-specific and remaining inherited scenarios are open.
 
+## Writable external memory
+
+Unpooled.WrappedBuffer(Memory<byte>) ports the writable NIO wrapping branch.
+The selected range is borrowed at reader 0 / writer length, without copying,
+retaining an owner or disposing it on Release. Array-backed ranges reuse existing
+array wrapping (whole array root or fixed partial slice). Known NativeMemoryOwner
+ranges use the new UnpooledDirectByteBuf wrapping constructor. Its public maximum
+and optional native reservation domain also support explicit growable wrappers.
+The original constructor and factory comments are retained. Mutable NIO position/
+order are represented by explicit Memory slicing and BE/LE operations.
+
+For native roots, equal capacity keeps aliases. Any changed capacity detaches to
+owned zeroed native storage, preserves the capacity prefix, and trims indices only
+after successful allocation/copy. Original external memory stays valid and ceases
+to alias after detachment; later resize/final release disposes only owned storage.
+Failed allocation/copy leaves storage and indices intact (Java trims indices before
+attempting a shrink allocation). Keep external owners valid during borrowed access.
+Pins preserve their original physical allocation across detach or logical release.
+Copies preserve the creator, direct kind and root maximum; a partial array slice's
+copy inherits its underlying array root maximum, matching Java delegation. Raw wraps
+and replacements stay outside factory metrics; copies charge their actual allocator.
+
+Unknown MemoryManager implementations have no general native-kind metadata or Java
+provider equivalent. A private fixed-capacity wrapper permits live writable access,
+uses heap-copy policy, and never disposes the manager. Manager Pin behavior applies
+when operations acquire a lease. Empty memory returns the shared sentinel. This is
+an explicit CLR policy; third-party native managers are not claimed to be direct.
+
+24 new cases include original wrapping/empty/selected-address scenarios (address
+comparison through Memory.Pin), BE/LE and overlapping writes, copies/shared views,
+Composite/Stream consumers, quotas, failed resize/copy cleanup, external ownership
+and pins. net10.0 Debug/Release/rebuilt checked Release each pass 1170/1170 without
+failures/skips. 3200 pinned Java/CLR snapshots match per Debug/Release and independent
+memory/capacity/ownership models. Checked build has zero errors and 51 existing
+Common warnings; no Buffer/test warnings. Common sources are unchanged this unit.
+Evidence: artifacts/buffer-writable-memory-validation (ignored), corresponding TRX.
+Inventory remains 159 files: 116 pending, 34 in-progress, 8 verified, 1 CLR replacement.
+Whole sources/fixtures remain partial; raw-address/provider wrapping, mutable order
+facades and remaining inherited scenarios have not been declared complete.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Pooled/adaptive allocator metrics,
-writable external memory/swapped buffers, remaining composite APIs/encoding/search/utilities, channel/native I/O,
+swapped buffers and provider-specific external memory, remaining composite APIs/encoding/search/utilities, channel/native I/O,
 borrowed-address wrapping, leak-aware wrappers and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units cover remaining composite/storage APIs and original fixtures,

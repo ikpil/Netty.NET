@@ -25,7 +25,7 @@ namespace Netty.NET.Buffer;
  * {@link UnpooledByteBufAllocator#directBuffer(int, int)}, {@link Unpooled#directBuffer(int)} and
  * {@link Unpooled#wrappedBuffer(ByteBuffer)} instead of calling the constructor explicitly.
  */
-/// <summary>A reference-counted buffer with explicitly owned native storage.</summary>
+/// <summary>A reference-counted buffer with owned or borrowed native storage.</summary>
 /// <remarks>Memory views are borrowed. Pins preserve physical storage across final
 /// release; they do not keep the buffer's logical reference count above zero.</remarks>
 // CLR: NativeMemoryAllocator supplies the native reservation domain, while
@@ -34,6 +34,8 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly NativeMemoryAllocator _allocator;
     private NativeMemoryOwner _owner;
+    private Memory<byte> _memory;
+    private int _capacity;
     private readonly IByteBufAllocator _bufferAllocator;
     private readonly UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric _metric;
     public override IByteBufAllocator Allocator => _bufferAllocator;
@@ -64,31 +66,60 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
         _allocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
         _owner = _allocator.Allocate(initialCapacity, clear: true);
+        _memory = _owner.Memory;
+        _capacity = initialCapacity;
         _metric = metric;
         _metric?.AddDirect(initialCapacity);
     }
-    protected override Memory<byte> GetMemoryCore(int index, int length) => _owner.Memory.Slice(index, length);
+    /**
+     * Creates a new direct buffer by wrapping the specified initial buffer.
+     *
+     * @param maxCapacity the maximum capacity of the underlying direct buffer
+     */
+    /// <remarks>The memory must come from NativeMemoryOwner. The caller keeps that
+    /// owner valid during access; Release never disposes the borrowed owner. A capacity
+    /// change detaches to owned native storage in the optional reservation domain.
+    /// Wrapped storage and its replacements do not charge allocator factory metrics.</remarks>
+    public UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, Memory<byte> initialBuffer,
+        int maxCapacity, NativeMemoryAllocator nativeAllocator = null) : base(maxCapacity)
+    {
+        ArgumentNullException.ThrowIfNull(bufferAllocator);
+        if (!NativeMemoryOwner.TryGetOwner(initialBuffer, out _))
+            throw new ArgumentException("The memory must be backed by NativeMemoryOwner.", nameof(initialBuffer));
+        if (initialBuffer.Length > maxCapacity)
+            throw new ArgumentOutOfRangeException(nameof(maxCapacity));
+        _bufferAllocator = bufferAllocator;
+        _allocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
+        _memory = initialBuffer;
+        _capacity = initialBuffer.Length;
+        SetIndex(0, _capacity);
+    }
+
+    protected override Memory<byte> GetMemoryCore(int index, int length) => _memory.Slice(index, length);
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
-        return new BufferMemoryLease(_owner.Memory.Pin());
+        return new BufferMemoryLease(_memory.Pin());
     }
     public override bool IsDirect => true;
     public override int Capacity
     {
-        get => _owner.Length;
+        get => _capacity;
         set
         {
             CheckNewCapacity(value);
-            if (value == _owner.Length) return;
+            if (value == _capacity) return;
             NativeMemoryOwner previous = _owner;
             NativeMemoryOwner replacement = _allocator.Allocate(value, clear: true);
-            try { previous.Memory.Span.Slice(0, Math.Min(value, previous.Length)).CopyTo(replacement.Memory.Span); }
+            try { _memory.Span.Slice(0, Math.Min(value, _capacity)).CopyTo(replacement.Memory.Span); }
             catch { replacement.Dispose(); throw; }
+            int previousCapacity = _capacity;
             _owner = replacement;
+            _memory = replacement.Memory;
+            _capacity = value;
             TrimIndicesToCapacity(value);
-            previous.Dispose();
-            _metric?.AddDirect((long)value - previous.Length);
+            previous?.Dispose();
+            _metric?.AddDirect((long)value - previousCapacity);
         }
     }
     public override ByteBuf Copy(int index, int length)
@@ -100,7 +131,9 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     }
     protected override void Deallocate()
     {
-        _owner.Dispose();
-        _metric?.AddDirect(-_owner.Length);
+        _memory = default;
+        _owner?.Dispose();
+        _owner = null;
+        _metric?.AddDirect(-_capacity);
     }
 }
