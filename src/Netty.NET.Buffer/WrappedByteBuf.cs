@@ -37,6 +37,8 @@ public class WrappedByteBuf : ByteBuf
 
     public override int Capacity { get => Buffer.Capacity; set => Buffer.Capacity = value; }
     public override IByteBufAllocator Allocator => Buffer.Allocator;
+    public override bool IsContiguous => Buffer.IsContiguous;
+    public override int MaxFastWritableBytes => Buffer.MaxFastWritableBytes;
     public override bool IsDirect => Buffer.IsDirect;
     public override bool IsReadOnly => Buffer.IsReadOnly;
     public override bool CanWrite(int byteCount) => Buffer.CanWrite(byteCount);

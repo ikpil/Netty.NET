@@ -1636,6 +1636,39 @@ Common is unchanged. The three affected original source/test entries stay in-pro
 inventory remains 159 (110 pending, 36 in-progress, 12 verified, 1 CLR replacement).
 Evidence: artifacts/buffer-relative-transfer-validation (ignored), buffer-relative-transfer-*.trx.
 
+## Decoder storage hints and allocated reads
+
+IsContiguous and MaxFastWritableBytes port the two storage hints consumed by pinned
+ByteToMessageDecoder MERGE_CUMULATOR. Heap/native/Memory owners and empty sentinels
+are contiguous; composite/fixed-composite buffers remain false even after consolidation
+to one component. Derived/read-only views forward topology but use their own WritableBytes
+for the fast-writable hint. Transparent/unreleasable wrappers forward both hints, including
+an overridden parent hidden reservation. The hint does not grant read-only write access.
+The test-only reserved owner verifies delegation; pooled allocators remain unimplemented.
+
+ReadBytes(length), also used in the original decoder documentation example, now calls
+Allocator.Buffer(length, MaxCapacity) rather than constructing a raw heap owner. Nonempty
+results follow the creator heap/native policy, participate in its metrics and have
+independent writable ownership. Only the requested bytes become readable even if an
+allocator reserves extra capacity. Zero reads retain the shared empty sentinel; validation
+precedes allocation. Source ReaderIndex advances only after success. Existing CLR cleanup
+releases the new output on copy failure; pinned AbstractByteBuf.readBytes lacks this cleanup.
+Both original hint API comments and the selected default-fast-writable test comment are
+preserved. Existing Unpooled defaults and explicit native Copy reservation policy remain.
+
+43 new cases cover original fast-writable/read scenarios, nine storage topologies, six
+view/wrapper kinds, structural changes, hidden reservation forwarding, allocator choice,
+metrics, independent release, invalid/dead/zero reads, extra capacity and failure cleanup.
+net10.0 Debug/Release/rebuilt checked Release each pass 1597/1597, no failures/skips.
+4032 pinned Java/CLR rows agree per Debug/Release: 1728 topology/view rows and 576
+allocated-read scenarios with four snapshots each. Independent models check storage,
+capacity, bytes, indices, marks, ownership and metrics. Java uses its default Unsafe
+provider; automatic allocator leak wrapping is disabled to isolate manually wrapped views.
+Checked build has zero errors and 51 existing Common warnings, no Buffer/test warnings.
+Common is unchanged. All affected original entries remain in-progress; inventory remains
+159 (110 pending, 36 in-progress, 12 verified, 1 CLR replacement).
+Evidence: artifacts/buffer-decoder-policy-validation (ignored), buffer-decoder-policy-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

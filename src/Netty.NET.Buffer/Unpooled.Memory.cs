@@ -53,6 +53,7 @@ public static partial class Unpooled
             SetIndex(0, memory.Length);
         }
         public override IByteBufAllocator Allocator => UnpooledByteBufAllocator.Default;
+        public override bool IsContiguous => true;
         public override bool IsDirect => false;
         public override int Capacity
         {

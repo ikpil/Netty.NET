@@ -68,6 +68,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         => _parent.AsReadOnlySequence(index, length);
     internal override BufferMemoryLease AcquireReadLease() => _parent.AcquireReadLease();
     public override IByteBufAllocator Allocator => _parent.Allocator;
+    public override bool IsContiguous => _parent.IsContiguous;
     public override bool IsDirect => _parent.IsDirect;
     public override int Capacity
     {

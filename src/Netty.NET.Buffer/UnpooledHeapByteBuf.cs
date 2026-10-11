@@ -68,6 +68,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     private static int GetLength(byte[] array)
     { ArgumentNullException.ThrowIfNull(array); return array.Length; }
     protected override Memory<byte> GetMemoryCore(int index, int length) => _array.AsMemory(index, length);
+    public override bool IsContiguous => true;
     public override bool IsDirect => false;
     public override int Capacity
     {

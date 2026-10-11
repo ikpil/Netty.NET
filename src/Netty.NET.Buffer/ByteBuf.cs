@@ -309,6 +309,16 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          */
     public abstract bool IsDirect { get; }
     /**
+     * Returns {@code true} if this {@link ByteBuf} implementation is backed by a single memory region.
+     * Composite buffer implementations must return false even if they currently hold &le; 1 components.
+     * For buffers that return {@code true}, it's guaranteed that a successful call to {@link #discardReadBytes()}
+     * will increase the value of {@link #maxFastWritableBytes()} by the current {@code readerIndex}.
+     * <p>
+     * This method will return {@code false} by default, and a {@code false} return value does not necessarily
+     * mean that the implementation is composite or that it is <i>not</i> backed by a single memory region.
+     */
+    public virtual bool IsContiguous => false;
+    /**
          * Return the underlying buffer instance if this buffer is a wrapper of another buffer.
          *
          * @return {@code null} if this buffer is not a wrapper
@@ -372,6 +382,14 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * {@code (this.maxCapacity - this.writerIndex)}.
          */
     public int MaxWritableBytes => MaxCapacity - _writerIndex;
+    /**
+     * Returns the maximum number of bytes which can be written for certain without involving
+     * an internal reallocation or data-copy. The returned value will be &ge; {@link #writableBytes()}
+     * and &le; {@link #maxWritableBytes()}.
+     */
+    /// <remarks>This is a storage-capacity hint, not permission to write to a read-only buffer.
+    /// Current unpooled owners/views reserve no extra hidden capacity. Transparent wrappers delegate this hint.</remarks>
+    public virtual int MaxFastWritableBytes => WritableBytes;
     /**
          * Returns {@code true}
          * if and only if {@code (this.writerIndex - this.readerIndex)} is greater
@@ -1581,7 +1599,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     {
         CheckReadableBytes(length);
         if (length == 0) return Unpooled.EmptyBuffer;
-        ByteBuf result = new UnpooledHeapByteBuf(length, MaxCapacity);
+        ByteBuf result = Allocator.Buffer(length, MaxCapacity);
         try { result.SetBytes(0, this, _readerIndex, length); result.WriterIndex = length; }
         catch { result.Release(); throw; }
         _readerIndex += length;

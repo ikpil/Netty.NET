@@ -46,6 +46,7 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
 
     public override IByteBufAllocator Allocator => _allocator;
     public override bool IsReadOnly => true;
+    public override bool IsContiguous => true;
     public override bool IsDirect => _direct;
     public override int Capacity
     {

@@ -101,6 +101,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         EnsureAccessible();
         return new BufferMemoryLease(_memory.Pin());
     }
+    public override bool IsContiguous => true;
     public override bool IsDirect => true;
     public override int Capacity
     {

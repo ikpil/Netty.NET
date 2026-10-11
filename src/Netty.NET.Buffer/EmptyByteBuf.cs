@@ -29,6 +29,7 @@ internal sealed class EmptyByteBuf : ByteBuf
     { ArgumentNullException.ThrowIfNull(allocator); _allocator = allocator; }
     public override IByteBufAllocator Allocator => _allocator;
     protected override Memory<byte> GetMemoryCore(int index, int length) => Memory<byte>.Empty;
+    public override bool IsContiguous => true;
     public override bool IsDirect => true;
     public override bool CanWrite(int byteCount)
     {
