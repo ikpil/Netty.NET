@@ -1364,6 +1364,44 @@ Inventory remains 159 files: 116 pending, 34 in-progress, 8 verified, 1 CLR repl
 Whole sources/fixtures remain partial; raw-address/provider wrapping, mutable order
 facades and remaining inherited scenarios have not been declared complete.
 
+## External memory copying
+
+Unpooled.CopiedBuffer(ReadOnlyMemory<byte>) and its params memory-array overload
+port the single/multiple NIO copying factories. Writable Memory converts to the
+read-only input type; Memory slicing selects Java's remaining region. Results are
+independent writable heap roots at reader 0 / writer copied length, with maximum
+equal to that length (unlike the growable single-ByteBuf copy). Source kind/read-only
+status do not change result kind. Empty input shares the sentinel; empty managers
+are not accessed. Null lists fail; default Memory values represent empty ranges.
+
+Two original factory docs and all five inline comments are retained. Immutable
+range metadata replaces duplicate/save/restore of NIO cursors. ReadOnlyMemory has
+no byte-order metadata: bytes remain unchanged, results use normal BE defaults and
+explicit LE accessors, and there is no mixed-order validation. The pinned Java
+single LE NIO copy defaults to BE through duplicate(); a multiple LE copy preserves
+LE order, and mixed nonempty orders throw. Three oracle edge rows record this CLR
+adaptation instead of claiming that the order facade was ported. The empty sentinel
+is direct in both runtimes; nonempty copy results are heap.
+
+Total length is checked before allocation or source access. Source owners must
+remain valid during the call; they are never retained, pinned or disposed. Copies
+survive immediate source ByteBuf release or external owner disposal. A source Span
+failure publishes no result, leaves input ownership/ranges unchanged, and lets GC
+reclaim the unpublished managed array. Raw wrapped result arrays follow the existing
+factory metric policy rather than charging a second allocator-owned root.
+
+26 new cases cover the original selected NIO copying/empty scenarios and CLR
+array/native/custom-manager ranges, mixed/repeated/empty inputs, aliases, source
+indices/marks, overflow without huge allocation, failure/recovery, lifetime, capacity
+and endian operations. net10.0 Debug/Release/rebuilt checked Release each pass
+1196/1196 without failures/skips. 6994 pinned Java/CLR rows match per Debug/Release
+and independent byte/ownership models, plus the order edge records. Checked build
+has zero errors and 51 existing Common warnings, no Buffer/test warnings. Common
+sources are unchanged. Evidence: artifacts/buffer-memory-copy-validation (ignored),
+corresponding TRX. Inventory remains 159 files: 116 pending, 34 in-progress, 8 verified,
+1 CLR replacement. Unpooled and its original fixture remain partial; provider-specific
+and multi-memory wrapping, leak wrappers and pooled/adaptive allocation remain open.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
