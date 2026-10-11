@@ -829,18 +829,38 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/SizeClasses.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/SizeClasses.cs"
+      ],
+      "evidence": [
+        "Size-class unit: 72 added cases include six original calculation scenarios from PoolArenaTest, exhaustive 0..16 MiB indexing, 57 independent grouped-model configurations, maximum chunk boundaries and explicit CLR error policies. net10.0 Debug/Release/rebuilt checked Release each pass 1801/1801, no failures/skips. 110058 pinned Java/CLR rows agree per Debug/Release across 61 configurations and an independent grouped-integer/bisect model. Original alignment truncation is reproduced with/without Java assertions. docs/buffer-porting.md#pooled-allocator-size-classes; artifacts/buffer-size-classes-validation (ignored); buffer-size-classes-*.trx."
+      ],
+      "adaptation": "Internal sealed managed implementation preserves grouped size generation, aligned lookup tables, raw size/page computation, small/normal boundaries and ceiling/floor/normalization formulas. BitOperations.Log2 replaces the PoolThreadCache helper; managed arrays replace JVM table storage. Constructor checks allocator page/chunk/alignment prerequisites locally until the pooled allocator is ported. Invalid indices, negative byte sizes and nonpositive page counts use ArgumentOutOfRangeException. Page byte counts widen to long before shifting so huge counts return the original out-of-chunk sentinel without Java int wrapping. Normalization/alignment that cannot fit Int32 throws OverflowException in every build instead of producing a negative Java capacity. A raw final class short of chunkSize throws ArgumentException: pinned Java can truncate its table for large alignment/small chunk configurations and return an unusable size index; alignment equal to the chunk also fails its enabled assertion. The original fixture pageSize=8192/pageShifts=11 mismatch is retained as an input; real pool geometry is not inferred from this fixture. All original comments are preserved. PoolArena, PoolChunk, allocator/cache storage and their integration remain pending.",
+      "comments": {
+        "upstreamCount": 15,
+        "preservedCount": 15,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/SizeClassesMetric.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "src/Netty.NET.Buffer/ISizeClassesMetric.cs"
+      ],
+      "evidence": [
+        "Size-class unit: 72 added cases include six original calculation scenarios from PoolArenaTest, exhaustive 0..16 MiB indexing, 57 independent grouped-model configurations, maximum chunk boundaries and explicit CLR error policies. net10.0 Debug/Release/rebuilt checked Release each pass 1801/1801, no failures/skips. 110058 pinned Java/CLR rows agree per Debug/Release across 61 configurations and an independent grouped-integer/bisect model. Original alignment truncation is reproduced with/without Java assertions. docs/buffer-porting.md#pooled-allocator-size-classes; artifacts/buffer-size-classes-validation (ignored); buffer-size-classes-*.trx."
+      ],
+      "adaptation": "All eight original metric methods and comments are preserved with I-prefixed interface and PascalCase method names. PageIdx2Size/PageIdx2SizeCompute keep long return types; direct-aligned table values and unaligned SizeIdx2SizeCompute values retain the original distinction.",
+      "comments": {
+        "upstreamCount": 10,
+        "preservedCount": 10,
+        "missingCount": 0,
+        "coverage": "all original comments preserved"
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/SlicedByteBuf.java",
@@ -1780,10 +1800,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/PoolArenaTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/SizeClassesTest.cs"
+      ],
+      "evidence": [
+        "Size-class unit: 72 added cases include six original calculation scenarios from PoolArenaTest, exhaustive 0..16 MiB indexing, 57 independent grouped-model configurations, maximum chunk boundaries and explicit CLR error policies. net10.0 Debug/Release/rebuilt checked Release each pass 1801/1801, no failures/skips. 110058 pinned Java/CLR rows agree per Debug/Release across 61 configurations and an independent grouped-integer/bisect model. Original alignment truncation is reproduced with/without Java assertions. docs/buffer-porting.md#pooled-allocator-size-classes; artifacts/buffer-size-classes-validation (ignored); buffer-size-classes-*.trx."
+      ],
+      "adaptation": "The six original size-class calculation test methods are ported against SizeClasses directly, retaining the original 8192/11/16 MiB fixture and implemented comments. The exhaustive every-byte index loop and every-page ceiling/floor loop are retained. Additional independent model, aligned-table/raw-compute, constructor, overflow and maximum-chunk tests form 72 cases. Actual arena allocation/deallocation counters, alignment of allocated addresses, chunk creation and thread-cache tests remain pending; no PoolArena integration is claimed.",
+      "comments": {
+        "upstreamCount": 17,
+        "preservedCount": 2,
+        "missingCount": 15,
+        "coverage": "partial source; unported arena/cache scenarios remain"
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/PooledAlignedBigEndianDirectByteBufTest.java",

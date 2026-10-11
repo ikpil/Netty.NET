@@ -1740,6 +1740,50 @@ partial SearchProcessorTest become verified. Inventory remains 159 (98 pending,
 36 in-progress, 24 verified, 1 CLR replacement). Buffer as a whole remains incomplete.
 Evidence: artifacts/buffer-multi-search-validation (ignored), buffer-multi-search-*.trx.
 
+## Pooled allocator size classes
+
+SizeClasses and ISizeClassesMetric port the size/page classification required by
+PoolArena allocation and PoolChunk page-run selection. The managed tables and integer
+formulas preserve small/normal boundaries, aligned size lookup, raw size computation,
+page ceiling/floor indices and normalization. This is allocator groundwork; pooled
+storage, arena allocation and thread caches are not implemented by this unit.
+All original comments from both source files are preserved.
+
+BitOperations.Log2 replaces the Java PoolThreadCache helper. Constructor checks enforce
+page/chunk powers of two, the original minimum page/maximum chunk bounds and alignment
+prerequisites locally. Negative sizes, invalid indices and nonpositive page counts throw
+ArgumentOutOfRangeException. Page-count shifting uses long before the chunk check;
+unrepresentable normalized/aligned capacities throw OverflowException instead of Java
+int wrapping. Index lookup still returns NSizes/NPSizes for out-of-chunk requests.
+SizeIdx2SizeCompute deliberately computes raw classes while SizeIdx2Size includes alignment.
+
+Pinned Java has an alignment/geometry edge: with page=4096, chunk=4096 and alignment=1024,
+it constructs only 27 classes, then size2SizeIdx(4096) returns the out-of-range index 27;
+no page-size class remains. Alignment=2048/4096 and chunk=8192 with alignment=2048/4096
+also truncate the raw table. Java assertions catch the alignment=chunk case only.
+CLR rejects a truncated final raw class with ArgumentException at construction.
+Larger chunks continue to support alignment up to pageSize. This is a deliberate
+diagnostic adaptation, not a claim that those broken Java tables are valid pool geometry.
+
+72 added tests port all six size-calculation scenarios from PoolArenaTest directly,
+including every byte through 16 MiB and every page through the chunk. The original
+fixture's pageSize=8192/pageShifts=11 mismatch is retained verbatim. Additional cases
+cover 57 configurations with a separate grouped-size model, maximum 1 GiB chunk,
+aligned/raw tables, boundary queries and CLR error policies. Actual arena allocations,
+address alignment, counters and cache behavior remain pending in that original fixture.
+
+110058 pinned Java/CLR rows agree per Debug/Release across 61 configurations: all table
+entries, near-class boundaries, lookup/range queries, deterministic random byte/page
+requests, aligned normalization and maximum chunk. A separate grouped-integer/bisect
+model checks every row without reusing the logarithmic index formulas. The five broken
+alignment configurations are recorded separately with Java assertions enabled/disabled.
+net10.0 Debug/Release/rebuilt checked Release each pass 1801/1801, no failures/skips.
+Checked build has zero errors and 51 existing Common warnings, no Buffer/test warnings.
+Common is unchanged. The two source entries become verified; PoolArenaTest becomes
+in-progress. Inventory remains 159 (95 pending, 37 in-progress, 26 verified,
+1 CLR replacement). Buffer as a whole remains incomplete.
+Evidence: artifacts/buffer-size-classes-validation (ignored), buffer-size-classes-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -1747,6 +1791,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units cover remaining composite/storage APIs and original fixtures,
-then remaining factories/utilities/original tests, leak wrappers and pooled/adaptive allocator/cache integration. Common
+Next units connect the reviewed size classes to pooled arena/chunk/cache storage and
+continue remaining factories/utilities/original fixtures and leak wrappers. Common
 changes must cite the actual buffer contract that requires them.
