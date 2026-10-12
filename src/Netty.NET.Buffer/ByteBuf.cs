@@ -242,6 +242,12 @@ namespace Netty.NET.Buffer;
 // throughout their use; a saved Memory is a view of its original allocation.
 public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
 {
+    // CLR: AbstractByteBuf's shared detector lives on the combined skeletal ByteBuf.
+    // Capture the configured factory at type initialization, before any buffer is created.
+    internal static readonly ResourceLeakDetector<ByteBuf> LeakDetector =
+        ResourceLeakDetectorFactory.Instance().NewResourceLeakDetector<ByteBuf>(typeof(ByteBuf));
+    static ByteBuf() { }
+
     /**
      * A {@code ByteBuf} can turn into itself.
      * @return This {@code ByteBuf} instance.

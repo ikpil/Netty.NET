@@ -107,7 +107,8 @@ public class SimpleLeakAwareByteBufTest
         ByteBuf copy = buffer.Copy();
         try
         {
-            Assert.IsNotType<SimpleLeakAwareByteBuf>(copy);
+            if (copy is SimpleLeakAwareByteBuf)
+                Assert.NotSame(tracker, AllocatorLeakDetectionTest.Tracker(copy));
             Assert.Equal("010203040506", ByteBufUtil.HexDump(copy));
             Assert.True(buffer.Equals(copy));
             Assert.Equal(buffer.GetHashCode(), copy.GetHashCode());

@@ -22,14 +22,18 @@ namespace Netty.NET.Buffer;
 /**
  * Simplistic {@link ByteBufAllocator} implementation that does not pool anything.
  */
-/// <remarks>This stage implements allocation policy and provenance. Leak-aware wrappers remain pending.
+/// <remarks>Direct and composite allocations use sampled leak detection unless explicitly disabled.
 /// NativeMemoryAllocator supplies the CLR reservation domain; JVM Unsafe/Cleaner switches are not exposed.</remarks>
 public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocatorMetricProvider
 {
+    /**
+     * Default instance which uses leak-detection for direct buffers.
+     */
     /// <summary>The unpooled default, using heap storage for Buffer and native storage for IoBuffer.</summary>
     public static UnpooledByteBufAllocator Default { get; } = new();
 
     private readonly NativeMemoryAllocator _nativeAllocator;
+    private readonly bool _disableLeakDetector;
     private readonly UnpooledByteBufAllocatorMetric _metric = new();
 
     /// <summary>Capacity owned by buffers created through this allocator's factories.</summary>
@@ -45,12 +49,25 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
      * @param preferDirect {@code true} if {@link #buffer(int)} should try to allocate a direct buffer rather than
      *                     a heap buffer
      */
-    /// <remarks>Leak detection mentioned in the original documentation is pending in this port.
-    /// An optional native allocator controls reservations for direct buffers, their copies and composite padding.</remarks>
+    /// <remarks>An optional native allocator controls reservations for direct buffers, their copies and composite padding.</remarks>
     public UnpooledByteBufAllocator(bool preferDirect = false, NativeMemoryAllocator nativeAllocator = null)
+        : this(preferDirect, false, nativeAllocator) { }
+
+    /**
+     * Create a new instance
+     *
+     * @param preferDirect {@code true} if {@link #buffer(int)} should try to allocate a direct buffer rather than
+     *                     a heap buffer
+     * @param disableLeakDetector {@code true} if the leak-detection should be disabled completely for this
+     *                            allocator. This can be useful if the user just want to depend on the GC to handle
+     *                            direct buffers when not explicit released.
+     */
+    /// <remarks>NativeMemoryAllocator replaces JVM Unsafe/NoCleaner provider selection.</remarks>
+    public UnpooledByteBufAllocator(bool preferDirect, bool disableLeakDetector, NativeMemoryAllocator nativeAllocator = null)
         : base(preferDirect)
     {
         _nativeAllocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
+        _disableLeakDetector = disableLeakDetector;
     }
 
     public override bool IsDirectBufferPooled => false;
@@ -59,7 +76,22 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
         => new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity, _metric);
 
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
-        => new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator, _metric);
+    {
+        var buffer = new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator, _metric);
+        return _disableLeakDetector ? buffer : ToLeakAwareBuffer(buffer);
+    }
+
+    public override CompositeByteBuf CompositeHeapBuffer(int maxNumComponents = 16)
+    {
+        var buffer = new CompositeByteBuf(this, false, maxNumComponents);
+        return _disableLeakDetector ? buffer : ToLeakAwareBuffer(buffer);
+    }
+
+    public override CompositeByteBuf CompositeDirectBuffer(int maxNumComponents = 16)
+    {
+        var buffer = new CompositeByteBuf(this, true, maxNumComponents);
+        return _disableLeakDetector ? buffer : ToLeakAwareBuffer(buffer);
+    }
 
     // CLR: one optional counter sink replaces Java's provider-specific instrumented subclasses.
     // Only allocator factories supply it; directly constructed or wrapped storage stays uncharged.

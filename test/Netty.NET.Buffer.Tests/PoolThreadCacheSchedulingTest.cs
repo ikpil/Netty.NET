@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using static Netty.NET.Buffer.Tests.AllocatorLeakDetectionTest;
 using Netty.NET.Common.Concurrent;
 using Netty.NET.Common.Internal;
 
@@ -31,8 +32,8 @@ public class PoolThreadCacheSchedulingTest
     private static PooledByteBufAllocator NewAllocator(TimeSpan? period = null, NativeMemoryAllocator native = null)
         => new(maxOrder: 4, nativeAllocator: native, smallCacheSize: 4, normalCacheSize: 4,
             cacheTrimPeriod: period ?? Period);
-    private static PooledByteBuf Allocate(PooledByteBufAllocator a, bool direct, int size)
-        => Assert.IsAssignableFrom<PooledByteBuf>(direct ? a.DirectBuffer(size) : a.HeapBuffer(size));
+    private static ByteBuf Allocate(PooledByteBufAllocator a, bool direct, int size)
+        => direct ? a.DirectBuffer(size) : a.HeapBuffer(size);
     private static IPoolArenaMetric Arena(PooledByteBufAllocator a, bool direct)
         => (direct ? a.Metric.DirectArenas : a.Metric.HeapArenas)[0];
     private static void Mapped(IEventExecutor executor, Action action) => ThreadExecutorMap.Apply(action, executor)();
@@ -140,7 +141,7 @@ public class PoolThreadCacheSchedulingTest
     public void ClosingAllocatorCancelsScheduleWhileLiveBufferOrLeaseRemainsUsable(bool useLease)
     {
         var native = new NativeMemoryAllocator(); var executor = new ManualExecutor();
-        using var a = NewAllocator(native: native); PooledByteBuf live = null;
+        using var a = NewAllocator(native: native); ByteBuf live = null;
         Mapped(executor, () => { live = Allocate(a, true, 48); live.WriteInt(42); Allocate(a, true, 64).Release(); });
         var lease = useLease ? live.AcquireReadLease() : default;
         if (useLease) live.Release();
@@ -312,12 +313,12 @@ public class PoolThreadCacheSchedulingTest
             Task barrier = null; PoolArena firstArena = null, secondArena = null;
             await first.SubmitAsync(() =>
             {
-                var b = Allocate(a, true, 48); firstArena = b.Allocation.Arena; b.Release();
+                var b = Allocate(a, true, 48); firstArena = PooledStorage(b).Allocation.Arena; b.Release();
                 barrier = first.ScheduleAsync(static () => { }, Period, TestContext.Current.CancellationToken);
             }, TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             await second.SubmitAsync(() =>
             {
-                var b = Allocate(a, true, 48); secondArena = b.Allocation.Arena; b.Release();
+                var b = Allocate(a, true, 48); secondArena = PooledStorage(b).Allocation.Arena; b.Release();
             }, TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.NotSame(firstArena, secondArena); Assert.Equal(1, firstArena.NumActiveAllocations);
             Assert.Equal(1, secondArena.NumActiveAllocations); Assert.Equal(2, a.Metric.NumThreadLocalCaches);

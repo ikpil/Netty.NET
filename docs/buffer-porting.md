@@ -540,7 +540,7 @@ owner. Original public operation comments and shared allocation rationale are ke
 All forms consistently honor the caller's Encoding and fallback, as ByteBuf.WriteString
 already does, and emit no preamble. Java selects specialized UTF-8/ASCII paths for
 whole strings, while regions/arrays use CharsetEncoder. These can produce different
-bytes: whole ASCII "é" becomes E9 in Java, but Encoding.ASCII uses 3F; a lone
+bytes: whole ASCII "챕" becomes E9 in Java, but Encoding.ASCII uses 3F; a lone
 surrogate becomes 3F in Java UTF-8, but Encoding.UTF8 uses EF BF BD. Strict/custom
 fallback must not be bypassed by selecting a fast path from a CLR code page.
 Existing ByteBufUtil.WriteUtf8/WriteAscii preserve Netty's specialized byte mappings.
@@ -2319,12 +2319,57 @@ reserved bytes to zero. Inventory is 159 (66 pending, 60 in-progress, 30 verifie
 facades and complete inherited original fixtures are still pending.
 Evidence: artifacts/buffer-advanced-composite-leak-validation (ignored), buffer-advanced-composite-leak-*.trx.
 
+## Automatic allocator leak wrapping
+
+The combined CLR ByteBuf skeletal type now captures one factory-created detector at
+type initialization, including initialization through an empty sentinel. Configure a
+custom ResourceLeakDetectorFactory before creating buffers/allocators; later factory
+replacement does not change this detector. AbstractByteBufAllocator's two protected
+helpers call Track and then IsRecordEnabled, preserving null/sample misses and custom
+provider policy. Creation stacks exclude these helper frames.
+
+Unpooled tracks direct and composite factory allocations; its heap factories remain
+unwrapped as in Java. A working preferDirect/disableLeakDetector/nativeAllocator
+constructor adds the original opt-out while preserving the existing constructor.
+Pooled tracks heap/native allocations through arenas and unpooled fallbacks, and its
+composites use the base helper. Detector callbacks run outside the CLR allocator lock.
+Empty (0,0) sentinels, explicit constructors and external wrapping acquire no automatic
+root tracker. Copies consult their creator allocator and acquire independent tracking
+where applicable. Existing CLR retained views share the original tracker/root count;
+Java pooled-independent derived tracking remains outside this unit.
+
+236 added tests cover factory policy, disabled detection, empty/growable buffers,
+all nine view forms, independent copies, native pins surviving logical close and public
+factory override dispatch through base/interface references. Five public factory
+methods become virtual to match Java, completing the skeletal allocator contract.
+Global level changes are isolated from parallel tests and restored. Existing cache,
+arena and copy fixtures inspect unwrapped storage while releasing the original public
+wrapper; they no longer assume factories always return raw pool buffers.
+net10.0 Debug/Release/rebuilt checked Release pass 4835/4835 without failures/skips.
+The full Debug and checked Release suites also run with sampling interval 1. Checked
+build has 51 existing Common warnings, zero Buffer/test warnings and zero errors.
+Common source is unchanged. Original implemented constructor/default comments are retained.
+
+93 freshly extracted pinned Java Buffer sources yield 5376 exact oracle rows for each
+targetRecords value (0/4), per Debug/Release: four detector levels, four real/custom
+provider modes, allocator/storage policies, 14 factory/constructor paths and three
+data/view/copy actions. An independent model checks wrapper kinds, track attempts,
+tracker counts, storage/bytes/cursors and final references. Provider trackers verify
+exact referents, one final close, simple/advanced recording, factory snapshot arguments
+and helper-frame exclusions. Every CLR case returns allocator/shared native reservations
+to zero. All 26 original AbstractByteBufAllocator constructor/method forms are accounted
+for by CLR optional overloads, shared kernels and the completed wrapping helpers; its
+source is now verified with all 10 original comment occurrences preserved. The original
+fixtures and broader allocator configuration remain partial. Inventory is 159
+(66 pending, 59 in-progress, 31 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-allocator-leak-validation (ignored), buffer-allocator-leak-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, automatic allocator leak wrapping, allocator events and adaptive allocators remain unported. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+borrowed-address wrapping, allocator events and adaptive allocators remain unported. Automatic wrapping is connected for the current unpooled/pooled allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units continue remaining factories/utilities/original fixtures, leak wrappers and
 remaining allocator integration. Common

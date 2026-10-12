@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using static Netty.NET.Buffer.Tests.AllocatorLeakDetectionTest;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -43,7 +44,7 @@ public class PooledByteBufAllocatorThreadBindingTest
     // Uses chunk-list identity only for test inspection, without adding public arena handles.
     private static int ArenaIndex(PooledByteBufAllocator a, ByteBuf b)
     {
-        PoolChunk chunk = Assert.IsAssignableFrom<PooledByteBuf>(b).Allocation.Chunk;
+        PoolChunk chunk = PooledStorage(b).Allocation.Chunk;
         return Arenas(a, b.IsDirect).Select((m, i) => (m, i))
             .Single(x => ((PoolArena)x.m).ChunkLists.Any(l => ReferenceEquals(l, chunk.Parent))).i;
     }

@@ -15,6 +15,7 @@
  */
 
 using System;
+using Netty.NET.Common;
 
 namespace Netty.NET.Buffer;
 
@@ -22,9 +23,28 @@ namespace Netty.NET.Buffer;
  * Skeletal {@link ByteBufAllocator} implementation to extend.
  */
 /// <remarks>NativeMemoryOwner can reliably free CLR native allocations, so preferDirect does not
-/// depend on JVM Unsafe/Cleaner detection. IoBuffer always chooses native storage. Leak wrappers remain pending.</remarks>
+/// depend on JVM Unsafe/Cleaner detection. IoBuffer always chooses native storage.</remarks>
 public abstract class AbstractByteBufAllocator : IByteBufAllocator
 {
+    static AbstractByteBufAllocator()
+        => ResourceLeakDetector.AddExclusions(typeof(AbstractByteBufAllocator), nameof(ToLeakAwareBuffer));
+
+    protected static ByteBuf ToLeakAwareBuffer(ByteBuf buffer)
+    {
+        IResourceLeakTracker<ByteBuf> leak = ByteBuf.LeakDetector.Track(buffer);
+        if (leak == null) return buffer;
+        return ByteBuf.LeakDetector.IsRecordEnabled()
+            ? new AdvancedLeakAwareByteBuf(buffer, leak) : new SimpleLeakAwareByteBuf(buffer, leak);
+    }
+
+    protected static CompositeByteBuf ToLeakAwareBuffer(CompositeByteBuf buffer)
+    {
+        IResourceLeakTracker<ByteBuf> leak = ByteBuf.LeakDetector.Track(buffer);
+        if (leak == null) return buffer;
+        return ByteBuf.LeakDetector.IsRecordEnabled()
+            ? new AdvancedLeakAwareCompositeByteBuf(buffer, leak) : new SimpleLeakAwareCompositeByteBuf(buffer, leak);
+    }
+
     private readonly ByteBuf _emptyBuffer;
     protected bool DirectByDefault { get; }
 
@@ -43,35 +63,37 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
         _emptyBuffer = new EmptyByteBuf(this);
     }
 
-    public ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+    public virtual ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
         => DirectByDefault ? DirectBuffer(initialCapacity, maxCapacity) : HeapBuffer(initialCapacity, maxCapacity);
 
-    public ByteBuf IoBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+    public virtual ByteBuf IoBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
         => DirectBuffer(initialCapacity, maxCapacity);
 
-    public ByteBuf HeapBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+    public virtual ByteBuf HeapBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
     {
         Validate(initialCapacity, maxCapacity);
         return initialCapacity == 0 && maxCapacity == 0 ? _emptyBuffer : NewHeapBuffer(initialCapacity, maxCapacity);
     }
 
-    public ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+    public virtual ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
     {
         Validate(initialCapacity, maxCapacity);
         return initialCapacity == 0 && maxCapacity == 0 ? _emptyBuffer : NewDirectBuffer(initialCapacity, maxCapacity);
     }
 
-    public CompositeByteBuf CompositeBuffer(int maxNumComponents = 16)
+    public virtual CompositeByteBuf CompositeBuffer(int maxNumComponents = 16)
         => DirectByDefault ? CompositeDirectBuffer(maxNumComponents) : CompositeHeapBuffer(maxNumComponents);
 
     public virtual CompositeByteBuf CompositeHeapBuffer(int maxNumComponents = 16)
-        => new(this, false, maxNumComponents);
+        => ToLeakAwareBuffer(new CompositeByteBuf(this, false, maxNumComponents));
 
     public virtual CompositeByteBuf CompositeDirectBuffer(int maxNumComponents = 16)
-        => new(this, true, maxNumComponents);
+        => ToLeakAwareBuffer(new CompositeByteBuf(this, true, maxNumComponents));
 
     public abstract bool IsDirectBufferPooled { get; }
 
+    // 4 MiB page
+    // CLR: the shared capacity kernel owns this threshold; the allocator hook delegates to it.
     public virtual int CalculateNewCapacity(int minimumNewCapacity, int maxCapacity)
         => ByteBuf.CalculateNewCapacity(minimumNewCapacity, maxCapacity);
 

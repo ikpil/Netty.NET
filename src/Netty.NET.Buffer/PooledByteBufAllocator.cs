@@ -23,8 +23,8 @@ namespace Netty.NET.Buffer;
 
 /// <summary>Allocates reference-counted buffers through heap and native memory pools.</summary>
 /// <remarks>This implementation binds each physical thread to the least-used heap/native
-/// arenas, with opt-in small/normal region caches and executor-based periodic trimming. Allocator events and automatic leak
-/// wrapping remain pending. CLR options replace JVM runtime/system-property heuristics.
+/// arenas, with opt-in small/normal region caches and executor-based periodic trimming. Allocator events
+/// remain pending. CLR options replace JVM runtime/system-property heuristics.
 /// Dispose closes factory allocations and pooled arenas; live pooled buffers and operation
 /// leases keep their reservations until returned. Unpooled fallback buffers own independent
 /// lifetimes. Empty sentinels/composites reserve no storage and remain available.
@@ -120,26 +120,31 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
 
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
     {
+        ByteBuf buffer;
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             ThreadBinding binding = GetThreadBinding();
             PoolArena arena = binding?.HeapArena;
-            return arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
+            buffer = arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
                 : new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
         }
+        // CLR: detector callbacks run after the allocator lock; the buffer owns its reservation.
+        return ToLeakAwareBuffer(buffer);
     }
 
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
     {
+        ByteBuf buffer;
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             ThreadBinding binding = GetThreadBinding();
             PoolArena arena = binding?.DirectArena;
-            return arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
+            buffer = arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
                 : new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator);
         }
+        return ToLeakAwareBuffer(buffer);
     }
 
     /**

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Netty.NET.Common;
+using static Netty.NET.Buffer.Tests.AllocatorLeakDetectionTest;
 
 namespace Netty.NET.Buffer.Tests;
 
@@ -55,7 +56,7 @@ public class PooledByteBufAllocatorTest
                 Assert.Equal(256, b.Capacity); Assert.Equal(int.MaxValue, b.MaxCapacity);
                 Assert.Equal(0, b.ReaderIndex); Assert.Equal(0, b.WriterIndex);
                 Assert.Equal(1, b.ReferenceCount); Assert.True(b.IsContiguous);
-                Assert.Equal(direct ? poolDirect : poolHeap, b is PooledByteBuf);
+                Assert.Equal(direct ? poolDirect : poolHeap, UnwrapLeak(b) is PooledByteBuf);
                 b.WriteLong(0x0102030405060708); Assert.Equal(0x0102030405060708, b.ReadLong());
             }
             finally { b.Release(); }
@@ -172,7 +173,7 @@ public class PooledByteBufAllocatorTest
         Assert.All(arena.ChunkLists, list => Assert.Empty(list));
         Assert.Equal(1, arena.NumChunkDeallocations); Assert.Equal(0, arena.NumActiveChunks);
         Assert.Equal(0, arena.NumActiveBytes); Assert.Equal(0, Pinned(a, direct));
-        var retry = (PooledByteBuf)a.Buffer(a.Metric.ChunkSize);
+        var retry = a.Buffer(a.Metric.ChunkSize);
         try { Assert.Equal(2, arena.NumChunkAllocations); Assert.Equal(1, arena.NumActiveChunks); }
         finally { retry.Release(); }
     }
@@ -272,7 +273,7 @@ public class PooledByteBufAllocatorTest
         try
         {
             Assert.Same(a, copy.Allocator); Assert.Equal(direct, copy.IsDirect);
-            Assert.IsAssignableFrom<PooledByteBuf>(copy); Assert.Equal(2, arena.NumActiveAllocations);
+            Assert.IsAssignableFrom<PooledByteBuf>(UnwrapLeak(copy)); Assert.Equal(2, arena.NumActiveAllocations);
             using var compositeLease = root.AcquireReadLease();
             Assert.Equal(2, arena.NumActiveAllocations);
             Assert.False(root.Release()); Assert.True(view.Release());
