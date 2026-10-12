@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Netty.NET.Buffer;
 
@@ -33,7 +34,11 @@ internal abstract partial class PoolArena
     // Huge chunks are exact-sized for the buffers they were allocated to.
     // CLR: huge reservations include normalized size, excluding native alignment headroom.
 
-    public int NumThreadCaches => 0;
+    private int _threadBindings;
+    // Java counts a thread's arena binding even when its region cache sizes are zero.
+    public int NumThreadCaches => Volatile.Read(ref _threadBindings);
+    internal void AddThreadBinding() => Interlocked.Increment(ref _threadBindings);
+    internal void RemoveThreadBinding() => Interlocked.Decrement(ref _threadBindings);
     [Obsolete("Tiny allocations have been merged into small allocations.")]
     public int NumTinySubpages => 0;
     public int NumSmallSubpages => SizeClass.NSubpages;

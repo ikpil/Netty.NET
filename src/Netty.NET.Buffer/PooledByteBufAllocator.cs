@@ -22,20 +22,20 @@ using Netty.NET.Common;
 namespace Netty.NET.Buffer;
 
 /// <summary>Allocates reference-counted buffers through heap and native memory pools.</summary>
-/// <remarks>This implementation uses one arena per enabled storage kind and no thread cache.
-/// Multi-arena thread assignment, cache scheduling, allocator events and automatic leak
+/// <remarks>This implementation binds each physical thread to the least-used heap/native
+/// arenas and has no buffer cache. Buffer caching/scheduling, allocator events and automatic leak
 /// wrapping remain pending. CLR options replace JVM runtime/system-property heuristics.
 /// Dispose closes factory allocations and pooled arenas; live pooled buffers and operation
 /// leases keep their reservations until returned. Unpooled fallback buffers own independent
 /// lifetimes. Empty sentinels/composites reserve no storage and remain available.</remarks>
-public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocatorMetricProvider, IDisposable
+public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocatorMetricProvider, IDisposable
 {
     public static PooledByteBufAllocator Default { get; } = new(preferDirect: true);
     private readonly object _sync = new();
     private readonly NativeMemoryAllocator _nativeAllocator;
     private bool _disposed;
-    internal PoolHeapArena HeapArena { get; }
-    internal PoolDirectArena DirectArena { get; }
+    private readonly PoolArena[] _heapArenas;
+    private readonly PoolArena[] _directArenas;
     internal IReadOnlyList<IPoolArenaMetric> HeapArenas { get; }
     internal IReadOnlyList<IPoolArenaMetric> DirectArenas { get; }
     internal int ChunkSize { get; }
@@ -43,6 +43,12 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
     IByteBufAllocatorMetric IByteBufAllocatorMetricProvider.Metric => Metric;
 
     public PooledByteBufAllocator(bool preferDirect = false, bool poolHeap = true, bool poolDirect = true,
+        int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
+        NativeMemoryAllocator nativeAllocator = null)
+        : this(preferDirect, poolHeap ? 1 : 0, poolDirect ? 1 : 0, pageSize, maxOrder,
+            directMemoryCacheAlignment, nativeAllocator) { }
+
+    public PooledByteBufAllocator(bool preferDirect, int heapArenaCount, int directArenaCount,
         int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
         NativeMemoryAllocator nativeAllocator = null) : base(preferDirect)
     {
@@ -52,6 +58,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         if (pageSize <= 0) throw new ArgumentOutOfRangeException(nameof(pageSize));
         if (directMemoryCacheAlignment > 0)
         {
+            // Ensure page size is a whole multiple of the alignment, or bump it to the next whole multiple.
             long aligned = ((long)pageSize + directMemoryCacheAlignment - 1) & -(long)directMemoryCacheAlignment;
             if (aligned > int.MaxValue) throw new ArgumentOutOfRangeException(nameof(pageSize));
             pageSize = (int)aligned;
@@ -62,26 +69,39 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         // Ensure the resulting chunkSize does not overflow.
         long chunkSize = (long)pageSize << maxOrder;
         if (chunkSize > 1 << 30) throw new ArgumentOutOfRangeException(nameof(maxOrder));
+        ArgumentOutOfRangeException.ThrowIfNegative(heapArenaCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(directArenaCount);
         ChunkSize = (int)chunkSize;
         // Logarithm base 2. At this point we know that pageSize is a power of two.
         int shifts = BitOperations.Log2((uint)pageSize);
         _nativeAllocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
-        if (poolHeap) HeapArena = new PoolHeapArena(this, new SizeClasses(pageSize, shifts, ChunkSize, 0));
-        if (poolDirect) DirectArena = new PoolDirectArena(this,
-            new SizeClasses(pageSize, shifts, ChunkSize, directMemoryCacheAlignment), _nativeAllocator);
-        HeapArenas = poolHeap ? Array.AsReadOnly(new IPoolArenaMetric[] { HeapArena }) : Array.Empty<IPoolArenaMetric>();
-        DirectArenas = poolDirect ? Array.AsReadOnly(new IPoolArenaMetric[] { DirectArena }) : Array.Empty<IPoolArenaMetric>();
+        _heapArenas = new PoolArena[heapArenaCount];
+        _directArenas = new PoolArena[directArenaCount];
+        if (heapArenaCount != 0)
+        {
+            var sizeClasses = new SizeClasses(pageSize, shifts, ChunkSize, 0);
+            for (int i = 0; i < heapArenaCount; ++i) _heapArenas[i] = new PoolHeapArena(this, sizeClasses);
+        }
+        if (directArenaCount != 0)
+        {
+            var sizeClasses = new SizeClasses(pageSize, shifts, ChunkSize, directMemoryCacheAlignment);
+            for (int i = 0; i < directArenaCount; ++i)
+                _directArenas[i] = new PoolDirectArena(this, sizeClasses, _nativeAllocator);
+        }
+        HeapArenas = Array.AsReadOnly<IPoolArenaMetric>(_heapArenas);
+        DirectArenas = Array.AsReadOnly<IPoolArenaMetric>(_directArenas);
         Metric = new PooledByteBufAllocatorMetric(this);
     }
 
-    public override bool IsDirectBufferPooled => DirectArena != null;
+    public override bool IsDirectBufferPooled => _directArenas.Length != 0;
 
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
     {
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            return HeapArena != null ? HeapArena.Allocate(initialCapacity, maxCapacity)
+            PoolArena arena = GetThreadBinding()?.HeapArena;
+            return arena != null ? arena.Allocate(initialCapacity, maxCapacity)
                 : new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
         }
     }
@@ -91,7 +111,8 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            return DirectArena != null ? DirectArena.Allocate(initialCapacity, maxCapacity)
+            PoolArena arena = GetThreadBinding()?.DirectArena;
+            return arena != null ? arena.Allocate(initialCapacity, maxCapacity)
                 : new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator);
         }
     }
@@ -102,7 +123,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
      * A buffer can pin more memory than its {@linkplain ByteBuf#capacity() capacity} might indicate,
      * due to implementation details of the allocator.
      */
-    public long PinnedHeapMemory => HeapArena?.NumPinnedBytes ?? -1;
+    public long PinnedHeapMemory => SumMemory(_heapArenas, pinned: true);
 
     /**
      * Returns the number of bytes of direct memory that is currently pinned to direct buffers allocated by a
@@ -110,7 +131,22 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
      * A buffer can pin more memory than its {@linkplain ByteBuf#capacity() capacity} might indicate,
      * due to implementation details of the allocator.
      */
-    public long PinnedDirectMemory => DirectArena?.NumPinnedBytes ?? -1;
+    public long PinnedDirectMemory => SumMemory(_directArenas, pinned: true);
+
+    internal long UsedHeapMemory => SumMemory(_heapArenas, pinned: false);
+    internal long UsedDirectMemory => SumMemory(_directArenas, pinned: false);
+
+    private static long SumMemory(PoolArena[] arenas, bool pinned)
+    {
+        if (arenas.Length == 0) return -1;
+        long total = 0;
+        foreach (PoolArena arena in arenas)
+        {
+            total = unchecked(total + (pinned ? arena.NumPinnedBytes : arena.NumActiveBytes));
+            if (total < 0) return long.MaxValue;
+        }
+        return total;
+    }
 
     /**
      * Return {@code true} if direct memory cache alignment is supported, {@code false} otherwise.
@@ -123,8 +159,10 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         {
             if (_disposed) return;
             _disposed = true;
-            HeapArena?.Dispose();
-            DirectArena?.Dispose();
+            foreach (ThreadBinding binding in _threadBindings.Values) binding.Detach();
+            _threadBindings.Clear();
+            foreach (PoolArena arena in _heapArenas) arena.Dispose();
+            foreach (PoolArena arena in _directArenas) arena.Dispose();
         }
     }
 }

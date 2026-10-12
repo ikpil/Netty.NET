@@ -1,0 +1,155 @@
+/*
+ * Copyright 2012 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
+
+namespace Netty.NET.Buffer;
+
+public partial class PooledByteBufAllocator
+{
+    // CLR: physical-thread affinity must not flow with ExecutionContext/AsyncLocal.
+    // The allocator owns this registry; no thread-local root retains the allocator.
+    // Weak thread identity prevents retaining terminated Thread objects and protects
+    // against managed thread ID reuse. No buffer region is cached in these bindings.
+    private readonly Dictionary<int, ThreadBinding> _threadBindings = new();
+
+    // Slow resize initializes the caller's binding, just like Java reallocate's
+    // parent.threadCache(), while storage still comes from the buffer's owning arena.
+    internal void PrepareThreadBinding()
+    {
+        lock (_sync)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            GetThreadBinding();
+        }
+    }
+
+    private ThreadBinding GetThreadBinding()
+    {
+        Debug.Assert(Monitor.IsEntered(_sync));
+        if (_heapArenas.Length == 0 && _directArenas.Length == 0) return null;
+        Thread thread = Thread.CurrentThread;
+        int id = thread.ManagedThreadId;
+        if (_threadBindings.TryGetValue(id, out ThreadBinding binding) && binding.IsOwner(thread)) return binding;
+        ReleaseTerminatedThreadBindingsCore();
+        // No caching so just use 0 as sizes.
+        // CLR: only arena bindings exist here; region caches remain pending.
+        binding = new ThreadBinding(thread, LeastUsedArena(_heapArenas), LeastUsedArena(_directArenas));
+        _threadBindings.Add(id, binding);
+        binding.HeapArena?.AddThreadBinding();
+        binding.DirectArena?.AddThreadBinding();
+        return binding;
+    }
+
+    private static PoolArena LeastUsedArena(PoolArena[] arenas)
+    {
+        if (arenas.Length == 0) return null;
+        PoolArena minArena = arenas[0];
+        //optimized
+        //If it is the first execution, directly return minarena and reduce the number of for loop comparisons below
+        if (minArena.NumThreadCaches == 0) return minArena;
+        for (int i = 1; i < arenas.Length; ++i)
+            if (arenas[i].NumThreadCaches < minArena.NumThreadCaches) minArena = arenas[i];
+        return minArena;
+    }
+
+    /// <summary>Releases the calling physical thread's arena assignment. Live buffers stay usable.</summary>
+    /// <remarks>Returns false if the thread has no assignment. The next factory allocation
+    /// chooses the least-used arenas again. This operation does not return live buffers
+    /// or pooled chunks and does not represent a cache flush: region caches are still pending.</remarks>
+    public bool ReleaseCurrentThreadBinding()
+    {
+        lock (_sync)
+        {
+            Thread thread = Thread.CurrentThread;
+            if (!_threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) || !binding.IsOwner(thread))
+                return false;
+            _threadBindings.Remove(thread.ManagedThreadId);
+            binding.Detach();
+            return true;
+        }
+    }
+
+    /// <summary>Reclaims arena assignments for terminated or collected physical threads.</summary>
+    /// <returns>The number of removed thread assignments, independent of storage kind.</returns>
+    /// <remarks>Assignments on live CLR worker threads remain until explicit release or
+    /// allocator disposal. Buffers retain their owning arena across thread exit and awaits.</remarks>
+    public int ReleaseTerminatedThreadBindings()
+    {
+        lock (_sync) return ReleaseTerminatedThreadBindingsCore();
+    }
+
+    private int ReleaseTerminatedThreadBindingsCore()
+    {
+        Debug.Assert(Monitor.IsEntered(_sync));
+        List<int> removed = null;
+        foreach (var pair in _threadBindings)
+            if (!pair.Value.IsAlive) (removed ??= new List<int>()).Add(pair.Key);
+        if (removed == null) return 0;
+        foreach (int id in removed)
+        {
+            ThreadBinding binding = _threadBindings[id];
+            _threadBindings.Remove(id);
+            binding.Detach();
+        }
+        return removed.Count;
+    }
+
+    internal int NumThreadBindings
+    {
+        get
+        {
+            lock (_sync)
+            {
+                ReleaseTerminatedThreadBindingsCore();
+                return _threadBindings.Count;
+            }
+        }
+    }
+
+    private sealed class ThreadBinding
+    {
+        private readonly WeakReference<Thread> _thread;
+        internal readonly PoolArena HeapArena;
+        internal readonly PoolArena DirectArena;
+
+        internal ThreadBinding(Thread thread, PoolArena heapArena, PoolArena directArena)
+        {
+            _thread = new WeakReference<Thread>(thread);
+            HeapArena = heapArena;
+            DirectArena = directArena;
+        }
+
+        internal bool IsOwner(Thread thread) => _thread.TryGetTarget(out Thread owner) && ReferenceEquals(owner, thread);
+        internal bool IsAlive => _thread.TryGetTarget(out Thread thread) && thread.IsAlive;
+        /**
+         *  Should be called if the Thread that uses this cache is about to exit to release resources out of the cache
+         */
+        internal void Detach()
+        {
+            // As free() may be called either by the finalizer or by FastThreadLocal.onRemoval(...) we need to ensure
+            // we only call this one time.
+            // CLR: removing the registration under the allocator Monitor makes detach
+            // exactly once, replacing the Java finalizer/AtomicBoolean strategy.
+            // No memory region is held here; detaching only releases arena assignments.
+            HeapArena?.RemoveThreadBinding();
+            DirectArena?.RemoveThreadBinding();
+        }
+    }
+}

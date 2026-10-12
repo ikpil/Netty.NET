@@ -22,8 +22,10 @@ namespace Netty.NET.Buffer;
 /**
  * Expose metrics for an arena.
  */
-/// <remarks>CLR uses one arena per enabled storage kind without thread bindings or caches,
-/// so NumThreadCaches is zero. Java creates a thread binding even with zero cache sizes.
+/// <remarks>NumThreadCaches counts physical-thread arena bindings, even with zero cache sizes.
+/// Terminated-thread bindings are reclaimed by the allocator on new thread assignment,
+/// allocator binding-count reads, explicit cleanup or shutdown; individual arena counts
+/// reflect the last such cleanup. Live buffer reservations do not depend on thread bindings.
 /// Properties are individually synchronized; separate reads are not one snapshot.
 /// Explicit shutdown keeps active reservations in the byte/chunk counts until returned.</remarks>
 public interface IPoolArenaMetric : ISizeClassesMetric

@@ -21,7 +21,8 @@ namespace Netty.NET.Buffer;
 /**
  * Exposed metric for {@link PooledByteBufAllocator}.
  */
-/// <remarks>Cache sizes/counts are zero in this cache-free implementation. Memory values
+/// <remarks>Buffer cache sizes are zero. NumThreadLocalCaches counts arena bindings,
+/// including bindings with no cached regions, as in Java. Memory values
 /// measure arena storage, excluding retained retired heap storage, alignment headroom
 /// and raw native pins; NativeMemoryAllocator.ReservedBytes measures physical reservations.
 /// Separate property reads are not a transactional snapshot.</remarks>
@@ -53,7 +54,7 @@ public sealed class PooledByteBufAllocatorMetric : IByteBufAllocatorMetric
     /**
      * Return the number of thread local caches used by this {@link PooledByteBufAllocator}.
      */
-    public int NumThreadLocalCaches => 0;
+    public int NumThreadLocalCaches => _allocator.NumThreadBindings;
 
     /**
      * Return the size of the tiny cache.
@@ -78,8 +79,8 @@ public sealed class PooledByteBufAllocatorMetric : IByteBufAllocatorMetric
      */
     public int ChunkSize => _allocator.ChunkSize;
 
-    public long UsedHeapMemory => _allocator.HeapArena?.NumActiveBytes ?? -1;
-    public long UsedDirectMemory => _allocator.DirectArena?.NumActiveBytes ?? -1;
+    public long UsedHeapMemory => _allocator.UsedHeapMemory;
+    public long UsedDirectMemory => _allocator.UsedDirectMemory;
     public override string ToString()
         => $"{nameof(PooledByteBufAllocatorMetric)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory}; " +
             $"numHeapArenas: {NumHeapArenas}; numDirectArenas: {NumDirectArenas}; smallCacheSize: {SmallCacheSize}; " +

@@ -2047,13 +2047,65 @@ metric implementation remain in-progress pending broader arena/cache integration
 Inventory is 159 (75 pending, 51 in-progress, 30 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-public-pool-validation (ignored), buffer-public-pool-*.trx.
 
+## Multiple pooled arenas and physical-thread bindings
+
+Public pooled allocation now accepts explicit nonnegative heap/native arena counts.
+The existing bool constructor retains its 0/1-arena behavior and default policy. Size
+classes are shared within each storage kind; subpage heads, chunks and reuse caches
+remain private to each arena. Backing storage stays lazy. Zero arenas use the existing
+unpooled fallback. Used/pinned memory sums every arena with Java's overflow saturation.
+
+First allocation on a physical thread selects the first arena with the fewest thread
+bindings, independently for heap and native storage. Both choices remain stable until
+that thread's binding is released. This retains Java's zero-cache-size binding and
+least-used/tie-order policy. NumThreadCaches/NumThreadLocalCaches now count those actual
+bindings even though buffer cache sizes remain zero. No arenas means no CLR binding.
+Copies select the caller's arenas; slow resize initializes the caller's binding while
+reserving replacement storage from the buffer's original arena. Fast resize within the
+existing reservation does not initialize a binding. Cross-thread return uses the owning
+arena; thread exit or reassignment never releases a live buffer's reservation.
+
+CLR does not have FastThreadLocalThread cleanup. An allocator-owned registry uses weak
+physical Thread identity and managed IDs, rather than AsyncLocal/ExecutionContext flow
+or a thread-local root that could retain the allocator. ReleaseCurrentThreadBinding
+explicitly releases the caller's assignment; ReleaseTerminatedThreadBindings reclaims
+dead-thread assignments. New thread assignment and allocator binding-count reads also
+reap dead registrations. Individual arena counts reflect the latest cleanup. Live CLR
+pool workers keep their assignments until explicit release or allocator disposal.
+These are metadata bindings, with no cached memory to flush and no finalizer/watcher.
+Shutdown atomically closes factories and detaches all registrations before draining
+every arena; buffers/internal leases keep their previous storage lifetime. The existing
+factory Monitor remains, so multi-arena throughput equivalence is not claimed.
+
+30 new cases adapt original thread-to-arena and aggregate binding-count scenarios and
+cover unequal arena counts/ties, explicit/automatic cleanup, cross-thread resize/copy,
+fast resize, execution-context flow, active buffers after thread exit, allocation failure
+retry, aggregate memory, active leases at shutdown and concurrent assignment/release/close.
+net10.0 Debug/Release/rebuilt checked Release pass 2082/2082, no failures/skips. Checked
+build has zero errors and 51 existing Common warnings; no Buffer/test warnings. Common
+and global default selection are unchanged. Implemented-path Java comments are retained.
+
+Fresh pinned Java buffer sources with assertions enabled and CLR public allocators
+produce 10024 identical rows per Debug/Release across 28 page/alignment/arena-count
+domains. Seven dedicated threads execute allocation, copy, resize, return, binding release
+and thread restart, including 740 resizes where the caller's assigned arena differs from
+the buffer owner. An independent binding/reservation/counter/owner/SHA-256 model agrees.
+Prior public allocator byte/metric regression retains all 31233 metric rows and 31230
+matching capacity/byte rows plus three documented aligned-huge adaptations per build;
+its prior CLR zero-binding assertion now correctly expects one, matching Java. Native
+CLR runners end with zero reserved bytes after disposal. Inventory is 159 (74 pending,
+52 in-progress, 30 verified, 3 CLR replacements). PoolThreadCache is only in-progress for
+its binding/count lifetime subset; region caches, trimming/scheduling, allocator events,
+automatic leak wrappers and broader original fixtures remain pending.
+Evidence: artifacts/buffer-multi-arena-validation (ignored), buffer-multi-arena-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping, pooled multi-arena/thread caches and adaptive allocators remain unported. Most original
+borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping, pooled region caches and adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units address pooled multi-arena/thread-cache lifecycle integration and
+Next units connect pooled small/normal region caches and their trim/return lifecycle and
 continue remaining factories/utilities/original fixtures and leak wrappers. Common
 changes must cite the actual buffer contract that requires them.

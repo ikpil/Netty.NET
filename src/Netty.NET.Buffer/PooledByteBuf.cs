@@ -94,6 +94,7 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
                 }
 
                 // Reallocation required.
+                if (_arena.Parent is PooledByteBufAllocator allocator) allocator.PrepareThreadBinding();
                 PoolArena.Allocation replacement = _arena.AllocateMemory(value);
                 try
                 {

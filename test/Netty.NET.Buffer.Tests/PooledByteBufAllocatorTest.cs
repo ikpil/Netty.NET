@@ -81,10 +81,10 @@ public class PooledByteBufAllocatorTest
             Assert.Equal(0, arena.NumNormalAllocations); Assert.Equal(0, arena.NumHugeAllocations);
             Assert.Equal(1, arena.NumChunkAllocations); Assert.Equal(0, arena.NumChunkDeallocations);
             Assert.Equal(1, arena.NumActiveChunks); Assert.Equal(a.Metric.ChunkSize, arena.NumActiveBytes);
-            Assert.Equal(0, arena.NumThreadCaches);
+            Assert.Equal(1, arena.NumThreadCaches);
         }
         Assert.Equal(0, a.Metric.SmallCacheSize); Assert.Equal(0, a.Metric.NormalCacheSize);
-        Assert.Equal(0, a.Metric.NumThreadLocalCaches);
+        Assert.Equal(1, a.Metric.NumThreadLocalCaches);
     }
 
     [Theory]
@@ -332,7 +332,7 @@ public class PooledByteBufAllocatorTest
         Assert.Same(PooledByteBufAllocator.Default, PooledByteBufAllocator.Default);
         Assert.Same(UnpooledByteBufAllocator.Default, IByteBufAllocator.Default);
         Assert.Equal(0, native.ReservedBytes);
-        Assert.Contains("smallCacheSize: 0; normalCacheSize: 0; numThreadLocalCaches: 0; chunkSize: 131072", a.Metric.ToString());
+        Assert.Contains("smallCacheSize: 0; normalCacheSize: 0; numThreadLocalCaches: 1; chunkSize: 131072", a.Metric.ToString());
     }
 
     [Fact]
