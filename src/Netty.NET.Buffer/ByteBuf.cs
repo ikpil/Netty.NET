@@ -574,7 +574,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if {@link #writerIndex()} + {@code minWritableBytes} &gt; {@link #maxCapacity()}.
          * @see #capacity(int)
          */
-    public ByteBuf EnsureWritable(int minimumWritableBytes)
+    public virtual ByteBuf EnsureWritable(int minimumWritableBytes)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minimumWritableBytes);
         EnsureCanWrite();
@@ -608,7 +608,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         {@code 3} if the buffer does not have enough bytes, but its capacity has been
          *                   increased to its maximum.
          */
-    public int EnsureWritable(int minimumWritableBytes, bool force)
+    public virtual int EnsureWritable(int minimumWritableBytes, bool force)
     {
         EnsureAccessible();
         ArgumentOutOfRangeException.ThrowIfNegative(minimumWritableBytes);
@@ -672,13 +672,13 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     /// <summary>Returns writable borrowed memory for a contiguous range.</summary>
     /// <exception cref="NotSupportedException">The range is read-only or spans
     /// multiple components. Use SetBytes or consolidate for segmented writes.</exception>
-    public Memory<byte> AsMemory(int index, int length)
+    public virtual Memory<byte> AsMemory(int index, int length)
     {
         EnsureCanWrite();
         CheckIndex(index, length);
         return GetMemoryCore(index, length);
     }
-    public Span<byte> AsSpan(int index, int length) => AsMemory(index, length).Span;
+    public virtual Span<byte> AsSpan(int index, int length) => AsMemory(index, length).Span;
     public ReadOnlyMemory<byte> ReadableMemory => AsReadOnlyMemory(_readerIndex, ReadableBytes);
 
     /**
@@ -690,7 +690,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 1} is greater than {@code this.capacity}
          */
-    public byte GetByte(int index) => AsReadOnlySpan(index, 1)[0];
+    public virtual byte GetByte(int index) => AsReadOnlySpan(index, 1)[0];
     /**
          * Gets a boolean at the specified absolute (@code index) in this buffer.
          * This method does not modify the {@code readerIndex} or {@code writerIndex}
@@ -700,7 +700,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 1} is greater than {@code this.capacity}
          */
-    public bool GetBoolean(int index) => GetByte(index) != 0;
+    public virtual bool GetBoolean(int index) => GetByte(index) != 0;
     /**
          * Sets the specified byte at the specified absolute {@code index} in this
          * buffer.  The 24 high-order bits of the specified value are ignored.
@@ -711,7 +711,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 1} is greater than {@code this.capacity}
          */
-    public ByteBuf SetByte(int index, int value) { AsSpan(index, 1)[0] = unchecked((byte)value); return this; }
+    public virtual ByteBuf SetByte(int index, int value) { AsSpan(index, 1)[0] = unchecked((byte)value); return this; }
     /**
          * Sets the specified boolean at the specified absolute {@code index} in this
          * buffer.
@@ -722,7 +722,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 1} is greater than {@code this.capacity}
          */
-    public ByteBuf SetBoolean(int index, bool value) => SetByte(index, value ? 1 : 0);
+    public virtual ByteBuf SetBoolean(int index, bool value) => SetByte(index, value ? 1 : 0);
     /**
          * Gets a 16-bit short integer at the specified absolute {@code index} in
          * this buffer.  This method does not modify {@code readerIndex} or
@@ -732,7 +732,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public short GetShort(int index) => unchecked((short)ReadWord(index, 2, false));
+    public virtual short GetShort(int index) => unchecked((short)ReadWord(index, 2, false));
     /**
          * Sets the specified 16-bit short integer at the specified absolute
          * {@code index} in this buffer.  The 16 high-order bits of the specified
@@ -744,7 +744,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public ByteBuf SetShort(int index, int value) => SetWord(index, unchecked((ulong)value), 2, false);
+    public virtual ByteBuf SetShort(int index, int value) => SetWord(index, unchecked((ulong)value), 2, false);
     /**
          * Gets a 16-bit short integer at the specified absolute {@code index} in
          * this buffer in Little Endian Byte Order. This method does not modify
@@ -754,7 +754,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public short GetShortLE(int index) => unchecked((short)ReadWord(index, 2, true));
+    public virtual short GetShortLE(int index) => unchecked((short)ReadWord(index, 2, true));
     /**
          * Sets the specified 16-bit short integer at the specified absolute
          * {@code index} in this buffer with the Little Endian Byte Order.
@@ -766,7 +766,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public ByteBuf SetShortLE(int index, int value) => SetWord(index, unchecked((ulong)value), 2, true);
+    public virtual ByteBuf SetShortLE(int index, int value) => SetWord(index, unchecked((ulong)value), 2, true);
     /**
          * Gets a 32-bit integer at the specified absolute {@code index} in
          * this buffer.  This method does not modify {@code readerIndex} or
@@ -776,7 +776,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public int GetInt(int index) => unchecked((int)ReadWord(index, 4, false));
+    public virtual int GetInt(int index) => unchecked((int)ReadWord(index, 4, false));
     /**
          * Sets the specified 32-bit integer at the specified absolute
          * {@code index} in this buffer.
@@ -787,7 +787,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public ByteBuf SetInt(int index, int value) => SetWord(index, unchecked((ulong)value), 4, false);
+    public virtual ByteBuf SetInt(int index, int value) => SetWord(index, unchecked((ulong)value), 4, false);
     /**
          * Gets a 32-bit integer at the specified absolute {@code index} in
          * this buffer with Little Endian Byte Order. This method does not
@@ -797,7 +797,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public int GetIntLE(int index) => unchecked((int)ReadWord(index, 4, true));
+    public virtual int GetIntLE(int index) => unchecked((int)ReadWord(index, 4, true));
     /**
          * Sets the specified 32-bit integer at the specified absolute
          * {@code index} in this buffer with Little Endian byte order
@@ -809,7 +809,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public ByteBuf SetIntLE(int index, int value) => SetWord(index, unchecked((ulong)value), 4, true);
+    public virtual ByteBuf SetIntLE(int index, int value) => SetWord(index, unchecked((ulong)value), 4, true);
     /**
          * Gets a 64-bit long integer at the specified absolute {@code index} in
          * this buffer.  This method does not modify {@code readerIndex} or
@@ -819,7 +819,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public long GetLong(int index) => unchecked((long)ReadWord(index, 8, false));
+    public virtual long GetLong(int index) => unchecked((long)ReadWord(index, 8, false));
     /**
          * Sets the specified 64-bit long integer at the specified absolute
          * {@code index} in this buffer.
@@ -830,7 +830,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public ByteBuf SetLong(int index, long value) => SetWord(index, unchecked((ulong)value), 8, false);
+    public virtual ByteBuf SetLong(int index, long value) => SetWord(index, unchecked((ulong)value), 8, false);
     /**
          * Gets a 64-bit long integer at the specified absolute {@code index} in
          * this buffer in Little Endian Byte Order. This method does not
@@ -840,7 +840,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public long GetLongLE(int index) => unchecked((long)ReadWord(index, 8, true));
+    public virtual long GetLongLE(int index) => unchecked((long)ReadWord(index, 8, true));
     /**
          * Sets the specified 64-bit long integer at the specified absolute
          * {@code index} in this buffer in Little Endian Byte Order.
@@ -851,7 +851,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public ByteBuf SetLongLE(int index, long value) => SetWord(index, unchecked((ulong)value), 8, true);
+    public virtual ByteBuf SetLongLE(int index, long value) => SetWord(index, unchecked((ulong)value), 8, true);
     /**
          * Gets an unsigned 24-bit medium integer at the specified absolute
          * {@code index} in this buffer.  This method does not modify
@@ -861,7 +861,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 3} is greater than {@code this.capacity}
          */
-    public int GetUnsignedMedium(int index) => (int)ReadWord(index, 3, false);
+    public virtual int GetUnsignedMedium(int index) => (int)ReadWord(index, 3, false);
     /**
          * Gets an unsigned 24-bit medium integer at the specified absolute
          * {@code index} in this buffer in Little Endian Byte Order.
@@ -872,7 +872,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 3} is greater than {@code this.capacity}
          */
-    public int GetUnsignedMediumLE(int index) => (int)ReadWord(index, 3, true);
+    public virtual int GetUnsignedMediumLE(int index) => (int)ReadWord(index, 3, true);
     /**
          * Gets a 24-bit medium integer at the specified absolute {@code index} in
          * this buffer.  This method does not modify {@code readerIndex} or
@@ -882,7 +882,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 3} is greater than {@code this.capacity}
          */
-    public int GetMedium(int index) => GetUnsignedMedium(index) << 8 >> 8;
+    public virtual int GetMedium(int index) => GetUnsignedMedium(index) << 8 >> 8;
     /**
          * Gets a 24-bit medium integer at the specified absolute {@code index} in
          * this buffer in the Little Endian Byte Order. This method does not
@@ -892,7 +892,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 3} is greater than {@code this.capacity}
          */
-    public int GetMediumLE(int index) => GetUnsignedMediumLE(index) << 8 >> 8;
+    public virtual int GetMediumLE(int index) => GetUnsignedMediumLE(index) << 8 >> 8;
     /**
          * Sets the specified 24-bit medium integer at the specified absolute
          * {@code index} in this buffer.  Please note that the most significant
@@ -904,7 +904,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 3} is greater than {@code this.capacity}
          */
-    public ByteBuf SetMedium(int index, int value) => SetWord(index, unchecked((ulong)value), 3, false);
+    public virtual ByteBuf SetMedium(int index, int value) => SetWord(index, unchecked((ulong)value), 3, false);
     /**
          * Sets the specified 24-bit medium integer at the specified absolute
          * {@code index} in this buffer in the Little Endian Byte Order.
@@ -917,7 +917,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 3} is greater than {@code this.capacity}
          */
-    public ByteBuf SetMediumLE(int index, int value) => SetWord(index, unchecked((ulong)value), 3, true);
+    public virtual ByteBuf SetMediumLE(int index, int value) => SetWord(index, unchecked((ulong)value), 3, true);
     /**
          * Gets an unsigned 16-bit short integer at the specified absolute
          * {@code index} in this buffer.  This method does not modify
@@ -927,7 +927,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public ushort GetUnsignedShort(int index) => unchecked((ushort)GetShort(index));
+    public virtual ushort GetUnsignedShort(int index) => unchecked((ushort)GetShort(index));
     /**
          * Gets an unsigned 16-bit short integer at the specified absolute
          * {@code index} in this buffer in Little Endian Byte Order.
@@ -938,7 +938,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public ushort GetUnsignedShortLE(int index) => unchecked((ushort)GetShortLE(index));
+    public virtual ushort GetUnsignedShortLE(int index) => unchecked((ushort)GetShortLE(index));
     /**
          * Gets an unsigned 32-bit integer at the specified absolute {@code index}
          * in this buffer.  This method does not modify {@code readerIndex} or
@@ -948,7 +948,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public uint GetUnsignedInt(int index) => unchecked((uint)GetInt(index));
+    public virtual uint GetUnsignedInt(int index) => unchecked((uint)GetInt(index));
     /**
          * Gets an unsigned 32-bit integer at the specified absolute {@code index}
          * in this buffer in Little Endian Byte Order. This method does not
@@ -958,7 +958,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public uint GetUnsignedIntLE(int index) => unchecked((uint)GetIntLE(index));
+    public virtual uint GetUnsignedIntLE(int index) => unchecked((uint)GetIntLE(index));
     /**
          * Gets a 2-byte UTF-16 character at the specified absolute
          * {@code index} in this buffer.  This method does not modify
@@ -968,7 +968,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public char GetChar(int index) => (char)GetUnsignedShort(index);
+    public virtual char GetChar(int index) => (char)GetUnsignedShort(index);
     /**
          * Sets the specified 2-byte UTF-16 character at the specified absolute
          * {@code index} in this buffer.
@@ -980,7 +980,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public ByteBuf SetChar(int index, char value) => SetShort(index, value);
+    public virtual ByteBuf SetChar(int index, char value) => SetShort(index, value);
     /**
          * Gets a 32-bit floating point number at the specified absolute
          * {@code index} in this buffer.  This method does not modify
@@ -990,7 +990,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public float GetFloat(int index) => BitConverter.Int32BitsToSingle(GetInt(index));
+    public virtual float GetFloat(int index) => BitConverter.Int32BitsToSingle(GetInt(index));
     /**
          * Gets a 32-bit floating point number at the specified absolute
          * {@code index} in this buffer in Little Endian Byte Order.
@@ -1001,7 +1001,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public float GetFloatLE(int index) => BitConverter.Int32BitsToSingle(GetIntLE(index));
+    public virtual float GetFloatLE(int index) => BitConverter.Int32BitsToSingle(GetIntLE(index));
     /**
          * Gets a 64-bit floating point number at the specified absolute
          * {@code index} in this buffer.  This method does not modify
@@ -1011,7 +1011,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public double GetDouble(int index) => BitConverter.Int64BitsToDouble(GetLong(index));
+    public virtual double GetDouble(int index) => BitConverter.Int64BitsToDouble(GetLong(index));
     /**
          * Gets a 64-bit floating point number at the specified absolute
          * {@code index} in this buffer in Little Endian Byte Order.
@@ -1022,7 +1022,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public double GetDoubleLE(int index) => BitConverter.Int64BitsToDouble(GetLongLE(index));
+    public virtual double GetDoubleLE(int index) => BitConverter.Int64BitsToDouble(GetLongLE(index));
     /**
          * Sets the specified 32-bit floating-point number at the specified
          * absolute {@code index} in this buffer.
@@ -1033,7 +1033,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public ByteBuf SetFloat(int index, float value) => SetInt(index, BitConverter.SingleToInt32Bits(value));
+    public virtual ByteBuf SetFloat(int index, float value) => SetInt(index, BitConverter.SingleToInt32Bits(value));
     /**
          * Sets the specified 32-bit floating-point number at the specified
          * absolute {@code index} in this buffer in Little Endian Byte Order.
@@ -1044,7 +1044,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public ByteBuf SetFloatLE(int index, float value) => SetIntLE(index, BitConverter.SingleToInt32Bits(value));
+    public virtual ByteBuf SetFloatLE(int index, float value) => SetIntLE(index, BitConverter.SingleToInt32Bits(value));
     /**
          * Sets the specified 64-bit floating-point number at the specified
          * absolute {@code index} in this buffer.
@@ -1055,7 +1055,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public ByteBuf SetDouble(int index, double value) => SetLong(index, BitConverter.DoubleToInt64Bits(value));
+    public virtual ByteBuf SetDouble(int index, double value) => SetLong(index, BitConverter.DoubleToInt64Bits(value));
     /**
          * Sets the specified 64-bit floating-point number at the specified
          * absolute {@code index} in this buffer in Little Endian Byte Order.
@@ -1066,7 +1066,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public ByteBuf SetDoubleLE(int index, double value) => SetLongLE(index, BitConverter.DoubleToInt64Bits(value));
+    public virtual ByteBuf SetDoubleLE(int index, double value) => SetLongLE(index, BitConverter.DoubleToInt64Bits(value));
 
     /**
          * Gets a byte at the current {@code readerIndex} and increases
@@ -1075,7 +1075,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 1}
          */
-    public byte ReadByte() { CheckReadableBytes(1); byte value = GetByte(_readerIndex); ++_readerIndex; return value; }
+    public virtual byte ReadByte() { CheckReadableBytes(1); byte value = GetByte(_readerIndex); ++_readerIndex; return value; }
     /**
          * Sets the specified byte at the current {@code writerIndex}
          * and increases the {@code writerIndex} by {@code 1} in this buffer.
@@ -1083,7 +1083,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 1}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteByte(int value) { EnsureWritable(1); SetByte(_writerIndex, value); ++_writerIndex; return this; }
+    public virtual ByteBuf WriteByte(int value) { EnsureWritable(1); SetByte(_writerIndex, value); ++_writerIndex; return this; }
     /**
          * Gets a boolean at the current {@code readerIndex} and increases
          * the {@code readerIndex} by {@code 1} in this buffer.
@@ -1091,14 +1091,14 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 1}
          */
-    public bool ReadBoolean() => ReadByte() != 0;
+    public virtual bool ReadBoolean() => ReadByte() != 0;
     /**
          * Sets the specified boolean at the current {@code writerIndex}
          * and increases the {@code writerIndex} by {@code 1} in this buffer.
          * If {@code this.writableBytes} is less than {@code 1}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteBoolean(bool value) => WriteByte(value ? 1 : 0);
+    public virtual ByteBuf WriteBoolean(bool value) => WriteByte(value ? 1 : 0);
     /**
          * Gets a 16-bit short integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 2} in this buffer.
@@ -1106,7 +1106,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 2}
          */
-    public short ReadShort() { CheckReadableBytes(2); short value = GetShort(_readerIndex); _readerIndex += 2; return value; }
+    public virtual short ReadShort() { CheckReadableBytes(2); short value = GetShort(_readerIndex); _readerIndex += 2; return value; }
     /**
          * Sets the specified 16-bit short integer at the current
          * {@code writerIndex} and increases the {@code writerIndex} by {@code 2}
@@ -1114,7 +1114,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 2}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteShort(int value) { EnsureWritable(2); SetShort(_writerIndex, value); _writerIndex += 2; return this; }
+    public virtual ByteBuf WriteShort(int value) { EnsureWritable(2); SetShort(_writerIndex, value); _writerIndex += 2; return this; }
     /**
          * Gets a 16-bit short integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1123,7 +1123,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 2}
          */
-    public short ReadShortLE() { CheckReadableBytes(2); short value = GetShortLE(_readerIndex); _readerIndex += 2; return value; }
+    public virtual short ReadShortLE() { CheckReadableBytes(2); short value = GetShortLE(_readerIndex); _readerIndex += 2; return value; }
     /**
          * Sets the specified 16-bit short integer in the Little Endian Byte
          * Order at the current {@code writerIndex} and increases the
@@ -1132,7 +1132,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 2}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteShortLE(int value) { EnsureWritable(2); SetShortLE(_writerIndex, value); _writerIndex += 2; return this; }
+    public virtual ByteBuf WriteShortLE(int value) { EnsureWritable(2); SetShortLE(_writerIndex, value); _writerIndex += 2; return this; }
     /**
          * Gets a 24-bit medium integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 3} in this buffer.
@@ -1140,7 +1140,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 3}
          */
-    public int ReadMedium() { CheckReadableBytes(3); int value = GetMedium(_readerIndex); _readerIndex += 3; return value; }
+    public virtual int ReadMedium() { CheckReadableBytes(3); int value = GetMedium(_readerIndex); _readerIndex += 3; return value; }
     /**
          * Sets the specified 24-bit medium integer at the current
          * {@code writerIndex} and increases the {@code writerIndex} by {@code 3}
@@ -1148,7 +1148,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 3}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteMedium(int value) { EnsureWritable(3); SetMedium(_writerIndex, value); _writerIndex += 3; return this; }
+    public virtual ByteBuf WriteMedium(int value) { EnsureWritable(3); SetMedium(_writerIndex, value); _writerIndex += 3; return this; }
     /**
          * Gets a 24-bit medium integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the
@@ -1157,7 +1157,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 3}
          */
-    public int ReadMediumLE() { CheckReadableBytes(3); int value = GetMediumLE(_readerIndex); _readerIndex += 3; return value; }
+    public virtual int ReadMediumLE() { CheckReadableBytes(3); int value = GetMediumLE(_readerIndex); _readerIndex += 3; return value; }
     /**
          * Sets the specified 24-bit medium integer at the current
          * {@code writerIndex} in the Little Endian Byte Order and
@@ -1166,7 +1166,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 3}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteMediumLE(int value) { EnsureWritable(3); SetMediumLE(_writerIndex, value); _writerIndex += 3; return this; }
+    public virtual ByteBuf WriteMediumLE(int value) { EnsureWritable(3); SetMediumLE(_writerIndex, value); _writerIndex += 3; return this; }
     /**
          * Gets a 32-bit integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 4} in this buffer.
@@ -1174,14 +1174,14 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 4}
          */
-    public int ReadInt() { CheckReadableBytes(4); int value = GetInt(_readerIndex); _readerIndex += 4; return value; }
+    public virtual int ReadInt() { CheckReadableBytes(4); int value = GetInt(_readerIndex); _readerIndex += 4; return value; }
     /**
          * Sets the specified 32-bit integer at the current {@code writerIndex}
          * and increases the {@code writerIndex} by {@code 4} in this buffer.
          * If {@code this.writableBytes} is less than {@code 4}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteInt(int value) { EnsureWritable(4); SetInt(_writerIndex, value); _writerIndex += 4; return this; }
+    public virtual ByteBuf WriteInt(int value) { EnsureWritable(4); SetInt(_writerIndex, value); _writerIndex += 4; return this; }
     /**
          * Gets a 32-bit integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1190,7 +1190,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 4}
          */
-    public int ReadIntLE() { CheckReadableBytes(4); int value = GetIntLE(_readerIndex); _readerIndex += 4; return value; }
+    public virtual int ReadIntLE() { CheckReadableBytes(4); int value = GetIntLE(_readerIndex); _readerIndex += 4; return value; }
     /**
          * Sets the specified 32-bit integer at the current {@code writerIndex}
          * in the Little Endian Byte Order and increases the {@code writerIndex}
@@ -1198,7 +1198,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 4}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteIntLE(int value) { EnsureWritable(4); SetIntLE(_writerIndex, value); _writerIndex += 4; return this; }
+    public virtual ByteBuf WriteIntLE(int value) { EnsureWritable(4); SetIntLE(_writerIndex, value); _writerIndex += 4; return this; }
     /**
          * Gets a 64-bit integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 8} in this buffer.
@@ -1206,7 +1206,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 8}
          */
-    public long ReadLong() { CheckReadableBytes(8); long value = GetLong(_readerIndex); _readerIndex += 8; return value; }
+    public virtual long ReadLong() { CheckReadableBytes(8); long value = GetLong(_readerIndex); _readerIndex += 8; return value; }
     /**
          * Sets the specified 64-bit long integer at the current
          * {@code writerIndex} and increases the {@code writerIndex} by {@code 8}
@@ -1214,7 +1214,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 8}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteLong(long value) { EnsureWritable(8); SetLong(_writerIndex, value); _writerIndex += 8; return this; }
+    public virtual ByteBuf WriteLong(long value) { EnsureWritable(8); SetLong(_writerIndex, value); _writerIndex += 8; return this; }
     /**
          * Gets a 64-bit integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1223,7 +1223,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 8}
          */
-    public long ReadLongLE() { CheckReadableBytes(8); long value = GetLongLE(_readerIndex); _readerIndex += 8; return value; }
+    public virtual long ReadLongLE() { CheckReadableBytes(8); long value = GetLongLE(_readerIndex); _readerIndex += 8; return value; }
     /**
          * Sets the specified 64-bit long integer at the current
          * {@code writerIndex} in the Little Endian Byte Order and
@@ -1232,7 +1232,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 8}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteLongLE(long value) { EnsureWritable(8); SetLongLE(_writerIndex, value); _writerIndex += 8; return this; }
+    public virtual ByteBuf WriteLongLE(long value) { EnsureWritable(8); SetLongLE(_writerIndex, value); _writerIndex += 8; return this; }
     /**
          * Gets a 32-bit floating point number at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 4} in this buffer.
@@ -1240,7 +1240,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 4}
          */
-    public float ReadFloat() { CheckReadableBytes(4); float value = GetFloat(_readerIndex); _readerIndex += 4; return value; }
+    public virtual float ReadFloat() { CheckReadableBytes(4); float value = GetFloat(_readerIndex); _readerIndex += 4; return value; }
     /**
          * Sets the specified 32-bit floating point number at the current
          * {@code writerIndex} and increases the {@code writerIndex} by {@code 4}
@@ -1248,7 +1248,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 4}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteFloat(float value) { EnsureWritable(4); SetFloat(_writerIndex, value); _writerIndex += 4; return this; }
+    public virtual ByteBuf WriteFloat(float value) { EnsureWritable(4); SetFloat(_writerIndex, value); _writerIndex += 4; return this; }
     /**
          * Gets a 32-bit floating point number at the current {@code readerIndex}
          * in Little Endian Byte Order and increases the {@code readerIndex}
@@ -1257,7 +1257,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 4}
          */
-    public float ReadFloatLE() { CheckReadableBytes(4); float value = GetFloatLE(_readerIndex); _readerIndex += 4; return value; }
+    public virtual float ReadFloatLE() { CheckReadableBytes(4); float value = GetFloatLE(_readerIndex); _readerIndex += 4; return value; }
     /**
          * Sets the specified 32-bit floating point number at the current
          * {@code writerIndex} in Little Endian Byte Order and increases
@@ -1265,7 +1265,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 4}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteFloatLE(float value) { EnsureWritable(4); SetFloatLE(_writerIndex, value); _writerIndex += 4; return this; }
+    public virtual ByteBuf WriteFloatLE(float value) { EnsureWritable(4); SetFloatLE(_writerIndex, value); _writerIndex += 4; return this; }
     /**
          * Gets a 64-bit floating point number at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 8} in this buffer.
@@ -1273,7 +1273,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 8}
          */
-    public double ReadDouble() { CheckReadableBytes(8); double value = GetDouble(_readerIndex); _readerIndex += 8; return value; }
+    public virtual double ReadDouble() { CheckReadableBytes(8); double value = GetDouble(_readerIndex); _readerIndex += 8; return value; }
     /**
          * Sets the specified 64-bit floating point number at the current
          * {@code writerIndex} and increases the {@code writerIndex} by {@code 8}
@@ -1281,7 +1281,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 8}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteDouble(double value) { EnsureWritable(8); SetDouble(_writerIndex, value); _writerIndex += 8; return this; }
+    public virtual ByteBuf WriteDouble(double value) { EnsureWritable(8); SetDouble(_writerIndex, value); _writerIndex += 8; return this; }
     /**
          * Gets a 64-bit floating point number at the current {@code readerIndex}
          * in Little Endian Byte Order and increases the {@code readerIndex}
@@ -1290,7 +1290,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 8}
          */
-    public double ReadDoubleLE() { CheckReadableBytes(8); double value = GetDoubleLE(_readerIndex); _readerIndex += 8; return value; }
+    public virtual double ReadDoubleLE() { CheckReadableBytes(8); double value = GetDoubleLE(_readerIndex); _readerIndex += 8; return value; }
     /**
          * Sets the specified 64-bit floating point number at the current
          * {@code writerIndex} in Little Endian Byte Order and increases
@@ -1298,7 +1298,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 8}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteDoubleLE(double value) { EnsureWritable(8); SetDoubleLE(_writerIndex, value); _writerIndex += 8; return this; }
+    public virtual ByteBuf WriteDoubleLE(double value) { EnsureWritable(8); SetDoubleLE(_writerIndex, value); _writerIndex += 8; return this; }
     /**
          * Gets an unsigned 16-bit short integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 2} in this buffer.
@@ -1306,7 +1306,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 2}
          */
-    public ushort ReadUnsignedShort() => unchecked((ushort)ReadShort());
+    public virtual ushort ReadUnsignedShort() => unchecked((ushort)ReadShort());
     /**
          * Gets an unsigned 16-bit short integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1315,7 +1315,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 2}
          */
-    public ushort ReadUnsignedShortLE() => unchecked((ushort)ReadShortLE());
+    public virtual ushort ReadUnsignedShortLE() => unchecked((ushort)ReadShortLE());
     /**
          * Gets an unsigned 32-bit integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 4} in this buffer.
@@ -1323,7 +1323,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 4}
          */
-    public uint ReadUnsignedInt() => unchecked((uint)ReadInt());
+    public virtual uint ReadUnsignedInt() => unchecked((uint)ReadInt());
     /**
          * Gets an unsigned 32-bit integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1332,7 +1332,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 4}
          */
-    public uint ReadUnsignedIntLE() => unchecked((uint)ReadIntLE());
+    public virtual uint ReadUnsignedIntLE() => unchecked((uint)ReadIntLE());
     /**
          * Gets an unsigned 24-bit medium integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 3} in this buffer.
@@ -1340,7 +1340,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 3}
          */
-    public int ReadUnsignedMedium() => ReadMedium() & 0xFFFFFF;
+    public virtual int ReadUnsignedMedium() => ReadMedium() & 0xFFFFFF;
     /**
          * Gets an unsigned 24-bit medium integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1349,7 +1349,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 3}
          */
-    public int ReadUnsignedMediumLE() => ReadMediumLE() & 0xFFFFFF;
+    public virtual int ReadUnsignedMediumLE() => ReadMediumLE() & 0xFFFFFF;
     /**
          * Gets a 2-byte UTF-16 character at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 2} in this buffer.
@@ -1357,7 +1357,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 2}
          */
-    public char ReadChar() => (char)ReadUnsignedShort();
+    public virtual char ReadChar() => (char)ReadUnsignedShort();
     /**
          * Sets the specified 2-byte UTF-16 character at the current
          * {@code writerIndex} and increases the {@code writerIndex} by {@code 2}
@@ -1365,7 +1365,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 2}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public ByteBuf WriteChar(char value) => WriteShort(value);
+    public virtual ByteBuf WriteChar(char value) => WriteShort(value);
     /**
          * Increases the current {@code readerIndex} by the specified
          * {@code length} in this buffer.
@@ -1373,7 +1373,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code length} is greater than {@code this.readableBytes}
          */
-    public ByteBuf SkipBytes(int length) { CheckReadableBytes(length); _readerIndex += length; return this; }
+    public virtual ByteBuf SkipBytes(int length) { CheckReadableBytes(length); _readerIndex += length; return this; }
     /**
          * Transfers this buffer's data to the specified destination starting at
          * the specified absolute {@code index}.
@@ -1386,7 +1386,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *            {@code this.capacity}
          */
     // CLR: The CLR destination is an explicit span range with no writer index.
-    public ByteBuf GetBytes(int index, Span<byte> destination)
+    public virtual ByteBuf GetBytes(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
         if (TryGetReadOnlyMemoryCore(index, destination.Length, out var memory)) memory.Span.CopyTo(destination);
@@ -1410,7 +1410,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *            {@code this.capacity}
          */
     // CLR: The CLR source is an explicit span range with no reader index.
-    public ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
+    public virtual ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
     {
         EnsureCanWrite(); CheckIndex(index, source.Length);
         if (TryGetMemoryCore(index, source.Length, out var memory)) source.CopyTo(memory.Span);
@@ -1426,7 +1426,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if {@code dst.length} is greater than {@code this.readableBytes}
          */
     // CLR: The CLR destination is an explicit span range; only this buffer reader advances.
-    public ByteBuf ReadBytes(Span<byte> destination)
+    public virtual ByteBuf ReadBytes(Span<byte> destination)
     {
         CheckReadableBytes(destination.Length);
         GetBytes(_readerIndex, destination); _readerIndex += destination.Length;
@@ -1440,7 +1440,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * will be called in an attempt to expand capacity to accommodate.
          */
     // CLR: The CLR source is an explicit span range; only this buffer writer advances.
-    public ByteBuf WriteBytes(ReadOnlySpan<byte> source)
+    public virtual ByteBuf WriteBytes(ReadOnlySpan<byte> source)
     {
         using var lease = PinMemoryForWrite();
         EnsureWritable(source.Length);
@@ -1464,7 +1464,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if {@code dstIndex + length} is greater than
          *            {@code dst.capacity}
          */
-    public ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
+    public virtual ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
         destination.SetBytes(destinationIndex, this, index, length);
@@ -1487,7 +1487,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if {@code srcIndex + length} is greater than
          *            {@code src.capacity}
          */
-    public ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
+    public virtual ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite(); CheckIndex(index, length); source.CheckIndex(sourceIndex, length);
@@ -1513,7 +1513,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if {@code length} is greater than {@code this.readableBytes} or
          *         if {@code length} is greater than {@code dst.writableBytes}
          */
-    public ByteBuf ReadBytes(ByteBuf destination, int length)
+    public virtual ByteBuf ReadBytes(ByteBuf destination, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckReadableBytes(length);
@@ -1536,7 +1536,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @param length the number of bytes to transfer
          * @throws IndexOutOfBoundsException if {@code length} is greater then {@code src.readableBytes}
          */
-    public ByteBuf WriteBytes(ByteBuf source, int length)
+    public virtual ByteBuf WriteBytes(ByteBuf source, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
         source.CheckReadableBytes(length);
@@ -1557,7 +1557,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         if {@code index + length} is greater than {@code this.capacity}
          */
-    public ByteBuf SetZero(int index, int length) { EnsureCanWrite(); CheckIndex(index, length); SetZeroCore(index, length); return this; }
+    public virtual ByteBuf SetZero(int index, int length) { EnsureCanWrite(); CheckIndex(index, length); SetZeroCore(index, length); return this; }
     /**
          * Fills this buffer with <tt>NUL (0x00)</tt> starting at the current
          * {@code writerIndex} and increases the {@code writerIndex} by the
@@ -1567,7 +1567,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *
          * @param length the number of <tt>NUL</tt>s to write to the buffer
          */
-    public ByteBuf WriteZero(int length)
+    public virtual ByteBuf WriteZero(int length)
     { EnsureWritable(length); SetZero(_writerIndex, length); _writerIndex += length; return this; }
     /**
          * Returns a copy of this buffer's readable bytes.  Modifying the content
@@ -1576,7 +1576,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * This method does not modify {@code readerIndex} or {@code writerIndex} of
          * this buffer.
          */
-    public ByteBuf Copy() => Copy(_readerIndex, ReadableBytes);
+    public virtual ByteBuf Copy() => Copy(_readerIndex, ReadableBytes);
     /**
          * Returns a copy of this buffer's sub-region.  Modifying the content of
          * the returned buffer or this buffer does not affect each other at all.
@@ -1604,7 +1604,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code length} is greater than {@code this.readableBytes}
          */
-    public ByteBuf ReadBytes(int length)
+    public virtual ByteBuf ReadBytes(int length)
     {
         CheckReadableBytes(length);
         if (length == 0) return Unpooled.EmptyBuffer;

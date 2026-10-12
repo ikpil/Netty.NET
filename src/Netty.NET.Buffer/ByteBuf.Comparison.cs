@@ -45,7 +45,7 @@ public abstract partial class ByteBuf : IEquatable<ByteBuf>, IComparable<ByteBuf
     public override bool Equals(object obj) => obj is ByteBuf other && Equals(other);
 
     /// <summary>Compares the current readable content, regardless of storage or absolute indices.</summary>
-    public bool Equals(ByteBuf other) => other is not null && ByteBufUtil.Equals(this, other);
+    public virtual bool Equals(ByteBuf other) => other is not null && ByteBufUtil.Equals(this, other);
 
 /**
      * Compares the content of the specified buffer to the content of this
@@ -55,5 +55,5 @@ public abstract partial class ByteBuf : IEquatable<ByteBuf>, IComparable<ByteBuf
      */
     /// <remarks>As required by IComparable, a non-null buffer sorts after null.
     /// Comparison otherwise follows ByteBufUtil.Compare over the readable bytes.</remarks>
-    public int CompareTo(ByteBuf other) => other is null ? 1 : ByteBufUtil.Compare(this, other);
+    public virtual int CompareTo(ByteBuf other) => other is null ? 1 : ByteBufUtil.Compare(this, other);
 }

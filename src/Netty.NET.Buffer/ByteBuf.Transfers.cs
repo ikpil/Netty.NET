@@ -38,7 +38,7 @@ public abstract partial class ByteBuf
      *         if {@code index + dst.writableBytes} is greater than
      *            {@code this.capacity}
      */
-    public ByteBuf GetBytes(int index, ByteBuf destination)
+    public virtual ByteBuf GetBytes(int index, ByteBuf destination)
     {
         ArgumentNullException.ThrowIfNull(destination);
         destination.EnsureAccessible();
@@ -63,7 +63,7 @@ public abstract partial class ByteBuf
      *            {@code this.capacity}, or
      *         if {@code length} is greater than {@code dst.writableBytes}
      */
-    public ByteBuf GetBytes(int index, ByteBuf destination, int length)
+    public virtual ByteBuf GetBytes(int index, ByteBuf destination, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
         GetBytes(index, destination, destination.WriterIndex, length);
@@ -87,7 +87,7 @@ public abstract partial class ByteBuf
      *         if {@code index + src.readableBytes} is greater than
      *            {@code this.capacity}
      */
-    public ByteBuf SetBytes(int index, ByteBuf source)
+    public virtual ByteBuf SetBytes(int index, ByteBuf source)
     {
         ArgumentNullException.ThrowIfNull(source);
         return SetBytes(index, source, source.ReadableBytes);
@@ -111,7 +111,7 @@ public abstract partial class ByteBuf
      *            {@code this.capacity}, or
      *         if {@code length} is greater than {@code src.readableBytes}
      */
-    public ByteBuf SetBytes(int index, ByteBuf source, int length)
+    public virtual ByteBuf SetBytes(int index, ByteBuf source, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
         source.CheckReadableBytes(length);
@@ -134,7 +134,7 @@ public abstract partial class ByteBuf
      *         if {@code dst.writableBytes} is greater than
      *            {@code this.readableBytes}
      */
-    public ByteBuf ReadBytes(ByteBuf destination)
+    public virtual ByteBuf ReadBytes(ByteBuf destination)
     {
         ArgumentNullException.ThrowIfNull(destination);
         destination.EnsureAccessible();
@@ -155,7 +155,7 @@ public abstract partial class ByteBuf
      *         if {@code dstIndex + length} is greater than
      *            {@code dst.capacity}
      */
-    public ByteBuf ReadBytes(ByteBuf destination, int destinationIndex, int length)
+    public virtual ByteBuf ReadBytes(ByteBuf destination, int destinationIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckReadableBytes(length);
@@ -177,7 +177,7 @@ public abstract partial class ByteBuf
      * {@link #ensureWritable(int)} will be called in an attempt to expand
      * capacity to accommodate.
      */
-    public ByteBuf WriteBytes(ByteBuf source)
+    public virtual ByteBuf WriteBytes(ByteBuf source)
     {
         ArgumentNullException.ThrowIfNull(source);
         return WriteBytes(source, source.ReadableBytes);
@@ -199,7 +199,7 @@ public abstract partial class ByteBuf
      */
     /// <remarks>Like Netty, growth occurs before validating the absolute source range.
     /// A failed copy leaves the writer index unchanged but may leave increased capacity or partially written bytes.</remarks>
-    public ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
+    public virtual ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
         EnsureWritable(length);

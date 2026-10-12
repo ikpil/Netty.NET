@@ -49,7 +49,7 @@ public abstract partial class ByteBuf
     /// a partial write count. The handle is borrowed and is never disposed here.
     /// Pooled snapshots use memory proportional to length, without borrowing native
     /// memory during I/O. File writes can have partial effects before throwing.</remarks>
-    public int GetBytes(int index, SafeFileHandle destination, long position, int length)
+    public virtual int GetBytes(int index, SafeFileHandle destination, long position, int length)
     {
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
@@ -87,7 +87,7 @@ public abstract partial class ByteBuf
     /// <remarks>CLR: a closed handle throws instead of returning Java's minus-one
     /// sentinel. Composite storage also uses one bounded read. A throwing file read
     /// does not publish staging bytes; a later composite commit can change a prefix.</remarks>
-    public int SetBytes(int index, SafeFileHandle source, long position, int length)
+    public virtual int SetBytes(int index, SafeFileHandle source, long position, int length)
     {
         EnsureCanWrite();
         CheckIndex(index, length);
@@ -119,7 +119,7 @@ public abstract partial class ByteBuf
      *         if the specified channel threw an exception during I/O
      */
     /// <summary>Writes readable bytes at a file offset and advances the reader only after success.</summary>
-    public int ReadBytes(SafeFileHandle destination, long position, int length)
+    public virtual int ReadBytes(SafeFileHandle destination, long position, int length)
     {
         CheckReadableBytes(length);
         int count = GetBytes(_readerIndex, destination, position, length);
@@ -147,7 +147,7 @@ public abstract partial class ByteBuf
     /// <summary>Reserves requested capacity, reads once at a file offset and advances by the actual count.</summary>
     /// <remarks>Handle/range/permission validation precedes growth. Once started,
     /// growth is not rolled back on EOF or I/O failure.</remarks>
-    public int WriteBytes(SafeFileHandle source, long position, int length)
+    public virtual int WriteBytes(SafeFileHandle source, long position, int length)
     {
         EnsureCanWrite();
         CheckFileTransfer(source, position, length);
@@ -163,7 +163,7 @@ public abstract partial class ByteBuf
     /// Keep the borrowed handle and buffer alive until completion. Exclude concurrent
     /// buffer mutation/release and external changes to the active cursor. Managed
     /// staging remains owned until I/O finishes; no native borrow survives await.</remarks>
-    public async ValueTask<int> GetBytesAsync(int index, SafeFileHandle destination, long position, int length,
+    public virtual async ValueTask<int> GetBytesAsync(int index, SafeFileHandle destination, long position, int length,
         CancellationToken cancellationToken = default)
     {
         CheckIndex(index, length);
@@ -186,7 +186,7 @@ public abstract partial class ByteBuf
     /// <remarks>A thrown cancellation or I/O failure does not publish staged input.
     /// A valid result commits despite late token cancellation. Buffer/handle ownership
     /// is borrowed through completion; concurrent mutation/release must be excluded.</remarks>
-    public async ValueTask<int> SetBytesAsync(int index, SafeFileHandle source, long position, int length,
+    public virtual async ValueTask<int> SetBytesAsync(int index, SafeFileHandle source, long position, int length,
         CancellationToken cancellationToken = default)
     {
         EnsureCanWrite();
@@ -213,7 +213,7 @@ public abstract partial class ByteBuf
     /// <summary>Asynchronously writes readable bytes at a file offset, advancing the reader after success.</summary>
     /// <remarks>A file can be partially modified before failure or cancellation;
     /// the reader remains unchanged if the awaited write throws.</remarks>
-    public async ValueTask<int> ReadBytesAsync(SafeFileHandle destination, long position, int length,
+    public virtual async ValueTask<int> ReadBytesAsync(SafeFileHandle destination, long position, int length,
         CancellationToken cancellationToken = default)
     {
         CheckReadableBytes(length);
@@ -227,7 +227,7 @@ public abstract partial class ByteBuf
     /// <remarks>Validation precedes cancellation; a pre-canceled token prevents growth
     /// and I/O. Once started, capacity growth is not rolled back. Exclude external
     /// writer changes until completion. The file's current position stays unchanged.</remarks>
-    public async ValueTask<int> WriteBytesAsync(SafeFileHandle source, long position, int length,
+    public virtual async ValueTask<int> WriteBytesAsync(SafeFileHandle source, long position, int length,
         CancellationToken cancellationToken = default)
     {
         EnsureCanWrite();

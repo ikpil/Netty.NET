@@ -31,7 +31,7 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
      * {@link ResourceLeakDetector#track(Object)} is called to create {@link #leak}.
      */
     private readonly ByteBuf _trackedByteBuf;
-    private readonly IResourceLeakTracker<ByteBuf> _leak;
+    protected readonly IResourceLeakTracker<ByteBuf> _leak;
 
     internal SimpleLeakAwareByteBuf(ByteBuf wrapped, IResourceLeakTracker<ByteBuf> leak)
         : this(wrapped, wrapped, leak) { }

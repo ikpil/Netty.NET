@@ -43,7 +43,7 @@ public abstract partial class ByteBuf
     /// <remarks>The stream is borrowed. Temporary pooled storage prevents callbacks
     /// from invalidating native memory or later composite segments during the write.
     /// Exclude concurrent changes, release and external cursor mutation during I/O.</remarks>
-    public ByteBuf GetBytes(int index, Stream destination, int length)
+    public virtual ByteBuf GetBytes(int index, Stream destination, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
@@ -81,7 +81,7 @@ public abstract partial class ByteBuf
     /// read is returned immediately; callers requiring a full field must loop.
     /// Staging means a throwing read cannot publish bytes into this buffer. The
     /// stream is borrowed; this method does not retain the buffer or change indices.</remarks>
-    public int SetBytes(int index, Stream source, int length)
+    public virtual int SetBytes(int index, Stream source, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite();
@@ -120,7 +120,7 @@ public abstract partial class ByteBuf
     /// <summary>Writes readable bytes and advances the reader only after success.</summary>
     /// <remarks>A throwing destination may already have accepted some bytes; the
     /// buffer reader remains unchanged. The stream is not disposed.</remarks>
-    public ByteBuf ReadBytes(Stream destination, int length)
+    public virtual ByteBuf ReadBytes(Stream destination, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckReadableBytes(length);
@@ -147,7 +147,7 @@ public abstract partial class ByteBuf
     /// <returns>The actual count, or zero at EOF or for an empty request.</returns>
     /// <remarks>Capacity can grow even at EOF or on I/O failure, as in Netty.
     /// The writer advances only after a successful read and buffer transfer.</remarks>
-    public int WriteBytes(Stream source, int length)
+    public virtual int WriteBytes(Stream source, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
         EnsureWritable(length);
@@ -162,7 +162,7 @@ public abstract partial class ByteBuf
     /// The stream and buffer are borrowed for the full operation. Exclude concurrent
     /// mutation, release and external cursor changes until the returned ValueTask completes.
     /// Temporary managed storage is kept until I/O finishes; native memory is not borrowed across await.</remarks>
-    public async ValueTask GetBytesAsync(int index, Stream destination, int length,
+    public virtual async ValueTask GetBytesAsync(int index, Stream destination, int length,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -185,7 +185,7 @@ public abstract partial class ByteBuf
     /// consumption can already have occurred. A valid result is committed even if the
     /// token was canceled meanwhile: cancellation is cooperative, not a rollback.
     /// Keep the borrowed buffer and stream alive and exclude concurrent mutation until completion.</remarks>
-    public async ValueTask<int> SetBytesAsync(int index, Stream source, int length,
+    public virtual async ValueTask<int> SetBytesAsync(int index, Stream source, int length,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -214,7 +214,7 @@ public abstract partial class ByteBuf
     /// <summary>Asynchronously writes readable bytes, then advances the reader after success.</summary>
     /// <remarks>Cancellation or failure leaves the reader unchanged even when the
     /// destination already accepted a prefix. Exclude external reader changes until completion.</remarks>
-    public async ValueTask ReadBytesAsync(Stream destination, int length,
+    public virtual async ValueTask ReadBytesAsync(Stream destination, int length,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -228,7 +228,7 @@ public abstract partial class ByteBuf
     /// <remarks>A pre-canceled token prevents capacity growth and I/O after argument
     /// and permission validation. Once started, growth is not rolled back on EOF,
     /// cancellation or failure. Exclude external writer changes until completion.</remarks>
-    public async ValueTask<int> WriteBytesAsync(Stream source, int length,
+    public virtual async ValueTask<int> WriteBytesAsync(Stream source, int length,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(source);

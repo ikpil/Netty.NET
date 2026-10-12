@@ -76,4 +76,12 @@ public class WrappedByteBuf : ByteBuf
     public override ByteBuf RetainedDuplicate() => Buffer.RetainedDuplicate();
     public override ByteBuf ReadSlice(int length) => Buffer.ReadSlice(length);
     public override ByteBuf ReadRetainedSlice(int length) => Buffer.ReadRetainedSlice(length);
+
+    // Preserve Java's direct comparison forwarding: hashing/comparing the wrapper
+    // must not turn its own primitive implementation reads into advanced access records.
+    public override int GetHashCode() => Buffer.GetHashCode();
+    // CLR reference identity stays reflexive, including after final release.
+    public override bool Equals(object obj) => ReferenceEquals(this, obj) || Buffer.Equals(obj);
+    public override bool Equals(ByteBuf other) => ReferenceEquals(this, other) || Buffer.Equals(other);
+    public override int CompareTo(ByteBuf other) => ReferenceEquals(this, other) ? 0 : Buffer.CompareTo(other);
 }

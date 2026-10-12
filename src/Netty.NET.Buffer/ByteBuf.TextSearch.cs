@@ -33,7 +33,7 @@ public abstract partial class ByteBuf
          *         current VM
          */
     /// <summary>Decodes readable bytes using the caller's encoding and fallback policy.</summary>
-    public string GetString(Encoding encoding) => GetString(_readerIndex, ReadableBytes, encoding);
+    public virtual string GetString(Encoding encoding) => GetString(_readerIndex, ReadableBytes, encoding);
 
     /**
          * Decodes this buffer's sub-region into a string with the specified
@@ -41,7 +41,7 @@ public abstract partial class ByteBuf
          * {@code writerIndex} of this buffer.
          */
     /// <summary>Decodes a capacity-bounded range without changing either index.</summary>
-    public string GetString(int index, int length, Encoding encoding)
+    public virtual string GetString(int index, int length, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(encoding);
         if (TryGetReadOnlyMemory(index, length, out var memory)) return encoding.GetString(memory.Span);
@@ -60,7 +60,7 @@ public abstract partial class ByteBuf
          *         if {@code length} is greater than {@code this.readableBytes}
          */
     /// <summary>Decodes written bytes and advances the reader only after successful decoding.</summary>
-    public string ReadString(int length, Encoding encoding)
+    public virtual string ReadString(int length, Encoding encoding)
     {
         CheckReadableBytes(length);
         string result = GetString(_readerIndex, length, encoding);
@@ -80,7 +80,7 @@ public abstract partial class ByteBuf
          *         if the sequence at the given index would be out of bounds of the buffer capacity
          */
     /// <summary>Encodes text without growing the buffer or changing indices. No preamble is emitted.</summary>
-    public int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
+    public virtual int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(encoding);
         EnsureCanWrite();
@@ -109,7 +109,7 @@ public abstract partial class ByteBuf
     /// <summary>Reserves the exact encoded length, writes text, and advances the writer after success.</summary>
     /// <remarks>The supplied Encoding controls malformed/unmappable input. No preamble is emitted.
     /// Use ByteBufUtil.WriteUtf8/WriteAscii when Netty's specialized byte mapping is required.</remarks>
-    public int WriteString(ReadOnlySpan<char> text, Encoding encoding)
+    public virtual int WriteString(ReadOnlySpan<char> text, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(encoding);
         // A UTF-16 span can alias native storage through MemoryMarshal.Cast. Keep it alive across growth.
@@ -179,7 +179,7 @@ public abstract partial class ByteBuf
          * @return the number of bytes between the current {@code readerIndex}
          *         and the first occurrence if found. {@code -1} otherwise.
          */
-    public int BytesBefore(byte value) => BytesBefore(_readerIndex, ReadableBytes, value);
+    public virtual int BytesBefore(byte value) => BytesBefore(_readerIndex, ReadableBytes, value);
 
     /**
          * Locates the first occurrence of the specified {@code value} in this
@@ -195,7 +195,7 @@ public abstract partial class ByteBuf
          * @throws IndexOutOfBoundsException
          *         if {@code length} is greater than {@code this.readableBytes}
          */
-    public int BytesBefore(int length, byte value)
+    public virtual int BytesBefore(int length, byte value)
     {
         CheckReadableBytes(length);
         return BytesBefore(_readerIndex, length, value);
@@ -215,7 +215,7 @@ public abstract partial class ByteBuf
          * @throws IndexOutOfBoundsException
          *         if {@code index + length} is greater than {@code this.capacity}
          */
-    public int BytesBefore(int index, int length, byte value)
+    public virtual int BytesBefore(int index, int length, byte value)
     {
         CheckIndex(index, length);
         int found = IndexOf(index, index + length, value);
@@ -228,7 +228,7 @@ public abstract partial class ByteBuf
          * @return {@code -1} if the processor iterated to or beyond the end of the readable bytes.
          *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
          */
-    public int ForEachByte(Func<byte, bool> processor) => ForEachByte(_readerIndex, ReadableBytes, processor);
+    public virtual int ForEachByte(Func<byte, bool> processor) => ForEachByte(_readerIndex, ReadableBytes, processor);
 
     /**
          * Iterates over the specified area of this buffer with the specified {@code processor} in ascending order.
@@ -237,7 +237,7 @@ public abstract partial class ByteBuf
          * @return {@code -1} if the processor iterated to or beyond the end of the specified area.
          *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
          */
-    public int ForEachByte(int index, int length, Func<byte, bool> processor)
+    public virtual int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
         ArgumentNullException.ThrowIfNull(processor);
         CheckIndex(index, length);
@@ -254,7 +254,7 @@ public abstract partial class ByteBuf
          * @return {@code -1} if the processor iterated to or beyond the beginning of the readable bytes.
          *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
          */
-    public int ForEachByteDesc(Func<byte, bool> processor) => ForEachByteDesc(_readerIndex, ReadableBytes, processor);
+    public virtual int ForEachByteDesc(Func<byte, bool> processor) => ForEachByteDesc(_readerIndex, ReadableBytes, processor);
 
     /**
          * Iterates over the specified area of this buffer with the specified {@code processor} in descending order.
@@ -264,7 +264,7 @@ public abstract partial class ByteBuf
          * @return {@code -1} if the processor iterated to or beyond the beginning of the specified area.
          *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
          */
-    public int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+    public virtual int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
     {
         ArgumentNullException.ThrowIfNull(processor);
         CheckIndex(index, length);

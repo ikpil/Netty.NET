@@ -2197,12 +2197,54 @@ Inventory remains 159 (74 pending, 52 in-progress, 30 verified, 3 CLR replacemen
 allocator/cache source and complete fixtures remain in-progress.
 Evidence: artifacts/buffer-cache-scheduling-validation (ignored), buffer-cache-scheduling-*.trx.
 
+## Advanced leak-aware buffer access records
+
+AdvancedLeakAwareByteBuf records existing data/view/capacity operations before
+delegating, including rejected accesses. Retain/Release and Touch always record;
+io.netty.leakDetection.acquireAndReleaseOnly suppresses other records, matching
+Java's static property (CLR process environment). Touch preserves the outer wrapper
+and optional hint. Common's existing stack exclusions hide Touch and the recording
+helper. Final release and original-close diagnostics remain SimpleLeakAwareByteBuf's
+responsibility; shared/retained views keep the advanced wrapper and original tracker.
+Copies retain independent allocator ownership.
+
+Existing ByteBuf data methods become virtual so the wrapper can intercept each
+public operation once and forward directly to its underlying buffer. This avoids
+recording nested primitive implementation calls, preserves fluent receiver identity
+and shared cursors/marks, and leaves ordinary buffers' implementations unchanged.
+WrappedByteBuf also forwards hash/equality/comparison directly as Java does, avoiding
+spurious records from the wrapper's own primitive reads during those operations.
+141 operation overrides also cover CLR Span/Memory/ReadOnlySequence and ValueTask
+stream/file transfers. Async calls record once when started; existing cancellation,
+borrowed lifetime and success-only cursor publication remain in effect. Explicit
+little-endian floating-point APIs also record (a CLR extension beyond Java's explicit
+override list). Byte-order facades, remaining Java-only NIO/channel surfaces, pooled
+independent derived counts, composite leak wrappers and automatic allocator wrapping
+remain separate work; this internal wrapper is not yet selected by allocator factories.
+
+762 added cases include the original sliced-component regression, 123 operations
+across six storage/view kinds, pooled native/heap retained lifetimes, failed-reference
+diagnostics, metadata/hints, memory access, sync/async stream/file I/O and cancellation.
+net10.0 Debug/Release/rebuilt checked Release each pass 2899/2899, no failures/skips.
+Checked build has zero errors and 51 existing Common warnings; no Buffer/test warnings.
+Both original AdvancedLeakAwareByteBuf source comments and the original fixture license
+are retained. Common is unchanged.
+
+93 freshly extracted pinned Java Buffer sources supply the differential runtime.
+Per Debug/Release and recording policy, all 738 access-record/closure rows agree with
+Java and an independent recording-policy model; 736 complete result/cursor/byte rows
+agree. Two existing read-only WriteByte/WriteBoolean failure rows retain CLR's unchanged
+writer index, whereas Java increments it before failure. No byte/lifetime difference is
+hidden by this adaptation. Both static policy values run in separate processes.
+Inventory is 159 (72 pending, 54 in-progress, 30 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-advanced-leak-validation (ignored), buffer-advanced-leak-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping, allocator events and adaptive allocators remain unported. Most original
+borrowed-address wrapping, composite leak wrappers, automatic allocator leak wrapping, allocator events and adaptive allocators remain unported. Advanced leak access recording covers the current CLR buffer API; its remaining upstream surfaces are pending. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units continue remaining factories/utilities/original fixtures, leak wrappers and
 remaining allocator integration. Common

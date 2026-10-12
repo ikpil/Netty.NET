@@ -60,7 +60,7 @@ public abstract partial class ByteBuf
     /// <summary>Returns borrowed segments sharing the buffer's content without retaining it.</summary>
     /// <remarks>The segment layout is captured. Exclude resize, component changes and
     /// release while using this sequence; it does not acquire native pins.</remarks>
-    public ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
+    public virtual ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
     { CheckIndex(index, length); return GetReadOnlySequenceCore(index, length); }
     public ReadOnlySequence<byte> ReadableSequence => AsReadOnlySequence(ReaderIndex, ReadableBytes);
 

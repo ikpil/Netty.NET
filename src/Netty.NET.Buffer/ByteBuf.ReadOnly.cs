@@ -77,13 +77,13 @@ public abstract partial class ByteBuf
     /// <remarks>This is a live view, not a snapshot. Exclude concurrent resize/release while borrowing it.</remarks>
     /// <exception cref="NotSupportedException">The range spans multiple components;
     /// use AsReadOnlySequence or GetBytes for such ranges.</exception>
-    public ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
+    public virtual ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
     {
         CheckIndex(index, length);
         return GetReadOnlyMemoryCore(index, length);
     }
 
-    public ReadOnlySpan<byte> AsReadOnlySpan(int index, int length) => AsReadOnlyMemory(index, length).Span;
+    public virtual ReadOnlySpan<byte> AsReadOnlySpan(int index, int length) => AsReadOnlyMemory(index, length).Span;
 
     protected void EnsureCanWrite()
     {
