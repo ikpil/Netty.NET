@@ -21,7 +21,7 @@ namespace Netty.NET.Buffer;
 /**
  * Exposed metric for {@link PooledByteBufAllocator}.
  */
-/// <remarks>Buffer cache sizes are zero. NumThreadLocalCaches counts arena bindings,
+/// <remarks>Cache sizes reflect configured entries per size class. NumThreadLocalCaches counts arena bindings,
 /// including bindings with no cached regions, as in Java. Memory values
 /// measure arena storage, excluding retained retired heap storage, alignment headroom
 /// and raw native pins; NativeMemoryAllocator.ReservedBytes measures physical reservations.
@@ -67,12 +67,12 @@ public sealed class PooledByteBufAllocatorMetric : IByteBufAllocatorMetric
     /**
      * Return the size of the small cache.
      */
-    public int SmallCacheSize => 0;
+    public int SmallCacheSize => _allocator.SmallCacheSize;
 
     /**
      * Return the size of the normal cache.
      */
-    public int NormalCacheSize => 0;
+    public int NormalCacheSize => _allocator.NormalCacheSize;
 
     /**
      * Return the chunk size for an arena.

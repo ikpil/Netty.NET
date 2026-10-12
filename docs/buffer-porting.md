@@ -2099,13 +2099,64 @@ its binding/count lifetime subset; region caches, trimming/scheduling, allocator
 automatic leak wrappers and broader original fixtures remain pending.
 Evidence: artifacts/buffer-multi-arena-validation (ignored), buffer-multi-arena-*.trx.
 
+## Pooled small/normal region caches and trimming
+
+Each physical-thread binding can now own independent heap/native small and normal
+region caches. Explicit smallCacheSize/normalCacheSize constructor options enable
+caching on CLR threads; defaults remain zero, including static Default. Configured
+sizes are reported unchanged, while bounded FIFO queues round capacity to the next
+power of two (saturated at 1 << 30). Small classes ignore the normal-capacity limit.
+Normal classes cover normalized sizes up to min(chunkSize, maxCachedBufferCapacity),
+default 32768; huge/dedicated reservations bypass caches. Cache entries are value
+records in lazy BCL queues, replacing Java Recycler entries and mutable NIO buffers.
+Queue growth failure safely returns the handle to its arena. Negative sizes/capacity
+and nonpositive cacheTrimInterval fail at construction before backing reservation,
+including disabled-cache configurations (stricter CLR argument validation).
+
+Cache hits do not increment arena allocation counts. Cached free handles remain
+active arena allocations until drained; logical pinned bytes decrease after the
+last buffer/internal operation lease returns, even when its handle enters a cache.
+The allocation's original cache accepts cross-thread returns if still open and not
+full. Late/full/ineligible returns go directly to the actual owning arena. A slow
+resize uses the caller's cache: a miss allocates through the old arena, but a hit
+can change the buffer's owning arena. Fast resize remains within its reservation.
+Raw native pins preserve physical storage, without retaining a logical reservation.
+
+TrimCurrentThreadCache does not create a binding. Each class frees up to rounded
+cache size minus successful hits since its previous trim, then resets its hit count.
+Eligible cache hits and misses count toward cacheTrimInterval (default 8192);
+ineligible and huge requests do not. Manual trim and automatic sweeps use original
+direct-small/direct-normal/heap-small/heap-normal order. Binding release, observed
+thread termination and allocator Dispose close/drain caches exactly once; live
+reservations stay usable and later bypass the closed cache. Lock order is allocator
+then cache then arena; return drops the arena lock before entering the cache.
+No timer, event executor, JVM finalizer or automatic thread-exit watcher is added.
+Live CLR workers retain their cache until explicit cleanup or allocator disposal.
+Scheduling, allocator events/leak wrappers and broader original fixtures remain pending.
+
+29 new cases include the original normal-cache capacity-boundary scenario, FIFO/full
+queues and rounded limits, hit-budget/manual/automatic trim, huge exclusions, separate
+classes/storage kinds, cross-thread returns/resize, thread exit, close races, native
+pins, internal leases, failed native allocation/resize and lazy extreme-size queues.
+net10.0 Debug/Release/rebuilt checked Release pass 2111/2111 with no failures/skips.
+Checked build has 51 existing Common warnings and zero Buffer/test warnings/errors.
+Fresh pinned Java buffer sources and CLR allocators produce 40720 identical rows
+per Debug/Release across 80 page/alignment/arena-count/cache-size domains. An independent
+bounded-cache/trim/owner/counter/reservation/SHA-256 model agrees, including 1218 hits,
+276 cross-arena hits, 612 automatic sweeps and 132 full-cache returns per runtime.
+The previous cache-free 10024-row multi-arena trace remains a regression check.
+Inventory remains 159 (74 pending, 52 in-progress, 30 verified, 3 CLR replacements).
+Implemented-path Java comments are retained; JVM Recycler/finalizer-only paths are
+explicit CLR adaptations, and complete source/fixture coverage remains in-progress.
+Evidence: artifacts/buffer-region-cache-validation (ignored), buffer-region-cache-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping, pooled region caches and adaptive allocators remain unported. Most original
+borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping, scheduled cache trimming and adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units connect pooled small/normal region caches and their trim/return lifecycle and
-continue remaining factories/utilities/original fixtures and leak wrappers. Common
+Next units continue remaining factories/utilities/original fixtures, leak wrappers and
+cache scheduling where supported by an actual executor consumer. Common
 changes must cite the actual buffer contract that requires them.

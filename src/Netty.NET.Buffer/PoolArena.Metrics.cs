@@ -24,7 +24,9 @@ internal abstract partial class PoolArena
 {
     // Metrics for allocations and deallocations
     // CLR: one arena Monitor protects every counter, replacing Java's split
-    // LongCounter/lock strategy. Counts refer to reservations, not wrapper objects.
+    // LongCounter/lock strategy. Counts refer to arena handles (including cached
+    // free handles), not wrapper objects. Cache hits do not increment allocations;
+    // only physical arena returns increment deallocations. Pinned bytes track leases.
     // Original Java counter rationale (CLR: these counters now share the arena lock):
     // We need to use the LongCounter here as this is not guarded via synchronized block.
     // We need to use the LongCounter here as this is not guarded via synchronized block.
@@ -34,6 +36,7 @@ internal abstract partial class PoolArena
     // Huge chunks are exact-sized for the buffers they were allocated to.
     // CLR: huge reservations include normalized size, excluding native alignment headroom.
 
+    // Number of thread caches backed by this arena.
     private int _threadBindings;
     // Java counts a thread's arena binding even when its region cache sizes are zero.
     public int NumThreadCaches => Volatile.Read(ref _threadBindings);

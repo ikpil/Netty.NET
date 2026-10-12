@@ -23,7 +23,7 @@ namespace Netty.NET.Buffer;
 
 /// <summary>Allocates reference-counted buffers through heap and native memory pools.</summary>
 /// <remarks>This implementation binds each physical thread to the least-used heap/native
-/// arenas and has no buffer cache. Buffer caching/scheduling, allocator events and automatic leak
+/// arenas, with opt-in small/normal region caches. Scheduled trimming, allocator events and automatic leak
 /// wrapping remain pending. CLR options replace JVM runtime/system-property heuristics.
 /// Dispose closes factory allocations and pooled arenas; live pooled buffers and operation
 /// leases keep their reservations until returned. Unpooled fallback buffers own independent
@@ -39,18 +39,27 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
     internal IReadOnlyList<IPoolArenaMetric> HeapArenas { get; }
     internal IReadOnlyList<IPoolArenaMetric> DirectArenas { get; }
     internal int ChunkSize { get; }
+    internal int SmallCacheSize { get; }
+    internal int NormalCacheSize { get; }
+    private readonly int _maxCachedBufferCapacity;
+    private readonly int _cacheTrimInterval;
     public PooledByteBufAllocatorMetric Metric { get; }
     IByteBufAllocatorMetric IByteBufAllocatorMetricProvider.Metric => Metric;
 
+    // No caching so just use 0 as sizes.
+    // CLR: keep the existing default policy; explicit nonzero sizes enable caching.
     public PooledByteBufAllocator(bool preferDirect = false, bool poolHeap = true, bool poolDirect = true,
         int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
-        NativeMemoryAllocator nativeAllocator = null)
+        NativeMemoryAllocator nativeAllocator = null, int smallCacheSize = 0, int normalCacheSize = 0,
+        int maxCachedBufferCapacity = 32768, int cacheTrimInterval = 8192)
         : this(preferDirect, poolHeap ? 1 : 0, poolDirect ? 1 : 0, pageSize, maxOrder,
-            directMemoryCacheAlignment, nativeAllocator) { }
+            directMemoryCacheAlignment, nativeAllocator, smallCacheSize, normalCacheSize,
+            maxCachedBufferCapacity, cacheTrimInterval) { }
 
     public PooledByteBufAllocator(bool preferDirect, int heapArenaCount, int directArenaCount,
         int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
-        NativeMemoryAllocator nativeAllocator = null) : base(preferDirect)
+        NativeMemoryAllocator nativeAllocator = null, int smallCacheSize = 0, int normalCacheSize = 0,
+        int maxCachedBufferCapacity = 32768, int cacheTrimInterval = 8192) : base(preferDirect)
     {
         if (directMemoryCacheAlignment < 0 ||
             directMemoryCacheAlignment != 0 && !BitOperations.IsPow2(directMemoryCacheAlignment))
@@ -71,6 +80,14 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
         if (chunkSize > 1 << 30) throw new ArgumentOutOfRangeException(nameof(maxOrder));
         ArgumentOutOfRangeException.ThrowIfNegative(heapArenaCount);
         ArgumentOutOfRangeException.ThrowIfNegative(directArenaCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(smallCacheSize);
+        ArgumentOutOfRangeException.ThrowIfNegative(normalCacheSize);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxCachedBufferCapacity);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cacheTrimInterval);
+        SmallCacheSize = smallCacheSize;
+        NormalCacheSize = normalCacheSize;
+        _maxCachedBufferCapacity = maxCachedBufferCapacity;
+        _cacheTrimInterval = cacheTrimInterval;
         ChunkSize = (int)chunkSize;
         // Logarithm base 2. At this point we know that pageSize is a power of two.
         int shifts = BitOperations.Log2((uint)pageSize);
@@ -100,8 +117,9 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            PoolArena arena = GetThreadBinding()?.HeapArena;
-            return arena != null ? arena.Allocate(initialCapacity, maxCapacity)
+            ThreadBinding binding = GetThreadBinding();
+            PoolArena arena = binding?.HeapArena;
+            return arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
                 : new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
         }
     }
@@ -111,8 +129,9 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            PoolArena arena = GetThreadBinding()?.DirectArena;
-            return arena != null ? arena.Allocate(initialCapacity, maxCapacity)
+            ThreadBinding binding = GetThreadBinding();
+            PoolArena arena = binding?.DirectArena;
+            return arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
                 : new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator);
         }
     }

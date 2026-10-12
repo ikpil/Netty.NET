@@ -23,19 +23,19 @@ namespace Netty.NET.Buffer;
 // not become a reference to a later live buffer. Only storage regions are pooled.
 internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
 {
-    private readonly PoolArena _arena;
+    private PoolArena _arena;
     private readonly object _resizeLock = new();
     private PoolArena.Allocation _allocation;
     private int _length;
     internal PoolArena.Allocation Allocation => _allocation;
 
-    protected PooledByteBuf(PoolArena arena, int initialCapacity, int maxCapacity) : base(maxCapacity)
+    protected PooledByteBuf(PoolArena arena, int initialCapacity, int maxCapacity, PoolThreadCache cache = null) : base(maxCapacity)
     {
         ArgumentNullException.ThrowIfNull(arena);
         if (initialCapacity < 0 || initialCapacity > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
-        _arena = arena;
-        _allocation = arena.AllocateMemory(initialCapacity);
+        _allocation = arena.AllocateMemory(initialCapacity, cache);
+        _arena = _allocation.Arena;
         _length = initialCapacity;
     }
 
@@ -94,8 +94,8 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
                 }
 
                 // Reallocation required.
-                if (_arena.Parent is PooledByteBufAllocator allocator) allocator.PrepareThreadBinding();
-                PoolArena.Allocation replacement = _arena.AllocateMemory(value);
+                PoolThreadCache cache = (_arena.Parent as PooledByteBufAllocator)?.PrepareThreadBinding();
+                PoolArena.Allocation replacement = _arena.AllocateMemory(value, cache);
                 try
                 {
                     // This does not touch buf's reader/writer indices
@@ -110,6 +110,8 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
                     throw;
                 }
                 _allocation = replacement;
+                // A caller's cache may supply a handle belonging to another arena.
+                _arena = replacement.Arena;
                 _length = value;
                 TrimIndicesToCapacity(value);
                 previous.Dispose();

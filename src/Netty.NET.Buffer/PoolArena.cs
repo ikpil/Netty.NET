@@ -23,7 +23,7 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Buffer;
 
 // CLR: Memory<byte> shares the allocation kernel across heap and native storage.
-// Thread caches, allocator events and automatic leak wrappers remain pending.
+// Allocator events and automatic leak wrappers remain pending.
 internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
 {
     private readonly object _sync = new();
@@ -40,6 +40,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
     internal IReadOnlyList<PoolChunkList> ChunkLists { get; }
     internal IByteBufAllocator Parent { get; }
     internal SizeClasses SizeClass { get; }
+    internal bool IsDirect => _direct;
 
     protected PoolArena(IByteBufAllocator parent, SizeClasses sizeClass, bool direct)
     {
@@ -69,16 +70,23 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         ChunkLists = Array.AsReadOnly(_chunkLists);
     }
 
-    internal abstract PooledByteBuf Allocate(int initialCapacity, int maxCapacity);
+    internal abstract PooledByteBuf Allocate(int initialCapacity, int maxCapacity, PoolThreadCache cache = null);
     protected abstract Memory<byte> AllocateBacking(int length, out NativeMemoryOwner owner);
 
-    internal Allocation AllocateMemory(int capacity)
+    internal Allocation AllocateMemory(int capacity, PoolThreadCache cache = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
+        int sizeIdx = SizeClass.Size2SizeIdx(capacity);
+        // Cache selection precedes the arena lock: returns, trim and close use
+        // cache -> arena, never arena -> cache. Huge requests bypass the cache.
+        if (sizeIdx < SizeClass.NSizes && cache?.TryAllocate(this, sizeIdx) is Allocation cached)
+        {
+            // was able to allocate out of the cache so move on
+            return cached;
+        }
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            int sizeIdx = SizeClass.Size2SizeIdx(capacity);
             if (sizeIdx == SizeClass.NSizes)
             {
                 // Huge allocations are never served via the cache so just call allocateHuge
@@ -96,7 +104,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
                 {
                     PoolSubpage subpage = head.Next;
                     if (subpage != head)
-                        return Bind(_chunks[subpage.Chunk], subpage.Allocate(), normalized);
+                        return Bind(_chunks[subpage.Chunk], subpage.Allocate(), normalized, cache);
                 }
             }
 
@@ -105,7 +113,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
                 _q000.TryAllocate(sizeIdx, out owner, out handle) ||
                 _qInit.TryAllocate(sizeIdx, out owner, out handle) ||
                 _q075.TryAllocate(sizeIdx, out owner, out handle))
-                return Bind(_chunks[owner], handle, normalized);
+                return Bind(_chunks[owner], handle, normalized, cache);
 
             // Add a new chunk.
             ChunkStorage storage = _lastDestroyedChunk;
@@ -140,7 +148,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
                 throw;
             }
             TrackChunk(chunk);
-            return Bind(_chunks[newOwner], newHandle, normalized);
+            return Bind(_chunks[newOwner], newHandle, normalized, cache);
         }
     }
 
@@ -165,13 +173,13 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         return chunk.AllocateRun(normalized);
     }
 
-    private Allocation Bind(ChunkStorage storage, long handle, int normalized)
+    private Allocation Bind(ChunkStorage storage, long handle, int normalized, PoolThreadCache cache)
     {
         try
         {
             int offset = PoolChunk.RunOffset(handle) << SizeClass.PageShifts;
             if (PoolChunk.IsSubpage(handle)) offset += PoolChunk.BitmapIdx(handle) * normalized;
-            var allocation = new Allocation(this, storage, handle, offset, normalized);
+            var allocation = new Allocation(this, storage, handle, offset, normalized, cache);
             ++storage.ActiveAllocations;
             unchecked
             {
@@ -185,6 +193,22 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         {
             if (!storage.Chunk.Parent.Free(storage.Chunk, handle)) DestroyChunk(storage.Chunk);
             throw;
+        }
+    }
+
+    internal Allocation BindCached(ChunkStorage storage, long handle, int normalized, PoolThreadCache cache)
+    {
+        lock (_sync)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            int offset = PoolChunk.RunOffset(handle) << SizeClass.PageShifts;
+            if (PoolChunk.IsSubpage(handle)) offset += PoolChunk.BitmapIdx(handle) * normalized;
+            var allocation = new Allocation(this, storage, handle, offset, normalized, cache);
+            unchecked { _pinnedBytes += normalized; }
+            // Cached handles already count as active arena allocations. A hit
+            // only pins bytes again; allocation/deallocation metrics stay unchanged.
+            // was able to allocate out of the cache so move on
+            return allocation;
         }
     }
 
@@ -235,9 +259,25 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
                 storage.Owner?.Dispose();
                 return;
             }
+        }
+        // Cache the allocation if possible.
+        // CLR: a logical lease returns before an arena handle does. Drop the
+        // arena lock before trying the original allocation's cache.
+        if (allocation.Cache?.Add(allocation) == true)
+        {
+            // cached so not free it.
+            return;
+        }
+        ReturnCached(storage, allocation.Handle);
+    }
+
+    internal void ReturnCached(ChunkStorage storage, long handle)
+    {
+        lock (_sync)
+        {
             unchecked
             {
-                if (PoolChunk.IsSubpage(allocation.Handle)) ++_smallDeallocations;
+                if (PoolChunk.IsSubpage(handle)) ++_smallDeallocations;
                 else ++_normalDeallocations;
             }
             --storage.ActiveAllocations;
@@ -245,7 +285,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
             {
                 if (storage.ActiveAllocations == 0) DestroyChunk(storage.Chunk);
             }
-            else if (!storage.Chunk.Parent.Free(storage.Chunk, allocation.Handle))
+            else if (!storage.Chunk.Parent.Free(storage.Chunk, handle))
                 DestroyChunk(storage.Chunk);
         }
     }
@@ -316,6 +356,8 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
     internal sealed class Allocation : IDisposable
     {
         private readonly PoolArena _arena;
+        internal PoolArena Arena => _arena;
+        internal readonly PoolThreadCache Cache;
         private int _references = 1;
         internal readonly ChunkStorage Storage;
         internal PoolChunk Chunk => Storage.Chunk;
@@ -325,9 +367,11 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         internal readonly int ReservedLength;
         internal bool IsPooled => Chunk != null;
 
-        internal Allocation(PoolArena arena, ChunkStorage storage, long handle, int offset, int reservedLength)
+        internal Allocation(PoolArena arena, ChunkStorage storage, long handle, int offset, int reservedLength,
+            PoolThreadCache cache = null)
         {
             _arena = arena;
+            Cache = cache;
             Storage = storage;
             Handle = handle;
             Offset = offset;

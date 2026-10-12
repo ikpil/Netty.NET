@@ -26,17 +26,17 @@ public partial class PooledByteBufAllocator
     // CLR: physical-thread affinity must not flow with ExecutionContext/AsyncLocal.
     // The allocator owns this registry; no thread-local root retains the allocator.
     // Weak thread identity prevents retaining terminated Thread objects and protects
-    // against managed thread ID reuse. No buffer region is cached in these bindings.
+    // against managed thread ID reuse. Each binding owns its optional region caches.
     private readonly Dictionary<int, ThreadBinding> _threadBindings = new();
 
     // Slow resize initializes the caller's binding, just like Java reallocate's
-    // parent.threadCache(), while storage still comes from the buffer's owning arena.
-    internal void PrepareThreadBinding()
+    // parent.threadCache(). A miss uses the old arena; a hit uses the cached owner.
+    internal PoolThreadCache PrepareThreadBinding()
     {
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            GetThreadBinding();
+            return GetThreadBinding()?.Cache;
         }
     }
 
@@ -48,9 +48,8 @@ public partial class PooledByteBufAllocator
         int id = thread.ManagedThreadId;
         if (_threadBindings.TryGetValue(id, out ThreadBinding binding) && binding.IsOwner(thread)) return binding;
         ReleaseTerminatedThreadBindingsCore();
-        // No caching so just use 0 as sizes.
-        // CLR: only arena bindings exist here; region caches remain pending.
-        binding = new ThreadBinding(thread, LeastUsedArena(_heapArenas), LeastUsedArena(_directArenas));
+        binding = new ThreadBinding(thread, LeastUsedArena(_heapArenas), LeastUsedArena(_directArenas),
+            SmallCacheSize, NormalCacheSize, _maxCachedBufferCapacity, _cacheTrimInterval);
         _threadBindings.Add(id, binding);
         binding.HeapArena?.AddThreadBinding();
         binding.DirectArena?.AddThreadBinding();
@@ -69,10 +68,28 @@ public partial class PooledByteBufAllocator
         return minArena;
     }
 
-    /// <summary>Releases the calling physical thread's arena assignment. Live buffers stay usable.</summary>
+    /**
+     * Trim thread local cache for the current {@link Thread}, which will give back any cached memory that was not
+     * allocated frequently since the last trim operation.
+     *
+     * Returns {@code true} if a cache for the current {@link Thread} exists and so was trimmed, false otherwise.
+     */
+    public bool TrimCurrentThreadCache()
+    {
+        lock (_sync)
+        {
+            Thread thread = Thread.CurrentThread;
+            if (!_threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) || !binding.IsOwner(thread))
+                return false;
+            binding.Cache.Trim();
+            return true;
+        }
+    }
+
+    /// <summary>Drains cached regions and releases the calling physical thread's arena assignment.</summary>
     /// <remarks>Returns false if the thread has no assignment. The next factory allocation
     /// chooses the least-used arenas again. This operation does not return live buffers
-    /// or pooled chunks and does not represent a cache flush: region caches are still pending.</remarks>
+    /// or their operation leases. Later returns bypass the detached cache.</remarks>
     public bool ReleaseCurrentThreadBinding()
     {
         lock (_sync)
@@ -128,12 +145,16 @@ public partial class PooledByteBufAllocator
         private readonly WeakReference<Thread> _thread;
         internal readonly PoolArena HeapArena;
         internal readonly PoolArena DirectArena;
+        internal readonly PoolThreadCache Cache;
 
-        internal ThreadBinding(Thread thread, PoolArena heapArena, PoolArena directArena)
+        internal ThreadBinding(Thread thread, PoolArena heapArena, PoolArena directArena,
+            int smallCacheSize, int normalCacheSize, int maxCachedBufferCapacity, int cacheTrimInterval)
         {
             _thread = new WeakReference<Thread>(thread);
             HeapArena = heapArena;
             DirectArena = directArena;
+            Cache = new PoolThreadCache(heapArena, directArena, smallCacheSize, normalCacheSize,
+                maxCachedBufferCapacity, cacheTrimInterval);
         }
 
         internal bool IsOwner(Thread thread) => _thread.TryGetTarget(out Thread owner) && ReferenceEquals(owner, thread);
@@ -147,7 +168,7 @@ public partial class PooledByteBufAllocator
             // we only call this one time.
             // CLR: removing the registration under the allocator Monitor makes detach
             // exactly once, replacing the Java finalizer/AtomicBoolean strategy.
-            // No memory region is held here; detaching only releases arena assignments.
+            Cache.Dispose();
             HeapArena?.RemoveThreadBinding();
             DirectArena?.RemoveThreadBinding();
         }

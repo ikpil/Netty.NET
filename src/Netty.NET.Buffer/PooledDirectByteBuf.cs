@@ -18,8 +18,8 @@ namespace Netty.NET.Buffer;
 
 internal sealed class PooledDirectByteBuf : PooledByteBuf
 {
-    internal PooledDirectByteBuf(PoolDirectArena arena, int initialCapacity, int maxCapacity)
-        : base(arena, initialCapacity, maxCapacity) { }
+    internal PooledDirectByteBuf(PoolDirectArena arena, int initialCapacity, int maxCapacity, PoolThreadCache cache = null)
+        : base(arena, initialCapacity, maxCapacity, cache) { }
 
     public override bool IsDirect => true;
 
