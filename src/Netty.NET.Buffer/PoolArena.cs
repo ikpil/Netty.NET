@@ -23,8 +23,8 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Buffer;
 
 // CLR: Memory<byte> shares the allocation kernel across heap and native storage.
-// Public allocator selection, counters and thread caches remain pending.
-internal abstract class PoolArena : IDisposable
+// Thread caches, allocator events and automatic leak wrappers remain pending.
+internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
 {
     private readonly object _sync = new();
     private readonly Dictionary<PoolChunk, ChunkStorage> _chunks = new();
@@ -136,12 +136,18 @@ internal abstract class PoolArena : IDisposable
             {
                 // Keep registered storage reachable by shutdown and later reuse even
                 // if subpage metadata allocation fails before the initial binding.
-                _qInit.Add(chunk);
+                TrackChunk(chunk);
                 throw;
             }
-            _qInit.Add(chunk);
+            TrackChunk(chunk);
             return Bind(_chunks[newOwner], newHandle, normalized);
         }
+    }
+
+    private void TrackChunk(PoolChunk chunk)
+    {
+        _qInit.Add(chunk);
+        unchecked { ++_chunkAllocations; }
     }
 
     internal long AllocateHandle(PoolChunk chunk, int sizeIdx, int normalized, out PoolChunk owner)
@@ -167,6 +173,12 @@ internal abstract class PoolArena : IDisposable
             if (PoolChunk.IsSubpage(handle)) offset += PoolChunk.BitmapIdx(handle) * normalized;
             var allocation = new Allocation(this, storage, handle, offset, normalized);
             ++storage.ActiveAllocations;
+            unchecked
+            {
+                if (PoolChunk.IsSubpage(handle)) ++_smallAllocations;
+                else ++_normalAllocations;
+                _pinnedBytes += normalized;
+            }
             return allocation;
         }
         catch
@@ -187,7 +199,17 @@ internal abstract class PoolArena : IDisposable
     {
         /* unpooled buffers are never allocated out of the thread-local cache */
         ChunkStorage storage = NewStorage(null, capacity);
-        try { return new Allocation(this, storage, -1, 0, capacity); }
+        try
+        {
+            var allocation = new Allocation(this, storage, -1, 0, capacity);
+            unchecked
+            {
+                ++_hugeAllocations;
+                _activeBytesHuge += capacity;
+                _pinnedBytes += capacity;
+            }
+            return allocation;
+        }
         catch { storage.Owner?.Dispose(); throw; }
     }
 
@@ -200,17 +222,28 @@ internal abstract class PoolArena : IDisposable
     private void Free(Allocation allocation)
     {
         ChunkStorage storage = allocation.Storage;
-        if (storage.Chunk == null)
-        {
-            storage.Owner?.Dispose();
-            return;
-        }
         lock (_sync)
         {
+            unchecked { _pinnedBytes -= allocation.ReservedLength; }
+            if (storage.Chunk == null)
+            {
+                unchecked
+                {
+                    ++_hugeDeallocations;
+                    _activeBytesHuge -= allocation.ReservedLength;
+                }
+                storage.Owner?.Dispose();
+                return;
+            }
+            unchecked
+            {
+                if (PoolChunk.IsSubpage(allocation.Handle)) ++_smallDeallocations;
+                else ++_normalDeallocations;
+            }
             --storage.ActiveAllocations;
             if (_disposed)
             {
-                if (storage.ActiveAllocations == 0) storage.Owner?.Dispose();
+                if (storage.ActiveAllocations == 0) DestroyChunk(storage.Chunk);
             }
             else if (!storage.Chunk.Parent.Free(storage.Chunk, allocation.Handle))
                 DestroyChunk(storage.Chunk);
@@ -221,7 +254,11 @@ internal abstract class PoolArena : IDisposable
     {
         Debug.Assert(System.Threading.Monitor.IsEntered(_sync));
         ChunkStorage storage = _chunks[chunk];
+        // CLR: after explicit shutdown, active storage stays in the metric registry
+        // until its last region lease returns, even though it has left the lists.
+        if (_disposed && storage.ActiveAllocations != 0) return;
         _chunks.Remove(chunk);
+        unchecked { ++_chunkDeallocations; }
         if (_disposed)
         {
             if (storage.ActiveAllocations == 0) storage.Owner?.Dispose();
@@ -252,7 +289,6 @@ internal abstract class PoolArena : IDisposable
             if (_disposed) return;
             _disposed = true;
             foreach (PoolChunkList list in _chunkLists) list.Destroy();
-            _chunks.Clear();
             _lastDestroyedChunk = null;
             Array.Clear(_smallSubpagePools);
         }

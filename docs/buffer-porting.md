@@ -1989,13 +1989,71 @@ public allocator/cache integration. The metric interface is verified. Inventory 
 159 (78 pending, 49 in-progress, 29 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-chunk-list-validation (ignored), buffer-chunk-list-*.trx.
 
+## Public pooled factories and reservation metrics
+
+PooledByteBufAllocator now connects public heap/native factories, creator provenance,
+growth, copies and composite allocations to the reviewed pooled storage kernel. Each
+enabled storage kind has one arena; disabling its pool selects an unpooled buffer with
+the same creator/native reservation domain. The constructor defaults to heap preference,
+while PooledByteBufAllocator.Default prefers native storage, as in the original policy.
+IByteBufAllocator.Default still selects the existing unpooled allocator. Geometry and
+alignment are validated before backing allocation. Backing storage is lazy, including
+valid 1-GiB chunk geometries. CLR options replace JVM CPU/memory/system-property heuristics.
+
+This is deliberately a cache-free, single-arena implementation. Cache sizes/counts and
+thread bindings are zero; Java creates one thread binding even with cache sizes zero.
+That difference is asserted separately in the oracle, rather than hidden in equivalent
+metric rows. Multi-arena assignment, thread-cache lifecycle/scheduling, allocator events,
+automatic leak wrapping and global default selection remain pending. No cache-enabled
+performance equivalence or complete original allocator/fixture coverage is claimed.
+
+IPoolArenaMetric exposes every original arena metric and size-class operation through
+CLR properties/read-only collections; all 28 original comments are preserved. The
+allocator metric retains all 11 original comments. Reservation-class allocations and
+returns, chunk creation/retirement, active counts and used/pinned bytes now reflect actual
+arena storage. One arena Monitor replaces Java's split LongCounter/lock strategy;
+counter arithmetic remains unchecked like Java. Separate property reads are not an
+atomic snapshot. Available-subpage membership is snapshotted; individual metrics stay live.
+
+Used bytes count registered chunks plus dedicated huge reservations. Pinned bytes count
+normalized live reservations, including internal operation leases across resize/release.
+Neither includes alignment headroom, the retired heap reuse cache or native memory held
+only by a raw pin. NativeMemoryAllocator.ReservedBytes separately reports physical native
+reservations. Disabled pools return -1 for unknown used/pinned bytes. Initial subpage
+metadata failure leaves registered reusable storage charged without counting an allocation
+that was never bound. Explicit CLR Dispose closes factories, drains idle chunks and keeps
+active chunk/huge reservations charged until their last lease returns; Java has no matching
+public shutdown operation. Unpooled fallback buffers retain independent lifetimes. Empty
+sentinels/composites reserve no storage and remain available after allocator shutdown.
+
+59 added cases cover public factories/fallbacks, original no-cache counters, subpage/list
+metrics, used/pinned memory, resize/release, whole-chunk retirement, aligned huge storage,
+native limits/failure retry, shutdown/leases/pins, consumer provenance, concurrent counts
+and geometry/default policy. net10.0 Debug/Release/rebuilt checked Release each pass
+2052/2052, no failures/skips. Checked build has zero errors and 51 existing Common warnings,
+no Buffer/test warnings. Common is unchanged.
+
+Fresh pinned Java public allocators and CLR public allocators agree on 31233 rows of 18
+allocation/return/chunk/active/used/pinned/list-count metric fields per Debug/Release.
+31230 capacity/cursor/SHA-256 byte rows also match across 12 native page/alignment and
+three heap page domains; three aligned-huge logical-capacity adaptations retain the
+previous documented CLR bound. An independent size/reservation/cursor/byte model checks
+those rows and independently derives reservation-class transitions/metric invariants.
+Native CLR arenas finish with zero reserved bytes. All 27252 prior Java/model chunk-list
+rows remain unchanged per Debug/Release across 18 domains, including retirement/reuse.
+
+Only the complete arena metric interface becomes verified. The public allocator and its
+metric implementation remain in-progress pending broader arena/cache integration.
+Inventory is 159 (75 pending, 51 in-progress, 30 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-public-pool-validation (ignored), buffer-public-pool-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Pooled/adaptive allocator metrics,
+single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping and pooled/adaptive allocators remain unported. Most original
+borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping, pooled multi-arena/thread caches and adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units add public pooled allocator/counter/cache integration and
+Next units address pooled multi-arena/thread-cache lifecycle integration and
 continue remaining factories/utilities/original fixtures and leak wrappers. Common
 changes must cite the actual buffer contract that requires them.
