@@ -58,7 +58,7 @@ public class SimpleLeakAwareCompositeByteBufTest
         Assert.Equal(leakAware ? 1 : 0, tracker.Closes);
     }
 
-    private static CompositeByteBuf Owner(int kind, IByteBufAllocator allocator = null)
+    internal static CompositeByteBuf Owner(int kind, IByteBufAllocator allocator = null)
     {
         allocator ??= UnpooledByteBufAllocator.Default;
         var b = new CompositeByteBuf(allocator, kind == 1);
@@ -77,14 +77,14 @@ public class SimpleLeakAwareCompositeByteBufTest
     }
 
     private static ByteBuf Raw(ByteBuf b) => b is SimpleLeakAwareByteBuf ? b.Unwrap() : b;
-    private static string Snapshot(ByteBuf b) => b.Capacity + "," + b.ReaderIndex + "," + b.WriterIndex + "," +
+    internal static string Snapshot(ByteBuf b) => b.Capacity + "," + b.ReaderIndex + "," + b.WriterIndex + "," +
         b.ReferenceCount + "," + ByteBufUtil.HexDump(b, 0, Math.Min(64, b.Capacity));
-    private static void CleanupView(ByteBuf view, int op)
+    internal static void CleanupView(ByteBuf view, int op)
     {
         if (view != null && (op is >= 89 and <= 95)) view.Release();
     }
 
-    private static string Execute(ByteBuf b, int operation, out ByteBuf view)
+    internal static string Execute(ByteBuf b, int operation, out ByteBuf view)
     {
         view = null; string result = "ok";
         switch (operation)

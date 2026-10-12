@@ -28,7 +28,7 @@ public partial class CompositeByteBuf : IEnumerable<ByteBuf>
     /// As in Netty, a changed component count invalidates a nonempty enumerator;
     /// replacing components while keeping the same count is not detected.
     /// This is not a synchronization mechanism.</remarks>
-    public IEnumerator<ByteBuf> GetEnumerator()
+    public virtual IEnumerator<ByteBuf> GetEnumerator()
     {
         EnsureAccessible();
         // CLR: the original empty iterator is independent of subsequent additions.

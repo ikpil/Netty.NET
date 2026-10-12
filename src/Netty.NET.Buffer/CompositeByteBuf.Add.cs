@@ -33,7 +33,7 @@ public partial class CompositeByteBuf
      * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
-    public CompositeByteBuf AddComponents(params ByteBuf[] buffers) => AddComponents(_components.Count, buffers);
+    public virtual CompositeByteBuf AddComponents(params ByteBuf[] buffers) => AddComponents(_components.Count, buffers);
 
     /**
      * Add the given {@link ByteBuf}s and increase the {@code writerIndex} if {@code increaseWriterIndex} is
@@ -44,7 +44,7 @@ public partial class CompositeByteBuf
      * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
-    public CompositeByteBuf AddComponents(ByteBuf[] buffers, bool increaseWriterIndex)
+    public virtual CompositeByteBuf AddComponents(ByteBuf[] buffers, bool increaseWriterIndex)
         => AddComponents(_components.Count, buffers, increaseWriterIndex);
 
     /**
@@ -65,7 +65,7 @@ public partial class CompositeByteBuf
     /// Null ends additions; remaining entries are safely released. A later insertion
     /// failure keeps the successful prefix, including its writer-index increase.
     /// Consolidation runs once after the complete batch.</remarks>
-    public CompositeByteBuf AddComponents(int componentIndex, ByteBuf[] buffers, bool increaseWriterIndex = false)
+    public virtual CompositeByteBuf AddComponents(int componentIndex, ByteBuf[] buffers, bool increaseWriterIndex = false)
         => AddComponentsCore(componentIndex, buffers, 0, increaseWriterIndex);
 
     private CompositeByteBuf AddComponentsCore(int componentIndex, ByteBuf[] buffers, int offset, bool increaseWriterIndex)
@@ -175,7 +175,7 @@ public partial class CompositeByteBuf
      * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
-    public CompositeByteBuf AddComponents(IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
+    public virtual CompositeByteBuf AddComponents(IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
         => AddComponents(_components.Count, buffers, increaseWriterIndex);
 
     /**
@@ -194,7 +194,7 @@ public partial class CompositeByteBuf
     /// <remarks>Streaming insertion keeps the successful prefix on failure. Null
     /// ends additions; remaining yielded entries are safely released. Enumeration
     /// and disposal follow the supplied IEnumerator's CLR contract.</remarks>
-    public CompositeByteBuf AddComponents(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
+    public virtual CompositeByteBuf AddComponents(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
     {
         // TODO optimize further, similar to ByteBuf[] version
         // (difference here is that we don't know *always* know precise size increase in advance,
@@ -245,7 +245,7 @@ public partial class CompositeByteBuf
     /// Derived/read-only views remain a single component to preserve their semantics.
     /// A composite source stays caller-owned on failure; newly retained components
     /// are rolled back. Successful transfer releases the source's existing reference.</remarks>
-    public CompositeByteBuf AddFlattenedComponents(ByteBuf buffer, bool increaseWriterIndex = false)
+    public virtual CompositeByteBuf AddFlattenedComponents(ByteBuf buffer, bool increaseWriterIndex = false)
     {
         ArgumentNullException.ThrowIfNull(buffer);
         if (ContainsBuffer(buffer, this)) throw new ArgumentException("Component ownership must be acyclic.", nameof(buffer));

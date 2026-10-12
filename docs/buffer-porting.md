@@ -2284,12 +2284,47 @@ native reserved bytes to zero. Inventory is 159 (68 pending, 58 in-progress, 30
 verified, 3 CLR replacements). The new sources/fixtures remain in-progress.
 Evidence: artifacts/buffer-composite-leak-validation (ignored), buffer-composite-leak-*.trx.
 
+## Advanced leak-aware composite access recording
+
+AdvancedLeakAwareCompositeByteBuf now records the current CLR data, view, stream/file
+and composite mutation/iteration APIs before delegation, including failed operations.
+It reuses AdvancedLeakAwareByteBuf's acquire-and-release-only policy. Retain/Release
+and Touch always record; IsReadOnly records as in the original composite wrapper,
+while component lookups, index metadata and comparisons retain their original lack
+of recording. Null optional Touch hints use the existing CLR no-hint convention.
+
+Fifteen composite structural methods are now virtual as in Java. The advanced wrapper
+delegates them to its immediate wrapped composite, avoiding duplicate records from
+convenience overloads and internal virtual calls. All nine shared/retained/read-only
+views use AdvancedLeakAwareByteBuf with the original exact referent/tracker. Final
+logical release closes once; outstanding native pins/operation leases can outlive it.
+No additional composite close-trace attachment or automatic allocator wrapping is added.
+
+937 added tests include 152 operations over three storage shapes and two wrapper
+depths, the inherited original view cases and nested forEachByte regression, exact
+tracker ownership, nested advanced wrappers, interface enumeration, metadata/Touch,
+native lifetimes, CLR memory/floating LE access and synchronous/asynchronous I/O.
+The existing simple-composite operation helpers are shared without duplicating their
+operation table. net10.0 Debug/Release/rebuilt checked Release pass 4599/4599, with no
+failures/skips. Checked build has zero errors and 51 existing Common warnings; no
+Buffer/test warnings. Common source is unchanged. Both original licenses are retained.
+
+93 freshly extracted pinned Java Buffer sources provide 5472 oracle rows per recording
+policy across 36 storage/component-limit/wrapper-depth/tracking domains. Debug/Release
+and both policy values agree with independent record/final-close checks and all Java
+byte/cursor/component/reference states. Each run has 5188 complete matches and 284
+explicit existing LE fluent-receiver adaptations. Every CLR case returns shared native
+reserved bytes to zero. Inventory is 159 (66 pending, 60 in-progress, 30 verified,
+3 CLR replacements). New source/fixture remain in-progress: byte-order/NIO/channel
+facades and complete inherited original fixtures are still pending.
+Evidence: artifacts/buffer-advanced-composite-leak-validation (ignored), buffer-advanced-composite-leak-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, advanced composite leak access recording, automatic allocator leak wrapping, allocator events and adaptive allocators remain unported. Advanced leak access recording covers the current CLR ordinary buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+borrowed-address wrapping, automatic allocator leak wrapping, allocator events and adaptive allocators remain unported. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units continue remaining factories/utilities/original fixtures, leak wrappers and
 remaining allocator integration. Common

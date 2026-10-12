@@ -102,7 +102,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
      * @param buffer the {@link ByteBuf} to add. {@link ByteBuf#release()} ownership is transferred to this
      * {@link CompositeByteBuf}.
      */
-    public CompositeByteBuf AddComponent(ByteBuf buffer, bool increaseWriterIndex = false)
+    public virtual CompositeByteBuf AddComponent(ByteBuf buffer, bool increaseWriterIndex = false)
         => AddComponent(_components.Count, buffer, increaseWriterIndex);
 
     /**
@@ -128,7 +128,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     /// <remarks>Validation failure releases the incoming reference, as in Netty.
     /// Null and ownership cycles are rejected before transfer. A consolidation
     /// failure leaves the successfully inserted component owned by this buffer.</remarks>
-    public CompositeByteBuf AddComponent(int componentIndex, ByteBuf buffer, bool increaseWriterIndex = false)
+    public virtual CompositeByteBuf AddComponent(int componentIndex, ByteBuf buffer, bool increaseWriterIndex = false)
     {
         AddComponentCore(componentIndex, buffer, increaseWriterIndex);
         ConsolidateIfNeeded();
@@ -187,14 +187,14 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
      *
      * @param cIndex the index on from which the {@link ByteBuf} will be remove
      */
-    public CompositeByteBuf RemoveComponent(int componentIndex) => RemoveComponents(componentIndex, 1);
+    public virtual CompositeByteBuf RemoveComponent(int componentIndex) => RemoveComponents(componentIndex, 1);
     /**
      * Remove the number of {@link ByteBuf}s starting from the given index.
      *
      * @param cIndex the index on which the {@link ByteBuf}s will be started to removed
      * @param numComponents the number of components to remove
      */
-    public CompositeByteBuf RemoveComponents(int componentIndex, int numComponents)
+    public virtual CompositeByteBuf RemoveComponents(int componentIndex, int numComponents)
     {
         CheckComponentRange(componentIndex, numComponents);
         for (int i = componentIndex; i < componentIndex + numComponents; ++i) _components[i].Free();
@@ -260,7 +260,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     /**
      * Same with {@link #slice(int, int)} except that this method returns a list.
      */
-    public IReadOnlyList<ByteBuf> Decompose(int offset, int length)
+    public virtual IReadOnlyList<ByteBuf> Decompose(int offset, int length)
     {
         CheckIndex(offset, length);
         if (length == 0) return Array.Empty<ByteBuf>();
@@ -321,14 +321,14 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     /**
      * Consolidate the composed {@link ByteBuf}s
      */
-    public CompositeByteBuf Consolidate() => Consolidate(0, _components.Count);
+    public virtual CompositeByteBuf Consolidate() => Consolidate(0, _components.Count);
     /**
      * Consolidate the composed {@link ByteBuf}s
      *
      * @param cIndex the index on which to start to compose
      * @param numComponents the number of components to compose
      */
-    public CompositeByteBuf Consolidate(int componentIndex, int numComponents)
+    public virtual CompositeByteBuf Consolidate(int componentIndex, int numComponents)
     {
         CheckComponentRange(componentIndex, numComponents);
         if (numComponents <= 1) return this;
@@ -368,7 +368,7 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
     /**
      * Discard all {@link ByteBuf}s which are read.
      */
-    public CompositeByteBuf DiscardReadComponents()
+    public virtual CompositeByteBuf DiscardReadComponents()
     {
         EnsureAccessible();
         int readerIndex = ReaderIndex;
