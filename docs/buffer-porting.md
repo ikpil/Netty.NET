@@ -1944,6 +1944,51 @@ in-progress; none are newly complete. Inventory is 159 (80 pending, 48 in-progre
 28 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-pooled-native-validation (ignored), buffer-pooled-native-*.trx.
 
+## Chunk utilization lists and retirement
+
+PoolChunkList now connects original qInit/q000/q025/q050/q075/q100 membership to
+actual heap/native arena storage. Allocation searches q050/q025/q000/qInit/q075,
+applying each list's normalized-capacity bound and head order. Shared available
+subpages are consulted first, including slots in q100 chunks. Existing-slot reuse
+does not change chunk page usage. Original free-byte thresholds promote/demote chunks;
+fully unused chunks descending past q000 retire. Never-promoted qInit chunks can remain
+empty, and the original conservative bound rejects a whole-chunk request even there.
+
+Heap keeps the first retired chunk for reuse; native releases retired owners at once.
+Operation leases delay region return and retirement; raw pins delay physical native
+free without making retired chunks reusable. Arena disposal drains lists, clears the
+heap cache and stops new allocations, preserving active buffer/lease storage until
+return. Registered storage remains listed after initial subpage metadata allocation
+failure. Native owner cleanup stays under the CLR arena Monitor and calls no user/arena
+callback. Coarse arena locking remains; thread caches/counters/events are pending.
+
+IPoolChunkListMetric uses properties and IEnumerable<IPoolChunkMetric>. Enumeration
+captures membership under the arena lock; chunk metrics remain live and retain no
+storage. The outer list collection is read-only. List/chunk descriptions retain the
+original format with CLR identity hashes/newlines. Detached chunks clear stale links.
+All 35 original list comments and all four metric-interface comments are preserved.
+Java's saturating double-to-int conversion for extreme qInit/q100 thresholds is explicit
+in CLR checked/unchecked builds; AtomicReference is unnecessary under the arena Monitor.
+
+21 added cases cover migration/retirement in three geometries on heap/native, initial
+retention/conservative selection, head/middle/tail removal, shared subpages in full chunks,
+snapshot/live metrics, heap reuse, native pins/leases and concurrent traversal. Prior
+native tests now expect normal retirement instead of the earlier retain-all foundation.
+Fresh pinned Java buffer sources with assertions enabled produce 27252 matching CLR
+rows per Debug/Release across 18 page/order/heap/native/alignment domains. An independent
+page-occupancy/free-span/usage/list model agrees, including 5517 non-head removals and
+834 retired-heap reuses. Live first/last byte markers detect storage overlap/corruption.
+Prior heap 6247 and native 24984 matching capacity/SHA-256 rows plus three documented
+CLR logical-capacity adaptations remain unchanged per Debug/Release. Native runners
+finish each arena with zero reserved bytes after disposal.
+
+net10.0 Debug/Release/rebuilt checked Release pass 1993/1993, no failures/skips. Checked
+build has zero errors and 51 existing Common warnings, no Buffer/test warnings. Common
+is unchanged. List policy is connected; its source remains in-progress pending broader
+public allocator/cache integration. The metric interface is verified. Inventory is
+159 (78 pending, 49 in-progress, 29 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-chunk-list-validation (ignored), buffer-chunk-list-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -1951,6 +1996,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping and pooled/adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units add arena utilization lists/eviction, public pooled allocator/cache integration and
+Next units add public pooled allocator/counter/cache integration and
 continue remaining factories/utilities/original fixtures and leak wrappers. Common
 changes must cite the actual buffer contract that requires them.

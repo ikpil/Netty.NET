@@ -16,20 +16,28 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Netty.NET.Common;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
 // CLR: Memory<byte> shares the allocation kernel across heap and native storage.
-// Public allocator selection, utilization lists/eviction, metrics and caches remain pending.
-// Pooled chunks are retained for reuse until this arena is disposed.
+// Public allocator selection, counters and thread caches remain pending.
 internal abstract class PoolArena : IDisposable
 {
     private readonly object _sync = new();
     private readonly Dictionary<PoolChunk, ChunkStorage> _chunks = new();
     private readonly PoolSubpage[] _smallSubpagePools;
+    private readonly PoolChunkList _qInit, _q000, _q025, _q050, _q075, _q100;
+    private readonly PoolChunkList[] _chunkLists;
+    private readonly bool _direct;
+    private ChunkStorage _lastDestroyedChunk;
+    // TODO: Test if adding padding helps under contention
+    //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
     private bool _disposed;
+    internal object SyncRoot => _sync;
+    internal IReadOnlyList<PoolChunkList> ChunkLists { get; }
     internal IByteBufAllocator Parent { get; }
     internal SizeClasses SizeClass { get; }
 
@@ -43,7 +51,22 @@ internal abstract class PoolArena : IDisposable
         _ = new PoolChunk(sizeClass);
         Parent = parent;
         SizeClass = sizeClass;
+        _direct = direct;
         _smallSubpagePools = PoolSubpage.CreatePoolHeads(sizeClass);
+        _q100 = new PoolChunkList(this, null, 100, int.MaxValue, sizeClass.ChunkSize);
+        _q075 = new PoolChunkList(this, _q100, 75, 100, sizeClass.ChunkSize);
+        _q050 = new PoolChunkList(this, _q100, 50, 100, sizeClass.ChunkSize);
+        _q025 = new PoolChunkList(this, _q050, 25, 75, sizeClass.ChunkSize);
+        _q000 = new PoolChunkList(this, _q025, 1, 50, sizeClass.ChunkSize);
+        _qInit = new PoolChunkList(this, _q000, int.MinValue, 25, sizeClass.ChunkSize);
+        _q100.SetPrevious(_q075);
+        _q075.SetPrevious(_q050);
+        _q050.SetPrevious(_q025);
+        _q025.SetPrevious(_q000);
+        _q000.SetPrevious(null);
+        _qInit.SetPrevious(_qInit);
+        _chunkLists = new[] { _qInit, _q000, _q025, _q050, _q075, _q100 };
+        ChunkLists = Array.AsReadOnly(_chunkLists);
     }
 
     internal abstract PooledByteBuf Allocate(int initialCapacity, int maxCapacity);
@@ -64,34 +87,64 @@ internal abstract class PoolArena : IDisposable
             }
 
             int normalized = SizeClass.SizeIdx2Size(sizeIdx);
-            // CLR: use existing chunks directly while utilization lists are pending.
-            foreach (var entry in _chunks)
+            // Available subpages are selected before applying chunk-list capacity limits.
+            // Taking a slot from an existing run does not change its owning chunk's usage.
+            if (sizeIdx <= SizeClass.SmallMaxSizeIdx)
             {
-                long handle = AllocateHandle(entry.Key, sizeIdx, normalized, out PoolChunk owner);
-                if (handle >= 0) return Bind(_chunks[owner], handle, normalized);
+                PoolSubpage head = _smallSubpagePools[sizeIdx];
+                lock (head.SyncRoot)
+                {
+                    PoolSubpage subpage = head.Next;
+                    if (subpage != head)
+                        return Bind(_chunks[subpage.Chunk], subpage.Allocate(), normalized);
+                }
             }
 
+            if (_q050.TryAllocate(sizeIdx, out PoolChunk owner, out long handle) ||
+                _q025.TryAllocate(sizeIdx, out owner, out handle) ||
+                _q000.TryAllocate(sizeIdx, out owner, out handle) ||
+                _qInit.TryAllocate(sizeIdx, out owner, out handle) ||
+                _q075.TryAllocate(sizeIdx, out owner, out handle))
+                return Bind(_chunks[owner], handle, normalized);
+
             // Add a new chunk.
-            var chunk = new PoolChunk(SizeClass, _smallSubpagePools);
+            ChunkStorage storage = _lastDestroyedChunk;
+            // The parameters are always the same, so it's fine to reuse a previously allocated chunk.
+            Debug.Assert(storage == null || ReferenceEquals(storage.Chunk.SizeClass, SizeClass));
+            var chunk = storage?.Chunk ?? new PoolChunk(SizeClass, _smallSubpagePools);
             if (sizeIdx <= SizeClass.SmallMaxSizeIdx && chunk.CalculateRunSize(sizeIdx) < 0)
             {
                 // CLR: tiny chunk geometries can be shorter than the small class's
                 // LCM run. Use a dedicated reservation, never a truncated slot.
                 return AllocateHuge(SizeClass.DirectMemoryCacheAlignment == 0 ? capacity : normalized);
             }
-            ChunkStorage storage = NewStorage(chunk, SizeClass.ChunkSize);
+            _lastDestroyedChunk = null;
+            storage ??= NewStorage(chunk, SizeClass.ChunkSize);
             try { _chunks.Add(chunk, storage); }
             catch { storage.Owner?.Dispose(); throw; }
             // Publish storage before a subpage can join a shared head. Allocation
             // failures then leave either no chunk or a reusable registered chunk.
-            long newHandle = AllocateHandle(chunk, sizeIdx, normalized, out PoolChunk newOwner);
-            if (newHandle < 0)
-                throw new InvalidOperationException("A new chunk could not satisfy its size class.");
+            long newHandle;
+            PoolChunk newOwner;
+            try
+            {
+                newHandle = AllocateHandle(chunk, sizeIdx, normalized, out newOwner);
+                if (newHandle < 0)
+                    throw new InvalidOperationException("A new chunk could not satisfy its size class.");
+            }
+            catch
+            {
+                // Keep registered storage reachable by shutdown and later reuse even
+                // if subpage metadata allocation fails before the initial binding.
+                _qInit.Add(chunk);
+                throw;
+            }
+            _qInit.Add(chunk);
             return Bind(_chunks[newOwner], newHandle, normalized);
         }
     }
 
-    private long AllocateHandle(PoolChunk chunk, int sizeIdx, int normalized, out PoolChunk owner)
+    internal long AllocateHandle(PoolChunk chunk, int sizeIdx, int normalized, out PoolChunk owner)
     {
         if (sizeIdx <= SizeClass.SmallMaxSizeIdx)
         {
@@ -118,7 +171,7 @@ internal abstract class PoolArena : IDisposable
         }
         catch
         {
-            FreeHandle(storage.Chunk, handle);
+            if (!storage.Chunk.Parent.Free(storage.Chunk, handle)) DestroyChunk(storage.Chunk);
             throw;
         }
     }
@@ -138,7 +191,7 @@ internal abstract class PoolArena : IDisposable
         catch { storage.Owner?.Dispose(); throw; }
     }
 
-    private static void FreeHandle(PoolChunk chunk, long handle)
+    internal static void FreeHandle(PoolChunk chunk, long handle)
     {
         if (PoolChunk.IsSubpage(handle)) chunk.FreeSmall(handle);
         else chunk.FreeRun(handle);
@@ -154,8 +207,38 @@ internal abstract class PoolArena : IDisposable
         }
         lock (_sync)
         {
-            if (!_disposed) FreeHandle(storage.Chunk, allocation.Handle);
-            if (--storage.ActiveAllocations == 0 && _disposed) storage.Owner?.Dispose();
+            --storage.ActiveAllocations;
+            if (_disposed)
+            {
+                if (storage.ActiveAllocations == 0) storage.Owner?.Dispose();
+            }
+            else if (!storage.Chunk.Parent.Free(storage.Chunk, allocation.Handle))
+                DestroyChunk(storage.Chunk);
+        }
+    }
+
+    internal void DestroyChunk(PoolChunk chunk)
+    {
+        Debug.Assert(System.Threading.Monitor.IsEntered(_sync));
+        ChunkStorage storage = _chunks[chunk];
+        _chunks.Remove(chunk);
+        if (_disposed)
+        {
+            if (storage.ActiveAllocations == 0) storage.Owner?.Dispose();
+            return;
+        }
+        Debug.Assert(storage.ActiveAllocations == 0 && chunk.FreeBytes == chunk.ChunkSize);
+        // Rely on GC. But keep one chunk for reuse.
+        // CLR: the arena Monitor makes the original AtomicReference unnecessary.
+        if (!_direct && _lastDestroyedChunk == null)
+            // The check-and-set does not need to be atomic.
+            _lastDestroyedChunk = storage;
+        else
+        {
+            // destroyChunk not need to be called while holding the synchronized lock.
+            // CLR: owner cleanup has no arena/user callback; keep release serialized
+            // with shutdown and storage registration under the same Monitor.
+            storage.Owner?.Dispose();
         }
     }
 
@@ -168,9 +251,9 @@ internal abstract class PoolArena : IDisposable
         {
             if (_disposed) return;
             _disposed = true;
-            foreach (ChunkStorage storage in _chunks.Values)
-                if (storage.ActiveAllocations == 0) storage.Owner?.Dispose();
+            foreach (PoolChunkList list in _chunkLists) list.Destroy();
             _chunks.Clear();
+            _lastDestroyedChunk = null;
             Array.Clear(_smallSubpagePools);
         }
     }

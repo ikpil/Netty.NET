@@ -27,7 +27,7 @@ public abstract class AbstractPooledByteBufTest
 {
     protected abstract bool Direct { get; }
 
-    protected sealed class TestAllocator : AbstractByteBufAllocator, IDisposable
+    internal sealed class TestAllocator : AbstractByteBufAllocator, IDisposable
     {
         internal readonly PoolArena Arena;
         internal readonly NativeMemoryAllocator Native;
@@ -56,7 +56,7 @@ public abstract class AbstractPooledByteBufTest
         public void Dispose() => Arena.Dispose();
     }
 
-    protected TestAllocator NewAllocator(int shifts = 13, int order = 4, int alignment = 0,
+    private protected TestAllocator NewAllocator(int shifts = 13, int order = 4, int alignment = 0,
         long maximumBytes = long.MaxValue) => new(Direct, shifts, order, alignment, maximumBytes);
 
     [Theory]

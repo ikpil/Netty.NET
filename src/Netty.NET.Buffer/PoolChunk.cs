@@ -152,6 +152,9 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
     private readonly PriorityQueue<int, int>[] _runsAvail;
     private readonly object _runsAvailLock = new();
     private int _freeBytes;
+    internal PoolChunkList Parent;
+    internal PoolChunk Prev;
+    internal PoolChunk Next;
 
     internal int PageSize => _sizeClass.PageSize;
     internal int PageShifts => _sizeClass.PageShifts;
@@ -280,6 +283,13 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
             return 100;
         int freePercentage = (int)(freeBytes * 100L / ChunkSize);
         return freePercentage == 0 ? 99 : 100 - freePercentage;
+    }
+
+    public override string ToString()
+    {
+        lock (_runsAvailLock)
+            return $"Chunk({System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this):x}: " +
+                $"{CalculateUsage(_freeBytes)}%, {ChunkSize - _freeBytes}/{ChunkSize})";
     }
 
     public int FreeBytes

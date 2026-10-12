@@ -118,8 +118,9 @@ public class PooledDirectByteBufTest : AbstractPooledByteBufTest
             Assert.Throws<OutOfMemoryException>(() => allocator.DirectBuffer(48));
         }
         finally { b.Release(); }
+        Assert.Equal(0, allocator.Native.ReservedBytes);
         var retry = (PooledDirectByteBuf)allocator.DirectBuffer(48);
-        try { Assert.Same(before.Storage, retry.Allocation.Storage); retry.SetByte(0, 99); }
+        try { Assert.NotSame(before.Storage, retry.Allocation.Storage); retry.SetByte(0, 99); }
         finally { retry.Release(); }
     }
 
@@ -189,7 +190,7 @@ public class PooledDirectByteBufTest : AbstractPooledByteBufTest
         ByteBuf huge = allocator.DirectBuffer(chunk + 1);
         ByteBuf view = live.RetainedSlice(0, 17);
         unused.Release(); live.SetByte(0, 42);
-        Assert.Equal(3L * chunk + 1, allocator.Native.ReservedBytes);
+        Assert.Equal(2L * chunk + 1, allocator.Native.ReservedBytes);
         allocator.Arena.Dispose(); allocator.Arena.Dispose();
         Assert.Equal(2L * chunk + 1, allocator.Native.ReservedBytes);
         Assert.Equal(42, view.GetByte(0));
