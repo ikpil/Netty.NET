@@ -18,6 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -53,6 +56,23 @@ public partial class PooledByteBufAllocator
         _threadBindings.Add(id, binding);
         binding.HeapArena?.AddThreadBinding();
         binding.DirectArena?.AddThreadBinding();
+        try
+        {
+            // The Thread is used by an EventExecutor, let's use the cache as the chances are good that we
+            // will allocate a lot!
+            // CLR: cache sizes stay explicit. Like Java, periodic trim is registered
+            // only when the allocating physical thread has an executor mapping.
+            IEventExecutor executor = ThreadExecutorMap.CurrentExecutor();
+            if (_cacheTrimPeriod > TimeSpan.Zero && executor != null)
+                binding.StartTrimming(executor, _cacheTrimPeriod);
+        }
+        catch
+        {
+            // Failed scheduling must not publish a partial binding/count or reserve storage.
+            _threadBindings.Remove(id);
+            binding.Detach();
+            throw;
+        }
         return binding;
     }
 
@@ -146,6 +166,7 @@ public partial class PooledByteBufAllocator
         internal readonly PoolArena HeapArena;
         internal readonly PoolArena DirectArena;
         internal readonly PoolThreadCache Cache;
+        private CancellationTokenSource _trimCancellation;
 
         internal ThreadBinding(Thread thread, PoolArena heapArena, PoolArena directArena,
             int smallCacheSize, int normalCacheSize, int maxCachedBufferCapacity, int cacheTrimInterval)
@@ -159,6 +180,28 @@ public partial class PooledByteBufAllocator
 
         internal bool IsOwner(Thread thread) => _thread.TryGetTarget(out Thread owner) && ReferenceEquals(owner, thread);
         internal bool IsAlive => _thread.TryGetTarget(out Thread thread) && thread.IsAlive;
+
+        internal void StartTrimming(IEventExecutor executor, TimeSpan period)
+        {
+            // Housekeeping must not retain the caller's AsyncLocal payload/context.
+            if (ExecutionContext.IsFlowSuppressed()) StartTrimmingCore(executor, period);
+            else
+                using (ExecutionContext.SuppressFlow()) StartTrimmingCore(executor, period);
+        }
+
+        private void StartTrimmingCore(IEventExecutor executor, TimeSpan period)
+        {
+            _trimCancellation = new CancellationTokenSource();
+            // Target this registration, not a task continuation's current thread.
+            // Cache's Monitor permits unordered executors and prevents an old
+            // reservation from trimming a later binding after release/reassignment.
+            Task task = executor.ScheduleAtFixedRateAsync(Cache.Trim, period, period, _trimCancellation.Token);
+            if (task.IsCompleted) task.GetAwaiter().GetResult();
+            // Immediate rejection is propagated to the factory; later scheduler
+            // faults are observed without retaining the binding in a continuation.
+            _ = task.ContinueWith(static failed => { _ = failed.Exception; }, CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
         /**
          *  Should be called if the Thread that uses this cache is about to exit to release resources out of the cache
          */
@@ -168,9 +211,17 @@ public partial class PooledByteBufAllocator
             // we only call this one time.
             // CLR: removing the registration under the allocator Monitor makes detach
             // exactly once, replacing the Java finalizer/AtomicBoolean strategy.
-            Cache.Dispose();
-            HeapArena?.RemoveThreadBinding();
-            DirectArena?.RemoveThreadBinding();
+            // CLR: cancellation removes queued housekeeping and releases captured
+            // cache/allocator references. A callback already transferred to a ready
+            // queue cannot revive the closed cache or initialize another binding.
+            try { _trimCancellation?.Cancel(); }
+            finally
+            {
+                _trimCancellation?.Dispose();
+                Cache.Dispose();
+                HeapArena?.RemoveThreadBinding();
+                DirectArena?.RemoveThreadBinding();
+            }
         }
     }
 }

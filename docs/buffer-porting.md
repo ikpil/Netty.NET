@@ -2150,13 +2150,60 @@ Implemented-path Java comments are retained; JVM Recycler/finalizer-only paths a
 explicit CLR adaptations, and complete source/fixture coverage remains in-progress.
 Evidence: artifacts/buffer-region-cache-validation (ignored), buffer-region-cache-*.trx.
 
+## Executor-based periodic cache trimming
+
+A positive cacheTrimPeriod TimeSpan registers one fixed-rate trim when a physical
+thread's first binding is created on ThreadExecutorMap.CurrentExecutor. Initial delay
+and period are equal, matching the pinned Java allocator; zero disables scheduling.
+Later executor mappings do not reschedule an existing binding. Explicit cache sizes
+remain unchanged, including zero-sized caches. Shared empty buffers and fully unpooled
+factories create neither a CLR binding nor a schedule. Common's existing executor
+scheduler supplies deadlines/catch-up and cancellation; no separate timer is introduced.
+
+The callback targets its original cache directly, permitting execution on another
+physical worker without creating or trimming an unrelated binding. Registration and
+fault observation suppress ExecutionContext flow, retaining no caller AsyncLocal data.
+Immediate unsupported/rejected scheduling rolls back the binding and both arena counts
+before storage reservation. A later backing allocation failure retains the single
+binding/schedule for retry or cleanup. Later scheduler faults are observed and stop
+that schedule; executor shutdown also stops it without draining cached handles. Manual,
+allocation-driven and binding/allocator cleanup remain available.
+
+Explicit binding release, observed thread termination and allocator Dispose cancel
+the schedule before closing/draining its cache. Already-transferred callbacks cannot
+revive a closed cache or trim a replacement binding; live buffers/leases keep their
+previous lifetime. This is an intentional CLR adaptation: Java's initialValue ignores
+the periodic future, and freeThreadLocalCache does not cancel that old task before a
+new binding registers another. Cancellation avoids duplicate sweeps and retained CLR
+objects. Negative explicit periods fail eagerly; extreme positive periods use Common's
+saturating TimeSpan deadlines. No executor throughput equivalence is claimed.
+
+26 added cases cover first deadlines, hit budgets, fixed-rate catch-up, absent/changed
+mappings, zero caches, rollback/retry, transferred callbacks, thread cleanup, live leases,
+ExecutionContext/GC and native lifetime. Real executors with independently controlled
+clocks additionally verify separate physical-thread caches and concurrent return/close.
+net10.0 Debug/Release/rebuilt checked Release each pass 2137/2137, no failures/skips.
+Checked build has zero errors and 51 existing Common warnings; no Buffer/test warnings.
+Common is unchanged. Implemented-path Java comments are retained.
+
+Fresh pinned Java buffer sources and CLR allocators produce 22176 identical rows per
+Debug/Release across 72 page/alignment/arena-count/cache-size/executor-mapping domains.
+Rows include clock/deadline/queue/sweep state, cache/arena metrics, reservations and
+SHA-256 bytes. An independent fixed-rate/cache/hit-budget/owner/counter/byte model
+agrees, including 2772 periodic sweeps and 392 allocation-driven sweeps per runtime.
+All 40720 prior region-cache Java rows remain unchanged per Debug/Release with periodic
+trimming disabled. Native CLR runners finish with zero reserved bytes after disposal.
+Inventory remains 159 (74 pending, 52 in-progress, 30 verified, 3 CLR replacements);
+allocator/cache source and complete fixtures remain in-progress.
+Evidence: artifacts/buffer-cache-scheduling-validation (ignored), buffer-cache-scheduling-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping, scheduled cache trimming and adaptive allocators remain unported. Most original
+borrowed-address wrapping, advanced/composite leak wrappers, automatic allocator leak wrapping, allocator events and adaptive allocators remain unported. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units continue remaining factories/utilities/original fixtures, leak wrappers and
-cache scheduling where supported by an actual executor consumer. Common
+remaining allocator integration. Common
 changes must cite the actual buffer contract that requires them.

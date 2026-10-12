@@ -23,11 +23,14 @@ namespace Netty.NET.Buffer;
 
 /// <summary>Allocates reference-counted buffers through heap and native memory pools.</summary>
 /// <remarks>This implementation binds each physical thread to the least-used heap/native
-/// arenas, with opt-in small/normal region caches. Scheduled trimming, allocator events and automatic leak
+/// arenas, with opt-in small/normal region caches and executor-based periodic trimming. Allocator events and automatic leak
 /// wrapping remain pending. CLR options replace JVM runtime/system-property heuristics.
 /// Dispose closes factory allocations and pooled arenas; live pooled buffers and operation
 /// leases keep their reservations until returned. Unpooled fallback buffers own independent
-/// lifetimes. Empty sentinels/composites reserve no storage and remain available.</remarks>
+/// lifetimes. Empty sentinels/composites reserve no storage and remain available.
+/// A positive cacheTrimPeriod schedules fixed-rate trim only when the binding is
+/// first created on a mapped event executor. Zero disables scheduling. Releasing
+/// the binding or allocator cancels its schedule; no caller ExecutionContext is retained.</remarks>
 public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocatorMetricProvider, IDisposable
 {
     public static PooledByteBufAllocator Default { get; } = new(preferDirect: true);
@@ -43,6 +46,7 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
     internal int NormalCacheSize { get; }
     private readonly int _maxCachedBufferCapacity;
     private readonly int _cacheTrimInterval;
+    private readonly TimeSpan _cacheTrimPeriod;
     public PooledByteBufAllocatorMetric Metric { get; }
     IByteBufAllocatorMetric IByteBufAllocatorMetricProvider.Metric => Metric;
 
@@ -51,15 +55,15 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
     public PooledByteBufAllocator(bool preferDirect = false, bool poolHeap = true, bool poolDirect = true,
         int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
         NativeMemoryAllocator nativeAllocator = null, int smallCacheSize = 0, int normalCacheSize = 0,
-        int maxCachedBufferCapacity = 32768, int cacheTrimInterval = 8192)
+        int maxCachedBufferCapacity = 32768, int cacheTrimInterval = 8192, TimeSpan cacheTrimPeriod = default)
         : this(preferDirect, poolHeap ? 1 : 0, poolDirect ? 1 : 0, pageSize, maxOrder,
             directMemoryCacheAlignment, nativeAllocator, smallCacheSize, normalCacheSize,
-            maxCachedBufferCapacity, cacheTrimInterval) { }
+            maxCachedBufferCapacity, cacheTrimInterval, cacheTrimPeriod) { }
 
     public PooledByteBufAllocator(bool preferDirect, int heapArenaCount, int directArenaCount,
         int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
         NativeMemoryAllocator nativeAllocator = null, int smallCacheSize = 0, int normalCacheSize = 0,
-        int maxCachedBufferCapacity = 32768, int cacheTrimInterval = 8192) : base(preferDirect)
+        int maxCachedBufferCapacity = 32768, int cacheTrimInterval = 8192, TimeSpan cacheTrimPeriod = default) : base(preferDirect)
     {
         if (directMemoryCacheAlignment < 0 ||
             directMemoryCacheAlignment != 0 && !BitOperations.IsPow2(directMemoryCacheAlignment))
@@ -84,10 +88,12 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
         ArgumentOutOfRangeException.ThrowIfNegative(normalCacheSize);
         ArgumentOutOfRangeException.ThrowIfNegative(maxCachedBufferCapacity);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cacheTrimInterval);
+        if (cacheTrimPeriod < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(cacheTrimPeriod));
         SmallCacheSize = smallCacheSize;
         NormalCacheSize = normalCacheSize;
         _maxCachedBufferCapacity = maxCachedBufferCapacity;
         _cacheTrimInterval = cacheTrimInterval;
+        _cacheTrimPeriod = cacheTrimPeriod;
         ChunkSize = (int)chunkSize;
         // Logarithm base 2. At this point we know that pageSize is a power of two.
         int shifts = BitOperations.Log2((uint)pageSize);
