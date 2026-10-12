@@ -31,7 +31,7 @@ namespace Netty.NET.Buffer;
 /// changes, storage resizing and release must be excluded while borrowing memory.</remarks>
 public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
 {
-    private readonly List<ComponentEntry> _components = new();
+    private readonly List<ComponentEntry> _components;
     private readonly bool _direct;
     private readonly IByteBufAllocator _bufferAllocator;
     public override IByteBufAllocator Allocator => _bufferAllocator;
@@ -49,8 +49,20 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         ArgumentNullException.ThrowIfNull(allocator);
         if (maxNumComponents < 1) throw new ArgumentOutOfRangeException(nameof(maxNumComponents));
         MaxNumComponents = maxNumComponents;
+        _components = new();
         _direct = direct;
         _bufferAllocator = allocator;
+    }
+
+    // CLR: transparent composite wrappers use the same component metadata and index
+    // owner, without an empty side-list. This also makes existing flatten/enumeration
+    // kernels see the real components. Reference ownership stays with the wrapped buffer.
+    private protected CompositeByteBuf(CompositeByteBuf wrapped) : base(wrapped)
+    {
+        _components = wrapped._components;
+        _direct = wrapped._direct;
+        _bufferAllocator = wrapped.Allocator;
+        MaxNumComponents = wrapped.MaxNumComponents;
     }
 
     /**
@@ -159,6 +171,10 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
         if (ReferenceEquals(buffer, target)) return true;
         if (buffer is CompositeByteBuf composite)
         {
+            // Wrapper aliases represent the same component owner; reject ownership
+            // cycles before consuming a reference, including raw/wrapped aliases.
+            if (target is CompositeByteBuf targetComposite &&
+                ReferenceEquals(composite._components, targetComposite._components)) return true;
             foreach (ComponentEntry entry in composite._components)
                 if (ContainsBuffer(entry.Source, target)) return true;
         }

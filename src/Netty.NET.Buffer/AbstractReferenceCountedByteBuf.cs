@@ -26,11 +26,13 @@ public abstract class AbstractReferenceCountedByteBuf : ByteBuf
     // this is setting the ref cnt to the initial value
     private int _referenceCount = 1;
     protected AbstractReferenceCountedByteBuf(int maxCapacity) : base(maxCapacity) { }
+    // Transparent composite wrappers share indices but delegate reference operations.
+    private protected AbstractReferenceCountedByteBuf(ByteBuf indexOwner) : base(indexOwner) { }
     // Try to do non-volatile read for performance as the ensureAccessible() is racy anyway and only provide
     // a best-effort guard.
     // CLR: retain the existing common counter's volatile observational read.
     // It is still an accessibility guard, not an ownership acquisition.
-    public sealed override int ReferenceCount => ReferenceCountUpdater.GetCount(ref _referenceCount);
+    public override int ReferenceCount => ReferenceCountUpdater.GetCount(ref _referenceCount);
 /**
      * An unsafe operation intended for use by a subclass that sets the reference count of the buffer directly
      */
@@ -39,12 +41,12 @@ public abstract class AbstractReferenceCountedByteBuf : ByteBuf
      * An unsafe operation intended for use by a subclass that resets the reference count of the buffer to 1
      */
     protected void ResetReferenceCount() => ReferenceCountUpdater.Reset(ref _referenceCount);
-    public sealed override ByteBuf Retain(int increment = 1)
+    public override ByteBuf Retain(int increment = 1)
     {
         ReferenceCountUpdater.Retain(ref _referenceCount, increment);
         return this;
     }
-    public sealed override bool Release(int decrement = 1)
+    public override bool Release(int decrement = 1)
     {
         bool final = ReferenceCountUpdater.Release(ref _referenceCount, decrement);
         if (final) Deallocate();

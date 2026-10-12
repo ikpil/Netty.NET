@@ -2239,12 +2239,57 @@ hidden by this adaptation. Both static policy values run in separate processes.
 Inventory is 159 (72 pending, 54 in-progress, 30 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-advanced-leak-validation (ignored), buffer-advanced-leak-*.trx.
 
+## Simple leak-aware composite wrappers
+
+WrappedCompositeByteBuf remains a CompositeByteBuf while sharing the original
+component metadata and index/mark owner. It introduces no component ownership or
+Retain. Storage/view/reference hooks delegate to the wrapped composite; existing
+CLR structural kernels use the shared list, including nested wrappers, enumeration,
+cached component views and flattened-source transfers. ReferenceCount/Retain/Release
+are now overridable in AbstractReferenceCountedByteBuf as in Java; ordinary counter
+operations are unchanged. Raw/wrapped/sibling aliases are the same component owner
+for the existing CLR cycle rejection, without consuming an incoming reference.
+
+SimpleLeakAwareCompositeByteBuf wraps nine derived views with SimpleLeakAwareByteBuf
+and the exact immediate wrapped referent/tracker. Only final logical release closes
+the tracker, even when a retained view is the last owner. Native pins/internal leases
+can outlive that close. The virtual view factory also supports advanced views without
+double closure. Simple composite accesses do not record; Touch still forwards like
+Java's composite wrapper. Composite Release retains its original lack of the ordinary
+simple byte wrapper's additional close-trace attachment. Optional decrement combines
+Java's two Release overloads; their identical explanatory comment is shared once.
+
+CLR fluent little-endian writes deliberately return the outer receiver. The pinned
+WrappedCompositeByteBuf returns its inner buffer for eight such methods, allowing a
+chained Release to bypass the simple composite tracker. Eight explicit regressions
+verify the CLR return/close policy. This adaptation changes neither bytes nor cursors.
+Byte-order/NIO/channel facades, full inherited fixtures, advanced composite access
+recording and automatic allocator wrapping remain pending.
+
+763 added cases cover 123 operations on heap/native/mixed-read-only composites through
+plain/simple wrappers, all nine original view scenarios and the original nested
+forEachByte regression. Structural aliases, flattening, borrowed iteration, ownership
+cycles, virtual view factories, final reference/pin/lease lifetimes and async streams
+are also checked. net10.0 Debug/Release/rebuilt checked Release pass 3662/3662 with no
+failures/skips. Checked build has zero errors and 51 existing Common warnings, with
+no Buffer/test warnings. Common is unchanged; original unique source comments and
+both fixture licenses are retained, with duplicate Release comment accounting explicit.
+
+93 freshly extracted pinned Java Buffer sources provide 5148 oracle rows across
+36 storage/component-limit/wrapper-depth/tracking domains and 143 operations per
+Debug/Release. All recording/close/byte/cursor/component/reference states match; 4864
+complete rows match, with 284 explicit little-endian receiver-return adaptations.
+Independent recording/close/receiver checks agree, and each CLR case returns shared
+native reserved bytes to zero. Inventory is 159 (68 pending, 58 in-progress, 30
+verified, 3 CLR replacements). The new sources/fixtures remain in-progress.
+Evidence: artifacts/buffer-composite-leak-validation (ignored), buffer-composite-leak-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, composite leak wrappers, automatic allocator leak wrapping, allocator events and adaptive allocators remain unported. Advanced leak access recording covers the current CLR buffer API; its remaining upstream surfaces are pending. Most original
+borrowed-address wrapping, advanced composite leak access recording, automatic allocator leak wrapping, allocator events and adaptive allocators remain unported. Advanced leak access recording covers the current CLR ordinary buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units continue remaining factories/utilities/original fixtures, leak wrappers and
 remaining allocator integration. Common
