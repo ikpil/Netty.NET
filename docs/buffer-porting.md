@@ -2390,6 +2390,35 @@ the exact resource type and creation hint; repeated drains do not notify again.
 Inventory remains 159 (66 pending, 59 in-progress, 31 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-leak-listener-validation (ignored), buffer-leak-listener-*.trx.
 
+## Buffer diagnostic representations
+
+The original object ToString contract now reports indices/capacity/finite maximum,
+unwrapped state or a freed marker. Ordinary wrappers surround their parent's text;
+composite wrappers delegate it without wrapper names. Composites append component
+counts, including after final release; CLR clears component references and preserves
+only the last count. EmptyByteBuf uses the original BE name. FixedCompositeByteBuf's
+diagnostic omits the maximum as its original skeletal constructor does, independently
+of public MaxCapacity. Decimal formatting is invariant and class names are CLR names.
+The original API comment/licenses are retained. No content is read or leak access
+record added; the freed skeletal path does not touch capacity or unwrap.
+
+53 added cases cover heap/native/pools/composites, finite/unbounded maxima, four view
+forms, changed cursors/marks, nested simple/advanced/unreleasable wrappers, empty/freed
+states, metadata-only guards and caller culture. net10.0 Debug/Release/rebuilt sampled
+checked Release pass 4896/4896, no failures/skips. Checked build has 51 existing Common
+warnings and zero Buffer/test warnings/errors; Common source is unchanged.
+
+Pinned Java probes recheck all 93 extracted Buffer sources. Each targetRecords value
+(0/4), per Debug/Release, yields 140 states: 137 match after explicit implementation-
+class-name normalization, and three preserve the existing CLR fixed-composite
+IsReadOnly/AsReadOnly identity policy (see fixed read-only composites). Independent
+metadata/max-bound/view/wrapper/component/leak-record/close models verify both policies.
+Every CLR case frees allocator/shared native reservations. The original charset
+ToString tests concern text decoding; the new cases supplement the object diagnostic
+contract. Whole sources/fixtures remain partial; inventory stays 159 (66 pending,
+59 in-progress, 31 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-diagnostics-validation (ignored), buffer-diagnostics-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

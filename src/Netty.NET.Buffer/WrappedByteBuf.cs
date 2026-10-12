@@ -16,6 +16,7 @@
 
 using System;
 using System.Buffers;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -43,6 +44,7 @@ public class WrappedByteBuf : ByteBuf
     public override bool IsReadOnly => Buffer.IsReadOnly;
     public override bool CanWrite(int byteCount) => Buffer.CanWrite(byteCount);
     public override ByteBuf Unwrap() => Buffer;
+    public override string ToString() => StringUtil.SimpleClassName(this) + '(' + Buffer.ToString() + ')';
     public override int ReferenceCount => Buffer.ReferenceCount;
     public override ByteBuf Retain(int increment = 1) { Buffer.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => Buffer.Release(decrement);

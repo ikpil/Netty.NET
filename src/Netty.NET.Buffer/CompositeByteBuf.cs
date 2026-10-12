@@ -32,9 +32,17 @@ namespace Netty.NET.Buffer;
 public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly List<ComponentEntry> _components;
+    private int _deallocatedComponentCount;
     private readonly bool _direct;
     private readonly IByteBufAllocator _bufferAllocator;
     public override IByteBufAllocator Allocator => _bufferAllocator;
+
+    public override string ToString()
+    {
+        string result = base.ToString();
+        int count = ReferenceCount == 0 ? _deallocatedComponentCount : NumComponents;
+        return FormattableString.Invariant($"{result[..^1]}, components={count})");
+    }
 
     // CLR: List replaces Java component-array growth.
     // The allocation policy affects padding, copies and consolidation. IsDirect
@@ -510,6 +518,8 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
 
     protected override void Deallocate()
     {
+        // CLR clears component references on release; preserve the original count for freed diagnostics.
+        _deallocatedComponentCount = _components.Count;
         // We're not using foreach to avoid creating an iterator.
         // see https://github.com/netty/netty/issues/2642
         for (int i = 0; i < _components.Count; ++i) _components[i].Free();

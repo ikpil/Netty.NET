@@ -28,6 +28,7 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
     internal WrappedCompositeByteBuf(CompositeByteBuf wrapped) : base(wrapped) => Wrapped = wrapped;
 
     public sealed override ByteBuf Unwrap() => Wrapped;
+    public sealed override string ToString() => Wrapped.ToString();
     public override IByteBufAllocator Allocator => Wrapped.Allocator;
     public override int Capacity { get => Wrapped.Capacity; set => Wrapped.Capacity = value; }
     public override bool IsDirect => Wrapped.IsDirect;

@@ -16,6 +16,7 @@
 
 using System;
 using System.Buffers;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -38,6 +39,8 @@ internal sealed class UnreleasableByteBuf : ByteBuf
 
     public override int Capacity { get => _parent.Capacity; set => _parent.Capacity = value; }
     public override IByteBufAllocator Allocator => _parent.Allocator;
+    // CLR: this facade uses the shared-index kernel directly; retain Java WrappedByteBuf's diagnostic rule.
+    public override string ToString() => StringUtil.SimpleClassName(this) + '(' + _parent.ToString() + ')';
     public override bool IsContiguous => _parent.IsContiguous;
     public override int MaxFastWritableBytes => _parent.MaxFastWritableBytes;
     public override bool IsDirect => _parent.IsDirect;

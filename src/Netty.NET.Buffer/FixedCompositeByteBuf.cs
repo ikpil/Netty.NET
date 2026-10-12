@@ -29,6 +29,15 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
     private readonly Component[] _components;
     private readonly bool _direct;
 
+    // Java's skeletal diagnostic reads its constructor bound, not FixedCompositeByteBuf.maxCapacity().
+    private protected override int DiagnosticMaxCapacity => int.MaxValue;
+
+    public override string ToString()
+    {
+        string result = base.ToString();
+        return FormattableString.Invariant($"{result[..^1]}, components={_components.Length})");
+    }
+
     internal FixedCompositeByteBuf(ByteBuf[] buffers) : this(Capture(buffers)) { }
 
     private FixedCompositeByteBuf(Component[] components)

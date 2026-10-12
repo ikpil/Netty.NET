@@ -28,6 +28,8 @@ internal sealed class EmptyByteBuf : ByteBuf
     internal EmptyByteBuf(IByteBufAllocator allocator) : base(0)
     { ArgumentNullException.ThrowIfNull(allocator); _allocator = allocator; }
     public override IByteBufAllocator Allocator => _allocator;
+    // The CLR buffer API uses explicit LE accessors; its default byte order is always BE.
+    public override string ToString() => "EmptyByteBufBE";
     protected override Memory<byte> GetMemoryCore(int index, int length) => Memory<byte>.Empty;
     public override bool IsContiguous => true;
     public override bool IsDirect => true;
