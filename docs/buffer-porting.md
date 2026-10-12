@@ -2364,6 +2364,32 @@ fixtures and broader allocator configuration remain partial. Inventory is 159
 (66 pending, 59 in-progress, 31 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-allocator-leak-validation (ignored), buffer-allocator-leak-*.trx.
 
+## Buffer leak listener
+
+ByteBufUtil.SetLeakListener forwards the original public API to the shared ByteBuf
+detector using Common's existing listener interface. Registration replaces the listener;
+null removes it. The listener installed when a subsequent tracking call drains a
+collected leak receives ByteBuf and its records on that tracking thread. Existing
+reporting gates and duplicate suppression apply. Common source is unchanged; the
+original API comment and source/fixture licenses are retained.
+
+Eight added CLR tests cover real-GC listener replacement/removal after collection,
+payload/thread/single-notification contracts and normal final release over
+unpooled/pooled heap, native, composite and retained views.
+Global changes are isolated and restored. net10.0 Debug/Release/rebuilt sampled checked
+Release pass 4843/4843, zero failures/skips. Checked build has 51 existing Common warnings,
+zero Buffer/test warnings or errors. The original utility source/fixture remain partial;
+the pinned ByteBufUtilTest has no dedicated listener test.
+
+Real-GC isolated probes reuse pinned Java classes after rechecking all 93 extracted
+Buffer sources. Seven modes over three allocator shapes yield 21 exact Java/CLR matches
+per targetRecords value (0/4) and Debug/Release. An independent callback/report/active-
+tracker model verifies delivery, replacement/removal/late registration after collection,
+reporting suppression, explicit final close and worker-thread delivery. Payloads contain
+the exact resource type and creation hint; repeated drains do not notify again.
+Inventory remains 159 (66 pending, 59 in-progress, 31 verified, 3 CLR replacements).
+Evidence: artifacts/buffer-leak-listener-validation (ignored), buffer-leak-listener-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
