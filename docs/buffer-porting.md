@@ -2577,11 +2577,9 @@ allocation callback on final release. Operation/pin claims protect old regions d
 aliased growing writes and defer reuse/free until their claims return.
 
 The existing Memory/Span kernel supplies primitive/bulk/text/sequence and .NET stream/
-positioned-file operations with logical bounds. An explicitly test-only serialized
-storage binder exercises actual policies/chunks; magazine/cache transfer, owner handoff,
-purge/scaling/contention, public allocator factories/metrics, runtime/default selection
-and JFR remain pending. The internal callback is the future magazine binding. No public
-factory/default change or full original allocator fixture verification is claimed.
+positioned-file operations with logical bounds. This buffer unit used an explicitly
+test-only serialized storage binder before magazine/cache and public factory integration.
+It did not change public/default factories or complete the original allocator fixture.
 
 49 added cases include original unwrap scenarios and portable logical-boundary regressions,
 plus storage transitions, copying, views, pins/leases, owner-local chunks and failure
@@ -2594,13 +2592,49 @@ cleanup. Original implemented-path comments/license are preserved. Inventory: 15
 (59 pending, 64 in-progress, 32 verified, 4 CLR replacements). Evidence:
 artifacts/buffer-adaptive-buffer-validation (ignored), buffer-adaptive-buffer-*.trx.
 
+## Adaptive shared magazines and public allocator
+
+AdaptiveByteBufAllocator now exposes heap/native/preferred/IoBuffer factories, automatic
+leak wrapping, inherited composites, self-provided metrics and Dispose. Real shared
+magazine groups select stripes by managed physical thread id, retain current/atomic
+next-in-line chunks, expand under contention and use dedicated fallback after bounded
+attempts. Chunks transfer their owner claim to caches while regions remain live.
+
+Shared fixed-class FIFO caches preserve generation/epoch scans, active preference,
+bounded ring-equivalent capacity, idle-only aging and the retention floor. Locked sorted
+buddy maps preserve newest-first equal keys, ceiling lookup, largest recovered pending
+return and idle-only pressure eviction. Monitor/Interlocked and locked BCL collections
+replace JVM synchronization/containers; performance equivalence is not claimed.
+Residual buddy capacity that is not a power of two now fails reservation as in Java,
+allowing magazine fallback. Exception paths preserve ownership of claimed next chunks.
+
+Pool lifetime gates close allocation before draining every fixed/buddy group. Live
+buffers/views/pin claims preserve storage until final return; native SafeHandles cover
+unreachable backing storage. lowMemory/native budgets are explicit; shared reuse/purge
+environment settings are supported. The global default stays unchanged. Thread-local
+groups/ring caches/owner cleanup, their runtime eligibility/non-event-loop options,
+runtime/default selection and events remain pending; sources/fixtures stay partial.
+
+40 added cases cover public factories/metrics/reuse/shared purge, 200 shuffled buddy
+repetitions, parallel allocation, forced expansion/dedicated fallback, composites,
+native budget failure, disposal/views/pins and real-slot shared/buddy cache scenarios.
+Debug/Release/rebuilt sampled checked Release pass 5272/5272 on net10.0, no failures/
+skips. Checked build: 51 existing Common warnings; zero Buffer/test warnings/errors;
+Common unchanged. All 93 pinned Java Buffer sources were rechecked. Public factory/
+buffer/shared-cache execution matches 12808 exact rows per Debug/Release. Independent
+models cover 2392 buffer states and 10402 FIFO/geometry/metric rows; cache aging/lifetime
+invariants agree. Explicit cleanup returns registries/native reservations to zero.
+Original implemented-path comments/licenses are retained. Inventory: 159 (57 pending,
+66 in-progress, 32 verified, 4 CLR replacements). Evidence:
+artifacts/buffer-adaptive-shared-validation (ignored), buffer-adaptive-shared-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
+single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared factories/metrics are connected; thread-local adaptive paths,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-allocator events and adaptive allocators remain unported. Automatic wrapping is connected for the current unpooled/pooled allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units connect adaptive magazine/cache ownership and wire the buffer into public
-factories, then runtime/default selection, remaining portable contracts and original fixtures.
+Next units address adaptive thread-local ownership/cleanup and runtime/default selection,
+then remaining portable contracts and original fixtures.
 Common changes must cite the actual buffer contract that requires them.

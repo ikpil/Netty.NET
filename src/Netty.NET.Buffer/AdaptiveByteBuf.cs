@@ -19,11 +19,13 @@ using System;
 namespace Netty.NET.Buffer;
 
 // CLR: the shared Memory/Span kernel provides primitive, bulk, text, sequence and
-// .NET stream/file access. The allocation callback is the future magazine's storage
-// binding, not a replacement allocator policy. No public factory/default is changed.
+// .NET stream/file access. The allocation callback binds the owning pool's magazine
+// selection and fallback while preserving buffer identity during reallocation.
 // Each wrapper is fresh; recycling a released CLR object could resurrect stale references.
 internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
 {
+    // We need the top-level allocator so ByteBuf.capacity(int) can call reallocate()
+    // CLR: the pool reservation callback replaces the chunk's allocator back-reference.
     private Func<int, int, AdaptiveChunkAllocation> _allocate;
     // this both act as adjustment and the start index for a free list segment allocation
     // CLR: the allocation owns this offset as well as operation/pin claims.

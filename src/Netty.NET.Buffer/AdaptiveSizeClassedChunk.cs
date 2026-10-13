@@ -51,6 +51,9 @@ internal sealed class AdaptiveSizeClassedChunk : AdaptiveChunk
     // making late-arriving releaseSegment calls on external threads arithmetically harmless.
     private const int Deallocated = int.MinValue;
     private int _state = Available;
+    internal int PurgeEpoch;
+    internal long LastPurgeGeneration;
+    internal long LastScanGeneration;
     private readonly int _segmentSize;
     private readonly int _segments;
     private readonly ConcurrentQueue<int> _externalFreeList = new();

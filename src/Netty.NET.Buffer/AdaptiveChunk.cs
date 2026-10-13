@@ -32,7 +32,7 @@ internal sealed class AdaptiveChunkRegistry
 
 // The allocating magazine must serialize allocation, capacity inspection and retirement.
 // Returns may come from other threads. Construction transfers the raw delegate's single
-// reference only on success. Magazine attachment/cache transfer and events are still pending.
+// reference only on success. Event integration is still pending.
 internal class AdaptiveChunk : IDisposable
 {
     private ByteBuf _storage;
@@ -42,10 +42,12 @@ internal class AdaptiveChunk : IDisposable
     // CLR: a non-nullable integer and ReferenceCountUpdater replace the JVM RefCnt object.
     private int _references = 1;
     private int _retired;
+    private AdaptiveMagazine _magazine;
     protected int AllocatedBytes;
     internal int Capacity { get; }
     internal bool IsDirect { get; }
     internal bool IsPooled { get; }
+    internal int OwnerReferenceCount => ReferenceCountUpdater.GetCount(ref _references);
     internal IByteBufAllocator Allocator => Storage.Allocator;
     internal ByteBuf Copy(int index, int length) => Storage.Copy(index, length);
     internal bool IsDeallocated => Volatile.Read(ref _storage) == null;
@@ -116,6 +118,24 @@ internal class AdaptiveChunk : IDisposable
     internal virtual int RemainingCapacity => Capacity - AllocatedBytes;
     internal virtual bool HasUnprocessedFreelistEntries => false;
     internal virtual void ProcessFreelistEntries() { }
+
+    internal void AttachToMagazine(AdaptiveMagazine magazine)
+    {
+        System.Diagnostics.Debug.Assert(_magazine == null);
+        _magazine = magazine;
+    }
+
+    /**
+     * Called when a magazine is done using this chunk, probably because it was emptied.
+     */
+    internal void ReleaseFromMagazine()
+    {
+        // Chunks can be reused before they become empty.
+        // We can therefor put them in the shared queue as soon as the magazine is done with this chunk.
+        AdaptiveMagazine magazine = _magazine;
+        _magazine = null;
+        if (!magazine.OfferToQueue(this)) Dispose();
+    }
 
     /**
      * Called when a ByteBuf is done using its allocation in this chunk.

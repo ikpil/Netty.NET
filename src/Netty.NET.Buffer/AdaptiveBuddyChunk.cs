@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Numerics;
 
 namespace Netty.NET.Buffer;
 
@@ -39,6 +40,10 @@ internal sealed class AdaptiveBuddyChunk : AdaptiveChunk
     {
         ThrowIfRetired();
         ProcessFreelistEntries();
+        // A magazine may offer the residual capacity, which need not be a power of
+        // two. The Java search returns no matching buddy in that case; the tree
+        // helper's stricter shape guard must not turn allocator fallback into an error.
+        if (startingCapacity < AdaptiveBuddyTree.MinBuddySize || !BitOperations.IsPow2(startingCapacity)) return null;
         int startIndex = _tree.TryAllocate(startingCapacity);
         if (startIndex == -1) return null;
         Retain();
