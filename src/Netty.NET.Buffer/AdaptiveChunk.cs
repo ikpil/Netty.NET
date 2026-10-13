@@ -46,6 +46,8 @@ internal class AdaptiveChunk : IDisposable
     internal int Capacity { get; }
     internal bool IsDirect { get; }
     internal bool IsPooled { get; }
+    internal IByteBufAllocator Allocator => Storage.Allocator;
+    internal ByteBuf Copy(int index, int length) => Storage.Copy(index, length);
     internal bool IsDeallocated => Volatile.Read(ref _storage) == null;
     protected ByteBuf Storage => Volatile.Read(ref _storage) ?? throw new ObjectDisposedException(nameof(AdaptiveChunk));
     protected bool IsRetired => Volatile.Read(ref _retired) != 0;

@@ -2550,8 +2550,8 @@ borrowed Memory. Operation/pin claims defer both slot reuse and delegate release
 copied handles release once, and abandoned pin tokens finalize. Idempotent chunk Dispose
 retires owner ownership while live regions survive. Local allocation/inspection/retirement
 requires the physical owner thread; shared allocation requires magazine serialization.
-Magazine attachment/cache transfer, owner handoff, AdaptiveByteBuf/public allocator,
-runtime/default selection and JFR remain pending. Current runtime factories are unchanged.
+This chunk unit preceded magazine/cache transfer, owner handoff, buffer integration,
+public allocator/runtime/default selection and JFR. Current runtime factories are unchanged.
 
 88 supplementary cases cover all 16 classes, both owner modes, heap/native storage,
 reuse/exhaustion, deferred queues, copied/abandoned pins, empty storage, rollback and
@@ -2565,6 +2565,35 @@ registries and CLR registries/native reservations are zero. Inventory remains 15
 comments/license are retained; the entire adaptive allocator remains partial. Evidence:
 artifacts/buffer-adaptive-chunk-validation (ignored), buffer-adaptive-chunk-*.trx.
 
+## Adaptive buffer region integration
+
+AdaptiveByteBuf now binds real chunk regions while keeping logical capacity separate
+from reserved capacity. Growth within the reservation and every shrink reuse storage;
+larger growth copies the full old logical prefix before publication. Buffer identity,
+indices/marks and old state on allocation/copy failure are preserved. Copies retain the
+raw delegate's maximum and storage kind. Borrowed/retained views share the adaptive root
+counter; Unwrap never exposes raw chunk storage. Fresh CLR wrappers clear the region and
+allocation callback on final release. Operation/pin claims protect old regions during
+aliased growing writes and defer reuse/free until their claims return.
+
+The existing Memory/Span kernel supplies primitive/bulk/text/sequence and .NET stream/
+positioned-file operations with logical bounds. An explicitly test-only serialized
+storage binder exercises actual policies/chunks; magazine/cache transfer, owner handoff,
+purge/scaling/contention, public allocator factories/metrics, runtime/default selection
+and JFR remain pending. The internal callback is the future magazine binding. No public
+factory/default change or full original allocator fixture verification is claimed.
+
+49 added cases include original unwrap scenarios and portable logical-boundary regressions,
+plus storage transitions, copying, views, pins/leases, owner-local chunks and failure
+rollback. Debug/Release/rebuilt sampled checked Release pass 5232/5232 on net10.0, no
+failures/skips. Checked build: 51 existing Common warnings; zero Buffer/test warnings/
+errors; Common unchanged. Rechecked pinned Java adaptive buffers match 1196 normal-mode
+and 1196 low-memory-mode rows per Debug/Release and an independent capacity/cursor/view/
+copy/reference/byte model. Probe registries/native reservations reach zero after explicit
+cleanup. Original implemented-path comments/license are preserved. Inventory: 159
+(59 pending, 64 in-progress, 32 verified, 4 CLR replacements). Evidence:
+artifacts/buffer-adaptive-buffer-validation (ignored), buffer-adaptive-buffer-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -2572,6 +2601,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 allocator events and adaptive allocators remain unported. Automatic wrapping is connected for the current unpooled/pooled allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units connect adaptive magazine/cache ownership and buffer integration, then
-public/default allocator selection, remaining portable contracts and original fixtures.
+Next units connect adaptive magazine/cache ownership and wire the buffer into public
+factories, then runtime/default selection, remaining portable contracts and original fixtures.
 Common changes must cite the actual buffer contract that requires them.

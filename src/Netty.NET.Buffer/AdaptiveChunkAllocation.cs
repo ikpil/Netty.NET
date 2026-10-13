@@ -33,6 +33,15 @@ internal sealed unsafe class AdaptiveChunkAllocation : MemoryManager<byte>
     private int _disposed;
     internal int Offset { get; }
     internal int Length { get; }
+    internal IByteBufAllocator Allocator => _chunk.Allocator;
+    internal bool IsDirect => _chunk.IsDirect;
+
+    internal ByteBuf Copy(int index, int length)
+    {
+        ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+        if (index < 0 || length < 0 || index > Length - length) throw new ArgumentOutOfRangeException(nameof(index));
+        return _chunk.Copy(Offset + index, length);
+    }
 
     internal AdaptiveChunkAllocation(AdaptiveChunk chunk, Memory<byte> memory, int offset)
     {
