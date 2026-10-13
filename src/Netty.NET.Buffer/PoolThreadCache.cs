@@ -44,6 +44,7 @@ internal sealed class PoolThreadCache : IDisposable
     internal PoolThreadCache(PoolArena heapArena, PoolArena directArena, int smallCacheSize,
         int normalCacheSize, int maxCachedBufferCapacity, int freeSweepAllocationThreshold)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(maxCachedBufferCapacity);
         _freeSweepAllocationThreshold = freeSweepAllocationThreshold;
         if (directArena != null)
         {

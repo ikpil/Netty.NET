@@ -23,8 +23,9 @@ namespace Netty.NET.Buffer;
 
 /// <summary>Allocates reference-counted buffers through heap and native memory pools.</summary>
 /// <remarks>This implementation binds each physical thread to the least-used heap/native
-/// arenas, with opt-in small/normal region caches and executor-based periodic trimming. Allocator events
-/// remain pending. CLR options replace JVM runtime/system-property heuristics.
+/// arenas, with small/normal region caches and executor-based periodic trimming. Default
+/// reads process settings and gates caching by physical thread/executor eligibility.
+/// Explicit constructors retain their opt-in cache options. Allocator events remain pending.
 /// Dispose closes factory allocations and pooled arenas; live pooled buffers and operation
 /// leases keep their reservations until returned. Unpooled fallback buffers own independent
 /// lifetimes. Empty sentinels/composites reserve no storage and remain available.
@@ -33,7 +34,7 @@ namespace Netty.NET.Buffer;
 /// the binding or allocator cancels its schedule; no caller ExecutionContext is retained.</remarks>
 public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocatorMetricProvider, IDisposable
 {
-    public static PooledByteBufAllocator Default { get; } = new(preferDirect: ByteBufUtil.PreferDirect);
+    public static PooledByteBufAllocator Default => DefaultInstance.Value;
     private readonly object _sync = new();
     private readonly NativeMemoryAllocator _nativeAllocator;
     private bool _disposed;
@@ -50,8 +51,8 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
     public PooledByteBufAllocatorMetric Metric { get; }
     IByteBufAllocatorMetric IByteBufAllocatorMetricProvider.Metric => Metric;
 
-    // No caching so just use 0 as sizes.
-    // CLR: keep the existing default policy; explicit nonzero sizes enable caching.
+    // CLR: explicit constructors retain their explicit options and cache-off defaults.
+    // The shared Default uses the snapshotted runtime configuration instead.
     public PooledByteBufAllocator(bool preferDirect = false, bool poolHeap = true, bool poolDirect = true,
         int pageSize = 8192, int maxOrder = 9, int directMemoryCacheAlignment = 0,
         NativeMemoryAllocator nativeAllocator = null, int smallCacheSize = 0, int normalCacheSize = 0,

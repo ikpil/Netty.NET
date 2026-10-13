@@ -2707,13 +2707,47 @@ original fixtures. Original interface/facade comments are preserved. Inventory: 
 (57 pending, 64 in-progress, 34 verified, 4 CLR replacements). Evidence:
 artifacts/buffer-default-allocator-validation (ignored), buffer-default-allocator-*.trx.
 
+## Pooled runtime configuration and cache eligibility
+
+The shared pooled Default now snapshots portable page/alignment/maxOrder fallback,
+arena counts, cache sizes/capacity, trim thresholds/periods and all-thread cache policy.
+Current trim-period properties override their deprecated alias. PascalCase getters
+expose original portable defaults. Explicit C# constructor options stay unchanged;
+CLR defaults to one arena per storage kind without JVM memory-budget inference.
+Shared-default caching requires a physical FastThreadLocalThread, executor mapping
+or the all-thread option. Guaranteed fast scopes register weak allocator/binding
+callbacks that detach the correct binding on removal, drain caches and cancel trim;
+live buffers remain valid and later bindings are not detached accidentally.
+
+Nonpositive cache sizes disable caching. Invalid cached capacity/trim thresholds fail
+when an eligible binding constructs caches, with CLR rollback before publication.
+The pinned Java trim-error constructor increments arena thread-cache counters before
+throwing; that metadata leak is deliberately not reproduced. NIO wrapper caches and
+cache-finalizer switches have no CLR consumer; Memory/Span values, explicit cleanup
+and weak registrations replace them. TimeSpan bounds saturate very large millisecond
+periods. The existing alignment-truncated-table guard remains a documented CLR policy.
+Portable diagnostics/events and complete original fixtures remain pending.
+
+37 added cases cover defaults/fallback, arena disable/clamp, eligibility, scope cleanup,
+period aliases, snapshots, explicit options, disabled/invalid caches and rejection.
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass
+5392/5392 on net10.0, no failures/skips. Checked build: 51 existing Common warnings;
+zero Buffer/test warnings/errors; Common unchanged. All 93 pinned Buffer sources were
+rechecked. Thirty-one isolated-process profiles match 509 exact Java/CLR executable
+states per Debug/Release; independent models verify 400 buffer states and 75 geometry/
+cache/binding/lifetime snapshots per configuration. Error profiles compare rejection
+timing; successful counters and removal agree. CLR cleanup returns native reservations
+to zero. Original implemented-path comments/licenses are preserved. Inventory remains
+159 (57 pending, 64 in-progress, 34 verified, 4 CLR replacements). Evidence:
+artifacts/buffer-pooled-configuration-validation (ignored), buffer-pooled-configuration-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection is connected; remaining portable pooled runtime configuration stays pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection and portable pooled runtime configuration are connected; remaining diagnostics/events stay pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units address remaining portable allocator configuration, buffer contracts
-and original fixtures.
+Next units address remaining portable buffer contracts and original fixtures,
+with allocator diagnostics/events still explicitly tracked.
 Common changes must cite the actual buffer contract that requires them.

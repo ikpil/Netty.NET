@@ -51,8 +51,14 @@ public partial class PooledByteBufAllocator
         int id = thread.ManagedThreadId;
         if (_threadBindings.TryGetValue(id, out ThreadBinding binding) && binding.IsOwner(thread)) return binding;
         ReleaseTerminatedThreadBindingsCore();
+        IEventExecutor executor = ThreadExecutorMap.CurrentExecutor();
+        bool useCache = _runtimeDefaults == null || _runtimeDefaults.UseCacheForAllThreads ||
+            // If the current thread is a FastThreadLocalThread we will always use the cache
+            FastThreadLocalThread.CurrentThreadHasFastThreadLocal() || executor != null;
+        // No caching so just use 0 as sizes.
         binding = new ThreadBinding(thread, LeastUsedArena(_heapArenas), LeastUsedArena(_directArenas),
-            SmallCacheSize, NormalCacheSize, _maxCachedBufferCapacity, _cacheTrimInterval);
+            useCache ? SmallCacheSize : 0, useCache ? NormalCacheSize : 0,
+            useCache ? _maxCachedBufferCapacity : 0, useCache ? _cacheTrimInterval : 0);
         _threadBindings.Add(id, binding);
         binding.HeapArena?.AddThreadBinding();
         binding.DirectArena?.AddThreadBinding();
@@ -60,11 +66,12 @@ public partial class PooledByteBufAllocator
         {
             // The Thread is used by an EventExecutor, let's use the cache as the chances are good that we
             // will allocate a lot!
-            // CLR: cache sizes stay explicit. Like Java, periodic trim is registered
-            // only when the allocating physical thread has an executor mapping.
-            IEventExecutor executor = ThreadExecutorMap.CurrentExecutor();
+            // CLR: explicit constructor sizes remain opt-in. Runtime defaults follow
+            // the original eligibility rules; mapped executors permit periodic trim.
             if (_cacheTrimPeriod > TimeSpan.Zero && executor != null)
                 binding.StartTrimming(executor, _cacheTrimPeriod);
+            if (_threadCleanup != null && FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals())
+                _threadCleanup.Set(new WeakReference<ThreadBinding>(binding));
         }
         catch
         {
@@ -74,6 +81,24 @@ public partial class PooledByteBufAllocator
             throw;
         }
         return binding;
+    }
+
+    // CLR: a cleanup registration must not root the allocator through its arena/binding.
+    // Both links are weak. The allocator registry keeps active bindings alive until detach.
+    private sealed class ThreadCleanup(PooledByteBufAllocator allocator) : FastThreadLocal<WeakReference<ThreadBinding>>
+    {
+        private readonly WeakReference<PooledByteBufAllocator> _allocator = new(allocator);
+        protected override void OnRemoval(WeakReference<ThreadBinding> value)
+        {
+            if (value == null || !value.TryGetTarget(out var binding) || !_allocator.TryGetTarget(out var owner)) return;
+            lock (owner._sync)
+            {
+                int id = Environment.CurrentManagedThreadId;
+                if (!owner._threadBindings.TryGetValue(id, out var current) || !ReferenceEquals(current, binding)) return;
+                owner._threadBindings.Remove(id);
+                binding.Detach();
+            }
+        }
     }
 
     private static PoolArena LeastUsedArena(PoolArena[] arenas)

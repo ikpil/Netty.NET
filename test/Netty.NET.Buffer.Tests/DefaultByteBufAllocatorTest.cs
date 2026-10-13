@@ -28,19 +28,20 @@ namespace Netty.NET.Buffer.Tests;
 // Configuration is process-wide. Fresh collectible assembly contexts exercise static
 // initialization without resetting production fields; this collection excludes parallel fixtures.
 [Collection(nameof(AllocatorLeakDetectionCollection))]
-public class DefaultByteBufAllocatorTest
+public partial class DefaultByteBufAllocatorTest
 {
     private sealed class Scope : IDisposable
     {
         private readonly Dictionary<string, string> _previous = new();
         private readonly HashSet<object> _allocators = new(ReferenceEqualityComparer.Instance);
         private readonly AssemblyLoadContext _context = new("allocator configuration", true);
-        private readonly Assembly _buffer, _common;
+        internal readonly Assembly _buffer, _common;
         internal Scope(string kind, string noPreferDirect)
         {
             Set("io.netty.allocator.type", kind); Set("io.netty.noPreferDirect", noPreferDirect);
             Set("io.netty.availableProcessors", "2"); Set("io.netty.leakDetection.level", "disabled");
             Set("io.netty.allocator.lowMemory", null);
+            foreach (string name in PooledConfigurationKeys) Set(name, null);
             _common = _context.LoadFromAssemblyPath(typeof(NettyRuntime).Assembly.Location);
             _buffer = _context.LoadFromAssemblyPath(typeof(ByteBuf).Assembly.Location);
         }
@@ -54,7 +55,7 @@ public class DefaultByteBufAllocatorTest
         internal object UtilityDefault => Type("ByteBufUtil").GetProperty("DefaultAllocator", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
         internal object Singleton(string name) => Track(Type(name).GetProperty("Default").GetValue(null));
         internal object Adaptive(bool? prefer = null, bool? low = null) => Track(Activator.CreateInstance(Type("AdaptiveByteBufAllocator"), prefer, low, null, null));
-        private object Track(object allocator) { lock (_allocators) _allocators.Add(allocator); return allocator; }
+        internal object Track(object allocator) { lock (_allocators) _allocators.Add(allocator); return allocator; }
         internal object CommonTypeCall(string type, string method, params object[] args)
             => _common.GetType("Netty.NET.Common." + type, true).GetMethod(method).Invoke(null, args);
         internal long NativeBytes
