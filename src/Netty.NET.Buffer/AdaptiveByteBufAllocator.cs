@@ -29,8 +29,9 @@ namespace Netty.NET.Buffer;
  * <p>
  * See the {@link AdaptivePoolingAllocator} class documentation for implementation details.
  */
-/// <remarks>Shared striped magazines pool heap/native chunks. Physical-thread local
-/// magazines and events remain pending. lowMemory is explicit; CLR GC heap limits are
+/// <remarks>Shared striped and physical-thread local magazines pool heap/native chunks.
+/// Local magazines require guaranteed FastThreadLocal cleanup and, by default, an executor mapping.
+/// lowMemory is explicit; CLR GC heap limits are
 /// not treated as native memory budgets. Dispose closes allocations and drains all groups;
 /// live buffers and pin/operation claims keep their regions until final return. Raw Memory
 /// remains borrowed. Empty sentinels/composites reserve no storage and remain available.
@@ -52,21 +53,39 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
      * The default size is twice {@link NettyRuntime#availableProcessors()},
      * same as the maximum number of magazines per magazine group.
      */
-    /// <summary>Creates an adaptive allocator using shared magazines and explicit native reservations.</summary>
-    public AdaptiveByteBufAllocator(bool preferDirect = true, bool lowMemory = false, NativeMemoryAllocator nativeAllocator = null)
+    /// <summary>Creates an adaptive allocator with explicit native reservations.</summary>
+    /// <param name="useCacheForNonEventLoopThreads">Enables local magazines for eligible cleanup scopes
+    /// without an executor mapping. Null reads io.netty.allocator.useCachedMagazinesForNonEventLoopThreads
+    /// (default false). Ordinary CLR workers always use shared magazines.</param>
+    public AdaptiveByteBufAllocator(bool preferDirect = true, bool lowMemory = false, NativeMemoryAllocator nativeAllocator = null,
+        bool? useCacheForNonEventLoopThreads = null)
         : this(preferDirect, lowMemory, nativeAllocator,
             Math.Max(2, SystemPropertyUtil.GetInt("io.netty.allocator.chunkReuseQueueCapacity", Environment.ProcessorCount * 2)),
             Math.Max(1, SystemPropertyUtil.GetLong("io.netty.allocator.chunkPurgePollsShared", 128)),
-            Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.chunkPurgeThreshold", 3)), Environment.ProcessorCount * 2) { }
+            Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.chunkPurgeThreshold", 3)), Environment.ProcessorCount * 2,
+            useCacheForNonEventLoopThreads ?? SystemPropertyUtil.GetBoolean("io.netty.allocator.useCachedMagazinesForNonEventLoopThreads", false),
+            Math.Max(1, SystemPropertyUtil.GetLong("io.netty.allocator.chunkPurgePollsThreadLocal", 16)),
+            Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.threadLocalChunkCacheMaxBytes", 8 * 1024 * 1024)),
+            LocalMinBytes()) { }
+
+    private static int LocalMinBytes()
+    {
+        int max = Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.threadLocalChunkCacheMaxBytes", 8 * 1024 * 1024));
+        return Math.Min(max, Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.threadLocalChunkCacheMinBytes", max / 2)));
+    }
 
     internal AdaptiveByteBufAllocator(bool preferDirect, bool lowMemory, NativeMemoryAllocator nativeAllocator,
-        int reuseCapacity, long purgePolls, int purgeThreshold, int maxStripes) : base(preferDirect)
+        int reuseCapacity, long purgePolls, int purgeThreshold, int maxStripes,
+        bool useCacheForNonEventLoopThreads = false, long localPurgePolls = 16,
+        int localMaxBytes = 8 * 1024 * 1024, int localMinBytes = 4 * 1024 * 1024) : base(preferDirect)
     {
         NativeMemoryAllocator native = nativeAllocator ?? NativeMemoryAllocator.Shared;
         HeapPool = new AdaptivePoolingAllocator((size, max) => new UnpooledHeapByteBuf(this, size, max),
-            lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes);
+            lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes,
+            useCacheForNonEventLoopThreads, localPurgePolls, localMaxBytes, localMinBytes);
         DirectPool = new AdaptivePoolingAllocator((size, max) => new UnpooledDirectByteBuf(this, size, max, native),
-            lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes);
+            lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes,
+            useCacheForNonEventLoopThreads, localPurgePolls, localMaxBytes, localMinBytes);
     }
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
     {

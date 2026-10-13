@@ -26,16 +26,23 @@ internal sealed class AdaptiveMagazine : IDisposable
     private static readonly object MagazineFreed = new();
     private readonly AdaptiveMagazineGroup _group;
     // We only need the StampedLock if this Magazine will be shared across threads.
-    // CLR: this unit implements shared magazines with a Monitor.
+    // CLR: shared magazines use a Monitor; local magazines rely on the pool lifetime gate.
     internal object AllocationLock { get; } = new();
+    private readonly bool _threadLocal;
     private AdaptiveChunk _current;
     // updated via NEXT_IN_LINE
     private object _nextInLine;
-    internal AdaptiveMagazine(AdaptiveMagazineGroup group) => _group = group;
+    internal AdaptiveMagazine(AdaptiveMagazineGroup group, bool threadLocal = false)
+    { _group = group; _threadLocal = threadLocal; }
     internal bool OfferToQueue(AdaptiveChunk chunk) => _group.OfferChunk(chunk);
 
     internal AdaptiveChunkAllocation TryAllocate(int size, int maxCapacity)
     {
+        if (_threadLocal)
+        {
+            // This magazine is not shared across threads, just allocate directly.
+            return Allocate(size, maxCapacity);
+        }
         // Try to retrieve the lock and if successful allocate.
         if (!Monitor.TryEnter(AllocationLock)) return AllocateWithoutLock(size, maxCapacity);
         try { return Allocate(size, maxCapacity); }

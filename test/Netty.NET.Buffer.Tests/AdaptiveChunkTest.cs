@@ -197,7 +197,6 @@ public class AdaptiveChunkTest
             try
             {
                 Assert.Throws<InvalidOperationException>(() => chunk.TryAllocate(1));
-                Assert.Throws<InvalidOperationException>(() => chunk.Dispose());
                 live[0].Release();
             }
             catch (Exception e) { error = e; }

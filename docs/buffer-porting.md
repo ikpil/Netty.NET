@@ -2628,13 +2628,54 @@ Original implemented-path comments/licenses are retained. Inventory: 159 (57 pen
 66 in-progress, 32 verified, 4 CLR replacements). Evidence:
 artifacts/buffer-adaptive-shared-validation (ignored), buffer-adaptive-shared-*.trx.
 
+## Adaptive physical-thread local magazines and cleanup
+
+Owner-local magazines and fixed-class ring caches now connect to the public heap/native
+allocator. Eligibility follows the pinned executable rules: guaranteed FastThreadLocal
+cleanup plus an executor mapping or explicit non-event-loop cache option. Ordinary CLR
+workers, low-memory mode and buddy allocations use shared magazines. Ownership stays on
+physical threads and never flows through AsyncLocal or ExecutionContext.
+
+The ring preserves head selection, fallback scanning, doubling/linearization, wrapped
+compaction, capacity-first/Dutch-flag partition, idle epochs, retention floors and per-class
+max/min byte bounds. Original purge and byte-bound environment defaults/clamping are
+supported. FastThreadLocal.OnRemoval drains current/next/cache chunks. The allocator also
+tracks local bindings so off-thread Dispose can quiesce allocations, detach owner identity
+and reclaim all local groups. A local return/retirement gate sends late returns through
+the external queue; live buffers and pins preserve storage until final return. This adds
+CLR synchronization; performance equivalence is not claimed. Wrappers stay fresh. The
+pinned low-memory dispatch already bypasses local groups regardless of its auxiliary
+disable flag, so that redundant JVM setting has no CLR switch.
+
+38 new cases cover real-slot local cache scenarios, eligibility, actual fast-thread exit,
+scope failure/restart, task non-inheritance, burst purge and 80 disposal/owner-return stress
+repetitions across heap/native storage. Debug/Release/rebuilt checked Release with SIMPLE
+leak sampling interval 1 pass 5310/5310 on net10.0, no failures/skips. Checked build: 51
+existing Common warnings; zero Buffer/test warnings/errors; Common unchanged. All 93
+pinned Java Buffer sources were rechecked. Public normal/low-memory factories across all
+16 small classes and both storage kinds, plus cache/ring/diagnostic snapshots, match
+139626 exact Java/CLR rows per Debug/Release. Independent first-pass geometry/data models
+cover 69736 states per configuration; ring membership/aging/retention/cleanup invariants
+agree. Explicit cleanup returns registries/native reservations to zero.
+
+Implemented-path comments/licenses are preserved, including the shared-cache description
+omitted in the preceding unit. The duplicate-aware source audit retains 158/164 comments;
+the six unmatched comments describe omitted JVM recycler paths, the redundant low-memory
+switch, or a shared race comment merged into one helper. Original fixtures remain partial
+with merged/unported variants recorded in JSON. One pinned behavior is deliberately
+preserved: an exhausted local stack does not immediately notice only external-queue
+returns through HasRemainingCapacity; RemainingCapacity refreshes the cached estimate.
+This unit does not silently change that upstream policy. Inventory: 159 (57 pending,
+66 in-progress, 32 verified, 4 CLR replacements). Evidence:
+artifacts/buffer-adaptive-local-validation (ignored), buffer-adaptive-local-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared factories/metrics are connected; thread-local adaptive paths,
+single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units address adaptive thread-local ownership/cleanup and runtime/default selection,
-then remaining portable contracts and original fixtures.
+Next units address runtime/default allocator selection, then remaining portable
+contracts and original fixtures.
 Common changes must cite the actual buffer contract that requires them.

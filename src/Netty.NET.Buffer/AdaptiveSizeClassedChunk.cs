@@ -42,8 +42,9 @@ namespace Netty.NET.Buffer;
  * visibility of any preceding {@link #markToDeallocate()} write.
  */
 // CLR: ConcurrentQueue/Stack replace JVM primitive containers. A full fence after enqueue
-// supplies the source's StoreLoad guarantee explicitly. Stack access/retirement stay on
-// the physical owner thread; a future magazine must serialize shared chunk allocation.
+// supplies the source's StoreLoad guarantee explicitly. Allocation stays on the physical
+// owner thread. Local returns and retirement share a gate so allocator Dispose may run
+// elsewhere after its lifetime gate has quiesced allocations and cache inspection.
 internal sealed class AdaptiveSizeClassedChunk : AdaptiveChunk
 {
     private const int Available = -1;
@@ -58,7 +59,8 @@ internal sealed class AdaptiveSizeClassedChunk : AdaptiveChunk
     private readonly int _segments;
     private readonly ConcurrentQueue<int> _externalFreeList = new();
     private readonly Stack<int> _localFreeList;
-    private readonly Thread _ownerThread;
+    private Thread _ownerThread;
+    private readonly object _localReturnLock = new();
 
     internal AdaptiveSizeClassedChunk(ByteBuf storage, AdaptiveChunkRegistry registry, int segmentSize,
         bool threadLocal = false) : base(storage, registry, true)
@@ -153,25 +155,29 @@ internal sealed class AdaptiveSizeClassedChunk : AdaptiveChunk
 
     internal override void ReleaseSegment(int startIndex, int size)
     {
-        if (_localFreeList != null && Thread.CurrentThread == _ownerThread)
+        if (_localFreeList != null)
         {
-            _localFreeList.Push(startIndex);
-            int state = Volatile.Read(ref _state);
-            if (state == Available) return;
-            int newLocalSize = _localFreeList.Count;
-            bool alwaysTrue = Interlocked.CompareExchange(ref _state, newLocalSize, state) == state;
-            Debug.Assert(alwaysTrue, "this shouldn't happen unless double release in the local free list");
-            DeallocateIfNeeded(newLocalSize);
+            lock (_localReturnLock)
+            {
+                if (Thread.CurrentThread == _ownerThread)
+                {
+                    _localFreeList.Push(startIndex);
+                    int state = Volatile.Read(ref _state);
+                    if (state == Available) return;
+                    int newLocalSize = _localFreeList.Count;
+                    bool alwaysTrue = Interlocked.CompareExchange(ref _state, newLocalSize, state) == state;
+                    Debug.Assert(alwaysTrue, "this shouldn't happen unless double release in the local free list");
+                    DeallocateIfNeeded(newLocalSize);
+                    return;
+                }
+            }
         }
-        else
-        {
-            _externalFreeList.Enqueue(startIndex);
-            // implicit StoreLoad barrier from MPSC offer()
-            // CLR ConcurrentQueue does not promise that barrier; supply it explicitly.
-            Thread.MemoryBarrier();
-            int state = Volatile.Read(ref _state);
-            if (state != Available) DeallocateIfNeeded(state);
-        }
+        _externalFreeList.Enqueue(startIndex);
+        // implicit StoreLoad barrier from MPSC offer()
+        // CLR ConcurrentQueue does not promise that barrier; supply it explicitly.
+        Thread.MemoryBarrier();
+        int externalState = Volatile.Read(ref _state);
+        if (externalState != Available) DeallocateIfNeeded(externalState);
     }
 
     private void DeallocateIfNeeded(int localSize)
@@ -184,7 +190,21 @@ internal sealed class AdaptiveSizeClassedChunk : AdaptiveChunk
 
     public override void Dispose()
     {
-        CheckOwner();
+        if (_localFreeList != null)
+        {
+            lock (_localReturnLock)
+            {
+                // CLR: caller quiesces owner allocation/inspection before handoff.
+                // Subsequent returns, including the former owner's, use the external queue.
+                _ownerThread = null;
+                Retire();
+            }
+        }
+        else Retire();
+    }
+
+    private void Retire()
+    {
         if (!TryRetire()) return;
         int localSize = _localFreeList?.Count ?? 0;
         // Exchange publishes retirement with the StoreLoad ordering used by the Java volatile write.

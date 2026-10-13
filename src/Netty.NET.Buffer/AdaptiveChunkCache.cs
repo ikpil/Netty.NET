@@ -55,6 +55,38 @@ internal interface IAdaptiveChunkCache : IDisposable
     //    the hasCap zone so scan doesn't reach them — they age to threshold+1 and get evicted.
     //    Shared: approximate, converges over multiple cycles (FIFO queue ordering,
     //    LRU preference in scan, retained counter in purge).
+/**
+ * MPMC queue cache for shared (cross-thread) chunk reuse.
+ *
+ * <p><b>scanForCapacity</b> — LRU preference with fallback:
+ * <pre>
+ *   fast path: head chunk has purgeEpoch == 0 and capacity → return O(1)
+ *
+ *   slow path: scan for epoch=0 chunk, hold first idle (epoch &gt; 0) as fallback
+ *     queue: [E&gt;0, E&gt;0, E=0, E&gt;0, ...]
+ *             skip   skip  ↑ return (put fallback back)
+ *
+ *   no epoch=0 found → use fallback, reset its epoch to 0
+ * </pre>
+ *
+ * <p>The LRU preference creates a natural separation: recently-used chunks (epoch=0,
+ * returned via {@link #offerChunk} after magazine use) cycle at the front. Idle chunks
+ * (epoch &gt; 0, aged by purge) are scanned past but never returned — they age undisturbed.
+ * When no recently-used chunks exist, idle ones are reused (fallback) rather than
+ * allocating new chunks.
+ *
+ * <p>All re-offered chunks are stamped with {@code lastScanGeneration} for cycle detection.
+ * The {@code >=} check terminates the scan when encountering any chunk already processed
+ * by this or a later scan, preventing livelock under concurrent access.
+ *
+ * <p><b>runPurgeScan</b> (every {@link #CHUNK_PURGE_POLLS_SHARED} polls):
+ * drains the queue, ages full chunks (epoch++), resets non-full (epoch=0).
+ * Non-candidate capacity chunks are re-offered inline. Eviction candidates (full,
+ * epoch past threshold) and no-capacity chunks are deferred to a buffer. After the drain,
+ * the buffer is walked with the known total: candidates are evicted while above
+ * {@link #CHUNK_REUSE_QUEUE}, remainder re-offered. No selection — that is
+ * {@code scanForCapacity}'s job (called after purge via {@code pollChunk}).
+ */
 // CLR: the cache gate serializes BCL FIFO operations, selection and purge. Allocation
 // is still striped across magazine locks; external segment returns remain concurrent.
 internal sealed class AdaptiveSharedChunkCache : IAdaptiveChunkCache

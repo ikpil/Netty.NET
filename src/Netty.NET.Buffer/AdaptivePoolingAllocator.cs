@@ -15,7 +15,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
+using Netty.NET.Common.Concurrent;
+using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
 
@@ -48,7 +51,7 @@ namespace Netty.NET.Buffer;
 // controllers use fixed small classes and remembered buddy sizes.
 // CLR: each pool owns shared size-class magazine groups and a buddy group. A lifetime
 // gate closes allocation before Dispose drains every group; live regions/pins survive.
-// Physical-thread local magazines and allocator events are separate pending paths.
+// Physical-thread caches are eligible only within guaranteed FastThreadLocal cleanup scopes.
 internal sealed class AdaptivePoolingAllocator : IDisposable
 {
     private readonly ReaderWriterLockSlim _lifetime = new();
@@ -59,20 +62,49 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
     private readonly Func<int, int, AdaptiveChunkAllocation> _reserve;
     private readonly AdaptiveMagazineGroup[] _small;
     private readonly AdaptiveMagazineGroup _large;
+    private readonly LocalGroups _threadLocal;
+    private readonly HashSet<AdaptiveMagazineGroup[]> _localBindings = new();
+    private readonly long _localPurgePolls;
+    private readonly int _purgeThreshold;
+    /**
+     * Per-size-class upper bound (in bytes) on the thread-local chunk cache.
+     * When a size class cache holds this many bytes worth of chunks,
+     * further offers are rejected and the chunk is marked for immediate deallocation.
+     * Chunks already in the cache are only evicted by the purge mechanism (they must be full and idle for
+     * {@link #CHUNK_PURGE_THRESHOLD} consecutive purge cycles).
+     */
+    private readonly int _localMaxBytes;
+    /**
+     * Per-size-class lower bound (in bytes) on the thread-local chunk cache.
+     * The purge mechanism will not evict chunks below this retention floor, even if they are full and idle.
+     * Clamped to {@link #THREAD_LOCAL_CACHE_MAX_BYTES} if the configured value exceeds it.
+     * When equal to {@link #THREAD_LOCAL_CACHE_MAX_BYTES}, purge eviction is effectively disabled.
+     */
+    private readonly int _localMinBytes;
     private bool _disposed;
     internal AdaptiveAllocationPolicy Policy { get; }
     internal AdaptiveChunkRegistry Registry { get; } = new();
     internal long UsedMemory => Registry.TotalCapacity;
     internal AdaptiveMagazineGroup Group(int index) => index < _small.Length ? _small[index] : _large;
+    internal AdaptiveMagazineGroup CurrentThreadGroup(int index) => _threadLocal.GetIfExists()?[index];
+    internal int LocalBindingCount { get { lock (_localBindings) return _localBindings.Count; } }
 
     internal AdaptivePoolingAllocator(Func<int, int, ByteBuf> chunkAllocator, bool lowMemory,
-        int reuseCapacity, long purgePolls, int purgeThreshold, int maxStripes)
+        int reuseCapacity, long purgePolls, int purgeThreshold, int maxStripes,
+        bool useCacheForNonEventLoopThreads = false, long localPurgePolls = 16,
+        int localMaxBytes = 8 * 1024 * 1024, int localMinBytes = 4 * 1024 * 1024)
     {
         ArgumentNullException.ThrowIfNull(chunkAllocator);
         if (reuseCapacity < 2 || reuseCapacity > 1 << 28) throw new ArgumentOutOfRangeException(nameof(reuseCapacity));
         ArgumentOutOfRangeException.ThrowIfLessThan(purgePolls, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(purgeThreshold, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxStripes, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(localPurgePolls, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(localMaxBytes, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(localMinBytes, 1);
+        _localPurgePolls = localPurgePolls; _purgeThreshold = purgeThreshold;
+        _localMaxBytes = localMaxBytes; _localMinBytes = Math.Min(localMaxBytes, localMinBytes);
+        _threadLocal = new LocalGroups(this, useCacheForNonEventLoopThreads);
         _chunkAllocator = chunkAllocator;
         _reserve = Reserve;
         Policy = new AdaptiveAllocationPolicy(lowMemory);
@@ -95,7 +127,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             AdaptiveChunkAllocation allocation = null;
-            if (Policy.IsPooled(size)) allocation = Group(AdaptiveAllocationPolicy.SizeClassIndexOf(size)).TryAllocate(size, maxCapacity);
+            if (Policy.IsPooled(size))
+            {
+                int index = AdaptiveAllocationPolicy.SizeClassIndexOf(size);
+                AdaptiveMagazineGroup[] groups = _small;
+                if (!Policy.LowMemory && FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals())
+                    groups = _threadLocal.Get() ?? _small;
+                allocation = (index < groups.Length ? groups[index] : _large).TryAllocate(size, maxCapacity);
+            }
             return allocation ?? AllocateFallback(size, maxCapacity);
         }
         finally { _lifetime.ExitReadLock(); }
@@ -124,13 +163,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
      * @param maxCapacity     The maximum capacity of the returned {@link AbstractByteBuf}.
      * @return The buffer that represents the chunk memory.
      */
-    internal AdaptiveChunk NewChunk(int size, int maximum, int segmentSize, bool pooled)
+    internal AdaptiveChunk NewChunk(int size, int maximum, int segmentSize, bool pooled, bool threadLocal = false)
     {
         ByteBuf raw = _chunkAllocator(size, maximum);
         try
         {
             return !pooled ? new AdaptiveChunk(raw, Registry)
-                : segmentSize != 0 ? new AdaptiveSizeClassedChunk(raw, Registry, segmentSize)
+                : segmentSize != 0 ? new AdaptiveSizeClassedChunk(raw, Registry, segmentSize, threadLocal)
                 : new AdaptiveBuddyChunk(raw, Registry);
         }
         catch { raw.Release(); throw; }
@@ -147,12 +186,47 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             if (_disposed) return;
             _disposed = true;
+            lock (_localBindings)
+            {
+                foreach (var groups in _localBindings) foreach (var group in groups) group.Dispose();
+                _localBindings.Clear();
+            }
             // CLR: explicit lifetime closes every group, including all fixed classes.
             // Native delegates additionally have SafeHandle cleanup when unreachable.
             foreach (var group in _small) group.Dispose();
             _large.Dispose();
         }
         finally { _lifetime.ExitWriteLock(); }
+    }
+
+    private sealed class LocalGroups(AdaptivePoolingAllocator pool, bool useCacheForNonEventLoopThreads)
+        : FastThreadLocal<AdaptiveMagazineGroup[]>
+    {
+        protected override AdaptiveMagazineGroup[] InitialValue()
+        {
+            if (!useCacheForNonEventLoopThreads && ThreadExecutorMap.CurrentExecutor() == null) return null;
+            int[] classes = AdaptiveAllocationPolicy.GetSizeClasses();
+            var groups = new AdaptiveMagazineGroup[classes.Length];
+            for (int i = 0; i < groups.Length; i++)
+                groups[i] = new AdaptiveMagazineGroup(pool, classes[i], pool._localPurgePolls,
+                    pool._purgeThreshold, pool._localMaxBytes, pool._localMinBytes);
+            lock (pool._localBindings) pool._localBindings.Add(groups);
+            return groups;
+        }
+
+        protected override void OnRemoval(AdaptiveMagazineGroup[] groups)
+        {
+            if (groups == null) return;
+            // CLR: cleanup and allocator Dispose may run on different physical threads.
+            // The write gate quiesces allocations/inspection before owner handoff.
+            pool._lifetime.EnterWriteLock();
+            try
+            {
+                lock (pool._localBindings) pool._localBindings.Remove(groups);
+                foreach (var group in groups) group.Dispose();
+            }
+            finally { pool._lifetime.ExitWriteLock(); }
+        }
     }
 }
 
@@ -162,6 +236,7 @@ internal sealed class AdaptiveMagazineGroup : IDisposable
     private readonly AdaptivePoolingAllocator _pool;
     private readonly int _segmentSize, _maxStripes;
     private readonly IAdaptiveChunkCache _cache;
+    private readonly AdaptiveMagazine _threadLocalMagazine;
     private AdaptiveMagazine[] _magazines = [];
     private bool _freed;
     internal AdaptiveMagazine[] Magazines => Volatile.Read(ref _magazines);
@@ -178,8 +253,19 @@ internal sealed class AdaptiveMagazineGroup : IDisposable
         _magazines = [new AdaptiveMagazine(this)];
     }
 
+    internal AdaptiveMagazineGroup(AdaptivePoolingAllocator pool, int segmentSize, long purgePolls,
+        int purgeThreshold, int maxBytes, int minBytes)
+    {
+        _pool = pool; _segmentSize = segmentSize;
+        _cache = new AdaptiveThreadLocalChunkCache(pool.Policy.ComputeChunkSize(segmentSize),
+            purgePolls, purgeThreshold, maxBytes, minBytes);
+        _threadLocalMagazine = new AdaptiveMagazine(this, true);
+    }
+
     internal AdaptiveChunkAllocation TryAllocate(int size, int maxCapacity)
     {
+        // Path for thread-local allocation.
+        if (_threadLocalMagazine != null) return _threadLocalMagazine.TryAllocate(size, maxCapacity);
         // Path for concurrent allocation.
         int threadId = Environment.CurrentManagedThreadId;
         AdaptiveMagazine[] magazines; int expansions = 0;
@@ -228,7 +314,7 @@ internal sealed class AdaptiveMagazineGroup : IDisposable
     internal AdaptiveChunk NewChunk(int size, AdaptiveMagazine magazine)
     {
         int capacity = _pool.Policy.ComputeChunkSize(size);
-        AdaptiveChunk chunk = _pool.NewChunk(capacity, capacity, _segmentSize, true);
+        AdaptiveChunk chunk = _pool.NewChunk(capacity, capacity, _segmentSize, true, _threadLocalMagazine != null);
         chunk.AttachToMagazine(magazine);
         return chunk;
     }
@@ -248,7 +334,8 @@ internal sealed class AdaptiveMagazineGroup : IDisposable
     public void Dispose()
     {
         Volatile.Write(ref _freed, true);
-        lock (_expandLock) foreach (var magazine in Magazines) magazine.Dispose();
+        if (_threadLocalMagazine != null) _threadLocalMagazine.Dispose();
+        else lock (_expandLock) foreach (var magazine in Magazines) magazine.Dispose();
         _cache.Dispose();
     }
 }
