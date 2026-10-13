@@ -2503,6 +2503,38 @@ trackers close and CLR native reservations return to zero. Inventory: 159 (62 pe
 62 in-progress, 31 verified, 4 CLR replacements). Evidence:
 artifacts/buffer-pooled-derived-validation (ignored), buffer-pooled-derived-*.trx.
 
+## Adaptive allocation policy and buddy core
+
+The pinned allocator's actual size/controller/tree code is now ported as internal
+AdaptiveAllocationPolicy and AdaptiveBuddyTree components. It uses 16 fixed classes,
+128-KiB minimum chunks with at least 32 segments, power-of-two buddy reservations,
+and a remembered maximum for new buddy chunks. Its historical histogram/percentile
+class description does not describe the current controller implementation; original
+implemented-path comments are retained with explanatory CLR notes. Fixed-class chunks
+need not be multiples of 128 KiB. Buddy reservations can exceed a buffer's maximum;
+the eventual public writable hint must clamp separately. Explicit low-memory mode
+preserves the source dedicated fallback above the last small class.
+
+Unsigned-byte flags and widened classification arithmetic preserve the rules under
+checked CLR builds. The tree splits first-fit blocks, coalesces matching siblings,
+and packs returned offsets/sizes. Its owner must serialize changes; external queued
+returns must be processed before invoking Free. Actual chunk storage/leases, magazines,
+cache/purge/scaling, AdaptiveByteBuf/public allocator, runtime/default selection and
+JFR remain pending. This unit supplies their core decisions without changing the
+current default allocator or representing the entire adaptive allocator as complete.
+
+64 added cases include the complete original classification fixture and supplementary
+controller/tree/guard cases. Debug/Release/rebuilt sampled checked Release pass
+5095/5095 on net10.0, zero failures/skips. Checked build: 51 existing Common warnings,
+zero Buffer/test warnings/errors; Common unchanged. Rechecked pinned Java controllers
+and actual BuddyChunk allocations/queued releases yield 19025 normal-mode and 16978
+low-memory-mode exact Java/CLR rows per Debug/Release. Independent interval/flag/
+controller models agree, all 511 packed intervals are covered, and Java chunk registries
+return to zero. Probes explicitly process frees before comparing tree states; pending
+queue/cache semantics are outside the claim. Inventory: 159 (60 pending, 63 in-progress,
+32 verified, 4 CLR replacements). Evidence: artifacts/buffer-adaptive-policy-validation
+(ignored), buffer-adaptive-policy-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -2510,6 +2542,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 allocator events and adaptive allocators remain unported. Automatic wrapping is connected for the current unpooled/pooled allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units prioritize adaptive allocation and default allocator selection, followed by
-remaining portable contracts and original fixtures. Common changes must cite the actual
-buffer contract that requires them.
+Next units connect adaptive chunk/magazine/cache ownership and buffer integration, then
+public/default allocator selection, remaining portable contracts and original fixtures.
+Common changes must cite the actual buffer contract that requires them.

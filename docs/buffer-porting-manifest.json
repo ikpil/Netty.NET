@@ -188,10 +188,21 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/AdaptivePoolingAllocator.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/AdaptiveAllocationPolicy.cs",
+        "src/Netty.NET.Buffer/AdaptiveBuddyTree.cs"
+      ],
+      "evidence": [
+        "Adaptive policy/buddy unit: the pinned size lookup, fixed-class geometry/fast-capacity decisions, low-memory/dedicated cutoffs, remembered buddy chunk sizing, first-fit split/coalesce flags and packed frees are ported as internal components. 64 new cases; net10.0 Debug/Release/rebuilt sampled checked Release pass 5095/5095, no failures/skips. Rechecked pinned Java controllers and actual BuddyChunk readInitInto/releaseSegment/accept paths yield 19025 normal-mode and 16978 low-memory-mode rows, each exactly matching Debug/Release and an independent aligned-interval/flag/controller model. Full classification and all 511 supported packed buddy intervals are covered; original Java chunk registries return to zero. C# widening/unsigned-byte masks and helper preconditions are checked. docs/buffer-porting.md#adaptive-allocation-policy-and-buddy-core; artifacts/buffer-adaptive-policy-validation (ignored); buffer-adaptive-policy-*.trx. Public adaptive allocator, runtime/default selection, magazines/caches, cross-thread return queues and storage/buffer lifecycle integration remain pending."
+      ],
+      "adaptation": "Actual pinned implementation is used instead of its historical histogram/percentile class description: 16 fixed classes, minimum 128-KiB chunks with at least 32 segments, large buddy reservations rounded to powers of two, and a remembered maximum for new buddy chunks. Internal policy instances take an explicit low-memory mode; runtime setting/default integration is pending. Classification uses widened arithmetic for checked CLR builds; valid allocator inputs preserve the source mapping. Small-class fast capacity clamps to the buffer maximum, while buddy reservation capacity remains a power of two and its public writable hint must later clamp separately. Fixed-class chunks may not be multiples of the minimum chunk size. The single-owner byte tree ports first-fit splitting, matching-sibling coalescence and packed offsets/sizes; C# unsigned-byte flags replace Java signed-byte promotion. Its owner must serialize tree operations, and queued external returns must be drained before Free, as in the source magazine. Helper preconditions reject invalid/double returns before tree mutation. Original implemented-path comments and source license are retained. Java probes execute real controllers and BuddyChunk buffers/queued packed releases, processing returned segments before comparing the tree; they do not claim pending queue/cache semantics are ported. Magazines, caches/purge/scaling, actual chunk allocation/registry/lease lifetime, AdaptiveByteBuf/public allocator/configuration/default selection and JFR integration remain pending. This source stays partial.",
+      "comments": {
+        "coverage": "original comments from implemented size/controller/tree/packing paths retained; allocator lifecycle/cache/queue and remaining comments pending",
+        "upstreamCount": 164,
+        "preservedCount": 32,
+        "missingCount": 132
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/AdvancedLeakAwareByteBuf.java",
@@ -1865,10 +1876,21 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AdaptivePoolingAllocatorTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/AdaptivePoolingAllocatorTest.cs",
+        "test/Netty.NET.Buffer.Tests/AdaptiveBuddyTreeTest.cs"
+      ],
+      "evidence": [
+        "Adaptive policy/buddy unit: the pinned size lookup, fixed-class geometry/fast-capacity decisions, low-memory/dedicated cutoffs, remembered buddy chunk sizing, first-fit split/coalesce flags and packed frees are ported as internal components. 64 new cases; net10.0 Debug/Release/rebuilt sampled checked Release pass 5095/5095, no failures/skips. Rechecked pinned Java controllers and actual BuddyChunk readInitInto/releaseSegment/accept paths yield 19025 normal-mode and 16978 low-memory-mode rows, each exactly matching Debug/Release and an independent aligned-interval/flag/controller model. Full classification and all 511 supported packed buddy intervals are covered; original Java chunk registries return to zero. C# widening/unsigned-byte masks and helper preconditions are checked. docs/buffer-porting.md#adaptive-allocation-policy-and-buddy-core; artifacts/buffer-adaptive-policy-validation (ignored); buffer-adaptive-policy-*.trx. Public adaptive allocator, runtime/default selection, magazines/caches, cross-thread return queues and storage/buffer lifecycle integration remain pending."
+      ],
+      "adaptation": "Entire original AdaptivePoolingAllocatorTest fixture (sizeClassComputations and its helper) is translated against the extracted CLR size policy, including the exhaustive 0..16897 lookup and original comment/license. Supplementary tests cover all fixed-class controller geometries, both memory modes/cutoffs, raw buddy reservation versus public maximum, remembered sizes, snapshot isolation/overflow, concurrent controller bounds, tree exhaustion/fragmentation/coalescence, seeded independent interval models, packed free levels and invalid-return guards. The original fixture only covers classification; verification of this fixture does not complete AdaptivePoolingAllocator or the larger adaptive buffer/allocator fixtures.",
+      "comments": {
+        "coverage": "complete original classification fixture comments retained; additional controller/tree cases are supplementary",
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/AdvancedLeakAwareByteBufTest.java",
