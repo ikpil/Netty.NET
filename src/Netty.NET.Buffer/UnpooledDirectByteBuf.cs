@@ -34,6 +34,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly NativeMemoryAllocator _allocator;
     private NativeMemoryOwner _owner;
+    private IDisposable _externalOwner;
     private Memory<byte> _memory;
     private int _capacity;
     private readonly IByteBufAllocator _bufferAllocator;
@@ -95,6 +96,20 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         SetIndex(0, _capacity);
     }
 
+    // CLR: raw-address wrapping has a separately disposable memory facade. Its
+    // SafeHandle controls optional external ownership and outstanding pin leases.
+    internal UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, NativeAddressMemoryManager manager,
+        NativeMemoryAllocator nativeAllocator = null) : base(manager.Length)
+    {
+        ArgumentNullException.ThrowIfNull(bufferAllocator);
+        _bufferAllocator = bufferAllocator;
+        _allocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
+        _memory = manager.Memory;
+        _externalOwner = manager;
+        _capacity = manager.Length;
+        SetIndex(0, _capacity);
+    }
+
     protected override Memory<byte> GetMemoryCore(int index, int length) => _memory.Slice(index, length);
     internal override BufferMemoryLease AcquireReadLease()
     {
@@ -120,6 +135,8 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
             _capacity = value;
             TrimIndicesToCapacity(value);
             previous?.Dispose();
+            _externalOwner?.Dispose();
+            _externalOwner = null;
             _metric?.AddDirect((long)value - previousCapacity);
         }
     }
@@ -135,6 +152,8 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         _memory = default;
         _owner?.Dispose();
         _owner = null;
+        _externalOwner?.Dispose();
+        _externalOwner = null;
         _metric?.AddDirect(-_capacity);
     }
 }

@@ -2447,12 +2447,38 @@ remain partial; inventory stays 159 (66 pending, 59 in-progress, 31 verified,
 3 CLR replacements). Evidence: artifacts/buffer-size-predicates-validation (ignored),
 buffer-size-predicates-*.trx.
 
+## Native address wrapping
+
+Unpooled.WrappedBuffer(nint,int,bool) now wraps raw native addresses without copying,
+with the original Java factory comment and wrapper license. MemoryManager/SafeHandle
+replace the original WrappedUnpooledUnsafeDirectByteBuf constructor/free specialization;
+existing direct-buffer operations supply views, primitives, copies and resize. doFree
+requires a NativeMemory.Free-compatible allocation base and transfers ownership only
+on success. Otherwise the caller preserves storage through all access and pins.
+External storage is uncharged; capacity changes detach to reserved native storage.
+Failure preserves the original range/ownership. Final release/detachment invalidates
+new Memory access; existing idempotent pins delay owned free. SafeHandle finalization
+also frees abandoned owned allocations. Zero-length wrappers retain their own logical
+lifetime. CLR rejects null nonempty, negative and wrapping address ranges before transfer.
+
+32 new cases cover ownership/views/address aliases, exact wire bytes, independent
+copies, resize/rollback/metrics, zero/null/invalid input, pin-delayed free/copied pins,
+concurrent pins, streams, consolidation and aliased composite growth. Debug/Release/
+rebuilt sampled checked Release pass 4981/4981 on net10.0, no failures/skips. Checked
+build has 51 existing Common warnings, zero Buffer/test warnings/errors; Common unchanged.
+Pinned Java probes recheck all 93 extracted Buffer sources; each targetRecords 0/4
+and Debug/Release yields 166 exact states against an independent address/view/reference/
+copy/resize model. Java probes enable its reflective raw-direct-buffer constructor.
+The pointer wrapper is a complete CLR replacement; its larger parent/factory/fixture
+remain partial. Inventory: 159 (65 pending, 59 in-progress, 31 verified, 4 CLR replacements).
+Evidence: artifacts/buffer-native-address-validation (ignored), buffer-native-address-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive allocator metrics,
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-borrowed-address wrapping, allocator events and adaptive allocators remain unported. Automatic wrapping is connected for the current unpooled/pooled allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+allocator events and adaptive allocators remain unported. Automatic wrapping is connected for the current unpooled/pooled allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units continue remaining factories/utilities/original fixtures, leak wrappers and
 remaining allocator integration. Common
