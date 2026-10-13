@@ -21,10 +21,11 @@ namespace Netty.NET.Buffer;
  * thread-safe.
  */
 /// <remarks>Optional parameters cover the Java no-argument and one-argument overloads.
-/// Default currently selects the unpooled heap policy; global pooled/adaptive selection remains pending.</remarks>
+/// Default reads io.netty.allocator.type once: adaptive (default), unpooled or pooled.
+/// Unknown values select pooled. The shared instance is owned by the process.</remarks>
 public interface IByteBufAllocator
 {
-    static IByteBufAllocator Default => UnpooledByteBufAllocator.Default;
+    static IByteBufAllocator Default => ByteBufUtil.DefaultAllocator;
 
     /**
      * Allocate a {@link ByteBuf}. If it is a direct or heap buffer

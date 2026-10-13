@@ -126,7 +126,7 @@ public class ByteBufAllocatorTest
         try { Assert.NotSame(empty, growable); Assert.Same(a, growable.Allocator); growable.WriteByte(4); Assert.Equal(1, growable.Capacity); }
         finally { growable.Release(); }
         Assert.Same(Unpooled.EmptyBuffer, UnpooledByteBufAllocator.Default.DirectBuffer(0, 0));
-        Assert.Same(IByteBufAllocator.Default, UnpooledByteBufAllocator.Default);
+        Assert.Same(IByteBufAllocator.Default, ByteBufUtil.DefaultAllocator);
     }
 
     [Theory]

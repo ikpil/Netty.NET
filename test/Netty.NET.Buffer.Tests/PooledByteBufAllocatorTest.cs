@@ -329,9 +329,9 @@ public class PooledByteBufAllocatorTest
         using var a = new PooledByteBufAllocator(pageSize: 4096, maxOrder: 4, directMemoryCacheAlignment: 8192, nativeAllocator: native);
         Assert.Equal(131072, a.Metric.ChunkSize); Assert.True(PooledByteBufAllocator.IsDirectMemoryCacheAlignmentSupported);
         ByteBuf b = a.Buffer(0, 1); Assert.False(b.IsDirect); b.Release();
-        ByteBuf d = PooledByteBufAllocator.Default.Buffer(1); Assert.True(d.IsDirect); d.Release();
+        ByteBuf d = PooledByteBufAllocator.Default.Buffer(1); Assert.Equal(ByteBufUtil.PreferDirect, d.IsDirect); d.Release();
         Assert.Same(PooledByteBufAllocator.Default, PooledByteBufAllocator.Default);
-        Assert.Same(UnpooledByteBufAllocator.Default, IByteBufAllocator.Default);
+        Assert.Same(ByteBufUtil.DefaultAllocator, IByteBufAllocator.Default);
         Assert.Equal(0, native.ReservedBytes);
         Assert.Contains("smallCacheSize: 0; normalCacheSize: 0; numThreadLocalCaches: 1; chunkSize: 131072", a.Metric.ToString());
     }

@@ -29,8 +29,9 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
     /**
      * Default instance which uses leak-detection for direct buffers.
      */
-    /// <summary>The unpooled default, using heap storage for Buffer and native storage for IoBuffer.</summary>
-    public static UnpooledByteBufAllocator Default { get; } = new();
+    /// <summary>The shared unpooled allocator. Buffer follows io.netty.noPreferDirect;
+    /// IoBuffer uses native storage. Unpooled.Buffer always requests heap storage.</summary>
+    public static UnpooledByteBufAllocator Default { get; } = new(ByteBufUtil.PreferDirect);
 
     private readonly NativeMemoryAllocator _nativeAllocator;
     private readonly bool _disableLeakDetector;

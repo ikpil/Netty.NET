@@ -2669,13 +2669,51 @@ This unit does not silently change that upstream policy. Inventory: 159 (57 pend
 66 in-progress, 32 verified, 4 CLR replacements). Evidence:
 artifacts/buffer-adaptive-local-validation (ignored), buffer-adaptive-local-*.trx.
 
+## Global allocator selection and runtime preferences
+
+IByteBufAllocator.Default now follows the pinned selector: adaptive when unset,
+exact unpooled/pooled/adaptive strings, and pooled fallback for unknown values.
+Separate CLR holders publish one process-owned instance and snapshot
+io.netty.noPreferDirect without singleton initialization cycles. SafeHandle-backed
+native release replaces JVM Cleaner capability checks. Unpooled/Pooled singletons
+and adaptive defaults follow the preference; explicit adaptive bool values override it.
+Unpooled.Buffer continues to request heap storage. Utility-only calls deliberately
+leave global allocator/processor configuration uninitialized, unlike Java's eager
+ByteBufUtil class initializer.
+
+Adaptive lowMemory null reads the explicit environment property with false default;
+CLR GC heap limits never imply native budgets. NettyRuntime configured processors
+now determine adaptive stripe/reuse defaults. Existing CLR pooled one-arena/cache-off
+policy remains explicit; JVM automatic memory-budget heuristics and remaining portable
+pooled runtime properties are outside this unit.
+
+45 new cases isolate static state in collectible contexts and restore environment
+variables in a nonparallel collection. They cover selector branches, preferences,
+low-memory overrides, singleton ordering/concurrency, snapshots, lazy utility calls,
+processor settings, public factories/copies and native cleanup. Debug/Release/rebuilt
+checked Release with SIMPLE leak sampling interval 1 pass 5355/5355 on net10.0, no
+failures/skips. Checked build: 51 existing Common warnings; zero Buffer/test warnings/
+errors; Common unchanged. All 93 pinned Java Buffer files and three relevant Common
+sources were rechecked. Forty isolated-process configurations match 3540 nonempty
+Java/CLR executable rows per Debug/Release; independent models verify 960 factory
+states, heap/native metric retention and 130 large-buffer low/normal decisions per
+configuration. Java pooled arena/cache settings are constrained to the CLR policy.
+Explicit CLR cleanup returns registries/native reservations to zero; Java adaptive
+registries drain and its process-owned pooled defaults end with the probe process.
+
+The complete portable allocator interface and adaptive facade are now verified;
+this does not complete the pooling kernel/events, concrete provider variants or
+original fixtures. Original interface/facade comments are preserved. Inventory: 159
+(57 pending, 64 in-progress, 34 verified, 4 CLR replacements). Evidence:
+artifacts/buffer-default-allocator-validation (ignored), buffer-default-allocator-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
-allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection is connected; remaining portable pooled runtime configuration stays pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units address runtime/default allocator selection, then remaining portable
-contracts and original fixtures.
+Next units address remaining portable allocator configuration, buffer contracts
+and original fixtures.
 Common changes must cite the actual buffer contract that requires them.

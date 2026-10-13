@@ -33,7 +33,7 @@ namespace Netty.NET.Buffer;
 /// the binding or allocator cancels its schedule; no caller ExecutionContext is retained.</remarks>
 public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocatorMetricProvider, IDisposable
 {
-    public static PooledByteBufAllocator Default { get; } = new(preferDirect: true);
+    public static PooledByteBufAllocator Default { get; } = new(preferDirect: ByteBufUtil.PreferDirect);
     private readonly object _sync = new();
     private readonly NativeMemoryAllocator _nativeAllocator;
     private bool _disposed;

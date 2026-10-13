@@ -35,7 +35,7 @@ namespace Netty.NET.Buffer;
 /// not treated as native memory budgets. Dispose closes allocations and drains all groups;
 /// live buffers and pin/operation claims keep their regions until final return. Raw Memory
 /// remains borrowed. Empty sentinels/composites reserve no storage and remain available.
-/// The global default allocator is unchanged.</remarks>
+/// The global default is selected through IByteBufAllocator.Default.</remarks>
 public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocatorMetricProvider,
     IByteBufAllocatorMetric, IDisposable
 {
@@ -54,19 +54,25 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
      * same as the maximum number of magazines per magazine group.
      */
     /// <summary>Creates an adaptive allocator with explicit native reservations.</summary>
+    /// <param name="preferDirect">Null follows io.netty.noPreferDirect; an explicit value overrides it.</param>
+    /// <param name="lowMemory">Null reads io.netty.allocator.lowMemory (default false).
+    /// CLR GC heap limits are not used to infer native memory budgets.</param>
     /// <param name="useCacheForNonEventLoopThreads">Enables local magazines for eligible cleanup scopes
     /// without an executor mapping. Null reads io.netty.allocator.useCachedMagazinesForNonEventLoopThreads
     /// (default false). Ordinary CLR workers always use shared magazines.</param>
-    public AdaptiveByteBufAllocator(bool preferDirect = true, bool lowMemory = false, NativeMemoryAllocator nativeAllocator = null,
+    public AdaptiveByteBufAllocator(bool? preferDirect = null, bool? lowMemory = null, NativeMemoryAllocator nativeAllocator = null,
         bool? useCacheForNonEventLoopThreads = null)
-        : this(preferDirect, lowMemory, nativeAllocator,
-            Math.Max(2, SystemPropertyUtil.GetInt("io.netty.allocator.chunkReuseQueueCapacity", Environment.ProcessorCount * 2)),
+        : this(preferDirect ?? ByteBufUtil.PreferDirect,
+            lowMemory ?? SystemPropertyUtil.GetBoolean("io.netty.allocator.lowMemory", false), nativeAllocator,
+            Math.Max(2, SystemPropertyUtil.GetInt("io.netty.allocator.chunkReuseQueueCapacity", MaxStripes())),
             Math.Max(1, SystemPropertyUtil.GetLong("io.netty.allocator.chunkPurgePollsShared", 128)),
-            Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.chunkPurgeThreshold", 3)), Environment.ProcessorCount * 2,
+            Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.chunkPurgeThreshold", 3)), MaxStripes(),
             useCacheForNonEventLoopThreads ?? SystemPropertyUtil.GetBoolean("io.netty.allocator.useCachedMagazinesForNonEventLoopThreads", false),
             Math.Max(1, SystemPropertyUtil.GetLong("io.netty.allocator.chunkPurgePollsThreadLocal", 16)),
             Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.threadLocalChunkCacheMaxBytes", 8 * 1024 * 1024)),
             LocalMinBytes()) { }
+
+    private static int MaxStripes() => (int)Math.Min(int.MaxValue, 2L * NettyRuntime.AvailableProcessors());
 
     private static int LocalMinBytes()
     {
