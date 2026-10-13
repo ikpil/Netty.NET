@@ -2518,9 +2518,9 @@ preserves the source dedicated fallback above the last small class.
 Unsigned-byte flags and widened classification arithmetic preserve the rules under
 checked CLR builds. The tree splits first-fit blocks, coalesces matching siblings,
 and packs returned offsets/sizes. Its owner must serialize changes; external queued
-returns must be processed before invoking Free. Actual chunk storage/leases, magazines,
-cache/purge/scaling, AdaptiveByteBuf/public allocator, runtime/default selection and
-JFR remain pending. This unit supplies their core decisions without changing the
+returns must be processed before invoking Free. This policy/tree unit preceded actual
+chunk storage/leases, magazines, cache/purge/scaling, AdaptiveByteBuf/public allocator,
+runtime/default selection and JFR. It supplies their core decisions without changing the
 current default allocator or representing the entire adaptive allocator as complete.
 
 64 added cases include the complete original classification fixture and supplementary
@@ -2535,6 +2535,36 @@ queue/cache semantics are outside the claim. Inventory: 159 (60 pending, 63 in-p
 32 verified, 4 CLR replacements). Evidence: artifacts/buffer-adaptive-policy-validation
 (ignored), buffer-adaptive-policy-*.trx.
 
+## Adaptive chunk storage and lifetime
+
+Dedicated, fixed-class and buddy chunks now own actual heap/native delegates and
+physical-capacity registries. Fixed slots preserve shared FIFO/local stack order,
+including tail-shifted local offsets, lazy capacity estimates and the segment-count
+retirement state machine. ConcurrentQueue/Stack replace JVM primitive containers;
+explicit enqueue fences and Interlocked retirement preserve Java StoreLoad ordering.
+Buddy returns queue packed segments before dropping their chunk claim; allocating
+owners drain them before reuse. Initialization failures restore reservations/counters.
+
+CLR region MemoryManagers preserve heap array discovery and invalidate released
+borrowed Memory. Operation/pin claims defer both slot reuse and delegate release;
+copied handles release once, and abandoned pin tokens finalize. Idempotent chunk Dispose
+retires owner ownership while live regions survive. Local allocation/inspection/retirement
+requires the physical owner thread; shared allocation requires magazine serialization.
+Magazine attachment/cache transfer, owner handoff, AdaptiveByteBuf/public allocator,
+runtime/default selection and JFR remain pending. Current runtime factories are unchanged.
+
+88 supplementary cases cover all 16 classes, both owner modes, heap/native storage,
+reuse/exhaustion, deferred queues, copied/abandoned pins, empty storage, rollback and
+600 concurrent retirement scenarios. Debug/Release/rebuilt sampled checked Release
+pass 5183/5183 on net10.0, no failures/skips. Checked build: 51 existing Common warnings,
+zero Buffer/test warnings/errors; Common unchanged. All 93 pinned Java Buffer sources
+were rechecked; real chunk allocation/return/retirement matches 73526 exact rows per
+Debug/Release and an independent FIFO/stack/aligned-interval/lifetime model. Final Java
+registries and CLR registries/native reservations are zero. Inventory remains 159
+(60 pending, 63 in-progress, 32 verified, 4 CLR replacements). Original implemented-path
+comments/license are retained; the entire adaptive allocator remains partial. Evidence:
+artifacts/buffer-adaptive-chunk-validation (ignored), buffer-adaptive-chunk-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -2542,6 +2572,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 allocator events and adaptive allocators remain unported. Automatic wrapping is connected for the current unpooled/pooled allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units connect adaptive chunk/magazine/cache ownership and buffer integration, then
+Next units connect adaptive magazine/cache ownership and buffer integration, then
 public/default allocator selection, remaining portable contracts and original fixtures.
 Common changes must cite the actual buffer contract that requires them.
