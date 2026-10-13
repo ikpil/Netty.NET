@@ -41,6 +41,17 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
 
     public override IByteBufAllocator Allocator => _arena.Parent;
     public override bool IsContiguous => true;
+    public override ByteBuf RetainedSlice() => RetainedSlice(ReaderIndex, ReadableBytes);
+    public override ByteBuf RetainedSlice(int index, int length)
+    {
+        CheckIndex(index, length);
+        return PooledDerivedByteBuf.NewSlice(this, this, index, length);
+    }
+    public override ByteBuf RetainedDuplicate()
+    {
+        EnsureAccessible();
+        return PooledDerivedByteBuf.NewDuplicate(this, this, ReaderIndex, WriterIndex);
+    }
     public override int MaxFastWritableBytes
         => Math.Min(_allocation?.ReservedLength ?? _length, MaxCapacity) - WriterIndex;
 

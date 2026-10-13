@@ -130,7 +130,7 @@ public class AllocatorLeakDetectionTest : IDisposable
 
     [Theory]
     [MemberData(nameof(ViewCases))]
-    public void AutomaticallyTrackedViewsShareTrackerAndFinalOwnership(int shape, int method)
+    public void AutomaticallyTrackedViewsRespectSharedOrIndependentOwnership(int shape, int method)
     {
         var native = new NativeMemoryAllocator(); IByteBufAllocator allocator = Allocator(shape == 0 ? 0 : shape < 3 ? 1 : 2, false, native);
         ByteBuf root = shape == 5 ? allocator.CompositeHeapBuffer().AddComponent(Unpooled.Buffer(16, 16).WriteZero(16), true)
@@ -146,18 +146,24 @@ public class AllocatorLeakDetectionTest : IDisposable
                 3 => root.ReadSlice(8), 4 => root.AsReadOnly(), 5 => root.RetainedSlice(),
                 6 => root.RetainedSlice(3, 8), 7 => root.RetainedDuplicate(), _ => root.ReadRetainedSlice(8)
             };
-            Assert.IsType<AdvancedLeakAwareByteBuf>(view); Assert.Same(tracker, Tracker(view));
+            Assert.IsType<AdvancedLeakAwareByteBuf>(view);
+            bool independent = retained && shape is 1 or 2;
+            var viewTracker = Tracker(view); ByteBuf viewReferent = view.Unwrap();
+            if (independent) { Assert.NotSame(tracker, viewTracker); Assert.Equal(1, view.ReferenceCount); }
+            else Assert.Same(tracker, viewTracker);
             Assert.Equal(retained ? 2 : 1, root.ReferenceCount);
             Assert.Equal(!retained, root.Release());
             if (retained)
             {
                 Assert.Equal(method == 6 ? 3 : 0, view.GetByte(0)); Assert.True(view.Release());
+                if (independent) Assert.False(viewTracker.Close(viewReferent));
             }
             else Assert.Throws<IllegalReferenceCountException>(() => view.GetByte(0));
             Assert.False(tracker.Close(referent));
         }
         finally
         {
+            if (view != null && retained && view.ReferenceCount > 0) view.Release();
             if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
             (allocator as IDisposable)?.Dispose();
         }

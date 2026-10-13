@@ -2335,8 +2335,8 @@ Pooled tracks heap/native allocations through arenas and unpooled fallbacks, and
 composites use the base helper. Detector callbacks run outside the CLR allocator lock.
 Empty (0,0) sentinels, explicit constructors and external wrapping acquire no automatic
 root tracker. Copies consult their creator allocator and acquire independent tracking
-where applicable. Existing CLR retained views share the original tracker/root count;
-Java pooled-independent derived tracking remains outside this unit.
+where applicable. At this checkpoint retained views shared the original tracker/root
+count; pooled-independent derived tracking is now covered under pooled derived ownership.
 
 236 added tests cover factory policy, disabled detection, empty/growable buffers,
 all nine view forms, independent copies, native pins surviving logical close and public
@@ -2473,6 +2473,36 @@ The pointer wrapper is a complete CLR replacement; its larger parent/factory/fix
 remain partial. Inventory: 159 (65 pending, 59 in-progress, 31 verified, 4 CLR replacements).
 Evidence: artifacts/buffer-native-address-validation (ignored), buffer-native-address-*.trx.
 
+## Pooled derived ownership
+
+Pooled roots now create independently counted retained slices/duplicates. Each view
+acquires one immediate-parent reference; its final release clears parent/root fields
+and releases that parent. Borrowed descendants delegate the derived counter, so a
+live root cannot make an already-released child accessible. Slice offsets, duplicate
+capacity/marks, parent-preserving copy policy and original translated-root bounds for
+borrowed retained slicing follow the pinned source. Memory/Span/sequence and .NET I/O
+reuse the existing kernel. CLR wrappers are never recycled or resurrected.
+
+Leak-aware retained children get forced independent tracking and reparent through the
+original leak facade, closing each ancestor tracker only at that ancestor's final
+release. Ordinary views share trackers. Failed virtual wrapper construction rolls
+back ownership/tracking. Native pins preserve physical storage after logical release.
+All 12/1/1 comments of the original derived base/slice/duplicate sources are retained.
+Independent ownership/current CLR views are verified; remaining upstream channel/native
+I/O surfaces and larger inherited fixtures keep the whole sources partial.
+
+50 new cases include the original multiple-level retained/non-retained slice scenario,
+plus hierarchy/release orders, siblings, delegate counts, coordinates/marks/copy/resize,
+zero/bounds/overflow, atomic release, native pins, forced trackers and failed factories.
+Existing pooled/leak fixtures now assert independent counters/trackers where applicable.
+Debug/Release/rebuilt sampled checked Release pass 5031/5031 on net10.0, no failures/skips.
+Checked build: 51 existing Common warnings; zero Buffer/test warnings/errors. Common unchanged.
+Rechecked pinned Java probes match 1152 states exactly per targetRecords 0/4 and Debug/
+Release; independent parent-claim/counter/coordinate/record/close models agree. Forced
+trackers close and CLR native reservations return to zero. Inventory: 159 (62 pending,
+62 in-progress, 31 verified, 4 CLR replacements). Evidence:
+artifacts/buffer-pooled-derived-validation (ignored), buffer-pooled-derived-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
@@ -2480,6 +2510,6 @@ single and multiple-input copying, encoded text/primitive copying, unreleasable 
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
 allocator events and adaptive allocators remain unported. Automatic wrapping is connected for the current unpooled/pooled allocators. Global default allocator selection remains pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units continue remaining factories/utilities/original fixtures, leak wrappers and
-remaining allocator integration. Common
-changes must cite the actual buffer contract that requires them.
+Next units prioritize adaptive allocation and default allocator selection, followed by
+remaining portable contracts and original fixtures. Common changes must cite the actual
+buffer contract that requires them.

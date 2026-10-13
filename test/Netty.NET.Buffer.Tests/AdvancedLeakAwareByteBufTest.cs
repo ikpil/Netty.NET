@@ -368,20 +368,22 @@ public class AdvancedLeakAwareByteBufTest
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public void PooledRetainedViewsKeepTheOriginalTrackerAndReservationAlive(bool direct)
+    public void PooledRetainedViewsTrackIndependentlyAndKeepParentReservationAlive(bool direct)
     {
         var native = new NativeMemoryAllocator();
         using var allocator = new PooledByteBufAllocator(nativeAllocator: native, smallCacheSize: 4);
-        ByteBuf origin = direct ? allocator.DirectBuffer(16) : allocator.HeapBuffer(16);
+        ByteBuf origin = direct ? new PooledDirectByteBuf((PoolDirectArena)allocator.DirectArenas[0], 16, 64)
+            : new PooledHeapByteBuf((PoolHeapArena)allocator.HeapArenas[0], 16, 64);
         origin.WriteInt(42);
         var tracker = new Tracker(origin);
         ByteBuf buffer = new AdvancedLeakAwareByteBuf(origin, tracker);
         ByteBuf view = buffer.RetainedSlice();
         Assert.IsType<AdvancedLeakAwareByteBuf>(view); Assert.Equal(1, tracker.Records);
+        Assert.NotSame(tracker, AllocatorLeakDetectionTest.Tracker(view)); Assert.Equal(1, view.ReferenceCount);
         Assert.False(buffer.Release()); Assert.Equal(0, tracker.Closes);
-        Assert.Equal(42, view.ReadInt()); Assert.Equal(3, tracker.Records);
+        Assert.Equal(42, view.ReadInt()); Assert.Equal(2, tracker.Records);
         allocator.Dispose(); Assert.Equal(42, view.GetInt(0));
-        Assert.True(view.Release()); Assert.Equal(1, tracker.Closes); Assert.Equal(0, native.ReservedBytes);
+        Assert.True(view.Release()); Assert.Equal(3, tracker.Records); Assert.Equal(1, tracker.Closes); Assert.Equal(0, native.ReservedBytes);
     }
 
     [Theory]

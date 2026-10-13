@@ -297,14 +297,20 @@ public abstract class AbstractPooledByteBufTest
             Assert.Same(allocator, copy.Allocator); Assert.IsAssignableFrom<PooledByteBuf>(copy); Assert.Equal(Direct, copy.IsDirect);
             Assert.Equal(new byte[] { 20, 30 }, ByteBufUtil.GetBytes(copy));
             Assert.Equal(500, copy.MaxCapacity);
-            Assert.False(root.Release()); Assert.Equal(2, slice.ReferenceCount);
+            Assert.False(root.Release()); Assert.Equal(1, slice.ReferenceCount); Assert.Equal(1, duplicate.ReferenceCount);
             root.Capacity = 500;
             slice.SetByte(0, 77); Assert.Equal(77, duplicate.GetByte(1));
             Assert.Equal(20, copy.GetByte(0));
-            Assert.False(duplicate.Release()); Assert.True(slice.Release());
+            Assert.True(duplicate.Release()); Assert.Equal(1, root.ReferenceCount); Assert.True(slice.Release());
             Assert.Equal(0, root.ReferenceCount);
         }
-        finally { copy.Release(); if (root.ReferenceCount > 0) root.Release(root.ReferenceCount); }
+        finally
+        {
+            copy.Release();
+            if (slice.ReferenceCount > 0) slice.Release();
+            if (duplicate.ReferenceCount > 0) duplicate.Release();
+            if (root.ReferenceCount > 0) root.Release(root.ReferenceCount);
+        }
     }
 
     [Theory]
