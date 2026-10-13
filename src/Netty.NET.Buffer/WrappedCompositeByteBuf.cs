@@ -35,6 +35,7 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
     public override bool IsReadOnly => Wrapped.IsReadOnly;
     public override bool IsContiguous => Wrapped.IsContiguous;
     public override int MaxFastWritableBytes => Wrapped.MaxFastWritableBytes;
+    public sealed override bool CanRead(int byteCount) => Wrapped.CanRead(byteCount);
     public override bool CanWrite(int byteCount) => Wrapped.CanWrite(byteCount);
     public override int ReferenceCount => Wrapped.ReferenceCount;
     public override CompositeByteBuf Retain(int increment = 1) { Wrapped.Retain(increment); return this; }

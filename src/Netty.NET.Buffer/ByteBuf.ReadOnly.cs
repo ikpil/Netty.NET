@@ -52,9 +52,10 @@ public abstract partial class ByteBuf
          * elements.
          */
     /// <summary>Checks write permission and available bytes without growing the buffer.</summary>
+    /// <remarks>Like Netty's isWritable(int), negative counts are compared without validation.
+    /// Read-only buffers and the shared empty sentinel always return false.</remarks>
     public virtual bool CanWrite(int byteCount)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(byteCount);
         return !IsReadOnly && byteCount <= WritableBytes;
     }
 

@@ -45,6 +45,7 @@ internal sealed class UnreleasableByteBuf : ByteBuf
     public override int MaxFastWritableBytes => _parent.MaxFastWritableBytes;
     public override bool IsDirect => _parent.IsDirect;
     public override bool IsReadOnly => _parent.IsReadOnly;
+    public override bool CanRead(int byteCount) => _parent.CanRead(byteCount);
     public override bool CanWrite(int byteCount) => _parent.CanWrite(byteCount);
     public override ByteBuf Unwrap() => _parent;
     public override int ReferenceCount => _parent.ReferenceCount;

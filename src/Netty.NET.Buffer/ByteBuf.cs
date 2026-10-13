@@ -403,6 +403,13 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          */
     public bool IsReadable => _writerIndex > _readerIndex;
     /**
+     * Returns {@code true} if and only if this buffer contains equal to or more than the specified number of elements.
+     */
+    /// <remarks>Queries readable indices without accessing content, retaining, or checking accessibility.
+    /// Like Netty's isReadable(int), a nonpositive count succeeds on ordinary buffers.
+    /// The shared empty sentinel always returns false.</remarks>
+    public virtual bool CanRead(int byteCount) => ReadableBytes >= byteCount;
+    /**
          * Returns {@code true}
          * if and only if {@code (this.capacity - this.writerIndex)} is greater
          * than {@code 0}.

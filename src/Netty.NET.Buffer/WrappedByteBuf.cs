@@ -42,6 +42,7 @@ public class WrappedByteBuf : ByteBuf
     public override int MaxFastWritableBytes => Buffer.MaxFastWritableBytes;
     public override bool IsDirect => Buffer.IsDirect;
     public override bool IsReadOnly => Buffer.IsReadOnly;
+    public override bool CanRead(int byteCount) => Buffer.CanRead(byteCount);
     public override bool CanWrite(int byteCount) => Buffer.CanWrite(byteCount);
     public override ByteBuf Unwrap() => Buffer;
     public override string ToString() => StringUtil.SimpleClassName(this) + '(' + Buffer.ToString() + ')';

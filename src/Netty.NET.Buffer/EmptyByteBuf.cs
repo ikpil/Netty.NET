@@ -33,11 +33,8 @@ internal sealed class EmptyByteBuf : ByteBuf
     protected override Memory<byte> GetMemoryCore(int index, int length) => Memory<byte>.Empty;
     public override bool IsContiguous => true;
     public override bool IsDirect => true;
-    public override bool CanWrite(int byteCount)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(byteCount);
-        return false;
-    }
+    public override bool CanRead(int byteCount) => false;
+    public override bool CanWrite(int byteCount) => false;
     public override int Capacity
     {
         get => 0;

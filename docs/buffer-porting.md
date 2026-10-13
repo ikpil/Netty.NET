@@ -2419,6 +2419,34 @@ contract. Whole sources/fixtures remain partial; inventory stays 159 (66 pending
 59 in-progress, 31 verified, 3 CLR replacements).
 Evidence: artifacts/buffer-diagnostics-validation (ignored), buffer-diagnostics-*.trx.
 
+## Buffer size predicates
+
+Original isReadable(int) is now CanRead(int), preserving its public Java comment,
+readable-index comparison and EmptyByteBuf specialization. Transparent ordinary,
+composite and unreleasable wrappers forward virtual queries without leak recording.
+CanWrite(int) no longer throws on negative counts: original comparisons apply,
+while read-only buffers and the empty sentinel return false. Neither query grows,
+consumes or retains a buffer. CanRead reads indices without checking accessibility;
+its metadata remains queryable after release. An owned zero-capacity buffer differs
+from the shared sentinel: nonpositive counts succeed on ordinary index comparisons.
+
+53 added tests cover six backings/six views, exact/insufficient/zero/negative/extreme
+counts, independent indices/marks, retained ownership, current capacity versus maximum,
+empty wrappers, virtual dispatch, no content/reference access or leak records and
+freed readable metadata. Debug/Release/rebuilt sampled checked Release each pass
+4949/4949 on net10.0, zero failures/skips. Checked build has 51 existing Common
+warnings and zero Buffer/test warnings/errors; Common source is unchanged.
+
+Pinned Java probes recheck all 93 extracted Buffer sources. For targetRecords 0/4,
+Debug and Release each match 1362 of 1408 rows exactly. The remaining 46 preserve
+existing CLR fixed-composite derived read-only permissions; original Java derived
+queries can report writable bytes although their fixed parent rejects actual writes.
+All readable results agree. Independent index/permission/recording models validate
+both policies; CLR native reservations return to zero. Original sources/fixtures
+remain partial; inventory stays 159 (66 pending, 59 in-progress, 31 verified,
+3 CLR replacements). Evidence: artifacts/buffer-size-predicates-validation (ignored),
+buffer-size-predicates-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
