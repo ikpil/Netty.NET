@@ -2741,11 +2741,51 @@ to zero. Original implemented-path comments/licenses are preserved. Inventory re
 159 (57 pending, 64 in-progress, 34 verified, 4 CLR replacements). Evidence:
 artifacts/buffer-pooled-configuration-validation (ignored), buffer-pooled-configuration-*.trx.
 
+## Socket channel transfers
+
+Connected Socket overloads now cover the four original Gathering/ScatteringByteChannel
+get/set/read/write contracts. Absolute calls keep both indices; relative calls advance
+only by the actual successful count. Each call invokes Send/Receive once. Nonblocking
+WouldBlock returns zero; other socket errors propagate. Stream EOF is zero rather than
+Java minus one. Empty requests validate buffer/null/permissions but skip socket I/O,
+including disposed sockets. Original public Java comments/licenses are preserved.
+
+ValueTask/CancellationToken counterparts await Socket's Memory-based operations directly.
+Pre-cancellation follows validation and prevents growth/I/O; started growth survives
+EOF, failure or cancellation. A successful result commits despite late cancellation;
+thrown failures leave active cursors unchanged. Async waits for readiness instead of
+exposing synchronous WouldBlock. Socket/buffer ownership is borrowed; callers keep both
+alive and exclude concurrent mutation/release/external cursor changes until completion.
+
+CLR staging/snapshots use O(length) pooled managed storage on every backing kind.
+Composite input receives once instead of Java's repeated per-component reads; output
+uses one snapshot rather than zero-copy gathering. A throwing receive publishes no
+staging bytes; a later failed composite commit may change a prefix. Native memory is
+never borrowed across await. Arbitrary Java channel providers/native transport surfaces
+are not declared complete. Raw null arguments now need an explicit Stream/Socket type
+where overloads would otherwise be ambiguous; five existing null tests specify Stream.
+
+71 added cases cover six backing kinds (heap/native/mixed composite/offset slice/pooled/
+adaptive), marks, absolute/relative transfers, short input/EOF, growth, closed sockets,
+read-only/released buffers, nonblocking backpressure, pending cancellation/reuse and
+single advanced-leak recording on success/failure. Loopback tests accept actual OS
+counts; advisory socket buffer sizes are not assumed to force a particular partial count.
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5463/5463
+on net10.0, no failures/skips. Checked build: 51 existing Common warnings; zero Buffer/
+test warnings/errors; Common unchanged. All 93 pinned Buffer sources were rechecked.
+Six backing kinds x three offsets x eight lengths x four operations match 576 exact
+Java/CLR final endpoint states per Debug/Release and sync/async mode, also checked by
+independent byte/cursor/capacity/reference models. The probes retry outside the API to
+reach known endpoint states; OS syscall split counts are not claimed equivalent. CLR
+cleanup returns native reservations to zero; Java process-owned pools end with the probe.
+Inventory remains 159 (57 pending, 64 in-progress, 34 verified, 4 CLR replacements).
+Evidence: artifacts/buffer-socket-validation (ignored), buffer-socket-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
-swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, channel/native I/O,
+swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, remaining provider-specific/native I/O,
 allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection and portable pooled runtime configuration are connected; remaining diagnostics/events stay pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units address remaining portable buffer contracts and original fixtures,

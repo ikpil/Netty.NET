@@ -17,6 +17,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -370,6 +371,34 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
 
     public override ByteBuf ReadRetainedSlice(int length)
     { RecordLeakNonRefCountingOperation(_leak); return base.ReadRetainedSlice(length); }
+
+    public override int GetBytes(int index, Socket destination, int length)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.GetBytes(index, destination, length); }
+
+    public override ValueTask<int> GetBytesAsync(int index, Socket destination, int length,
+        CancellationToken cancellationToken = default)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.GetBytesAsync(index, destination, length, cancellationToken); }
+
+    public override int SetBytes(int index, Socket source, int length)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.SetBytes(index, source, length); }
+
+    public override ValueTask<int> SetBytesAsync(int index, Socket source, int length,
+        CancellationToken cancellationToken = default)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.SetBytesAsync(index, source, length, cancellationToken); }
+
+    public override int ReadBytes(Socket destination, int length)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.ReadBytes(destination, length); }
+
+    public override ValueTask<int> ReadBytesAsync(Socket destination, int length,
+        CancellationToken cancellationToken = default)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.ReadBytesAsync(destination, length, cancellationToken); }
+
+    public override int WriteBytes(Socket source, int length)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.WriteBytes(source, length); }
+
+    public override ValueTask<int> WriteBytesAsync(Socket source, int length,
+        CancellationToken cancellationToken = default)
+    { RecordLeakNonRefCountingOperation(_leak); return Buffer.WriteBytesAsync(source, length, cancellationToken); }
 
     public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
     { RecordLeakNonRefCountingOperation(_leak); return Buffer.GetBytes(index, destination, position, length); }

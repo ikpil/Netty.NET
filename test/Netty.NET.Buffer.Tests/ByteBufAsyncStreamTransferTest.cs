@@ -230,10 +230,10 @@ public class ByteBufAsyncStreamTransferTest
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => b.ReadBytesAsync(stream, 1, TestContext.Current.CancellationToken).AsTask());
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => b.WriteBytesAsync(stream, -1, TestContext.Current.CancellationToken).AsTask());
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => b.WriteBytesAsync(stream, 129, TestContext.Current.CancellationToken).AsTask());
-            await Assert.ThrowsAsync<ArgumentNullException>(() => b.GetBytesAsync(0, null, 0, TestContext.Current.CancellationToken).AsTask());
-            await Assert.ThrowsAsync<ArgumentNullException>(() => b.SetBytesAsync(0, null, 0, TestContext.Current.CancellationToken).AsTask());
-            await Assert.ThrowsAsync<ArgumentNullException>(() => b.ReadBytesAsync(null, 0, TestContext.Current.CancellationToken).AsTask());
-            await Assert.ThrowsAsync<ArgumentNullException>(() => b.WriteBytesAsync(null, 0, TestContext.Current.CancellationToken).AsTask());
+            await Assert.ThrowsAsync<ArgumentNullException>(() => b.GetBytesAsync(0, (Stream)null, 0, TestContext.Current.CancellationToken).AsTask());
+            await Assert.ThrowsAsync<ArgumentNullException>(() => b.SetBytesAsync(0, (Stream)null, 0, TestContext.Current.CancellationToken).AsTask());
+            await Assert.ThrowsAsync<ArgumentNullException>(() => b.ReadBytesAsync((Stream)null, 0, TestContext.Current.CancellationToken).AsTask());
+            await Assert.ThrowsAsync<ArgumentNullException>(() => b.WriteBytesAsync((Stream)null, 0, TestContext.Current.CancellationToken).AsTask());
             Assert.Equal(0, stream.Calls); Assert.Equal(8, b.Capacity);
         }
         finally { b.Release(); }
@@ -395,7 +395,7 @@ public class ByteBufAsyncStreamTransferTest
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => b.SetBytesAsync(8, stream, 1, cts.Token).AsTask());
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => b.GetBytesAsync(8, stream, 1, cts.Token).AsTask());
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => b.ReadBytesAsync(stream, 1, cts.Token).AsTask());
-            await Assert.ThrowsAsync<ArgumentNullException>(() => b.WriteBytesAsync(null, 0, cts.Token).AsTask());
+            await Assert.ThrowsAsync<ArgumentNullException>(() => b.WriteBytesAsync((Stream)null, 0, cts.Token).AsTask());
             await Assert.ThrowsAsync<NotSupportedException>(() => b.AsReadOnly().WriteBytesAsync(stream, 0, cts.Token).AsTask());
             Assert.Equal(8, b.Capacity); Assert.Equal(0, stream.Calls);
         }

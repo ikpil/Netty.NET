@@ -17,6 +17,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -356,6 +357,34 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
 
     public override ByteBuf ReadRetainedSlice(int length)
     { RecordLeakNonRefCountingOperation(Leak); return base.ReadRetainedSlice(length); }
+
+    public override int GetBytes(int index, Socket destination, int length)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.GetBytes(index, destination, length); }
+
+    public override ValueTask<int> GetBytesAsync(int index, Socket destination, int length,
+        CancellationToken cancellationToken = default)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.GetBytesAsync(index, destination, length, cancellationToken); }
+
+    public override int SetBytes(int index, Socket source, int length)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.SetBytes(index, source, length); }
+
+    public override ValueTask<int> SetBytesAsync(int index, Socket source, int length,
+        CancellationToken cancellationToken = default)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.SetBytesAsync(index, source, length, cancellationToken); }
+
+    public override int ReadBytes(Socket destination, int length)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.ReadBytes(destination, length); }
+
+    public override ValueTask<int> ReadBytesAsync(Socket destination, int length,
+        CancellationToken cancellationToken = default)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.ReadBytesAsync(destination, length, cancellationToken); }
+
+    public override int WriteBytes(Socket source, int length)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.WriteBytes(source, length); }
+
+    public override ValueTask<int> WriteBytesAsync(Socket source, int length,
+        CancellationToken cancellationToken = default)
+    { RecordLeakNonRefCountingOperation(Leak); return Wrapped.WriteBytesAsync(source, length, cancellationToken); }
 
     public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
     { RecordLeakNonRefCountingOperation(Leak); return Wrapped.GetBytes(index, destination, position, length); }
