@@ -2781,6 +2781,39 @@ cleanup returns native reservations to zero; Java process-owned pools end with t
 Inventory remains 159 (57 pending, 64 in-progress, 34 verified, 4 CLR replacements).
 Evidence: artifacts/buffer-socket-validation (ignored), buffer-socket-*.trx.
 
+## Thread-local direct transport helper
+
+ByteBufUtil.ThreadLocalDirectBuffer now ports the original optional native scratch
+factory used by AbstractNioChannel (527/559) and SocketWritableByteChannel (54).
+Unset/nonpositive/invalid io.netty.threadLocalDirectBufferSize returns null; positive
+values create 256-byte, int.MaxValue-capacity contiguous direct buffers with unpooled
+allocator provenance and no automatic leak facade. Settings snapshot at the first
+helper call; unrelated utility/global allocator initialization remains lazy.
+
+Guaranteed physical fast-thread cleanup scopes retain one idle native owner at most,
+if its final capacity is <= the configured cutoff. Other callers allocate uncached;
+cross-thread returns free storage. CLR storage caching replaces Java object recycling,
+its ratio and multi-entry/cross-thread policy. Fresh wrappers/memory facades prevent
+stale-reference resurrection; cached bytes remain dirty while indices/marks reset.
+Pins/operation claims delay reuse. Resize retires the old allocation, with existing
+CLR full-prefix copying; scope removal drains idle owners and frees late returns while
+live buffers/pins remain valid. Native reservation failure preserves prior state.
+
+26 added cases cover isolated settings/snapshots, successful/failed fast scopes and
+actual thread exit, cutoff/reuse, stale views/Memory, pins/copied handles/leases, late
+cross-thread return, native budget failure/retry, retained ownership, copy provenance
+and self-aliased growth. Debug/Release/rebuilt checked Release with SIMPLE leak sampling
+interval 1 pass 5489/5489, no failures/skips. Checked build: 51 existing Common warnings;
+zero Buffer/test warnings/errors; Common unchanged. Nine isolated profiles match 114
+executable Java Unsafe/NIO and CLR states per Debug/Release, independently checked for
+factory/cutoff/bytes/cursors/references. Java recycler ratio=1 isolates the single-owner
+reuse contract; identity, addresses, performance, backing cleanup timing and broader
+recycler policies are not claimed equivalent. All 93 Buffer sources were rechecked;
+original public API comments/licenses retained; CLR cleanup returns native bytes to zero.
+Whole utility and original fixtures remain partial. Inventory unchanged: 159 (57 pending,
+64 in-progress, 34 verified, 4 CLR replacements). Evidence:
+artifacts/buffer-thread-local-direct-validation (ignored), buffer-thread-local-direct-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
