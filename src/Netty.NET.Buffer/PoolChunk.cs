@@ -288,8 +288,7 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
     public override string ToString()
     {
         lock (_runsAvailLock)
-            return $"Chunk({System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this):x}: " +
-                $"{CalculateUsage(_freeBytes)}%, {ChunkSize - _freeBytes}/{ChunkSize})";
+            return FormattableString.Invariant($"Chunk({System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this):x}: {CalculateUsage(_freeBytes)}%, {ChunkSize - _freeBytes}/{ChunkSize})");
     }
 
     public int FreeBytes

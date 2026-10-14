@@ -224,10 +224,10 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
             if (!doNotDestroy)
             {
                 // Not used for creating the String.
-                return $"({_runOffset}: not in use)";
+                return FormattableString.Invariant($"({_runOffset}: not in use)");
             }
         }
-        return $"({_runOffset}: {_maxNumElems - numAvail}/{_maxNumElems}, offset: {_runOffset}, length: {_runSize}, elemSize: {ElementSize})";
+        return FormattableString.Invariant($"({_runOffset}: {_maxNumElems - numAvail}/{_maxNumElems}, offset: {_runOffset}, length: {_runSize}, elemSize: {ElementSize})");
     }
 
     public int MaxNumElements => _maxNumElems;

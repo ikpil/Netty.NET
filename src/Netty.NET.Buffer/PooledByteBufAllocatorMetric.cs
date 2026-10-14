@@ -82,7 +82,5 @@ public sealed class PooledByteBufAllocatorMetric : IByteBufAllocatorMetric
     public long UsedHeapMemory => _allocator.UsedHeapMemory;
     public long UsedDirectMemory => _allocator.UsedDirectMemory;
     public override string ToString()
-        => $"{nameof(PooledByteBufAllocatorMetric)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory}; " +
-            $"numHeapArenas: {NumHeapArenas}; numDirectArenas: {NumDirectArenas}; smallCacheSize: {SmallCacheSize}; " +
-            $"normalCacheSize: {NormalCacheSize}; numThreadLocalCaches: {NumThreadLocalCaches}; chunkSize: {ChunkSize})";
+        => FormattableString.Invariant($"{nameof(PooledByteBufAllocatorMetric)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory}; numHeapArenas: {NumHeapArenas}; numDirectArenas: {NumDirectArenas}; smallCacheSize: {SmallCacheSize}; normalCacheSize: {NormalCacheSize}; numThreadLocalCaches: {NumThreadLocalCaches}; chunkSize: {ChunkSize})");
 }

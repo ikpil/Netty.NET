@@ -2814,6 +2814,36 @@ Whole utility and original fixtures remain partial. Inventory unchanged: 159 (57
 64 in-progress, 34 verified, 4 CLR replacements). Evidence:
 artifacts/buffer-thread-local-direct-validation (ignored), buffer-thread-local-direct-*.trx.
 
+## Pooled allocator state diagnostics
+
+PooledByteBufAllocator.DumpStats now connects the original arena reports: configured
+heap then direct arena order, six utilization labels/list order, empty none entries,
+and available small-subpage size-class lines. Full subpages are omitted; available
+siblings share the original separator-free line. The arena Monitor and ordered head
+locks serialize metadata traversal. Reports create no arena storage or thread binding;
+the complete allocator is not a transactional snapshot. Environment.NewLine replaces
+StringUtil.NEWLINE and RuntimeHelpers supplies diagnostic identity hashes.
+
+Existing chunk/subpage/pooled metric strings now preserve Java invariant decimal syntax,
+including negative sentinel/disabled-memory values. Original DumpStats comment/licenses
+are preserved. CLR disposal clears heads/retires lists; reports remain readable while
+live buffers/pins can still preserve storage. This lifetime extension is tested explicitly.
+
+16 added cases cover empty/disabled/unequal arenas, full/fragmented subpages, multiple
+chunks/utilization transitions, cached returns/drain, culture, read-only metric collections,
+live native storage after disposal and concurrent allocation/return/shutdown. Debug/Release/
+rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5505/5505, no failures/
+skips. Checked build: 51 existing Common warnings; zero Buffer/test warnings/errors;
+Common unchanged. Six configurations match 206 complete Java/CLR report/metric snapshots
+per Debug/Release, normalizing only object identity hashes. Independent models check
+layout, geometry, configured counts, used memory and logical pinned bytes. All 93 pinned
+Buffer files were rechecked; explicit CLR cleanup returns native reservations to zero.
+
+The complete pooled allocator metric facade is now verified, with all original comments
+retained. This does not complete the allocator/pooling kernel, events or original fixtures.
+Inventory: 159 (57 pending, 63 in-progress, 35 verified, 4 CLR replacements). Evidence:
+artifacts/buffer-pool-diagnostics-validation (ignored), buffer-pool-diagnostics-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
