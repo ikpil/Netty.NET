@@ -2844,6 +2844,38 @@ retained. This does not complete the allocator/pooling kernel, events or origina
 Inventory: 159 (57 pending, 63 in-progress, 35 verified, 4 CLR replacements). Evidence:
 artifacts/buffer-pool-diagnostics-validation (ignored), buffer-pool-diagnostics-*.trx.
 
+## CLR primitive access replacements
+
+HeapByteBufUtil (18 accessors/nine private fallback methods) and all 24 overloads of
+VarHandleByteBufferAccess are now reviewed CLR replacements. The existing ByteBuf
+Memory/Span/BinaryPrimitives kernel covers heap/native arrays, derived and pooled
+storage; 24-bit words use explicit bytes and crossing words use at most eight stack
+bytes. Duplicate Java helper classes, signature-polymorphic calls and Android loading
+isolation add no CLR contract. The consumer audit covers heap/pooled heap/direct/unsafe
+direct buffers and UnsafeByteBufUtil; remaining raw-address/bulk/provider logic is not
+declared complete. This unit adds verification/provenance rather than a new algorithm.
+
+Java signed-byte results map to CLR byte wire values; integer narrowing stays unchecked.
+Public CLR range/permission/lifetime checks precede memory access; unchecked Java helper
+partial out-of-bounds writes are not replicated. Mixed-readonly composite policies remain
+separate. No atomicity/volatile, JVM loading or performance equivalence is claimed.
+
+Original licenses/class descriptions are retained in ByteBuf.Segmented.cs. JVM-only
+IntelliJ directives and group labels are preserved verbatim as referenceComments in the
+existing JSON rather than inserted into CLR code. Comment counts explicitly distinguish
+implementation preservation from archived references; both classes have no missing comments.
+
+144 added cases cover eight backings, edge/random/high-bit/truncated values, both byte
+orders, unaligned/end/cross-component ranges, neighbor bytes, readonly reads, cursor/mark/
+reference stability and guarded failures. Debug/Release/rebuilt checked Release with SIMPLE
+leak sampling interval 1 pass 5649/5649, no failures/skips. Checked build: 51 existing Common
+warnings; zero Buffer/test warnings/errors; Common unchanged. Five pinned JVM paths execute
+with asserted VarHandle gates; per Debug/Release, 12096 independently modeled CLR states
+yield 48384 applicable Java-path matches. All 93 Buffer files were rechecked; CLR native
+reservations return to zero. Inventory: 159 (55 pending, 63 in-progress, 35 verified,
+6 CLR replacements). Evidence: artifacts/buffer-primitive-access-validation (ignored),
+buffer-primitive-access-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

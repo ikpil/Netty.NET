@@ -4,7 +4,7 @@
     "buffer/src/main/java",
     "buffer/src/test/java"
   ],
-  "statusMeaning": "pending: no completed review; in-progress: only stated API/scenarios are implemented; verified: the stated complete source/test contract is reviewed; clr-replacement/not-applicable require an explicit consumer-based decision. Building a project or translating selected scenarios does not complete buffer.",
+  "statusMeaning": "pending: no completed review; in-progress: only stated API/scenarios are implemented; verified: the stated complete source/test contract is reviewed; clr-replacement/not-applicable require an explicit consumer-based decision. Building a project or translating selected scenarios does not complete buffer. Comment preservedCount includes verbatim referenceComments for JVM-only directives/group labels; preservedInImplementationCount/preservedAsReferenceCount distinguish code from archived references where present.",
   "entries": [
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/AbstractAllocatorEvent.java",
@@ -672,10 +672,24 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/HeapByteBufUtil.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+        "test/Netty.NET.Buffer.Tests/PrimitiveAccessReplacementTest.cs"
+      ],
+      "evidence": [
+        "Primitive helper replacement review: all 18 HeapByteBufUtil package-visible accessors (and nine private fallback methods) plus all 24 VarHandleByteBufferAccess overloads map to the existing ByteBuf/Span/BinaryPrimitives kernel. 144 new tests cover eight backings, signed/truncated/high-bit/random values, both byte orders, unaligned/end/segment-crossing ranges, neighbors, readonly reads, unchanged cursors/marks/references, bounds/readonly/released failures. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5649/5649, no failures/skips. Five original JVM paths execute with asserted VarHandle gates: heap byte fallback, heap VarHandle dispatch, direct VarHandle array/heap ByteBuffer/direct ByteBuffer access. Per Debug/Release, 12096 independent CLR states yield 48384 matches to all applicable original paths. All 93 Buffer source bytes rechecked; CLR native reservations return to zero; Common unchanged. docs/buffer-porting.md#clr-primitive-access-replacements; artifacts/buffer-primitive-access-validation (ignored), buffer-primitive-access-*.trx."
+      ],
+      "adaptation": " Complete CLR replacement decision: neither Java helper needs a duplicate C# class. ByteBuf.GetByte/SetByte, Get/SetShort[LE], GetUnsignedMedium[LE]/SetMedium[LE], Get/SetInt[LE] and Get/SetLong[LE] use bounded spans and BinaryPrimitives, with explicit byte-wise 24-bit handling and at most eight stack bytes for crossing words. The full HeapByteBufUtil surface and private byte fallback variants, and every VarHandle array/ByteBuffer short/int/long BE/LE overload, are covered. JVM Android class-verification isolation, Unsafe/VarHandle selection and signature-polymorphic calls have no CLR consumer; runtime representation is BCL Memory/Span rather than Java arrays/NIO class-specific entry points. Source consumer audit finds UnpooledHeapByteBuf, PooledHeapByteBuf, UnpooledDirectByteBuf, UnpooledUnsafeDirectByteBuf and UnsafeByteBufUtil, plus the heap helper itself. Existing CLR heap/native/derived/composite/pooled/adaptive kernels cover their ordinary integer access; this decision does not complete UnsafeByteBufUtil raw-address/bulk/provider variants. Java signed byte returns map to C# unsigned byte wire values; narrowing integer writes remain explicitly unchecked in checked builds. Public CLR bounds/permission/lifetime guards run before memory access: invalid fixed ranges do not reproduce Java unchecked-helper partial out-of-bounds writes. Composite commit/mixed-readonly policies remain separately documented. No new runtime algorithm is introduced in this review. Original licenses/class descriptions are copied to ByteBuf.Segmented.cs; JVM-only group labels and IntelliJ directives remain verbatim referenceComments in JSON, distinguished from implemented comments. No atomicity/volatile semantics, JVM loading behavior or performance equivalence is claimed.",
+      "comments": {
+        "coverage": "All original comments retained; CLR-relevant licenses/descriptions in implementation, JVM-only referenceComments explicitly archived without claiming runtime behavior.",
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0,
+        "preservedInImplementationCount": 2,
+        "preservedAsReferenceCount": 0
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/IntPriorityQueue.java",
@@ -1508,10 +1522,70 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/VarHandleByteBufferAccess.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+        "test/Netty.NET.Buffer.Tests/PrimitiveAccessReplacementTest.cs"
+      ],
+      "evidence": [
+        "Primitive helper replacement review: all 18 HeapByteBufUtil package-visible accessors (and nine private fallback methods) plus all 24 VarHandleByteBufferAccess overloads map to the existing ByteBuf/Span/BinaryPrimitives kernel. 144 new tests cover eight backings, signed/truncated/high-bit/random values, both byte orders, unaligned/end/segment-crossing ranges, neighbors, readonly reads, unchanged cursors/marks/references, bounds/readonly/released failures. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5649/5649, no failures/skips. Five original JVM paths execute with asserted VarHandle gates: heap byte fallback, heap VarHandle dispatch, direct VarHandle array/heap ByteBuffer/direct ByteBuffer access. Per Debug/Release, 12096 independent CLR states yield 48384 matches to all applicable original paths. All 93 Buffer source bytes rechecked; CLR native reservations return to zero; Common unchanged. docs/buffer-porting.md#clr-primitive-access-replacements; artifacts/buffer-primitive-access-validation (ignored), buffer-primitive-access-*.trx."
+      ],
+      "adaptation": " Complete CLR replacement decision: neither Java helper needs a duplicate C# class. ByteBuf.GetByte/SetByte, Get/SetShort[LE], GetUnsignedMedium[LE]/SetMedium[LE], Get/SetInt[LE] and Get/SetLong[LE] use bounded spans and BinaryPrimitives, with explicit byte-wise 24-bit handling and at most eight stack bytes for crossing words. The full HeapByteBufUtil surface and private byte fallback variants, and every VarHandle array/ByteBuffer short/int/long BE/LE overload, are covered. JVM Android class-verification isolation, Unsafe/VarHandle selection and signature-polymorphic calls have no CLR consumer; runtime representation is BCL Memory/Span rather than Java arrays/NIO class-specific entry points. Source consumer audit finds UnpooledHeapByteBuf, PooledHeapByteBuf, UnpooledDirectByteBuf, UnpooledUnsafeDirectByteBuf and UnsafeByteBufUtil, plus the heap helper itself. Existing CLR heap/native/derived/composite/pooled/adaptive kernels cover their ordinary integer access; this decision does not complete UnsafeByteBufUtil raw-address/bulk/provider variants. Java signed byte returns map to C# unsigned byte wire values; narrowing integer writes remain explicitly unchecked in checked builds. Public CLR bounds/permission/lifetime guards run before memory access: invalid fixed ranges do not reproduce Java unchecked-helper partial out-of-bounds writes. Composite commit/mixed-readonly policies remain separately documented. No new runtime algorithm is introduced in this review. Original licenses/class descriptions are copied to ByteBuf.Segmented.cs; JVM-only group labels and IntelliJ directives remain verbatim referenceComments in JSON, distinguished from implemented comments. No atomicity/volatile semantics, JVM loading behavior or performance equivalence is claimed.",
+      "referenceComments": [
+        "// short (big endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// short (little endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// int (big endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// int (little endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// long (big endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// long (little endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// --------------------------------------------------------------------",
+        "// byte[] (heap array) accessors",
+        "// These centralize VarHandle.get/set calls for heap arrays as well,",
+        "// so classes like HeapByteBufUtil do not call signature-polymorphic",
+        "// methods directly.",
+        "// Methods must only be called when PlatformDependent.hasVarHandle() is true.",
+        "// --------------------------------------------------------------------",
+        "// short (big endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// short (little endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// int (big endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// int (little endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// long (big endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue",
+        "// long (little endian)",
+        "//noinspection DataFlowIssue",
+        "//noinspection DataFlowIssue"
+      ],
+      "referenceCommentsMeaning": "Original JVM-only VarHandle grouping and IntelliJ inspection directives retained verbatim for traceability; no CLR runtime behavior is claimed by these comments.",
+      "comments": {
+        "coverage": "All original comments retained; CLR-relevant licenses/descriptions in implementation, JVM-only referenceComments explicitly archived without claiming runtime behavior.",
+        "upstreamCount": 45,
+        "preservedCount": 45,
+        "missingCount": 0,
+        "preservedInImplementationCount": 2,
+        "preservedAsReferenceCount": 43
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/WrappedByteBuf.java",
