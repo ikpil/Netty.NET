@@ -36,6 +36,7 @@ public partial class PooledByteBufAllocator
     // parent.threadCache(). A miss uses the old arena; a hit uses the cached owner.
     internal PoolThreadCache PrepareThreadBinding()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
@@ -90,6 +91,7 @@ public partial class PooledByteBufAllocator
         private readonly WeakReference<PooledByteBufAllocator> _allocator = new(allocator);
         protected override void OnRemoval(WeakReference<ThreadBinding> value)
         {
+            using var events = BufferAllocatorEventSource.Log.BeginOperation();
             if (value == null || !value.TryGetTarget(out var binding) || !_allocator.TryGetTarget(out var owner)) return;
             lock (owner._sync)
             {
@@ -121,6 +123,7 @@ public partial class PooledByteBufAllocator
      */
     public bool TrimCurrentThreadCache()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             Thread thread = Thread.CurrentThread;
@@ -137,6 +140,7 @@ public partial class PooledByteBufAllocator
     /// or their operation leases. Later returns bypass the detached cache.</remarks>
     public bool ReleaseCurrentThreadBinding()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             Thread thread = Thread.CurrentThread;
@@ -154,6 +158,7 @@ public partial class PooledByteBufAllocator
     /// allocator disposal. Buffers retain their owning arena across thread exit and awaits.</remarks>
     public int ReleaseTerminatedThreadBindings()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync) return ReleaseTerminatedThreadBindingsCore();
     }
 
@@ -177,6 +182,7 @@ public partial class PooledByteBufAllocator
     {
         get
         {
+            using var events = BufferAllocatorEventSource.Log.BeginOperation();
             lock (_sync)
             {
                 ReleaseTerminatedThreadBindingsCore();

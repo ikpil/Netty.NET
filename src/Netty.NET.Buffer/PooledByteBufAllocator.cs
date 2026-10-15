@@ -26,7 +26,7 @@ namespace Netty.NET.Buffer;
 /// arenas, with small/normal region caches and executor-based periodic trimming. Default
 /// reads process settings and gates caching by physical thread/executor eligibility.
 /// Explicit constructors retain their opt-in cache options. Buffer lifecycle events use
-/// BufferAllocatorEventSource; chunk events remain pending.
+/// BufferAllocatorEventSource, including pooled chunk lifetime transitions.
 /// Dispose closes factory allocations and pooled arenas; live pooled buffers and operation
 /// leases keep their reservations until returned. Unpooled fallback buffers own independent
 /// lifetimes. Empty sentinels/composites reserve no storage and remain available.
@@ -122,6 +122,7 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
 
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ByteBuf buffer;
         lock (_sync)
         {
@@ -138,6 +139,7 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
 
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ByteBuf buffer;
         lock (_sync)
         {
@@ -189,6 +191,7 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
 
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             if (_disposed) return;

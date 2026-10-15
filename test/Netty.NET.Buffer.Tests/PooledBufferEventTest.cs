@@ -192,7 +192,7 @@ public class PooledBufferEventTest
             Allocate(allocator, true, 16).Release(); Assert.Equal(2, listener.Events.Length);
             listener.DisableEvents(BufferAllocatorEventSource.Log);
             Allocate(allocator, true, 16).Release(); Assert.Equal(2, listener.Events.Length);
-            listener.EnableEvents(BufferAllocatorEventSource.Log, EventLevel.Informational, EventKeywords.All);
+            listener.EnableEvents(BufferAllocatorEventSource.Log, EventLevel.Informational, (EventKeywords)7);
             Allocate(allocator, true, 16).Release(); Assert.Equal(4, listener.Events.Length);
         }
         Assert.False(BufferAllocatorEventSource.Log.IsEnabled()); allocator.Dispose(); Assert.Equal(0, native.ReservedBytes);
@@ -319,7 +319,7 @@ public class PooledBufferEventTest
         private readonly EventSource _source;
         internal Action<Record> Callback;
         internal Record[] Events => _events.ToArray();
-        internal Listener(EventKeywords keywords = EventKeywords.All, EventSource source = null)
+        internal Listener(EventKeywords keywords = (EventKeywords)7, EventSource source = null)
         {
             _source = source ?? BufferAllocatorEventSource.Log;
             EnableEvents(_source, EventLevel.Informational, keywords);

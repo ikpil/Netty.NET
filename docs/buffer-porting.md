@@ -2956,13 +2956,60 @@ and adaptive producers and remaining fixtures stay pending/partial; no whole all
 completion is claimed. Inventory: 159 (47 pending, 70 in-progress, 35 verified,
 7 CLR replacements).
 
+## Pooled chunk lifecycle events
+
+Pooled AllocateChunk/FreeChunk now use EventSource IDs/keywords 4/8 and 5/16.
+Payloads retain allocator type, usable capacity, native flag/address and pooled storage;
+AllocateChunk threadLocal is always false for this shared allocator. ChunkInfo and the
+JFR chunk schema become immutable values over CLR ChunkStorage Memory. Alignment
+headroom is excluded from usable capacity; the existing aligned-huge logical-capacity
+adaptation remains unchanged. Original event/interface comments and metadata descriptions
+are preserved, including the shared-chunk explanation.
+
+Events describe logical registration/retirement. A retained empty subpage can keep a
+chunk registered. Returning its last eligible normal region can retire it; heap arenas
+may retain one retired backing and register it again, producing another allocation event.
+Huge reservations are unpooled. Cache entries defer retirement until drained. Explicit
+shutdown defers live regions until their operation leases return; a native pin may keep
+physical bytes alive after logical retirement. No duplicate event is emitted on final
+pin disposal or disposal of an already retired heap cache entry. Failed native reservations
+publish no chunk allocation.
+
+All five buffer/chunk events are captured in producer order and published at the
+outermost synchronous operation boundary. This preserves buffer-free before chunk-free,
+and resize/new-chunk/new-buffer/old-chunk-free ordering. Physical-thread value guards
+cover factories, arena/cache operations, binding/terminated-thread cleanup, metrics cleanup
+and shutdown; scheduled direct cache trimming is covered. Lists/pins/payloads are created
+only for enabled events, and pending state is cleared before listener callbacks. An
+operation beginning while disabled still establishes its boundary, so enabling a listener
+while allocation is blocked cannot publish callbacks from inside nested locks. Publication
+timestamps follow the operation; no global transactional ordering or JFR timing identity
+is claimed. Listener reentry starts an independent batch. Adaptive producers remain pending.
+
+29 added cases cover metadata/order, one/two/reused chunks, retained subpages, huge/aligned
+capacity, cache trim/close/cross-thread return, live leases/pins, failed allocation/resize,
+keyword gates and listener reentry/failure/late-enable lock safety. Debug/Release/rebuilt
+checked Release with SIMPLE leak sampling interval 1 pass 5723/5723, no failures/skips.
+Checked build: 51 existing Common warnings, zero Buffer/test warnings/errors; Common
+unchanged. Per Debug/Release, 160 independently modeled cases match 652 ordered event
+payloads and 160 byte/cursor/reference states per original Unsafe/NIO path: 1624 matches.
+The oracle explicitly drains original thread caches and invokes original chunk-list
+teardown after all buffers return; this compares teardown events without claiming Java
+has CLR IDisposable. Addresses are checked locally, never emitted in comparison rows.
+All 93 Buffer source files were rechecked; explicit CLR cleanup returns native bytes to zero.
+
+Four pending chunk/schema/interface entries become in-progress; adaptive integration and
+full original fixtures remain partial. Inventory: 159 (43 pending, 74 in-progress,
+35 verified, 7 CLR replacements). Evidence: artifacts/buffer-pooled-chunk-events-validation
+(ignored), buffer-pooled-chunk-events-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, remaining provider-specific/native I/O,
-chunk/adaptive allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection and portable pooled runtime configuration are connected; remaining chunk/adaptive events stay pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+adaptive allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection and portable pooled runtime configuration are connected; remaining adaptive events stay pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units address remaining portable buffer contracts and original fixtures,
-with chunk/adaptive allocator events still explicitly tracked.
+with adaptive allocator events still explicitly tracked.
 Common changes must cite the actual buffer contract that requires them.

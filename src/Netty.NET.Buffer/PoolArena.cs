@@ -23,7 +23,7 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Buffer;
 
 // CLR: Memory<byte> shares the allocation kernel across heap and native storage.
-// Buffer lifecycle events are emitted after allocator/resize locks; chunk events remain pending.
+// Buffer and chunk lifecycle events are published after allocator/cache/arena locks.
 internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
 {
     private readonly object _sync = new();
@@ -75,6 +75,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
 
     internal Allocation AllocateMemory(int capacity, PoolThreadCache cache = null)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ArgumentOutOfRangeException.ThrowIfNegative(capacity);
         int sizeIdx = SizeClass.Size2SizeIdx(capacity);
         // Cache selection precedes the arena lock: returns, trim and close use
@@ -130,6 +131,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
             storage ??= NewStorage(chunk, SizeClass.ChunkSize);
             try { _chunks.Add(chunk, storage); }
             catch { storage.Owner?.Dispose(); throw; }
+            BufferAllocatorEventSource.Log.ChunkChanged(storage, _direct, allocated: true);
             // Publish storage before a subpage can join a shared head. Allocation
             // failures then leave either no chunk or a reusable registered chunk.
             long newHandle;
@@ -223,6 +225,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
     {
         /* unpooled buffers are never allocated out of the thread-local cache */
         ChunkStorage storage = NewStorage(null, capacity);
+        BufferAllocatorEventSource.Log.ChunkChanged(storage, _direct, allocated: true);
         try
         {
             var allocation = new Allocation(this, storage, -1, 0, capacity);
@@ -245,6 +248,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
 
     private void Free(Allocation allocation)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ChunkStorage storage = allocation.Storage;
         lock (_sync)
         {
@@ -256,6 +260,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
                     ++_hugeDeallocations;
                     _activeBytesHuge -= allocation.ReservedLength;
                 }
+                BufferAllocatorEventSource.Log.ChunkChanged(storage, _direct, allocated: false);
                 storage.Owner?.Dispose();
                 return;
             }
@@ -273,6 +278,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
 
     internal void ReturnCached(ChunkStorage storage, long handle)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             unchecked
@@ -297,6 +303,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         // CLR: after explicit shutdown, active storage stays in the metric registry
         // until its last region lease returns, even though it has left the lists.
         if (_disposed && storage.ActiveAllocations != 0) return;
+        BufferAllocatorEventSource.Log.ChunkChanged(storage, _direct, allocated: false);
         _chunks.Remove(chunk);
         unchecked { ++_chunkDeallocations; }
         if (_disposed)
@@ -324,6 +331,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
     // Native owners release physical memory; outstanding native pins defer that free.
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             if (_disposed) return;

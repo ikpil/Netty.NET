@@ -121,6 +121,7 @@ internal sealed class PoolThreadCache : IDisposable
      */
     internal PoolArena.Allocation TryAllocate(PoolArena arena, int sizeIdx)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             RegionCache cache = Cache(arena, sizeIdx);
@@ -152,6 +153,7 @@ internal sealed class PoolThreadCache : IDisposable
 
     internal void Trim()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync) { if (!_freed) TrimCore(); }
     }
 
@@ -171,6 +173,7 @@ internal sealed class PoolThreadCache : IDisposable
      */
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             // As free() may be called either by the finalizer or by FastThreadLocal.onRemoval(...) we need to ensure
