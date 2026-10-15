@@ -22,6 +22,9 @@ namespace Netty.NET.Buffer;
 /**
  * Read-only ByteBuf which wraps a read-only ByteBuffer.
  */
+/**
+ * Read-only ByteBuf which wraps a read-only direct ByteBuffer and use unsafe for best performance.
+ */
 /// <summary>A reference-counted read-only buffer borrowing an external memory range.</summary>
 /// <remarks>ReadOnlyMemory replaces the Java ByteBuffer's captured remaining slice.
 /// The caller keeps the external owner valid until all buffer access has ended;
@@ -39,6 +42,10 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
     {
         ArgumentNullException.ThrowIfNull(allocator);
         _allocator = allocator;
+        // Use buffer as the super class will slice the passed in ByteBuffer which means the memoryAddress
+        // may be different if the position != 0.
+        // CLR: the captured ReadOnlyMemory already includes its source offset; native
+        // ownership is recognized on that range, and addresses are borrowed only through pins.
         _memory = memory;
         _direct = NativeMemoryOwner.TryGetOwner(memory, out _);
         SetIndex(0, memory.Length);
@@ -72,8 +79,15 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
         // Always duplicate the buffer so it's safe to call copy from multiple threads.
         // CLR: a local immutable range replaces Java's per-copy ByteBuffer cursor.
         ReadOnlyMemory<byte> source = _memory.Slice(index, length);
-        ByteBuf result = IsDirect ? Allocator.DirectBuffer(length) : Allocator.HeapBuffer(length);
-        try { return result.WriteBytes(source.Span); }
+        // The original optimized native provider retains this captured range's maximum.
+        // Managed/opaque memory follows the original generic read-only provider's factory default.
+        ByteBuf result = IsDirect ? Allocator.DirectBuffer(length, MaxCapacity) : Allocator.HeapBuffer(length);
+        try
+        {
+            // The native provider does not touch either range for an empty copy.
+            if (!IsDirect || length != 0) result.WriteBytes(source.Span);
+            return result;
+        }
         catch { result.Release(); throw; }
     }
 

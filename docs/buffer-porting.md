@@ -1292,8 +1292,10 @@ The original source's three comments, factory comment and both fixture licenses/
 three inline comments are retained. Existing BE/LE primitives, read-only guards,
 Memory/Sequence views, derived ownership, Stream and positioned-file paths are
 reused. Copies use the creating allocator, are writable and independent, and use
-Int32.MaxValue maximum (matching this original source rather than the fixed root
-maximum). Allocated results are released on write failure. Wrapping external storage
+Int32.MaxValue maximum for generic managed/opaque memory. Known-native copies now
+follow the optimized provider and preserve the captured root maximum (see Native
+read-only provider below). Allocated results are released on write failure.
+Wrapping external storage
 has no allocator-capacity charge; copying and composite consolidation charge their
 actual new storage. Empty factory input shares EmptyBuffer; explicit empty roots
 remain owned/read-only. CLR negative/released EnsureWritable status calls validate
@@ -2875,6 +2877,39 @@ yield 48384 applicable Java-path matches. All 93 Buffer files were rechecked; CL
 reservations return to zero. Inventory: 159 (55 pending, 63 in-progress, 35 verified,
 6 CLR replacements). Evidence: artifacts/buffer-primitive-access-validation (ignored),
 buffer-primitive-access-*.trx.
+
+## Native read-only provider
+
+The optimized ReadOnlyUnsafeDirectByteBuf has a portable copy difference: it passes
+the captured root maximum to the direct factory, while the generic provider uses the
+factory default maximum. A regression reproduced eight-byte native input producing
+MaxCapacity 2147483647 instead of 8. ReadOnlyMemoryByteBuf now preserves the native
+captured maximum through root/duplicate/slice copies and skips writing for empty native
+copies. Managed/opaque memory keeps its generic heap/default maximum. Existing native
+copy test expectations were corrected; creators, writable independence and source
+cursors/references stay intact, and failures release newly allocated results.
+
+Bounded native spans replace unchecked Unsafe primitive/bulk access; Memory.Pin
+replaces memoryAddress and preserves captured source/derived offsets. External ownership
+remains borrowed. CLR destination permission/lifetime/range guards are retained, including
+rejecting readonly native writes that raw Java copyMemory can bypass. ReadOnlyMemory is
+the type-level readonly view; JVM writable-ByteBuffer constructor checks/provider switches
+are not duplicated. Unknown memory managers retain existing heap classification. The
+original native provider license, description and offset comments are preserved.
+
+20 added cases cover three creators/four views, ranged/empty copies, growth bounds,
+independence after external release, offsets/pins, primitive/bulk reads, guarded failures
+and result cleanup. Debug/Release/rebuilt checked Release with SIMPLE leak sampling
+interval 1 pass 5669/5669, no failures/skips. Checked build: 51 existing Common warnings;
+zero Buffer/test warnings/errors; Common unchanged. Per Debug/Release, 576 independently
+modeled CLR states yield 864 matches against original aligned Unsafe, bytewise Unsafe
+and generic heap paths. Captured addresses are checked locally, never emitted. All 93
+Buffer files were rechecked; explicit CLR cleanup returns native reservations to zero.
+
+The optimized native class is now a CLR replacement; its own fixture pointer scenario
+uses CLR native pins. Full inherited read-only/NIO fixtures remain partial. Inventory:
+159 (53 pending, 64 in-progress, 35 verified, 7 CLR replacements). Evidence:
+artifacts/buffer-readonly-native-provider-validation (ignored), buffer-readonly-native-provider-*.trx.
 
 ## Remaining work
 

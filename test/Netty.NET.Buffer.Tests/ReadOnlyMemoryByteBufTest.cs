@@ -120,7 +120,8 @@ public class ReadOnlyMemoryByteBufTest
                 try
                 {
                     Assert.Same(a, copy.Allocator); Assert.Equal(kind == 1, copy.IsDirect); Assert.False(copy.IsReadOnly);
-                    Assert.Equal(int.MaxValue, copy.MaxCapacity); Assert.Equal(view.ReadableBytes, copy.WriterIndex);
+                    Assert.Equal(kind == 1 ? b.MaxCapacity : int.MaxValue, copy.MaxCapacity);
+                    Assert.Equal(view.ReadableBytes, copy.WriterIndex);
                     Assert.Equal(ByteBufUtil.GetBytes(view), ByteBufUtil.GetBytes(copy));
                     copy.SetByte(0, 99); Assert.NotEqual(99, view.GetByte(view.ReaderIndex));
                 }
