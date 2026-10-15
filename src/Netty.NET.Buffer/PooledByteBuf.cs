@@ -80,60 +80,80 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
             // See https://github.com/netty/netty/issues/13467
             // CLR: use a private Monitor for all capacity mutations. Data access,
             // active cursors and final Release still require caller synchronization.
-            lock (_resizeLock)
+            BufferAllocatorEventSource.Snapshot? before = null, after = null;
+            try
             {
-                CheckNewCapacity(value);
-                if (value == _length) return;
-                PoolArena.Allocation previous = _allocation;
-                int maxLength = previous.ReservedLength;
-                if (previous.IsPooled)
+                lock (_resizeLock)
                 {
-                    // If the request capacity does not require reallocation, just update the length of the memory.
-                    if (value > _length && value <= maxLength)
+                    CheckNewCapacity(value);
+                    if (value == _length) return;
+                    PoolArena.Allocation previous = _allocation;
+                    int maxLength = previous.ReservedLength;
+                    if (previous.IsPooled)
                     {
-                        _length = value;
-                        return;
+                        // If the request capacity does not require reallocation, just update the length of the memory.
+                        if (value > _length && value <= maxLength)
+                        {
+                            _length = value;
+                            return;
+                        }
+                        if (value < _length && value > maxLength >> 1 &&
+                            (maxLength > 512 || value > maxLength - 16))
+                        {
+                            // here newCapacity < length
+                            _length = value;
+                            TrimIndicesToCapacity(value);
+                            return;
+                        }
                     }
-                    if (value < _length && value > maxLength >> 1 &&
-                        (maxLength > 512 || value > maxLength - 16))
-                    {
-                        // here newCapacity < length
-                        _length = value;
-                        TrimIndicesToCapacity(value);
-                        return;
-                    }
-                }
 
-                // Reallocation required.
-                PoolThreadCache cache = (_arena.Parent as PooledByteBufAllocator)?.PrepareThreadBinding();
-                PoolArena.Allocation replacement = _arena.AllocateMemory(value, cache);
-                try
-                {
-                    // This does not touch buf's reader/writer indices
-                    // We must duplicate the NIO buffers because they may be accessed by other Netty buffers.
-                    // CLR: bounded Span copying needs no mutable NIO cursor or duplicate object.
-                    previous.Memory.Span.Slice(previous.Offset, Math.Min(_length, value))
-                        .CopyTo(replacement.Memory.Span.Slice(replacement.Offset));
+                    // Reallocation required.
+                    before = CaptureEvent(BufferAllocatorEventSource.Keywords.ReallocateBuffer);
+                    PoolThreadCache cache = (_arena.Parent as PooledByteBufAllocator)?.PrepareThreadBinding();
+                    PoolArena.Allocation replacement = _arena.AllocateMemory(value, cache);
+                    try
+                    {
+                        // This does not touch buf's reader/writer indices
+                        // We must duplicate the NIO buffers because they may be accessed by other Netty buffers.
+                        // CLR: bounded Span copying needs no mutable NIO cursor or duplicate object.
+                        previous.Memory.Span.Slice(previous.Offset, Math.Min(_length, value))
+                            .CopyTo(replacement.Memory.Span.Slice(replacement.Offset));
+                    }
+                    catch
+                    {
+                        replacement.Dispose();
+                        throw;
+                    }
+                    _allocation = replacement;
+                    // A caller's cache may supply a handle belonging to another arena.
+                    _arena = replacement.Arena;
+                    _length = value;
+                    TrimIndicesToCapacity(value);
+                    after = CaptureEvent(BufferAllocatorEventSource.Keywords.AllocateBuffer);
+                    previous.Dispose();
                 }
-                catch
-                {
-                    replacement.Dispose();
-                    throw;
-                }
-                _allocation = replacement;
-                // A caller's cache may supply a handle belonging to another arena.
-                _arena = replacement.Arena;
-                _length = value;
-                TrimIndicesToCapacity(value);
-                previous.Dispose();
+            }
+            finally
+            {
+                // EventListener callbacks are synchronous. Publish immutable snapshots
+                // after mutation locks, including the attempted resize on failure.
+                BufferAllocatorEventSource.Log.Reallocated(before, value);
+                BufferAllocatorEventSource.Log.Allocated(after);
             }
         }
     }
 
+    private BufferAllocatorEventSource.Snapshot? CaptureEvent(System.Diagnostics.Tracing.EventKeywords keyword)
+        => BufferAllocatorEventSource.Log.Capture(this, keyword,
+            IsDirect ? _allocation.Memory.Slice(_allocation.Offset, _length) : default,
+            _allocation.IsPooled, _allocation.FromThreadCache);
+
     protected override void Deallocate()
     {
         PoolArena.Allocation allocation = _allocation;
+        BufferAllocatorEventSource.Snapshot? snapshot = CaptureEvent(BufferAllocatorEventSource.Keywords.FreeBuffer);
         _allocation = null;
-        allocation.Dispose();
+        try { allocation.Dispose(); }
+        finally { BufferAllocatorEventSource.Log.Freed(snapshot); }
     }
 }

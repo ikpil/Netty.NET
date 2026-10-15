@@ -2911,13 +2911,58 @@ uses CLR native pins. Full inherited read-only/NIO fixtures remain partial. Inve
 159 (53 pending, 64 in-progress, 35 verified, 7 CLR replacements). Evidence:
 artifacts/buffer-readonly-native-provider-validation (ignored), buffer-readonly-native-provider-*.trx.
 
+## Pooled buffer lifecycle events
+
+The three pooled buffer JFR events now use CLR EventSource: provider Netty-NET-Buffer,
+AllocateBuffer (ID/keyword 1/1), FreeBuffer (2/2), ReallocateBuffer (3/4). Events are off
+until a tracing consumer enables them. Payloads retain allocator type, configured/fast/
+maximum capacity, native flag/address, pooled storage and actual thread-cache hits.
+No-arena fallback factories preserve the original allocation-only instrumentation;
+in-place capacity changes and derived reference changes add no root lifecycle events.
+Reallocation records the old snapshot/target followed by successful replacement;
+allocation failure emits the attempt only and preserves the existing buffer.
+
+JFR classes, availability/property gates and annotations are replaced by EventSource
+metadata and independent keyword gates. Original schema comments and annotation
+field/event descriptions are retained. Disabled events skip capture/pins/payload boxing.
+Native addresses use short-lived pins and grant no access or lifetime. Original Unsafe
+allocation events can contain zero/stale addresses because init commits before refreshing
+the pointer; CLR captures current storage. Address availability remains provider-specific,
+so addresses are checked locally rather than compared numerically.
+
+EventListener callbacks are synchronous. Immutable value snapshots are captured during
+mutations but published after allocator/resize/storage-return locks. Therefore attempt/
+free publication timestamps follow the operation rather than exact pre-operation JFR
+timing. Events do not retain buffers, owners or operation leases. Listener exceptions
+follow EventSource suppression. A full Release run exposed a duplicate EventSource GUID
+when configuration tests loaded library copies. The default load context retains the
+fixed provider name; separate contexts receive unique Netty-NET-Buffer-{identifier}
+identities, discoverable through Log.Name. A simultaneous two-context regression covers
+independent subscriptions and keeps the default provider usable.
+
+25 new cases cover payloads, cache miss/hit, zero/huge/no-arena paths, in-place/reallocated/
+failed capacity changes, maximum clamping, keyword enable/disable, pointer offsets,
+retained views, logical release/operation lease cleanup, observer failures and lock safety.
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5694/5694,
+no failures/skips. Checked build: 51 existing Common warnings, zero Buffer/test warnings/
+errors; Common unchanged. Per Debug/Release, 144 independent cases match 360 JFR event
+payloads/order and 144 byte/cursor/reference states from each original Unsafe/NIO path:
+1008 original matches. All 93 Buffer source bytes were checked; CLR native cleanup returns
+reservations to zero. Evidence: artifacts/buffer-pooled-events-validation (ignored),
+buffer-pooled-events-*.trx, including the pre-fix load-context collision.
+
+The five event/schema sources and JFR fixture move from pending to in-progress. Chunk
+and adaptive producers and remaining fixtures stay pending/partial; no whole allocator
+completion is claimed. Inventory: 159 (47 pending, 70 in-progress, 35 verified,
+7 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, remaining provider-specific/native I/O,
-allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection and portable pooled runtime configuration are connected; remaining diagnostics/events stay pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+chunk/adaptive allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection and portable pooled runtime configuration are connected; remaining chunk/adaptive events stay pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units address remaining portable buffer contracts and original fixtures,
-with allocator diagnostics/events still explicitly tracked.
+with chunk/adaptive allocator events still explicitly tracked.
 Common changes must cite the actual buffer contract that requires them.

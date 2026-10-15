@@ -23,7 +23,7 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Buffer;
 
 // CLR: Memory<byte> shares the allocation kernel across heap and native storage.
-// Allocator events and automatic leak wrappers remain pending.
+// Buffer lifecycle events are emitted after allocator/resize locks; chunk events remain pending.
 internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
 {
     private readonly object _sync = new();
@@ -203,7 +203,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
             ObjectDisposedException.ThrowIf(_disposed, this);
             int offset = PoolChunk.RunOffset(handle) << SizeClass.PageShifts;
             if (PoolChunk.IsSubpage(handle)) offset += PoolChunk.BitmapIdx(handle) * normalized;
-            var allocation = new Allocation(this, storage, handle, offset, normalized, cache);
+            var allocation = new Allocation(this, storage, handle, offset, normalized, cache, fromThreadCache: true);
             unchecked { _pinnedBytes += normalized; }
             // Cached handles already count as active arena allocations. A hit
             // only pins bytes again; allocation/deallocation metrics stay unchanged.
@@ -358,6 +358,7 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         private readonly PoolArena _arena;
         internal PoolArena Arena => _arena;
         internal readonly PoolThreadCache Cache;
+        internal readonly bool FromThreadCache;
         private int _references = 1;
         internal readonly ChunkStorage Storage;
         internal PoolChunk Chunk => Storage.Chunk;
@@ -368,10 +369,11 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         internal bool IsPooled => Chunk != null;
 
         internal Allocation(PoolArena arena, ChunkStorage storage, long handle, int offset, int reservedLength,
-            PoolThreadCache cache = null)
+            PoolThreadCache cache = null, bool fromThreadCache = false)
         {
             _arena = arena;
             Cache = cache;
+            FromThreadCache = fromThreadCache;
             Storage = storage;
             Handle = handle;
             Offset = offset;

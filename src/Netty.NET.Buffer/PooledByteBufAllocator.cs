@@ -25,7 +25,8 @@ namespace Netty.NET.Buffer;
 /// <remarks>This implementation binds each physical thread to the least-used heap/native
 /// arenas, with small/normal region caches and executor-based periodic trimming. Default
 /// reads process settings and gates caching by physical thread/executor eligibility.
-/// Explicit constructors retain their opt-in cache options. Allocator events remain pending.
+/// Explicit constructors retain their opt-in cache options. Buffer lifecycle events use
+/// BufferAllocatorEventSource; chunk events remain pending.
 /// Dispose closes factory allocations and pooled arenas; live pooled buffers and operation
 /// leases keep their reservations until returned. Unpooled fallback buffers own independent
 /// lifetimes. Empty sentinels/composites reserve no storage and remain available.
@@ -131,6 +132,7 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
                 : new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
         }
         // CLR: detector callbacks run after the allocator lock; the buffer owns its reservation.
+        BufferAllocatorEventSource.Log.Allocated(buffer);
         return ToLeakAwareBuffer(buffer);
     }
 
@@ -145,6 +147,7 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
             buffer = arena != null ? arena.Allocate(initialCapacity, maxCapacity, binding.Cache)
                 : new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, _nativeAllocator);
         }
+        BufferAllocatorEventSource.Log.Allocated(buffer);
         return ToLeakAwareBuffer(buffer);
     }
 
