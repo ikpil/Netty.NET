@@ -60,6 +60,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
      */
     private readonly Func<int, int, ByteBuf> _chunkAllocator;
     private readonly Func<int, int, AdaptiveChunkAllocation> _reserve;
+    private readonly Func<int, int, AdaptiveChunkAllocation, AdaptiveChunkAllocation> _reallocate;
     private readonly AdaptiveMagazineGroup[] _small;
     private readonly AdaptiveMagazineGroup _large;
     private readonly LocalGroups _threadLocal;
@@ -106,7 +107,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         _localMaxBytes = localMaxBytes; _localMinBytes = Math.Min(localMaxBytes, localMinBytes);
         _threadLocal = new LocalGroups(this, useCacheForNonEventLoopThreads);
         _chunkAllocator = chunkAllocator;
-        _reserve = Reserve;
+        _reserve = Reserve; _reallocate = ReserveCore;
         Policy = new AdaptiveAllocationPolicy(lowMemory);
         int[] classes = AdaptiveAllocationPolicy.GetSizeClasses();
         _small = new AdaptiveMagazineGroup[classes.Length];
@@ -115,13 +116,16 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         _large = new AdaptiveMagazineGroup(this, 0, reuseCapacity, purgePolls, purgeThreshold, lowMemory ? 1 : maxStripes);
     }
 
-    internal ByteBuf Allocate(int size, int maxCapacity) => new AdaptiveByteBuf(size, maxCapacity, _reserve);
+    internal ByteBuf Allocate(int size, int maxCapacity) => new AdaptiveByteBuf(size, maxCapacity, _reserve, _reallocate);
     /**
      * Allocate into the given buffer. Used by {@link AdaptiveByteBuf#capacity(int)}.
      */
     // CLR: return a replacement reservation; AdaptiveByteBuf publishes it after copying.
-    private AdaptiveChunkAllocation Reserve(int size, int maxCapacity)
+    private AdaptiveChunkAllocation Reserve(int size, int maxCapacity) => ReserveCore(size, maxCapacity, null);
+
+    private AdaptiveChunkAllocation ReserveCore(int size, int maxCapacity, AdaptiveChunkAllocation previous)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         _lifetime.EnterReadLock();
         try
         {
@@ -135,17 +139,17 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     groups = _threadLocal.Get() ?? _small;
                 allocation = (index < groups.Length ? groups[index] : _large).TryAllocate(size, maxCapacity);
             }
-            return allocation ?? AllocateFallback(size, maxCapacity);
+            return allocation ?? AllocateFallback(size, maxCapacity, previous?.CurrentThreadLocalAssociation ?? false);
         }
         finally { _lifetime.ExitReadLock(); }
     }
 
-    private AdaptiveChunkAllocation AllocateFallback(int size, int maxCapacity)
+    private AdaptiveChunkAllocation AllocateFallback(int size, int maxCapacity, bool threadLocal)
     {
         // If we don't already have a buffer, obtain one from the most conveniently available magazine.
         // CLR: the outer wrapper is fresh and already bound to this pool; no recycler magazine is needed.
         // Create a one-off chunk for this allocation.
-        AdaptiveChunk chunk = NewChunk(size, maxCapacity, 0, false);
+        AdaptiveChunk chunk = NewChunk(size, maxCapacity, 0, false, threadLocal);
         try { return chunk.TryAllocate(size) ?? throw new InvalidOperationException("A dedicated chunk was exhausted."); }
         finally
         {
@@ -165,18 +169,25 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
      */
     internal AdaptiveChunk NewChunk(int size, int maximum, int segmentSize, bool pooled, bool threadLocal = false)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ByteBuf raw = _chunkAllocator(size, maximum);
         try
         {
-            return !pooled ? new AdaptiveChunk(raw, Registry)
+            AdaptiveChunk chunk = !pooled ? new AdaptiveChunk(raw, Registry)
                 : segmentSize != 0 ? new AdaptiveSizeClassedChunk(raw, Registry, segmentSize, threadLocal)
                 : new AdaptiveBuddyChunk(raw, Registry);
+            // A dedicated Java fallback keeps its prior magazine association for
+            // metadata/reallocation. CLR needs only that bit, not a recycler owner.
+            if (!pooled) chunk.FallbackThreadLocal = threadLocal;
+            chunk.TrackAllocation(threadLocal);
+            return chunk;
         }
         catch { raw.Release(); throw; }
     }
 
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         // Ensure that we release all previous pooled resources when this object is finalized. This is needed as otherwise
         // we might end up with leaks. While these leaks are usually harmless in reality it would still at least be
         // very confusing for users.
@@ -216,6 +227,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
 
         protected override void OnRemoval(AdaptiveMagazineGroup[] groups)
         {
+            using var events = BufferAllocatorEventSource.Log.BeginOperation();
             if (groups == null) return;
             // CLR: cleanup and allocator Dispose may run on different physical threads.
             // The write gate quiesces allocations/inspection before owner handoff.
@@ -264,6 +276,7 @@ internal sealed class AdaptiveMagazineGroup : IDisposable
 
     internal AdaptiveChunkAllocation TryAllocate(int size, int maxCapacity)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         // Path for thread-local allocation.
         if (_threadLocalMagazine != null) return _threadLocalMagazine.TryAllocate(size, maxCapacity);
         // Path for concurrent allocation.
@@ -333,6 +346,7 @@ internal sealed class AdaptiveMagazineGroup : IDisposable
     }
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         Volatile.Write(ref _freed, true);
         if (_threadLocalMagazine != null) _threadLocalMagazine.Dispose();
         else lock (_expandLock) foreach (var magazine in Magazines) magazine.Dispose();

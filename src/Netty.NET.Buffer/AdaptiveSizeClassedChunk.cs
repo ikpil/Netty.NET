@@ -155,6 +155,7 @@ internal sealed class AdaptiveSizeClassedChunk : AdaptiveChunk
 
     internal override void ReleaseSegment(int startIndex, int size)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         if (_localFreeList != null)
         {
             lock (_localReturnLock)
@@ -190,6 +191,7 @@ internal sealed class AdaptiveSizeClassedChunk : AdaptiveChunk
 
     public override void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         if (_localFreeList != null)
         {
             lock (_localReturnLock)

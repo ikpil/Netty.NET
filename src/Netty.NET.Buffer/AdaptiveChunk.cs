@@ -32,7 +32,7 @@ internal sealed class AdaptiveChunkRegistry
 
 // The allocating magazine must serialize allocation, capacity inspection and retirement.
 // Returns may come from other threads. Construction transfers the raw delegate's single
-// reference only on success. Event integration is still pending.
+// reference only on success. Events describe successful creation and final deallocation.
 internal class AdaptiveChunk : IDisposable
 {
     private ByteBuf _storage;
@@ -43,6 +43,9 @@ internal class AdaptiveChunk : IDisposable
     private int _references = 1;
     private int _retired;
     private AdaptiveMagazine _magazine;
+    private bool _eventsTracked;
+    internal bool FallbackThreadLocal { private get; set; }
+    internal bool IsThreadLocal => _magazine?.IsThreadLocal ?? FallbackThreadLocal;
     protected int AllocatedBytes;
     internal int Capacity { get; }
     internal bool IsDirect { get; }
@@ -75,6 +78,11 @@ internal class AdaptiveChunk : IDisposable
 
     // Derived constructors register only after all fallible initialization succeeds.
     private protected void Register() => _registry.Add(this);
+    internal void TrackAllocation(bool threadLocal)
+    {
+        _eventsTracked = true;
+        BufferAllocatorEventSource.Log.AdaptiveChunkChanged(Storage, IsPooled, threadLocal, allocated: true);
+    }
     private protected void ThrowIfRetired() => ObjectDisposedException.ThrowIf(IsRetired, this);
     private protected bool TryRetire() => Interlocked.Exchange(ref _retired, 1) == 0;
     private protected void Retain() => ReferenceCountUpdater.Retain(ref _references);
@@ -85,8 +93,10 @@ internal class AdaptiveChunk : IDisposable
 
     private protected void Deallocate()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ByteBuf storage = Interlocked.Exchange(ref _storage, null);
         if (storage == null) return;
+        if (_eventsTracked) BufferAllocatorEventSource.Log.AdaptiveChunkChanged(storage, IsPooled, false, allocated: false);
         _registry.Remove(this);
         storage.Release();
     }
@@ -130,6 +140,7 @@ internal class AdaptiveChunk : IDisposable
      */
     internal void ReleaseFromMagazine()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         // Chunks can be reused before they become empty.
         // We can therefor put them in the shared queue as soon as the magazine is done with this chunk.
         AdaptiveMagazine magazine = _magazine;
@@ -146,6 +157,7 @@ internal class AdaptiveChunk : IDisposable
     // leases still own their segments. Calling it again must not release that ownership again.
     public virtual void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         if (TryRetire()) Release();
     }
 }

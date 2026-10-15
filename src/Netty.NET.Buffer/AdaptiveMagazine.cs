@@ -29,6 +29,7 @@ internal sealed class AdaptiveMagazine : IDisposable
     // CLR: shared magazines use a Monitor; local magazines rely on the pool lifetime gate.
     internal object AllocationLock { get; } = new();
     private readonly bool _threadLocal;
+    internal bool IsThreadLocal => _threadLocal;
     private AdaptiveChunk _current;
     // updated via NEXT_IN_LINE
     private object _nextInLine;
@@ -38,6 +39,7 @@ internal sealed class AdaptiveMagazine : IDisposable
 
     internal AdaptiveChunkAllocation TryAllocate(int size, int maxCapacity)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         if (_threadLocal)
         {
             // This magazine is not shared across threads, just allocate directly.
@@ -220,6 +222,7 @@ internal sealed class AdaptiveMagazine : IDisposable
     }
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         // Release the current Chunk and the next that was stored for later usage.
         RestoreMagazineFreed();
         lock (AllocationLock)

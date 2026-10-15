@@ -3003,13 +3003,62 @@ full original fixtures remain partial. Inventory: 159 (43 pending, 74 in-progres
 35 verified, 7 CLR replacements). Evidence: artifacts/buffer-pooled-chunk-events-validation
 (ignored), buffer-pooled-chunk-events-*.trx.
 
+## Adaptive allocator lifecycle events
+
+AdaptiveByteBufAllocator now produces all five EventSource events using the existing
+IDs/keywords and immutable payload schema. Shared/local fixed classes, shared buddy,
+low-memory and dedicated fallback allocations report their actual capacity, pooling and
+magazine flags. A last-slot allocation captures its local flag before magazine detachment.
+Dedicated reallocation preserves the previous magazine association through one boolean;
+CLR does not need to retain or recycle a Java buffer/magazine owner for this metadata.
+
+Resize records the old state/target before reservation and the new allocation after
+successful copy/publication. Failed reservation records only the attempt and retains the
+old bytes/cursors. Shrink and growth within fast capacity emit no resize event. Final
+buffer release captures live allocation metadata even after the logical reference count
+reaches zero. Chunk free follows the last storage claim, including outstanding operations
+and pins after allocator shutdown; tracing does not extend that lifetime. Heap diagnostic
+addresses are zero. The original adaptive heap address helper can add a segment offset to
+a zero base; this is deliberately corrected. Native addresses are observed through a
+short-lived pin and convey no storage access or ownership.
+
+Physical-thread operation guards cover adaptive factories, lifetime gates, magazines,
+shared/local caches, returns and shutdown. All five events preserve producer order and
+publish after those locks are released, including when a listener becomes enabled during
+a blocked allocation. Disabled tracing establishes only the value guard, without allocating
+pending lists, payload arrays or pins. Reentry uses a separate batch; observer exceptions
+cannot block storage return. The existing CLR provider identity and publication-timestamp
+adaptations still apply; JFR file formats, annotations and timing are replaced by
+EventListener/EventPipe/ETW rather than duplicated as JVM infrastructure.
+
+38 new cases cover adaptive storage/policy/lifetime/keyword/failure/late-enable/reentry
+paths and the remaining original pooled reuse scenario. All 10 standalone JfrEventsTest
+scenarios now map to three isolated CLR tracing fixtures (92 cases), using bounded chunk
+geometry and physical FastThreadLocal scopes. All 13 original comments are retained:
+12 in implementation and the JVM-only RecordingStream directive as a manifest reference.
+The nine event/schema/interface sources and this fixture become CLR replacements based
+on both actual original producers/ChunkInfo implementers. Other allocator sources and
+fixtures remain in-progress; this does not complete Buffer.
+
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5761/5761,
+no failures/skips. Checked build: 51 existing Common warnings, zero Buffer/test warnings/
+errors; Common unchanged. Per Debug/Release, 120 independently modeled scenarios cover
+3000 ordered event payloads and 120 byte/cursor/reference/burst states across normal and
+low-memory modes. Both original Unsafe/NIO paths agree: 6240 applicable original matches
+per CLR configuration. All 93 pinned Buffer source bytes were checked and freshly compiled
+for the four JVM profiles. Original shared magazine teardown is invoked explicitly after
+all returns; CLR Dispose additionally supports live claims. Addresses are checked locally
+and omitted from cross-process rows. Explicit CLR cleanup returns native reservations to
+zero. Evidence: artifacts/buffer-adaptive-events-validation (ignored),
+buffer-adaptive-events-*.trx. Inventory: 159 (43 pending, 64 in-progress, 35 verified,
+17 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
 swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, remaining provider-specific/native I/O,
-adaptive allocator events and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection and portable pooled runtime configuration are connected; remaining adaptive events stay pending. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
+and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection, portable pooled runtime configuration and pooled/adaptive lifecycle events are connected. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units address remaining portable buffer contracts and original fixtures,
-with adaptive allocator events still explicitly tracked.
+Next units address remaining portable buffer contracts and original fixtures.
 Common changes must cite the actual buffer contract that requires them.

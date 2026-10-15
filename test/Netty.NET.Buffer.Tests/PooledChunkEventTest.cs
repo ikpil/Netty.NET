@@ -57,6 +57,24 @@ public class PooledChunkEventTest
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
+    public void OriginalTwoRemainingSegmentsReuseScenarioKeepsOneRegisteredChunk(bool direct)
+    {
+        var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native, order: 4);
+        using var listener = Listen((EventKeywords)24); const int size = 16896;
+        ByteBuf initial = Allocate(allocator, direct, size);
+        long pinned = direct ? allocator.PinnedDirectMemory : allocator.PinnedHeapMemory;
+        initial.Release(); int buffersPerChunk = (int)(131072 / pinned);
+        var buffers = Enumerable.Range(0, buffersPerChunk - 2).Select(_ => Allocate(allocator, direct, size)).ToArray();
+        // we still have 2 available segments in the chunk, so we should not allocate a new one
+        for (int i = 0; i < 128; i++) Allocate(allocator, direct, size).Release();
+        Assert.Single(listener.Events, e => e.Id == 4);
+        // release all buffers
+        foreach (ByteBuf buffer in buffers) buffer.Release();
+        allocator.Dispose(); Assert.Single(listener.Events, e => e.Id == 5); Assert.Equal(0, native.ReservedBytes);
+    }
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
     public void OriginalTwoChunkAndReuseScenariosExposeLogicalChunkLifetime(bool direct)
     {
         var native = new NativeMemoryAllocator(); using var allocator = NewAllocator(native, order: 4);

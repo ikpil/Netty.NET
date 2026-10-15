@@ -35,6 +35,9 @@ internal sealed unsafe class AdaptiveChunkAllocation : MemoryManager<byte>
     internal int Length { get; }
     internal IByteBufAllocator Allocator => _chunk.Allocator;
     internal bool IsDirect => _chunk.IsDirect;
+    internal bool IsPooled => _chunk.IsPooled;
+    internal bool IsThreadLocal { get; }
+    internal bool CurrentThreadLocalAssociation => _chunk.IsThreadLocal;
 
     internal ByteBuf Copy(int index, int length)
     {
@@ -46,6 +49,8 @@ internal sealed unsafe class AdaptiveChunkAllocation : MemoryManager<byte>
     internal AdaptiveChunkAllocation(AdaptiveChunk chunk, Memory<byte> memory, int offset)
     {
         _chunk = chunk;
+        // Capture before a successful last-slot allocation detaches its magazine.
+        IsThreadLocal = chunk.IsThreadLocal;
         _memory = memory;
         Offset = offset;
         Length = memory.Length;
@@ -104,6 +109,7 @@ internal sealed unsafe class AdaptiveChunkAllocation : MemoryManager<byte>
 
     private void ReleaseClaim()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         if (!ReferenceCountUpdater.Release(ref _references)) return;
         AdaptiveChunk chunk = _chunk;
         _chunk = null;

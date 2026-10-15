@@ -27,6 +27,7 @@ internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
     // We need the top-level allocator so ByteBuf.capacity(int) can call reallocate()
     // CLR: the pool reservation callback replaces the chunk's allocator back-reference.
     private Func<int, int, AdaptiveChunkAllocation> _allocate;
+    private Func<int, int, AdaptiveChunkAllocation, AdaptiveChunkAllocation> _reallocate;
     // this both act as adjustment and the start index for a free list segment allocation
     // CLR: the allocation owns this offset as well as operation/pin claims.
     private AdaptiveChunkAllocation _allocation;
@@ -34,21 +35,26 @@ internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
     private int _maxFastCapacity;
     internal AdaptiveChunkAllocation Allocation => _allocation;
 
-    internal AdaptiveByteBuf(int initialCapacity, int maxCapacity, Func<int, int, AdaptiveChunkAllocation> allocate)
+    internal AdaptiveByteBuf(int initialCapacity, int maxCapacity, Func<int, int, AdaptiveChunkAllocation> allocate,
+        Func<int, int, AdaptiveChunkAllocation, AdaptiveChunkAllocation> reallocate = null)
         : base(maxCapacity)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ArgumentNullException.ThrowIfNull(allocate);
         if (initialCapacity < 0 || initialCapacity > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
         _allocate = allocate;
+        _reallocate = reallocate;
         _allocation = Allocate(initialCapacity);
         _maxFastCapacity = _allocation.Length;
         _length = initialCapacity;
+        BufferAllocatorEventSource.Log.Allocated(CaptureEvent(BufferAllocatorEventSource.Keywords.AllocateBuffer));
     }
 
     private AdaptiveChunkAllocation Allocate(int capacity)
     {
-        AdaptiveChunkAllocation allocation = _allocate(capacity, MaxCapacity)
+        AdaptiveChunkAllocation allocation = (_allocation != null && _reallocate != null
+            ? _reallocate(capacity, MaxCapacity, _allocation) : _allocate(capacity, MaxCapacity))
             ?? throw new InvalidOperationException("The adaptive storage binding did not supply an allocation.");
         if (allocation.Length >= capacity) return allocation;
         allocation.Release();
@@ -80,6 +86,7 @@ internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
         get => _length;
         set
         {
+            using var events = BufferAllocatorEventSource.Log.BeginOperation();
             CheckNewCapacity(value);
             if (_length <= value && value <= _allocation.Length)
             {
@@ -94,6 +101,7 @@ internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
             }
 
             // Reallocation required.
+            BufferAllocatorEventSource.Log.Reallocated(CaptureEvent(BufferAllocatorEventSource.Keywords.ReallocateBuffer), value);
             AdaptiveChunkAllocation previous = _allocation;
             AdaptiveChunkAllocation replacement = Allocate(value);
             try
@@ -111,6 +119,7 @@ internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
             _allocation = replacement;
             _maxFastCapacity = replacement.Length;
             _length = value;
+            BufferAllocatorEventSource.Log.Allocated(CaptureEvent(BufferAllocatorEventSource.Keywords.AllocateBuffer));
             previous.Release();
         }
     }
@@ -123,11 +132,17 @@ internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
         return _allocation.Copy(index, length);
     }
 
+    private BufferAllocatorEventSource.Snapshot? CaptureEvent(System.Diagnostics.Tracing.EventKeywords keyword)
+        => BufferAllocatorEventSource.Log.CaptureAdaptive(this, _allocation, keyword);
+
     protected override void Deallocate()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
+        BufferAllocatorEventSource.Log.Freed(CaptureEvent(BufferAllocatorEventSource.Keywords.FreeBuffer));
         AdaptiveChunkAllocation allocation = _allocation;
         _allocation = null;
         _allocate = null;
+        _reallocate = null;
         allocation.Release();
     }
 }

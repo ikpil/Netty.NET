@@ -150,6 +150,7 @@ internal sealed class AdaptiveThreadLocalChunkCache : IAdaptiveChunkCache
 
     public AdaptiveChunk PollChunk(int size)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         if (_disposed) return null;
         if (--_purgeBudget == 0)
         {
@@ -304,6 +305,7 @@ internal sealed class AdaptiveThreadLocalChunkCache : IAdaptiveChunkCache
 
     public bool OfferChunk(AdaptiveChunk chunk)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         if (_disposed || _count >= MaxCachedChunks)
         {
             return false;
@@ -347,6 +349,7 @@ internal sealed class AdaptiveThreadLocalChunkCache : IAdaptiveChunkCache
 
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         _disposed = true;
         int mask = _chunks.Length - 1;
         for (int i = 0; i < _count; i++)

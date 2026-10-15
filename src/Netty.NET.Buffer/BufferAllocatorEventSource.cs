@@ -26,8 +26,8 @@ namespace Netty.NET.Buffer;
  */
 /// <summary>Optional allocator diagnostics through the CLR tracing infrastructure.</summary>
 /// <remarks>Enable individual keywords using EventListener, EventPipe or ETW. Payloads are
-/// immutable snapshots; addresses are observations, never borrowed memory handles. Buffer
-/// events currently cover PooledByteBufAllocator. Pooled chunk events are included; adaptive events remain pending.
+/// immutable snapshots; addresses are observations, never borrowed memory handles. Buffer and chunk
+/// events cover PooledByteBufAllocator and AdaptiveByteBufAllocator.
 /// CLR callbacks run after allocator/capacity/storage-return locks have been released.
 /// The default load context uses Netty-NET-Buffer. Each separately loaded library copy
 /// uses a unique Netty-NET-Buffer-{identifier} name, available through Log.Name.</remarks>
@@ -56,7 +56,7 @@ public sealed class BufferAllocatorEventSource : EventSource
     // CLR: the original AbstractBufferEvent fields become a value snapshot shared by
     // the three event payloads. No JFR Event objects or JVM class metadata are needed.
     internal readonly record struct Snapshot(int Size, int MaxFastCapacity, int MaxCapacity,
-        bool Direct, long Address, bool ChunkPooled, bool ChunkThreadLocal);
+        bool Direct, long Address, bool ChunkPooled, bool ChunkThreadLocal, bool Adaptive = false);
 
     /**
      * Statically check if this event is enabled.
@@ -90,6 +90,38 @@ public sealed class BufferAllocatorEventSource : EventSource
             buffer.IsDirect ? buffer.AsReadOnlyMemory(0, buffer.Capacity) : default,
             pooled?.Allocation.IsPooled ?? false, pooled?.Allocation.FromThreadCache ?? false);
         Allocated(snapshot);
+    }
+
+    [NonEvent]
+    internal unsafe Snapshot? CaptureAdaptive(AdaptiveByteBuf buffer, AdaptiveChunkAllocation allocation, EventKeywords keyword)
+    {
+        if (!Enabled(keyword)) return null;
+        bool direct = allocation.IsDirect;
+        long address = 0;
+        if (direct)
+        {
+            using MemoryHandle pin = allocation.Memory.Pin();
+            address = unchecked((long)(nint)pin.Pointer);
+        }
+        // Final release has already made ByteBuf inaccessible. The live allocation
+        // supplies storage metadata until the caller returns its buffer claim.
+        return new Snapshot(buffer.Capacity, buffer.MaxFastWritableBytes + buffer.WriterIndex,
+            buffer.MaxCapacity, direct, address, allocation.IsPooled, allocation.IsThreadLocal, true);
+    }
+
+    [NonEvent]
+    internal unsafe void AdaptiveChunkChanged(ByteBuf storage, bool pooled, bool threadLocal, bool allocated)
+    {
+        if (!Enabled(allocated ? Keywords.AllocateChunk : Keywords.FreeChunk)) return;
+        bool direct = storage.IsDirect;
+        long address = 0;
+        if (direct)
+        {
+            using MemoryHandle pin = storage.AsReadOnlyMemory(0, storage.Capacity).Pin();
+            address = unchecked((long)(nint)pin.Pointer);
+        }
+        Record(new PendingEvent(allocated ? 4 : 5, default,
+            new ChunkSnapshot(storage.Capacity, direct, address, pooled, threadLocal, true), 0));
     }
 
     // Synchronous tracing callbacks cannot run while nested allocator/cache/arena
@@ -137,7 +169,7 @@ public sealed class BufferAllocatorEventSource : EventSource
         /**
          * The native memory address of the chunk, if any, otherwise zero.
          */
-        long Address, bool Pooled);
+        long Address, bool Pooled, bool ThreadLocal = false, bool Adaptive = false);
 
     [NonEvent]
     private void Record(PendingEvent entry)
@@ -182,7 +214,7 @@ public sealed class BufferAllocatorEventSource : EventSource
     private void Publish(PendingEvent entry)
     {
         Snapshot value = entry.Buffer; ChunkSnapshot chunk = entry.Chunk;
-        string allocatorType = typeof(PooledByteBufAllocator).FullName;
+        string allocatorType = value.Adaptive || chunk.Adaptive ? typeof(AdaptiveByteBufAllocator).FullName : typeof(PooledByteBufAllocator).FullName;
         switch (entry.Id)
         {
             case 1: AllocateBuffer(allocatorType, value.Size, value.MaxFastCapacity, value.MaxCapacity,
@@ -191,7 +223,7 @@ public sealed class BufferAllocatorEventSource : EventSource
             case 3: ReallocateBuffer(allocatorType, value.Size, value.MaxFastCapacity, value.MaxCapacity,
                 value.Direct, value.Address, entry.NewCapacity); break;
             // Chunks in the pooled allocator are always shared.
-            case 4: AllocateChunk(allocatorType, chunk.Capacity, chunk.Direct, chunk.Address, chunk.Pooled, false); break;
+            case 4: AllocateChunk(allocatorType, chunk.Capacity, chunk.Direct, chunk.Address, chunk.Pooled, chunk.ThreadLocal); break;
             case 5: FreeChunk(allocatorType, chunk.Capacity, chunk.Direct, chunk.Address, chunk.Pooled); break;
         }
     }

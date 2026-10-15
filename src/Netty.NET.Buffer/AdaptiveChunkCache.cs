@@ -117,6 +117,7 @@ internal sealed class AdaptiveSharedChunkCache : IAdaptiveChunkCache
     internal int Count { get { lock (_sync) return _queue.Count; } }
     public AdaptiveChunk PollChunk(int size)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             if (_disposed) return null;
@@ -200,6 +201,7 @@ internal sealed class AdaptiveSharedChunkCache : IAdaptiveChunkCache
 
     public bool OfferChunk(AdaptiveChunk chunk)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             if (_disposed || _queue.Count == _capacity) return false;
@@ -209,6 +211,7 @@ internal sealed class AdaptiveSharedChunkCache : IAdaptiveChunkCache
     }
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             _disposed = true;
@@ -248,6 +251,7 @@ internal sealed class AdaptiveBuddyChunkCache : IAdaptiveChunkCache
     }
     public AdaptiveChunk PollChunk(int size)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             if (_disposed) return null;
@@ -280,6 +284,7 @@ internal sealed class AdaptiveBuddyChunkCache : IAdaptiveChunkCache
     }
     public bool OfferChunk(AdaptiveChunk chunk)
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             if (_disposed) return false;
@@ -301,6 +306,7 @@ internal sealed class AdaptiveBuddyChunkCache : IAdaptiveChunkCache
     }
     public void Dispose()
     {
+        using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
             _disposed = true;
