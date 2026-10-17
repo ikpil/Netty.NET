@@ -3191,6 +3191,34 @@ byte-checked and freshly compiled. Evidence: artifacts/buffer-consolidation-fixt
 CompositeByteBuf/Unpooled and inherited suites stay partial. Inventory: 159 (35 pending,
 64 in-progress, 37 verified, 23 CLR replacements).
 
+## Original empty buffer fixture
+
+All 12 standalone EmptyByteBufTest scenarios now have CLR counterparts, with the
+original license and inline comment retained. Twenty added cases (24 in this fixture)
+cover queries, empty/nonempty writes and failure cursors, symmetric equality/hash 1,
+independent owned-zero release, three text encodings and invalid lengths.
+
+Java array access becomes MemoryMarshal.TryGetArray over borrowed ReadOnlyMemory.
+NIO object identity/position/limit become value-type Memory coordinates and one empty
+ReadOnlySequence segment. Java's capability-dependent nonzero empty direct address
+becomes scoped Memory.Empty pins with a null pointer and no allocation. Simultaneous
+writable/read-only pins remain valid across the sentinel's no-op Release. Six cases
+cover unpooled/pooled/adaptive allocators with both direct preferences, allocator-local
+sentinel identity and zero heap/native metrics and physical reservations. No CLR
+capability skip or dummy native backing is required. The original readCharSequence
+and readString tests share the existing string/Encoding API.
+
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass
+5916/5916, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/
+errors. All 93 original Buffer sources and the unmodified original test were freshly
+compiled. For each unpooled/pooled/adaptive default, all 12 JVM tests pass under Unsafe;
+the 10 non-address tests pass under NIO and both unsupported-address contracts are
+asserted separately (66 original test invocations, 12 address-capability checks).
+The standalone fixture becomes a CLR replacement; EmptyByteBuf source overrides,
+I/O and remaining source comment stay in-progress. Production/Common unchanged.
+Evidence: artifacts/buffer-empty-fixture-validation (ignored), buffer-empty-fixture-*.trx.
+Inventory: 159 (35 pending, 63 in-progress, 37 verified, 24 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
