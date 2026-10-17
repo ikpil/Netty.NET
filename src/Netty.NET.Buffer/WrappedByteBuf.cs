@@ -70,6 +70,12 @@ public class WrappedByteBuf : ByteBuf
     public override ByteBuf Copy(int index, int length) => Buffer.Copy(index, length);
     public override ByteBuf ReadBytes(int length) => Buffer.ReadBytes(length);
     public override int IndexOf(int fromIndex, int toIndex, byte value) => Buffer.IndexOf(fromIndex, toIndex, value);
+    public override int ForEachByte(Func<byte, bool> processor) => Buffer.ForEachByte(processor);
+    public override int ForEachByte(int index, int length, Func<byte, bool> processor)
+        => Buffer.ForEachByte(index, length, processor);
+    public override int ForEachByteDesc(Func<byte, bool> processor) => Buffer.ForEachByteDesc(processor);
+    public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+        => Buffer.ForEachByteDesc(index, length, processor);
     public override ByteBuf DiscardReadBytes() { Buffer.DiscardReadBytes(); return this; }
     public override ByteBuf DiscardSomeReadBytes() { Buffer.DiscardSomeReadBytes(); return this; }
     public override ByteBuf EnsureWritable(int minimumWritableBytes) { Buffer.EnsureWritable(minimumWritableBytes); return this; }

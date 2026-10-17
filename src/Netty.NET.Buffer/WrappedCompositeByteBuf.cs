@@ -59,6 +59,12 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
 
     public override ByteBuf Copy(int index, int length) => Wrapped.Copy(index, length);
     public override ByteBuf ReadBytes(int length) => Wrapped.ReadBytes(length);
+    public override int ForEachByte(Func<byte, bool> processor) => Wrapped.ForEachByte(processor);
+    public override int ForEachByte(int index, int length, Func<byte, bool> processor)
+        => Wrapped.ForEachByte(index, length, processor);
+    public override int ForEachByteDesc(Func<byte, bool> processor) => Wrapped.ForEachByteDesc(processor);
+    public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+        => Wrapped.ForEachByteDesc(index, length, processor);
     public override ByteBuf Slice() => Wrapped.Slice();
     public override ByteBuf Slice(int index, int length) => Wrapped.Slice(index, length);
     public override ByteBuf RetainedSlice() => Wrapped.RetainedSlice();

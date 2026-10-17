@@ -3324,6 +3324,33 @@ warnings/errors. Native cleanup returns isolated reservations to zero. Common un
 whole-source status remains partial. Evidence: artifacts/buffer-unreleasable-comparison-validation
 (ignored), buffer-unreleasable-comparison-*.trx.
 
+## Byte iteration forwarding
+
+The four ForEachByte/ForEachByteDesc overloads now delegate directly through
+WrappedByteBuf, WrappedCompositeByteBuf and UnreleasableByteBuf, matching the
+original wrappers. These 12 missing overrides preserve underlying subtype policy
+and prevent nested advanced facades from recording a separate access for every
+visited byte. Simple leak facades inherit the delegates. Existing bounded CLR
+iteration still reacquires storage after each callback, so native growth during a
+callback cannot leave an old borrowed span in use. Original source licenses/comments
+remain retained; the original forwarding bodies have no operation comments.
+
+All 62 added regressions fail before the change and pass afterwards. Heap/native/
+mixed-composite cases cover all four overloads through ordinary/simple/unreleasable
+and composite facades, absolute stop indices, readable/explicit ranges, callback
+order, full iteration, exceptions, empty/invalid/released requests, indices/marks,
+subtype dispatch and ownership. Six native callback-growth cases observe the next
+byte's mutation after reallocation. Cleanup closes each tracker once and returns
+isolated native reservations to zero.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6165/6165, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/
+errors. All 93 pinned Buffer sources were byte-checked and freshly compiled: each
+original Unsafe/NIO path satisfies the same 62 independently modeled scenarios
+(124 Java cases). Physical native allocation accounting is checked only on CLR.
+Common unchanged; whole-source and inherited-suite statuses remain partial. Evidence:
+artifacts/buffer-iteration-dispatch-validation (ignored), buffer-iteration-dispatch-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

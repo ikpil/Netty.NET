@@ -74,6 +74,12 @@ internal sealed class UnreleasableByteBuf : ByteBuf
     public override ByteBuf ReadBytes(int length) => _parent.ReadBytes(length);
     public override int IndexOf(int fromIndex, int toIndex, byte value)
         => _parent.IndexOf(fromIndex, toIndex, value);
+    public override int ForEachByte(Func<byte, bool> processor) => _parent.ForEachByte(processor);
+    public override int ForEachByte(int index, int length, Func<byte, bool> processor)
+        => _parent.ForEachByte(index, length, processor);
+    public override int ForEachByteDesc(Func<byte, bool> processor) => _parent.ForEachByteDesc(processor);
+    public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+        => _parent.ForEachByteDesc(index, length, processor);
     public override ByteBuf DiscardReadBytes() { _parent.DiscardReadBytes(); return this; }
     public override ByteBuf DiscardSomeReadBytes() { _parent.DiscardSomeReadBytes(); return this; }
     public override ByteBuf EnsureWritable(int minimumWritableBytes) { _parent.EnsureWritable(minimumWritableBytes); return this; }
