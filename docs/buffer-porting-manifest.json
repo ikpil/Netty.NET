@@ -4,7 +4,7 @@
     "buffer/src/main/java",
     "buffer/src/test/java"
   ],
-  "statusMeaning": "pending: no completed review; in-progress: only stated API/scenarios are implemented; verified: the stated complete source/test contract is reviewed; clr-replacement/not-applicable require an explicit consumer-based decision. Building a project or translating selected scenarios does not complete buffer. Comment preservedCount includes verbatim referenceComments for JVM-only directives/group labels; preservedInImplementationCount/preservedAsReferenceCount distinguish code from archived references where present.",
+  "statusMeaning": "pending: no completed review; in-progress: only stated API/scenarios are implemented; verified: the stated complete source/test contract is reviewed; clr-replacement/not-applicable require an explicit consumer-based decision. Building a project or translating selected scenarios does not complete buffer. Comment preservedCount includes verbatim referenceComments for JVM-only directives/group labels or superseded compatibility APIs; preservedInImplementationCount/preservedAsReferenceCount distinguish code from archived references where present.",
   "entries": [
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/AbstractAllocatorEvent.java",
@@ -547,10 +547,37 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufProcessor.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Common/ByteProcessor.cs",
+        "src/Netty.NET.Buffer/ByteBuf.TextSearch.cs",
+        "test/Netty.NET.Buffer.Tests/ByteProcessorTest.cs"
+      ],
+      "evidence": [
+        "Byte processing fixture/compatibility unit: all 24 original forward/backward assertions are retained across seven heap/native/composite/fixed/slice/duplicate/read-only backings. 28 added cases include all 256 octets, all 13 Common predicates, explicit capacity ranges, readable overloads, captured state, exception identity, cursor/mark/reference preservation and native cleanup. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5789/5789, no failures/skips; checked build has 51 existing Common warnings, zero Buffer/test warnings/errors. Per Debug/Release, 9710 independently modeled rows agree with each pinned Java Unsafe/NIO path (19420 applicable original matches): 3328 current predicate decisions, 2560 deprecated alias decisions and 3822 scan/visited-byte/cursor/reference states. All 93 Buffer sources plus Common ByteProcessor/ByteProcessorUtils were freshly compiled from byte-checked pinned sources. Entire upstream Java tree has no ByteBufProcessor consumer outside its definition. Common and production behavior unchanged. docs/buffer-porting.md#byte-processing-and-compatibility-alias; artifacts/buffer-byte-processor-validation (ignored), buffer-byte-processor-*.trx. Whole ByteBuf and inherited fixtures remain partial."
+      ],
+      "adaptation": "The deprecated Java ByteBufProcessor interface is only a compatibility alias of Common ByteProcessor, with ten duplicated anonymous predicate instances and no other Java consumer anywhere in the pinned repository. Existing Common ByteProcessor Func<byte, bool> constants and ByteBuf ForEachByte/ForEachByteDesc overloads retain every continue/stop contract. CLR byte values are unsigned octets; predicate behavior is checked over all 256 patterns against both original interfaces. Stateful processors use ordinary closures; CLR exceptions propagate unchanged rather than JVM checked-exception rethrow helpers. No redundant obsolete interface/class or second set of predicates is introduced. The original license is retained in the fixture, and all eleven comments redirecting users to Common ByteProcessor are retained verbatim as referenceComments because the deprecated API itself is superseded.",
+      "referenceComments": [
+        "/** * @deprecated Use {@link ByteProcessor}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_NUL}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_NON_NUL}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_CR}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_NON_CR}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_LF}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_NON_LF}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_CRLF}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_NON_CRLF}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_LINEAR_WHITESPACE}. */",
+        "/** * @deprecated Use {@link ByteProcessor#FIND_NON_LINEAR_WHITESPACE}. */"
+      ],
+      "comments": {
+        "coverage": "Original license retained; superseded Java compatibility redirection comments archived verbatim.",
+        "upstreamCount": 12,
+        "preservedCount": 12,
+        "missingCount": 0,
+        "preservedInImplementationCount": 1,
+        "preservedAsReferenceCount": 11
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/ByteBufUtil.java",
@@ -2411,10 +2438,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ByteProcessorTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/ByteProcessorTest.cs"
+      ],
+      "evidence": [
+        "Byte processing fixture/compatibility unit: all 24 original forward/backward assertions are retained across seven heap/native/composite/fixed/slice/duplicate/read-only backings. 28 added cases include all 256 octets, all 13 Common predicates, explicit capacity ranges, readable overloads, captured state, exception identity, cursor/mark/reference preservation and native cleanup. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5789/5789, no failures/skips; checked build has 51 existing Common warnings, zero Buffer/test warnings/errors. Per Debug/Release, 9710 independently modeled rows agree with each pinned Java Unsafe/NIO path (19420 applicable original matches): 3328 current predicate decisions, 2560 deprecated alias decisions and 3822 scan/visited-byte/cursor/reference states. All 93 Buffer sources plus Common ByteProcessor/ByteProcessorUtils were freshly compiled from byte-checked pinned sources. Entire upstream Java tree has no ByteBufProcessor consumer outside its definition. Common and production behavior unchanged. docs/buffer-porting.md#byte-processing-and-compatibility-alias; artifacts/buffer-byte-processor-validation (ignored), buffer-byte-processor-*.trx. Whole ByteBuf and inherited fixtures remain partial."
+      ],
+      "adaptation": "Both standalone original tests are translated with their exact input string, 24 expected positions and predicates; no inherited tests exist. Seven backing-kind theories supplement the original heap path without altering its expectations. Additional independent stop-position cases exercise all 13 Common delegates over all octets, including unsigned CLR values 128..255, component boundaries, empty ranges and absolute indices outside the readable window. Captured state and the same thrown exception object cross Func callbacks without changing cursors, marks or reference ownership. Existing production paths already satisfy this fixture; no production change is required.",
+      "comments": {
+        "coverage": "All original fixture comments retained.",
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ConsolidationTest.java",

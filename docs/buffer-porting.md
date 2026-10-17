@@ -3053,6 +3053,39 @@ zero. Evidence: artifacts/buffer-adaptive-events-validation (ignored),
 buffer-adaptive-events-*.trx. Inventory: 159 (43 pending, 64 in-progress, 35 verified,
 17 CLR replacements).
 
+## Byte processing and compatibility alias
+
+Both standalone ByteProcessorTest methods are now translated, retaining the exact input
+and all 24 original expected positions. Seven heap/native/mixed-composite/fixed-composite/
+offset-slice/duplicate/read-only backings exercise the same assertions. All 13 Common
+predicates additionally cover every octet, component boundaries, explicit capacity ranges,
+readable overloads and absolute return indices. Stateful delegates and callback exception
+identity are checked without changing cursors, marks, reference counts or storage bytes.
+Every native reservation is returned. Existing production paths satisfy these contracts;
+this unit completes the original fixture without changing production behavior.
+
+The deprecated ByteBufProcessor interface only aliases Common ByteProcessor and duplicates
+ten predicates. The entire pinned Java tree has no other consumer. Its CLR replacement is
+the existing Common ByteProcessor constants and Func<byte, bool> callbacks accepted by
+ByteBuf.ForEachByte/ForEachByteDesc. True continues and false stops; closures hold state and
+CLR exceptions propagate directly. The unsigned CLR byte represents the same eight bits
+as Java byte; all 256 values are compared. No second obsolete callback interface or set of
+constants is needed. Its license is preserved in the fixture; all eleven superseded Java
+API redirection comments are archived verbatim in referenceComments. The test source has
+all comments preserved. Common remains unchanged.
+
+28 added cases bring Debug/Release/rebuilt checked Release with SIMPLE leak sampling
+interval 1 to 5789/5789 passes, no failures/skips. Checked build: 51 existing Common
+warnings, zero Buffer/test warnings/errors. Freshly compiled pinned Java Unsafe/NIO paths
+and CLR Debug/Release each match 9710 independent model rows: 3328 current predicate
+decisions, 2560 deprecated-alias decisions and 3822 scan states including every visited
+byte, stop index, cursor and reference count. This is 19420 original matches per CLR
+configuration. All 93 Buffer sources plus Common ByteProcessor/ByteProcessorUtils were
+byte-checked against the pin before fresh compilation. Evidence:
+artifacts/buffer-byte-processor-validation (ignored), buffer-byte-processor-*.trx.
+Inventory: 159 (41 pending, 64 in-progress, 36 verified, 18 CLR replacements).
+The complete ByteBuf API and other inherited fixtures remain partial.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
