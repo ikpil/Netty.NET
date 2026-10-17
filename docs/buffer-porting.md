@@ -3351,6 +3351,41 @@ original Unsafe/NIO path satisfies the same 62 independently modeled scenarios
 Common unchanged; whole-source and inherited-suite statuses remain partial. Evidence:
 artifacts/buffer-iteration-dispatch-validation (ignored), buffer-iteration-dispatch-*.trx.
 
+## Text and search forwarding
+
+WrappedByteBuf, WrappedCompositeByteBuf and UnreleasableByteBuf now directly
+delegate all three BytesBefore overloads and the five GetString/ReadString/SetString/
+WriteString operations. Composite IndexOf delegates too: 25 missing overrides in
+total. Simple leak wrappers inherit these delegates. Underlying subtype policy,
+encoding identity and single advanced access records are preserved, including failed
+requests. Java Charset/CharSequence surfaces continue to use the existing CLR
+Encoding/ReadOnlySpan<char>/string adaptation. Original source comments/licenses are
+retained; the Java forwarding bodies add no operation comments.
+
+126 new cases cover heap/native/mixed-composite storage, all nine request shapes,
+ordinary/simple/unreleasable/composite facades, UTF-8 text across components, exact
+bytes, readable/explicit search ranges, not-found results, reader/writer progress,
+growth, indices/marks, subtype dispatch, invalid arguments and ownership. Before
+the change 115 fail; all pass afterwards. Strict CLR decoder/encoder fallback
+failures preserve cursors and record one request. Cleanup closes each tracker once
+and returns isolated native reservations to zero.
+
+All 93 pinned Buffer sources were byte-checked and freshly compiled. Each Unsafe/NIO
+path passes 126 independently modeled Java scenarios. Live results/bytes/cursors and
+request dispatch agree. Eleven released-search outcomes per path retain existing
+CLR differences: six heap BytesBefore value/range cases reject inaccessible storage
+where Java reaches its zero-capacity IndexOf fast return; five composite IndexOf
+cases return -1 because CLR release clears capacity, while Java retains capacity and
+then rejects access. Both policies are explicitly tested; no shared search/lifetime
+kernel was changed. Strict caller-supplied CLR Encoding failures and physical native
+accounting are checked separately from Java's charset replacement behavior.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6291/6291 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Common unchanged; whole-source/inherited-suite statuses remain
+partial. Evidence: artifacts/buffer-text-search-dispatch-validation (ignored),
+buffer-text-search-dispatch-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

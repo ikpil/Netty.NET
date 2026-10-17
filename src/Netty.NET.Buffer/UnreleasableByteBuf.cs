@@ -16,6 +16,7 @@
 
 using System;
 using System.Buffers;
+using System.Text;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
@@ -74,6 +75,16 @@ internal sealed class UnreleasableByteBuf : ByteBuf
     public override ByteBuf ReadBytes(int length) => _parent.ReadBytes(length);
     public override int IndexOf(int fromIndex, int toIndex, byte value)
         => _parent.IndexOf(fromIndex, toIndex, value);
+    public override int BytesBefore(byte value) => _parent.BytesBefore(value);
+    public override int BytesBefore(int length, byte value) => _parent.BytesBefore(length, value);
+    public override int BytesBefore(int index, int length, byte value) => _parent.BytesBefore(index, length, value);
+    public override string GetString(Encoding encoding) => _parent.GetString(encoding);
+    public override string GetString(int index, int length, Encoding encoding)
+        => _parent.GetString(index, length, encoding);
+    public override string ReadString(int length, Encoding encoding) => _parent.ReadString(length, encoding);
+    public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
+        => _parent.SetString(index, text, encoding);
+    public override int WriteString(ReadOnlySpan<char> text, Encoding encoding) => _parent.WriteString(text, encoding);
     public override int ForEachByte(Func<byte, bool> processor) => _parent.ForEachByte(processor);
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         => _parent.ForEachByte(index, length, processor);

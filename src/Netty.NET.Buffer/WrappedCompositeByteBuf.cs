@@ -16,6 +16,7 @@
 
 using System;
 using System.Buffers;
+using System.Text;
 
 namespace Netty.NET.Buffer;
 
@@ -59,6 +60,17 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
 
     public override ByteBuf Copy(int index, int length) => Wrapped.Copy(index, length);
     public override ByteBuf ReadBytes(int length) => Wrapped.ReadBytes(length);
+    public override int IndexOf(int fromIndex, int toIndex, byte value) => Wrapped.IndexOf(fromIndex, toIndex, value);
+    public override int BytesBefore(byte value) => Wrapped.BytesBefore(value);
+    public override int BytesBefore(int length, byte value) => Wrapped.BytesBefore(length, value);
+    public override int BytesBefore(int index, int length, byte value) => Wrapped.BytesBefore(index, length, value);
+    public override string GetString(Encoding encoding) => Wrapped.GetString(encoding);
+    public override string GetString(int index, int length, Encoding encoding)
+        => Wrapped.GetString(index, length, encoding);
+    public override string ReadString(int length, Encoding encoding) => Wrapped.ReadString(length, encoding);
+    public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
+        => Wrapped.SetString(index, text, encoding);
+    public override int WriteString(ReadOnlySpan<char> text, Encoding encoding) => Wrapped.WriteString(text, encoding);
     public override int ForEachByte(Func<byte, bool> processor) => Wrapped.ForEachByte(processor);
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         => Wrapped.ForEachByte(index, length, processor);

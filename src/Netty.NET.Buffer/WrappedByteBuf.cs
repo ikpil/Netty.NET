@@ -16,6 +16,7 @@
 
 using System;
 using System.Buffers;
+using System.Text;
 using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Buffer;
@@ -70,6 +71,16 @@ public class WrappedByteBuf : ByteBuf
     public override ByteBuf Copy(int index, int length) => Buffer.Copy(index, length);
     public override ByteBuf ReadBytes(int length) => Buffer.ReadBytes(length);
     public override int IndexOf(int fromIndex, int toIndex, byte value) => Buffer.IndexOf(fromIndex, toIndex, value);
+    public override int BytesBefore(byte value) => Buffer.BytesBefore(value);
+    public override int BytesBefore(int length, byte value) => Buffer.BytesBefore(length, value);
+    public override int BytesBefore(int index, int length, byte value) => Buffer.BytesBefore(index, length, value);
+    public override string GetString(Encoding encoding) => Buffer.GetString(encoding);
+    public override string GetString(int index, int length, Encoding encoding)
+        => Buffer.GetString(index, length, encoding);
+    public override string ReadString(int length, Encoding encoding) => Buffer.ReadString(length, encoding);
+    public override int SetString(int index, ReadOnlySpan<char> text, Encoding encoding)
+        => Buffer.SetString(index, text, encoding);
+    public override int WriteString(ReadOnlySpan<char> text, Encoding encoding) => Buffer.WriteString(text, encoding);
     public override int ForEachByte(Func<byte, bool> processor) => Buffer.ForEachByte(processor);
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         => Buffer.ForEachByte(index, length, processor);
