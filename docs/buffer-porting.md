@@ -3170,6 +3170,27 @@ native reservations to zero. Evidence: artifacts/buffer-endian-validation (ignor
 buffer-endian-*.trx. Inventory: 159 (36 pending, 64 in-progress, 36 verified,
 23 CLR replacements).
 
+## Original consolidation fixture
+
+Both standalone ConsolidationTest scenarios now retain the original wrapping sequence,
+expected ASCII strings, license and class comment. 24 cases cover heap/native/mixed
+leaves, component limits, independent copies, captured source coordinates, preserved
+indices/marks and complete reference returns. An outstanding CLR pin preserves physical
+storage after consolidation retires its logical buffer; disposing it returns the last
+native reservation. Existing production behavior satisfies the fixture and is unchanged.
+
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5896/5896,
+no failures/skips. Checked build: 51 existing Common warnings, zero Buffer/test warnings/
+errors; Common unchanged. Per Debug/Release, 270 independent combinations of 1/5/12
+pairs, default/1/2/3/16 limits, source padding and mutation/consolidation modes produce
+4320 exact states per pinned Java Unsafe/NIO path (8640 original matches). The model
+checks each wrap's bytes/layout, copy independence, indices/marks, all leaf/node counters
+and live native byte accounting through final release. All 93 Buffer sources were
+byte-checked and freshly compiled. Evidence: artifacts/buffer-consolidation-fixture-validation
+(ignored), buffer-consolidation-fixture-*.trx. Only this fixture becomes verified;
+CompositeByteBuf/Unpooled and inherited suites stay partial. Inventory: 159 (35 pending,
+64 in-progress, 37 verified, 23 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

@@ -2526,10 +2526,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ConsolidationTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "verified",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/ConsolidationTest.cs"
+      ],
+      "evidence": [
+        "Both original standalone consolidation tests are translated with exact wrapping order and expected strings; original license/class comments retained. 24 added cases cover heap/native/mixed leaves, default/1/2/3/16 component limits, copy independence, captured readable coordinates, cursor/mark preservation, all transferred references and outstanding pin lifetime. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5896/5896, no failures/skips. Checked build: 51 existing Common warnings, zero Buffer/test warnings/errors. Per Debug/Release, 270 independently modeled scenarios yield 4320 matching states per fresh pinned Java Unsafe/NIO path (8640 original matches), including each wrap, component/native-byte accounting, source-index changes, mutation, explicit consolidation and final reference returns. All 93 Buffer source bytes checked before fresh compilation; CLR native reservations return to zero. Production/Common unchanged. docs/buffer-porting.md#original-consolidation-fixture; artifacts/buffer-consolidation-fixture-validation (ignored), buffer-consolidation-fixture-*.trx. Only this standalone fixture is complete; CompositeByteBuf/Unpooled and inherited fixtures remain partial."
+      ],
+      "adaptation": "The two original tests wrap a=1& and a=1&b=2&c=3&d=4&e=5& in the same sequence, copy the result and decode using Encoding.ASCII instead of CharsetUtil.US_ASCII. Additional policy/lifetime cases use xUnit theories (24 cases total), not Java class-provider duplication. Nested composites transfer references without flattening; default limits equal the supplied input count. Small explicit limits trigger copying into the existing heap consolidation policy. Captured source ranges survive subsequent source reader/writer changes. Copies remain independent while originals mutate/retire. Explicit CLR pins may retain physical native storage after all original buffer counters reach zero; pin disposal returns the last reservation without resurrecting a logical owner. Existing production paths satisfy the original fixture; no runtime changes are required.",
+      "comments": {
+        "coverage": "All original fixture comments retained.",
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/DefaultByteBufHolderTest.java",
