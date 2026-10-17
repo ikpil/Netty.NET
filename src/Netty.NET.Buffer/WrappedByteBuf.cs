@@ -29,7 +29,8 @@ namespace Netty.NET.Buffer;
  */
 /// <remarks>CLR forwarding uses shared indices and bounded memory hooks rather than
 /// duplicating every primitive operation. Views returned by this base are unwrapped;
-/// lifetime-aware subclasses wrap them as needed. Java order/address facades remain pending.</remarks>
+/// lifetime-aware subclasses wrap them as needed. Endian access is explicit;
+/// storage metadata is borrowed through Memory and scoped pins.</remarks>
 public class WrappedByteBuf : ByteBuf
 {
     protected readonly ByteBuf Buffer;

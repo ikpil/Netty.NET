@@ -3125,11 +3125,56 @@ cleanup returns native reservations to zero. Evidence: artifacts/buffer-derivati
 (ignored), buffer-derivation-*.trx, including the before-fix failures.
 Inventory: 159 (40 pending, 65 in-progress, 36 verified, 18 CLR replacements).
 
+## Explicit endian replacements for swapped buffers
+
+SwappedByteBuf is deprecated upstream in favor of explicit little-endian accessors.
+The CLR replacement keeps the existing canonical BE operations and explicit LE operations;
+protocol code carries any order choice at the call site across views and copies. It does
+not add a mutable order flag, cached wrapper, second cursor owner or deprecated provider
+hierarchy. Wrapper identity/order(null)/diagnostic-type behavior is deliberately absent.
+
+| Original operation | CLR operation |
+| --- | --- |
+| Unsuffixed numeric access on selected BE/LE buffer | Choose the corresponding BE/LE accessor |
+| Explicit LE access under either selection | Always use the LE accessor |
+| Little-endian char | Cast UInt16 LE to/from a UTF-16 char unit |
+| Float/double | Preserve raw Int32/Int64 bits, including NaN payloads and negative zero |
+| Ordered NIO views, array/address metadata | Existing Memory/Span/ReadOnlySequence, MemoryMarshal and scoped pins |
+| Other wrapper forwarding | Use the underlying ByteBuf API; its remaining surfaces stay tracked separately |
+
+The two Unsafe heap/native strategies and their abstract base become BinaryPrimitives
+over current bounded memory. Storage is reacquired after resize; old native addresses
+are never cached. Their architecture/unaligned-access dispatch classes are unnecessary.
+All original provider comments/licenses are retained in ByteBufEndianTest, including the
+native resize/address warning. No JVM Unsafe performance equivalence is claimed.
+The API review catalogs 225 public/protected declarations across all four sources and
+22 order-aware Buffer consumer files. Comparisons/hash use canonical content; forwarding
+and future codec/transport consumers must apply the documented native API mappings.
+
+53 added cases cover seven unpooled/pooled/adaptive heap/native/mixed-composite backings,
+signed/unsigned widths, explicit LE invariance, floating raw bits, UTF-16 units,
+view/copy/allocated-read cursors and resize. ByteBufDerivationTest now also covers the
+adapted shared-cursor order scenario and all four operations in the 10000-step mixture.
+All 10 standalone original scenarios have CLR counterparts; this fixture and four
+swapped-provider sources become CLR replacements. Entire inherited little-endian fixture
+families and the remaining underlying ByteBuf APIs are not thereby complete.
+
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5872/5872,
+no failures/skips. Checked build: 51 existing Common warnings, zero Buffer/test warnings/
+errors. Production behavior and Common are unchanged. Per Debug/Release, 20686 independent
+model rows agree with each pinned Unsafe/NIO Java path (41372 original matches): 686
+numeric/view/growth states and 20000 mixed-order derivation states. The JVM runs assert
+actual generic, UnsafeHeapSwappedByteBuf and UnsafeDirectSwappedByteBuf provider coverage.
+All 93 Buffer sources were byte-checked and freshly compiled. Explicit CLR cleanup returns
+native reservations to zero. Evidence: artifacts/buffer-endian-validation (ignored),
+buffer-endian-*.trx. Inventory: 159 (36 pending, 64 in-progress, 36 verified,
+23 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
 single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
-swapped buffers and provider-specific external memory, remaining composite APIs/encoding/utilities, remaining provider-specific/native I/O,
+remaining provider-specific external memory, composite APIs/encoding/utilities and provider-specific/native I/O,
 and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection, portable pooled runtime configuration and pooled/adaptive lifecycle events are connected. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
 test classes and the rest of AbstractByteBufTest remain pending/in-progress.
 Next units address remaining portable buffer contracts and original fixtures.

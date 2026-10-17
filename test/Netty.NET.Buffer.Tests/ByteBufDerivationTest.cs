@@ -111,6 +111,37 @@ public class ByteBufDerivationTest
     }
 
     [Theory] [InlineData(false)] [InlineData(true)]
+    public void TestSwapThroughExplicitAccessorsSharesTheOriginalCursorOwner(bool direct) => WithRoot(direct, root =>
+    {
+        root.SetIndex(1, 7);
+        Assert.Equal(0x04030201, root.GetIntLE(root.ReaderIndex)); Assert.Equal(0x01020304, root.GetInt(root.ReaderIndex));
+        root.SetIndex(2, 6);
+        Assert.Equal(0x05040302, root.GetIntLE(root.ReaderIndex)); Assert.Equal(0x02030405, root.GetInt(root.ReaderIndex));
+        Assert.Equal(2, root.ReaderIndex); Assert.Equal(6, root.WriterIndex); Assert.Equal(1, root.ReferenceCount);
+    });
+
+    [Theory] [InlineData(false)] [InlineData(true)]
+    public void FullMixtureKeepsOrderSelectionAtTheCallSiteAcrossTenThousandDerivations(bool direct) => WithRoot(direct, root =>
+    {
+        uint random = 0x12345678; ByteBuf derived = root; int offset = 0; bool little = false;
+        for (int i = 0; i < 10000; i++)
+        {
+            random = unchecked(random * 1664525 + 1013904223);
+            switch ((random >> 16) % 4)
+            {
+                case 0: derived = derived.Slice(1, derived.Capacity - 1); offset++; break;
+                case 1: derived = derived.Duplicate(); break;
+                case 2: little = !little; break;
+                case 3: derived = new ReadOnlyByteBuf(derived); break;
+            }
+            byte[] bytes = Enumerable.Range(offset, 4).Select(value => unchecked((byte)value)).ToArray();
+            long expected = 0; foreach (byte value in little ? bytes.Reverse() : bytes) expected = (expected << 8) | value;
+            Assert.Equal(unchecked((int)expected), little ? derived.GetIntLE(0) : derived.GetInt(0));
+            Assert.InRange(Depth(derived), 0, 2); Assert.Equal(1, derived.ReferenceCount);
+        }
+    }, 10000);
+
+    [Theory] [InlineData(false)] [InlineData(true)]
     public void PortableMixtureKeepsTenThousandDerivationsWithinTwoWrappers(bool direct) => WithRoot(direct, root =>
     {
         uint random = 0x12345678; ByteBuf derived = root; int offset = 0;
