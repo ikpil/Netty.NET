@@ -28,12 +28,27 @@ namespace Netty.NET.Buffer.Tests;
  * Tests channel buffer streams
  */
 // Input half of pinned ByteBufStreamTest plus CLR Stream integration, paired with ByteBufOutputStreamTest.
-public class ByteBufInputStreamTest
+public class ByteBufInputStreamTest : IDisposable
 {
-    private static ByteBuf Owner(int kind, byte[] bytes)
+    private readonly NativeMemoryAllocator _native = new();
+    private PooledByteBufAllocator _pooled;
+
+    public void Dispose()
+    {
+        _pooled?.Dispose();
+        Assert.Equal(0, _native.ReservedBytes);
+    }
+
+    private ByteBuf Owner(int kind, byte[] bytes)
     {
         if (kind == 0) return Unpooled.WrappedBuffer(bytes);
         if (kind == 1) return Unpooled.DirectBuffer(bytes.Length).WriteBytes(bytes);
+        if (kind is 4 or 5)
+        {
+            _pooled ??= new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1,
+                smallCacheSize: 32, normalCacheSize: 32);
+            return (kind == 4 ? _pooled.HeapBuffer(bytes.Length) : _pooled.DirectBuffer(bytes.Length)).WriteBytes(bytes);
+        }
         int split = bytes.Length / 2;
         ByteBuf first = Unpooled.WrappedBuffer(bytes[..split]), second = Unpooled.WrappedBuffer(bytes[split..]);
         return kind == 2 ? Unpooled.CompositeBuffer().AddComponents(new[] { first, second }, true)
@@ -43,6 +58,7 @@ public class ByteBufInputStreamTest
     [Theory]
     [InlineData(0, false)] [InlineData(0, true)] [InlineData(1, false)] [InlineData(1, true)]
     [InlineData(2, false)] [InlineData(2, true)] [InlineData(3, false)] [InlineData(3, true)]
+    [InlineData(4, false)] [InlineData(4, true)] [InlineData(5, false)] [InlineData(5, true)]
     public void OriginalBoundedReadsMarksAndSkipShareTheReader(int kind, bool readOnly)
     {
         ByteBuf owner = Owner(kind, new byte[] { 9, 1, 2, 3, 4, 5, 6 }); owner.ReaderIndex = 1;
@@ -64,7 +80,7 @@ public class ByteBufInputStreamTest
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)] [InlineData(5)]
     public void OriginalDataInputPrimitivesAndFullyUseBigEndianAcrossBoundaries(int kind)
     {
         ByteBuf encoded = Unpooled.Buffer(0);
@@ -93,6 +109,56 @@ public class ByteBufInputStreamTest
         Assert.Throws<ArgumentOutOfRangeException>(() => stream.ReadFully(bytes, 0, -1));
         Assert.Throws<EndOfStreamException>(() => stream.ReadFully(bytes));
         int count = stream.BytesRead; stream.Dispose(); Assert.Equal(count, stream.BytesRead);
+    }
+
+    [Theory]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)] [InlineData(5)]
+    public void OriginalBoundedReadAndLineExamples(int kind)
+    {
+        // case1
+        ByteBuf first = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
+        using (var input = new ByteBufInputStream(first, 3, true))
+        {
+            Assert.Equal(1, input.ReadByte()); Assert.Equal(2, input.ReadByte()); Assert.Equal(3, input.ReadByte());
+            for (int i = 0; i < 3; i++) Assert.Equal(-1, input.ReadByte());
+            Assert.Equal(3, first.ReaderIndex);
+        }
+        Assert.Equal(0, first.ReferenceCount);
+
+        // case2
+        ByteBuf second = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
+        using (var input = new ByteBufInputStream(second, 4, true))
+        {
+            for (int i = 1; i <= 4; i++) Assert.Equal(i, input.ReadByte());
+            Assert.NotEqual(5, input.ReadByte()); Assert.Equal(-1, input.ReadByte());
+            Assert.Equal(4, second.ReaderIndex);
+        }
+        Assert.Equal(0, second.ReferenceCount);
+
+        // case1
+        ByteBuf noLine = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
+        using (var input = new ByteBufInputStream(noLine, 0, true))
+        {
+            Assert.Null(input.ReadLine()); Assert.Equal(0, noLine.ReaderIndex);
+        }
+        Assert.Equal(0, noLine.ReferenceCount);
+
+        ByteBuf line = Owner(kind, Encoding.ASCII.GetBytes("AB\nCEF"));
+        using (var input = new ByteBufInputStream(line, 4, true))
+        {
+            Assert.Equal("AB", input.ReadLine()); Assert.Equal("C", input.ReadLine());
+            Assert.Null(input.ReadLine()); Assert.Equal(4, line.ReaderIndex);
+        }
+        Assert.Equal(0, line.ReferenceCount);
+
+        // case1
+        ByteBuf noByte = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
+        using (var input = new ByteBufInputStream(noByte, 0, true))
+        {
+            Assert.Throws<EndOfStreamException>(() => input.ReadBoolean());
+            Assert.Equal(0, noByte.ReaderIndex);
+        }
+        Assert.Equal(0, noByte.ReferenceCount);
     }
 
     [Theory]

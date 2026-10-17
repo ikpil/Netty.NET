@@ -29,20 +29,35 @@ namespace Netty.NET.Buffer.Tests;
  * Tests channel buffer streams
  */
 // Output half of pinned ByteBufStreamTest, paired with ByteBufInputStreamTest.
-public class ByteBufOutputStreamTest
+public class ByteBufOutputStreamTest : IDisposable
 {
-    private static ByteBuf Owner(int kind, int maximum = 100000)
+    private readonly NativeMemoryAllocator _native = new();
+    private PooledByteBufAllocator _pooled;
+
+    public void Dispose()
+    {
+        _pooled?.Dispose();
+        Assert.Equal(0, _native.ReservedBytes);
+    }
+
+    private ByteBuf Owner(int kind, int maximum = 100000)
     {
         if (kind == 0) return Unpooled.Buffer(0, maximum);
         if (kind == 1) return Unpooled.DirectBuffer(0, maximum);
+        if (kind is 3 or 4)
+        {
+            _pooled ??= new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1,
+                smallCacheSize: 32, normalCacheSize: 32);
+            return kind == 3 ? _pooled.HeapBuffer(0, maximum) : _pooled.DirectBuffer(0, maximum);
+        }
         return Unpooled.CompositeBuffer(2);
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(2)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)]
     public void OriginalAllOutputOperationsRoundTripThroughInput(int kind)
     {
-        ByteBuf buffer = Owner(kind); buffer.WriteByte(9);
+        ByteBuf buffer = Owner(kind, 65536); buffer.WriteByte(9);
         using var output = new ByteBufOutputStream(buffer);
         Assert.Same(buffer, output.Buffer); Assert.True(output.CanWrite);
         Assert.False(output.CanRead); Assert.False(output.CanSeek);
@@ -55,7 +70,22 @@ public class ByteBufOutputStreamTest
         int count = output.BytesWritten; Assert.Equal(buffer.WriterIndex - 1, count);
         output.Dispose(); Assert.Equal(1, buffer.ReferenceCount); Assert.Equal(count, output.BytesWritten);
         Assert.Equal(0, buffer.ReaderIndex); buffer.ReaderIndex = 1;
+        Assert.Throws<ArgumentNullException>(() => new ByteBufOutputStream(null));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufOutputStream(buffer).Write(Array.Empty<byte>(), -1, 0));
+        Assert.Throws<ArgumentNullException>(() => new ByteBufInputStream(null, true));
+        Assert.Throws<ArgumentNullException>(() => new ByteBufInputStream(null, 0, true));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufInputStream(buffer.RetainedSlice(), -1, true));
+        // Expected
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ByteBufInputStream(buffer.RetainedSlice(), buffer.Capacity + 1, true));
+        // Expected
+        Assert.Equal(1, buffer.ReferenceCount);
         using var input = new ByteBufInputStream(buffer, true);
+        input.Mark();
+        Assert.Equal(count, input.Skip(long.MaxValue));
+        Assert.False(buffer.IsReadable);
+        input.Reset(); Assert.Equal(1, buffer.ReaderIndex);
+        Assert.Equal(4, input.Skip(4)); Assert.Equal(5, buffer.ReaderIndex);
+        input.Reset();
         Assert.True(input.ReadBoolean()); Assert.False(input.ReadBoolean());
         Assert.Equal(42, input.ReadSByte()); Assert.Equal(224, input.ReadUnsignedByte());
         byte[] text = new byte[13]; input.ReadFully(text); Assert.Equal("Hello, World!", Encoding.Latin1.GetString(text));
@@ -67,13 +97,30 @@ public class ByteBufOutputStreamTest
         Assert.Equal("The first line", input.ReadLine()); Assert.Equal("", input.ReadLine());
         Span<byte> tail = stackalloc byte[4]; input.ReadFully(tail);
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, tail.ToArray()); Assert.Equal(-1, input.ReadByte());
+        Assert.Equal(0, input.Read(text)); // CLR Stream bulk EOF returns zero.
+        Assert.Throws<EndOfStreamException>(() => input.ReadSByte());
+        Assert.Throws<ArgumentOutOfRangeException>(() => input.ReadFully(text, 0, -1));
+        Assert.Throws<EndOfStreamException>(() => input.ReadFully(text));
+        // Ownership was transferred to the ByteBufOutputStream, before we close we must retain the underlying
+        // buffer.
+        // CLR: the transferred reference belongs to the input adapter here; output is borrowed.
+        buffer.Retain();
+        try
+        {
+            input.Dispose();
+            Assert.Equal(count, input.BytesRead);
+            Assert.Equal(1, buffer.ReferenceCount);
+        }
+        finally { Assert.True(buffer.Release()); }
     }
 
     [Theory]
     [InlineData(0, false)] [InlineData(0, true)] [InlineData(1, false)] [InlineData(1, true)]
     [InlineData(2, false)] [InlineData(2, true)]
+    [InlineData(3, false)] [InlineData(3, true)] [InlineData(4, false)] [InlineData(4, true)]
     public async Task OriginalConditionalOwnershipReleasesOnceThroughDisposeOrDisposeAsync(int kind, bool release)
     {
+        // case1
         ByteBuf buffer = Owner(kind).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6 });
         var output = new ByteBufOutputStream(buffer, release);
         Assert.Equal(1, buffer.ReferenceCount);
@@ -92,7 +139,7 @@ public class ByteBufOutputStreamTest
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(2)]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)]
     public void OriginalStringBytesIgnoreHigherOrderBitsAndCharsPreserveCodeUnits(int kind)
     {
         ByteBuf buffer = Owner(kind);

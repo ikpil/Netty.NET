@@ -3219,6 +3219,34 @@ I/O and remaining source comment stay in-progress. Production/Common unchanged.
 Evidence: artifacts/buffer-empty-fixture-validation (ignored), buffer-empty-fixture-*.trx.
 Inventory: 159 (35 pending, 63 in-progress, 37 verified, 24 CLR replacements).
 
+## Original combined stream fixture
+
+All 10 standalone ByteBufStreamTest scenarios are now covered by the existing input/
+output fixtures. Twenty added cases complete real pooled heap/native coverage with
+small/normal caches enabled, the combined primitive/text roundtrip, transferred-reference
+rollback on invalid input construction, marks/long skip and retained ownership across
+input close. Exact original read lengths 3/4, zero-length line/boolean reads and the
+length-4 AB-newline-CEF example also run across six storage kinds. Allocator teardown
+returns each isolated native reservation domain to zero.
+
+All 17 original fixture comments are retained, including repeated case labels. The
+original ownership comment incorrectly names the output adapter at the input-close
+site; it is preserved and followed by a CLR clarification. Standard Stream.Read bulk
+EOF returns zero, ReadByte EOF returns -1, typed EOF throws EndOfStreamException and
+disposed CLR streams reject operations. The original closed-input readLine assertion
+maps to active-input EOF plus the existing disposed-stream checks. Existing primitive,
+low-byte string and modified UTF wire APIs remain unchanged.
+
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass
+5936/5936 (125 input/output cases), no failures/skips; 51 existing Common warnings,
+zero Buffer/test warnings/errors. All 93 original Buffer sources and the unmodified
+fixture were freshly compiled: all 10 original tests pass for every Unsafe/NIO and
+unpooled/pooled/adaptive default combination (60 original invocations). Existing adapter
+wire evidence remains applicable; production/Common unchanged. This standalone fixture
+becomes a CLR replacement. Evidence: artifacts/buffer-stream-fixture-validation (ignored),
+buffer-stream-fixture-*.trx. Inventory: 159 (35 pending, 62 in-progress, 37 verified,
+25 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
