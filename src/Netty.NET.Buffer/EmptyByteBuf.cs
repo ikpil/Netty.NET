@@ -45,6 +45,8 @@ internal sealed class EmptyByteBuf : ByteBuf
     // There is no owned allocation or lifetime transition to mutate.
     public override ByteBuf Retain(int increment = 1) => this;
     public override bool Release(int decrement = 1) => false;
+    // Preserve this allocator's sentinel instead of AbstractByteBuf's global empty allocated-read result.
+    public override ByteBuf ReadBytes(int length) { CheckIndex(0, length); return this; }
     public override ByteBuf Copy(int index, int length) { CheckIndex(index, length); return this; }
     public override ByteBuf Slice(int index, int length) { CheckIndex(index, length); return this; }
     public override ByteBuf Duplicate() => this;

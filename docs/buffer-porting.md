@@ -3247,6 +3247,32 @@ becomes a CLR replacement. Evidence: artifacts/buffer-stream-fixture-validation 
 buffer-stream-fixture-*.trx. Inventory: 159 (35 pending, 62 in-progress, 37 verified,
 25 CLR replacements).
 
+## Allocated-read specialization and forwarding
+
+Source API comparison found four missing ReadBytes(int) overrides. EmptyByteBuf now
+returns its own allocator-specific sentinel for length zero, following checkLength;
+ordinary owned buffers and read-only derived views still return Unpooled.EmptyBuffer.
+WrappedByteBuf and WrappedCompositeByteBuf delegate to the underlying virtual operation.
+UnreleasableByteBuf preserves the same inherited Java forwarding: allocated results
+retain their independent releasable ownership. Simple leak facades inherit forwarding;
+advanced facades keep their existing single access record. Original licenses/comments
+are retained; the original override bodies add no operation comments.
+
+Seventy source-based regressions cover three allocators/both preferences, custom heap/
+composite overrides, nested facades, invalid/zero/positive lengths, creator provenance,
+cursor progress, independent result bytes/lifetime, leak recording/close and native
+cleanup. Before the implementation change 54 fail; afterwards all 70 pass. Freshly
+compiled exact pinned sources satisfy the same 70 independent contract scenarios on
+each Unsafe/NIO path (140 Java cases). Native-versus-heap allocator selection follows
+the existing explicit CLR policy; Java without reliable direct cleanup may fall back
+to heap. No native provider-selection equivalence is claimed.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6006/6006, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/
+errors. Common unchanged. Only these implementation gaps are closed; whole-source and
+inherited-fixture statuses stay partial. Evidence: artifacts/buffer-read-dispatch-validation
+(ignored), buffer-read-dispatch-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

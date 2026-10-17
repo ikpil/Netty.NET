@@ -70,6 +70,8 @@ internal sealed class UnreleasableByteBuf : ByteBuf
     internal override BufferMemoryLease PinMemoryForWrite() => _parent.PinMemoryForWrite();
 
     public override ByteBuf Copy(int index, int length) => _parent.Copy(index, length);
+    // Allocated reads return the parent's independently owned result, not an unreleasable view.
+    public override ByteBuf ReadBytes(int length) => _parent.ReadBytes(length);
     public override int IndexOf(int fromIndex, int toIndex, byte value)
         => _parent.IndexOf(fromIndex, toIndex, value);
     public override ByteBuf DiscardReadBytes() { _parent.DiscardReadBytes(); return this; }
