@@ -3086,6 +3086,45 @@ artifacts/buffer-byte-processor-validation (ignored), buffer-byte-processor-*.tr
 Inventory: 159 (41 pending, 64 in-progress, 36 verified, 18 CLR replacements).
 The complete ByteBuf API and other inherited fixtures remain partial.
 
+## Bounded derived view chains
+
+The portable ByteBufDerivationTest scenarios exposed missing upstream normalization:
+12 of the initial 22 cases failed. Slice-of-slice and duplicate-of-duplicate kept every
+intermediate CLR view; read-only-of-duplicate kept an unnecessary duplicate. A slice's
+duplicate also inherited current indices as its initial marks, unlike the original fixed
+slice duplicate's zero marks. These are original derivation contracts, not new CLR API.
+
+ByteBufView now composes slice coordinates through its parent factory, collapses ordinary
+duplicate intermediates and duplicates a fixed slice as another fixed slice with fresh
+zero marks. ReadOnlyByteBuf skips ordinary duplicates. Each result keeps independent
+indices and shared data/reference ownership. Parent factory dispatch preserves specialized
+read-only/pooled/lifetime behavior; independently counted pooled owners and leak facades
+are not unwrapped merely to reduce depth. Root shrink/regrow still checks live CLR memory
+bounds; tracing/lifetime policies are unchanged. All original comments for the affected
+sliced/duplicate/read-only sources and fixture are retained, including the JVM subtype,
+constructor length-hook and inline index-adjustment rationale. These sources remain partial.
+
+30 added cases cover eight original basic scenarios, the portable 10000-operation mixture,
+fixed marks/capacity, live root bounds, retained shared ownership, independent pooled
+counters and simple/advanced leak tracker closure. CLR AsReadOnly remains idempotent;
+Duplicate supplies the independent read-only view requested by the deprecated Java
+Unpooled.unmodifiableBuffer factory. Tests assert actual parent identity and metadata
+rather than reproducing Java provider class identities. Deprecated testSwap and byte-order
+toggling within testMixture remain pending with SwappedByteBuf; the fixture is in-progress.
+
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5819/5819,
+no failures/skips. Checked build: 51 existing Common warnings, zero Buffer/test warnings/
+errors; Common unchanged. Per Debug/Release, 22430 independent states agree with each
+original Unsafe/NIO path (44860 original matches): all 243 five-operation scripts over
+slice/duplicate/read-only, plus 10000 mixed operations for each heap/native backing.
+The model checks composed coordinates, capacities, indices/marks, read-only flags, depth,
+aliased writes and reference counts. Ordinary portable chains stay within two wrappers;
+that bound does not apply to independently owned pooled parent chains or leak facades.
+All 93 pinned Buffer source bytes were checked before fresh compilation; explicit CLR
+cleanup returns native reservations to zero. Evidence: artifacts/buffer-derivation-validation
+(ignored), buffer-derivation-*.trx, including the before-fix failures.
+Inventory: 159 (40 pending, 65 in-progress, 36 verified, 18 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

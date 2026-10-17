@@ -14,6 +14,37 @@
  * under the License.
  */
 
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Copyright 2015 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 using System;
 using System.Buffers;
 
@@ -27,19 +58,43 @@ namespace Netty.NET.Buffer;
  */
 // CLR: one private view represents fixed slices or dynamic-capacity duplicates.
 // It delegates shared ownership to the parent and keeps independent indices.
+/**
+ * A special {@link AbstractUnpooledSlicedByteBuf} that can make optimizations because it knows the sliced buffer is of
+ * type {@link AbstractByteBuf}.
+ */
+// CLR: bounded memory hooks provide the shared primitive path without that JVM subtype.
 internal sealed class ByteBufView : ByteBuf
 {
     private readonly ByteBuf _parent;
+    /**
+     * Returns the index with the needed adjustment.
+     */
+    // CLR: each memory hook applies this adjustment inline.
     private readonly int _offset;
     private readonly bool _fixedCapacity;
+    internal bool IsSlice => _fixedCapacity;
+    /**
+     * A derived buffer which simply forwards all data access requests to its
+     * parent.  It is recommended to use {@link ByteBuf#duplicate()} instead
+     * of calling the constructor explicitly.
+     *
+     * @deprecated Do not use.
+     */
     internal ByteBufView(ByteBuf parent) : base(parent.MaxCapacity)
     {
-        _parent = parent;
+        // DuplicatedByteBuf skips an existing duplicate, but retains a slice's
+        // fixed range and any owner with its own reference-counting contract.
+        _parent = parent is ByteBufView { IsSlice: false } duplicate ? duplicate._parent : parent;
         SetIndex(parent.ReaderIndex, parent.WriterIndex);
         MarkReaderIndex(); MarkWriterIndex();
     }
     internal ByteBufView(ByteBuf parent, int offset, int length) : base(length)
     {
+        /**
+         * Called by the constructor before {@link #writerIndex(int)}.
+         * @param length the {@code length} argument from the constructor.
+         */
+        // CLR: the base constructor stores the length; no empty initLength override hook is needed.
         _parent = parent; _offset = offset; _fixedCapacity = true;
         WriterIndex = length;
     }
@@ -73,6 +128,21 @@ internal sealed class ByteBufView : ByteBuf
         }
     }
     public override ByteBuf Unwrap() => _parent;
+    public override ByteBuf Slice(int index, int length)
+    {
+        CheckIndex(index, length);
+        // AbstractUnpooledSlicedByteBuf composes the adjustment on its parent.
+        // Dispatch through that parent so read-only and lifetime-aware views
+        // keep their own factory/ownership rules instead of being unpeeled.
+        return _parent.Slice(_offset + index, length);
+    }
+    public override ByteBuf Duplicate()
+    {
+        EnsureAccessible();
+        // A slice duplicates as another fixed slice with fresh zero marks;
+        // an ordinary duplicate snapshots its current indices as initial marks.
+        return _fixedCapacity ? Slice(0, Capacity).SetIndex(ReaderIndex, WriterIndex) : new ByteBufView(this);
+    }
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);

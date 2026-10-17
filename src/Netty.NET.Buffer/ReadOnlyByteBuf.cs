@@ -55,7 +55,8 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     internal ReadOnlyByteBuf(ByteBuf parent)
         : base(parent?.MaxCapacity ?? throw new ArgumentNullException(nameof(parent)))
     {
-        _parent = parent is ReadOnlyByteBuf readOnly ? readOnly._parent : parent;
+        _parent = parent is ReadOnlyByteBuf readOnly ? readOnly._parent
+            : parent is ByteBufView { IsSlice: false } duplicate ? duplicate.Unwrap() : parent;
         SetIndex(parent.ReaderIndex, parent.WriterIndex);
     }
 
