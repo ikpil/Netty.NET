@@ -3298,6 +3298,32 @@ path passes the same 69 independently modeled contract states (138 Java cases).
 Common unchanged. Whole-source and inherited-suite statuses remain partial. Evidence:
 artifacts/buffer-writable-dispatch-validation (ignored), buffer-writable-dispatch-*.trx.
 
+## Unreleasable comparison forwarding
+
+Java UnreleasableByteBuf inherits WrappedByteBuf's direct hashCode/equals/compareTo
+delegates. The CLR shared-index facade now explicitly supplies these inherited
+operations, including both object and IEquatable<ByteBuf> equality. Parent overrides
+are preserved; after release, comparison against that same underlying parent still
+returns true/zero, while distinct content access requires ownership. Comparisons do
+not reread content through nested advanced facades and create extra access records.
+The existing CLR released-facade reflexivity and IComparable null ordering remain.
+
+28 added regressions cover heap/native/mixed composites and four parent arrangements,
+readable bounds, canonical hash/order, parent override dispatch and dead/live cases.
+HashSet/Dictionary lookups exercise CLR typed equality; keys are cleared before cursor
+changes or release. Nineteen cases fail before the implementation and all pass after.
+Both pinned Java Unsafe/NIO paths satisfy 27 independent states each: 24 storage/
+lifetime combinations and three original comparison surfaces. CLR's additional typed
+equality overload, collection behavior, null ordering and released-wrapper self identity
+are checked separately. All 93 original Buffer sources were freshly byte-checked and
+compiled. Original source licenses/comments remain retained.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6103/6103 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Native cleanup returns isolated reservations to zero. Common unchanged;
+whole-source status remains partial. Evidence: artifacts/buffer-unreleasable-comparison-validation
+(ignored), buffer-unreleasable-comparison-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

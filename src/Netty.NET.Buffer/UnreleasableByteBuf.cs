@@ -112,4 +112,11 @@ internal sealed class UnreleasableByteBuf : ByteBuf
         // So we just use duplicate() because the end result should be logically equivalent.
         return Duplicate();
     }
+
+    // Java inherits these direct comparison delegates from WrappedByteBuf.
+    // Keep the same CLR reflexive identity policy as the other transparent facades.
+    public override int GetHashCode() => _parent.GetHashCode();
+    public override bool Equals(object obj) => ReferenceEquals(this, obj) || _parent.Equals(obj);
+    public override bool Equals(ByteBuf other) => ReferenceEquals(this, other) || _parent.Equals(other);
+    public override int CompareTo(ByteBuf other) => ReferenceEquals(this, other) ? 0 : _parent.CompareTo(other);
 }
