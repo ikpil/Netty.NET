@@ -72,6 +72,8 @@ public class WrappedByteBuf : ByteBuf
     public override int IndexOf(int fromIndex, int toIndex, byte value) => Buffer.IndexOf(fromIndex, toIndex, value);
     public override ByteBuf DiscardReadBytes() { Buffer.DiscardReadBytes(); return this; }
     public override ByteBuf DiscardSomeReadBytes() { Buffer.DiscardSomeReadBytes(); return this; }
+    public override ByteBuf EnsureWritable(int minimumWritableBytes) { Buffer.EnsureWritable(minimumWritableBytes); return this; }
+    public override int EnsureWritable(int minimumWritableBytes, bool force) => Buffer.EnsureWritable(minimumWritableBytes, force);
     public override ByteBuf AsReadOnly() => Buffer.AsReadOnly();
     public override ByteBuf Slice() => Buffer.Slice();
     public override ByteBuf Slice(int index, int length) => Buffer.Slice(index, length);

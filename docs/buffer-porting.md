@@ -3273,6 +3273,31 @@ errors. Common unchanged. Only these implementation gaps are closed; whole-sourc
 inherited-fixture statuses stay partial. Evidence: artifacts/buffer-read-dispatch-validation
 (ignored), buffer-read-dispatch-*.trx.
 
+## Writable request forwarding
+
+Six missing EnsureWritable overrides now forward both forms through ordinary,
+composite and unreleasable facades to the underlying virtual operation. Fluent calls
+keep the outer receiver, so an unreleasable facade does not expose its parent. Status
+calls preserve codes 0/1/2/3. Simple leak facades inherit this dispatch and nested
+advanced tracking records the request once. The advanced composite fluent override
+uses the original CompositeByteBuf return type, matching its wrapped base. Original
+licenses/comments are preserved; these override bodies add no operation comments.
+
+69 added regressions all fail before the implementation change and pass afterwards.
+Heap/native/composite cases cover enough room, growth, bounds/negative requests,
+forced maximum growth, single subtype dispatch, bytes, indices/marks and ownership.
+Six native growth-failure cases preserve the original eight-byte allocation and data;
+releasing the owner returns its isolated reservation to zero. Java injects allocation
+failure through the original protected hook; CLR uses a real 16-byte reservation
+limit. The two memory-accounting systems are not asserted to be equivalent.
+
+Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass
+6075/6075, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/
+errors. All 93 pinned sources were byte-checked and freshly compiled: each Unsafe/NIO
+path passes the same 69 independently modeled contract states (138 Java cases).
+Common unchanged. Whole-source and inherited-suite statuses remain partial. Evidence:
+artifacts/buffer-writable-dispatch-validation (ignored), buffer-writable-dispatch-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

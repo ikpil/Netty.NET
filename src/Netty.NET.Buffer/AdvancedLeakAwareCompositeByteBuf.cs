@@ -64,7 +64,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override CompositeByteBuf DiscardSomeReadBytes()
     { RecordLeakNonRefCountingOperation(Leak); Wrapped.DiscardSomeReadBytes(); return this; }
 
-    public override ByteBuf EnsureWritable(int minimumWritableBytes)
+    public override CompositeByteBuf EnsureWritable(int minimumWritableBytes)
     { RecordLeakNonRefCountingOperation(Leak); Wrapped.EnsureWritable(minimumWritableBytes); return this; }
 
     public override int EnsureWritable(int minimumWritableBytes, bool force)
