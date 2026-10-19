@@ -3686,6 +3686,48 @@ warnings/errors. Common unchanged. Evidence: artifacts/buffer-unsafe-helper-vali
 (ignored), buffer-unsafe-helper-*.trx. Inventory: 159 (26 pending, 62 in-progress,
 37 verified, 34 CLR replacements). Full inherited sources/fixture completion is separate.
 
+## Derived stream forwarding
+
+Added five synchronous and five async stream overrides across ByteBufView,
+PooledDerivedByteBuf and ReadOnlyByteBuf. Previously inherited stream code copied
+storage directly and bypassed custom parent GetBytes/SetBytes Stream overrides.
+Now duplicate/read-only output and sliced/pooled input/output follow the pinned
+parent/root delegates with the appropriate coordinate adjustment. Output returns
+the view; input returns the parent's actual count. Relative stream operations
+still move only the view's cursor after successful completion. Read-only input
+remains rejected before any parent call.
+
+The C# async counterparts directly await the parent's ValueTask with the original
+cancellation token and ConfigureAwait(false). No Task.Run or synchronous fallback
+is introduced. Pending operations leave view cursors unchanged until completion;
+exceptions propagate without publishing cursor updates. Async validation failures
+remain faults of the returned operation. Callers continue to keep borrowed views,
+their owners and streams alive for the operation, excluding concurrent mutation.
+
+106 new cases reproduce 98 failures before the fix. They cover heap/native roots
+and eleven ordinary/nested/read-only/retained/borrowed slice/duplicate paths, exact
+parent method/stream/coordinates, absolute bytes, fluent identity, short reads,
+own relative cursors, marks, references, parent exceptions and invalid ranges.
+Independent pooled-view release is checked while the root remains alive. Eighteen
+pending async cases verify tokens, awaited completion and cursor publication;
+pending work is completed/drained before fixture disposal. Existing guards stay
+before custom parent dispatch, even for duplicate/read-only forwarding.
+
+All 93 pinned Buffer sources were byte-checked and freshly compiled. Each original
+Unsafe/NIO path agrees with 44 independently modeled sync scenarios and 40 invalid
+range probes. Java visits the custom parent in 14 invalid duplicate/read-only/
+pooled-duplicate requests before rejecting the range; CLR keeps its earlier own-view
+guards. Exact JVM exception precedence is not claimed. The 62 async cases are CLR
+extensions of the same contract, not original Java async Stream methods.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6858/6858 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Original affected source comments remain retained; Common unchanged.
+This unit changes Stream forwarding, with socket/file/scalar/bulk forwarding and
+full source/fixture completion remaining separate. Evidence:
+artifacts/buffer-derived-stream-validation (ignored), buffer-derived-stream-*.trx.
+Inventory remains 159 (26 pending, 62 in-progress, 37 verified, 34 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

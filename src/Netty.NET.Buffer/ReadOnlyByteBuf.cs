@@ -15,6 +15,9 @@
  */
 
 using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Buffers;
 
 namespace Netty.NET.Buffer;
@@ -81,6 +84,22 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         => throw new NotSupportedException("The buffer is read-only.");
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         => _parent.AsReadOnlyMemory(index, length);
+    // Preserve parent stream overrides and translated coordinates. CLR view
+    // bounds/lifetime guards remain in front of dispatch, including duplicates.
+    public override ByteBuf GetBytes(int index, Stream destination, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        _parent.GetBytes(index, destination, length);
+        return this;
+    }
+    public override async ValueTask GetBytesAsync(int index, Stream destination, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        await _parent.GetBytesAsync(index, destination, length, cancellationToken).ConfigureAwait(false);
+    }
     public override int ReferenceCount => _parent.ReferenceCount;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => _parent.Release(decrement);

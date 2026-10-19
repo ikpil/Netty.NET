@@ -15,6 +15,9 @@
  */
 
 using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using Netty.NET.Common;
 
@@ -118,6 +121,35 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
         int result = Root.ForEachByteDesc(_offset + index, length, processor);
         return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
+    }
+    // Preserve parent stream overrides and translated coordinates. CLR view
+    // bounds/lifetime guards remain in front of dispatch, including duplicates.
+    public override ByteBuf GetBytes(int index, Stream destination, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        Root.GetBytes(_offset + index, destination, length);
+        return this;
+    }
+    public override async ValueTask GetBytesAsync(int index, Stream destination, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        await Root.GetBytesAsync(_offset + index, destination, length, cancellationToken).ConfigureAwait(false);
+    }
+    public override int SetBytes(int index, Stream source, int length)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite(); CheckIndex(index, length);
+        return Root.SetBytes(_offset + index, source, length);
+    }
+    public override async ValueTask<int> SetBytesAsync(int index, Stream source, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite(); CheckIndex(index, length);
+        return await Root.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
     }
     public override int ReferenceCount => _referenceCountDelegate?.ReferenceCount ?? base.ReferenceCount;
     public override ByteBuf Retain(int increment = 1)

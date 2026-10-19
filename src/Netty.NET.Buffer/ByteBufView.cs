@@ -46,6 +46,9 @@
  */
 
 using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Buffers;
 
 namespace Netty.NET.Buffer;
@@ -176,6 +179,35 @@ internal sealed class ByteBufView : ByteBuf
         // AbstractUnpooledSlicedByteBuf/DuplicatedByteBuf preserve the parent's
         // allocation policy and maximum; only the source coordinates are adjusted.
         return _parent.Copy(_offset + index, length);
+    }
+    // Preserve parent stream overrides and translated coordinates. CLR view
+    // bounds/lifetime guards remain in front of dispatch, including duplicates.
+    public override ByteBuf GetBytes(int index, Stream destination, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        _parent.GetBytes(_offset + index, destination, length);
+        return this;
+    }
+    public override async ValueTask GetBytesAsync(int index, Stream destination, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        await _parent.GetBytesAsync(_offset + index, destination, length, cancellationToken).ConfigureAwait(false);
+    }
+    public override int SetBytes(int index, Stream source, int length)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite(); CheckIndex(index, length);
+        return _parent.SetBytes(_offset + index, source, length);
+    }
+    public override async ValueTask<int> SetBytesAsync(int index, Stream source, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite(); CheckIndex(index, length);
+        return await _parent.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
     }
     public override int ReferenceCount => _parent.ReferenceCount;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
