@@ -1762,10 +1762,26 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledUnsafeNoCleanerDirectByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+        "src/Netty.NET.Buffer/UnpooledByteBufAllocator.cs",
+        "src/Netty.NET.Common/NativeMemoryAllocator.cs",
+        "src/Netty.NET.Common/NativeMemoryOwner.cs",
+        "test/Netty.NET.Buffer.Tests/DirectByteBufReallocationTest.cs"
+      ],
+      "evidence": [
+        "Concrete NoCleaner review: 32 new CLR cases cover constructor/factory capacity transitions (zero/no-op/grow/shrink), prefix, trimmed indices, preserved marks, invalid/released requests, factory logical metrics and physical native reservations. CLR-only cases cover peak-budget shrink/grow failure atomicity, old pins across replacement/final release, and borrowed native-owner detachment. All 93 pinned Buffer sources byte-checked/freshly compiled; actual Unsafe/NIO/NoCleaner providers each pass 22 independently modeled portable states, including allocator provider selection. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 6525/6525, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. Common/runtime algorithms unchanged; only a CLR ownership/peak-budget comment is added to production code. docs/buffer-porting.md#native-reallocation-specialization; artifacts/buffer-native-reallocation-validation (ignored), buffer-native-reallocation-*.trx."
+      ],
+      "adaptation": "Complete concrete UnpooledUnsafeNoCleanerDirectByteBuf specialization maps to existing UnpooledDirectByteBuf owned NativeMemoryOwner storage and its Capacity setter; UnpooledByteBufAllocator factories already select this CLR storage and update capacity metrics. Constructor/same-capacity validation, successful prefix preservation, index trimming, marks, release and logical accounting are verified against actual Java providers. JVM protected ByteBuffer allocate/free hooks that unconditionally throw and the CleanableDirectBuffer reallocation hook have no CLR compatibility API; NativeMemoryOwner supplies deterministic cleanup with pin leases. CLR allocation/copy/publish intentionally replaces JVM in-place/delta-accounted reallocation: the budget includes both old and replacement allocations (minimum one physical byte for a zero-length owner), even on shrink; old pinned allocations survive until unpin; new storage is cleared; saved managed Memory views are invalidated after replacement. Allocation failure leaves CLR bytes, indices, marks and counters unchanged; Java trims indices before the potentially failing reallocation. Factory metrics count logical capacity and can reach zero while pins retain physical reservations. Borrowed-owner detachment is a separate CLR ownership check, not a NoCleaner constructor claim. No pointer equality, peak-budget equivalence, JVM availability switches or hardware timing is claimed. This closes only the concrete specialization; inherited Unsafe/NIO direct sources, helper methods and full direct fixtures remain partial. Original sole comment (2016 license) is preserved in the regression fixture.",
+      "comments": {
+        "coverage": "Sole original concrete comment retained verbatim in the CLR regression fixture.",
+        "upstreamCount": 1,
+        "preservedCount": 1,
+        "missingCount": 0,
+        "preservedInImplementationCount": 1,
+        "preservedAsReferenceCount": 0
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnreleasableByteBuf.java",

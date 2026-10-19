@@ -3516,6 +3516,44 @@ Common unchanged. Evidence: artifacts/buffer-heap-provider-validation (ignored),
 buffer-heap-provider-*.trx. Inventory: 159 (29 pending, 63 in-progress, 37 verified,
 30 CLR replacements).
 
+## Native reallocation specialization
+
+UnpooledUnsafeNoCleanerDirectByteBuf is now a CLR replacement for its complete
+concrete specialization. Existing UnpooledDirectByteBuf/UnpooledByteBufAllocator
+and NativeMemoryOwner cover owned native allocation, Capacity, cleanup and logical
+capacity metrics. JVM-only throwing ByteBuffer allocation/free hooks and Cleaner
+provider selection require no separate CLR API. The original sole comment (2016
+license) is retained in DirectByteBufReallocationTest. Inherited Unsafe/NIO direct
+sources, UnsafeByteBufUtil and full direct fixtures remain partial.
+
+CLR capacity replacement deliberately allocates, copies and then publishes rather
+than calling NativeMemoryAllocator.Reallocate: old pins must retain their original
+allocation and growing writes may alias old storage. The quota therefore covers
+old plus replacement storage, even on shrink; an empty owner reserves one physical
+byte. Newly added bytes are cleared. Allocation failure preserves bytes, indices,
+marks and counters, whereas Java trims indices before a potentially failing realloc.
+Old managed Memory views become invalid after replacement; outstanding pins retain
+physical storage through final buffer release. Factory metrics count logical capacity,
+independently of physical reservations. JVM delta-budget and pointer/timing equivalence
+are not claimed. The capacity setter now explains this policy; its algorithm is unchanged.
+
+32 new CLR cases cover constructor/factory zero/no-op/grow/shrink transitions, data
+prefixes, cursor trimming, marks after regrowth, invalid capacities, released no-op
+requests, peak-budget failures/success, old pins and borrowed-owner detachment at
+zero/nonzero offsets. Borrowed-owner behavior is an additional CLR ownership check,
+not a claim about a NoCleaner borrowing constructor. Cleanup returns reservations
+and logical metrics to zero, including pins released after logical final release.
+
+All 93 pinned Buffer sources were byte-checked and freshly compiled. Each actual
+Unsafe/NIO/NoCleaner provider passes 22 independently modeled portable states; the
+NoCleaner run enables reflective access and asserts both platform availability and
+the concrete constructor/factory selection. Full net10.0 Debug/Release/rebuilt checked
+Release with SIMPLE leak sampling interval 1 pass 6525/6525 without failures/skips;
+51 existing Common warnings, zero Buffer/test warnings/errors. Common/runtime
+algorithms unchanged. Evidence: artifacts/buffer-native-reallocation-validation
+(ignored), buffer-native-reallocation-*.trx. Inventory: 159 (28 pending,
+63 in-progress, 37 verified, 31 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

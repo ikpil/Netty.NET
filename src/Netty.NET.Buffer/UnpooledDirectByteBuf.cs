@@ -125,6 +125,9 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         {
             CheckNewCapacity(value);
             if (value == _capacity) return;
+            // CLR replacement for the JVM NoCleaner reallocation specialization:
+            // allocate/copy before publishing preserves old pins and failure state.
+            // The reservation limit must cover both allocations, even when shrinking.
             NativeMemoryOwner previous = _owner;
             NativeMemoryOwner replacement = _allocator.Allocate(value, clear: true);
             try { _memory.Span.Slice(0, Math.Min(value, _capacity)).CopyTo(replacement.Memory.Span); }
