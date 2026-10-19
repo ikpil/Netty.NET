@@ -16,6 +16,9 @@
 
 namespace Netty.NET.Buffer;
 
+// CLR: this storage type also replaces PooledUnsafeDirectByteBuf. The shared
+// bounded Memory/Span kernel resolves each allocation's offset without caching a
+// raw address or mutable NIO cursor; a scoped Memory.Pin supplies native interop.
 internal sealed class PooledDirectByteBuf : PooledByteBuf
 {
     internal PooledDirectByteBuf(PoolDirectArena arena, int initialCapacity, int maxCapacity, PoolThreadCache cache = null)

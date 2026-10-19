@@ -3554,6 +3554,46 @@ algorithms unchanged. Evidence: artifacts/buffer-native-reallocation-validation
 (ignored), buffer-native-reallocation-*.trx. Inventory: 159 (28 pending,
 63 in-progress, 37 verified, 31 CLR replacements).
 
+## Pooled native provider specialization
+
+PooledUnsafeDirectByteBuf is now a CLR replacement for its complete concrete
+specialization. Existing PooledDirectByteBuf/PooledByteBuf/PoolDirectArena and the
+bounded ByteBuf kernel cover region initialization, all 18 scalar accessors, four
+input/output forms, direct Copy, SetZero and WriteZero. Raw-address caching becomes
+per-access Memory/Span region resolution; NIO duplicate/position/limit becomes an
+immutable range. Scoped Memory.Pin replaces native interop addresses; it preserves
+physical storage, not ownership of a reusable pooled region. Callers retain the
+buffer throughout region use. Native memory exposes no managed array. Fresh CLR
+wrappers replace Recycler reuse; storage remains pooled. The original license is
+retained in the fixture and the unaligned-only swapped directive is archived.
+No hardware timing, wrapper identity or stable-address equivalence is claimed.
+
+62 new cases verify normal pooled regions (actual nonzero offsets and poisoned
+neighbors) and huge unpooled backing. They cover independent scalar byte models,
+zero-fill thresholds/end bounds, WriteZero growth, direct copy ownership/provenance,
+heap/native/segmented peers, array/span ranges, scoped pins, and one-read stream
+short read, EOF, exception and output behavior. Absolute operations preserve cursors
+and marks; native reservations and allocator metrics return to zero after disposal.
+CLR additionally checks released-owner safety, read-only destinations and zero-length
+input callback bypass. Java EOF -1 maps to CLR Stream EOF zero. ByteBuffer cursor
+changes are modeled as explicit ranges, not mutable CLR span cursors.
+
+All 93 pinned Buffer sources were byte-checked/freshly compiled. Original provider
+selection and normal/huge storage are asserted on both Unsafe/NIO paths. Unsafe
+agrees with 62 independent portable states; NIO agrees with 60 and reproduces two
+UnsupportedOperationException cases on composite output: its AbstractByteBuf branch
+calls CompositeByteBuf.internalNioBuffer for a multi-component range. CLR keeps its
+existing bounded segmented copy, as does the original Unsafe path. This is a recorded
+original-provider difference, not a CLR regression or a skipped test. Full inherited
+fixtures, UnpooledUnsafeDirectByteBuf and raw-address helper internals remain partial.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6587/6587 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Runtime algorithms/Common unchanged; production additions explain
+the provider consolidation. Evidence: artifacts/buffer-pooled-native-provider-validation
+(ignored), buffer-pooled-native-provider-*.trx. Inventory: 159 (27 pending,
+63 in-progress, 37 verified, 32 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
