@@ -1763,10 +1763,28 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnsafeByteBufUtil.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/UnpooledDirectByteBuf.cs",
+        "src/Netty.NET.Buffer/PooledByteBuf.cs",
+        "test/Netty.NET.Buffer.Tests/UnsafeByteBufUtilTest.cs"
+      ],
+      "evidence": [
+        "Unsafe copy fixture: all 12 original tests map to 32 CLR cases through public SetBytes(ReadOnlySpan<byte>) on unpooled native, pooled native and native with pooled creator storage. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 6461/6461, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. All 93 pinned Buffer sources byte-checked/freshly compiled; the unmodified original 12-test fixture passes on Unsafe. Each original Unsafe/NIO public-provider path satisfies 31 independent portable copy/range/layout scenarios. CLR null/default spans are valid empty inputs; null plus nonzero length fails while constructing the span, unlike Java null-array pointer validation. Metadata inspection unwraps optional leak facades while release stays on the facade. All original fixture comments retained, native cleanup zero, Common/runtime algorithms unchanged. docs/buffer-porting.md#unsafe-copy-fixture-adaptation; artifacts/buffer-unsafe-copy-fixture-validation (ignored), buffer-unsafe-copy-fixture-*.trx."
+      ],
+      "adaptation": "Only the two setBytes(AbstractByteBuf,long,int,byte[],int,int)/(AbstractByteBuf,long,int,ByteBuffer) source contracts and their standalone tests are mapped here. Public ByteBuf.SetBytes(int,ReadOnlySpan<byte>) uses bounded overlap-safe span copying for managed/native regions; explicit source range construction replaces array srcIndex/length, and immutable span input replaces ByteBuffer position/limit. No raw-address helper or JVM crash/null-array surface is exposed. CLR still validates target bounds/accessibility for empty spans; Java empty ByteBuffer may return earlier. Original null-crash rationale and copy-branch comments are retained in the CLR operation; the obsolete internalNioBuffer bounds directive is archived as reference. Other original scalar, zero-fill, stream, copy and address-specific helper contracts/comments remain pending; whole helper completion is not claimed.",
+      "referenceComments": [
+        "//no need to checkIndex: internalNioBuffer is already taking care of it"
+      ],
+      "comments": {
+        "coverage": "Partial helper: implemented setBytes comments retained; obsolete NIO directive archived; remaining operation comments stay upstream.",
+        "upstreamCount": 15,
+        "preservedCount": 6,
+        "missingCount": 9,
+        "preservedInImplementationCount": 5,
+        "preservedAsReferenceCount": 1
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnsafeDirectSwappedByteBuf.java",
@@ -3139,10 +3157,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/UnsafeByteBufUtilTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/UnsafeByteBufUtilTest.cs"
+      ],
+      "evidence": [
+        "Unsafe copy fixture: all 12 original tests map to 32 CLR cases through public SetBytes(ReadOnlySpan<byte>) on unpooled native, pooled native and native with pooled creator storage. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 6461/6461, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. All 93 pinned Buffer sources byte-checked/freshly compiled; the unmodified original 12-test fixture passes on Unsafe. Each original Unsafe/NIO public-provider path satisfies 31 independent portable copy/range/layout scenarios. CLR null/default spans are valid empty inputs; null plus nonzero length fails while constructing the span, unlike Java null-array pointer validation. Metadata inspection unwraps optional leak facades while release stays on the facade. All original fixture comments retained, native cleanup zero, Common/runtime algorithms unchanged. docs/buffer-porting.md#unsafe-copy-fixture-adaptation; artifacts/buffer-unsafe-copy-fixture-validation (ignored), buffer-unsafe-copy-fixture-*.trx."
+      ],
+      "adaptation": "Complete 12-scenario standalone fixture maps to 32 CLR tests using ReadOnlySpan instead of raw addresses/ByteBuffer/array+range. Read-only source, pooled creator/shared heap storage with distinct offsets, normal/empty copies and all seven invalid ranges are covered on three native target paths. Java Unsafe availability assumptions are unnecessary for CLR spans, so no test is skipped. Java null-array request has no direct span representation: null/default spans are valid empty inputs, while a nonempty range over null fails at CLR span construction. Source cursor mutation becomes an immutable span range. Pooled metadata inspection unwraps leak facades without bypassing their final Release. Original test comments are all retained; this closes only the standalone fixture, not the whole UnsafeByteBufUtil helper.",
+      "comments": {
+        "coverage": "All original standalone fixture comments retained.",
+        "upstreamCount": 10,
+        "preservedCount": 10,
+        "missingCount": 0
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/WrappedCompositeByteBufTest.java",

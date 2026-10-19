@@ -3447,6 +3447,41 @@ Evidence: artifacts/buffer-slice-specialization-validation (ignored),
 buffer-slice-specialization-*.trx. Inventory: 159 (33 pending, 62 in-progress,
 37 verified, 27 CLR replacements).
 
+## Unsafe copy fixture adaptation
+
+All 12 scenarios in UnsafeByteBufUtilTest now map to 32 CLR cases using the public
+SetBytes(int, ReadOnlySpan<byte>) operation. Targets cover unpooled native, pooled
+native and unpooled native with a pooled creator. Tests retain every original comment
+and cover read-only input, shared pooled heap storage with different offsets, array/
+empty copying, all seven invalid ranges, unchanged bytes/cursors/marks and cleanup.
+Metadata inspection follows optional leak facades; final Release still uses the
+original facade. This removes a reproduced InvalidCastException in the new test
+under SIMPLE sampling interval 1. The helper implementation was already functional.
+
+The original null-array-plus-length request has no direct span representation. Null
+arrays converted to spans and default spans are valid empty inputs; a nonzero range
+over null fails at span construction. ByteBuffer position/limit becomes an immutable
+source range. Source range construction can precede target validation; combined-invalid
+argument precedence is not asserted equivalent. Existing CLR empty-copy target bounds/
+accessibility checks remain, while Java's empty ByteBuffer path may return earlier.
+The Unsafe availability prerequisite is unnecessary on CLR; no test is skipped.
+
+Only the two source setBytes overloads (array/range and ByteBuffer) are mapped in the
+UnsafeByteBufUtil entry, now in-progress. Original null-crash/copy comments are retained
+in the CLR operation; the obsolete internalNioBuffer bounds directive is archived.
+Other scalar, zero-fill, stream and address helpers remain pending. The standalone
+fixture is a CLR replacement; completing it does not complete the helper class.
+
+All 93 pinned Buffer sources and the unmodified fixture were freshly byte-checked/
+compiled. All 12 original tests pass with Unsafe; each Unsafe/NIO public-provider path
+passes 31 independently modeled copy/layout/range scenarios. CLR null-span semantics
+and physical native cleanup are checked separately. Full net10.0 Debug/Release/rebuilt
+checked Release with SIMPLE leak sampling interval 1 pass 6461/6461, no failures/skips;
+51 existing Common warnings, zero Buffer/test warnings/errors. Native reservations
+return to zero; Common/runtime algorithms unchanged. Evidence:
+artifacts/buffer-unsafe-copy-fixture-validation (ignored), buffer-unsafe-copy-fixture-*.trx.
+Inventory: 159 (31 pending, 63 in-progress, 37 verified, 28 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

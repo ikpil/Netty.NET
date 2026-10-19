@@ -1426,6 +1426,11 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     public virtual ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
     {
         EnsureCanWrite(); CheckIndex(index, source.Length);
+        // we need to check not null for src as it may cause the JVM crash
+        // See https://github.com/netty/netty/issues/10791
+        // Copy from direct memory
+        // Copy from array
+        // CLR: the validated span represents either source; no raw address or nullable array enters the copy.
         if (TryGetMemoryCore(index, source.Length, out var memory)) source.CopyTo(memory.Span);
         else SetBytesCore(index, source.ToArray()); // Preserve overlap across component boundaries.
         return this;
