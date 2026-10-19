@@ -3594,6 +3594,50 @@ the provider consolidation. Evidence: artifacts/buffer-pooled-native-provider-va
 (ignored), buffer-pooled-native-provider-*.trx. Inventory: 159 (27 pending,
 63 in-progress, 37 verified, 32 CLR replacements).
 
+## Unpooled native provider specialization
+
+UnpooledUnsafeDirectByteBuf is now a CLR replacement for its complete concrete
+specialization. Existing UnpooledDirectByteBuf and the shared bounded kernel cover
+all 18 scalar accessors, checked overrides, bulk/stream operations, direct Copy and
+zero-fill. Owned constructors/factories use NativeMemoryOwner; borrowed ByteBuffer
+constructors become explicit immutable Memory ranges. The dangerous slice=false
+mutable-cursor API and JVM expensive-clean/Unsafe/VarHandle switches need no CLR
+compatibility members. Scoped pins replace cached addresses, including both original
+setByteBuffer address updates. The existing raw-address wrapper covers the actual
+internal doFree consumer with explicit owned/borrowed SafeHandle behavior.
+
+All 18 original concrete comments are retained: 12 in implementation and six as
+references for obsolete JVM APIs/argument labels/dispatch. The original Java9
+borrowed-owner rationale remains beside the CLR constructor, with a CLR explanation.
+Established allocation/copy/publish, cleared tails, peak quota, failure atomicity,
+old-Memory invalidation and pin-delayed free policies remain. Borrowed owner lifetime
+is the caller's responsibility; detaching/releasing a buffer never disposes that owner.
+
+The former PooledNativeByteBufProviderTest is now NativeByteBufProviderTest: its
+62 pooled/huge cases are preserved and 93 cases add unpooled factory, explicit owned
+and borrowed offset-11 storage. The shared 155 cases verify scalar byte order/bounds,
+zero/writeZero growth, direct copy ownership, heap/native/segmented transfers, spans/
+pins and streams. Borrowed prefix/suffix sentinels survive mutation, growth and final
+release. Existing reallocation/raw-address ownership fixtures pass in the full suite.
+
+All 93 pinned Buffer sources were byte-checked/freshly compiled. Actual Unsafe and
+forced VarHandle paths each agree with 155 independent states; NIO agrees with 150
+and reproduces five composite-output exceptions. Each path additionally checks 15
+invalid-input-range probes. In nine unpooled NIO probes, input is consumed before
+bounds checking; EOF can bypass the check and an input failure can take precedence.
+NIO output range errors can also originate as IllegalArgumentException from a
+ByteBuffer limit setter. CLR keeps pre-I/O range validation and idiomatic exceptions,
+EOF zero, read-only guards and zero-length callback bypass. These differences are
+recorded; no JVM mutable-cursor, exception-precedence or hardware timing equivalence
+is claimed. Inherited direct sources, helper internals and complete fixtures remain partial.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6680/6680 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Common/runtime algorithms unchanged. Evidence:
+artifacts/buffer-unpooled-native-provider-validation (ignored),
+buffer-unpooled-native-provider-*.trx. Inventory: 159 (26 pending, 63 in-progress,
+37 verified, 33 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

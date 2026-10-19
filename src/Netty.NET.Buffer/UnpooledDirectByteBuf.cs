@@ -30,6 +30,8 @@ namespace Netty.NET.Buffer;
 /// release; they do not keep the buffer's logical reference count above zero.</remarks>
 // CLR: NativeMemoryAllocator supplies the native reservation domain, while
 // IByteBufAllocator controls buffer creation, copies and growth policy.
+// UnpooledUnsafeDirectByteBuf uses this same bounded storage kernel; native
+// addresses are scoped pins rather than cached addresses or JVM VarHandle dispatch.
 public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
 {
     private readonly NativeMemoryAllocator _allocator;
@@ -84,6 +86,17 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     public UnpooledDirectByteBuf(IByteBufAllocator bufferAllocator, Memory<byte> initialBuffer,
         int maxCapacity, NativeMemoryAllocator nativeAllocator = null) : base(maxCapacity)
     {
+        // We never try to free the buffer if it was provided by the end-user as we don't know if this is a duplicate or
+        // a slice. This is done to prevent an IllegalArgumentException when using Java9 as Unsafe.invokeCleaner(...)
+        // will check if the given buffer is either a duplicate or slice and in this case throw an
+        // IllegalArgumentException.
+        //
+        // See https://hg.openjdk.java.net/jdk9/hs-demo/jdk/file/0d2ab72ba600/src/jdk.unsupported/share/classes/
+        // sun/misc/Unsafe.java#l1250
+        //
+        // We also call slice() explicitly here to preserve behaviour with previous netty releases.
+        // CLR: Memory<byte> already captures the caller's range without mutable NIO
+        // position/limit state. The owner stays borrowed until explicitly detached.
         ArgumentNullException.ThrowIfNull(bufferAllocator);
         if (!NativeMemoryOwner.TryGetOwner(initialBuffer, out _))
             throw new ArgumentException("The memory must be backed by NativeMemoryOwner.", nameof(initialBuffer));

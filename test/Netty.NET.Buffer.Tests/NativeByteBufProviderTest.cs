@@ -23,49 +23,77 @@ using Netty.NET.Common;
 
 namespace Netty.NET.Buffer.Tests;
 
-// Portable contracts of PooledUnsafeDirectByteBuf, including real arena offsets.
-public class PooledNativeByteBufProviderTest
+// Portable contracts of pooled/unpooled native providers and borrowed memory.
+// Provider 0: pooled region; 1: huge pooled backing; 2: unpooled factory;
+// 3: explicit owned constructor; 4: borrowed NativeMemoryOwner range.
+public class NativeByteBufProviderTest
 {
     private sealed class Storage : IDisposable
     {
         public readonly NativeMemoryAllocator Native = new(1 << 20);
-        public readonly PooledByteBufAllocator Allocator;
+        public readonly IByteBufAllocator Allocator;
         public readonly ByteBuf Left, Target, Right;
         public readonly int Initial;
-        public Storage(bool huge)
+        private readonly NativeMemoryOwner _borrowed;
+        private IByteBufAllocatorMetric Metric => ((IByteBufAllocatorMetricProvider)Allocator).Metric;
+        public Storage(int provider)
         {
-            Initial = huge ? 9000 : 128;
-            Allocator = new PooledByteBufAllocator(true, poolHeap: false, pageSize: 4096,
-                maxOrder: 1, nativeAllocator: Native);
+            Initial = provider == 1 ? 9000 : 128;
+            Allocator = provider < 2
+                ? new PooledByteBufAllocator(true, poolHeap: false, pageSize: 4096,
+                    maxOrder: 1, nativeAllocator: Native)
+                : new UnpooledByteBufAllocator(true, Native);
             Left = Allocator.DirectBuffer(128, 128);
-            Target = Allocator.DirectBuffer(Initial, 32768);
+            if (provider == 4)
+            {
+                _borrowed = Native.Allocate(160);
+                _borrowed.Memory.Span.Fill(0x7e);
+                Target = new UnpooledDirectByteBuf(Allocator, _borrowed.Memory.Slice(11, Initial), 32768, Native);
+                Assert.Equal(0, Target.ReaderIndex); Assert.Equal(Initial, Target.WriterIndex);
+            }
+            else Target = provider == 3 ? new UnpooledDirectByteBuf(Allocator, Initial, 32768, Native)
+                : Allocator.DirectBuffer(Initial, 32768);
             Right = Allocator.DirectBuffer(128, 128);
             Left.SetBytes(0, Filled(128, 0xa5));
             Right.SetBytes(0, Filled(128, 0x5a));
             Assert.True(Target.IsDirect); Assert.True(Target.IsContiguous);
             Assert.Same(Allocator, Target.Allocator);
-            var a = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Left)).Allocation;
-            var b = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Target)).Allocation;
-            var c = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Right)).Allocation;
-            Assert.Equal(!huge, b.IsPooled);
-            if (!huge)
+            if (provider < 2)
             {
-                Assert.Same(a.Storage, b.Storage); Assert.Same(b.Storage, c.Storage);
-                Assert.True(b.Offset > 0); Assert.NotEqual(a.Offset, b.Offset); Assert.NotEqual(b.Offset, c.Offset);
+                var a = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Left)).Allocation;
+                var b = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Target)).Allocation;
+                var c = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Right)).Allocation;
+                Assert.Equal(provider == 0, b.IsPooled);
+                if (provider == 0)
+                {
+                    Assert.Same(a.Storage, b.Storage); Assert.Same(b.Storage, c.Storage);
+                    Assert.True(b.Offset > 0); Assert.NotEqual(a.Offset, b.Offset); Assert.NotEqual(b.Offset, c.Offset);
+                }
+                else Assert.Equal(0, b.Offset);
             }
-            else Assert.Equal(0, b.Offset);
+            else Assert.IsAssignableFrom<UnpooledDirectByteBuf>(Owner(Target));
         }
         public void Neighbors()
         {
             Assert.Equal(Filled(128, 0xa5), ByteBufUtil.GetBytes(Left, 0, 128));
             Assert.Equal(Filled(128, 0x5a), ByteBufUtil.GetBytes(Right, 0, 128));
+            BorrowedGuards();
+        }
+        private void BorrowedGuards()
+        {
+            if (_borrowed == null) return;
+            Assert.Equal(Filled(11, 0x7e), _borrowed.Memory[..11].ToArray());
+            Assert.Equal(Filled(21, 0x7e), _borrowed.Memory[139..].ToArray());
         }
         public void Dispose()
         {
             foreach (ByteBuf b in new[] { Left, Target, Right }) if (b.ReferenceCount > 0) Assert.True(b.Release());
-            Allocator.Dispose();
+            // Release/detach never disposes the caller's borrowed owner.
+            BorrowedGuards();
+            _borrowed?.Dispose();
+            (Allocator as IDisposable)?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
-            Assert.Equal(0, Allocator.Metric.UsedDirectMemory);
+            Assert.Equal(0, Metric.UsedDirectMemory);
         }
     }
     private static ByteBuf Owner(ByteBuf b)
@@ -80,16 +108,25 @@ public class PooledNativeByteBufProviderTest
         b.SetIndex(0, b.Capacity).ResetWriterIndex().ResetReaderIndex();
         Assert.Equal(reader, b.ReaderIndex); Assert.Equal(writer, b.WriterIndex);
     }
+    public static IEnumerable<object[]> ProviderCases()
+    {
+        foreach (int provider in Enumerable.Range(0, 5)) yield return [provider];
+    }
+    public static IEnumerable<object[]> BooleanCases()
+    {
+        foreach (int provider in Enumerable.Range(0, 5))
+        foreach (bool value in new[] { false, true }) yield return [provider, value];
+    }
     public static IEnumerable<object[]> ScalarCases()
     {
-        foreach (bool huge in new[] { false, true })
-        foreach (int index in new[] { 0, 1, 7, huge ? 8992 : 120 }) yield return [huge, index];
+        foreach (int provider in Enumerable.Range(0, 5))
+        foreach (int index in new[] { 0, 1, 7, provider == 1 ? 8992 : 120 }) yield return [provider, index];
     }
     [Theory]
     [MemberData(nameof(ScalarCases))]
-    public void ScalarsRespectNativeRegionOffsetsAndWireOrder(bool huge, int index)
+    public void ScalarsRespectNativeRegionOffsetsAndWireOrder(int provider, int index)
     {
-        using var s = new Storage(huge);
+        using var s = new Storage(provider);
         int[] widths = [1, 2, 2, 3, 3, 4, 4, 8, 8];
         foreach (ulong value in new ulong[] { 0, 0x1122334455667788, 0xffeeddcc8000fedc })
         for (int operation = 0; operation < widths.Length; ++operation)
@@ -137,14 +174,14 @@ public class PooledNativeByteBufProviderTest
 
     public static IEnumerable<object[]> ZeroCases()
     {
-        foreach (bool huge in new[] { false, true })
-        foreach (int length in new[] { 0, 1, 7, 8, 63, 64, 65, 128, -1 }) yield return [huge, length];
+        foreach (int provider in Enumerable.Range(0, 5))
+        foreach (int length in new[] { 0, 1, 7, 8, 63, 64, 65, 128, -1 }) yield return [provider, length];
     }
     [Theory]
     [MemberData(nameof(ZeroCases))]
-    public void NativeZeroFillChecksLogicalBoundsAndPreservesNeighbors(bool huge, int length)
+    public void NativeZeroFillChecksLogicalBoundsAndPreservesNeighbors(int provider, int length)
     {
-        using var s = new Storage(huge);
+        using var s = new Storage(provider);
         byte[] expected = Filled(s.Initial, 0xcc);
         s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         int index = length >= 0 ? s.Initial - length : 0;
@@ -154,11 +191,10 @@ public class PooledNativeByteBufProviderTest
         IndicesAndMarks(s.Target); s.Neighbors();
     }
     [Theory]
-    [InlineData(false, false)] [InlineData(false, true)]
-    [InlineData(true, false)] [InlineData(true, true)]
-    public void WriteZeroRemainsCorrectAfterNativeStorageMoves(bool huge, bool grow)
+    [MemberData(nameof(BooleanCases))]
+    public void WriteZeroRemainsCorrectAfterNativeStorageMoves(int provider, bool grow)
     {
-        using var s = new Storage(huge);
+        using var s = new Storage(provider);
         int writer = grow ? s.Initial - 8 : 10;
         s.Target.SetBytes(0, Filled(s.Initial, 0xcc)).SetIndex(3, writer).MarkReaderIndex().MarkWriterIndex();
         Assert.Same(s.Target, s.Target.WriteZero(16));
@@ -170,14 +206,14 @@ public class PooledNativeByteBufProviderTest
     }
     public static IEnumerable<object[]> CopyCases()
     {
-        foreach (bool huge in new[] { false, true })
-        foreach (int length in new[] { 0, 7, 128 }) yield return [huge, length];
+        foreach (int provider in Enumerable.Range(0, 5))
+        foreach (int length in new[] { 0, 7, 128 }) yield return [provider, length];
     }
     [Theory]
     [MemberData(nameof(CopyCases))]
-    public void CopyKeepsDirectAllocatorAndIndependentLifetime(bool huge, int length)
+    public void CopyKeepsDirectAllocatorAndIndependentLifetime(int provider, int length)
     {
-        using var s = new Storage(huge);
+        using var s = new Storage(provider);
         s.Target.SetBytes(0, Filled(s.Initial, 0x42)).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         ByteBuf copy = s.Target.Copy(s.Initial - length, length);
         try
@@ -197,15 +233,15 @@ public class PooledNativeByteBufProviderTest
     }
     public static IEnumerable<object[]> TransferCases()
     {
-        foreach (bool huge in new[] { false, true })
+        foreach (int provider in Enumerable.Range(0, 5))
         foreach (int kind in new[] { 0, 1, 2 })
-        foreach (bool output in new[] { false, true }) yield return [huge, kind, output];
+        foreach (bool output in new[] { false, true }) yield return [provider, kind, output];
     }
     [Theory]
     [MemberData(nameof(TransferCases))]
-    public void AbsoluteCopiesSupportHeapNativeAndSegmentedPeers(bool huge, int kind, bool output)
+    public void AbsoluteCopiesSupportHeapNativeAndSegmentedPeers(int provider, int kind, bool output)
     {
-        using var s = new Storage(huge);
+        using var s = new Storage(provider);
         ByteBuf peer = kind == 0 ? Unpooled.Buffer(32, 32) : kind == 1
             ? new UnpooledDirectByteBuf(32, 32, s.Native)
             : new CompositeByteBuf().AddComponent(Unpooled.WrappedBuffer(new byte[8]), true)
@@ -230,11 +266,10 @@ public class PooledNativeByteBufProviderTest
         finally { peer.Release(); }
     }
     [Theory]
-    [InlineData(false, false)] [InlineData(false, true)]
-    [InlineData(true, false)] [InlineData(true, true)]
-    public unsafe void BoundedSpansReplaceArrayAndByteBufferRanges(bool huge, bool output)
+    [MemberData(nameof(BooleanCases))]
+    public unsafe void BoundedSpansReplaceArrayAndByteBufferRanges(int provider, bool output)
     {
-        using var s = new Storage(huge);
+        using var s = new Storage(provider);
         byte[] root = Filled(s.Initial, 0xcc), other = Filled(32, 0x42);
         s.Target.SetBytes(0, root).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         int index = s.Initial - 23;
@@ -261,14 +296,14 @@ public class PooledNativeByteBufProviderTest
     }
     public static IEnumerable<object[]> StreamCases()
     {
-        foreach (bool huge in new[] { false, true })
-        foreach (int mode in new[] { 0, 1, 2, 3 }) yield return [huge, mode];
+        foreach (int provider in Enumerable.Range(0, 5))
+        foreach (int mode in new[] { 0, 1, 2, 3 }) yield return [provider, mode];
     }
     [Theory]
     [MemberData(nameof(StreamCases))]
-    public void StreamTransfersAreBoundedAndKeepAbsoluteIndices(bool huge, int mode)
+    public void StreamTransfersAreBoundedAndKeepAbsoluteIndices(int provider, int mode)
     {
-        using var s = new Storage(huge);
+        using var s = new Storage(provider);
         byte[] root = Filled(s.Initial, 0xcc);
         s.Target.SetBytes(0, root).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         int index = s.Initial - 23;
@@ -297,10 +332,10 @@ public class PooledNativeByteBufProviderTest
         IndicesAndMarks(s.Target); s.Neighbors();
     }
     [Theory]
-    [InlineData(false)] [InlineData(true)]
-    public void RecycledStorageCannotReviveAnOldClrOwner(bool huge)
+    [MemberData(nameof(ProviderCases))]
+    public void RecycledStorageCannotReviveAnOldClrOwner(int provider)
     {
-        using var s = new Storage(huge);
+        using var s = new Storage(provider);
         ByteBuf old = Owner(s.Target);
         Assert.True(s.Target.Release());
         ByteBuf next = s.Allocator.DirectBuffer(s.Initial, 32768);
