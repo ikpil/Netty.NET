@@ -63,6 +63,8 @@ public abstract partial class ByteBuf
         => GetReadOnlyMemoryCore(index, destination.Length).Span.CopyTo(destination);
     protected virtual void SetBytesCore(int index, ReadOnlySpan<byte> source)
         => source.CopyTo(GetMemoryCore(index, source.Length).Span);
+    // fast-path for small writes to avoid thread-state change JDK's handling
+    // CLR: Span.Clear replaces the heap helper's manual batch/64-byte threshold strategy.
     protected virtual void SetZeroCore(int index, int length) => GetMemoryCore(index, length).Span.Clear();
     protected virtual ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
         => new(GetReadOnlyMemoryCore(index, length));

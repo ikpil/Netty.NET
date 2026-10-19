@@ -3482,6 +3482,40 @@ return to zero; Common/runtime algorithms unchanged. Evidence:
 artifacts/buffer-unsafe-copy-fixture-validation (ignored), buffer-unsafe-copy-fixture-*.trx.
 Inventory: 159 (31 pending, 63 in-progress, 37 verified, 28 CLR replacements).
 
+## Heap provider specializations
+
+UnpooledUnsafeHeapByteBuf and PooledUnsafeHeapByteBuf are now CLR replacements for
+their complete concrete specialization. Existing heap/pooled storage and the bounded
+ByteBuf Memory/Span/BinaryPrimitives kernel cover all nine scalar getter/setter pairs,
+checked unpooled entry points, pooled offsets and SetZero/WriteZero. Real original
+consumers are UnpooledByteBufAllocator's instrumented heap type and PoolArena's heap
+factory. Oracle runs assert that Unsafe selects these original classes and NIO selects
+their safe counterparts. Inherited source/fixture completion remains separate.
+
+JVM uninitialized allocation, unaligned dispatch and Recycler wrappers require no
+additional CLR subtype. Existing managed initial-byte policy and fresh CLR buffer
+objects remain; storage is still pooled. Deprecated swapped selection uses the
+existing explicit BE/LE replacement. Every concrete comment is retained, including
+the unaligned-only directive archived as reference. The original helper's BE-default
+and small-write rationale are retained beside CLR scalar/Span.Clear code. Only its
+array scalar/zero subset is additionally reviewed here; the whole UnsafeByteBufUtil
+entry remains in-progress for its unclosed address/stream/copy contracts.
+
+32 added cases verify three independent word patterns at offsets 0/1/7/120, exact
+neighbor bytes, nonzero pooled storage offsets, zero lengths 0/1/7/8/63/64/65/128/129,
+WriteZero growth and writer/mark changes. Heap disposal metrics return to zero;
+the absent direct arena reports -1 (unknown), not a positive reservation. Stale CLR
+owners cannot revive after a later allocation. JVM recycling identity, initial
+unwritten bytes and hardware timing are not asserted equivalent.
+
+All 93 pinned Buffer sources were byte-checked/freshly compiled; each Unsafe/NIO
+path passes 32 independently modeled portable scenarios. Full net10.0 Debug/Release/
+rebuilt checked Release with SIMPLE leak sampling interval 1 pass 6493/6493, no failures/
+skips; 51 existing Common warnings, zero Buffer/test warnings/errors. Runtime algorithms/
+Common unchanged. Evidence: artifacts/buffer-heap-provider-validation (ignored),
+buffer-heap-provider-*.trx. Inventory: 159 (29 pending, 63 in-progress, 37 verified,
+30 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

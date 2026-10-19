@@ -240,6 +240,10 @@ namespace Netty.NET.Buffer;
 // This first stage implements indices, primitive/bulk access and shared views.
 // Memory and Span are borrowed, not retain tokens. Exclude release/reallocation
 // throughout their use; a saved Memory is a view of its original allocation.
+/**
+ * All operations get and set as {@link ByteOrder#BIG_ENDIAN}.
+ */
+// CLR: the helper's default wire order is BE; explicit LE methods share bounded scalar access.
 public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
 {
     // CLR: AbstractByteBuf's shared detector lives on the combined skeletal ByteBuf.
