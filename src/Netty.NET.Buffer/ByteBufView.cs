@@ -128,6 +128,23 @@ internal sealed class ByteBufView : ByteBuf
         }
     }
     public override ByteBuf Unwrap() => _parent;
+    // AbstractByteBuf's readable overload uses its own loop, not the indexed virtual delegate.
+    public override int ForEachByte(Func<byte, bool> processor)
+        => base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    public override int ForEachByteDesc(Func<byte, bool> processor)
+        => base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    public override int ForEachByte(int index, int length, Func<byte, bool> processor)
+    {
+        if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
+        int result = _parent.ForEachByte(_offset + index, length, processor);
+        return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
+    }
+    public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+    {
+        if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
+        int result = _parent.ForEachByteDesc(_offset + index, length, processor);
+        return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
+    }
     public override ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);

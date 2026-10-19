@@ -102,6 +102,23 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     internal override BufferMemoryLease AcquireReadLease() { EnsureAccessible(); return Root.AcquireReadLease(); }
     internal override BufferMemoryLease PinMemoryForWrite() { EnsureCanWrite(); return Root.PinMemoryForWrite(); }
     public override ByteBuf Copy(int index, int length) { CheckIndex(index, length); return Root.Copy(_offset + index, length); }
+    // Readable iteration stays on this view; indexed iteration follows the original root delegates.
+    public override int ForEachByte(Func<byte, bool> processor)
+        => base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    public override int ForEachByteDesc(Func<byte, bool> processor)
+        => base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    public override int ForEachByte(int index, int length, Func<byte, bool> processor)
+    {
+        if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
+        int result = Root.ForEachByte(_offset + index, length, processor);
+        return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
+    }
+    public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+    {
+        if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
+        int result = Root.ForEachByteDesc(_offset + index, length, processor);
+        return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
+    }
     public override int ReferenceCount => _referenceCountDelegate?.ReferenceCount ?? base.ReferenceCount;
     public override ByteBuf Retain(int increment = 1)
     {

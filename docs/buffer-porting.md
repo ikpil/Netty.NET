@@ -3386,6 +3386,36 @@ warnings/errors. Common unchanged; whole-source/inherited-suite statuses remain
 partial. Evidence: artifacts/buffer-text-search-dispatch-validation (ignored),
 buffer-text-search-dispatch-*.trx.
 
+## Derived buffer iteration
+
+ByteBufView, ReadOnlyByteBuf and PooledDerivedByteBuf now implement the original
+indexed ForEachByte/ForEachByteDesc parent/root delegates. Slices translate input
+coordinates and convert parent results back to view coordinates, normalizing any
+result below their adjustment to -1, including zero-offset slices. Duplicates and
+read-only views preserve the parent's result. Explicit readable-overload overrides
+keep AbstractByteBuf's view-local loop; forwarding those through the newly indexed
+override would incorrectly invoke the parent's indexed policy. The six indexed and
+six readable overrides retain existing bounded CLR access and callback safety.
+
+All 110 added cases fail before this change and pass afterwards. Eleven derivation
+paths cover ordinary/nested/zero-offset slices, duplicates, read-only slices, owned
+pooled slices/duplicates and borrowed pooled derivatives on heap/native storage in
+both directions. Tests check subtype dispatch/processor identity, stop indices,
+not-found normalization, readable ranges, callbacks/exceptions, empty/invalid ranges,
+native growth with subsequent byte mutation, indices/marks and ownership. CLR also
+rejects independently released pooled views even while their root remains alive;
+that safety guard is checked separately from Java's unchecked delegates and recycled
+wrapper diagnostics. Native reservations return to zero after cleanup.
+
+All 93 pinned Buffer sources were byte-checked and freshly compiled; each Unsafe/NIO
+path passes 110 independently modeled portable scenarios. Original source comments/
+licenses remain retained; these indexed override bodies add no operation comments.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6401/6401 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Common unchanged; whole-source/inherited-suite statuses stay partial.
+Evidence: artifacts/buffer-derived-iteration-validation (ignored),
+buffer-derived-iteration-*.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

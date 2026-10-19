@@ -87,6 +87,21 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     public override ByteBuf Touch(object hint = null) { _parent.Touch(hint); return this; }
 
     public override ByteBuf Copy(int index, int length) => _parent.Copy(index, length);
+    // Keep readable iteration on the view's own loop, as in AbstractByteBuf.
+    public override int ForEachByte(Func<byte, bool> processor)
+        => base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    public override int ForEachByteDesc(Func<byte, bool> processor)
+        => base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    public override int ForEachByte(int index, int length, Func<byte, bool> processor)
+    {
+        EnsureAccessible();
+        return _parent.ForEachByte(index, length, processor);
+    }
+    public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+    {
+        EnsureAccessible();
+        return _parent.ForEachByteDesc(index, length, processor);
+    }
     public override ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);
