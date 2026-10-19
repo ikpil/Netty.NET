@@ -15,7 +15,9 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Netty.NET.Common;
 
 namespace Netty.NET.Buffer.Tests;
@@ -29,14 +31,15 @@ public class UnsafeByteBufUtilTest
         public readonly NativeMemoryAllocator Native = new();
         public readonly PooledByteBufAllocator Pool;
         public readonly ByteBuf Target;
-        public Storage(int provider, int length)
+        public Storage(int provider, int length, int maxOrder = 0)
         {
-            if (provider != 0)
-                Pool = new PooledByteBufAllocator(true, pageSize: 4096, maxOrder: 0, nativeAllocator: Native);
+            if (provider is 1 or 2)
+                Pool = new PooledByteBufAllocator(true, pageSize: 4096, maxOrder: maxOrder, nativeAllocator: Native);
             Target = provider switch
             {
                 0 => new UnpooledDirectByteBuf(length, length, Native),
                 1 => new PooledDirectByteBuf((PoolDirectArena)Pool.DirectArenas[0], length, length),
+                3 => new UnpooledHeapByteBuf(length, length),
                 _ => new UnpooledDirectByteBuf(Pool, length, length, Native)
             };
             Target.SetZero(0, length);
@@ -165,5 +168,129 @@ public class UnsafeByteBufUtilTest
         s.Target.SetIndex(0, capacity).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, s.Target.ReaderIndex); Assert.Equal(capacity - 1, s.Target.WriterIndex);
         Assert.Equal(1, s.Target.ReferenceCount);
+    }
+
+    public static IEnumerable<object[]> ZeroAlignments()
+    {
+        foreach (int provider in Enumerable.Range(0, 4))
+        foreach (int offset in Enumerable.Range(0, 8)) yield return [provider, offset];
+    }
+
+    [Theory]
+    [MemberData(nameof(ZeroAlignments))]
+    public void ZeroFillReplacesEveryNativeAlignmentAndBatchBoundary(int provider, int offset)
+    {
+        using var s = new Storage(provider, 160, maxOrder: 4);
+        foreach (int length in new[] { 0, 1, 7, 8, 63, 64, 65, 129 })
+        {
+            byte[] expected = Enumerable.Repeat((byte)0xa5, 160).ToArray();
+            s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
+            Array.Clear(expected, offset, length);
+            Assert.Same(s.Target, s.Target.SetZero(offset, length));
+            Assert.Equal(expected, ByteBufUtil.GetBytes(s.Target, 0, 160));
+            Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+            s.Target.SetIndex(0, 160).ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(100, s.Target.WriterIndex);
+        }
+        Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetZero(159, 2));
+    }
+
+    public static IEnumerable<object[]> StreamLengths()
+    {
+        foreach (int provider in Enumerable.Range(0, 4))
+        foreach (int length in new[] { 1024, 1025, 8192, 8193 })
+        foreach (bool fail in new[] { false, true }) yield return [provider, length, fail];
+    }
+
+    private sealed class Output(bool fail) : MemoryStream
+    {
+        public int Calls;
+        public override void Write(ReadOnlySpan<byte> bytes)
+        {
+            Calls++;
+            base.Write(fail ? bytes[..Math.Min(17, bytes.Length)] : bytes);
+            if (fail) throw new IOException("output failure");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StreamLengths))]
+    public void StreamOutputPreservesBytesAcrossOriginalTemporaryStorageThresholds(int provider, int length, bool fail)
+    {
+        using var s = new Storage(provider, length + 16, maxOrder: 4);
+        byte[] data = Enumerable.Range(0, length + 16).Select(i => unchecked((byte)(i * 7 + 1))).ToArray();
+        s.Target.SetBytes(0, data).SetIndex(3, length + 11).MarkReaderIndex().MarkWriterIndex();
+        using var output = new Output(fail);
+        if (fail) Assert.Throws<IOException>(() => s.Target.GetBytes(5, output, length));
+        else Assert.Same(s.Target, s.Target.GetBytes(5, output, length));
+        Assert.Equal(data.Skip(5).Take(fail ? 17 : length), output.ToArray());
+        Assert.Equal(1, output.Calls); Assert.True(output.CanWrite);
+        Assert.Equal(data, ByteBufUtil.GetBytes(s.Target, 0, data.Length));
+        Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(length + 11, s.Target.WriterIndex);
+        s.Target.SetIndex(0, data.Length).ResetReaderIndex().ResetWriterIndex();
+        Assert.Equal(3, s.Target.ReaderIndex); Assert.Equal(length + 11, s.Target.WriterIndex);
+    }
+
+    public static IEnumerable<object[]> FactorySizes()
+    {
+        foreach (bool adaptive in new[] { false, true })
+        foreach (int length in new[] { 1, 128, 1048577 }) yield return [adaptive, length];
+    }
+
+    private static IByteBufAllocator Factory(bool adaptive, NativeMemoryAllocator native)
+        => adaptive ? new AdaptiveByteBufAllocator(true, false, native)
+            : new PooledByteBufAllocator(true, poolHeap: false, poolDirect: false, nativeAllocator: native);
+
+    [Theory]
+    [MemberData(nameof(FactorySizes))]
+    public void ActualDirectHelperConsumersUseTheExplicitNativeDomain(bool adaptive, int length)
+    {
+        var native = new NativeMemoryAllocator(16 << 20);
+        IByteBufAllocator allocator = Factory(adaptive, native);
+        ByteBuf b = null, copy = null;
+        try
+        {
+            b = allocator.DirectBuffer(length, length + 64);
+            Assert.True(b.IsDirect); Assert.Same(allocator, b.Allocator);
+            if (adaptive)
+                Assert.True(MemoryMarshal.TryGetMemoryManager<byte, AdaptiveChunkAllocation>(b.AsMemory(0, length), out _));
+            else Assert.True(NativeMemoryOwner.TryGetOwner(b.AsMemory(0, length), out _));
+            Assert.True(native.ReservedBytes >= length);
+            byte[] prefix = Enumerable.Range(0, Math.Min(32, length)).Select(i => (byte)(i + 1)).ToArray();
+            b.WriteBytes(prefix).MarkReaderIndex().MarkWriterIndex();
+            copy = b.Copy(0, prefix.Length);
+            Assert.True(copy.IsDirect); Assert.Same(allocator, copy.Allocator);
+            Assert.Equal(prefix, ByteBufUtil.GetBytes(copy));
+            b.Capacity = length + 64;
+            Assert.Equal(prefix, ByteBufUtil.GetBytes(b, 0, prefix.Length));
+            if (adaptive)
+                Assert.True(MemoryMarshal.TryGetMemoryManager<byte, AdaptiveChunkAllocation>(b.AsMemory(0, b.Capacity), out _));
+            else Assert.True(NativeMemoryOwner.TryGetOwner(b.AsMemory(0, b.Capacity), out _));
+            Assert.True(native.ReservedBytes >= b.Capacity);
+            b.SetIndex(0, b.Capacity).ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(0, b.ReaderIndex); Assert.Equal(prefix.Length, b.WriterIndex);
+            Assert.True(b.Release());
+            Assert.Equal(prefix, ByteBufUtil.GetBytes(copy));
+        }
+        finally
+        {
+            copy?.Release();
+            if (b?.ReferenceCount > 0) b.Release();
+            ((IDisposable)allocator).Dispose();
+        }
+        Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(adaptive ? 0 : -1, ((IByteBufAllocatorMetricProvider)allocator).Metric.UsedDirectMemory);
+    }
+
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public void FailedDirectBackingAllocationReleasesEveryReservation(bool adaptive)
+    {
+        var native = new NativeMemoryAllocator(0);
+        IByteBufAllocator allocator = Factory(adaptive, native);
+        try { Assert.Throws<OutOfMemoryException>(() => allocator.DirectBuffer(128, 192)); }
+        finally { ((IDisposable)allocator).Dispose(); }
+        Assert.Equal(0, native.ReservedBytes);
+        Assert.Equal(adaptive ? 0 : -1, ((IByteBufAllocatorMetricProvider)allocator).Metric.UsedDirectMemory);
     }
 }

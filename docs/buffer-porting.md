@@ -3638,6 +3638,54 @@ artifacts/buffer-unpooled-native-provider-validation (ignored),
 buffer-unpooled-native-provider-*.trx. Inventory: 159 (26 pending, 63 in-progress,
 37 verified, 33 CLR replacements).
 
+## Unsafe helper completion
+
+UnsafeByteBufUtil is now a complete CLR replacement. All 55 static methods are
+accounted for: 36 scalar overloads, two zero-fill forms, Copy, eight bulk/stream
+overloads, two alignment conveniences, native creation, and five private strategy
+helpers. Existing Memory/Span/BinaryPrimitives/Span.Clear and native constructors
+provide these semantics; Java signed-byte reads become CLR unsigned wire bytes.
+No duplicate unsafe CLR helper class is needed. The two
+alignment conveniences have only the private zero loop as a consumer, so the CLR
+zeroing kernel replaces them without exposing general raw-address arithmetic.
+
+Seven actual original consumers are reviewed. Heap/native pooled/unpooled/read-only
+providers use the shared bounded kernel. The original creation helper is called by
+PooledByteBufAllocator's arena-free fallback and AdaptiveByteBufAllocator's direct
+chunk allocator; both CLR paths use the existing native storage constructor. Tests
+cover those actual public consumers, not an unused compatibility factory. Adaptive
+Memory views use region claim managers over native backing; they are not direct
+NativeMemoryOwner views. Native-budget denial and final disposal return reservations
+to zero; an absent pooled direct arena reports -1 (unknown).
+
+72 added cases cover all eight alignment residues and zero lengths around 8/64 bytes,
+output sizes 1024/1025/8192/8193 with success/failure, factory sizes 1/128/1048577 and
+zero-budget failure. Original 32 fixture cases remain, for 104 UnsafeByteBufUtilTest
+cases. New small-allocation probes use 4 KiB pages and 64 KiB chunks in both runtimes,
+large enough for the original subpage run requirements. All 15 helper comments are
+retained: 11 in implementation and four archived JVM strategy directives.
+
+All 93 pinned Buffer sources were byte-checked/freshly compiled. Unsafe, VarHandle,
+bytewise, NoCleaner and NIO paths each pass 70 independently modeled storage/consumer
+scenarios; each of four Unsafe-enabled paths additionally passes 16 direct helper
+scalar cases (432 getter/setter pairs), covering both address and array overloads.
+Actual factory delegates and NoCleaner selection are asserted. Raw array/address
+Unsafe helpers require Unsafe; NIO compares public provider operations. CLR's two
+quota failures and physical cleanup are additional checks, not JVM limit equivalence.
+
+CLR stream input keeps one staged read, EOF zero and pre-I/O bounds checks. Output
+keeps one whole-range ArrayPool snapshot/write to prevent callback invalidation,
+using O(request length) temporary space; Java may use multiple 8 KiB writes and
+provider-dependent temporary buffers. Callback partitioning, peak temporary memory
+and performance are not asserted equivalent. Empty/null-span, permission and native
+ownership rules remain as previously documented. No runtime algorithm changed.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6752/6752 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Common unchanged. Evidence: artifacts/buffer-unsafe-helper-validation
+(ignored), buffer-unsafe-helper-*.trx. Inventory: 159 (26 pending, 62 in-progress,
+37 verified, 34 CLR replacements). Full inherited sources/fixture completion is separate.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

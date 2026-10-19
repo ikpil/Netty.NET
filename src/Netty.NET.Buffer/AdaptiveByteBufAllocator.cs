@@ -89,6 +89,15 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
         HeapPool = new AdaptivePoolingAllocator((size, max) => new UnpooledHeapByteBuf(this, size, max),
             lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes,
             useCacheForNonEventLoopThreads, localPurgePolls, localMaxBytes, localMinBytes);
+        /**
+         * Allocates direct buffers for chunks used in the pooling allocators.
+         * @param alloc The allocator we're creating a chunk for.
+         * @param initialCapacity The initial capacity.
+         * @param maxCapacity The max capacity.
+         * @return The {@link UnpooledDirectByteBuf} with the chunk memory.
+         */
+        // CLR: this callback and the pooled allocator's arena-free fallback use
+        // the same owned native constructor instead of JVM Unsafe/Cleaner selection.
         DirectPool = new AdaptivePoolingAllocator((size, max) => new UnpooledDirectByteBuf(this, size, max, native),
             lowMemory, reuseCapacity, purgePolls, purgeThreshold, maxStripes,
             useCacheForNonEventLoopThreads, localPurgePolls, localMaxBytes, localMinBytes);

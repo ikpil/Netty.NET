@@ -1406,6 +1406,11 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     public virtual ByteBuf GetBytes(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
+        // We need to check if dst is ready-only so we not write something in it by using Unsafe.
+        // Copy to direct memory
+        // Copy to array
+        // CLR: Span<byte> represents a writable destination of either storage kind;
+        // ByteBuf destinations separately enforce their read-only guard in SetBytes.
         if (TryGetReadOnlyMemoryCore(index, destination.Length, out var memory)) memory.Span.CopyTo(destination);
         else
         {
