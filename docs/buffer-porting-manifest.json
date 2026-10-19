@@ -1494,10 +1494,23 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/SlicedByteBuf.java",
       "kind": "source",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "clr-replacement",
+      "implementation": [
+        "src/Netty.NET.Buffer/ByteBuf.cs",
+        "src/Netty.NET.Buffer/ByteBufView.cs",
+        "src/Netty.NET.Buffer/PooledDerivedByteBuf.cs",
+        "test/Netty.NET.Buffer.Tests/SlicedByteBufSourceTest.cs"
+      ],
+      "evidence": [
+        "Slice specialization review: 28 added CLR cases cover seven heap/native/composite/pooled/borrowed paths at zero/nonzero offsets; all 18 scalar accessors, independent marks/fixed bounds, shared ownership and parent shrink/regrow. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 6429/6429, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. All 93 pinned sources byte-checked/freshly compiled; each Unsafe/NIO path passes 48 independent original scenarios using both concrete classes and real borrowed pooled consumers. CLR additionally guards wide reads against the live root capacity and verifies zero native reservations after cleanup. Original comments retained. Concrete classes mapped to CLR replacement; inherited sources/suites remain partial. No runtime algorithm/Common changes. docs/buffer-porting.md#concrete-slice-specializations; artifacts/buffer-slice-specialization-validation (ignored), buffer-slice-specialization-*.trx."
+      ],
+      "adaptation": "The complete concrete legacy class is represented by Slice factories/private fixed ByteBufView: its constructor and initLength/length/capacity storage use the immutable ByteBuf.MaxCapacity value. The deprecated public constructor adds no portable capability and is not duplicated as a public CLR class. The original runtime source consumer uses UnpooledSlicedByteBuf instead; SlicedByteBuf construction occurs only in its null-constructor test. All two original comments are retained. Supporting inherited AbstractUnpooledSlicedByteBuf/ByteBuf behavior and the large inherited fixture remain partial; this decision closes only the concrete length-storage wrapper. docs/buffer-porting.md#concrete-slice-specializations.",
+      "comments": {
+        "coverage": "All original concrete-class comments retained; inherited source/fixture status remains separate.",
+        "upstreamCount": 2,
+        "preservedCount": 2,
+        "missingCount": 0
+      }
     },
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/SwappedByteBuf.java",
@@ -1670,19 +1683,22 @@
     {
       "upstream": "buffer/src/main/java/io/netty/buffer/UnpooledSlicedByteBuf.java",
       "kind": "source",
-      "status": "in-progress",
+      "status": "clr-replacement",
       "implementation": [
         "src/Netty.NET.Buffer/ByteBufView.cs",
         "src/Netty.NET.Buffer/ByteBuf.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufDerivationTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufDerivationTest.cs",
+        "src/Netty.NET.Buffer/PooledDerivedByteBuf.cs",
+        "test/Netty.NET.Buffer.Tests/SlicedByteBufSourceTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
-        "Derived-view unit: reproduced 12 failures among 22 new cases before the fix. ByteBufView now skips duplicate-of-duplicate intermediates, composes slice offsets through the parent factory and duplicates a fixed slice with fresh zero marks; ReadOnlyByteBuf skips ordinary duplicate intermediates. 30 new cases cover eight original basic derivation scenarios, a portable 10000-operation mixture, fixed bounds/marks, root shrink/regrow, retained shared ownership, independently counted pooled owners and simple/advanced leak facades. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5819/5819, no failures/skips; checked build has 51 existing Common warnings, zero Buffer/test warnings/errors. Per Debug/Release, 22430 independently modeled states agree with each freshly compiled pinned Java Unsafe/NIO path (44860 original matches): every five-operation sequence over slice/duplicate/read-only plus 10000 mixed operations per backing. Models cover adjusted coordinates, capacities, indices/marks, read-only flags, depth, aliased writes and reference counts. All 93 Buffer sources were byte-checked before fresh compilation. Native cleanup zero; Common unchanged. docs/buffer-porting.md#bounded-derived-view-chains; artifacts/buffer-derivation-validation (ignored), buffer-derivation-*.trx, including the before-fix failures. Deprecated byte-order wrappers/mixed-order scenario and complete source/inherited fixtures remain pending/partial."
+        "Derived-view unit: reproduced 12 failures among 22 new cases before the fix. ByteBufView now skips duplicate-of-duplicate intermediates, composes slice offsets through the parent factory and duplicates a fixed slice with fresh zero marks; ReadOnlyByteBuf skips ordinary duplicate intermediates. 30 new cases cover eight original basic derivation scenarios, a portable 10000-operation mixture, fixed bounds/marks, root shrink/regrow, retained shared ownership, independently counted pooled owners and simple/advanced leak facades. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5819/5819, no failures/skips; checked build has 51 existing Common warnings, zero Buffer/test warnings/errors. Per Debug/Release, 22430 independently modeled states agree with each freshly compiled pinned Java Unsafe/NIO path (44860 original matches): every five-operation sequence over slice/duplicate/read-only plus 10000 mixed operations per backing. Models cover adjusted coordinates, capacities, indices/marks, read-only flags, depth, aliased writes and reference counts. All 93 Buffer sources were byte-checked before fresh compilation. Native cleanup zero; Common unchanged. docs/buffer-porting.md#bounded-derived-view-chains; artifacts/buffer-derivation-validation (ignored), buffer-derivation-*.trx, including the before-fix failures. Deprecated byte-order wrappers/mixed-order scenario and complete source/inherited fixtures remain pending/partial.",
+        "Slice specialization review: 28 added CLR cases cover seven heap/native/composite/pooled/borrowed paths at zero/nonzero offsets; all 18 scalar accessors, independent marks/fixed bounds, shared ownership and parent shrink/regrow. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 6429/6429, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. All 93 pinned sources byte-checked/freshly compiled; each Unsafe/NIO path passes 48 independent original scenarios using both concrete classes and real borrowed pooled consumers. CLR additionally guards wide reads against the live root capacity and verifies zero native reservations after cleanup. Original comments retained. Concrete classes mapped to CLR replacement; inherited sources/suites remain partial. No runtime algorithm/Common changes. docs/buffer-porting.md#concrete-slice-specializations; artifacts/buffer-slice-specialization-validation (ignored), buffer-slice-specialization-*.trx."
       ],
-      "adaptation": "Native span slices replace Java primitive forwarding specialization; complete API review remains pending. Derived-chain update: ordinary duplicates skip duplicate intermediates; slice factories compose coordinates through the parent, preserving specialized ownership and read-only dispatch. A fixed slice duplicate stays fixed and starts with zero marks. Read-only views skip only ordinary ByteBufView duplicates, never independently counted pooled owners or leak facades. Exact portable Java states and CLR live-root-bound safeguards are recorded in docs/buffer-porting.md#bounded-derived-view-chains. Other provider-specific operations and complete inherited fixtures stay partial; byte-order facades use the explicit-endian CLR replacement in docs/buffer-porting.md#explicit-endian-replacements-for-swapped-buffers.",
+      "adaptation": "The complete concrete optimization class is replaced by ByteBufView fixed MaxCapacity, ByteBuf bounded scalar Memory/Span/BinaryPrimitives access and pooled borrowed PooledDerivedByteBuf views. Its constructor/capacity/typed unwrap and nine getter/setter pairs require no separate unchecked provider subtype because CLR ByteBuf combines the Java ByteBuf/AbstractByteBuf layers. Actual original consumers are AbstractByteBuf.slice and AbstractPooledDerivedByteBuf.PooledNonRetainedSlicedByteBuf. Shared indices/ownership/translated coordinates remain those of the existing factories. Both original comments are retained. CLR still validates live root ranges; Java unchecked access/performance equivalence is not claimed. Supporting inherited sources/fixtures stay partial; only this concrete specialization is closed. docs/buffer-porting.md#concrete-slice-specializations.",
       "comments": {
-        "coverage": "All original comments retained; complete source/fixture surfaces remain partial.",
+        "coverage": "All original concrete-class comments retained; inherited source/fixture status remains separate.",
         "upstreamCount": 2,
         "preservedCount": 2,
         "missingCount": 0
@@ -3032,10 +3048,20 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/SlicedByteBufTest.java",
       "kind": "test",
-      "status": "pending",
-      "implementation": [],
-      "evidence": [],
-      "adaptation": ""
+      "status": "in-progress",
+      "implementation": [
+        "test/Netty.NET.Buffer.Tests/SlicedByteBufSourceTest.cs"
+      ],
+      "evidence": [
+        "Slice specialization review: 28 added CLR cases cover seven heap/native/composite/pooled/borrowed paths at zero/nonzero offsets; all 18 scalar accessors, independent marks/fixed bounds, shared ownership and parent shrink/regrow. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 6429/6429, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. All 93 pinned sources byte-checked/freshly compiled; each Unsafe/NIO path passes 48 independent original scenarios using both concrete classes and real borrowed pooled consumers. CLR additionally guards wide reads against the live root capacity and verifies zero native reservations after cleanup. Original comments retained. Concrete classes mapped to CLR replacement; inherited sources/suites remain partial. No runtime algorithm/Common changes. docs/buffer-porting.md#concrete-slice-specializations; artifacts/buffer-slice-specialization-validation (ignored), buffer-slice-specialization-*.trx."
+      ],
+      "adaptation": "Partial original fixture: contiguity, initial reader/writer marks, enough/insufficient EnsureWritable and too-large destination range are checked on seven CLR storage/ownership paths. Additional scalar and live-root range tests support the concrete class mapping. Constructor null, empty-retain scenario, original ignored/disabled cases, platform/NIO and the inherited AbstractByteBufTest suite are not claimed complete. No skipped/empty placeholder tests are added.",
+      "comments": {
+        "coverage": "Implemented fixture comments retained; remaining fixture/inherited scenarios and their comments stay upstream.",
+        "upstreamCount": 8,
+        "preservedCount": 4,
+        "missingCount": 4
+      }
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/UnpooledByteBufAllocatorTest.java",

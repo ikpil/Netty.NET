@@ -3416,6 +3416,37 @@ warnings/errors. Common unchanged; whole-source/inherited-suite statuses stay pa
 Evidence: artifacts/buffer-derived-iteration-validation (ignored),
 buffer-derived-iteration-*.trx.
 
+## Concrete slice specializations
+
+SlicedByteBuf's constructor and initLength/length/capacity state map to the existing
+Slice factory/private fixed ByteBufView and immutable MaxCapacity. Its deprecated
+public constructor adds no portable capability. UnpooledSlicedByteBuf's constructor,
+capacity, typed unwrap and nine raw getter/setter pairs map to the same view plus
+ByteBuf's bounded Memory/Span/BinaryPrimitives kernel. Original consumers are
+AbstractByteBuf.slice and the borrowed pooled subclass in AbstractPooledDerivedByteBuf;
+the latter maps to PooledDerivedByteBuf and retains its own duplicate/root-coordinate
+policy. Both complete concrete classes are now CLR replacements. Their inherited
+sources and AbstractByteBufTest coverage remain separate and partial. All original
+concrete-class comments are retained; the missing legacy class documentation is added.
+
+28 new CLR cases cover seven heap/native/mixed-composite/pooled/borrowed paths at
+zero/nonzero offsets, all 18 scalar accessors with an independent byte oracle and
+neighbor sentinels, fixed capacity, initial independent marks, bounds, shared ownership
+and parent shrink/regrow. Each original Unsafe/NIO path passes 48 independently modeled
+scenarios using both concrete classes and actual borrowed pooled consumers. All 93
+pinned Buffer sources were byte-checked and freshly compiled. CLR additionally checks
+wide reads against live root capacity, even if a pooled physical region is larger;
+unchecked JVM access and provider performance equivalence are not claimed.
+
+The SlicedByteBufTest entry is now in-progress for its stated portable subset; no
+complete inherited suite, skipped placeholder, or untested constructor API is claimed.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 6429/6429, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings/
+errors. Cleanup returns native reservations to zero. Runtime algorithms/Common unchanged.
+Evidence: artifacts/buffer-slice-specialization-validation (ignored),
+buffer-slice-specialization-*.trx. Inventory: 159 (33 pending, 62 in-progress,
+37 verified, 27 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

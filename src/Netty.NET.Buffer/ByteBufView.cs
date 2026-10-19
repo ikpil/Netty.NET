@@ -63,6 +63,16 @@ namespace Netty.NET.Buffer;
  * type {@link AbstractByteBuf}.
  */
 // CLR: bounded memory hooks provide the shared primitive path without that JVM subtype.
+/**
+ * A derived buffer which exposes its parent's sub-region only.  It is
+ * recommended to use {@link ByteBuf#slice()} and
+ * {@link ByteBuf#slice(int, int)} instead of calling the constructor
+ * explicitly.
+ *
+ * @deprecated Do not use.
+ */
+// CLR: SlicedByteBuf's stored length and UnpooledSlicedByteBuf's capacity specialization
+// both use the fixed MaxCapacity below. Slice factories replace the deprecated public constructor.
 internal sealed class ByteBufView : ByteBuf
 {
     private readonly ByteBuf _parent;
