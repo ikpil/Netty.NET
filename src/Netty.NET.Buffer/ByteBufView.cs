@@ -115,6 +115,7 @@ internal sealed class ByteBufView : ByteBuf
          * @param length the {@code length} argument from the constructor.
          */
         // CLR: the base constructor stores the length; no empty initLength override hook is needed.
+        ArgumentNullException.ThrowIfNull(parent);
         _parent = parent; _offset = offset; _fixedCapacity = true;
         WriterIndex = length;
     }

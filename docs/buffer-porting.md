@@ -3960,6 +3960,41 @@ warnings/errors. Common unchanged. Evidence:
 artifacts/buffer-duplicate-fixture-validation (ignored), buffer-duplicate-fixture-*.trx.
 Inventory remains 159: 24 pending, 62 in-progress, 38 verified, 35 CLR replacements.
 
+## Retained slice fixture handoff
+
+281 added CLR cases port RetainedSlicedByteBufTest.newSlice, seven selected
+SlicedByteBufTest methods and ten inherited AbstractByteBufTest methods. Existing
+caseMappings record the exact methods; the retained fixture moves from pending to
+in-progress. Remaining inherited cases, platform/NIO/thread tests and fixed-capacity
+encoding expansion overrides stay incomplete. No empty/skipped tests are added.
+
+Five storage paths (unpooled heap/native, mixed composite and pooled heap/native)
+run ordinary and retained-returning factories at offsets 0/3. Retained factories
+release the original claim before returning. Tests verify fixed capacity, fresh
+marks, contiguity, content aliases, two generations of retained or explicitly
+retained borrowed slices, repeated children, empty borrowed chains and final
+zero reference counts/native reservations. Shared and independent counters are
+both valid. Managed literal expectations replace allocated expected buffers;
+applicable original annotations and both fixture licenses are retained.
+
+The internal slice constructor previously accepted a null parent. It now rejects
+that argument immediately with ArgumentNullException. Before the guard, 280 new
+cases pass and the null-constructor case fails because no exception is thrown.
+No storage, factory ownership or reference-counting algorithm is changed.
+
+All 93 pinned Buffer sources and three unchanged original fixtures were byte-checked
+and freshly compiled. In each Unsafe-enabled/NIO profile, selected 17 original
+methods per concrete fixture pass with init/dispose (34 tests). The same selected
+bodies run 170 more times with only the test factory overridden for five providers
+and ordinary/retained handoff. Twenty supplemental offset/mark/empty-chain probes
+also pass. Unselected original methods are not claimed run.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 8919/8919 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Common unchanged. Evidence:
+artifacts/buffer-retained-slice-fixture-validation (ignored), buffer-retained-slice-fixture-*.trx.
+Inventory remains 159: 23 pending, 63 in-progress, 38 verified, 35 CLR replacements.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
