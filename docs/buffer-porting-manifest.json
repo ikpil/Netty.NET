@@ -3099,20 +3099,396 @@
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ReadOnlyByteBufTest.java",
       "kind": "test",
-      "status": "in-progress",
+      "status": "verified",
       "implementation": [
-        "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs"
+        "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+        "test/Netty.NET.Buffer.Tests/DerivedByteBufStreamTest.cs",
+        "test/Netty.NET.Buffer.Tests/DerivedByteBufChannelTest.cs",
+        "test/Netty.NET.Buffer.Tests/DerivedByteBufBulkTest.cs",
+        "test/Netty.NET.Buffer.Tests/DerivedByteBufScalarTest.cs"
       ],
       "evidence": [
-        "19 heap/native/empty/owner test cases, including a mutation matrix for every currently implemented setter/writer/mutable borrow, selected original copy/view/ensure-writable/ownership rules. Both original comments preserved."
+        "19 heap/native/empty/owner test cases, including a mutation matrix for every currently implemented setter/writer/mutable borrow, selected original copy/view/ensure-writable/ownership rules. Both original comments preserved.",
+        "Read-only fixture completion: 111 new CLR cases bring ReadOnlyByteBufTest to 130 cases. Constructor/factory checks, force/non-force status classification, explicit BE/LE reads, null-versus-read-only validation, empty span input, and 96 slice/duplicate capacity/lifetime combinations cover pooled/unpooled heap/native writable/read-only parents and readable/explicit/empty ranges. Retained duplicates survive parent release; final native reservations return to zero. All 93 pinned Buffer sources and the exact original ReadOnlyByteBufTest.java freshly byte-checked/compiled; all 27 unchanged JUnit methods execute on fresh fixture instances and pass in both Unsafe-enabled/NIO profiles with real cached Mockito/AssertJ dependencies. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 8467/8467, no failures/skips, 51 existing Common warnings and zero Buffer/test warnings/errors. Production source unchanged. docs/buffer-porting.md#read-only-fixture-completion; artifacts/buffer-readonly-fixture-validation (ignored), buffer-readonly-fixture-*.trx. Two memory-parent cases verify exact public override coordinates, returned read-only borrow identity, shared live bytes and guards before invalid/mutable requests."
       ],
-      "adaptation": "Tests the public native AsReadOnly factory rather than the deprecated Java public constructor. Native literal getter fixtures replace mock/Java NIO forwarding cases. Byte-order objects, channel/stream APIs, public-constructor null testing and remaining original cases are pending/adapted; the full fixture is not marked complete.",
+      "adaptation": "All 27 original JUnit cases are mapped explicitly: 19 direct semantic ports and 8 CLR adaptations. C# uses explicit BE/LE access, bounded ReadOnlyMemory/Span and borrowed Socket/Stream APIs. Existing null/range/lifetime validation remains stricter than blind Mockito forwarding; null Stream/Socket/ByteBuf arguments fail before read-only permission checks. Real custom parent providers replace Mockito dispatch mocks. Internal constructor null handling is tested; a deprecated public constructor or JVM subtype hierarchy is not added. Product source completion remains separate from this completed fixture.",
       "comments": {
         "upstreamCount": 2,
         "preservedCount": 2,
         "missingCount": 0,
-        "coverage": "partial source; remaining operations not ported"
-      }
+        "coverage": "Both original comments retained; all 27 original test methods are accounted for in caseMappings."
+      },
+      "caseMappings": [
+        {
+          "upstreamMethod": "shouldNotAllowNullInConstructor",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "ConstructorRejectsNullParent"
+            }
+          ],
+          "adaptation": "Internal CLR constructor rejects a null parent with ArgumentNullException."
+        },
+        {
+          "upstreamMethod": "testUnmodifiableBuffer",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts"
+            }
+          ],
+          "adaptation": "AsReadOnly returns the CLR read-only view for heap/native providers."
+        },
+        {
+          "upstreamMethod": "testUnmodifiableBufferDoesNotThrowClassCastException",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts"
+            }
+          ],
+          "adaptation": "Real wrapped and duplicated providers replace the Mockito/JVM AbstractByteBuf subtype-cast regression; no parallel CLR hierarchy is introduced."
+        },
+        {
+          "upstreamMethod": "testUnwrap",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "ReadOnlyViewSharesContentAndOwnershipWithIndependentIndicesAndMarks"
+            }
+          ],
+          "adaptation": "Unwrap retains the appropriate parent after duplicate normalization."
+        },
+        {
+          "upstreamMethod": "shouldHaveSameByteOrder",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "ReadsWordsStringsSearchesAndProcessorsThroughReadOnlyStorage"
+            }
+          ],
+          "adaptation": "CLR has explicit BE/LE accessors, without a mutable ByteOrder facade; both wire orders are verified."
+        },
+        {
+          "upstreamMethod": "shouldReturnReadOnlyDerivedBuffer",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "NestedSlicesAndDuplicatesRemainReadOnlyWithTheirOwnCoordinateSpace"
+            }
+          ],
+          "adaptation": "Slices and duplicates remain read-only."
+        },
+        {
+          "upstreamMethod": "shouldReturnWritableCopy",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "BulkReadCopyAndWritableDestinationConsumeOnlyTheReadOnlyView"
+            }
+          ],
+          "adaptation": "A copy is writable and independent of its read-only source."
+        },
+        {
+          "upstreamMethod": "shouldForwardReadCallsBlindly",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/DerivedByteBufStreamTest.cs",
+              "method": "AbsoluteAndRelativeStreamsPreserveParentPolicyAndViewCoordinates"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/DerivedByteBufChannelTest.cs",
+              "method": "ChannelViewsPreserveParentPolicyCoordinatesAndActualCounts"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/DerivedByteBufBulkTest.cs",
+              "method": "BulkViewsPreserveParentPolicyPeerIdentityAndOwnCursors"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/DerivedByteBufScalarTest.cs",
+              "method": "AbsolutePoliciesAndRelativeKernelsFollowOriginalViewRules"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "ReadOnlyViewSharesContentAndOwnershipWithIndependentIndicesAndMarks"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "ReadOnlyMemoryBorrowPreservesParentOverrideAndLiveStorage"
+            }
+          ],
+          "adaptation": "Valid parent stream/socket/file/bulk/scalar policies and live read-only memory are verified. CLR retains own null/range/lifetime checks instead of passing invalid Mockito arguments blindly; ByteBuffer views map to ReadOnlyMemory/Span."
+        },
+        {
+          "upstreamMethod": "shouldRejectDiscardReadBytes",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "DiscardSomeReadBytesSeparatesIndexOnlyResetFromDataCompaction"
+            }
+          ],
+          "adaptation": "DiscardReadBytes rejects read-only storage, including empty storage."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetByte",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "Byte mutation rejects read-only storage."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetShort",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "Short mutation rejects read-only storage."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetMedium",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "Medium mutation rejects read-only storage."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetInt",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "Int mutation rejects read-only storage."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetLong",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "Long mutation rejects read-only storage."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetBytes1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "NullReferenceInputKeepsClrValidationBeforeReadOnlyPermission"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/DerivedByteBufStreamTest.cs",
+              "method": "AbsoluteAndRelativeStreamsPreserveParentPolicyAndViewCoordinates"
+            }
+          ],
+          "adaptation": "CLR null Stream validation precedes permission checking; valid stream input is rejected before I/O on read-only views. Async faults are returned through ValueTask."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetBytes2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "NullReferenceInputKeepsClrValidationBeforeReadOnlyPermission"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/DerivedByteBufChannelTest.cs",
+              "method": "ChannelViewsPreserveParentPolicyCoordinatesAndActualCounts"
+            }
+          ],
+          "adaptation": "CLR Socket replaces ScatteringByteChannel; null validation precedes permission checking, while valid input is rejected before I/O."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetBytes3",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EmptySpanInputStillRejectsReadOnlyStorage"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "CLR ReadOnlySpan replaces the nullable array range; an empty span still rejects read-only mutation."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetBytes4",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "NullReferenceInputKeepsClrValidationBeforeReadOnlyPermission"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/DerivedByteBufBulkTest.cs",
+              "method": "BulkViewsPreserveParentPolicyPeerIdentityAndOwnCursors"
+            }
+          ],
+          "adaptation": "CLR null ByteBuf validation precedes permission checking; valid peer input rejects read-only mutation."
+        },
+        {
+          "upstreamMethod": "shouldRejectSetBytes5",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EmptySpanInputStillRejectsReadOnlyStorage"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "NIO ByteBuffer input maps to ReadOnlySpan without a parallel nullable NIO type."
+        },
+        {
+          "upstreamMethod": "shouldIndicateNotWritable",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "ReadOnlyViewSharesContentAndOwnershipWithIndependentIndicesAndMarks"
+            }
+          ],
+          "adaptation": "IsWritable is false."
+        },
+        {
+          "upstreamMethod": "shouldIndicateNotWritableAnyNumber",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "ReadOnlyViewSharesContentAndOwnershipWithIndependentIndicesAndMarks"
+            }
+          ],
+          "adaptation": "CanWrite is false even for zero bytes."
+        },
+        {
+          "upstreamMethod": "ensureWritableIntStatusShouldFailButNotThrow",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "EnsureWritable(1, false) returns status 1 and EnsureWritableSuccess is false."
+        },
+        {
+          "upstreamMethod": "ensureWritableForceIntStatusShouldFailButNotThrow",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "EnsureWritable(1, true) returns status 1 and EnsureWritableSuccess is false."
+        },
+        {
+          "upstreamMethod": "ensureWritableShouldThrow",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EveryImplementedMutationAndMutableBorrowRejectsWithoutChangingDataOrIndices"
+            }
+          ],
+          "adaptation": "The fluent EnsureWritable overload throws NotSupportedException for read-only storage."
+        },
+        {
+          "upstreamMethod": "asReadOnly",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts"
+            },
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "EmptyReadOnlyViewIsDistinctAndPermanentlyAccessibleButCannotWrite"
+            }
+          ],
+          "adaptation": "Repeated AsReadOnly preserves identity."
+        },
+        {
+          "upstreamMethod": "testDuplicateOfSliceHasTheSameCapacityAsTheSlice",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "DuplicateOfSlicePreservesCapacityAndRetainedParentLifetime"
+            }
+          ],
+          "adaptation": "The retainSlice=false matrix covers both duplicate modes with readable, explicit and empty ranges, pooled/unpooled heap/native roots and read-only variants."
+        },
+        {
+          "upstreamMethod": "testDuplicateOfRetainedSliceHasTheSameCapacityAsTheSlice",
+          "disposition": "ported",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ReadOnlyByteBufTest.cs",
+              "method": "DuplicateOfSlicePreservesCapacityAndRetainedParentLifetime"
+            }
+          ],
+          "adaptation": "The retainSlice=true matrix additionally verifies parents can be released before a retained duplicate and all owned memory is reclaimed."
+        }
+      ]
     },
     {
       "upstream": "buffer/src/test/java/io/netty/buffer/ReadOnlyByteBufferBufTest.java",

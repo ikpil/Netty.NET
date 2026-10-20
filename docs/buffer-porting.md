@@ -3883,6 +3883,45 @@ warnings/errors. Common unchanged. Evidence:
 artifacts/buffer-derived-scalar-validation (ignored), buffer-derived-scalar-*.trx.
 Inventory remains 159: 26 pending, 61 in-progress, 37 verified, 35 CLR replacements.
 
+## Read-only fixture completion
+
+ReadOnlyByteBufTest.java is now verified. Its 27 original JUnit methods are
+accounted for individually in the existing manifest's caseMappings: 19 semantic
+ports and eight explicit CLR adaptations. Completion applies to this fixture;
+ReadOnlyByteBuf.java and inherited source/fixture status remain independent.
+
+111 added CLR cases bring the fixture to 130 cases. Constructor/factory tests
+cover ordinary, wrapped and duplicated heap/native parents without JVM subtype
+casts, identity/metadata, explicit BE/LE reads and force/non-force writable status
+classification. Two public memory-parent cases verify exact callback coordinates,
+returned read-only borrow identity, live shared storage and pre-dispatch guards.
+A 96-case matrix ports both original duplicate-of-slice tests
+across pooled/unpooled heap/native writable/read-only parents, borrowed/retained
+slices and duplicates, and readable/explicit/empty ranges. It verifies capacity,
+indices, retained-parent lifetime, final release and zero native reservations.
+
+Java's mutable ByteOrder facade is replaced by explicit BE/LE access. Byte arrays
+and NIO ByteBuffer inputs/views use Span and ReadOnlyMemory. Existing CLR own-view
+range/lifetime/null validation remains before parent dispatch; null Stream,
+Socket and ByteBuf inputs fail argument validation before read-only permission
+checking, while valid and empty span inputs still reject mutation. Existing
+stream/channel/bulk/scalar fixtures verify actual parent policies with real
+providers. The original blind forwarding Mockito test therefore has a documented
+CLR adaptation rather than an invalid-argument forwarding requirement.
+
+All 93 pinned Buffer sources and the exact original ReadOnlyByteBufTest.java were
+byte-checked and freshly compiled. All 27 unchanged original @Test methods run
+on fresh fixture instances and pass in both Unsafe-enabled/NIO profiles, using
+cached Mockito/AssertJ/JUnit dependencies. No original test is filtered out. This
+Java run confirms the reference fixture; the manifest records the deliberate
+CLR argument/representation differences instead of claiming identical APIs.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 8467/8467 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Production source unchanged. Evidence:
+artifacts/buffer-readonly-fixture-validation (ignored), buffer-readonly-fixture-*.trx.
+Inventory remains 159: 26 pending, 60 in-progress, 38 verified, 35 CLR replacements.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

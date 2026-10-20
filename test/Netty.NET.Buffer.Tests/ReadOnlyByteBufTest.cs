@@ -16,6 +16,11 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Text;
 using Netty.NET.Common;
 
@@ -412,5 +417,181 @@ public class ReadOnlyByteBufTest
         Assert.Equal(1, view.EnsureWritable(0, false));
         Assert.False(view.Release());
         Assert.Equal(1, view.ReferenceCount);
+    }
+
+    [Fact]
+    public void ConstructorRejectsNullParent()
+        => Assert.Throws<ArgumentNullException>(() => new ReadOnlyByteBuf(null));
+
+    private sealed class ForwardingWrapper(ByteBuf parent) : WrappedByteBuf(parent);
+
+    [Theory]
+    [InlineData(false, 0)] [InlineData(false, 1)] [InlineData(false, 2)]
+    [InlineData(true, 0)] [InlineData(true, 1)] [InlineData(true, 2)]
+    public void FactoryAcceptsOrdinaryWrappedAndDuplicatedParentsWithoutJvmSubtypeCasts(bool direct, int shape)
+    {
+        var native = new NativeMemoryAllocator();
+        ByteBuf root = direct ? new UnpooledDirectByteBuf(16, 16, native) : new UnpooledHeapByteBuf(16, 16);
+        try
+        {
+            for (int i = 0; i < 16; i++) root.WriteByte(i);
+            root.SetIndex(1, 13);
+            var wrapped = new ForwardingWrapper(root);
+            ByteBuf parent = shape == 0 ? root : shape == 1 ? wrapped : new ByteBufView(wrapped);
+            ByteBuf view = parent.AsReadOnly();
+            Assert.IsType<ReadOnlyByteBuf>(view);
+            Assert.Same(shape == 2 ? wrapped : root, view.Unwrap());
+            Assert.Equal(direct, view.IsDirect); Assert.Same(root.Allocator, view.Allocator);
+            Assert.Equal(1, view.ReaderIndex); Assert.Equal(13, view.WriterIndex);
+            Assert.Equal(16, view.Capacity); Assert.Equal(1, root.ReferenceCount);
+            Assert.Same(view, view.AsReadOnly());
+            Assert.Equal(0x0203, view.GetShort(2)); Assert.Equal(0x0302, view.GetShortLE(2));
+            foreach (ByteBuf derived in new[] { view.Duplicate(), view.Slice(), view.Slice(2, 6) })
+                Assert.True(derived.IsReadOnly);
+            foreach (bool force in new[] { false, true })
+            {
+                int status = view.EnsureWritable(1, force);
+                Assert.Equal(1, status); Assert.False(ByteBufUtil.EnsureWritableSuccess(status));
+            }
+            Assert.Equal(1, root.ReaderIndex); Assert.Equal(13, root.WriterIndex);
+            Assert.Equal(1, view.ReaderIndex); Assert.Equal(13, view.WriterIndex);
+        }
+        finally { Assert.True(root.Release()); }
+        Assert.Equal(0, native.ReservedBytes);
+    }
+
+    public static IEnumerable<object[]> DuplicateCapacityCases()
+    {
+        foreach (bool direct in new[] { false, true })
+        foreach (bool pooled in new[] { false, true })
+        foreach (bool readOnly in new[] { false, true })
+        foreach (bool retainSlice in new[] { false, true })
+        foreach (bool retainDuplicate in new[] { false, true })
+        for (int range = 0; range < 3; range++) yield return [direct, pooled, readOnly, retainSlice, retainDuplicate, range];
+    }
+    [Theory]
+    [MemberData(nameof(DuplicateCapacityCases))]
+    public void DuplicateOfSlicePreservesCapacityAndRetainedParentLifetime(bool direct, bool pooled, bool readOnly,
+        bool retainSlice, bool retainDuplicate, int range)
+    {
+        var native = new NativeMemoryAllocator();
+        PooledByteBufAllocator allocator = pooled ? new PooledByteBufAllocator(pageSize: 4096, maxOrder: 1, nativeAllocator: native) : null;
+        ByteBuf root = pooled ? direct ? new PooledDirectByteBuf((PoolDirectArena)allocator.DirectArenas[0], 16, 32)
+                : new PooledHeapByteBuf((PoolHeapArena)allocator.HeapArenas[0], 16, 32)
+            : direct ? new UnpooledDirectByteBuf(16, 32, native) : new UnpooledHeapByteBuf(16, 32);
+        ByteBuf slice = null, duplicate = null;
+        bool rootReleased = false, sliceReleased = false, duplicateReleased = false;
+        try
+        {
+            for (int i = 0; i < 16; i++) root.WriteByte(i);
+            root.SetIndex(4, 12).MarkReaderIndex().MarkWriterIndex();
+            ByteBuf parent = readOnly ? root.AsReadOnly() : root;
+            int index = range == 0 ? 4 : range == 1 ? 0 : 16;
+            int length = range == 0 ? 8 : range == 1 ? 14 : 0;
+            slice = range == 0 ? retainSlice ? parent.RetainedSlice() : parent.Slice()
+                : retainSlice ? parent.RetainedSlice(index, length) : parent.Slice(index, length);
+            int count = slice.ReferenceCount;
+            duplicate = retainDuplicate ? slice.RetainedDuplicate() : slice.Duplicate();
+            Assert.NotSame(slice, duplicate); Assert.Equal(length, slice.Capacity);
+            Assert.Equal(slice.Capacity, duplicate.Capacity); Assert.Equal(slice.MaxCapacity, duplicate.MaxCapacity);
+            Assert.Equal(readOnly, duplicate.IsReadOnly); Assert.Equal(direct, duplicate.IsDirect);
+            Assert.Equal(0, duplicate.ReaderIndex); Assert.Equal(length, duplicate.WriterIndex);
+            Assert.Equal(count + (retainDuplicate ? 1 : 0), slice.ReferenceCount);
+            if (length > 0) Assert.Equal(index, duplicate.ReadByte());
+            Assert.Equal(0, slice.ReaderIndex); Assert.Equal(length, slice.WriterIndex);
+            Assert.Equal(4, root.ReaderIndex); Assert.Equal(12, root.WriterIndex);
+            if (retainSlice) { slice.Release(); sliceReleased = true; }
+            root.Release(); rootReleased = true;
+            if (retainDuplicate)
+            {
+                Assert.True(duplicate.ReferenceCount > 0);
+                if (length > 0) Assert.Equal(index, duplicate.GetByte(0));
+                else Assert.Empty(duplicate.AsReadOnlyMemory(0, 0).ToArray());
+                Assert.True(duplicate.Release()); duplicateReleased = true;
+            }
+            Assert.Equal(0, root.ReferenceCount); Assert.Equal(0, duplicate.ReferenceCount);
+            Assert.Throws<IllegalReferenceCountException>(() => duplicate.AsReadOnlyMemory(0, 0));
+        }
+        finally
+        {
+            if (retainDuplicate && !duplicateReleased && duplicate?.ReferenceCount > 0) duplicate.Release();
+            if (retainSlice && !sliceReleased && slice?.ReferenceCount > 0) slice.Release();
+            if (!rootReleased && root.ReferenceCount > 0) root.Release();
+            allocator?.Dispose();
+        }
+        Assert.Equal(0, native.ReservedBytes);
+    }
+
+    [Theory]
+    [InlineData(0, false)] [InlineData(0, true)]
+    [InlineData(1, false)] [InlineData(1, true)] [InlineData(2, false)]
+    public async Task NullReferenceInputKeepsClrValidationBeforeReadOnlyPermission(int kind, bool asynchronous)
+    {
+        ByteBuf view = Unpooled.EmptyBuffer.AsReadOnly();
+        if (asynchronous)
+        {
+            CancellationToken token = TestContext.Current.CancellationToken;
+            Task<int> operation = kind == 0 ? view.SetBytesAsync(0, (Stream)null, 0, token).AsTask()
+                : view.SetBytesAsync(0, (Socket)null, 0, token).AsTask();
+            await Assert.ThrowsAsync<ArgumentNullException>(() => operation);
+        }
+        else if (kind == 0) Assert.Throws<ArgumentNullException>(() => view.SetBytes(0, (Stream)null, 0));
+        else if (kind == 1) Assert.Throws<ArgumentNullException>(() => view.SetBytes(0, (Socket)null, 0));
+        else Assert.Throws<ArgumentNullException>(() => view.SetBytes(0, (ByteBuf)null, 0, 0));
+        Assert.Equal(0, view.ReaderIndex); Assert.Equal(0, view.WriterIndex);
+        Assert.Equal(1, view.ReferenceCount); Assert.False(view.Release());
+    }
+
+    [Fact]
+    public void EmptySpanInputStillRejectsReadOnlyStorage()
+    {
+        ByteBuf view = Unpooled.EmptyBuffer.AsReadOnly();
+        Assert.Throws<NotSupportedException>(() => view.SetBytes(0, ReadOnlySpan<byte>.Empty));
+        Assert.Throws<NotSupportedException>(() => view.WriteBytes(ReadOnlySpan<byte>.Empty));
+        Assert.Equal(0, view.ReaderIndex); Assert.Equal(0, view.WriterIndex);
+        Assert.False(view.Release());
+    }
+
+    private sealed class MemoryObservation
+    {
+        public int Calls, Index, Length;
+        public ReadOnlyMemory<byte> Result;
+        public ReadOnlyMemory<byte> Record(int index, int length, ReadOnlyMemory<byte> result)
+        { Calls++; Index = index; Length = length; return Result = result; }
+    }
+    private sealed class MemoryHeap(MemoryObservation o) : UnpooledHeapByteBuf(16, 16)
+    {
+        public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
+            => o.Record(index, length, base.AsReadOnlyMemory(index, length));
+    }
+    private sealed class MemoryDirect(MemoryObservation o, NativeMemoryAllocator native) : UnpooledDirectByteBuf(16, 16, native)
+    {
+        public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
+            => o.Record(index, length, base.AsReadOnlyMemory(index, length));
+    }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ReadOnlyMemoryBorrowPreservesParentOverrideAndLiveStorage(bool direct)
+    {
+        var native = new NativeMemoryAllocator(); var observed = new MemoryObservation();
+        ByteBuf root = direct ? new MemoryDirect(observed, native) : new MemoryHeap(observed);
+        try
+        {
+            for (int i = 0; i < 16; i++) root.WriteByte(i);
+            root.SetIndex(3, 13);
+            ByteBuf view = root.AsReadOnly();
+            ReadOnlyMemory<byte> memory = view.AsReadOnlyMemory(7, 3);
+            Assert.Equal(1, observed.Calls); Assert.Equal(7, observed.Index); Assert.Equal(3, observed.Length);
+            Assert.Equal(observed.Result, memory); Assert.Equal(new byte[] { 7, 8, 9 }, memory.ToArray());
+            root.SetByte(7, 77); Assert.Equal(77, memory.Span[0]);
+            Assert.Throws<NotSupportedException>(() => view.AsMemory(7, 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => view.AsReadOnlyMemory(16, 1));
+            Assert.Equal(1, observed.Calls); Assert.Equal(1, root.ReferenceCount);
+            Assert.Equal(3, view.ReaderIndex); Assert.Equal(13, view.WriterIndex);
+            Assert.Equal(3, root.ReaderIndex); Assert.Equal(13, root.WriterIndex);
+        }
+        finally { Assert.True(root.Release()); }
+        Assert.Equal(0, native.ReservedBytes);
     }
 }
