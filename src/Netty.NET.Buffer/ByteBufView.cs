@@ -273,6 +273,36 @@ internal sealed class ByteBufView : ByteBuf
         cancellationToken.ThrowIfCancellationRequested();
         return await _parent.SetBytesAsync(_offset + index, source, position, length, cancellationToken).ConfigureAwait(false);
     }
+    // Preserve the parent bulk overload and peer identity. Span replaces the
+    // Java array/ByteBuffer range; relative operations still own their cursors.
+    public override ByteBuf GetBytes(int index, Span<byte> destination)
+    {
+        CheckIndex(index, destination.Length);
+        _parent.GetBytes(_offset + index, destination);
+        return this;
+    }
+    public override ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, source.Length);
+        _parent.SetBytes(_offset + index, source);
+        return this;
+    }
+    public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        _parent.GetBytes(_offset + index, destination, destinationIndex, length);
+        return this;
+    }
+    public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite();
+        CheckIndex(index, length);
+        _parent.SetBytes(_offset + index, source, sourceIndex, length);
+        return this;
+    }
     public override int ReferenceCount => _parent.ReferenceCount;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => _parent.Release(decrement);

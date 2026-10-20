@@ -3773,6 +3773,55 @@ Evidence: artifacts/buffer-derived-channel-validation (ignored),
 buffer-derived-channel-*.trx. Inventory remains 159 (26 pending, 62 in-progress,
 37 verified, 34 CLR replacements).
 
+## Derived bulk forwarding
+
+Added ten Span/ByteBuf GetBytes/SetBytes overrides across ByteBufView,
+PooledDerivedByteBuf and ReadOnlyByteBuf. Inherited storage fast paths previously
+bypassed custom parent bulk methods. Ordinary and pooled views now preserve the
+parent/root overload, translated buffer index, original peer identity/index and
+fluent view identity. Read-only views forward output only. Relative operations
+continue to update the view and ByteBuf peer cursors after successful transfer;
+absolute calls preserve both cursors and marks.
+
+Java's byte-array and NIO ByteBuffer ranges map to CLR Span/ReadOnlySpan ranges.
+Spans have no NIO position/limit cursor and can also alias native memory. The
+existing bounded copy kernels preserve overlapping bytes. Own CLR bounds,
+lifetime, null and read-only checks precede dispatch; peer validation remains
+part of the parent's overload. JVM provider-internal secondary bulk calls are
+not reproduced as mandatory CLR dispatches.
+
+352 new cases reproduce 320 failures before the fix. There are 176 ordinary cases
+across heap/native roots, eleven ordinary/nested/read-only/retained/borrowed view
+paths and Span/heap/native/segmented peers. Native input peers are read-only.
+Tests verify exact parent overload and peer identity, bytes, fluent receiver,
+absolute/relative cursors, marks, references, parent exceptions, own and peer
+range validation, null peers, empty ranges and independently released pooled
+owners while the root stays alive. Another 176 cases verify forward/backward
+aliases through spans and ByteBuf views, including native storage.
+
+All 93 pinned Buffer sources were byte-checked and freshly compiled. Each original
+Unsafe-enabled/NIO profile matches an independent 440-scenario model: 220 ordinary
+cases (including NIO ranges) and 220 aliases. Direct Java buffers lack array
+aliases; NIO covers those, while heap aliases cover arrays and NIO. Original own
+range probes number 200 per profile, empty-range probes 200, peer-range probes
+120; Java visits custom parents before invalid own-range rejection in 70 probes.
+CLR retains its earlier own-view/null guards.
+
+The model explicitly records 11 original UnpooledDirectByteBuf output failures
+per profile when the destination is a multi-component CompositeByteBuf. Its
+AbstractByteBuf destination fast path requests internalNioBuffer, which the
+composite rejects, including for empty ranges. Source and destination bytes and
+cursors remain unchanged. CLR keeps its existing segmented-copy support instead
+of importing this provider restriction; JVM/CLR behavior is not claimed identical
+for those cases.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 7422/7422 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Original source comments retained; Common unchanged. Full derived
+sources, scalar dispatch and inherited fixtures remain partial. Evidence:
+artifacts/buffer-derived-bulk-validation (ignored), buffer-derived-bulk-*.trx.
+Inventory remains 159 (26 pending, 62 in-progress, 37 verified, 34 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

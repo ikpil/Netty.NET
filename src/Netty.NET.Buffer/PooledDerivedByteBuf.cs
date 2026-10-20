@@ -215,6 +215,36 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         cancellationToken.ThrowIfCancellationRequested();
         return await Root.SetBytesAsync(_offset + index, source, position, length, cancellationToken).ConfigureAwait(false);
     }
+    // Preserve the parent bulk overload and peer identity. Span replaces the
+    // Java array/ByteBuffer range; relative operations still own their cursors.
+    public override ByteBuf GetBytes(int index, Span<byte> destination)
+    {
+        CheckIndex(index, destination.Length);
+        Root.GetBytes(_offset + index, destination);
+        return this;
+    }
+    public override ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, source.Length);
+        Root.SetBytes(_offset + index, source);
+        return this;
+    }
+    public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        Root.GetBytes(_offset + index, destination, destinationIndex, length);
+        return this;
+    }
+    public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite();
+        CheckIndex(index, length);
+        Root.SetBytes(_offset + index, source, sourceIndex, length);
+        return this;
+    }
     public override int ReferenceCount => _referenceCountDelegate?.ReferenceCount ?? base.ReferenceCount;
     public override ByteBuf Retain(int increment = 1)
     {
