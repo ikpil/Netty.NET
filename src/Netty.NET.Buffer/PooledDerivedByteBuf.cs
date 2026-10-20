@@ -16,6 +16,8 @@
 
 using System;
 using System.IO;
+using System.Net.Sockets;
+using Microsoft.Win32.SafeHandles;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -150,6 +152,68 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         ArgumentNullException.ThrowIfNull(source);
         EnsureCanWrite(); CheckIndex(index, length);
         return await Root.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
+    }
+    // Forward the channel policy with translated buffer coordinates; the file
+    // position is independent of the view offset. Keep CLR guards before dispatch.
+    public override int GetBytes(int index, Socket destination, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        return Root.GetBytes(_offset + index, destination, length);
+    }
+    public override async ValueTask<int> GetBytesAsync(int index, Socket destination, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Root.GetBytesAsync(_offset + index, destination, length, cancellationToken).ConfigureAwait(false);
+    }
+    public override int SetBytes(int index, Socket source, int length)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite();
+        CheckIndex(index, length);
+        return Root.SetBytes(_offset + index, source, length);
+    }
+    public override async ValueTask<int> SetBytesAsync(int index, Socket source, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        EnsureCanWrite();
+        CheckIndex(index, length);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Root.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
+    }
+    public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
+    {
+        CheckIndex(index, length);
+        CheckFileTransfer(destination, position, length);
+        return Root.GetBytes(_offset + index, destination, position, length);
+    }
+    public override async ValueTask<int> GetBytesAsync(int index, SafeFileHandle destination, long position, int length,
+        CancellationToken cancellationToken = default)
+    {
+        CheckIndex(index, length);
+        CheckFileTransfer(destination, position, length);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Root.GetBytesAsync(_offset + index, destination, position, length, cancellationToken).ConfigureAwait(false);
+    }
+    public override int SetBytes(int index, SafeFileHandle source, long position, int length)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, length);
+        CheckFileTransfer(source, position, length);
+        return Root.SetBytes(_offset + index, source, position, length);
+    }
+    public override async ValueTask<int> SetBytesAsync(int index, SafeFileHandle source, long position, int length,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, length);
+        CheckFileTransfer(source, position, length);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await Root.SetBytesAsync(_offset + index, source, position, length, cancellationToken).ConfigureAwait(false);
     }
     public override int ReferenceCount => _referenceCountDelegate?.ReferenceCount ?? base.ReferenceCount;
     public override ByteBuf Retain(int increment = 1)

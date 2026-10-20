@@ -241,7 +241,7 @@ public abstract partial class ByteBuf
         return count;
     }
 
-    private static void CheckFileTransfer(SafeFileHandle handle, long position, int length)
+    private protected static void CheckFileTransfer(SafeFileHandle handle, long position, int length)
     {
         ArgumentNullException.ThrowIfNull(handle);
         if (handle.IsClosed) throw new ObjectDisposedException(nameof(handle));

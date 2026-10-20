@@ -3728,6 +3728,51 @@ full source/fixture completion remaining separate. Evidence:
 artifacts/buffer-derived-stream-validation (ignored), buffer-derived-stream-*.trx.
 Inventory remains 159 (26 pending, 62 in-progress, 37 verified, 34 CLR replacements).
 
+## Derived socket and positioned-file forwarding
+
+Added ten synchronous and ten async overrides across ByteBufView,
+PooledDerivedByteBuf and ReadOnlyByteBuf. The inherited Socket/SafeFileHandle
+implementations previously bypassed custom parent channel methods. Duplicate,
+slice and pooled views now follow the pinned GatheringByteChannel,
+ScatteringByteChannel and FileChannel delegates. Read-only views forward only
+output. The view offset adjusts the buffer index; the long file position is
+forwarded unchanged. Actual counts propagate to relative operations, which move
+only the view's cursor after successful completion.
+
+CLR own-view bounds, lifetime, null, handle, permission and cancellation checks
+remain before parent dispatch. The existing file validator is shared by internal
+derived types through a private protected helper. Async overrides await the
+parent ValueTask with the original token and ConfigureAwait(false), preserving
+fault delivery through the returned operation. Caller lifetime/exclusion rules
+and the existing CLR socket EOF/partial-send and complete-file-write policies
+remain in effect; no Task.Run or synchronous fallback is introduced.
+
+212 new cases reproduce 196 failures before the fix. The 176 ordinary cases cover
+heap/native roots and eleven ordinary/nested/read-only/retained/borrowed view
+paths, absolute bytes, short input/output counts, marks, references, parent
+exceptions, relative cursors, invalid/empty ranges, negative/overflowed file
+positions, offsets above Int32.MaxValue, pre-cancellation and independent pooled
+view release while the root remains alive. All 160 permitted combinations also
+perform real loopback socket or positioned-file I/O. Thirty-six pending custom
+parent cases verify exact tokens and cursor publication only after completion;
+pending work is completed/drained before disposal.
+
+All 93 pinned Buffer sources were byte-checked and freshly compiled. Each original
+Unsafe/NIO path matches 88 independently modeled synchronous scenarios, 80 invalid
+range probes and 80 empty-range delegates. Java visits the custom parent in 28
+invalid duplicate/read-only/pooled-duplicate probes; CLR keeps its earlier own-view
+guards. File offsets above Int32.MaxValue are observed unchanged without creating
+large files. The 124 async cases extend the synchronous Java channel contracts
+with CLR ValueTask/token completion semantics.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 7070/7070 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Source comments retained; Common unchanged. This closes the
+channel-forwarding gap, not entire derived classes or inherited fixtures.
+Evidence: artifacts/buffer-derived-channel-validation (ignored),
+buffer-derived-channel-*.trx. Inventory remains 159 (26 pending, 62 in-progress,
+37 verified, 34 CLR replacements).
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,

@@ -16,6 +16,8 @@
 
 using System;
 using System.IO;
+using System.Net.Sockets;
+using Microsoft.Win32.SafeHandles;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Buffers;
@@ -99,6 +101,36 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
         await _parent.GetBytesAsync(index, destination, length, cancellationToken).ConfigureAwait(false);
+    }
+    // Forward the channel policy with translated buffer coordinates; the file
+    // position is independent of the view offset. Keep CLR guards before dispatch.
+    public override int GetBytes(int index, Socket destination, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        return _parent.GetBytes(index, destination, length);
+    }
+    public override async ValueTask<int> GetBytesAsync(int index, Socket destination, int length,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _parent.GetBytesAsync(index, destination, length, cancellationToken).ConfigureAwait(false);
+    }
+    public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
+    {
+        CheckIndex(index, length);
+        CheckFileTransfer(destination, position, length);
+        return _parent.GetBytes(index, destination, position, length);
+    }
+    public override async ValueTask<int> GetBytesAsync(int index, SafeFileHandle destination, long position, int length,
+        CancellationToken cancellationToken = default)
+    {
+        CheckIndex(index, length);
+        CheckFileTransfer(destination, position, length);
+        cancellationToken.ThrowIfCancellationRequested();
+        return await _parent.GetBytesAsync(index, destination, position, length, cancellationToken).ConfigureAwait(false);
     }
     public override int ReferenceCount => _parent.ReferenceCount;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
