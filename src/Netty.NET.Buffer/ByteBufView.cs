@@ -100,7 +100,7 @@ internal sealed class ByteBufView : ByteBuf
      *
      * @deprecated Do not use.
      */
-    internal ByteBufView(ByteBuf parent) : base(parent.MaxCapacity)
+    internal ByteBufView(ByteBuf parent) : base((parent ?? throw new ArgumentNullException(nameof(parent))).MaxCapacity)
     {
         // DuplicatedByteBuf skips an existing duplicate, but retains a slice's
         // fixed range and any owner with its own reference-counting contract.

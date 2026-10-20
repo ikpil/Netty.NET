@@ -3922,6 +3922,44 @@ warnings/errors. Production source unchanged. Evidence:
 artifacts/buffer-readonly-fixture-validation (ignored), buffer-readonly-fixture-*.trx.
 Inventory remains 159: 26 pending, 60 in-progress, 38 verified, 35 CLR replacements.
 
+## Duplicate fixture ownership and marks
+
+171 added CLR cases port all four locally declared DuplicatedByteBufTest methods,
+the RetainedDuplicatedByteBufTest factory handoff and 13 selected inherited
+AbstractByteBufTest methods. The existing manifest records method mappings and
+moves both concrete fixtures from pending to in-progress. Their remaining inherited
+suite is still incomplete; RetainedSlicedByteBufTest remains pending.
+
+Both ordinary and retained-returning factories run over unpooled heap/native,
+mixed segmented composite and pooled heap/native storage. Tests cover contiguity,
+parent capacity growth, initial/independent marks, duplicate grow/shrink, nested
+shared content, releasing the original before handing off, repeated retained
+children, borrowed release and final deallocation with zero native reservations.
+Expected buffers become managed byte-array expectations; applicable original
+comments and both fixture licenses are retained. No extra Java provider hierarchy
+or wrapper recycling is introduced.
+
+The deprecated Java duplicate constructor maps to the existing internal CLR view.
+It now explicitly rejects null with ArgumentNullException. The final 171-case
+suite has one failing null-argument case before this guard and 170 passing cases;
+this unit otherwise adds reference tests without changing storage/ownership rules.
+In particular, an owned pooled duplicate's borrowed duplicate copies current
+indices from its owner but initializes marks from the root. A direct constructor
+copies marks from its immediate parent. This original distinction is separately
+tested instead of assuming all duplicate factories have the same initial marks.
+
+All 93 pinned Buffer sources and the three original abstract/duplicate fixtures
+were byte-checked and freshly compiled. Selected 17 unchanged original methods
+per concrete fixture run with original init/dispose (34 tests), plus ten direct
+constructor/factory mark scenarios over the same provider matrix, in each of the
+Unsafe-enabled and NIO profiles. Other inherited methods are not claimed run.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 8638/8638 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Common unchanged. Evidence:
+artifacts/buffer-duplicate-fixture-validation (ignored), buffer-duplicate-fixture-*.trx.
+Inventory remains 159: 24 pending, 62 in-progress, 38 verified, 35 CLR replacements.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
