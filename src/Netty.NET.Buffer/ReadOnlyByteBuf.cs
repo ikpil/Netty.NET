@@ -147,6 +147,53 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         _parent.GetBytes(index, destination, destinationIndex, length);
         return this;
     }
+    // Public absolute scalar dispatch differs from the optimized storage
+    // kernel used by relative operations and slices.
+    public override byte GetByte(int index)
+    {
+        CheckIndex(index, 1);
+        return _parent.GetByte(index);
+    }
+    public override short GetShort(int index)
+    {
+        CheckIndex(index, 2);
+        return _parent.GetShort(index);
+    }
+    public override short GetShortLE(int index)
+    {
+        CheckIndex(index, 2);
+        return _parent.GetShortLE(index);
+    }
+    public override int GetUnsignedMedium(int index)
+    {
+        CheckIndex(index, 3);
+        return _parent.GetUnsignedMedium(index);
+    }
+    public override int GetUnsignedMediumLE(int index)
+    {
+        CheckIndex(index, 3);
+        return _parent.GetUnsignedMediumLE(index);
+    }
+    public override int GetInt(int index)
+    {
+        CheckIndex(index, 4);
+        return _parent.GetInt(index);
+    }
+    public override int GetIntLE(int index)
+    {
+        CheckIndex(index, 4);
+        return _parent.GetIntLE(index);
+    }
+    public override long GetLong(int index)
+    {
+        CheckIndex(index, 8);
+        return _parent.GetLong(index);
+    }
+    public override long GetLongLE(int index)
+    {
+        CheckIndex(index, 8);
+        return _parent.GetLongLE(index);
+    }
     public override int ReferenceCount => _parent.ReferenceCount;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
     public override bool Release(int decrement = 1) => _parent.Release(decrement);

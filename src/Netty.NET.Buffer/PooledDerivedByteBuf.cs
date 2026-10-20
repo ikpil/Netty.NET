@@ -245,6 +245,144 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         Root.SetBytes(_offset + index, source, sourceIndex, length);
         return this;
     }
+    // Public absolute scalar dispatch differs from the optimized storage
+    // kernel used by relative operations and slices.
+    public override byte GetByte(int index)
+    {
+        CheckIndex(index, 1);
+        if (_fixedCapacity) return base.GetByte(index);
+        return Root.GetByte(_offset + index);
+    }
+    public override ByteBuf SetByte(int index, int value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 1);
+        if (_fixedCapacity) return base.SetByte(index, value);
+        Root.SetByte(_offset + index, value);
+        return this;
+    }
+    public override short GetShort(int index)
+    {
+        CheckIndex(index, 2);
+        if (_fixedCapacity) return base.GetShort(index);
+        return Root.GetShort(_offset + index);
+    }
+    public override ByteBuf SetShort(int index, int value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 2);
+        if (_fixedCapacity) return base.SetShort(index, value);
+        Root.SetShort(_offset + index, value);
+        return this;
+    }
+    public override short GetShortLE(int index)
+    {
+        CheckIndex(index, 2);
+        if (_fixedCapacity) return base.GetShortLE(index);
+        return Root.GetShortLE(_offset + index);
+    }
+    public override ByteBuf SetShortLE(int index, int value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 2);
+        if (_fixedCapacity) return base.SetShortLE(index, value);
+        Root.SetShortLE(_offset + index, value);
+        return this;
+    }
+    public override int GetUnsignedMedium(int index)
+    {
+        CheckIndex(index, 3);
+        if (_fixedCapacity) return base.GetUnsignedMedium(index);
+        return Root.GetUnsignedMedium(_offset + index);
+    }
+    public override ByteBuf SetMedium(int index, int value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 3);
+        if (_fixedCapacity) return base.SetMedium(index, value);
+        Root.SetMedium(_offset + index, value);
+        return this;
+    }
+    public override int GetUnsignedMediumLE(int index)
+    {
+        CheckIndex(index, 3);
+        if (_fixedCapacity) return base.GetUnsignedMediumLE(index);
+        return Root.GetUnsignedMediumLE(_offset + index);
+    }
+    public override ByteBuf SetMediumLE(int index, int value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 3);
+        if (_fixedCapacity) return base.SetMediumLE(index, value);
+        Root.SetMediumLE(_offset + index, value);
+        return this;
+    }
+    public override int GetInt(int index)
+    {
+        CheckIndex(index, 4);
+        if (_fixedCapacity) return base.GetInt(index);
+        return Root.GetInt(_offset + index);
+    }
+    public override ByteBuf SetInt(int index, int value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 4);
+        if (_fixedCapacity) return base.SetInt(index, value);
+        Root.SetInt(_offset + index, value);
+        return this;
+    }
+    public override int GetIntLE(int index)
+    {
+        CheckIndex(index, 4);
+        if (_fixedCapacity) return base.GetIntLE(index);
+        return Root.GetIntLE(_offset + index);
+    }
+    public override ByteBuf SetIntLE(int index, int value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 4);
+        if (_fixedCapacity) return base.SetIntLE(index, value);
+        Root.SetIntLE(_offset + index, value);
+        return this;
+    }
+    public override long GetLong(int index)
+    {
+        CheckIndex(index, 8);
+        if (_fixedCapacity) return base.GetLong(index);
+        return Root.GetLong(_offset + index);
+    }
+    public override ByteBuf SetLong(int index, long value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 8);
+        if (_fixedCapacity) return base.SetLong(index, value);
+        Root.SetLong(_offset + index, value);
+        return this;
+    }
+    public override long GetLongLE(int index)
+    {
+        CheckIndex(index, 8);
+        if (_fixedCapacity) return base.GetLongLE(index);
+        return Root.GetLongLE(_offset + index);
+    }
+    public override ByteBuf SetLongLE(int index, long value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 8);
+        if (_fixedCapacity) return base.SetLongLE(index, value);
+        Root.SetLongLE(_offset + index, value);
+        return this;
+    }
+    // The pinned PooledDuplicatedByteBuf._setLongLE reaches the public root
+    // setter. Borrowed duplicates and slices retain the bounded storage path.
+    public override ByteBuf WriteLongLE(long value)
+    {
+        if (!IsIndependent || _fixedCapacity) return base.WriteLongLE(value);
+        EnsureWritable(8);
+        Root.SetLongLE(WriterIndex, value);
+        WriterIndex += 8;
+        return this;
+    }
     public override int ReferenceCount => _referenceCountDelegate?.ReferenceCount ?? base.ReferenceCount;
     public override ByteBuf Retain(int increment = 1)
     {

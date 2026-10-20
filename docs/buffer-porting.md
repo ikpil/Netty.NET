@@ -3822,6 +3822,67 @@ sources, scalar dispatch and inherited fixtures remain partial. Evidence:
 artifacts/buffer-derived-bulk-validation (ignored), buffer-derived-bulk-*.trx.
 Inventory remains 159 (26 pending, 62 in-progress, 37 verified, 34 CLR replacements).
 
+## Derived scalar dispatch
+
+Added 45 public absolute scalar overrides across ByteBufView,
+PooledDerivedByteBuf and ReadOnlyByteBuf. Ordinary duplicates, owned/borrowed
+pooled duplicates and read-only views follow the parent's public getter/setter
+with translated coordinates; slices use their bounded storage kernel. Read-only
+views forward getters only. CLR own bounds/lifetime/write guards remain first.
+Signed/unsigned/boolean/char/floating-point absolute conveniences compose these
+nine byte/short/medium/int/long BE/LE getters/setters as in the original.
+
+Relative primitives now use the existing bounded Span/word kernels rather than
+public absolute overrides, following AbstractByteBuf and the optimized unpooled,
+pooled and read-only factory views. This also fixes relative access on a custom
+root provider. No unsafe JVM kernel hierarchy or unchecked memory API is added.
+The pinned PooledDuplicatedByteBuf._setLongLE is an exception: it calls the public
+root setter. Owned duplicate WriteLongLE, and composed WriteDoubleLE, preserve
+that policy and publish the view writer only after success. Borrowed duplicates
+and slices retain their bounded relative storage path.
+
+Signed medium reads compose relative unsigned-medium reads. Boolean/char/floating
+relative APIs compose their relative integer methods, preserving custom relative
+policies. Boolean/char and BE floating writes return the receiver after invoking
+the integer writer; Java's LE floating methods return the delegated writer's
+result, which is also preserved for custom overrides. Raw float/double bits,
+24-bit sign extension and checked-build truncation remain explicit. Java signed
+byte getters are normalized to CLR unsigned wire octets.
+
+934 added cases cover heap/native roots and eleven ordinary/nested/read-only/
+owned/borrowed view paths across 21 scalar forms. Parent providers alter returned
+values/written bytes or throw, verifying actual policy and call coordinates.
+Tests check absolute/relative bytes, independent cursors/marks/references,
+read-only guards, invalid ranges and released owners while the root remains
+alive. Two root cases exercise every relative primitive; eight composition cases
+check custom integer overrides and returned receiver identity. Replaying the final
+tests against the previous commit produces 304 failures among 934 cases.
+
+All 93 pinned Buffer sources were byte-checked and freshly compiled. Unsafe-enabled
+and NIO profiles each match an independent 934-scenario custom-provider model.
+The original views make 840 invalid-range probes; 294 visit the public parent
+before rejection, while CLR keeps its earlier own-view guards. Four scenarios
+exercise the owned duplicate's relative LongLE exception. Deprecated explicit
+unoptimized wrapper constructors are not introduced.
+
+The Java direct test provider overrides four protected medium hooks with bounded
+NIO access to isolate view dispatch from provider-internal callbacks. Production
+UnpooledDirectByteBuf uses three public byte calls for medium values; CLR keeps
+its existing word kernel. Original production sources are unchanged, and JVM
+protected-provider callback topology/performance is not claimed identical.
+
+UnpooledDuplicatedByteBuf's complete concrete purpose (constructor/unwrap and 18
+optimized protected scalar hooks) now maps to the CLR duplicate and bounded
+relative kernel. Its class comment is restored alongside the existing license;
+both original comments are retained. The class is a CLR replacement; inherited
+DuplicatedByteBuf and full original fixture completion remain separate.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1
+pass 8356/8356 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Common unchanged. Evidence:
+artifacts/buffer-derived-scalar-validation (ignored), buffer-derived-scalar-*.trx.
+Inventory remains 159: 26 pending, 61 in-progress, 37 verified, 35 CLR replacements.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
