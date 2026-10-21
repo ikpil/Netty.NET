@@ -4006,7 +4006,7 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | Original fixture | Declared methods | Mapped | Test gaps | Unreviewed |
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
-| AbstractCompositeByteBufTest | 85 | 48 | 0 | 37 |
+| AbstractCompositeByteBufTest | 85 | 52 | 0 | 33 |
 | AbstractByteBufAllocatorTest | 10 | 10 | 0 | 0 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
@@ -4312,6 +4312,42 @@ Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval
 pass 9144/9144 without failures/skips; 51 existing Common warnings, zero Buffer/test
 warnings/errors. Evidence: artifacts/buffer-composite-flatten-validation (ignored),
 buffer-composite-flatten-*.trx. Whole-file/inherited coverage remains partial.
+
+## Composite discard marks and empty I/O
+
+20 added cases in the existing CompositeByteBufDiscardTest fixture map four further
+declared AbstractCompositeByteBufTest methods: discard/reset marker parity, grown
+tail discard, zero-length read at end and 65 interleaved writes/reads from empty.
+The focused run also retains its 24 earlier cases (44 total). Heap/native
+pooled/unpooled factories cover each path; the integer-tail case has explicit BE/LE
+variants. Original discard and issue 1976/1060 comments are preserved. The shared
+fixture inventory maps 86 declarations with 417 individually unreviewed; this
+fixture remains in-progress with 52/85 declarations mapped.
+
+The original ten-byte data and offset-five component slices mark reader=6/current=5
+and writer=9/current=10. Discard matches the contiguous reference's readable bytes
+and markers, then ResetReaderIndex/ResetWriterIndex yield reader=1,writer=4 and
+bytes [7,8,9]. Composite capacity shrinks to five and the consumed source is released;
+the ordinary reference keeps ten-byte capacity. All remaining claims are released
+at cleanup.
+
+Issue 1976's eight integers plus an extra byte grow capacity from 32 to 64. After
+all 33 bytes are read, DiscardSomeReadBytes releases the eight consumed components
+but retains the 32-byte padding component with reader=writer=1. Explicit sixteen-byte
+source backing replaces the default size without changing contributed lengths.
+An independent byte model checks BE/LE content. A zero-length read after [1,2]/[3,4]
+leaves reader/writer/capacity=4 and source ownership intact. Issue 1060's 65 alternating
+one-byte writes/reads start at zero capacity, keep no readable bytes and end with
+capacity=128/two padding components. Native reservations are zero after cleanup.
+No runtime/Common change was needed.
+
+All 93 pinned Buffer sources and two unchanged original fixtures freshly compile.
+Each Unsafe/NIO profile passes eight original runs (four methods, both byte orders,
+init/dispose) plus 20 supplemental scenarios with explicit heap/direct factories.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+pass 9164/9164 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Evidence: artifacts/buffer-composite-discard-marks-validation
+(ignored), buffer-composite-discard-marks-*.trx. Whole-file/inherited coverage remains partial.
 
 ## Remaining work
 

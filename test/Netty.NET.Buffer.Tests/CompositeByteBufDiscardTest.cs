@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using Netty.NET.Common;
 
@@ -45,6 +46,12 @@ public class CompositeByteBufDiscardTest
     {
         foreach (object[] p in Providers())
         foreach (bool some in new[] { false, true }) yield return [p[0], p[1], some];
+    }
+
+    public static IEnumerable<object[]> TailGrowths()
+    {
+        foreach (object[] provider in Providers())
+        foreach (bool littleEndian in new[] { false, true }) yield return [provider[0], provider[1], littleEndian];
     }
 
     [Theory]
@@ -240,5 +247,143 @@ public class CompositeByteBufDiscardTest
             Assert.True(composite.Release());
         }
         finally { if (composite.ReferenceCount > 0) composite.Release(); }
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void DiscardReadBytesAdjustsBothMarksLikeTheContiguousReference(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        byte[] data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        ByteBuf contiguous = storage.Allocator.Buffer(10, 10).WriteBytes(data);
+        ByteBuf first = storage.Allocator.Buffer(10, 10).WriteBytes(data).Slice(0, 5);
+        ByteBuf second = storage.Allocator.Buffer(10, 10).WriteBytes(data).Slice(5, 5);
+        CompositeByteBuf composite = storage.Allocator.CompositeBuffer().AddComponents(new[] { first, second }, true);
+        try
+        {
+            contiguous.SkipBytes(6).MarkReaderIndex();
+            composite.SkipBytes(6).MarkReaderIndex();
+            Assert.Equal(contiguous.ReaderIndex, composite.ReaderIndex);
+            contiguous.ReaderIndex--; composite.ReaderIndex--;
+            Assert.Equal(contiguous.ReaderIndex, composite.ReaderIndex);
+            contiguous.WriterIndex--; contiguous.MarkWriterIndex();
+            composite.WriterIndex--; composite.MarkWriterIndex();
+            Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
+            contiguous.WriterIndex++; composite.WriterIndex++;
+            Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
+            Assert.True(ByteBufUtil.Equals(contiguous, composite));
+            // now discard
+            contiguous.DiscardReadBytes(); composite.DiscardReadBytes();
+            Assert.Equal(contiguous.ReaderIndex, composite.ReaderIndex);
+            Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
+            Assert.True(ByteBufUtil.Equals(contiguous, composite));
+            Assert.Equal(new byte[] { 6, 7, 8, 9, 10 }, composite.ReadableSequence.ToArray());
+            Assert.Equal(0, first.ReferenceCount);
+            Assert.Equal(1, second.ReferenceCount);
+            Assert.Equal(10, contiguous.Capacity);
+            Assert.Equal(5, composite.Capacity);
+            contiguous.ResetReaderIndex(); composite.ResetReaderIndex();
+            Assert.Equal(contiguous.ReaderIndex, composite.ReaderIndex);
+            Assert.Equal(1, composite.ReaderIndex);
+            contiguous.ResetWriterIndex(); composite.ResetWriterIndex();
+            Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
+            Assert.Equal(4, composite.WriterIndex);
+            Assert.True(ByteBufUtil.Equals(contiguous, composite));
+            Assert.Equal(new byte[] { 7, 8, 9 }, composite.ReadableSequence.ToArray());
+        }
+        finally { contiguous.Release(); composite.Release(); }
+        Assert.Equal(0, first.ReferenceCount);
+        Assert.Equal(0, second.ReferenceCount);
+    }
+
+    // See https://github.com/netty/netty/issues/1976
+    [Theory]
+    [MemberData(nameof(TailGrowths))]
+    public void DiscardingConsumedWordsKeepsTheUnreadCapacityOfTheGrownTail(bool pooled, bool direct, bool littleEndian)
+    {
+        using var storage = new Storage(pooled, direct);
+        CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
+        var sources = new List<ByteBuf>();
+        try
+        {
+            const int length = 8 * 4;
+            var expected = new byte[length];
+            for (int i = 0; i < length; i += 4)
+            {
+                ByteBuf source = storage.Allocator.Buffer(16, 16);
+                sources.Add(source);
+                if (littleEndian) source.WriteIntLE(i); else source.WriteInt(i);
+                composite.Capacity = composite.WriterIndex;
+                composite.AddComponent(source);
+                composite.WriterIndex = i + 4;
+                expected[littleEndian ? i : i + 3] = (byte)i;
+            }
+            composite.WriteByte(1);
+            Assert.Equal(64, composite.Capacity);
+            var actual = new byte[length];
+            composite.ReadBytes(actual);
+            Assert.Equal(expected, actual);
+            Assert.Equal(1, composite.ReadByte());
+            Assert.Equal(33, composite.ReaderIndex);
+            Assert.Equal(33, composite.WriterIndex);
+            Assert.Same(composite, composite.DiscardSomeReadBytes());
+            Assert.Equal(1, composite.NumComponents);
+            Assert.Equal(32, composite.Capacity);
+            Assert.Equal(1, composite.ReaderIndex);
+            Assert.Equal(1, composite.WriterIndex);
+            Assert.Equal(0, composite.ReadableBytes);
+            Assert.All(sources, source => Assert.Equal(0, source.ReferenceCount));
+        }
+        finally { composite.Release(); }
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void ZeroLengthReadAtTheEndLeavesIndicesAndComponentClaimsUnchanged(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        ByteBuf first = storage.Allocator.Buffer(2, 2).WriteBytes(new byte[] { 1, 2 });
+        ByteBuf second = storage.Allocator.Buffer(2, 2).WriteBytes(new byte[] { 3, 4 });
+        CompositeByteBuf composite = storage.Allocator.CompositeBuffer().AddComponents(new[] { first, second }, true);
+        try
+        {
+            var data = new byte[4];
+            Assert.Same(composite, composite.ReadBytes(data));
+            Assert.Equal(new byte[] { 1, 2, 3, 4 }, data);
+            Assert.Same(composite, composite.ReadBytes(Array.Empty<byte>()));
+            Assert.Equal(4, composite.ReaderIndex);
+            Assert.Equal(4, composite.WriterIndex);
+            Assert.Equal(4, composite.Capacity);
+            Assert.Equal(1, first.ReferenceCount);
+            Assert.Equal(1, second.ReferenceCount);
+        }
+        finally { composite.Release(); }
+        Assert.Equal(0, first.ReferenceCount);
+        Assert.Equal(0, second.ReferenceCount);
+    }
+
+    // Test for https://github.com/netty/netty/issues/1060
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void InitiallyEmptyCompositeSupportsSixtyFiveInterleavedWritesAndReads(bool pooled, bool direct)
+    {
+        using var storage = new Storage(pooled, direct);
+        CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
+        try
+        {
+            Assert.Equal(0, composite.NumComponents);
+            Assert.Equal(0, composite.Capacity);
+            for (int i = 0; i < 65; ++i)
+            {
+                composite.WriteByte(1);
+                Assert.Equal(1, composite.ReadByte());
+                Assert.Equal(i + 1, composite.ReaderIndex);
+                Assert.Equal(i + 1, composite.WriterIndex);
+                Assert.Equal(0, composite.ReadableBytes);
+            }
+            Assert.Equal(128, composite.Capacity);
+            Assert.Equal(2, composite.NumComponents);
+        }
+        finally { Assert.True(composite.Release()); }
     }
 }
