@@ -3995,6 +3995,41 @@ warnings/errors. Common unchanged. Evidence:
 artifacts/buffer-retained-slice-fixture-validation (ignored), buffer-retained-slice-fixture-*.trx.
 Inventory remains 159: 23 pending, 63 in-progress, 38 verified, 35 CLR replacements.
 
+## Common fixture method review
+
+The three common base fixtures now partition every declared JUnit method between
+caseMappings, evidence-backed methodFindings and testMethodReview.unreviewedMethods.
+Unreviewed means no individual decision yet; an existing equivalent CLR test or
+implementation may already exist. Mapped counts cover only each mapping's stated
+scenarios/providers, not all inherited provider variants or whole-fixture completion.
+
+| Original fixture | Declared methods | Mapped | Test gaps | Unreviewed |
+| --- | ---: | ---: | ---: | ---: |
+| AbstractByteBufTest | 408 | 24 | 0 | 384 |
+| AbstractCompositeByteBufTest | 85 | 4 | 0 | 81 |
+| AbstractByteBufAllocatorTest | 10 | 5 | 1 | 4 |
+
+Ten existing-test mappings are newly recorded after comparing bodies: initial
+state, four iterator cases, capacity calculation and four unpooled metric cases.
+The shouldReuseChunks finding distinguishes proven storage reuse from the missing
+warm-up/100-allocation/<8 MiB thread-allocation test. The original unpooled fixture
+disables that test; CLR pooled/adaptive applicability and allocation measurement
+still need review. No implementation gap is confirmed by this limited review;
+that is not a claim that unreviewed methods have complete implementations.
+
+Update-BufferPortingManifest.ps1 regenerates the partition from pinned sources;
+-Check detects stale/missing decisions and invalid original/CLR method names
+without changing files. It preserves existing status/comment semantics. Parser
+and decision checks cover comments/literals, package-visible and parameterized
+methods, duplicate/unknown/stale decisions and missing target declarations.
+Java reflection independently agrees on all 503 declared JUnit names after fresh
+compilation of 93 pinned Buffer sources and four unchanged test sources. Original
+test bodies are not executed in this metadata audit.
+
+Full net10.0 Release tests pass 8919/8919 without failures/skips; mapped CLR tests
+are confirmed in that TRX. No runtime/test implementation or fixture status changed.
+Evidence: artifacts/buffer-method-review-validation (ignored), buffer-method-review-release.trx.
+
 ## Remaining work
 
 Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
