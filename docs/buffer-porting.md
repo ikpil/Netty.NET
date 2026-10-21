@@ -4006,7 +4006,7 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | Original fixture | Declared methods | Mapped | Test gaps | Unreviewed |
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
-| AbstractCompositeByteBufTest | 85 | 4 | 0 | 81 |
+| AbstractCompositeByteBufTest | 85 | 12 | 0 | 73 |
 | AbstractByteBufAllocatorTest | 10 | 10 | 0 | 0 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
@@ -4091,6 +4091,41 @@ pass 8970/8970 without failures/skips; 51 existing Common warnings, zero Buffer/
 warnings/errors. The three common base fixtures now have 38 mapped and 465
 unreviewed declarations; these are scoped mappings, not a completion percentage.
 Evidence: artifacts/buffer-allocator-contract-validation (ignored), buffer-allocator-contract-*.trx.
+
+## Composite decomposition and removal ownership
+
+44 added CLR cases port eight declared AbstractCompositeByteBufTest methods:
+three original decomposition ranges, one/two retained-source counter cases and
+three original removal shapes. Heap/native pooled/unpooled public factories cover
+both shared and independent counters. File status remains in-progress; the common
+fixture inventory now maps 46 declarations with 457 individually unreviewed.
+
+The original 200/400/100 windows over a 1024-byte root are checked against a
+flat deterministic byte model. Decompose returns borrowed slices without retaining;
+mutations alias the original bytes and cursors remain independent. Both cleanup
+orders are tested. Explicit retained claims can be released through decomposed
+slices, which must follow the original component counter rather than its root.
+With independent pooled counters, released parts become inaccessible even while
+the root still has its own claim. Shared-counter parts live until the root's
+final release. Native reservations are zero after allocator cleanup.
+
+Removing the sole/final component or components 4..6 from ten components releases
+only the transferred claims and rebuilds offsets/content. Supplemental nonzero
+captured source indices remain intact. Composite reader/writer are intentionally
+unchanged after removal, including indices beyond the reduced capacity; callers
+must reset them before relative access. A zero-count tail removal is a no-op.
+No runtime/Common change was needed.
+
+All 93 pinned Buffer sources and two unchanged original fixtures were freshly
+compiled. Each Unsafe-enabled/NIO profile passes eight exact original methods
+under both original byte orders (16 runs with init/dispose), plus 44 supplemental
+ownership/range/removal scenarios. CLR comparisons use concatenated borrowed
+bytes instead of allocating an unreleased temporary wrapping container.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+pass 9014/9014 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Evidence: artifacts/buffer-composite-ownership-validation (ignored),
+buffer-composite-ownership-*.trx.
 
 ## Remaining work
 
