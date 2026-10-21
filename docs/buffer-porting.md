@@ -4006,7 +4006,7 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | Original fixture | Declared methods | Mapped | Test gaps | Unreviewed |
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
-| AbstractCompositeByteBufTest | 85 | 28 | 0 | 57 |
+| AbstractCompositeByteBufTest | 85 | 36 | 0 | 49 |
 | AbstractByteBufAllocatorTest | 10 | 10 | 0 | 0 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
@@ -4196,6 +4196,45 @@ Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass
 9068/9068 without failures/skips; 51 existing Common warnings, zero Buffer/test
 warnings/errors. Evidence: artifacts/buffer-composite-lookup-validation (ignored),
 buffer-composite-lookup-*.trx. Whole-file/inherited coverage remains partial.
+
+## Composite consolidation and copy lifetimes
+
+28 added CLR cases map eight further declared AbstractCompositeByteBufTest methods:
+automatic/full/ranged consolidation, conversion to contiguous bytes, allocator
+identity for both copy overloads, and empty copy/duplicate behavior. Original
+hard-coded six-byte range comments are preserved. The shared fixture inventory
+maps 70 declarations with 433 individually unreviewed; this fixture remains
+in-progress with 36/85 declarations mapped.
+
+Original 1/2/3-byte components consolidate automatically at limit two, all at once,
+or with a fourth four-byte component through consolidate(1,2). Writer remains zero
+throughout. Absolute bytes/capacity survive; only replaced claims are released,
+with all remaining claims released at cleanup. Memory and bounded heap array
+segments replace Java array access: unpooled heap keeps the original zero offset,
+while pooled segments may begin inside a larger array. Native reservations reach
+zero after allocator cleanup.
+
+The original 3/1/2-byte layout yields six contiguous bytes despite writer=0.
+Java's merged nioBuffer becomes an explicit owned Copy(0,6), then borrowed Memory;
+the copy is released explicitly. Both Java representations match the same bytes
+and do not alias sources. Source layout/cursors/claims remain unchanged. Both Copy
+overloads preserve allocator identity, storage kind and readable content. Their
+eight-byte source retains real 1/2/3/2-byte fragments; empty separators are omitted
+so extra native variants have an all-native component set. Mutation and source-first
+cleanup prove independent bytes/lifetime. Empty duplicates share the root count;
+empty copies retain independent ownership after the source is released.
+
+All 93 pinned Buffer sources and two unchanged original fixtures freshly compile.
+Each Unsafe/NIO profile passes 16 exact original runs (eight methods, both byte
+orders, init/dispose) plus 28 supplemental scenarios. Supplemental probes select
+heap/direct factories explicitly: pinned AbstractByteBufAllocator's preferDirect
+falls back to heap when direct buffers cannot be reliably freed. CLR native owners
+do not need this JVM-dependent fallback. Original methods run unchanged.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+pass 9096/9096 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Evidence: artifacts/buffer-composite-copy-validation (ignored),
+buffer-composite-copy-*.trx. No runtime/Common change or fixture completion claim.
 
 ## Remaining work
 
