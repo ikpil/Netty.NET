@@ -4006,7 +4006,7 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | Original fixture | Declared methods | Mapped | Test gaps | Unreviewed |
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
-| AbstractCompositeByteBufTest | 85 | 36 | 0 | 49 |
+| AbstractCompositeByteBufTest | 85 | 44 | 0 | 41 |
 | AbstractByteBufAllocatorTest | 10 | 10 | 0 | 0 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
@@ -4235,6 +4235,44 @@ Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval
 pass 9096/9096 without failures/skips; 51 existing Common warnings, zero Buffer/test
 warnings/errors. Evidence: artifacts/buffer-composite-copy-validation (ignored),
 buffer-composite-copy-*.trx. No runtime/Common change or fixture completion claim.
+
+## Composite transferred references and empty components
+
+32 added CLR cases map eight further declared AbstractCompositeByteBufTest methods:
+three reference-count paths, component duplicate shape, single/batched empty-source
+release and two middle-empty insertion paths. Heap/native pooled/unpooled factories
+cover each path. Original reference-count and insertion/skip-empty comments are
+preserved. The shared fixture inventory maps 78 declarations with 425 individually
+unreviewed; this fixture remains in-progress with 44/85 declarations mapped.
+
+Original 1/2/3 component claims remain unchanged after array or List/IEnumerable
+insertion and borrowed component access. Releasing the extra caller claims first
+leaves exactly one claim per component for composite release. In the nested path,
+releasing the outer composite deallocates the inner and leaves counts 0/1/2 for
+final caller cleanup. The existing ComponentsKeepOriginalReferenceCountsAndReleaseOneOwnedReferenceEach
+test retains the complementary non-nested composite-first release order.
+
+A source with capacity=4,maxCapacity=6 and indices 1/3 returns a distinct duplicate
+with the original limits and two readable bytes. CLR verifies this contract instead
+of requiring Java's AbstractDerivedByteBuf hierarchy. Duplicate index changes leave
+source/composite indices intact, and explicit Retain/Release uses the source count.
+
+Single or batched owned empty-readable sources keep their own claim after transfer
+despite contributing no bytes, then reach zero on composite release. Their backing
+capacity is explicitly 16 rather than the original default; batch lengths remain
+0/4/0. The immutable empty singleton instead remains a component slot between bytes
+1/2, whether appended or inserted at index one. Relative reads and absolute copy
+skip its zero byte range while internal component lookup preserves its identity.
+All owned source claims reach zero; native reservations are zero after allocator
+cleanup. No runtime/Common change was needed.
+
+All 93 pinned Buffer sources and two unchanged original fixtures freshly compile.
+Each Unsafe/NIO profile passes 16 original runs (eight methods, both byte orders,
+init/dispose) plus 32 supplemental scenarios with explicit heap/direct factories.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+pass 9128/9128 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Evidence: artifacts/buffer-composite-reference-validation (ignored),
+buffer-composite-reference-*.trx. Whole-file/inherited coverage remains partial.
 
 ## Remaining work
 
