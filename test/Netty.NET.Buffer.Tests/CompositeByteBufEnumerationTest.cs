@@ -421,14 +421,18 @@ public class CompositeByteBufEnumerationTest
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ComponentSliceFromFlattenedCompositeCanBeRetainedRemovedAndAddedBack(bool direct)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public void ComponentSliceFromFlattenedCompositeCanBeRetainedRemovedAndAddedBack(bool direct, bool pooled)
     {
-        // CLR: exercise the pinned view contract on heap/native storage; pooled
-        // independent-reference-count variants remain separately inventoried.
-        var allocator = new NativeMemoryAllocator(64);
-        ByteBuf source = direct ? new UnpooledDirectByteBuf(32, allocator: allocator) : Unpooled.Buffer(32);
+        // CLR: exercise the original pooled factory as well as heap/native unpooled storage.
+        var allocator = new NativeMemoryAllocator(pooled ? 8192 : 64);
+        using var pool = pooled ? new PooledByteBufAllocator(direct, pageSize: 4096,
+            maxOrder: 1, nativeAllocator: allocator) : null;
+        ByteBuf source = pooled ? pool.Buffer(32)
+            : direct ? new UnpooledDirectByteBuf(32, allocator: allocator) : Unpooled.Buffer(32);
         CompositeByteBuf first = null, second = null;
         ByteBuf component = null;
         try
@@ -461,6 +465,7 @@ public class CompositeByteBufEnumerationTest
             // On a success path, only composite2 will be non-null here.
             source?.Release(); first?.Release(); second?.Release(); component?.Release();
         }
+        pool?.Dispose();
         Assert.Equal(0, allocator.ReservedBytes);
     }
 }

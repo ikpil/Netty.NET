@@ -4006,7 +4006,7 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | Original fixture | Declared methods | Mapped | Test gaps | Unreviewed |
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
-| AbstractCompositeByteBufTest | 85 | 12 | 0 | 73 |
+| AbstractCompositeByteBufTest | 85 | 20 | 0 | 65 |
 | AbstractByteBufAllocatorTest | 10 | 10 | 0 | 0 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
@@ -4126,6 +4126,40 @@ Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval
 pass 9014/9014 without failures/skips; 51 existing Common warnings, zero Buffer/test
 warnings/errors. Evidence: artifacts/buffer-composite-ownership-validation (ignored),
 buffer-composite-ownership-*.trx.
+
+## Composite shrink and discard lifetimes
+
+Eight more declared AbstractCompositeByteBufTest methods are mapped. 24 new cases
+cover borrowed/retained slice chains, shrink release and repeated discard over
+heap/native pooled/unpooled factories. Two added pooled cases extend the existing
+flattened-component retain/remove/re-add test. Three existing cases are reused,
+so the focused selection contains 29 cases. No runtime/Common change was needed.
+The common fixture inventory maps 54 declarations with 449 individually unreviewed;
+this fixture remains in-progress with 20/85 declarations mapped.
+
+Four nested borrowed slice Retain claims are transferred even when intermediate
+slices have no readable bytes. Retained pooled children instead have independent
+counters and immediate-parent claims. Shrinking a two-component composite releases
+only the removed child; composite and final root release consume the remaining
+claims in order. Native reservations reach zero after allocator cleanup. Original
+pooled explanations, release comments and repeated-discard helper comments are
+preserved, including the original inline counter labels.
+
+The original skip/discard/read sequence verifies both discard variants through
+component removal and subsequent lookup. CLR bounded binary search supplies the
+Java last-access cache's observable behavior. A retained composite slice does not
+retain discarded components: its existing CLR test rejects access with
+ArgumentOutOfRangeException before advancing its reader, adapting Java's expected
+IllegalStateException. Flattened component slices retain the original 01234 view
+after removal and re-add with both pooled and unpooled factories.
+
+All 93 pinned Buffer sources and two unchanged original test fixtures freshly
+compile. Each Unsafe/NIO profile passes 16 exact original runs (eight methods,
+both byte orders, init/dispose) plus 28 supplemental lifecycle scenarios.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+pass 9040/9040 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Evidence: artifacts/buffer-composite-discard-validation (ignored),
+buffer-composite-discard-*.trx. No fixture completion or runtime improvement claim.
 
 ## Remaining work
 
