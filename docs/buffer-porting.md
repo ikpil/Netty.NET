@@ -4007,14 +4007,14 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
 | AbstractCompositeByteBufTest | 85 | 4 | 0 | 81 |
-| AbstractByteBufAllocatorTest | 10 | 5 | 1 | 4 |
+| AbstractByteBufAllocatorTest | 10 | 6 | 0 | 4 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
 state, four iterator cases, capacity calculation and four unpooled metric cases.
-The shouldReuseChunks finding distinguishes proven storage reuse from the missing
-warm-up/100-allocation/<8 MiB thread-allocation test. The original unpooled fixture
-disables that test; CLR pooled/adaptive applicability and allocation measurement
-still need review. No implementation gap is confirmed by this limited review;
+The shouldReuseChunks finding initially identified a missing
+warm-up/100-allocation/<8 MiB thread-allocation test. The allocator chunk-reuse unit
+below resolves that finding for pooled/adaptive heap factories; the original
+unpooled applicability exclusion is retained. No implementation gap is confirmed by this limited review;
 that is not a claim that unreviewed methods have complete implementations.
 
 Update-BufferPortingManifest.ps1 regenerates the partition from pinned sources;
@@ -4029,6 +4029,36 @@ test bodies are not executed in this metadata audit.
 Full net10.0 Release tests pass 8919/8919 without failures/skips; mapped CLR tests
 are confirmed in that TRX. No runtime/test implementation or fixture status changed.
 Evidence: artifacts/buffer-method-review-validation (ignored), buffer-method-review-release.trx.
+
+## Allocator chunk reuse budget
+
+The shouldReuseChunks method-level test gap is now mapped for pooled/adaptive
+heap factories: one warm-up, then 100 allocations/releases with initial=max=1 MiB,
+requiring strictly less than 8 MiB of managed allocation on the calling physical
+thread. GC.GetAllocatedBytesForCurrentThread replaces the optional JVM MXBean.
+Three added CLR cases include both allocators and an unpooled negative control
+that detects at least 100 MiB of fresh backing arrays. The original unpooled
+fixture explicitly disables the reuse requirement; no skipped CLR test is added.
+
+The measurement disables leak diagnostics in a nonparallel collection and restores
+the prior level in finally, matching the Java reference-run profile. Forced SIMPLE
+sampling interval 1 allocates about 27 MB per 100 cycles for diagnostics and fails
+the 8 MiB bound; that diagnostic cost is documented, not covered by this reuse
+budget. The remaining checked suite keeps its existing diagnostic settings.
+No runtime allocation policy or Common implementation is changed. Fresh CLR wrappers
+remain supported; no zero-allocation or cross-language performance equivalence is claimed.
+
+All 93 pinned Buffer sources and three unchanged original test sources were
+freshly compiled. The exact inherited shouldReuseChunks body runs for pooled and
+adaptive factories in each Unsafe-enabled/NIO profile, with no abort/skip. Matching
+supplemental MXBean measurements pass, and the original unpooled Disabled annotation
+is verified without executing that excluded test.
+
+Full net10.0 Debug/Release/rebuilt checked Release pass 8922/8922 without failures/skips;
+51 existing Common warnings, zero Buffer/test warnings/errors. The common-fixture
+method review now records 34 mapped, zero confirmed gaps and 469 unreviewed methods;
+unreviewed does not mean unimplemented. File statuses are unchanged. Evidence:
+artifacts/buffer-chunk-reuse-validation (ignored), buffer-chunk-reuse-*.trx.
 
 ## Remaining work
 
