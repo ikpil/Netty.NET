@@ -4006,7 +4006,7 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | Original fixture | Declared methods | Mapped | Test gaps | Unreviewed |
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
-| AbstractCompositeByteBufTest | 85 | 44 | 0 | 41 |
+| AbstractCompositeByteBufTest | 85 | 48 | 0 | 37 |
 | AbstractByteBufAllocatorTest | 10 | 10 | 0 | 0 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
@@ -4273,6 +4273,45 @@ Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval
 pass 9128/9128 without failures/skips; 51 existing Common warnings, zero Buffer/test
 warnings/errors. Evidence: artifacts/buffer-composite-reference-validation (ignored),
 buffer-composite-reference-*.trx. Whole-file/inherited coverage remains partial.
+
+## Nested composite flattening and borrowed segments
+
+16 added CLR cases map four further declared AbstractCompositeByteBufTest methods:
+mixed retained-slice flattening with/without WrappedCompositeByteBuf, nested layout
+and full forward/reverse visitor traversal. Heap/native pooled/unpooled providers
+cover every path. Original pooled, readable-range, excluded-component and release
+comments are preserved. The shared fixture inventory maps 82 declarations with
+421 individually unreviewed; this fixture remains in-progress with 48/85 mapped.
+
+The original double-owned 1/2/3 prefix is followed by the [1,5) readable intersection
+of a mixed s1/s2/s3/s4 chain. Both plain and wrapped paths yield five components
+and ten bytes [1,2,3,1,2,3,2,1,2,1]. Retained components keep their own counters:
+after flattening releases the input container, the excluded pooled s4 is deallocated,
+while s1/s2/root retain the claims needed by the destination. Unpooled views instead
+share three root claims, including the excluded view's observable counter. Final
+destination release zeros all original owners. An alias mutation updates both
+intersecting destination ranges while leaving the comparison copy unchanged.
+
+CLR asserts the original helper's unchecked ByteBufUtil.equals result through byte
+arrays and an independent literal model. Its temporary owned copy is explicitly
+released. The original mixed-retained wrapper scenario is now mapped; this does
+not complete all wrapper/provider/inherited coverage. No runtime/Common change
+was needed. Native reservations reach zero after allocator cleanup.
+
+Nested [1,2]/[3,4] components with writer=0 expose Slice(1,2) as two borrowed one-byte
+ReadOnlySequence segments [2]/[3], adapting nioBuffers without Java ByteBuffer
+objects. Mutation confirms aliasing, and outer release consumes the nested owner's
+claim. Func<byte,bool> delegates replace anonymous ByteProcessor classes for the
+original ascending [1..6] and descending [6..1] visitor arrays, return -1 on full
+traversal and preserve nested reader/writer indices.
+
+All 93 pinned Buffer sources and two unchanged original fixtures freshly compile.
+Each Unsafe/NIO profile passes eight original runs (four methods, both byte orders,
+init/dispose) plus 16 supplemental scenarios with explicit heap/direct factories.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+pass 9144/9144 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Evidence: artifacts/buffer-composite-flatten-validation (ignored),
+buffer-composite-flatten-*.trx. Whole-file/inherited coverage remains partial.
 
 ## Remaining work
 
