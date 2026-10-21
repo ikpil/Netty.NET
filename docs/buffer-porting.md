@@ -4351,10 +4351,29 @@ warnings/errors. Evidence: artifacts/buffer-composite-discard-marks-validation
 
 ## Remaining work
 
-Unpooled factories cover heap/native allocation, single and multiple-input wrapping,
-single and multiple-input copying, encoded text/primitive copying, unreleasable views, fixed read-only composites and the shared empty sentinel. Adaptive shared/local factories, metrics and cleanup are connected;
-remaining provider-specific external memory, composite APIs/encoding/utilities and provider-specific/native I/O,
-and remaining adaptive integration remain unported. Automatic wrapping is connected for the current unpooled/pooled/adaptive allocators. Global allocator selection, portable pooled runtime configuration and pooled/adaptive lifecycle events are connected. Advanced leak access recording covers the current CLR ordinary/composite buffer API; its remaining upstream surfaces are pending. Simple composite leak wrappers cover shared-root views and the current CLR composite API. Most original
-test classes and the rest of AbstractByteBufTest remain pending/in-progress.
-Next units address remaining portable buffer contracts and original fixtures.
+Source in-progress counts describe incomplete review, not a count of confirmed
+missing implementations. Historical pending/unported notes above describe each
+unit's scope at that time; they must not be read as a current missing-API list.
+The manifest's publicApiReview begins the explicit availability partition.
+
+ByteBufUtil's 53 declared public static signatures now have exact CLR target
+declarations: 32 implemented portable operations and 21 CLR replacements, with
+zero confirmed missing public operations or unreviewed public signatures in this
+file. Groups link existing contract tests and language/ownership policies.
+CharSequence/CharBuffer become spans or strings, Charset becomes Encoding,
+copy=false uses whole-array Memory eligibility, and a bounded native storage cache
+replaces Java recycler object reuse. These are implemented alternatives, not gaps.
+
+This review checks API availability/representation. Existing tests validate their
+stated scenarios; the full original ByteBufUtilTest, remaining internal/protected
+members, fields, provider details and callers still require separate review.
+ByteBufUtil remains in-progress. Other 34 in-progress source files have not yet
+received this signature-level partition. None is assumed either missing or complete.
+
+Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
+inventory and CLR declaration targets; this is not a behavioral equivalence test.
+Run tools/Update-BufferPortingManifest.ps1 -Check separately for the original file
+inventory and declared-test mappings. Next review targets ByteBuf/AbstractByteBuf,
+CompositeByteBuf and allocator/utility consumers. Implement confirmed portable gaps
+first; classify deliberate CLR alternatives explicitly, then port uncovered tests.
 Common changes must cite the actual buffer contract that requires them.

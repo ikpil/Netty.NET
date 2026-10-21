@@ -653,7 +653,8 @@
         "UTF-8 range/reservation unit: 44 new cases; net10.0 Debug/Release/rebuilt checked Release 1424/1424 with no failures/skips. 36536 pinned Java/CLR rows per Debug/Release match independent Unicode/octet, index/mark, capacity and reference models. Six Java undersized-reservation rows ground the explicit CLR preflight adaptation. Implemented original operation comments retained. docs/buffer-porting.md#utf-8-subsequences-and-ascii-reservations; artifacts/buffer-utf8-range-validation (ignored); buffer-utf8-range-*.trx. Whole original source/fixture remains partial.",
         "Leak-listener API unit: original ByteBufUtil.setLeakListener delegates to the shared factory-created ByteBuf detector through the existing Common listener interface. Eight added cases cover real-GC replacement/null removal after collection, payload/thread/single-notification contracts and normally released heap/native/composite allocations and retained views. net10.0 Debug/Release/rebuilt sampled checked Release pass 4843/4843, zero failures/skips. Real-GC isolated Java/CLR probes have 21 exact scenarios per targetRecords value 0/4 and Debug/Release: delivery, replacement/removal/registration after collection, reporting suppression, explicit final close and tracking-thread notification. Independent callback/report/active-tracker counts and exact resource type/creation hint checks agree. docs/buffer-porting.md#buffer-leak-listener; artifacts/buffer-leak-listener-validation (ignored); buffer-leak-listener-*.trx.",
         "Default allocator unit: IByteBufAllocator.Default now implements pinned ByteBufUtil selection: adaptive when unset, exact unpooled/pooled/adaptive strings, pooled fallback for unknown/case/whitespace values. Separate CLR holders publish one process-owned instance and snapshot io.netty.noPreferDirect without cyclic singleton initialization or eagerly constructing an allocator for unrelated utilities. Native SafeHandle ownership replaces JVM Cleaner reliability detection. Unpooled/Pooled singleton preferences and adaptive nullable explicit overrides follow this setting; Unpooled.Buffer remains heap. Adaptive lowMemory null reads the explicit environment flag with false default, never inferring native budgets from CLR GC limits. NettyRuntime.AvailableProcessors controls adaptive stripes/reuse defaults, including programmatic override. 45 additional isolated-context/concurrency/configuration/factory cases; net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5355/5355, no failures/skips. Checked build: 51 existing Common warnings, zero Buffer/test warnings/errors; Common unchanged. Rechecked 93 pinned Java Buffer files byte-for-byte and three relevant Common sources after line-ending normalization. Forty isolated-process Java/CLR configurations match 3540 nonempty executable state rows per Debug/Release; independent models check 960 factory shapes/data/allocator identities, heap/native metric retention and 130 low/normal large-allocation decisions per configuration. Java pooled arena/cache settings are explicitly constrained to the existing CLR one-arena/cache-off policy; JVM automatic heap/native budget heuristics and remaining portable pooled runtime properties are not claimed. CLR explicit cleanup returns registries/native reservations to zero; Java adaptive registries also drain, and Java process-owned pooled defaults end with their process. docs/buffer-porting.md#global-allocator-selection-and-runtime-preferences; artifacts/buffer-default-allocator-validation (ignored); buffer-default-allocator-*.trx.",
-        "Thread-local direct transport helper: original ByteBufUtil.threadLocalDirectBuffer contract/property/256-byte initial allocation/capacity cutoff and NIO absolute-source copy consumer are ported. 26 new cases cover configuration isolation, actual fast-thread/scope cleanup, fresh wrappers, bounded storage reuse, late/cross-thread returns, pins/leases, retained views, copy provenance, alias growth and failed reserve/resize retry. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5489/5489 on net10.0, no failures/skips. Nine isolated profiles match 114 executable Java Unsafe/NIO and CLR states per Debug/Release, with independent threshold/factory/wire/cursor/reference models. All 93 Buffer source bytes rechecked. Original public API comment/licenses retained; Common unchanged. docs/buffer-porting.md#thread-local-direct-transport-helper; artifacts/buffer-thread-local-direct-validation (ignored), buffer-thread-local-direct-*.trx. Whole utility/source fixture remains partial."
+        "Thread-local direct transport helper: original ByteBufUtil.threadLocalDirectBuffer contract/property/256-byte initial allocation/capacity cutoff and NIO absolute-source copy consumer are ported. 26 new cases cover configuration isolation, actual fast-thread/scope cleanup, fresh wrappers, bounded storage reuse, late/cross-thread returns, pins/leases, retained views, copy provenance, alias growth and failed reserve/resize retry. Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5489/5489 on net10.0, no failures/skips. Nine isolated profiles match 114 executable Java Unsafe/NIO and CLR states per Debug/Release, with independent threshold/factory/wire/cursor/reference models. All 93 Buffer source bytes rechecked. Original public API comment/licenses retained; Common unchanged. docs/buffer-porting.md#thread-local-direct-transport-helper; artifacts/buffer-thread-local-direct-validation (ignored), buffer-thread-local-direct-*.trx. Whole utility/source fixture remains partial.",
+        "Public API availability review: all 53 declared public static ByteBufUtil signatures partition into 32 implemented portable operations and 21 explicit CLR replacements; zero confirmed public-signature gaps and zero unreviewed public signatures in this file only. Each signature records exact CLR member declarations and grouped existing contract-test/policy evidence. CharSequence/CharBuffer/Charset, whole-array sharing, generic leak listeners, Span search and bounded native caching have explicit adaptations. tools/Check-BufferPublicApi.py checks the pinned inventory and every registered target; it does not prove behavior equivalence. ByteBufUtilTest/internal/provider coverage and the other 34 partial runtime sources remain unreviewed at this level. No runtime behavior or source status change. docs/buffer-porting.md#remaining-work; artifacts/buffer-public-api-review-validation (ignored). Full net10.0 Debug/Release regression passes 9164/9164 per configuration, zero failures/skips; 51 existing Common warning lines per build, zero Buffer/test warnings. No tests added; the only runtime-source edit removes an outdated summary comment, with executable tokens unchanged. Independent javap metadata agrees with all 53 original signatures."
       ],
       "adaptation": "Directional/subsequence search, UTF-8 maximum/exact length, UTF-8 writes/reservations and ASCII writes are implemented. Span.IndexOf/LastIndexOf replace Java SWAR/Two-Way internals. UTF-8 malformed-surrogate and ASCII octet rules, AsciiString raw bytes and public writeUtf8 worst-case reservation are preserved. Checked sizes and undersized reservation rejection are CLR safety adaptations. C# callers can pass a ReadOnlySpan<char> slice directly; matching start/end overloads now reuse that kernel and share overflow-safe endpoint validation with raw AsciiString ranges. Allocator-returning operations are covered by the later allocation utility update; remaining I/O and utilities stay pending. Composite consumer: contiguous borrowing/segment hooks propagate through read-only and derived views; native pins can be grouped through read-only sources, text/search accept segmented storage, and Unpooled.CompositeBuffer uses the original default maximum of 16 components. Original unported operations remain pending. Hex update maps all 11 original public hex/pretty/decode operations to native byte[]/string APIs, with ReadOnlySpan<byte>/ReadOnlySpan<char> forms. Contiguous hex uses Convert.ToHexStringLower; segmented formatting walks ReadOnlySequence directly into the final string. Strict ASCII hex decoding reuses Common.StringUtil nibble decoding; no ICharSequence facade, substring copy or Common modification is needed. Pretty dumps copy at most 16 bytes to stack per row, preserve headers, lowercase octets, ASCII printable 32..126, padding, no trailing newline, append behavior and StringUtil.NEWLINE. Computed padding and existing Common byte conversion replace Java HexUtil lookup initialization; its original comments remain. The pinned cached-prefix quirk is preserved: row labels below row 4096 are relative to the dump start, while later labels use absolute buffer indices. Absolute ranges may extend past WriterIndex to Capacity; default ranges use readable bytes. Indices/marks/refcounts stay unchanged. Null/empty/dead/overflowing ranges are consistently checked before output, deliberately rejecting Java zero-length bypasses; hex output size uses checked arithmetic. Concurrent mutation/release must be excluded during formatting. Source and remaining utility operations remain partial. Content comparison/hash update: HashCode, both Equals forms and Compare retain signed wrapping Int32/signed-byte hashing, zero coercion, unsigned exact clamped word/tail comparisons and writer-bounded absolute equality. Explicit-endian primitives replace Java order branches; Span.SequenceEqual handles contiguous equality and bounded crossing words handle segmented storage without flattening. Self-reference/null identity fast paths remain; distinct released buffers consistently throw even on empty/mismatched ranges. No indices/marks/refcounts change. Full policy and remaining scope: docs/buffer-porting.md#content-comparison-and-hashing. Text validation update: both IsText overloads use Encoding rather than Charset. Explicit ranges are absolute, may precede ReaderIndex and end at WriterIndex. Canonical UTF8/ASCII use BCL Utf8.IsValid/Ascii.IsValid; segmented UTF8 and other/custom encodings use fresh Decoder state with ExceptionFallback and fixed 256-char scratch, flushing once after all segments. Caller Encoding/fallback stay unchanged; custom same-code-page decoders are honored. Original RFC/algorithm comments remain beside the BCL replacement. Released-empty UTF8 consistently throws rather than Java success. Indices/marks/refcounts stay unchanged; exclude concurrent content/layout/lifetime changes. Full policy and pending scope: docs/buffer-porting.md#text-validation. Array extraction update: all three GetBytes overloads return byte[]. Default/range overloads always snapshot; explicit ranges are capacity-bounded. Copy=false shares only a complete writable contiguous managed-array mapping, using existing Memory borrowing and MemoryMarshal.TryGetArray instead of Java hasArray/array/arrayOffset APIs. Read-only roots/components, native backing, partial arrays and segmented ranges copy through ReadOnlySequence.ToArray without a temporary flattening buffer. Contiguous composite views and empty-adjacent single-array composites may share where Java wrapper hasArray restrictions force copying; this is a deliberate CLR policy, not alias equivalence. Empty output uses Array.Empty. Bounds/lifetime checks include empty requests; indices/marks/refcounts stay unchanged and concurrent content/layout/lifetime changes are excluded. Full policy: docs/buffer-porting.md#array-extraction. AsciiString copying update: all three Copy overloads use AsciiString.AsSpan().Slice with logical bounds before destination validation/mutation, preserving raw octets and backing-array offsets without ASCII re-encoding. Absolute SetBytes is capacity-bounded and changes no indices; relative WriteBytes may grow and publishes WriterIndex only after success. Source null/range and destination null become CLR argument exceptions; lifetime/read-only guards include empty copies, while the shared empty sentinel accepts a valid zero-length copy. Existing span overlap semantics are retained: segmented writes snapshot the source, intentionally differing from Java sequential component writes for forward same-array overlap. Managed source remains alive through heap growth. No new Common/storage abstraction or retain; callers exclude concurrent source/destination mutation/lifetime changes. Composite failures may leave bytes/capacity changed while WriterIndex is unchanged. Full policy and consumer evidence: docs/buffer-porting.md#asciistring-copying. Allocator-returning update: IByteBufAllocator supplies the result and its creator policy; successful operations transfer one owned reference to the caller, and failure releases the new owner. ReadBytes consumes exactly the requested length, preventing Java writable-capacity overread for custom overallocating factories; source writer/marks/refcount stay unchanged. UTF-16 spans use existing Netty UTF8/ASCII octet mappings, while AsciiString uses offset-aware raw bytes and retains the original UTF8 length-then-3x reservation/growth quirk. UTF8/ASCII factory write failures now release their result, unlike pinned Java. EncodeString uses ReadOnlySpan<char> instead of a mutable CharBuffer cursor, caller Encoding/fallback without preamble, exact byte count plus checked nonnegative extraCapacity, and unwritten tail capacity for framing. Invalid null/negative/overflow/strict-encoding inputs fail before allocation; released/empty source bounds and failure cleanup remain checked. Heap/native/segmented factories are supported through existing ByteBuf writers. JVM charset/cursor/capacity equivalence is not claimed. Unpooled keeps its existing heap-only encoding path; no internal enforceHeap facade is needed. Unpooled metrics are covered separately; caches/leak wrappers and other original utilities remain pending. Full policy: docs/buffer-porting.md#allocator-returning-utilities. Scalar/endian update: BinaryPrimitives reverses signed 16/32/64-bit words; SwapMedium discards high bits and sign-extends the reversed 24-bit result. BE helpers call existing unsuffixed BE operations; explicit LE operations replace mutable Java byte-order views. ReadUnsignedShortBE returns ushort. Accessibility checks observe shared refcount without retaining; only ensureWritable status 0/2 means success. Null arguments fail with ArgumentNullException. Policy: docs/buffer-porting.md#scalar-and-endian-utilities. UTF-8 range update: Utf8Bytes/WriteUtf8/ReserveAndWriteUtf8 accept [start,end) over ReadOnlySpan<char> or AsciiString, and explicit full AsciiString reservations preserve raw 0x00-0xff octets and logical offsets. Span slices reuse the established encoding kernel without CharSequence/subsequence allocations. Endpoints are validated before subtraction and destination growth, including extreme Int32 values in checked builds. Worst-case WriteUtf8 reserves three bytes per selected UTF-16 unit even for AsciiString; explicit reservations may be exact or larger and never advance writer by the reserved surplus. Raw byte writes share a bounded kernel; failed writes leave writer unchanged, while composite writes may partially mutate earlier components. Undersized reservations uniformly fail before growth/mutation under existing CLR policy; pinned Java has storage-dependent partial-write/success behavior. Original range-operation documentation is preserved. Policy: docs/buffer-porting.md#utf-8-subsequences-and-ascii-reservations. Leak listener update: the public setter replaces/removes the existing shared detector listener without a second detector or callback scheduler. Collection queues, reporting gates, duplicate suppression and notification on the draining tracking thread remain Common contracts. Additional CLR fixture coverage is used because the pinned ByteBufUtilTest has no dedicated listener test; the original fixture remains partial. Global-default update: exact pinned allocator-type selection, unknown-to-pooled fallback, process instance publication and direct preference are implemented through independent lazy CLR holders. ByteBufUtil utility-only calls deliberately do not freeze global allocator/processor configuration; Java eagerly initializes them in its utility class initializer. Broader utility APIs remain partial. Thread-local direct helper update: ThreadLocalDirectBuffer defaults to null for unset/nonpositive/invalid io.netty.threadLocalDirectBufferSize; a positive value returns contiguous native storage, initially 256 bytes, maxCapacity int.MaxValue, and UnpooledByteBufAllocator.Default provenance without automatic leak wrapping. The property snapshots on the first helper call rather than Java eager ByteBufUtil initialization; unrelated utilities/global selector stay lazy. Guaranteed physical fast-thread cleanup scopes cache one idle owner, with final-capacity <= configured cutoff; ordinary/unguaranteed callers allocate uncached, and cross-thread returns free storage. Java recycler object reuse/ratio/multiple-idle retention become an explicit bounded CLR storage cache; wrappers/memory facades stay fresh, old references cannot resurrect, and borrowed Memory invalidates at release/resize. Pins/operation claims delay reuse, cached bytes are not cleared, indices/marks reset through fresh wrappers, old resized storage is freed when claims drain, and scope removal closes the gate/drains idle owners while preserving live buffers. Capacity copying/shrink retains the existing CLR full-prefix storage policy. The single-owner differential profiles set Java recycler ratio=1 and compare portable factory/capacity/bytes/cursors/references, not wrapper identity, OS addresses, performance, Java backing cleanup timing or multi-entry/cross-thread recycler policy. Actual pinned consumers: transport/src/main/java/io/netty/channel/nio/AbstractNioChannel.java:527,559; transport-native-unix-common/src/main/java/io/netty/channel/unix/SocketWritableByteChannel.java:54. Existing allocator pools/events and complete original fixtures are outside this unit.",
       "comments": {
@@ -661,6 +662,749 @@
         "preservedCount": 125,
         "missingCount": 40,
         "coverage": "partial source; remaining operations not ported"
+      },
+      "publicApiReview": {
+        "scope": "declared-public-static-methods",
+        "meaning": "Availability/representation review of each declared public static signature. implemented means an existing portable CLR operation is identified; clr-replacement means an explicit CLR representation/behavior policy is identified. Neither means full fixture/provider equivalence. implementation-gap requires a confirmed missing operation; unreviewed means no decision. Internal/protected members, fields, allocator/provider internals and other source files are outside this review.",
+        "verificationRemaining": "Original ByteBufUtilTest fixture and remaining internal/provider/consumer contracts still require individual review. Existing evidence and partial validation are linked per group; no source status is promoted.",
+        "summary": {
+          "declared": 53,
+          "clr-replacement": 21,
+          "implementation-gap": 0,
+          "implemented": 32,
+          "unreviewed": 0
+        },
+        "groups": {
+          "scalar": {
+            "adaptation": "Portable accessibility/status and endian helpers have direct CLR operations. Unsigned ushort replaces Java int for ReadUnsignedShortBE; values and explicit BE semantics are preserved. Full receiver/provider behavior remains scoped to existing evidence.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufScalarUtilTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "hex": {
+            "adaptation": "ByteBuf/byte[] ranges keep absolute offsets and lower-case hex formatting. string/ReadOnlySpan<char> replace CharSequence for decoding; optional span conveniences have explicit CLR range/null semantics.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufHexTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "comparison": {
+            "adaptation": "Readable-content hash/equality/lexicographic comparison use ByteBuf ranges independently of absolute indices. Existing strict bounds and signed Java hash arithmetic are preserved with explicit CLR unchecked composition.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "search": {
+            "adaptation": "Two-buffer search uses contiguous Span.IndexOf, materializing segmented ranges; Java Two-Way/SWAR algorithm/performance is replaced. The scalar range helper delegates to the buffer virtual IndexOf. Existing empty-needle/null/range policies are recorded in the contract tests.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufComparisonTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "allocated-read": {
+            "adaptation": "IByteBufAllocator replaces ByteBufAllocator. Allocate and read exactly length bytes, advancing source reader/result writer; release the new owner on failure. Existing CLR negative/null guards are explicit.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatedUtilTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "utf8": {
+            "adaptation": "ReadOnlySpan<char> replaces general CharSequence; AsciiString overloads retain the specialized raw-octet path. Explicit [start,end) ranges avoid subsequence allocation. Existing malformed-surrogate mappings, reservation validation, alias-growth leases and checked size policy are retained.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufUtf8RangeTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatedUtilTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "ascii": {
+            "adaptation": "ReadOnlySpan<char>/AsciiString replace Java CharSequence and keep their distinct character-low-octet/raw-octet behavior; allocator-returning paths release failed results.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufTextSearchTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatedUtilTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "encoding": {
+            "adaptation": "ReadOnlySpan<char> and Encoding replace CharBuffer/Charset without a mutable character cursor. One optional extraCapacity parameter covers both Java overloads. CLR honors caller fallback with exact encoded size rather than Java encoder upper-bound capacity; failures release the new owner.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufAllocatedUtilTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "thread-local": {
+            "adaptation": "A bounded native-storage cache in guaranteed fast-thread cleanup scopes replaces Java recycler object reuse; other callers allocate uncached, wrappers stay fresh, pins delay reuse and cross-thread returns free storage. Configuration snapshots at the first helper call. This is an implemented CLR adaptation, not a missing cache API.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ThreadLocalDirectBufferTest.cs",
+              "test/Netty.NET.Buffer.Tests/ThreadLocalDirectConfigurationTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "extraction": {
+            "adaptation": "Default/ranged GetBytes make independent snapshots. copy=false shares only a writable contiguous whole managed array when eligible; CLR Memory mapping replaces Java hasArray restrictions. Readonly/native/segmented/partial array ranges are copied; no ownership claim is acquired.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufArrayExtractionTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "ascii-copy": {
+            "adaptation": "AsciiString retains logical offsets and raw octets. Explicit destination index leaves writer unchanged; implicit writer forms advance it as in the Java overload contracts.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufAsciiCopyTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "validation": {
+            "adaptation": "Encoding and strict streaming decoders replace Charset; canonical ASCII/UTF8 instances use optimized validators. State spans component boundaries; input indices/encoding fallbacks remain unchanged. Existing CLR exception and custom-encoding behavior are documented in tests.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufTextValidationTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          },
+          "leak-listener": {
+            "adaptation": "The generic ResourceLeakDetector<ByteBuf>.LeakListener updates the existing shared detector, with null removing the listener. No additional detector/scheduler is introduced.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufLeakListenerTest.cs"
+            ],
+            "validation": "Existing contract tests support the stated behavior; full original-fixture/provider completion is not asserted."
+          }
+        },
+        "methods": [
+          {
+            "upstream": "isAccessible(ByteBuf)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "IsAccessible(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "ensureAccessible(ByteBuf)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "EnsureAccessible(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "hexDump(ByteBuf)",
+            "state": "implemented",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "HexDump(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "hexDump(ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "HexDump(ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "hexDump(byte[])",
+            "state": "implemented",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "HexDump(byte[])"
+              }
+            ]
+          },
+          {
+            "upstream": "hexDump(byte[],int,int)",
+            "state": "implemented",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "HexDump(byte[],int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "decodeHexByte(CharSequence,int)",
+            "state": "clr-replacement",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "DecodeHexByte(string,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "DecodeHexByte(ReadOnlySpan<char>,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "decodeHexDump(CharSequence)",
+            "state": "clr-replacement",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "DecodeHexDump(string)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "DecodeHexDump(ReadOnlySpan<char>)"
+              }
+            ]
+          },
+          {
+            "upstream": "decodeHexDump(CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "DecodeHexDump(string,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "ensureWritableSuccess(int)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "EnsureWritableSuccess(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "hashCode(ByteBuf)",
+            "state": "implemented",
+            "group": "comparison",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Comparison.cs",
+                "member": "HashCode(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "indexOf(ByteBuf,ByteBuf)",
+            "state": "clr-replacement",
+            "group": "search",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "IndexOf(ByteBuf,ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "equals(ByteBuf,int,ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "comparison",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Comparison.cs",
+                "member": "Equals(ByteBuf,int,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "equals(ByteBuf,ByteBuf)",
+            "state": "implemented",
+            "group": "comparison",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Comparison.cs",
+                "member": "Equals(ByteBuf,ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "compare(ByteBuf,ByteBuf)",
+            "state": "implemented",
+            "group": "comparison",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Comparison.cs",
+                "member": "Compare(ByteBuf,ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "indexOf(ByteBuf,int,int,byte)",
+            "state": "implemented",
+            "group": "search",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "IndexOf(ByteBuf,int,int,byte)"
+              }
+            ]
+          },
+          {
+            "upstream": "swapShort(short)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "SwapShort(short)"
+              }
+            ]
+          },
+          {
+            "upstream": "swapMedium(int)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "SwapMedium(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "swapInt(int)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "SwapInt(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "swapLong(long)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "SwapLong(long)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeShortBE(ByteBuf,int)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "WriteShortBE(ByteBuf,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShortBE(ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "SetShortBE(ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeMediumBE(ByteBuf,int)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "WriteMediumBE(ByteBuf,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readUnsignedShortBE(ByteBuf)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "ReadUnsignedShortBE(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "readIntBE(ByteBuf)",
+            "state": "implemented",
+            "group": "scalar",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs",
+                "member": "ReadIntBE(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBufAllocator,ByteBuf,int)",
+            "state": "implemented",
+            "group": "allocated-read",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+                "member": "ReadBytes(IByteBufAllocator,ByteBuf,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeUtf8(ByteBufAllocator,CharSequence)",
+            "state": "clr-replacement",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+                "member": "WriteUtf8(IByteBufAllocator,ReadOnlySpan<char>)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+                "member": "WriteUtf8(IByteBufAllocator,AsciiString)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeUtf8(ByteBuf,CharSequence)",
+            "state": "clr-replacement",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "WriteUtf8(ByteBuf,ReadOnlySpan<char>)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "WriteUtf8(ByteBuf,AsciiString)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeUtf8(ByteBuf,CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+                "member": "WriteUtf8(ByteBuf,ReadOnlySpan<char>,int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+                "member": "WriteUtf8(ByteBuf,AsciiString,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "reserveAndWriteUtf8(ByteBuf,CharSequence,int)",
+            "state": "clr-replacement",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "ReserveAndWriteUtf8(ByteBuf,ReadOnlySpan<char>,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+                "member": "ReserveAndWriteUtf8(ByteBuf,AsciiString,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "reserveAndWriteUtf8(ByteBuf,CharSequence,int,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+                "member": "ReserveAndWriteUtf8(ByteBuf,ReadOnlySpan<char>,int,int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+                "member": "ReserveAndWriteUtf8(ByteBuf,AsciiString,int,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "utf8MaxBytes(int)",
+            "state": "implemented",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "Utf8MaxBytes(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "utf8MaxBytes(CharSequence)",
+            "state": "clr-replacement",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "Utf8MaxBytes(ReadOnlySpan<char>)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "Utf8MaxBytes(AsciiString)"
+              }
+            ]
+          },
+          {
+            "upstream": "utf8Bytes(CharSequence)",
+            "state": "clr-replacement",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "Utf8Bytes(ReadOnlySpan<char>)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "Utf8Bytes(AsciiString)"
+              }
+            ]
+          },
+          {
+            "upstream": "utf8Bytes(CharSequence,int,int)",
+            "state": "clr-replacement",
+            "group": "utf8",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+                "member": "Utf8Bytes(ReadOnlySpan<char>,int,int)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Utf8Ranges.cs",
+                "member": "Utf8Bytes(AsciiString,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeAscii(ByteBufAllocator,CharSequence)",
+            "state": "clr-replacement",
+            "group": "ascii",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+                "member": "WriteAscii(IByteBufAllocator,ReadOnlySpan<char>)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+                "member": "WriteAscii(IByteBufAllocator,AsciiString)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeAscii(ByteBuf,CharSequence)",
+            "state": "clr-replacement",
+            "group": "ascii",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "WriteAscii(ByteBuf,ReadOnlySpan<char>)"
+              },
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.cs",
+                "member": "WriteAscii(ByteBuf,AsciiString)"
+              }
+            ]
+          },
+          {
+            "upstream": "encodeString(ByteBufAllocator,CharBuffer,Charset)",
+            "state": "clr-replacement",
+            "group": "encoding",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+                "member": "EncodeString(IByteBufAllocator,ReadOnlySpan<char>,Encoding,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "encodeString(ByteBufAllocator,CharBuffer,Charset,int)",
+            "state": "clr-replacement",
+            "group": "encoding",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+                "member": "EncodeString(IByteBufAllocator,ReadOnlySpan<char>,Encoding,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "threadLocalDirectBuffer()",
+            "state": "clr-replacement",
+            "group": "thread-local",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.ThreadLocalDirect.cs",
+                "member": "ThreadLocalDirectBuffer()"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(ByteBuf)",
+            "state": "implemented",
+            "group": "extraction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.ArrayExtraction.cs",
+                "member": "GetBytes(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "extraction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.ArrayExtraction.cs",
+                "member": "GetBytes(ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getBytes(ByteBuf,int,int,boolean)",
+            "state": "clr-replacement",
+            "group": "extraction",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.ArrayExtraction.cs",
+                "member": "GetBytes(ByteBuf,int,int,bool)"
+              }
+            ]
+          },
+          {
+            "upstream": "copy(AsciiString,ByteBuf)",
+            "state": "implemented",
+            "group": "ascii-copy",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.AsciiCopy.cs",
+                "member": "Copy(AsciiString,ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "copy(AsciiString,int,ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "ascii-copy",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.AsciiCopy.cs",
+                "member": "Copy(AsciiString,int,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "copy(AsciiString,int,ByteBuf,int)",
+            "state": "implemented",
+            "group": "ascii-copy",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.AsciiCopy.cs",
+                "member": "Copy(AsciiString,int,ByteBuf,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "prettyHexDump(ByteBuf)",
+            "state": "implemented",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "PrettyHexDump(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "prettyHexDump(ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "PrettyHexDump(ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "appendPrettyHexDump(StringBuilder,ByteBuf)",
+            "state": "implemented",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "AppendPrettyHexDump(StringBuilder,ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "appendPrettyHexDump(StringBuilder,ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "hex",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.Hex.cs",
+                "member": "AppendPrettyHexDump(StringBuilder,ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "isText(ByteBuf,Charset)",
+            "state": "clr-replacement",
+            "group": "validation",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.TextValidation.cs",
+                "member": "IsText(ByteBuf,Encoding)"
+              }
+            ]
+          },
+          {
+            "upstream": "isText(ByteBuf,int,int,Charset)",
+            "state": "clr-replacement",
+            "group": "validation",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.TextValidation.cs",
+                "member": "IsText(ByteBuf,int,int,Encoding)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLeakListener(ResourceLeakDetector.LeakListener)",
+            "state": "clr-replacement",
+            "group": "leak-listener",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBufUtil.LeakDetection.cs",
+                "member": "SetLeakListener(ResourceLeakDetector<ByteBuf>.LeakListener)"
+              }
+            ]
+          }
+        ]
       }
     },
     {
