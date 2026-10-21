@@ -4006,7 +4006,7 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | Original fixture | Declared methods | Mapped | Test gaps | Unreviewed |
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
-| AbstractCompositeByteBufTest | 85 | 20 | 0 | 65 |
+| AbstractCompositeByteBufTest | 85 | 28 | 0 | 57 |
 | AbstractByteBufAllocatorTest | 10 | 10 | 0 | 0 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
@@ -4160,6 +4160,42 @@ Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval
 pass 9040/9040 without failures/skips; 51 existing Common warnings, zero Buffer/test
 warnings/errors. Evidence: artifacts/buffer-composite-discard-validation (ignored),
 buffer-composite-discard-*.trx. No fixture completion or runtime improvement claim.
+
+## Composite component lookup and limits
+
+28 added CLR cases map eight more declared AbstractCompositeByteBufTest methods:
+componentAtOffset, toComponentIndex, toByteIndex, isContiguous, findComponent and
+three constructor-limit cases. Heap/native pooled/unpooled public factories cover
+the original component data, cursor behavior and release paths. Original loop,
+spot-check, factory and constructor-helper comments are preserved. The shared
+fixture inventory maps 62 declarations with 441 individually unreviewed; this
+fixture remains in-progress with 28/85 declarations mapped.
+
+The original 5/7-byte components are visited at every offset and return borrowed
+source duplicates with independent indices. The 5/7/7 layout maps every offset
+against a flat byte model and the original starts 0/5/12. Repeated 1..9-byte
+fragments separated by empties are truncated to four bytes for the contiguity
+check, or ten bytes for three nested components exposing only a/b/c. Reading a,
+skipping b and reading c preserves the original relative-lookup sequence and
+releases all nested owners. Explicit AddComponent retains this fragmented layout
+instead of depending on Unpooled's wrapping optimization.
+
+Constructor limits 0/1/5 reproduce the original rejection/lower-bound/positive
+cases. CLR uses ArgumentOutOfRangeException and its parameter name instead of
+Java's IllegalArgumentException message. An additional three-component Java probe
+finds that toByteIndex(numComponents) passes checkComponentIndex then dereferences
+a null slot, throwing NullPointerException. CLR's existing range guard rejects
+that missing component with ArgumentOutOfRangeException. Valid-index behavior
+agrees; no runtime/Common change is needed. Native reservations reach zero after
+allocator cleanup.
+
+All 93 pinned Buffer sources and two unchanged test fixtures freshly compile.
+Each Unsafe/NIO profile passes 16 original runs (eight methods, both byte orders,
+init/dispose), plus 28 supplemental lookup/limit scenarios. Full net10.0
+Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass
+9068/9068 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. Evidence: artifacts/buffer-composite-lookup-validation (ignored),
+buffer-composite-lookup-*.trx. Whole-file/inherited coverage remains partial.
 
 ## Remaining work
 

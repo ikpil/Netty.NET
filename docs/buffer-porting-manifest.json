@@ -3218,7 +3218,8 @@
         "test/Netty.NET.Buffer.Tests/CompositeByteBufEnumerationTest.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufConstructionTest.cs",
         "test/Netty.NET.Buffer.Tests/CompositeByteBufOwnershipTest.cs",
-        "test/Netty.NET.Buffer.Tests/CompositeByteBufDiscardTest.cs"
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufDiscardTest.cs",
+        "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs"
       ],
       "evidence": [
         "Composite storage unit: Buffer.Tests 211 passed in Debug/Release/checked Release; focused common native-memory/reference-count/EncodingConstructor contracts 118 passed in Debug/Release. Pinned Java common/buffer runtime probe matches 400 heap/direct structural, wire, view, search, decompose, discard, consolidate and final-reference rows. docs/buffer-porting.md; artifacts/buffer-composite-validation; buffer-composite-*.trx. Partial source/fixture only.",
@@ -3227,13 +3228,14 @@
         "Composite constructor unit: public params ByteBuf[] and IEnumerable<ByteBuf> constructors capture readable ranges, transfer existing references, consolidate once and expose the full capacity as readable. 26 new cases; net10.0 Debug/Release/rebuilt checked Release pass 1286/1286 without failures/skips. 4608 pinned Java/CLR rows per configuration agree with independent byte/index/metric/reference models. Four failure rows per configuration reproduce Java retaining acquired inputs after failed consolidation allocation; CLR releases the inaccessible partial composite. No source/fixture completion is inferred. Policy: docs/buffer-porting.md#composite-buffer-construction; artifacts/buffer-construction-validation (ignored); buffer-construction-*.trx.",
         "Declared-method audit: pinned JUnit methods are partitioned into explicit caseMappings, evidence-backed methodFindings and testMethodReview.unreviewedMethods. Name similarity is not completion evidence. Mapping scope remains the stated scenarios/providers. docs/buffer-porting.md#common-fixture-method-review; tools/Update-BufferPortingManifest.ps1 -Check; artifacts/buffer-method-review-validation (ignored).",
         "Composite ownership unit: eight selected declared methods gain explicit mappings; 44 new CLR cases cover original decomposition ranges/counts, independent pooled source counters, both cleanup orders and original removal shapes over heap/native pooled/unpooled public factories. All 93 pinned Buffer sources and two unchanged original fixtures freshly compiled; each Unsafe/NIO profile passes 16 original test runs (eight methods under both original byte orders) with init/dispose and 44 supplemental ownership/data-model cases. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9014/9014 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. No runtime/Common change or fixture completion claim. docs/buffer-porting.md#composite-decomposition-and-removal-ownership; artifacts/buffer-composite-ownership-validation (ignored), buffer-composite-ownership-*.trx.",
-        "Composite shrink/discard unit: eight more declared methods mapped using 26 added CLR cases and three reused existing cases (29 focused). Four nested retained/borrowed component claims, shrink release, repeated discard lookup and flattened retained re-add are checked against the pinned source. All 93 pinned Buffer sources and two unchanged test fixtures freshly compile; Unsafe/NIO each pass 16 original runs (eight methods, both byte orders) plus 28 supplemental lifecycle scenarios. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9040/9040 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. No runtime/Common change or fixture completion claim. docs/buffer-porting.md#composite-shrink-and-discard-lifetimes; artifacts/buffer-composite-discard-validation (ignored), buffer-composite-discard-*.trx."
+        "Composite shrink/discard unit: eight more declared methods mapped using 26 added CLR cases and three reused existing cases (29 focused). Four nested retained/borrowed component claims, shrink release, repeated discard lookup and flattened retained re-add are checked against the pinned source. All 93 pinned Buffer sources and two unchanged test fixtures freshly compile; Unsafe/NIO each pass 16 original runs (eight methods, both byte orders) plus 28 supplemental lifecycle scenarios. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9040/9040 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. No runtime/Common change or fixture completion claim. docs/buffer-porting.md#composite-shrink-and-discard-lifetimes; artifacts/buffer-composite-discard-validation (ignored), buffer-composite-discard-*.trx.",
+        "Composite lookup unit: eight more declared methods mapped through 28 added CLR cases for original component-at-offset data, every-byte 5/7/7 index mapping, fragmented contiguity, nested a/skip-b/c lookup and component limits 0/1/5 across heap/native pooled/unpooled factories. All 93 pinned Buffer sources and two unchanged original test fixtures freshly compile; Unsafe/NIO each pass 16 original runs (eight methods, both byte orders) plus 28 supplemental lookup/boundary scenarios. The invalid cIndex=numComponents Java null-slot dereference is recorded as an explicit CLR argument-validation adaptation. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9068/9068 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings/errors. No runtime/Common change or fixture completion claim. docs/buffer-porting.md#composite-component-lookup-and-limits; artifacts/buffer-composite-lookup-validation (ignored), buffer-composite-lookup-*.trx."
       ],
-      "adaptation": "Selected original empty/component/offset/index/ownership/auto/full/ranged consolidation/shrink/discard/decompose/nested word/visitor/overflow contracts run alongside CLR borrowed sequence, native pin/quota/failure and aliasing tests. Retained component coverage distinguishes shared unpooled counters from independent pooled parent/child counters in the explicit method mappings below. Old retained composite views fail checked access after all components are discarded rather than exposing freed storage. Two seeded 100-layout fixtures independently assemble word bytes and check discard/consolidate; 400 full pinned-Java/CLR rows cover heap/direct structural behaviors. Remaining original fixture, array/NIO/gathering/allocator/pooled cases remain pending; no stubs or skipped tests. Batch/flatten update adds 31 cases for array/streaming success and failure ownership, prefix writer updates, null/tail safe release, checked overflow with shared backing memory, one batch consolidation, disposed/throwing enumerators, enumerable ByteBuf dispatch, shallow readable intersections and original slice ownership, derived/read-only inputs, empty input, allocation/retain/source-read rollback, separately retained source already owned by destination, cycle rejection and issue 16799 offset/discard regression. WrappedCompositeByteBuf variants remain unreviewed; mapped pooled cases have explicit scope below. Remaining original fixture cases stay pending. Enumeration/cache update adds 24 cases for original empty/normal/count-change iterator contracts, cached view identities, internal offset checks through empties, full/partial sources, native early-disposal ownership, readonly nested storage, cache replacement on shrink/discard, retained-vs-borrowed removal/consolidation, same-count mutation, failed materialization retry, ByteBuf+IEnumerable single-source dispatch, and the original flatten/componentSlice retain-remove-add-back regression on heap/native storage. Pooled flatten/componentSlice variants are now covered by the explicit mapping below; CLR enumerator protocol is validated separately. Constructor update adds 26 cases for array/enumerable/params and ByteBuf+IEnumerable inputs, captured ranges/marks and readonly aliases, mixed heap/native allocation provenance and metrics, null termination/tail ownership, empty components, argument validation, insertion/copy/allocation failures with retry, derived-constructor cleanup, recoverable/persistent enumeration failure and disposal, and checked overflow. Original constructor-bound/overflow scenarios inform these tests; synthetic logical buffers exercise Int32 capacity overflow without large allocations instead of the original repeated 1-MiB backing. No original test method or whole fixture is claimed newly complete. Original operation comments from reused batch/null handling remain retained. Policy: docs/buffer-porting.md#composite-buffer-construction. Decomposition/removal update maps eight declared test methods through deterministic data and explicit borrowed-list ownership, including independent retained source counters and shared-counter alternatives. Original byte-order facades add no additional byte-only ownership behavior; CLR wire endianness remains explicit. File/inherited test coverage remains partial. Shrink/discard ownership maps eight further declarations, including existing retained-slice range rejection and extended pooled flattening coverage. CLR binary-search lookup replaces the Java last-access cache. Independent retained child counters remain distinct from the shared unpooled model; byte order is explicit. File/inherited coverage remains partial.",
+      "adaptation": "Selected original empty/component/offset/index/ownership/auto/full/ranged consolidation/shrink/discard/decompose/nested word/visitor/overflow contracts run alongside CLR borrowed sequence, native pin/quota/failure and aliasing tests. Retained component coverage distinguishes shared unpooled counters from independent pooled parent/child counters in the explicit method mappings below. Old retained composite views fail checked access after all components are discarded rather than exposing freed storage. Two seeded 100-layout fixtures independently assemble word bytes and check discard/consolidate; 400 full pinned-Java/CLR rows cover heap/direct structural behaviors. Remaining original fixture, array/NIO/gathering/allocator/pooled cases remain pending; no stubs or skipped tests. Batch/flatten update adds 31 cases for array/streaming success and failure ownership, prefix writer updates, null/tail safe release, checked overflow with shared backing memory, one batch consolidation, disposed/throwing enumerators, enumerable ByteBuf dispatch, shallow readable intersections and original slice ownership, derived/read-only inputs, empty input, allocation/retain/source-read rollback, separately retained source already owned by destination, cycle rejection and issue 16799 offset/discard regression. WrappedCompositeByteBuf variants remain unreviewed; mapped pooled cases have explicit scope below. Remaining original fixture cases stay pending. Enumeration/cache update adds 24 cases for original empty/normal/count-change iterator contracts, cached view identities, internal offset checks through empties, full/partial sources, native early-disposal ownership, readonly nested storage, cache replacement on shrink/discard, retained-vs-borrowed removal/consolidation, same-count mutation, failed materialization retry, ByteBuf+IEnumerable single-source dispatch, and the original flatten/componentSlice retain-remove-add-back regression on heap/native storage. Pooled flatten/componentSlice variants are now covered by the explicit mapping below; CLR enumerator protocol is validated separately. Constructor update adds 26 cases for array/enumerable/params and ByteBuf+IEnumerable inputs, captured ranges/marks and readonly aliases, mixed heap/native allocation provenance and metrics, null termination/tail ownership, empty components, argument validation, insertion/copy/allocation failures with retry, derived-constructor cleanup, recoverable/persistent enumeration failure and disposal, and checked overflow. Original constructor-bound/overflow scenarios inform these tests; synthetic logical buffers exercise Int32 capacity overflow without large allocations instead of the original repeated 1-MiB backing. No original test method or whole fixture is claimed newly complete. Original operation comments from reused batch/null handling remain retained. Policy: docs/buffer-porting.md#composite-buffer-construction. Decomposition/removal update maps eight declared test methods through deterministic data and explicit borrowed-list ownership, including independent retained source counters and shared-counter alternatives. Original byte-order facades add no additional byte-only ownership behavior; CLR wire endianness remains explicit. File/inherited test coverage remains partial. Shrink/discard ownership maps eight further declarations, including existing retained-slice range rejection and extended pooled flattening coverage. CLR binary-search lookup replaces the Java last-access cache. Independent retained child counters remain distinct from the shared unpooled model; byte order is explicit. File/inherited coverage remains partial. Lookup/limit update maps eight further declarations using original data, repeated empty-separated 1..9-byte fragments and nested one-byte readable windows. CLR validates invalid component indices and constructor limits with standard argument exceptions; the pinned Java null-slot dereference at cIndex=numComponents is recorded rather than reproduced. Valid component lookup and ownership agree across all four allocator/storage combinations. File/inherited coverage remains partial.",
       "comments": {
         "upstreamCount": 121,
-        "preservedCount": 60,
-        "missingCount": 61,
+        "preservedCount": 69,
+        "missingCount": 52,
         "coverage": "partial source; remaining operations not ported"
       },
       "caseMappings": [
@@ -3456,21 +3458,105 @@
             }
           ],
           "adaptation": "Extend the existing two heap/native unpooled cases to pooled factories. Preserve the original flatten/retain/remove/reset/add-flattened sequence and comments; the retained component keeps the 01234 view. ASCII bytes and explicit indices replace readCharSequence and the byte-order facade."
+        },
+        {
+          "upstreamMethod": "testComponentAtOffset",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs",
+              "method": "ComponentAtEveryOffsetReturnsTheOriginalSourceDuplicate"
+            }
+          ],
+          "adaptation": "Original five/seven-byte data and every-byte walk, expanded across heap/native pooled/unpooled factories. Duplicates preserve source capacity/content and independent reader indices without retaining. Source and composite claims are checked through release; original getBufferFor and loop comments are retained."
+        },
+        {
+          "upstreamMethod": "testToComponentIndex",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs",
+              "method": "ByteAndComponentIndicesMatchEveryOriginalBoundary"
+            }
+          ],
+          "adaptation": "Original five/seven/seven-byte components and spot checks plus an exact flat-byte/component model for every valid offset. Supplemental negative/end offsets reject with the CLR argument exception; original loop/spot-check comments are retained."
+        },
+        {
+          "upstreamMethod": "testToByteIndex",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs",
+              "method": "ByteAndComponentIndicesMatchEveryOriginalBoundary"
+            }
+          ],
+          "adaptation": "Original component starts 0/5/12 plus round-trip byte checks at every valid offset. CLR validates missing components with ArgumentOutOfRangeException. A supplemental pinned Java three-component probe at cIndex=numComponents instead throws NullPointerException because checkComponentIndex accepts the end index; this invalid-input behavior is deliberately not copied."
+        },
+        {
+          "upstreamMethod": "testIsContiguous",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs",
+              "method": "FragmentedFactoryDoesNotClaimContiguousStorage"
+            }
+          ],
+          "adaptation": "Port the original four-byte fragmented composite check. The factory retains the original repeated 1..9-byte fragments separated by empty components and truncation, using explicit AddComponent rather than the Unpooled wrapping optimization; heap/native pooled/unpooled public factories are checked. Original factory comments are retained."
+        },
+        {
+          "upstreamMethod": "testFindComponent",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs",
+              "method": "RelativeReadsFindNestedComponentsAcrossSkippedBytes"
+            }
+          ],
+          "adaptation": "Three ten-byte fragmented nested composites contribute only their one written a/b/c byte. Read a, skip b and read c with exact reader/writer/capacity=3, followed by nested owner release. Use explicit byte assertions without a Java byte-order facade; heap/native pooled/unpooled factories are checked."
+        },
+        {
+          "upstreamMethod": "testComponentsLessThanLowerBound",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs",
+              "method": "ComponentLimitRejectsZeroAndPreservesPositiveValues"
+            }
+          ],
+          "adaptation": "limit=0; original explicit allocator/direct constructor values over heap/native pooled/unpooled factories. Zero rejects with ArgumentOutOfRangeException and ParamName=maxNumComponents instead of the Java IllegalArgumentException message. Positive limits are preserved and the empty composite releases its sole claim. Original helper documentation is retained."
+        },
+        {
+          "upstreamMethod": "testComponentsEqualToLowerBound",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs",
+              "method": "ComponentLimitRejectsZeroAndPreservesPositiveValues"
+            }
+          ],
+          "adaptation": "limit=1; original explicit allocator/direct constructor values over heap/native pooled/unpooled factories. Zero rejects with ArgumentOutOfRangeException and ParamName=maxNumComponents instead of the Java IllegalArgumentException message. Positive limits are preserved and the empty composite releases its sole claim. Original helper documentation is retained."
+        },
+        {
+          "upstreamMethod": "testComponentsGreaterThanLowerBound",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/CompositeByteBufLookupTest.cs",
+              "method": "ComponentLimitRejectsZeroAndPreservesPositiveValues"
+            }
+          ],
+          "adaptation": "limit=5; original explicit allocator/direct constructor values over heap/native pooled/unpooled factories. Zero rejects with ArgumentOutOfRangeException and ParamName=maxNumComponents instead of the Java IllegalArgumentException message. Positive limits are preserved and the empty composite releases its sole claim. Original helper documentation is retained."
         }
       ],
       "testMethodReview": {
         "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
         "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
         "declaredCount": 85,
-        "mappedCount": 20,
+        "mappedCount": 28,
         "testGapCount": 0,
         "implementationGapCount": 0,
-        "unreviewedCount": 65,
+        "unreviewedCount": 57,
         "unreviewedMethods": [
-          "testIsContiguous",
-          "testComponentAtOffset",
-          "testToComponentIndex",
-          "testToByteIndex",
           "testDiscardReadBytes3",
           "testAutoConsolidation",
           "testCompositeToSingleBuffer",
@@ -3520,9 +3606,6 @@
           "testAddFlattenedComponentsWithWrappedComposite",
           "testAllocatorIsSameWhenCopy",
           "testAllocatorIsSameWhenCopyUsingIndexAndLength",
-          "testComponentsLessThanLowerBound",
-          "testComponentsEqualToLowerBound",
-          "testComponentsGreaterThanLowerBound",
           "testAddComponentWithNullEntry",
           "testOverflowWhileAddingComponent",
           "testOverflowWhileAddingComponentsViaVarargs",
@@ -3530,7 +3613,6 @@
           "testOverflowWhileUseConstructorWithOffset",
           "testNotOverflowWhileUseConstructorWithOffset",
           "forEachByteOnNestedCompositeByteBufMustSeeEntireFlattenedContents",
-          "testFindComponent",
           "testDiscardReadComponentsWithOffsetSourceBuffersDoesNotCorruptNextRead"
         ]
       }
