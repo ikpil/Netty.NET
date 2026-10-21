@@ -4007,7 +4007,7 @@ scenarios/providers, not all inherited provider variants or whole-fixture comple
 | --- | ---: | ---: | ---: | ---: |
 | AbstractByteBufTest | 408 | 24 | 0 | 384 |
 | AbstractCompositeByteBufTest | 85 | 4 | 0 | 81 |
-| AbstractByteBufAllocatorTest | 10 | 6 | 0 | 4 |
+| AbstractByteBufAllocatorTest | 10 | 10 | 0 | 0 |
 
 Ten existing-test mappings are newly recorded after comparing bodies: initial
 state, four iterator cases, capacity calculation and four unpooled metric cases.
@@ -4059,6 +4059,38 @@ Full net10.0 Debug/Release/rebuilt checked Release pass 8922/8922 without failur
 method review now records 34 mapped, zero confirmed gaps and 469 unreviewed methods;
 unreviewed does not mean unimplemented. File statuses are unchanged. Evidence:
 artifacts/buffer-chunk-reuse-validation (ignored), buffer-chunk-reuse-*.trx.
+
+## Allocator storage contracts
+
+48 added CLR cases map the four remaining unreviewed declarations in
+AbstractByteBufAllocatorTest: factory storage type, direct address availability,
+maximum-capacity rejection and copying from the buffer's own internal memory.
+All ten declarations now have scoped mappings and all eight original comments
+are retained. The fixture remains in-progress: inherited ByteBufAllocatorTest
+scenarios and provider-specific metric overrides are not thereby complete.
+
+Unpooled, disabled-arena pooled fallback, enabled pooled and adaptive factories
+run with both preferences. JVM safe/Unsafe type branches become managed heap and
+owned native implementations. Persistent addresses become a nonzero usable pointer
+inside Memory.Pin only; no address escapes its pin. Invalid 100000 -> 100001
+capacity growth preserves endpoint bytes, indices, references, metrics and native
+reservations. ReadOnlyMemory/Span replaces internal NIO input: the original
+[4,8) -> [0,4) copy plus both six-byte overlap directions match an independent
+snapshot model. Every case releases its buffer and final native reservations.
+No runtime/Common change was needed.
+
+All 93 pinned sources and two unchanged original test fixtures were freshly
+compiled. On JDK 21 with Unsafe, eleven original method runs pass; with Unsafe
+disabled, eight pass and the three actual address assumptions abort as specified
+by the original. Each profile also passes an adaptive-type probe corresponding
+to its original override and 24 supplemental copy windows. Those probes are not
+claimed unchanged original method executions. C# runs all 48 cases without skips.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+pass 8970/8970 without failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings/errors. The three common base fixtures now have 38 mapped and 465
+unreviewed declarations; these are scoped mappings, not a completion percentage.
+Evidence: artifacts/buffer-allocator-contract-validation (ignored), buffer-allocator-contract-*.trx.
 
 ## Remaining work
 
