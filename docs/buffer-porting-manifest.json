@@ -85,7 +85,8 @@
         "Size-predicate unit: original isReadable(int) is ported as CanRead(int), with the public Java comment, empty-sentinel specialization and transparent forwarding. CanWrite(int) now preserves the original comparison behavior for negative counts instead of throwing. 53 added CLR cases; net10.0 Debug/Release/rebuilt sampled checked Release pass 4949/4949 without failures/skips. Pinned Java/CLR probes yield 1408 rows per targetRecords value (0/4) and Debug/Release: 1362 exact matches, 46 existing fixed-composite derived read-only-policy differences. Independent size/index/permission/recording models verify both policies. Every CLR native reservation returns to zero. docs/buffer-porting.md#buffer-size-predicates; artifacts/buffer-size-predicates-validation (ignored); buffer-size-predicates-*.trx. Whole sources/fixture remain partial.",
         "Socket channel unit: four original channel contracts plus native ValueTask/CancellationToken counterparts; 71 new loopback/storage/lifetime/cancellation/nonblocking/leak cases. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5463/5463, no failures/skips. Six backing kinds, three offsets, eight lengths and four operations match 576 pinned Java/CLR final endpoint states per Debug/Release and sync/async mode, with independent bytes/cursors/capacity/reference models. TCP syscall split counts are deliberately not compared. All 93 original Buffer sources rechecked; CLR native reservations return to zero. docs/buffer-porting.md#socket-channel-transfers; artifacts/buffer-socket-validation (ignored), buffer-socket-*.trx. Original sources/fixtures remain partial.",
         "Derived scalar dispatch: added 45 absolute overrides and the owned pooled duplicate LongLE relative exception; ordinary/owned/borrowed duplicates and read-only views preserve public parent scalar policy while slices and optimized relative primitives use bounded CLR storage. 934 tests cover 21 signed/unsigned/boolean/char/raw-float/double BE/LE forms, heap/native roots, eleven view/ownership paths, altered parent values, exceptions, cursor/mark/reference invariants and released owners. Final baseline replay fails 304/934; full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 8356/8356, no skips/failures, zero new warnings. All 93 original Buffer sources freshly byte-checked/compiled; Unsafe-enabled/NIO profiles each match 934 independently modeled custom-provider scenarios, including 840 invalid-range probes (294 Java parent-first dispatches), four owned pooled LongLE relative policy cases and eight relative API composition cases. Java direct test providers normalize four protected medium hooks to isolate view policy from production safe-direct per-byte callbacks; CLR retains its bounded word kernel. UnpooledDuplicatedByteBuf concrete optimization maps completely to CLR view/kernels with both comments preserved; inherited sources/fixtures remain separate. Common unchanged. docs/buffer-porting.md#derived-scalar-dispatch; artifacts/buffer-derived-scalar-validation (ignored), buffer-derived-scalar-*.trx.",
-        "Instance API inventory/dispatch unit: pinned AbstractByteBuf declares 149 public instance signatures; discardSomeReadBytes has one explicit corrected CLR contract and the other 148 remain individually unreviewed, not confirmed missing. Restore the original SetBytes hook without a virtual DiscardReadBytes call. Fourteen new CLR cases reproduce six failures before the fix and all pass afterward; Unsafe/NIO each pass 14 fresh-original custom-extension cases, and reflection agrees with all 341 ByteBuf/AbstractByteBuf signatures. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9178/9178 without failures/skips, 51 existing Common warnings and no Buffer/test warnings. Validation uses an isolated HEAD-source copy plus the Buffer fix/tests because an unrelated working Common/Internal/ByteOrder.cs namespace edit fails CS8956; that edit is preserved and excluded. No source status promotion. docs/buffer-porting.md#partial-discard-extension-point; artifacts/buffer-discard-dispatch-validation (ignored)."
+        "Instance API inventory/dispatch unit: pinned AbstractByteBuf declares 149 public instance signatures; discardSomeReadBytes has one explicit corrected CLR contract and the other 148 remain individually unreviewed, not confirmed missing. Restore the original SetBytes hook without a virtual DiscardReadBytes call. Fourteen new CLR cases reproduce six failures before the fix and all pass afterward; Unsafe/NIO each pass 14 fresh-original custom-extension cases, and reflection agrees with all 341 ByteBuf/AbstractByteBuf signatures. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9178/9178 without failures/skips, 51 existing Common warnings and no Buffer/test warnings. Validation uses an isolated HEAD-source copy plus the Buffer fix/tests because an unrelated working Common/Internal/ByteOrder.cs namespace edit fails CS8956; that edit is preserved and excluded. No source status promotion. docs/buffer-porting.md#partial-discard-extension-point; artifacts/buffer-discard-dispatch-validation (ignored).",
+        "Relative ByteBuf transfer unit: restore indexed virtual dispatch and post-success peer cursor commits for readBytes(ByteBuf,int)/writeBytes(ByteBuf,int), and receiver return identity for whole transfers. Six public declarations reviewed per source, seven total including partial discard; 142 remain individually unreviewed. All 44 new heap/native cases pass after reproducing 32 failures/12 passes before the fixes. Fresh pinned Java Unsafe/NIO each pass 44 probes (42 identical extension contracts, two explicit CLR early negative-write validation policies). Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 9222/9222, no failures/skips, 51 existing Common warnings and no Buffer/test warnings. Original comments retained; no source status promotion or Common edit. Validation uses committed HEAD Common in an isolated source copy because the preserved unrelated working ByteOrder.cs namespace edit causes CS8956. docs/buffer-porting.md#relative-bytebuf-transfer-extension-points; artifacts/buffer-relative-transfer-validation (ignored)."
       ],
       "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining utilities still pending. Composite consumer adds bounded segment hooks, stack crossing-word access, borrowed ReadOnlySequence, and cross-component bulk/overlap/text/search/view behavior. Contiguous memory borrowing never silently copies; unsupported multi-segment Memory ranges are actual CLR representation limits. Standalone ReadBytes now follows creator allocator Buffer policy; see decoder storage/read update below. Synchronous stream transfer update: inherited GetBytes/SetBytes/ReadBytes/WriteBytes Stream overloads are covered on this backing kind. One bounded input read, EOF=0, validated empty requests, pooled staging, borrowed ownership and success-only index publication follow the explicit CLR policy in docs/buffer-porting.md#synchronous-stream-transfers. Remaining channel/positioned-file and async transfer contracts stay pending. Async stream transfer update: GetBytesAsync/SetBytesAsync/ReadBytesAsync/WriteBytesAsync are CLR counterparts of the four synchronous stream contracts, using ValueTask, CancellationToken and the stream Memory-based asynchronous operations directly. Managed pooled staging survives suspension; no native memory is borrowed across await. One bounded input read, EOF=0, borrowed lifetime and success-only index publication follow the synchronous CLR policy. Pre-cancellation follows argument/permission validation and prevents growth/I/O; started growth is not rolled back. A valid stream result commits despite late token cancellation; a thrown cancellation or failure leaves active indices unchanged and does not publish staged input. Callers must keep streams/buffers alive and exclude concurrent mutation and external active-cursor changes through completion. Full cancellation, failure, alias and partial composite-commit limits: docs/buffer-porting.md#asynchronous-stream-transfers. Channel/positioned-file APIs and broader original source remain pending. Positioned file update: inherited SafeFileHandle/RandomAccess sync and async transfers are reviewed on this backing kind. Position preservation, count/index publication and explicit CLR EOF/closed-handle/complete-write/staging policies are detailed in docs/buffer-porting.md#positioned-file-transfers. Readonly inputs reject setters. Other channel consumers and whole source remain incomplete. Content comparison/hash update: inherited readable-content Equals/GetHashCode/CompareTo delegate to ByteBufUtil through CLR IEquatable<ByteBuf>/IComparable<ByteBuf>. Original implementation uses the same delegation. Full null/lifetime/hash/order policy and partial scope: docs/buffer-porting.md#content-comparison-and-hashing. Allocator policy update: creator IByteBufAllocator is retained through owners, derived/read-only/unreleasable views and allocator-specific empty buffers. Both writable-growth paths consult its capacity hook; heap/native copies and composite padding/consolidation/copies use its factories. Legacy explicit native reservation domains remain in effect for subsequent copies and composite allocations. Existing Unpooled heap/native defaults are preserved. Policy and limits: docs/buffer-porting.md#allocator-policy-foundation. Relative transfer update: default/length GetBytes append to destination WriterIndex without growing; default/length SetBytes consume source ReaderIndex without changing destination indices; default ReadBytes fills destination WritableBytes and moves both cursors; explicit-destination ReadBytes moves only source ReaderIndex; default WriteBytes consumes all readable source bytes; explicit-source WriteBytes grows destination and moves only its WriterIndex. All return the receiver, keep marks/reference counts, and delegate to the existing bounded bulk kernel. Explicit source write grows before source-range validation, as in Java. Failed copies publish no cursor changes but may leave increased capacity or partially changed composite bytes. Existing CLR snapshot/memmove overlap policy applies; Java can repeat overwritten bytes across composite self-copy boundaries. Default reads check destination lifetime before computing WritableBytes to retain IllegalReferenceCountException after native/heap storage is cleared on final release; Java reports bounds/argument errors in two such probes. Null arguments use early ArgumentNullException. Byte[] ranges remain native Span slices rather than duplicated Java array overloads. Policy: docs/buffer-porting.md#relative-buffer-transfers. Decoder storage/read update: ReadBytes(length) now uses the creator allocator Buffer factory instead of forcing a raw heap owner. It advances source ReaderIndex only after successful copy and initializes only the result readable range even if the allocator reserves extra capacity. Failed copies retain CLR result cleanup; pinned Java readBytes lacks that cleanup. Zero/invalid reads do not allocate. Policy: docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads. Pooled heap consumer: both EnsureWritable overloads now use MaxFastWritableBytes before the creator allocator growth hook, preserving existing normalized reservations as pinned Java requires. Unpooled defaults remain WritableBytes. Automatic leak integration: the combined ByteBuf type captures one factory-created ResourceLeakDetector<ByteBuf> at explicit CLR type initialization (including an empty sentinel), as the shared skeletal detector. Configure the factory before buffers/allocators; later replacement does not change it. All wrappers and supported allocator factories share this detector. Remaining source surfaces stay partial. Diagnostic update: The combined CLR kernel implements the original metadata/freed/unwrapped diagnostic without content reads or freed capacity/unwrap access. Whole source/fixture remains partial. Size-query update: CanRead(int) preserves original readable-index comparison, including nonpositive counts without validation; shared EmptyByteBuf always returns false. Transparent ordinary/composite/unreleasable facades forward virtual queries without leak recording. CanWrite(int) no longer rejects negative counts before its original comparison; read-only and empty-sentinel results remain false. Current CLR fixed-derived read-only policy is retained. Whole source remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Scalar-dispatch update: public absolute parent delegates are distinct from bounded relative/slice kernels. Owned pooled duplicates preserve the pinned LongLE relative public-setter path; floating/boolean/char/signed-medium relative APIs preserve their integer composition and upstream receiver-return rules. CLR byte values are unsigned wire octets; existing Span/memory hooks replace JVM per-primitive protected kernel topology, including safe-direct medium byte callbacks. docs/buffer-porting.md#derived-scalar-dispatch.",
       "comments": {
@@ -100,9 +101,9 @@
         "summary": {
           "declared": 149,
           "clr-replacement": 0,
-          "implemented": 1,
+          "implemented": 7,
           "implementation-gap": 0,
-          "unreviewed": 148
+          "unreviewed": 142
         },
         "groups": {
           "discard-dispatch": {
@@ -114,6 +115,18 @@
             ],
             "validation": "Fourteen heap/native regression cases: original CLR failed 6/passed 8; corrected CLR passes 14. Fresh pinned Java implementations match all 14 cases in Unsafe/NIO profiles. Reflection independently checks all declared non-synthetic public instance signatures: ByteBuf=192, AbstractByteBuf=149.",
             "correctedGap": "Inherited DiscardSomeReadBytes called a subclass DiscardReadBytes override, which could throw or change behavior although Java invokes only SetBytes. Direct compaction restores the original extension point."
+          },
+          "relative-transfer": {
+            "adaptation": "CLR ByteBuf merges ByteBuf/AbstractByteBuf. Relative ByteBuf transfers delegate through the indexed virtual ReadBytes/WriteBytes operation and advance the peer cursor only after success. Indexed operations own local bounds/growth/copy/cursor updates. Whole transfers preserve receiver return identity even when a relative override returns another buffer. Existing CLR source accessibility and negative-length validation before relative writes are retained; Java validates negative write lengths inside the indexed overload. Original operation comments are preserved.",
+            "evidence": [
+              "src/Netty.NET.Buffer/ByteBuf.cs",
+              "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufRelativeTransferDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufRelativeTransferTest.cs",
+              "docs/buffer-porting.md"
+            ],
+            "validation": "44 heap/native regression cases: 32 failed and 12 passed before the fixes; all 44 pass after. Fresh pinned Java sources pass 44 probes in both Unsafe/NIO profiles: 42 matching dispatch/return/cursor contracts plus two negative-write cases with the documented earlier CLR validation. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 each pass 9222/9222 without failures/skips. Isolated tracked HEAD sources plus the exact Buffer changes preserve the unrelated working Common/ByteOrder.cs edit.",
+            "correctedGap": "Relative length overloads bypassed indexed ReadBytes/WriteBytes overrides, losing subclass behavior and exception/cursor ordering. Whole overloads returned a nested override result instead of the receiver."
           }
         },
         "methods": [
@@ -125,6 +138,72 @@
               {
                 "path": "src/Netty.NET.Buffer/ByteBuf.cs",
                 "member": "DiscardSomeReadBytes()"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuf)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+                "member": "ReadBytes(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuf,int)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadBytes(ByteBuf,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+                "member": "ReadBytes(ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeBytes(ByteBuf)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+                "member": "WriteBytes(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeBytes(ByteBuf,int)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "WriteBytes(ByteBuf,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeBytes(ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+                "member": "WriteBytes(ByteBuf,int,int)"
               }
             ]
           }
@@ -223,9 +302,6 @@
           "readRetainedSlice(int)",
           "readBytes(byte[],int,int)",
           "readBytes(byte[])",
-          "readBytes(ByteBuf)",
-          "readBytes(ByteBuf,int)",
-          "readBytes(ByteBuf,int,int)",
           "readBytes(ByteBuffer)",
           "readBytes(GatheringByteChannel,int)",
           "readBytes(FileChannel,long,int)",
@@ -246,9 +322,6 @@
           "writeDouble(double)",
           "writeBytes(byte[],int,int)",
           "writeBytes(byte[])",
-          "writeBytes(ByteBuf)",
-          "writeBytes(ByteBuf,int)",
-          "writeBytes(ByteBuf,int,int)",
           "writeBytes(ByteBuffer)",
           "writeBytes(InputStream,int)",
           "writeBytes(ScatteringByteChannel,int)",
@@ -633,7 +706,8 @@
         "Size-predicate unit: original isReadable(int) is ported as CanRead(int), with the public Java comment, empty-sentinel specialization and transparent forwarding. CanWrite(int) now preserves the original comparison behavior for negative counts instead of throwing. 53 added CLR cases; net10.0 Debug/Release/rebuilt sampled checked Release pass 4949/4949 without failures/skips. Pinned Java/CLR probes yield 1408 rows per targetRecords value (0/4) and Debug/Release: 1362 exact matches, 46 existing fixed-composite derived read-only-policy differences. Independent size/index/permission/recording models verify both policies. Every CLR native reservation returns to zero. docs/buffer-porting.md#buffer-size-predicates; artifacts/buffer-size-predicates-validation (ignored); buffer-size-predicates-*.trx. Whole sources/fixture remain partial.",
         "Socket channel unit: four original channel contracts plus native ValueTask/CancellationToken counterparts; 71 new loopback/storage/lifetime/cancellation/nonblocking/leak cases. net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 5463/5463, no failures/skips. Six backing kinds, three offsets, eight lengths and four operations match 576 pinned Java/CLR final endpoint states per Debug/Release and sync/async mode, with independent bytes/cursors/capacity/reference models. TCP syscall split counts are deliberately not compared. All 93 original Buffer sources rechecked; CLR native reservations return to zero. docs/buffer-porting.md#socket-channel-transfers; artifacts/buffer-socket-validation (ignored), buffer-socket-*.trx. Original sources/fixtures remain partial.",
         "Derived scalar dispatch: added 45 absolute overrides and the owned pooled duplicate LongLE relative exception; ordinary/owned/borrowed duplicates and read-only views preserve public parent scalar policy while slices and optimized relative primitives use bounded CLR storage. 934 tests cover 21 signed/unsigned/boolean/char/raw-float/double BE/LE forms, heap/native roots, eleven view/ownership paths, altered parent values, exceptions, cursor/mark/reference invariants and released owners. Final baseline replay fails 304/934; full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 pass 8356/8356, no skips/failures, zero new warnings. All 93 original Buffer sources freshly byte-checked/compiled; Unsafe-enabled/NIO profiles each match 934 independently modeled custom-provider scenarios, including 840 invalid-range probes (294 Java parent-first dispatches), four owned pooled LongLE relative policy cases and eight relative API composition cases. Java direct test providers normalize four protected medium hooks to isolate view policy from production safe-direct per-byte callbacks; CLR retains its bounded word kernel. UnpooledDuplicatedByteBuf concrete optimization maps completely to CLR view/kernels with both comments preserved; inherited sources/fixtures remain separate. Common unchanged. docs/buffer-porting.md#derived-scalar-dispatch; artifacts/buffer-derived-scalar-validation (ignored), buffer-derived-scalar-*.trx.",
-        "Instance API inventory/dispatch unit: pinned ByteBuf declares 192 public instance signatures; discardSomeReadBytes has one explicit corrected CLR contract and the other 191 remain individually unreviewed, not confirmed missing. Restore the original SetBytes hook without a virtual DiscardReadBytes call. Fourteen new CLR cases reproduce six failures before the fix and all pass afterward; Unsafe/NIO each pass 14 fresh-original custom-extension cases, and reflection agrees with all 341 ByteBuf/AbstractByteBuf signatures. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9178/9178 without failures/skips, 51 existing Common warnings and no Buffer/test warnings. Validation uses an isolated HEAD-source copy plus the Buffer fix/tests because an unrelated working Common/Internal/ByteOrder.cs namespace edit fails CS8956; that edit is preserved and excluded. No source status promotion. docs/buffer-porting.md#partial-discard-extension-point; artifacts/buffer-discard-dispatch-validation (ignored)."
+        "Instance API inventory/dispatch unit: pinned ByteBuf declares 192 public instance signatures; discardSomeReadBytes has one explicit corrected CLR contract and the other 191 remain individually unreviewed, not confirmed missing. Restore the original SetBytes hook without a virtual DiscardReadBytes call. Fourteen new CLR cases reproduce six failures before the fix and all pass afterward; Unsafe/NIO each pass 14 fresh-original custom-extension cases, and reflection agrees with all 341 ByteBuf/AbstractByteBuf signatures. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 pass 9178/9178 without failures/skips, 51 existing Common warnings and no Buffer/test warnings. Validation uses an isolated HEAD-source copy plus the Buffer fix/tests because an unrelated working Common/Internal/ByteOrder.cs namespace edit fails CS8956; that edit is preserved and excluded. No source status promotion. docs/buffer-porting.md#partial-discard-extension-point; artifacts/buffer-discard-dispatch-validation (ignored).",
+        "Relative ByteBuf transfer unit: restore indexed virtual dispatch and post-success peer cursor commits for readBytes(ByteBuf,int)/writeBytes(ByteBuf,int), and receiver return identity for whole transfers. Six public declarations reviewed per source, seven total including partial discard; 185 remain individually unreviewed. All 44 new heap/native cases pass after reproducing 32 failures/12 passes before the fixes. Fresh pinned Java Unsafe/NIO each pass 44 probes (42 identical extension contracts, two explicit CLR early negative-write validation policies). Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 9222/9222, no failures/skips, 51 existing Common warnings and no Buffer/test warnings. Original comments retained; no source status promotion or Common edit. Validation uses committed HEAD Common in an isolated source copy because the preserved unrelated working ByteOrder.cs namespace edit causes CS8956. docs/buffer-porting.md#relative-bytebuf-transfer-extension-points; artifacts/buffer-relative-transfer-validation (ignored)."
       ],
       "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining utilities still pending. Composite consumer adds bounded segment hooks, stack crossing-word access, borrowed ReadOnlySequence, and cross-component bulk/overlap/text/search/view behavior. Contiguous memory borrowing never silently copies; unsupported multi-segment Memory ranges are actual CLR representation limits. Standalone ReadBytes now follows creator allocator Buffer policy; see decoder storage/read update below. Unreleasable consumer requires transparent shared indices and marks: private ref-return access routes to the captured index owner without an extra state allocation. Ordinary owners/slices/duplicates still own independent state. Slice/retained/read-slice/duplicate conveniences and AsReadOnly are virtual so lifetime-suppressing wrappers can preserve the original derived-view contract. Full existing Buffer suite is rerun for this base change. Synchronous stream transfer update: inherited GetBytes/SetBytes/ReadBytes/WriteBytes overloads accept a borrowed System.IO.Stream. Absolute operations preserve indices, relative output advances reader only after complete success, and relative input pre-reserves the requested length then advances writer by the actual returned count. All storage kinds perform one bounded Stream.Read, returning short reads immediately and EOF as 0; this deliberately replaces the Java CompositeByteBuf fill-until-EOF loop and prevents retrying CLR EOF forever. Zero lengths validate buffer/range/permission/null without calling the stream. Pooled staging avoids native-span lifetime across callbacks, snapshots all output before a single Stream.Write, and prevents a throwing input from publishing its temporary bytes; unlike Java heap reads, input I/O failure leaves target contents unchanged. A later composite storage-commit failure can still modify earlier writable components, leaving writer unchanged, and source input can already be consumed. Streams and buffer references remain borrowed. Input staging rechecks destination permission/range after callbacks. Temporary memory is proportional to requested length plus pool bucket rounding, and copying is deliberate; no zero-copy/performance claim. Concurrent changes, release, and external mutation of the active cursor during I/O remain caller exclusions; same-buffer append with the supplied stream adapters is tested. Channel/positioned-file and async ByteBuf transfer APIs remain pending. Async stream transfer update: GetBytesAsync/SetBytesAsync/ReadBytesAsync/WriteBytesAsync are CLR counterparts of the four synchronous stream contracts, using ValueTask, CancellationToken and the stream Memory-based asynchronous operations directly. Managed pooled staging survives suspension; no native memory is borrowed across await. One bounded input read, EOF=0, borrowed lifetime and success-only index publication follow the synchronous CLR policy. Pre-cancellation follows argument/permission validation and prevents growth/I/O; started growth is not rolled back. A valid stream result commits despite late token cancellation; a thrown cancellation or failure leaves active indices unchanged and does not publish staged input. Callers must keep streams/buffers alive and exclude concurrent mutation and external active-cursor changes through completion. Full cancellation, failure, alias and partial composite-commit limits: docs/buffer-porting.md#asynchronous-stream-transfers. Channel/positioned-file APIs and broader original source remain pending. Positioned file update: SafeFileHandle plus System.IO.RandomAccess map all four FileChannel absolute/relative overloads without changing file position; four ValueTask/CancellationToken forms are CLR async extensions. Successful CLR writes complete the requested range and return length (Java permits partial write counts); one bounded read returns actual bytes with EOF=0 across all backing kinds. Closed handles throw rather than Java input -1; invalid/closed/null handles, negative ranges and signed file-end overflow are validated even for zero requests, before growth/I/O. Absolute operations preserve indices; relative indices publish only after success. Output uses a pooled snapshot; input commits managed staging after reading, with async destination revalidation and no native borrow across await. Read failures do not publish staging, but later composite commit failures can change earlier components; failed output may partially change the file while leaving reader unchanged. Input reserves requested capacity before actual I/O, preserving growth on EOF/error; pre-cancellation follows validation and prevents growth/I/O. Buffer/handle ownership is borrowed through completion, without implicit Retain/disposal; exclude concurrent buffer mutation/release and external active-cursor changes. Full semantics, limitations and evidence: docs/buffer-porting.md#positioned-file-transfers. Gathering/scattering channel consumer mapping and broader APIs remain pending. Content comparison/hash update: original equality/hash/comparison API comments are retained in ByteBuf.Comparison.cs. Native IEquatable<ByteBuf>/IComparable<ByteBuf>, Equals/GetHashCode and default sorting replace Java Object/Comparable contracts; == stays reference identity. CompareTo(null)=1 follows CLR sorting. Readable content determines values; hash keys require stable bytes/indices/lifetime. Full policy: docs/buffer-porting.md#content-comparison-and-hashing. Allocator policy update: creator IByteBufAllocator is retained through owners, derived/read-only/unreleasable views and allocator-specific empty buffers. Both writable-growth paths consult its capacity hook; heap/native copies and composite padding/consolidation/copies use its factories. Legacy explicit native reservation domains remain in effect for subsequent copies and composite allocations. Existing Unpooled heap/native defaults are preserved. Policy and limits: docs/buffer-porting.md#allocator-policy-foundation. ByteBufConvertible integration: all buffer kinds implement IByteBufConvertible through inherited AsByteBuf, which returns this without changing references or requiring accessible storage. Original conversion operation comment retained. Buffer-holder consumers inherit existing buffer content/hash/copy/lifetime policies; whole source stays partial. Policy: docs/buffer-porting.md#buffer-holders-and-conversion. Relative transfer update: default/length GetBytes append to destination WriterIndex without growing; default/length SetBytes consume source ReaderIndex without changing destination indices; default ReadBytes fills destination WritableBytes and moves both cursors; explicit-destination ReadBytes moves only source ReaderIndex; default WriteBytes consumes all readable source bytes; explicit-source WriteBytes grows destination and moves only its WriterIndex. All return the receiver, keep marks/reference counts, and delegate to the existing bounded bulk kernel. Explicit source write grows before source-range validation, as in Java. Failed copies publish no cursor changes but may leave increased capacity or partially changed composite bytes. Existing CLR snapshot/memmove overlap policy applies; Java can repeat overwritten bytes across composite self-copy boundaries. Default reads check destination lifetime before computing WritableBytes to retain IllegalReferenceCountException after native/heap storage is cleared on final release; Java reports bounds/argument errors in two such probes. Null arguments use early ArgumentNullException. Byte[] ranges remain native Span slices rather than duplicated Java array overloads. Policy: docs/buffer-porting.md#relative-buffer-transfers. Decoder storage/read update: IsContiguous is a conservative storage-topology property, false by default; MaxFastWritableBytes defaults to WritableBytes and is a capacity hint rather than write permission. Both original API comments are preserved. ReadBytes(length) now allocates through Allocator.Buffer(length, MaxCapacity), preserving creator policy, metrics and independent ownership; zero reads keep the shared empty sentinel. Failed copies release the new result before rethrowing, retaining the existing CLR cleanup beyond the pinned Java implementation. Policy: docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads. Advanced leak consumer: existing data/view/copy/transfer/text/search/memory APIs are virtual so the internal wrapper records the public operation once then delegates directly; ordinary implementations, shared index owner and storage kernels are unchanged. Async signatures remain native virtual ValueTask operations. Policy: docs/buffer-porting.md#advanced-leak-aware-buffer-access-records. Typed Equals/CompareTo are also virtual for WrappedByteBuf direct comparison forwarding; existing CLR identity/null policies are preserved. Diagnostic update: The original object-string API comment and skeletal metadata/freed/unwrapped representation are implemented in the combined CLR kernel, with invariant numbers and CLR simple class names. Whole source/fixture remains partial. Size-query update: CanRead(int) preserves original readable-index comparison, including nonpositive counts without validation; shared EmptyByteBuf always returns false. Transparent ordinary/composite/unreleasable facades forward virtual queries without leak recording. CanWrite(int) no longer rejects negative counts before its original comparison; read-only and empty-sentinel results remain false. Current CLR fixed-derived read-only policy is retained. Whole source remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Scalar-dispatch update: public absolute parent delegates are distinct from bounded relative/slice kernels. Owned pooled duplicates preserve the pinned LongLE relative public-setter path; floating/boolean/char/signed-medium relative APIs preserve their integer composition and upstream receiver-return rules. CLR byte values are unsigned wire octets; existing Span/memory hooks replace JVM per-primitive protected kernel topology, including safe-direct medium byte callbacks. docs/buffer-porting.md#derived-scalar-dispatch.",
       "comments": {
@@ -648,9 +722,9 @@
         "summary": {
           "declared": 192,
           "clr-replacement": 0,
-          "implemented": 1,
+          "implemented": 7,
           "implementation-gap": 0,
-          "unreviewed": 191
+          "unreviewed": 185
         },
         "groups": {
           "discard-dispatch": {
@@ -662,6 +736,18 @@
             ],
             "validation": "Fourteen heap/native regression cases: original CLR failed 6/passed 8; corrected CLR passes 14. Fresh pinned Java implementations match all 14 cases in Unsafe/NIO profiles. Reflection independently checks all declared non-synthetic public instance signatures: ByteBuf=192, AbstractByteBuf=149.",
             "correctedGap": "Inherited DiscardSomeReadBytes called a subclass DiscardReadBytes override, which could throw or change behavior although Java invokes only SetBytes. Direct compaction restores the original extension point."
+          },
+          "relative-transfer": {
+            "adaptation": "CLR ByteBuf merges ByteBuf/AbstractByteBuf. Relative ByteBuf transfers delegate through the indexed virtual ReadBytes/WriteBytes operation and advance the peer cursor only after success. Indexed operations own local bounds/growth/copy/cursor updates. Whole transfers preserve receiver return identity even when a relative override returns another buffer. Existing CLR source accessibility and negative-length validation before relative writes are retained; Java validates negative write lengths inside the indexed overload. Original operation comments are preserved.",
+            "evidence": [
+              "src/Netty.NET.Buffer/ByteBuf.cs",
+              "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufRelativeTransferDispatchTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufRelativeTransferTest.cs",
+              "docs/buffer-porting.md"
+            ],
+            "validation": "44 heap/native regression cases: 32 failed and 12 passed before the fixes; all 44 pass after. Fresh pinned Java sources pass 44 probes in both Unsafe/NIO profiles: 42 matching dispatch/return/cursor contracts plus two negative-write cases with the documented earlier CLR validation. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE leak sampling interval 1 each pass 9222/9222 without failures/skips. Isolated tracked HEAD sources plus the exact Buffer changes preserve the unrelated working Common/ByteOrder.cs edit.",
+            "correctedGap": "Relative length overloads bypassed indexed ReadBytes/WriteBytes overrides, losing subclass behavior and exception/cursor ordering. Whole overloads returned a nested override result instead of the receiver."
           }
         },
         "methods": [
@@ -673,6 +759,72 @@
               {
                 "path": "src/Netty.NET.Buffer/ByteBuf.cs",
                 "member": "DiscardSomeReadBytes()"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuf)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+                "member": "ReadBytes(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuf,int)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadBytes(ByteBuf,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readBytes(ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+                "member": "ReadBytes(ByteBuf,int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeBytes(ByteBuf)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+                "member": "WriteBytes(ByteBuf)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeBytes(ByteBuf,int)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "WriteBytes(ByteBuf,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "writeBytes(ByteBuf,int,int)",
+            "state": "implemented",
+            "group": "relative-transfer",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.Transfers.cs",
+                "member": "WriteBytes(ByteBuf,int,int)"
               }
             ]
           }
@@ -792,9 +944,6 @@
           "readBytes(int)",
           "readSlice(int)",
           "readRetainedSlice(int)",
-          "readBytes(ByteBuf)",
-          "readBytes(ByteBuf,int)",
-          "readBytes(ByteBuf,int,int)",
           "readBytes(byte[])",
           "readBytes(byte[],int,int)",
           "readBytes(ByteBuffer)",
@@ -819,9 +968,6 @@
           "writeFloatLE(float)",
           "writeDouble(double)",
           "writeDoubleLE(double)",
-          "writeBytes(ByteBuf)",
-          "writeBytes(ByteBuf,int)",
-          "writeBytes(ByteBuf,int,int)",
           "writeBytes(byte[])",
           "writeBytes(byte[],int,int)",
           "writeBytes(ByteBuffer)",

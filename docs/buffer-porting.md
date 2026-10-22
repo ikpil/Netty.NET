@@ -4377,6 +4377,31 @@ fix/tests: an unrelated working Common/Internal/ByteOrder.cs namespace edit caus
 CS8956 in the primary working copy. That edit was preserved and excluded from the
 porting commit. Evidence: artifacts/buffer-discard-dispatch-validation (ignored).
 
+## Relative ByteBuf transfer extension points
+
+ReadBytes(ByteBuf,int) and WriteBytes(ByteBuf,int) now call the indexed virtual
+ReadBytes/WriteBytes overload, matching AbstractByteBuf. Previously they bypassed
+those overrides and copied directly. The indexed operation owns local validation,
+growth, copying and cursor updates; the relative overload commits the peer cursor
+only after success. A throwing override can leave local progress while keeping the
+peer cursor unchanged, as in Java. Whole-transfer overloads also return the receiver
+even when the relative override returns a different buffer. Original comments remain.
+
+All 44 new heap/native cases pass; before both fixes, 32 failed and 12 passed.
+Coverage includes zero/exact-length transfers, growth, invalid ranges, failures
+before/after copying, delegated arguments, return identity, marks and ownership.
+Fresh pinned Java Unsafe/NIO each pass 44 probes: 42 match the CLR extension contract;
+two negative-write cases retain CLR's existing early length/source-accessibility
+guard, while Java reaches indexed validation. This is an explicit CLR policy.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 9222/9222 without failures/skips; 51 existing Common warnings and no
+Buffer/test warnings. Validation uses isolated committed HEAD sources plus the exact
+Buffer changes, preserving the unrelated working Common/ByteOrder.cs edit (CS8956).
+Six more public declarations per source are reviewed: ByteBuf has 7 reviewed/185
+unreviewed and AbstractByteBuf has 7/142. Source/fixture status remains in-progress.
+Evidence: artifacts/buffer-relative-transfer-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4396,9 +4421,10 @@ This review checks API availability/representation. Existing tests validate thei
 stated scenarios; the full original ByteBufUtilTest, remaining internal/protected
 members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
-inventories, but only the corrected partial-discard extension contract is reviewed;
-191/148 declarations remain individually unreviewed. Other 32 in-progress source
-files have no signature-level inventory yet. None is assumed missing or complete.
+inventories, with partial discard and six relative/indexed ByteBuf transfer declarations
+reviewed per source; 185/142 declarations remain individually unreviewed. Other 32
+in-progress source files have no signature-level inventory yet. None is assumed
+missing or complete.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.

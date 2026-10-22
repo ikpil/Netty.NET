@@ -1552,10 +1552,10 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     public virtual ByteBuf ReadBytes(ByteBuf destination, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
-        CheckReadableBytes(length);
         if (length > destination.WritableBytes) throw new ArgumentOutOfRangeException(nameof(length));
-        GetBytes(_readerIndex, destination, destination._writerIndex, length);
-        _readerIndex += length; destination._writerIndex += length;
+        // The indexed overload owns source validation/copying and advances this reader.
+        ReadBytes(destination, destination.WriterIndex, length);
+        destination.WriterIndex += length;
         return this;
     }
     /**
@@ -1576,9 +1576,9 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     {
         ArgumentNullException.ThrowIfNull(source);
         source.CheckReadableBytes(length);
-        EnsureWritable(length);
-        SetBytes(_writerIndex, source, source._readerIndex, length);
-        _writerIndex += length; source._readerIndex += length;
+        // Commit the source cursor only after the indexed virtual write succeeds.
+        WriteBytes(source, source.ReaderIndex, length);
+        source.ReaderIndex += length;
         return this;
     }
     /**

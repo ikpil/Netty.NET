@@ -138,7 +138,8 @@ public abstract partial class ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         destination.EnsureAccessible();
-        return ReadBytes(destination, destination.WritableBytes);
+        ReadBytes(destination, destination.WritableBytes);
+        return this;
     }
 
     /**
@@ -180,7 +181,8 @@ public abstract partial class ByteBuf
     public virtual ByteBuf WriteBytes(ByteBuf source)
     {
         ArgumentNullException.ThrowIfNull(source);
-        return WriteBytes(source, source.ReadableBytes);
+        WriteBytes(source, source.ReadableBytes);
+        return this;
     }
 
     /**
