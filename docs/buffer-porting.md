@@ -4402,6 +4402,27 @@ Six more public declarations per source are reviewed: ByteBuf has 7 reviewed/185
 unreviewed and AbstractByteBuf has 7/142. Source/fixture status remains in-progress.
 Evidence: artifacts/buffer-relative-transfer-validation (ignored).
 
+## Absolute ByteBuf transfer guards and returns
+
+Whole GetBytes/SetBytes now return the receiver even when a nested length override
+returns another buffer. SetBytes(index,source,length) also restores AbstractByteBuf's
+destination range/accessibility check before the indexed virtual copy. Previously an
+override could run for an invalid or released destination and consume the source.
+Peer cursors still commit only after a successful copy; absolute transfers never grow.
+Existing CLR null/source validation policies and original Java comments are preserved.
+
+All 54 new heap/native cases pass; before the fixes, 14 failed and 40 passed. They
+cover return identity, delegated arguments, invalid zero/negative/overflow ranges,
+insufficient bytes, failures before/after copy, no-copy overrides, marks, ownership
+and released destinations. Fresh pinned Java Unsafe/NIO each pass the same 54 cases.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 9276/9276 without failures/skips; 51 existing Common warnings and no
+Buffer/test warnings. Validation uses isolated committed HEAD sources plus the exact
+Buffer changes, preserving the unrelated working Common/ByteOrder.cs edit (CS8956).
+Four more public declarations per source are reviewed: ByteBuf has 11 reviewed/181
+unreviewed and AbstractByteBuf has 11/138. Source/fixture status remains in-progress.
+Evidence: artifacts/buffer-absolute-transfer-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4421,8 +4442,8 @@ This review checks API availability/representation. Existing tests validate thei
 stated scenarios; the full original ByteBufUtilTest, remaining internal/protected
 members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
-inventories, with partial discard and six relative/indexed ByteBuf transfer declarations
-reviewed per source; 185/142 declarations remain individually unreviewed. Other 32
+inventories, with partial discard and ten relative/absolute ByteBuf transfer declarations
+reviewed per source; 181/138 declarations remain individually unreviewed. Other 32
 in-progress source files have no signature-level inventory yet. None is assumed
 missing or complete.
 

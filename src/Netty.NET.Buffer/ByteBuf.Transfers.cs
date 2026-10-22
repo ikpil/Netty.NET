@@ -42,7 +42,8 @@ public abstract partial class ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         destination.EnsureAccessible();
-        return GetBytes(index, destination, destination.WritableBytes);
+        GetBytes(index, destination, destination.WritableBytes);
+        return this;
     }
 
     /**
@@ -90,7 +91,8 @@ public abstract partial class ByteBuf
     public virtual ByteBuf SetBytes(int index, ByteBuf source)
     {
         ArgumentNullException.ThrowIfNull(source);
-        return SetBytes(index, source, source.ReadableBytes);
+        SetBytes(index, source, source.ReadableBytes);
+        return this;
     }
 
     /**
@@ -114,6 +116,8 @@ public abstract partial class ByteBuf
     public virtual ByteBuf SetBytes(int index, ByteBuf source, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
+        // Validate this range before the indexed override can run or consume the source.
+        CheckIndex(index, length);
         source.CheckReadableBytes(length);
         SetBytes(index, source, source.ReaderIndex, length);
         source.ReaderIndex += length;
