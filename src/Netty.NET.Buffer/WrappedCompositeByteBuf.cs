@@ -90,6 +90,8 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
     public override CompositeByteBuf DiscardSomeReadBytes() { Wrapped.DiscardSomeReadBytes(); return this; }
     public override CompositeByteBuf EnsureWritable(int minimumWritableBytes) { Wrapped.EnsureWritable(minimumWritableBytes); return this; }
     public override int EnsureWritable(int minimumWritableBytes, bool force) => Wrapped.EnsureWritable(minimumWritableBytes, force);
+    public override ByteBuf SetZero(int index, int length) { Wrapped.SetZero(index, length); return this; }
+    public override ByteBuf WriteZero(int length) { Wrapped.WriteZero(length); return this; }
 
     public override int GetHashCode() => Wrapped.GetHashCode();
     public override bool Equals(object obj) => ReferenceEquals(this, obj) || Wrapped.Equals(obj);

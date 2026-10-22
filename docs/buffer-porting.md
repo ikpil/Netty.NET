@@ -4423,6 +4423,35 @@ Four more public declarations per source are reviewed: ByteBuf has 11 reviewed/1
 unreviewed and AbstractByteBuf has 11/138. Source/fixture status remains in-progress.
 Evidence: artifacts/buffer-absolute-transfer-validation (ignored).
 
+## Zero-fill storage and facade dispatch
+
+Inherited WriteZero now uses the bounded SetZeroCore storage kernel independently
+of the public SetZero operation, matching AbstractByteBuf's low-level writes. A
+SetZero override can no longer reject or alter an inherited sequential zero write.
+The writer commits only after the kernel returns; growth may remain after failure.
+WrappedByteBuf, WrappedCompositeByteBuf and UnreleasableByteBuf now explicitly
+forward each zero-fill operation to its parent and preserve the outer receiver.
+This also preserves parent WriteZero overrides and one advanced leak access.
+Original comments remain; Span.Clear replaces Java's manual word loops.
+
+All 65 new CLR cases pass; before the fixes, 48 failed and 17 passed. They cover
+18 heap/native width/growth cases, two partial-write kernel failures, 44 operation/
+exception cases through 11 heap/native/mixed-composite facade shapes and one native
+budget failure. Data, markers, cursor commit, exception identity, one leak record,
+reference ownership and zero native reservations after cleanup are checked.
+Fresh pinned Java Unsafe/NIO each pass 64 probes: 62 matching extension contracts
+and two empty-write differences. CLR deliberately keeps empty-write permission and
+lifetime validation; Java exits before ensureWritable. The native budget failure
+is CLR-specific. Derived-view/provider source reviews remain separate work.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 9341/9341 without failures/skips; 51 existing Common warnings and no
+Buffer/test warnings. Validation uses isolated committed HEAD sources plus the exact
+Buffer changes, preserving the unrelated working Common/ByteOrder.cs edit (CS8956).
+Two more public declarations per source are reviewed: ByteBuf has 13 reviewed/179
+unreviewed and AbstractByteBuf has 13/136. Source/fixture status remains in-progress.
+Evidence: artifacts/buffer-zero-dispatch-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4442,8 +4471,9 @@ This review checks API availability/representation. Existing tests validate thei
 stated scenarios; the full original ByteBufUtilTest, remaining internal/protected
 members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
-inventories, with partial discard and ten relative/absolute ByteBuf transfer declarations
-reviewed per source; 181/138 declarations remain individually unreviewed. Other 32
+inventories, with partial discard, ten relative/absolute ByteBuf transfer declarations
+and two zero-fill declarations reviewed per source; 179/136 remain individually
+unreviewed. Other 32
 in-progress source files have no signature-level inventory yet. None is assumed
 missing or complete.
 

@@ -95,6 +95,8 @@ internal sealed class UnreleasableByteBuf : ByteBuf
     public override ByteBuf DiscardSomeReadBytes() { _parent.DiscardSomeReadBytes(); return this; }
     public override ByteBuf EnsureWritable(int minimumWritableBytes) { _parent.EnsureWritable(minimumWritableBytes); return this; }
     public override int EnsureWritable(int minimumWritableBytes, bool force) => _parent.EnsureWritable(minimumWritableBytes, force);
+    public override ByteBuf SetZero(int index, int length) { _parent.SetZero(index, length); return this; }
+    public override ByteBuf WriteZero(int length) { _parent.WriteZero(length); return this; }
     public override ByteBuf AsReadOnly()
         => _parent.IsReadOnly ? this : new UnreleasableByteBuf(_parent.AsReadOnly());
     public override ByteBuf ReadSlice(int length) => new UnreleasableByteBuf(_parent.ReadSlice(length));

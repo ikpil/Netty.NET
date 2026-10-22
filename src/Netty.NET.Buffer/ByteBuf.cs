@@ -1604,7 +1604,15 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @param length the number of <tt>NUL</tt>s to write to the buffer
          */
     public virtual ByteBuf WriteZero(int length)
-    { EnsureWritable(length); SetZero(_writerIndex, length); _writerIndex += length; return this; }
+    {
+        EnsureWritable(length);
+        CheckIndex(_writerIndex, length);
+        // Like AbstractByteBuf's low-level writes, the storage kernel is independent of public SetZero overrides.
+        EnsureCanWrite();
+        SetZeroCore(_writerIndex, length);
+        _writerIndex += length;
+        return this;
+    }
     /**
          * Returns a copy of this buffer's readable bytes.  Modifying the content
          * of the returned buffer or this buffer does not affect each other at all.
