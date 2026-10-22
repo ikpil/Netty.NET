@@ -158,7 +158,10 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     }
     public override ByteBuf Copy(int index, int length)
     {
-        ReadOnlySpan<byte> source = AsSpan(index, length);
+        // CLR: keep the borrowed native span valid across allocator/write callbacks,
+        // including a callback that resizes or releases this buffer. Copy only reads.
+        using BufferMemoryLease lease = AcquireReadLease();
+        ReadOnlySpan<byte> source = AsReadOnlySpan(index, length);
         ByteBuf result = Allocator.DirectBuffer(length, MaxCapacity);
         try { return result.WriteBytes(source); }
         catch { result.Release(); throw; }

@@ -4548,6 +4548,40 @@ AbstractByteBuf directly declares 28 of these methods, now 47 reviewed/102 unrev
 eight LE float/double helpers are declared only on ByteBuf. Source/fixture statuses
 remain in-progress. Evidence: artifacts/buffer-scalar-composition-validation (ignored).
 
+## Native Copy read access and physical lifetime
+
+UnpooledDirectByteBuf.Copy now borrows ReadOnlySpan rather than requesting writable
+memory. This preserves the original duplicate-ByteBuffer read contract, including
+subclasses that report IsReadOnly. Allocator.DirectBuffer(length, MaxCapacity),
+capacity-based bounds, independent result storage and nested WriteBytes dispatch
+remain intact, including empty copies and derived-view offsets.
+
+A scoped existing read lease also keeps the captured native allocation physically
+valid through virtual allocation/write callbacks. Resizing may detach the source;
+final Release may reduce its logical reference count to zero. The old allocation
+survives until copying exits, including allocation/write failures, without retaining
+the source's logical reference count. This is CLR span lifetime handling, not a
+claim that original Java permits reentrant release/resize safely. Java comments
+remain unchanged. Common source is unchanged by this unit.
+
+All 129 new cases pass; before the fix 39 failed and 90 passed. The 105 portable
+cases combine seven native/read-only/duplicate/nested-slice forms, five ranges and
+three allocation/write outcomes. Fresh pinned Java Unsafe/NIO each pass these
+105 cases: 84 matching contracts and 21 explicit CLR failed-result cleanup cases
+(Java leaves the allocated failed-write result owned; CLR releases it). Twenty-four
+additional CLR cases verify allocation callbacks that resize/release source storage
+and successful/failed allocation/write exits. They first assert a live pin before
+mutating storage, so the red reproduction cannot deliberately dereference freed
+memory. Independent bytes, marks, offsets, reference counts and separate native
+reservation domains verify copy results and all cleanup paths.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 10560/10560 without failures/skips; 51 existing Common warnings, zero
+Buffer/test warnings and zero native reservations after cleanup. Validation uses
+isolated committed Common, preserving the working ByteOrder.cs edit (CS8956).
+Source/fixture statuses are unchanged; this unit reviews the native Copy path.
+Evidence: artifacts/buffer-native-copy-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
