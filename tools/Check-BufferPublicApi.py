@@ -14,6 +14,11 @@ TOKENS = re.compile(r'''(?s)@"(?:""|[^"])*"|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|
 METHOD = re.compile(
     r'(?m)^[ \t]*public[ \t]+static[ \t]+[\w.<>,\[\]?]+[ \t]+(\w+)\s*'
     r'\(([^;{}]*?)\)\s*(?:throws\s+[\w.,\s]+)?(?=\{|=>|;)')
+INSTANCE_METHOD = re.compile(
+    r'(?m)^[ \t]*public[ \t]+(?!static\b)'
+    r'(?:(?:abstract|final|virtual|override|sealed|new|unsafe|async)[ \t]+)*'
+    r'[\w.<>,\[\]?]+[ \t]+(\w+)\s*'
+    r'\(([^;{}]*?)\)\s*(?:throws\s+[\w.,\s]+)?(?=\{|=>|;)')
 STATES = {'implemented', 'clr-replacement', 'implementation-gap', 'unreviewed'}
 
 
@@ -33,10 +38,10 @@ def parameter_types(parameters):
     return result
 
 
-def declarations(source):
-    """Public static methods of the outer class; omit nested helper members.
+def declarations(source, static=True):
+    """Declared public methods of the outer class; omit nested helper members.
 
-    Fail closed on unmatched public-static methods at the outer depth. Literal and
+    Fail closed on unmatched public methods at the outer depth. Literal and
     comment masking preserves offsets, so brace depth cannot come from a JavaDoc.
     """
     masked = TOKENS.sub(lambda m: re.sub(r'[^\r\n]', ' ', m.group()), source)
@@ -46,15 +51,20 @@ def declarations(source):
         if char == '{': depth += 1
         elif char == '}': depth -= 1
     found = {}
-    for match in METHOD.finditer(masked):
+    pattern = METHOD if static else INSTANCE_METHOD
+    for match in pattern.finditer(masked):
         if depths[match.start()] != 1: continue
         signature = match[1] + '(' + ','.join(parameter_types(match[2])) + ')'
         if signature in found: raise ValueError('Duplicate declaration: ' + signature)
         found[signature] = source.count('\n', 0, match.start()) + 1
     # A different formatting/grammar must be inspected instead of silently lost.
-    for match in re.finditer(r'(?m)^[ \t]*public[ \t]+static[^\r\n]*\(', masked):
-        if depths[match.start()] == 1 and not METHOD.match(masked, match.start()):
-            raise ValueError('Unparsed public-static declaration at line ' +
+    candidate = (r'(?m)^[ \t]*public[ \t]+static[^\r\n]*\(' if static else
+                 r'(?m)^[ \t]*public[ \t]+(?!static\b)'
+                 r'(?:(?:abstract|final|virtual|override|sealed|new|unsafe|async)[ \t]+)*'
+                 r'[\w.<>,\[\]?]+[ \t]+\w+[ \t]*\(')
+    for match in re.finditer(candidate, masked):
+        if depths[match.start()] == 1 and not pattern.match(masked, match.start()):
+            raise ValueError('Unparsed public method declaration at line ' +
                              str(source.count('\n', 0, match.start()) + 1))
     return found
 
@@ -67,18 +77,21 @@ def check():
         review = entry.get('publicApiReview')
         if not review: continue
         reviewed += 1
-        if review['scope'] != 'declared-public-static-methods':
+        if review['scope'] not in {'declared-public-static-methods', 'declared-public-instance-methods'}:
             raise ValueError('Unsupported API review scope; extend the parser explicitly')
+        static = review['scope'] == 'declared-public-static-methods'
         if entry['kind'] != 'source': raise ValueError('API review requires a source entry')
         java = subprocess.check_output(
             ['git', '-C', str(upstream), 'show', manifest['baseline'] + ':' + entry['upstream']]
         ).decode('utf-8')
-        original = declarations(java)
+        original = declarations(java, static)
         decisions = review['methods']
-        names = [item['upstream'] for item in decisions]
+        unreviewed = review.get('unreviewedMethods', [])
+        names = [item['upstream'] for item in decisions] + unreviewed
         if len(names) != len(set(names)) or set(names) != set(original):
             raise ValueError('Missing, duplicate or unknown original API: ' + entry['upstream'])
         counts = collections.Counter()
+        counts['unreviewed'] = len(unreviewed)
         for item in decisions:
             state = item['state']
             if state not in STATES: raise ValueError('Unknown API state: ' + state)
@@ -95,7 +108,7 @@ def check():
                 path = target['path']
                 if path not in entry['implementation']: raise ValueError('Unregistered CLR target: ' + path)
                 source = (ROOT / path).read_text(encoding='utf-8-sig')
-                if target['member'] not in declarations(source):
+                if target['member'] not in declarations(source, static):
                     raise ValueError('Missing CLR declaration: ' + path + ':' + target['member'])
         summary = {'declared': len(original), **{state: counts[state] for state in sorted(STATES)}}
         if summary != review['summary']: raise ValueError('Stale API summary: ' + entry['upstream'])

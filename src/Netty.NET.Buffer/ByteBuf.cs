@@ -561,7 +561,13 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
             _readerIndex = _writerIndex = 0;
         }
         else if (_readerIndex > 0 && _readerIndex >= (Capacity >>> 1))
-            DiscardReadBytes();
+        {
+            // Preserve AbstractByteBuf's setBytes hook; discardReadBytes is an independent virtual operation.
+            SetBytes(0, this, _readerIndex, _writerIndex - _readerIndex);
+            _writerIndex -= _readerIndex;
+            AdjustMarkers(_readerIndex);
+            _readerIndex = 0;
+        }
         return this;
     }
     protected void AdjustMarkers(int decrement)

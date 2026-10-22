@@ -4349,6 +4349,34 @@ pass 9164/9164 without failures/skips; 51 existing Common warnings, zero Buffer/
 warnings/errors. Evidence: artifacts/buffer-composite-discard-marks-validation
 (ignored), buffer-composite-discard-marks-*.trx. Whole-file/inherited coverage remains partial.
 
+## Partial discard extension point
+
+An implementation difference was reproduced while reviewing ByteBuf/AbstractByteBuf.
+Java discardSomeReadBytes compacts through setBytes directly; CLR instead called
+the independent virtual DiscardReadBytes operation. A subclass overriding that
+operation could unexpectedly throw or alter partial-discard behavior. CLR now uses
+the original SetBytes hook and updates indices/marks only after a successful copy.
+The original operation comment remains intact.
+
+Fourteen heap/native cases cover reader positions 0/1/3/4/5/8 and throwing copy hooks.
+An override that rejects full discard must never be invoked by partial discard.
+Before the fix, six cases failed and eight passed; all 14 now pass, including data,
+half-capacity threshold, all-consumed handling, marker reset and copy-failure state.
+Fresh pinned Java source passes the same 14 cases in Unsafe/NIO profiles.
+
+Public instance inventories now list ByteBuf=192 and AbstractByteBuf=149 declarations,
+independently matched by reflection excluding compiler bridges/synthetic methods.
+Only discardSomeReadBytes is decided in each source; the other 191/148 signatures
+remain explicitly unreviewed. These are overlapping Java source declarations,
+not 341 distinct CLR operations or a count of missing implementations.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+pass 9178/9178 without failures/skips; 51 existing Common warnings, no Buffer/test
+warnings. Validation ran against isolated committed HEAD sources plus the Buffer
+fix/tests: an unrelated working Common/Internal/ByteOrder.cs namespace edit causes
+CS8956 in the primary working copy. That edit was preserved and excluded from the
+porting commit. Evidence: artifacts/buffer-discard-dispatch-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4367,8 +4395,10 @@ replaces Java recycler object reuse. These are implemented alternatives, not gap
 This review checks API availability/representation. Existing tests validate their
 stated scenarios; the full original ByteBufUtilTest, remaining internal/protected
 members, fields, provider details and callers still require separate review.
-ByteBufUtil remains in-progress. Other 34 in-progress source files have not yet
-received this signature-level partition. None is assumed either missing or complete.
+ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
+inventories, but only the corrected partial-discard extension contract is reviewed;
+191/148 declarations remain individually unreviewed. Other 32 in-progress source
+files have no signature-level inventory yet. None is assumed missing or complete.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
