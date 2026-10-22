@@ -4516,6 +4516,38 @@ Four more public declarations per source are reviewed: ByteBuf has 19 reviewed/1
 unreviewed and AbstractByteBuf has 19/130. Source/fixture status remains in-progress.
 Evidence: artifacts/buffer-iteration-kernel-validation (ignored).
 
+## Scalar composition and CLR bit representation
+
+GetChar now calls GetShort directly and reinterprets the result with unchecked
+UTF-16 conversion. An independent GetUnsignedShort override no longer intercepts it.
+SetBoolean, SetChar, BE SetFloat and BE SetDouble now return their receiver after
+the primitive setter succeeds. LE float/double helpers retain the nested primitive
+return specified by ByteBuf; their different rule is tested explicitly.
+Original operation comments remain unchanged.
+
+Thirty-six scalar helpers are reviewed for primitive dispatch and value conversion.
+Native ushort/uint retain the Java widened unsigned domains; signed mediums extend
+bit 23. BitConverter preserves IEEE bits, including quiet NaN payloads and negative
+zero. SetChar/WriteChar intentionally take C# char rather than Java int, requiring
+explicit caller conversion to a UTF-16 code unit. Primitive overrides retain control
+of their own validation/cursors; wrappers add no independent cursor movement.
+
+All 864 new heap/native cases pass; before the fixes, 72 failed and 792 passed.
+They combine 36 operations, six bit patterns and primitive success/failure, checking
+exact hook/arguments, unsigned/sign extension, zero/all-ones/sign bits, NaN payloads,
+negative zero, infinity, BE/LE returns, exceptions, memory, marks and ownership.
+Fresh pinned Java Unsafe/NIO each pass the same 864 cases. Existing concrete and
+derived storage tests remain the evidence for ordinary wire reads/writes.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 10431/10431 without failures/skips; 51 existing Common warnings, no
+Buffer/test warnings and zero native reservations after case cleanup. Validation
+uses isolated committed HEAD Common, preserving the working ByteOrder.cs edit (CS8956).
+
+ByteBuf adds 36 decisions: 55 reviewed/137 unreviewed, including two CLR char adapters.
+AbstractByteBuf directly declares 28 of these methods, now 47 reviewed/102 unreviewed;
+eight LE float/double helpers are declared only on ByteBuf. Source/fixture statuses
+remain in-progress. Evidence: artifacts/buffer-scalar-composition-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4536,9 +4568,11 @@ stated scenarios; the full original ByteBufUtilTest, remaining internal/protecte
 members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
-zero-fill operations, allocated reads, whole Copy and four iteration operations
-reviewed per source; 173/130 remain individually unreviewed. Other 32 in-progress
-source files have no signature inventory yet. None is assumed missing or complete.
+zero-fill operations, allocated reads, whole Copy, four iteration operations and the
+scalar composition family reviewed. ByteBuf has 55 decided/137 unreviewed declarations;
+AbstractByteBuf has 47/102, including two CLR char adapters per source. Other 32
+in-progress source files have no signature inventory yet. None is assumed missing
+or complete.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.

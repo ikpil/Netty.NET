@@ -745,7 +745,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 1} is greater than {@code this.capacity}
          */
-    public virtual ByteBuf SetBoolean(int index, bool value) => SetByte(index, value ? 1 : 0);
+    public virtual ByteBuf SetBoolean(int index, bool value) { SetByte(index, value ? 1 : 0); return this; }
     /**
          * Gets a 16-bit short integer at the specified absolute {@code index} in
          * this buffer.  This method does not modify {@code readerIndex} or
@@ -991,7 +991,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public virtual char GetChar(int index) => (char)GetUnsignedShort(index);
+    public virtual char GetChar(int index) => unchecked((char)GetShort(index));
     /**
          * Sets the specified 2-byte UTF-16 character at the specified absolute
          * {@code index} in this buffer.
@@ -1003,7 +1003,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 2} is greater than {@code this.capacity}
          */
-    public virtual ByteBuf SetChar(int index, char value) => SetShort(index, value);
+    public virtual ByteBuf SetChar(int index, char value) { SetShort(index, value); return this; }
     /**
          * Gets a 32-bit floating point number at the specified absolute
          * {@code index} in this buffer.  This method does not modify
@@ -1056,7 +1056,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 4} is greater than {@code this.capacity}
          */
-    public virtual ByteBuf SetFloat(int index, float value) => SetInt(index, BitConverter.SingleToInt32Bits(value));
+    public virtual ByteBuf SetFloat(int index, float value) { SetInt(index, BitConverter.SingleToInt32Bits(value)); return this; }
     /**
          * Sets the specified 32-bit floating-point number at the specified
          * absolute {@code index} in this buffer in Little Endian Byte Order.
@@ -1078,7 +1078,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 8} is greater than {@code this.capacity}
          */
-    public virtual ByteBuf SetDouble(int index, double value) => SetLong(index, BitConverter.DoubleToInt64Bits(value));
+    public virtual ByteBuf SetDouble(int index, double value) { SetLong(index, BitConverter.DoubleToInt64Bits(value)); return this; }
     /**
          * Sets the specified 64-bit floating-point number at the specified
          * absolute {@code index} in this buffer in Little Endian Byte Order.
