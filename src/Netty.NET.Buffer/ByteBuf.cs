@@ -600,8 +600,17 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     public virtual ByteBuf EnsureWritable(int minimumWritableBytes)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minimumWritableBytes);
+        EnsureWritableCore(minimumWritableBytes);
+        return this;
+    }
+
+    // AbstractByteBuf.ensureWritable0 is final: primitive writes must not call an independent public override.
+    private void EnsureWritableCore(int minimumWritableBytes)
+    {
         EnsureCanWrite();
-        if (minimumWritableBytes <= WritableBytes) return this;
+        // using non-short-circuit & to reduce branching - this is a hot path and targetCapacity should rarely overflow
+        // CLR: subtraction-based bounds avoid overflowing targetCapacity, including in checked builds.
+        if (minimumWritableBytes <= WritableBytes) return;
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
             throw new ArgumentOutOfRangeException(nameof(minimumWritableBytes));
         // Normalize the target capacity to the power of 2.
@@ -610,7 +619,6 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
             : Allocator.CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
         // Adjust to the new capacity.
         Capacity = newCapacity;
-        return this;
     }
     /**
          * Expands the buffer {@link #capacity()} to make sure the number of
@@ -1109,7 +1117,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 1}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteByte(int value) { EnsureWritable(1); AsSpan(_writerIndex, 1)[0] = unchecked((byte)value); ++_writerIndex; return this; }
+    public virtual ByteBuf WriteByte(int value) { EnsureWritableCore(1); AsSpan(_writerIndex, 1)[0] = unchecked((byte)value); ++_writerIndex; return this; }
     /**
          * Gets a boolean at the current {@code readerIndex} and increases
          * the {@code readerIndex} by {@code 1} in this buffer.
@@ -1140,7 +1148,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 2}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteShort(int value) { EnsureWritable(2); SetWord(_writerIndex, unchecked((ulong)value), 2, false); _writerIndex += 2; return this; }
+    public virtual ByteBuf WriteShort(int value) { EnsureWritableCore(2); SetWord(_writerIndex, unchecked((ulong)value), 2, false); _writerIndex += 2; return this; }
     /**
          * Gets a 16-bit short integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1158,7 +1166,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 2}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteShortLE(int value) { EnsureWritable(2); SetWord(_writerIndex, unchecked((ulong)value), 2, true); _writerIndex += 2; return this; }
+    public virtual ByteBuf WriteShortLE(int value) { EnsureWritableCore(2); SetWord(_writerIndex, unchecked((ulong)value), 2, true); _writerIndex += 2; return this; }
     /**
          * Gets a 24-bit medium integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 3} in this buffer.
@@ -1174,7 +1182,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 3}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteMedium(int value) { EnsureWritable(3); SetWord(_writerIndex, unchecked((ulong)value), 3, false); _writerIndex += 3; return this; }
+    public virtual ByteBuf WriteMedium(int value) { EnsureWritableCore(3); SetWord(_writerIndex, unchecked((ulong)value), 3, false); _writerIndex += 3; return this; }
     /**
          * Gets a 24-bit medium integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the
@@ -1192,7 +1200,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 3}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteMediumLE(int value) { EnsureWritable(3); SetWord(_writerIndex, unchecked((ulong)value), 3, true); _writerIndex += 3; return this; }
+    public virtual ByteBuf WriteMediumLE(int value) { EnsureWritableCore(3); SetWord(_writerIndex, unchecked((ulong)value), 3, true); _writerIndex += 3; return this; }
     /**
          * Gets a 32-bit integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 4} in this buffer.
@@ -1207,7 +1215,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 4}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteInt(int value) { EnsureWritable(4); SetWord(_writerIndex, unchecked((ulong)value), 4, false); _writerIndex += 4; return this; }
+    public virtual ByteBuf WriteInt(int value) { EnsureWritableCore(4); SetWord(_writerIndex, unchecked((ulong)value), 4, false); _writerIndex += 4; return this; }
     /**
          * Gets a 32-bit integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1224,7 +1232,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 4}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteIntLE(int value) { EnsureWritable(4); SetWord(_writerIndex, unchecked((ulong)value), 4, true); _writerIndex += 4; return this; }
+    public virtual ByteBuf WriteIntLE(int value) { EnsureWritableCore(4); SetWord(_writerIndex, unchecked((ulong)value), 4, true); _writerIndex += 4; return this; }
     /**
          * Gets a 64-bit integer at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 8} in this buffer.
@@ -1240,7 +1248,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 8}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteLong(long value) { EnsureWritable(8); SetWord(_writerIndex, unchecked((ulong)value), 8, false); _writerIndex += 8; return this; }
+    public virtual ByteBuf WriteLong(long value) { EnsureWritableCore(8); SetWord(_writerIndex, unchecked((ulong)value), 8, false); _writerIndex += 8; return this; }
     /**
          * Gets a 64-bit integer at the current {@code readerIndex}
          * in the Little Endian Byte Order and increases the {@code readerIndex}
@@ -1258,7 +1266,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code 8}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
-    public virtual ByteBuf WriteLongLE(long value) { EnsureWritable(8); SetWord(_writerIndex, unchecked((ulong)value), 8, true); _writerIndex += 8; return this; }
+    public virtual ByteBuf WriteLongLE(long value) { EnsureWritableCore(8); SetWord(_writerIndex, unchecked((ulong)value), 8, true); _writerIndex += 8; return this; }
     /**
          * Gets a 32-bit floating point number at the current {@code readerIndex}
          * and increases the {@code readerIndex} by {@code 4} in this buffer.

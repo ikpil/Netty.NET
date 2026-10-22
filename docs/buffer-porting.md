@@ -4615,6 +4615,42 @@ AbstractByteBuf has 51/98. AbstractByteBufTest has 29 mapped/379 unreviewed decl
 tests. Whole source/fixture statuses remain partial; other provider specializations
 and test methods remain separate work. Evidence: artifacts/buffer-search-kernel-validation (ignored).
 
+## Primitive write reservation and public growth hooks
+
+WriteByte, BE/LE WriteShort/WriteMedium/WriteInt/WriteLong now reserve through a
+private EnsureWritableCore corresponding to final AbstractByteBuf.ensureWritable0.
+Previously an independent public EnsureWritable override intercepted all nine
+writes, potentially throwing an unrelated exception even when capacity was enough.
+Explicit EnsureWritable calls retain virtual dispatch. Bulk, zero, channel and text
+operations retain their separately specified reservation paths.
+
+The kernel retains MaxFastWritableBytes, allocator rounding and capacity-setter
+hooks, bounds, access/read-only guards and original growth behavior. Subtraction
+avoids Java target-capacity overflow even in checked CLR builds. The original
+branch-optimization comment is retained with this CLR explanation. Integer value
+truncation and explicit BE/LE encoding are unchanged. CLR commits the writer after
+a successful storage write; Java WriteByte increments before its low-level write,
+so arbitrary subclass storage-failure cursor equivalence is not claimed.
+
+All 132 new heap/native cases pass; before, 108 failed and 24 passed. Nine operations
+cover sufficient/growing/exhausted capacity and accepting/rejecting public overrides
+(108 cases). Twelve cases verify explicit public reservation still invokes its
+hook. Another 12 port six declared original tests: forced/unforced expansion,
+forced/unforced read-only rejection, access after release and integer overflow.
+Original helper comments are retained. Fresh pinned Java Unsafe/NIO each pass all
+132, executing the six original fixture bodies and three helpers verbatim.
+Independent expected wire arrays, original prefixes, cursor/marks and final native
+reservations verify successful writes, failure state and cleanup. Existing pooled
+hidden-capacity, allocator policy and native budget-failure tests also pass.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 10797/10797 without failures/skips; 51 existing Common warnings, zero
+Buffer/test warnings. Isolated committed Common preserves the ByteOrder.cs edit
+(CS8956). ByteBuf now has 70 reviewed/122 unreviewed public declarations;
+AbstractByteBuf has 62/87. AbstractByteBufTest has 35 mapped/373 unreviewed declared
+tests. Whole source/fixture/provider completion remains separate work.
+Evidence: artifacts/buffer-writable-kernel-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4636,8 +4672,9 @@ members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
-scalar composition and directional search families reviewed. ByteBuf has 59 decided/133 unreviewed declarations;
-AbstractByteBuf has 51/98, including two CLR char adapters per source. Other 32
+scalar composition, directional search and primitive reservation families reviewed.
+ByteBuf has 70 decided/122 unreviewed declarations; AbstractByteBuf has 62/87,
+including two CLR char adapters per source. Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 
