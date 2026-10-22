@@ -58,6 +58,7 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
     internal override BufferMemoryLease AcquireReadLease() => Wrapped.AcquireReadLease();
     internal override BufferMemoryLease PinMemoryForWrite() => Wrapped.PinMemoryForWrite();
 
+    public override ByteBuf Copy() => Wrapped.Copy();
     public override ByteBuf Copy(int index, int length) => Wrapped.Copy(index, length);
     public override ByteBuf ReadBytes(int length) => Wrapped.ReadBytes(length);
     public override int IndexOf(int fromIndex, int toIndex, byte value) => Wrapped.IndexOf(fromIndex, toIndex, value);

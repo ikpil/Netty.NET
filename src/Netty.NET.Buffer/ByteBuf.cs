@@ -1653,7 +1653,7 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         CheckReadableBytes(length);
         if (length == 0) return Unpooled.EmptyBuffer;
         ByteBuf result = Allocator.Buffer(length, MaxCapacity);
-        try { result.SetBytes(0, this, _readerIndex, length); result.WriterIndex = length; }
+        try { result.WriteBytes(this, _readerIndex, length); }
         catch { result.Release(); throw; }
         _readerIndex += length;
         return result;

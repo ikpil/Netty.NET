@@ -4452,6 +4452,37 @@ Two more public declarations per source are reviewed: ByteBuf has 13 reviewed/17
 unreviewed and AbstractByteBuf has 13/136. Source/fixture status remains in-progress.
 Evidence: artifacts/buffer-zero-dispatch-validation (ignored).
 
+## Allocation and copy write extension points
+
+ReadBytes(int) now invokes WriteBytes(ByteBuf,index,length) on the newly allocated
+buffer, then advances its source reader only after success. Previously it bypassed
+that override with SetBytes and a direct writer assignment. Empty/invalid reads
+still do not allocate, and the allocated result is returned even if its write
+returns another buffer. UnpooledHeapByteBuf.Copy now uses the CLR span adapter for
+the original array write and preserves that write override's return. Native Copy's
+ByteBuffer-to-span path already matches. Whole Copy on transparent ordinary,
+composite and unreleasable facades now calls the parent's original Copy() override.
+Original comments remain; other indexed providers/derived factories remain separate.
+
+All 134 new CLR cases pass; before the fixes, 54 failed and 80 passed. The 120
+allocation cases exercise heap/native providers, opposing allocator preferences,
+negative/zero/exact/capacity-bounded lengths, allocation failure, exceptions before/
+after writing, no-write overrides, redirected results, provenance, independent data,
+cursors and marks. Fourteen whole-copy facade cases verify factory dispatch and
+exception identity without invoking an independent indexed-copy override.
+Fresh pinned Java Unsafe/NIO each pass 134 probes: 110 matching contracts plus 24
+explicit CLR cleanup differences. CLR retains its existing release of a fresh,
+unpublished result after failed writing; Java leaves that buffer owned. No native
+reservation remains after CLR case cleanup.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 9475/9475 without failures/skips; 51 existing Common warnings and no
+Buffer/test warnings. Validation uses isolated committed HEAD sources plus the exact
+Buffer changes, preserving the unrelated working Common/ByteOrder.cs edit (CS8956).
+Two more public declarations per source are reviewed: ByteBuf has 15 reviewed/177
+unreviewed and AbstractByteBuf has 15/134. Source/fixture status remains in-progress.
+Evidence: artifacts/buffer-allocation-write-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4471,11 +4502,10 @@ This review checks API availability/representation. Existing tests validate thei
 stated scenarios; the full original ByteBufUtilTest, remaining internal/protected
 members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
-inventories, with partial discard, ten relative/absolute ByteBuf transfer declarations
-and two zero-fill declarations reviewed per source; 179/136 remain individually
-unreviewed. Other 32
-in-progress source files have no signature-level inventory yet. None is assumed
-missing or complete.
+inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
+zero-fill operations, allocated reads and whole Copy reviewed per source; 177/134
+remain individually unreviewed. Other 32 in-progress source files have no signature
+inventory yet. None is assumed missing or complete.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
 inventory and CLR declaration targets; this is not a behavioral equivalence test.
