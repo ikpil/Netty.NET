@@ -4582,6 +4582,39 @@ isolated committed Common, preserving the working ByteOrder.cs edit (CS8956).
 Source/fixture statuses are unchanged; this unit reviews the native Copy path.
 Evidence: artifacts/buffer-native-copy-validation (ignored).
 
+## Directional search storage and original fixtures
+
+Segmented IndexOf now reads bounded storage independently of public GetByte
+redefinitions, matching AbstractByteBuf/ByteBufUtil's low-level search path.
+Previously a composite root/duplicate could throw an unrelated getter exception
+only when its range crossed components. Contiguous Span.IndexOf/LastIndexOf and
+segmented single-byte reads now share that rule. Span primitives replace JVM SWAR;
+no JVM performance equivalence or arbitrary-subclass graph equivalence is claimed.
+Existing directional clamping, capacity bounds, empty/released short circuits and
+BytesBefore virtual delegation/distance rules are unchanged. Indexed BytesBefore
+retains the explicit CLR range/lifetime guard before delegation, including empty,
+negative and overflowing ranges; Java can short-circuit before such checks.
+
+Ported all scenarios/comments from five declared AbstractByteBufTest methods:
+testSWARIndexOf, testUnrolledSWARIndexOf, testIndexOf, testIndexOfReleaseBuffer and
+testEndiannessIndexOf. They run on heap/native/mixed-composite storage (15 cases),
+including zero initialization, forward/reverse matches, unrolled tails, clamping,
+invalid endpoints, release capacity branches and explicit little-endian writes.
+Another 72 cases model direction, high-bit/missing needles, three component sizes
+and ordinary/optimized duplicate/slice/nested views; 18 cases verify BytesBefore's
+IndexOf arguments/results/exceptions. All 105 pass; before, 24 failed and 81 passed.
+Fresh pinned Java Unsafe/NIO each pass the same 105; five Java fixture bodies are
+executed verbatim. Independent arrays verify positions/content; marks, references
+and zero final native reservations are checked.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 10665/10665 without failures/skips; 51 existing Common warnings and zero
+Buffer/test warnings. Isolated committed Common preserves the ByteOrder.cs edit
+(CS8956). ByteBuf now has 59 reviewed/133 unreviewed public declarations;
+AbstractByteBuf has 51/98. AbstractByteBufTest has 29 mapped/379 unreviewed declared
+tests. Whole source/fixture statuses remain partial; other provider specializations
+and test methods remain separate work. Evidence: artifacts/buffer-search-kernel-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4603,8 +4636,8 @@ members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
-scalar composition family reviewed. ByteBuf has 55 decided/137 unreviewed declarations;
-AbstractByteBuf has 47/102, including two CLR char adapters per source. Other 32
+scalar composition and directional search families reviewed. ByteBuf has 59 decided/133 unreviewed declarations;
+AbstractByteBuf has 51/98, including two CLR char adapters per source. Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 

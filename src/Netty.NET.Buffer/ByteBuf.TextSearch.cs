@@ -148,7 +148,8 @@ public abstract partial class ByteBuf
             int length = checked(toIndex - fromIndex);
             if (!TryGetReadOnlyMemory(fromIndex, length, out var memory))
             {
-                for (int i = fromIndex; i < toIndex; ++i) if (GetByte(i) == value) return i;
+                // Match the original low-level search reads, independently of public GetByte overrides.
+                for (int i = fromIndex; i < toIndex; ++i) if (AsReadOnlySpan(i, 1)[0] == value) return i;
                 return -1;
             }
             int found = memory.Span.IndexOf(value);
@@ -161,7 +162,7 @@ public abstract partial class ByteBuf
         int reverseLength = checked(fromIndex - toIndex);
         if (!TryGetReadOnlyMemory(toIndex, reverseLength, out var reverseMemory))
         {
-            for (int i = fromIndex - 1; i >= toIndex; --i) if (GetByte(i) == value) return i;
+            for (int i = fromIndex - 1; i >= toIndex; --i) if (AsReadOnlySpan(i, 1)[0] == value) return i;
             return -1;
         }
         int reverseFound = reverseMemory.Span.LastIndexOf(value);
