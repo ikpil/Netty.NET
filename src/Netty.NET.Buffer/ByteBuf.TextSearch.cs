@@ -228,7 +228,12 @@ public abstract partial class ByteBuf
          * @return {@code -1} if the processor iterated to or beyond the end of the readable bytes.
          *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
          */
-    public virtual int ForEachByte(Func<byte, bool> processor) => ForEachByte(_readerIndex, ReadableBytes, processor);
+    public virtual int ForEachByte(Func<byte, bool> processor)
+    {
+        ArgumentNullException.ThrowIfNull(processor);
+        CheckIndex(_readerIndex, ReadableBytes);
+        return ForEachByteAscending(_readerIndex, _writerIndex, processor);
+    }
 
     /**
          * Iterates over the specified area of this buffer with the specified {@code processor} in ascending order.
@@ -241,10 +246,15 @@ public abstract partial class ByteBuf
     {
         ArgumentNullException.ThrowIfNull(processor);
         CheckIndex(index, length);
-        int end = index + length;
+        return ForEachByteAscending(index, index + length, processor);
+    }
+
+    private int ForEachByteAscending(int start, int end, Func<byte, bool> processor)
+    {
+        // Use the storage kernel independently of public GetByte/indexed iteration overrides.
         // Reacquire each byte: a callback can resize or release native storage. Never retain a span across callbacks.
-        for (int i = index; i < end; ++i)
-            if (!processor(GetByte(i))) return i;
+        for (int i = start; i < end; ++i)
+            if (!processor(AsReadOnlySpan(i, 1)[0])) return i;
         return -1;
     }
 
@@ -254,7 +264,12 @@ public abstract partial class ByteBuf
          * @return {@code -1} if the processor iterated to or beyond the beginning of the readable bytes.
          *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
          */
-    public virtual int ForEachByteDesc(Func<byte, bool> processor) => ForEachByteDesc(_readerIndex, ReadableBytes, processor);
+    public virtual int ForEachByteDesc(Func<byte, bool> processor)
+    {
+        ArgumentNullException.ThrowIfNull(processor);
+        CheckIndex(_readerIndex, ReadableBytes);
+        return ForEachByteDescending(_writerIndex - 1, _readerIndex, processor);
+    }
 
     /**
          * Iterates over the specified area of this buffer with the specified {@code processor} in descending order.
@@ -268,8 +283,13 @@ public abstract partial class ByteBuf
     {
         ArgumentNullException.ThrowIfNull(processor);
         CheckIndex(index, length);
-        for (int i = index + length - 1; i >= index; --i)
-            if (!processor(GetByte(i))) return i;
+        return ForEachByteDescending(index + length - 1, index, processor);
+    }
+
+    private int ForEachByteDescending(int start, int end, Func<byte, bool> processor)
+    {
+        for (int i = start; i >= end; --i)
+            if (!processor(AsReadOnlySpan(i, 1)[0])) return i;
         return -1;
     }
 }
