@@ -4818,6 +4818,40 @@ reviewed/62 unreviewed public declarations (21 CLR adapters); AbstractByteBuf st
 Whole sources, fixtures and provider combinations remain partial.
 Evidence: artifacts/buffer-capacity-source-validation (ignored).
 
+## Array transfers as bounded spans
+
+Ported 17 original AbstractByteBufTest methods over five providers (85 cases): four
+array destination bounds, five random/sequential block transfers and eight array
+operations after release. Original capacity 4096, block size 128, doubled-array
+ranges and reseeding order are retained. Each runtime checks its own PRNG stream;
+Java/CLR random byte sequences are not compared. Managed arrays replace Java
+expected-buffer wrappers. Twenty extra cases transfer four bytes at offset 15
+across a composite split at 16, checking complete contents, array guard bytes,
+indices, saved marks, reference counts and invalid-span failure state.
+
+Reviewed eight ByteBuf and six AbstractByteBuf array declarations as four CLR span
+operations. Whole arrays convert to spans; offset/length pairs use AsSpan. Java's
+separate whole-array override hooks collapse into each span operation. Invalid CLR
+array ranges fail during span construction before buffer dispatch; this exception
+order/type follows CLR rules. Existing UnsafeByteBufUtilTest retains the explicit
+null-array-to-empty-span policy; a nonempty null-array range still fails. Span
+values carry no cursor or reference claim. Read/Write retain their Get/Set and
+public EnsureWritable dispatch; native leases protect aliased growing writes.
+
+Four missing original range-overload JavaDocs are now beside GetBytes, SetBytes,
+ReadBytes and WriteBytes; executable runtime tokens are unchanged. All 105 new
+cases pass existing runtime and fresh pinned Java Unsafe/NIO, executing 17 original
+bodies plus releasedBuffer helper verbatim. Existing overlap/derived/pooled tests
+remain. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling
+interval 1 each pass 11608/11608, no failures/skips; 51 existing Common warnings,
+zero Buffer/test warnings, final native reservations zero. Isolated committed
+Common preserves the unrelated ByteOrder.cs edit (CS8956). Java maxOrder=9 versus
+supported CLR test maxOrder=1 is not a pool geometry/performance comparison.
+ByteBuf now has 138 reviewed/54 unreviewed declarations (29 CLR adapters),
+AbstractByteBuf 125/24 (24 CLR adapters), and AbstractByteBufTest 170 mapped/238
+unreviewed methods. Whole source/fixture/provider statuses remain partial.
+Evidence: artifacts/buffer-array-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4840,9 +4874,9 @@ ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-metho
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
 scalar composition, directional search, primitive reservation, view factory and raw
-integer, index-state, full-discard and capacity-property families reviewed. ByteBuf
-has 130 decided/62 unreviewed declarations (21 CLR adapters); AbstractByteBuf has
-119/30 (18 CLR adapters). Other 32
+integer, index-state, full-discard, capacity-property and array-span families
+reviewed. ByteBuf has 138 decided/54 unreviewed declarations (29 CLR adapters);
+AbstractByteBuf has 125/24 (24 CLR adapters). Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 

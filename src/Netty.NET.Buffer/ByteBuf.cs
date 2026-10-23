@@ -1439,6 +1439,25 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if {@code index + dst.length} is greater than
          *            {@code this.capacity}
          */
+    /**
+     * Transfers this buffer's data to the specified destination starting at
+     * the specified absolute {@code index}.
+     * This method does not modify {@code readerIndex} or {@code writerIndex}
+     * of this buffer.
+     *
+     * @param dstIndex the first index of the destination
+     * @param length   the number of bytes to transfer
+     *
+     * @throws IndexOutOfBoundsException
+     *         if the specified {@code index} is less than {@code 0},
+     *         if the specified {@code dstIndex} is less than {@code 0},
+     *         if {@code index + length} is greater than
+     *            {@code this.capacity}, or
+     *         if {@code dstIndex + length} is greater than
+     *            {@code dst.length}
+     */
+    // CLR: The original array range overload above uses array.AsSpan(offset, length);
+    // range creation validates array bounds before this method is invoked.
     // CLR: The CLR destination is an explicit span range with no writer index.
     public virtual ByteBuf GetBytes(int index, Span<byte> destination)
     {
@@ -1468,6 +1487,21 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if {@code index + src.length} is greater than
          *            {@code this.capacity}
          */
+    /**
+     * Transfers the specified source array's data to this buffer starting at
+     * the specified absolute {@code index}.
+     * This method does not modify {@code readerIndex} or {@code writerIndex} of
+     * this buffer.
+     *
+     * @throws IndexOutOfBoundsException
+     *         if the specified {@code index} is less than {@code 0},
+     *         if the specified {@code srcIndex} is less than {@code 0},
+     *         if {@code index + length} is greater than
+     *            {@code this.capacity}, or
+     *         if {@code srcIndex + length} is greater than {@code src.length}
+     */
+    // CLR: The original array range overload above uses array.AsSpan(offset, length);
+    // range creation validates array bounds before this method is invoked.
     // CLR: The CLR source is an explicit span range with no reader index.
     public virtual ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
     {
@@ -1489,6 +1523,21 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code dst.length} is greater than {@code this.readableBytes}
          */
+    /**
+     * Transfers this buffer's data to the specified destination starting at
+     * the current {@code readerIndex} and increases the {@code readerIndex}
+     * by the number of the transferred bytes (= {@code length}).
+     *
+     * @param dstIndex the first index of the destination
+     * @param length   the number of bytes to transfer
+     *
+     * @throws IndexOutOfBoundsException
+     *         if the specified {@code dstIndex} is less than {@code 0},
+     *         if {@code length} is greater than {@code this.readableBytes}, or
+     *         if {@code dstIndex + length} is greater than {@code dst.length}
+     */
+    // CLR: The original array range overload above uses array.AsSpan(offset, length);
+    // range creation validates array bounds before this method is invoked.
     // CLR: The CLR destination is an explicit span range; only this buffer reader advances.
     public virtual ByteBuf ReadBytes(Span<byte> destination)
     {
@@ -1503,6 +1552,22 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * If {@code this.writableBytes} is less than {@code src.length}, {@link #ensureWritable(int)}
          * will be called in an attempt to expand capacity to accommodate.
          */
+    /**
+     * Transfers the specified source array's data to this buffer starting at
+     * the current {@code writerIndex} and increases the {@code writerIndex}
+     * by the number of the transferred bytes (= {@code length}).
+     * If {@code this.writableBytes} is less than {@code length}, {@link #ensureWritable(int)}
+     * will be called in an attempt to expand capacity to accommodate.
+     *
+     * @param srcIndex the first index of the source
+     * @param length   the number of bytes to transfer
+     *
+     * @throws IndexOutOfBoundsException
+     *         if the specified {@code srcIndex} is less than {@code 0}, or
+     *         if {@code srcIndex + length} is greater than {@code src.length}
+     */
+    // CLR: The original array range overload above uses array.AsSpan(offset, length);
+    // range creation validates array bounds before this method is invoked.
     // CLR: The CLR source is an explicit span range; only this buffer writer advances.
     public virtual ByteBuf WriteBytes(ReadOnlySpan<byte> source)
     {
