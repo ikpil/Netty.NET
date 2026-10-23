@@ -4852,6 +4852,37 @@ AbstractByteBuf 125/24 (24 CLR adapters), and AbstractByteBufTest 170 mapped/238
 unreviewed methods. Whole source/fixture/provider statuses remain partial.
 Evidence: artifacts/buffer-array-source-validation (ignored).
 
+## Content comparison and CLR collection contracts
+
+Ported four original declared comparison tests over five providers (20 new cases):
+unsigned-word underflow, null/object/content equality, unsigned prefix comparisons
+with two retained windows, and four-owner endian-independent comparison results.
+The existing original HashSet/default-sort test is reused for testHashCode with its
+15-byte heap/native keys and heap probe. Its probe capacity 15 replaces the unused
+4096-byte original fixture capacity. This maps five declared tests without adding
+a duplicate HashSet test or claiming all inherited provider combinations.
+
+Reviewed hashCode/equals(Object)/compareTo in ByteBuf and AbstractByteBuf as CLR
+GetHashCode, object/IEquatable equality and IComparable comparison. CompareTo(null)
+returns 1 under the CLR contract; pinned Java still expects NullPointerException.
+Explicit BE/LE reads replace Java mutable order facades. Existing signed hash-tail,
+wrapping/zero-coercion, exact unsigned comparison, readable-window, default generic
+collection, reference-identity and wrapper/lifetime tests remain. Mutable readable
+content, indices and lifetime must remain stable while used as a hash collection
+key. No production implementation change was needed.
+
+All 21 focused cases pass unchanged runtime; fresh pinned Java Unsafe/NIO each pass
+21 scenarios using all five original bodies verbatim. Each runtime reseeds its own
+PRNG; their random streams are not equated. Full net10.0 Debug/Release/rebuilt checked
+Release with SIMPLE sampling interval 1 each pass 11628/11628 without failures/skips;
+51 existing Common warnings, zero Buffer/test warnings and new provider native
+reservations zero. Isolated committed Common preserves the unrelated ByteOrder.cs
+edit (CS8956). Java maxOrder=9 versus supported CLR test maxOrder=1 is not a pool
+geometry/performance comparison. ByteBuf has 141 reviewed/51 unreviewed declarations
+(32 CLR adapters), AbstractByteBuf 128/21 (27 CLR adapters), and AbstractByteBufTest
+175 mapped/233 unreviewed methods. Whole source/fixture statuses remain partial.
+Evidence: artifacts/buffer-comparison-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4874,9 +4905,9 @@ ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-metho
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
 scalar composition, directional search, primitive reservation, view factory and raw
-integer, index-state, full-discard, capacity-property and array-span families
-reviewed. ByteBuf has 138 decided/54 unreviewed declarations (29 CLR adapters);
-AbstractByteBuf has 125/24 (24 CLR adapters). Other 32
+integer, index-state, full-discard, capacity-property, array-span and content-comparison
+families reviewed. ByteBuf has 141 decided/51 unreviewed declarations (32 CLR adapters);
+AbstractByteBuf has 128/21 (27 CLR adapters). Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 
