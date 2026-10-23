@@ -4651,6 +4651,42 @@ AbstractByteBuf has 62/87. AbstractByteBufTest has 35 mapped/373 unreviewed decl
 tests. Whole source/fixture/provider completion remains separate work.
 Evidence: artifacts/buffer-writable-kernel-validation (ignored).
 
+## View factory bounds and original lifetime fixtures
+
+Ported 23 previously unreviewed declared AbstractByteBufTest methods covering the
+Slice/RetainedSlice/Duplicate/RetainedDuplicate and readable-slice factory family.
+All 115 new cases pass against the existing runtime across heap/native/mixed
+composite/pooled heap/pooled native. No production code change was needed.
+
+Scenarios include eight nested bounds combinations, two readable-slice bounds
+cases, six factory calls after release, shared slice release, initial reader/writer
+indices, duplicate-of-slice capacity, readable retained children before/after read,
+and 4096-byte sequential slicing with 128-byte blocks and live alias mutation.
+Original comments are retained. Additional assertions check unchanged failed-call
+cursors/marks/reference counts, independent readable-byte patterns and zero native
+reservations after root/pool cleanup. Managed arrays replace temporary expected
+buffers; explicit BE/LE reads replace Java mutable byte-order facade comparisons.
+Deterministic reseeded random streams are tested within each runtime; their actual
+random octet sequences are not compared across Java/.NET.
+
+Fresh byte-checked pinned Java Unsafe/NIO each pass 115 cases by executing all
+23 original test bodies and five helpers verbatim. The runner tracks and releases
+original temporary wrapped expected buffers after assertions. Java's pool uses its
+default maxOrder=9 to satisfy original run-size assertions; CLR uses its supported
+small test chunks (maxOrder=1). Pool geometry/performance is not compared.
+
+Eight base factory declarations now have explicit public-API decisions, linked to
+these cases and existing derived/pooled/leak-aware tests. Source/provider completion
+is not inferred. ByteBuf has 78 reviewed/114 unreviewed public declarations;
+AbstractByteBuf has 70/79. AbstractByteBufTest has 58 mapped/350 unreviewed declared
+tests. Whole source/fixture statuses are unchanged.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero
+Buffer/test warnings. Validation uses isolated committed runtime plus the exact new
+test, preserving the unrelated ByteOrder.cs edit (CS8956).
+Evidence: artifacts/buffer-view-factory-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4672,8 +4708,8 @@ members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
-scalar composition, directional search and primitive reservation families reviewed.
-ByteBuf has 70 decided/122 unreviewed declarations; AbstractByteBuf has 62/87,
+scalar composition, directional search, primitive reservation and view factory families reviewed.
+ByteBuf has 78 decided/114 unreviewed declarations; AbstractByteBuf has 70/79,
 including two CLR char adapters per source. Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
