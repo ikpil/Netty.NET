@@ -721,6 +721,17 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          *         if the specified {@code index} is less than {@code 0} or
          *         {@code index + 1} is greater than {@code this.capacity}
          */
+    /**
+     * Gets an unsigned byte at the specified absolute {@code index} in this
+     * buffer.  This method does not modify {@code readerIndex} or
+     * {@code writerIndex} of this buffer.
+     *
+     * @throws IndexOutOfBoundsException
+     *         if the specified {@code index} is less than {@code 0} or
+     *         {@code index + 1} is greater than {@code this.capacity}
+     */
+    // CLR: byte already represents 0..255, so signed/unsigned Java octet APIs share this method.
+    /// <remarks>Use unchecked((sbyte)value) when a signed Java byte value is required.</remarks>
     public virtual byte GetByte(int index) => AsReadOnlySpan(index, 1)[0];
     /**
          * Gets a boolean at the specified absolute (@code index) in this buffer.
@@ -1106,6 +1117,15 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
          * @throws IndexOutOfBoundsException
          *         if {@code this.readableBytes} is less than {@code 1}
          */
+    /**
+     * Gets an unsigned byte at the current {@code readerIndex} and increases
+     * the {@code readerIndex} by {@code 1} in this buffer.
+     *
+     * @throws IndexOutOfBoundsException
+     *         if {@code this.readableBytes} is less than {@code 1}
+     */
+    // CLR: byte already represents 0..255, so signed/unsigned Java octet APIs share this method.
+    /// <remarks>Use unchecked((sbyte)value) when a signed Java byte value is required.</remarks>
     // Relative primitives follow AbstractByteBuf storage kernels, bypassing public
     // absolute overrides. Floating-point and signed-medium methods compose the
     // corresponding relative integer APIs, preserving their override policy.

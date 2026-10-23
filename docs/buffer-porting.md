@@ -4687,6 +4687,43 @@ Buffer/test warnings. Validation uses isolated committed runtime plus the exact 
 test, preserving the unrelated ByteOrder.cs edit (CS8956).
 Evidence: artifacts/buffer-view-factory-source-validation (ignored).
 
+## Raw integer access and CLR octets
+
+Reviewed 29 shared raw integer get/set/read declarations. Absolute operations use
+capacity bounds and preserve cursors; relative readers require a readable width
+and commit after success. Bounded spans and ReadWord/SetWord replace JVM raw access,
+including BE/LE, low-bit truncation, 24-bit unsigned values and component crossings.
+No executable runtime change was needed. Provider-specific overrides and JVM
+performance remain separate review work.
+
+Java signed byte and widened unsigned-byte APIs intentionally share GetByte/ReadByte
+returning CLR byte (0..255). For Java's signed numeric domain use
+unchecked((sbyte)value), including in checked builds. Both omitted original unsigned
+API comments are now preserved beside these methods. No redundant unsigned-byte
+aliases are added. Other existing unsigned/char adapters keep their own decisions.
+
+Ported 69 declared original tests: 56 scalar get/set/read operations after release,
+12 absolute getter boundaries and the exhausted-readable-byte scenario. Five
+storage providers produce 345 new fixture cases. Ten additional provider cases
+exercise nine raw integer operations against independent byte models with five bit
+patterns at offset 15, crossing the composite split at 16, plus all 256 byte values.
+They check full wire/guard bytes, signed numeric conversion, readable/capacity
+bounds, indices/marks, failed-read state and zero final native reservations.
+All 355 cases pass against the existing runtime. Fresh pinned Java Unsafe/NIO each
+pass 355 cases, running all 69 original bodies and releasedBuffer helper verbatim;
+unsigned byte results are explicitly normalized to the CLR representation.
+Java uses default pooled maxOrder=9, CLR supported test maxOrder=1; pool geometry
+and performance are not compared.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 11267/11267 without failures/skips; 51 existing Common warnings and zero
+Buffer/test warnings. Validation uses isolated committed Common, preserving the
+unrelated ByteOrder.cs edit (CS8956). ByteBuf now has 107 reviewed/85 unreviewed
+public declarations; AbstractByteBuf has 99/50. Each has six CLR adapters.
+AbstractByteBufTest has 127 mapped/281 unreviewed declared tests. Whole source,
+fixture and provider statuses are unchanged.
+Evidence: artifacts/buffer-scalar-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4708,9 +4745,9 @@ members, fields, provider details and callers still require separate review.
 ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-method
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
-scalar composition, directional search, primitive reservation and view factory families reviewed.
-ByteBuf has 78 decided/114 unreviewed declarations; AbstractByteBuf has 70/79,
-including two CLR char adapters per source. Other 32
+scalar composition, directional search, primitive reservation, view factory and raw
+integer families reviewed. ByteBuf has 107 decided/85 unreviewed declarations;
+AbstractByteBuf has 99/50, including six CLR adapters per source. Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 

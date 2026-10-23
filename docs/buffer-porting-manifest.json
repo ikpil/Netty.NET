@@ -94,7 +94,8 @@
         "Scalar composition unit: correct GetChar primitive dispatch and four absolute setter receiver-return contracts. Review covers 36 ByteBuf declarations and 28 directly declared AbstractByteBuf counterparts; eight LE float/double methods are declared on ByteBuf only. SetChar/WriteChar use typed CLR UTF-16 char arguments and are explicit CLR replacements; native ushort/uint and BitConverter retain unsigned domains/raw IEEE bits. New set: 864 heap/native cases over 36 operations, six patterns and primitive success/failure (72 failed/792 passed before; all pass after), including NaN payloads, signed zero, infinity, exact BE/LE return rules, metadata and ownership. Fresh pinned Java Unsafe/NIO each pass the same 864 cases. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10431/10431, no failures/skips; 51 existing Common warnings and no Buffer/test warnings. Original comments retained; no source/fixture status promotion. Validation uses isolated committed HEAD Common plus exact Buffer changes, preserving the working ByteOrder.cs namespace edit (CS8956). docs/buffer-porting.md#scalar-composition-and-clr-bit-representation; artifacts/buffer-scalar-composition-validation (ignored).",
         "Search storage/fixture unit: segmented IndexOf now reads bounded storage directly instead of invoking an independent public GetByte override, matching AbstractByteBuf/ByteBufUtil firstIndexOf/lastIndexOf low-level reads. 105 new CLR cases: five original declared search tests on heap/native/mixed composite (15), 72 modeled direction/needle/topology/optimized-view cases and 18 BytesBefore-to-IndexOf dispatch cases. Before 24 failed/81 passed, after 105/105. Fresh byte-checked pinned Java Unsafe/NIO each pass the same 105 cases; the five Java fixture bodies are executed verbatim. net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10665/10665, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves the unrelated ByteOrder.cs edit (CS8956). Four public API decisions and five declared-test mappings added; whole sources/fixture remain partial. docs/buffer-porting.md#directional-search-storage-and-original-fixtures; artifacts/buffer-search-kernel-validation (ignored).",
         "Primitive reservation unit: nine base integer writes now call private EnsureWritableCore, representing final AbstractByteBuf.ensureWritable0, instead of an independent virtual public EnsureWritable override. Explicit EnsureWritable remains virtual; bulk/zero/channel/text paths retain their own dispatch contracts. 132 new heap/native cases: 108 primitive fit/grow/max-capacity and accepting/rejecting override probes, 12 explicit public-hook probes, and six original declared fixture methods represented by 12 provider/force cases. Before 108 failed/24 passed, after 132/132. Fresh byte-checked pinned Java Unsafe/NIO each pass the same 132, executing all six original fixture bodies and three helpers verbatim. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10797/10797, no failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves the unrelated ByteOrder.cs edit (CS8956). Eleven public decisions and six original test mappings added; whole source/fixture remain partial. docs/buffer-porting.md#primitive-write-reservation-and-public-growth-hooks; artifacts/buffer-writable-kernel-validation (ignored).",
-        "View factory original-fixture unit: 23 previously unreviewed declared AbstractByteBufTest methods are ported across heap, native, mixed composite, pooled heap and pooled native providers (115 new cases). All 115 pass against the existing CLR runtime; no production source change was needed. Includes eight nested slice bounds combinations, two readable-slice bounds tests, six factories after release, shared slice release, initial slice indices, duplicate-of-slice capacities, retained readable windows before/after read, and 4096-byte sequential slicing in 128-byte blocks. Fresh byte-checked pinned Java Unsafe/NIO each execute all 23 original test bodies plus five helpers verbatim and pass 115 cases. JVM pool uses default maxOrder=9 for its run-size assertions; CLR uses supported small test chunks (maxOrder=1); pool geometry/performance is not compared. CLR uses deterministic per-runtime random streams, managed expected byte arrays and explicit BE/LE accessors instead of mutable byte-order facades. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Native reservations return to zero after root/pool cleanup. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956). Eight public API decisions and 23 original declared-test mappings added; whole sources/fixture/providers remain partial. docs/buffer-porting.md#view-factory-bounds-and-original-lifetime-fixtures; artifacts/buffer-view-factory-source-validation (ignored)."
+        "View factory original-fixture unit: 23 previously unreviewed declared AbstractByteBufTest methods are ported across heap, native, mixed composite, pooled heap and pooled native providers (115 new cases). All 115 pass against the existing CLR runtime; no production source change was needed. Includes eight nested slice bounds combinations, two readable-slice bounds tests, six factories after release, shared slice release, initial slice indices, duplicate-of-slice capacities, retained readable windows before/after read, and 4096-byte sequential slicing in 128-byte blocks. Fresh byte-checked pinned Java Unsafe/NIO each execute all 23 original test bodies plus five helpers verbatim and pass 115 cases. JVM pool uses default maxOrder=9 for its run-size assertions; CLR uses supported small test chunks (maxOrder=1); pool geometry/performance is not compared. CLR uses deterministic per-runtime random streams, managed expected byte arrays and explicit BE/LE accessors instead of mutable byte-order facades. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Native reservations return to zero after root/pool cleanup. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956). Eight public API decisions and 23 original declared-test mappings added; whole sources/fixture/providers remain partial. docs/buffer-porting.md#view-factory-bounds-and-original-lifetime-fixtures; artifacts/buffer-view-factory-source-validation (ignored).",
+        "Raw scalar source/fixture unit: reviewed 29 base raw integer get/set/read declarations, including explicit CLR adapters for Java signed/unsigned byte APIs. GetByte/ReadByte return unsigned CLR byte; use unchecked((sbyte)value) for a signed Java-byte numeric domain rather than duplicate unsigned aliases. Both omitted original unsigned-byte API comments are now retained beside these methods; executable runtime tokens are unchanged. Ported 69 original declared fixture methods (56 scalar get/set/read-after-release, 12 absolute getter boundaries, one exhausted ReadByte) across heap/native/mixed composite/pooled heap/pooled native (345 cases). Ten additional provider cases check nine raw integer operations with five bit patterns at offset 15 across a composite split at 16, full wire/prefix/cursor/mark checks, insufficient readable widths and all 256 byte values. All 355 pass against existing runtime. Fresh byte-checked pinned Java Unsafe/NIO each execute 69 original test bodies plus releasedBuffer helper verbatim and pass 355 cases, with explicit unsigned-byte representation normalization. Java pool uses default maxOrder=9; supported CLR test pool uses maxOrder=1; geometry/performance is not compared. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11267/11267 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956); final native reservations zero. Whole source/fixture/provider statuses remain partial. docs/buffer-porting.md#raw-integer-access-and-clr-octets; artifacts/buffer-scalar-source-validation (ignored)."
       ],
       "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining utilities still pending. Composite consumer adds bounded segment hooks, stack crossing-word access, borrowed ReadOnlySequence, and cross-component bulk/overlap/text/search/view behavior. Contiguous memory borrowing never silently copies; unsupported multi-segment Memory ranges are actual CLR representation limits. Standalone ReadBytes now follows creator allocator Buffer policy; see decoder storage/read update below. Synchronous stream transfer update: inherited GetBytes/SetBytes/ReadBytes/WriteBytes Stream overloads are covered on this backing kind. One bounded input read, EOF=0, validated empty requests, pooled staging, borrowed ownership and success-only index publication follow the explicit CLR policy in docs/buffer-porting.md#synchronous-stream-transfers. Remaining channel/positioned-file and async transfer contracts stay pending. Async stream transfer update: GetBytesAsync/SetBytesAsync/ReadBytesAsync/WriteBytesAsync are CLR counterparts of the four synchronous stream contracts, using ValueTask, CancellationToken and the stream Memory-based asynchronous operations directly. Managed pooled staging survives suspension; no native memory is borrowed across await. One bounded input read, EOF=0, borrowed lifetime and success-only index publication follow the synchronous CLR policy. Pre-cancellation follows argument/permission validation and prevents growth/I/O; started growth is not rolled back. A valid stream result commits despite late token cancellation; a thrown cancellation or failure leaves active indices unchanged and does not publish staged input. Callers must keep streams/buffers alive and exclude concurrent mutation and external active-cursor changes through completion. Full cancellation, failure, alias and partial composite-commit limits: docs/buffer-porting.md#asynchronous-stream-transfers. Channel/positioned-file APIs and broader original source remain pending. Positioned file update: inherited SafeFileHandle/RandomAccess sync and async transfers are reviewed on this backing kind. Position preservation, count/index publication and explicit CLR EOF/closed-handle/complete-write/staging policies are detailed in docs/buffer-porting.md#positioned-file-transfers. Readonly inputs reject setters. Other channel consumers and whole source remain incomplete. Content comparison/hash update: inherited readable-content Equals/GetHashCode/CompareTo delegate to ByteBufUtil through CLR IEquatable<ByteBuf>/IComparable<ByteBuf>. Original implementation uses the same delegation. Full null/lifetime/hash/order policy and partial scope: docs/buffer-porting.md#content-comparison-and-hashing. Allocator policy update: creator IByteBufAllocator is retained through owners, derived/read-only/unreleasable views and allocator-specific empty buffers. Both writable-growth paths consult its capacity hook; heap/native copies and composite padding/consolidation/copies use its factories. Legacy explicit native reservation domains remain in effect for subsequent copies and composite allocations. Existing Unpooled heap/native defaults are preserved. Policy and limits: docs/buffer-porting.md#allocator-policy-foundation. Relative transfer update: default/length GetBytes append to destination WriterIndex without growing; default/length SetBytes consume source ReaderIndex without changing destination indices; default ReadBytes fills destination WritableBytes and moves both cursors; explicit-destination ReadBytes moves only source ReaderIndex; default WriteBytes consumes all readable source bytes; explicit-source WriteBytes grows destination and moves only its WriterIndex. All return the receiver, keep marks/reference counts, and delegate to the existing bounded bulk kernel. Explicit source write grows before source-range validation, as in Java. Failed copies publish no cursor changes but may leave increased capacity or partially changed composite bytes. Existing CLR snapshot/memmove overlap policy applies; Java can repeat overwritten bytes across composite self-copy boundaries. Default reads check destination lifetime before computing WritableBytes to retain IllegalReferenceCountException after native/heap storage is cleared on final release; Java reports bounds/argument errors in two such probes. Null arguments use early ArgumentNullException. Byte[] ranges remain native Span slices rather than duplicated Java array overloads. Policy: docs/buffer-porting.md#relative-buffer-transfers. Decoder storage/read update: ReadBytes(length) now uses the creator allocator Buffer factory instead of forcing a raw heap owner. It advances source ReaderIndex only after successful copy and initializes only the result readable range even if the allocator reserves extra capacity. Failed copies retain CLR result cleanup; pinned Java readBytes lacks that cleanup. Zero/invalid reads do not allocate. Policy: docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads. Pooled heap consumer: both EnsureWritable overloads now use MaxFastWritableBytes before the creator allocator growth hook, preserving existing normalized reservations as pinned Java requires. Unpooled defaults remain WritableBytes. Automatic leak integration: the combined ByteBuf type captures one factory-created ResourceLeakDetector<ByteBuf> at explicit CLR type initialization (including an empty sentinel), as the shared skeletal detector. Configure the factory before buffers/allocators; later replacement does not change it. All wrappers and supported allocator factories share this detector. Remaining source surfaces stay partial. Diagnostic update: The combined CLR kernel implements the original metadata/freed/unwrapped diagnostic without content reads or freed capacity/unwrap access. Whole source/fixture remains partial. Size-query update: CanRead(int) preserves original readable-index comparison, including nonpositive counts without validation; shared EmptyByteBuf always returns false. Transparent ordinary/composite/unreleasable facades forward virtual queries without leak recording. CanWrite(int) no longer rejects negative counts before its original comparison; read-only and empty-sentinel results remain false. Current CLR fixed-derived read-only policy is retained. Whole source remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Scalar-dispatch update: public absolute parent delegates are distinct from bounded relative/slice kernels. Owned pooled duplicates preserve the pinned LongLE relative public-setter path; floating/boolean/char/signed-medium relative APIs preserve their integer composition and upstream receiver-return rules. CLR byte values are unsigned wire octets; existing Span/memory hooks replace JVM per-primitive protected kernel topology, including safe-direct medium byte callbacks. docs/buffer-porting.md#derived-scalar-dispatch.",
       "comments": {
@@ -108,10 +109,10 @@
         "meaning": "Inventory of all declared public instance signatures, with only explicitly reviewed methods decided. Unreviewed signatures are not confirmed gaps. Java property-like methods and language adapters require individual decisions. No full source/fixture/provider completion is inferred.",
         "summary": {
           "declared": 149,
-          "clr-replacement": 2,
-          "implemented": 68,
+          "clr-replacement": 6,
+          "implemented": 93,
           "implementation-gap": 0,
-          "unreviewed": 79
+          "unreviewed": 50
         },
         "groups": {
           "discard-dispatch": {
@@ -238,6 +239,29 @@
             ],
             "validation": "115 new original-fixture cases pass against unchanged runtime across five storage providers. Fresh pinned Java Unsafe/NIO each pass 115 original cases (23 verbatim test bodies plus five helpers). Independent expected readable bytes, BE/LE aliases, reference counts, marks, failed-range non-retention and zero native reservations after pool cleanup supplement original assertions. Full Debug/Release/checked Release each pass 10912 without failures/skips.",
             "reviewResult": "No confirmed runtime gap found in this unit. Eight previously unreviewed base factory declarations now have explicit implementation/test decisions; remaining inherited/provider contracts and original fixture methods stay separate."
+          },
+          "raw-integer-access": {
+            "adaptation": "Base absolute raw integer getters/setters use capacity-bounded memory kernels and do not move indices. Relative raw integer readers validate readable width, use storage kernels independently of public absolute getters and commit the reader after successful reads. ReadWord/SetWord and bounded spans/BinaryPrimitives replace JVM _get/_set accessors, including component-crossing words, explicit BE/LE, low-bit truncation and 24-bit unsigned values. Existing CLR range/lifetime/read-only guards and failure cursor policy remain. Provider-specific overrides/low-level implementation and performance remain separate review work; this group reviews the shared public contracts.",
+            "evidence": [
+              "src/Netty.NET.Buffer/ByteBuf.cs",
+              "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufWireContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/HeapByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufScalarCompositionTest.cs",
+              "docs/buffer-porting.md"
+            ],
+            "validation": "355 new cases pass against unchanged executable runtime: 345 original fixture/provider cases and ten independent wire/octet-model provider cases. Fresh pinned Java Unsafe/NIO each pass 355, including 69 verbatim original tests plus one helper. Original invalid endpoints/released-storage exceptions map to CLR argument/reference exceptions; both builds and checked overflow/leak validation pass all 11267 tests.",
+            "reviewResult": "No new runtime algorithm gap found. Recorded shared scalar contracts; original fixture/provider/implementation completion is not inferred."
+          },
+          "clr-octets": {
+            "adaptation": "Java byte is signed, and getUnsignedByte/readUnsignedByte widen octets to short. CLR byte already covers 0..255, so GetByte/ReadByte represent the wire octet and both unsigned Java operations without redundant API aliases. A signed numeric Java-byte interpretation requires unchecked((sbyte)value), including under checked builds; return-type widening to int otherwise keeps CLR unsigned semantics. The two original unsigned-operation comments are retained beside the corresponding CLR methods. Existing boolean/unsigned-short/unsigned-int/char adapters remain separately reviewed.",
+            "evidence": [
+              "src/Netty.NET.Buffer/ByteBuf.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "docs/buffer-porting.md"
+            ],
+            "validation": "All 256 octets verify CLR unsigned value, signed reinterpretation and relative boolean/reader behavior across five providers. Original signed/unsigned getter/reader released-storage tests map separately to the shared CLR methods. Fresh Java profiles validate original signed and unsigned domains explicitly; no new duplicate unsigned-byte methods are introduced."
           }
         },
         "methods": [
@@ -1010,6 +1034,325 @@
                 "member": "RetainedSlice(int,int)"
               }
             ]
+          },
+          {
+            "upstream": "getByte(int)",
+            "state": "clr-replacement",
+            "group": "clr-octets",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetByte(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedByte(int)",
+            "state": "clr-replacement",
+            "group": "clr-octets",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetByte(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readByte()",
+            "state": "clr-replacement",
+            "group": "clr-octets",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadByte()"
+              }
+            ]
+          },
+          {
+            "upstream": "readUnsignedByte()",
+            "state": "clr-replacement",
+            "group": "clr-octets",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadByte()"
+              }
+            ]
+          },
+          {
+            "upstream": "getShort(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetShort(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readShort()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadShort()"
+              }
+            ]
+          },
+          {
+            "upstream": "getShortLE(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetShortLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readShortLE()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadShortLE()"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMedium(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetUnsignedMedium(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readUnsignedMedium()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadUnsignedMedium()"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMediumLE(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetUnsignedMediumLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readUnsignedMediumLE()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadUnsignedMediumLE()"
+              }
+            ]
+          },
+          {
+            "upstream": "getInt(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetInt(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readInt()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadInt()"
+              }
+            ]
+          },
+          {
+            "upstream": "getIntLE(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetIntLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readIntLE()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadIntLE()"
+              }
+            ]
+          },
+          {
+            "upstream": "getLong(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetLong(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readLong()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadLong()"
+              }
+            ]
+          },
+          {
+            "upstream": "getLongLE(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetLongLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readLongLE()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadLongLE()"
+              }
+            ]
+          },
+          {
+            "upstream": "setByte(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetByte(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShort(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetShort(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShortLE(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetShortLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMedium(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetMedium(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMediumLE(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetMediumLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setInt(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetInt(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setIntLE(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetIntLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLong(int,long)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetLong(int,long)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLongLE(int,long)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetLongLE(int,long)"
+              }
+            ]
           }
         ],
         "unreviewedMethods": [
@@ -1035,41 +1378,12 @@
           "resetWriterIndex()",
           "discardReadBytes()",
           "order(ByteOrder)",
-          "getByte(int)",
-          "getUnsignedByte(int)",
-          "getShort(int)",
-          "getShortLE(int)",
-          "getUnsignedMedium(int)",
-          "getUnsignedMediumLE(int)",
-          "getInt(int)",
-          "getIntLE(int)",
-          "getLong(int)",
-          "getLongLE(int)",
           "getBytes(int,byte[])",
           "getCharSequence(int,int,Charset)",
           "readCharSequence(int,Charset)",
           "readString(int,Charset)",
-          "setByte(int,int)",
-          "setShort(int,int)",
-          "setShortLE(int,int)",
-          "setMedium(int,int)",
-          "setMediumLE(int,int)",
-          "setInt(int,int)",
-          "setIntLE(int,int)",
-          "setLong(int,long)",
-          "setLongLE(int,long)",
           "setBytes(int,byte[])",
           "setCharSequence(int,CharSequence,Charset)",
-          "readByte()",
-          "readUnsignedByte()",
-          "readShort()",
-          "readShortLE()",
-          "readUnsignedMedium()",
-          "readUnsignedMediumLE()",
-          "readInt()",
-          "readIntLE()",
-          "readLong()",
-          "readLongLE()",
           "readBytes(byte[],int,int)",
           "readBytes(byte[])",
           "readBytes(ByteBuffer)",
@@ -1456,13 +1770,14 @@
         "Scalar composition unit: correct GetChar primitive dispatch and four absolute setter receiver-return contracts. Review covers 36 ByteBuf declarations and 28 directly declared AbstractByteBuf counterparts; eight LE float/double methods are declared on ByteBuf only. SetChar/WriteChar use typed CLR UTF-16 char arguments and are explicit CLR replacements; native ushort/uint and BitConverter retain unsigned domains/raw IEEE bits. New set: 864 heap/native cases over 36 operations, six patterns and primitive success/failure (72 failed/792 passed before; all pass after), including NaN payloads, signed zero, infinity, exact BE/LE return rules, metadata and ownership. Fresh pinned Java Unsafe/NIO each pass the same 864 cases. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10431/10431, no failures/skips; 51 existing Common warnings and no Buffer/test warnings. Original comments retained; no source/fixture status promotion. Validation uses isolated committed HEAD Common plus exact Buffer changes, preserving the working ByteOrder.cs namespace edit (CS8956). docs/buffer-porting.md#scalar-composition-and-clr-bit-representation; artifacts/buffer-scalar-composition-validation (ignored).",
         "Search storage/fixture unit: segmented IndexOf now reads bounded storage directly instead of invoking an independent public GetByte override, matching AbstractByteBuf/ByteBufUtil firstIndexOf/lastIndexOf low-level reads. 105 new CLR cases: five original declared search tests on heap/native/mixed composite (15), 72 modeled direction/needle/topology/optimized-view cases and 18 BytesBefore-to-IndexOf dispatch cases. Before 24 failed/81 passed, after 105/105. Fresh byte-checked pinned Java Unsafe/NIO each pass the same 105 cases; the five Java fixture bodies are executed verbatim. net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10665/10665, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves the unrelated ByteOrder.cs edit (CS8956). Four public API decisions and five declared-test mappings added; whole sources/fixture remain partial. docs/buffer-porting.md#directional-search-storage-and-original-fixtures; artifacts/buffer-search-kernel-validation (ignored).",
         "Primitive reservation unit: nine base integer writes now call private EnsureWritableCore, representing final AbstractByteBuf.ensureWritable0, instead of an independent virtual public EnsureWritable override. Explicit EnsureWritable remains virtual; bulk/zero/channel/text paths retain their own dispatch contracts. 132 new heap/native cases: 108 primitive fit/grow/max-capacity and accepting/rejecting override probes, 12 explicit public-hook probes, and six original declared fixture methods represented by 12 provider/force cases. Before 108 failed/24 passed, after 132/132. Fresh byte-checked pinned Java Unsafe/NIO each pass the same 132, executing all six original fixture bodies and three helpers verbatim. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10797/10797, no failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves the unrelated ByteOrder.cs edit (CS8956). Eleven public decisions and six original test mappings added; whole source/fixture remain partial. docs/buffer-porting.md#primitive-write-reservation-and-public-growth-hooks; artifacts/buffer-writable-kernel-validation (ignored).",
-        "View factory original-fixture unit: 23 previously unreviewed declared AbstractByteBufTest methods are ported across heap, native, mixed composite, pooled heap and pooled native providers (115 new cases). All 115 pass against the existing CLR runtime; no production source change was needed. Includes eight nested slice bounds combinations, two readable-slice bounds tests, six factories after release, shared slice release, initial slice indices, duplicate-of-slice capacities, retained readable windows before/after read, and 4096-byte sequential slicing in 128-byte blocks. Fresh byte-checked pinned Java Unsafe/NIO each execute all 23 original test bodies plus five helpers verbatim and pass 115 cases. JVM pool uses default maxOrder=9 for its run-size assertions; CLR uses supported small test chunks (maxOrder=1); pool geometry/performance is not compared. CLR uses deterministic per-runtime random streams, managed expected byte arrays and explicit BE/LE accessors instead of mutable byte-order facades. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Native reservations return to zero after root/pool cleanup. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956). Eight public API decisions and 23 original declared-test mappings added; whole sources/fixture/providers remain partial. docs/buffer-porting.md#view-factory-bounds-and-original-lifetime-fixtures; artifacts/buffer-view-factory-source-validation (ignored)."
+        "View factory original-fixture unit: 23 previously unreviewed declared AbstractByteBufTest methods are ported across heap, native, mixed composite, pooled heap and pooled native providers (115 new cases). All 115 pass against the existing CLR runtime; no production source change was needed. Includes eight nested slice bounds combinations, two readable-slice bounds tests, six factories after release, shared slice release, initial slice indices, duplicate-of-slice capacities, retained readable windows before/after read, and 4096-byte sequential slicing in 128-byte blocks. Fresh byte-checked pinned Java Unsafe/NIO each execute all 23 original test bodies plus five helpers verbatim and pass 115 cases. JVM pool uses default maxOrder=9 for its run-size assertions; CLR uses supported small test chunks (maxOrder=1); pool geometry/performance is not compared. CLR uses deterministic per-runtime random streams, managed expected byte arrays and explicit BE/LE accessors instead of mutable byte-order facades. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Native reservations return to zero after root/pool cleanup. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956). Eight public API decisions and 23 original declared-test mappings added; whole sources/fixture/providers remain partial. docs/buffer-porting.md#view-factory-bounds-and-original-lifetime-fixtures; artifacts/buffer-view-factory-source-validation (ignored).",
+        "Raw scalar source/fixture unit: reviewed 29 base raw integer get/set/read declarations, including explicit CLR adapters for Java signed/unsigned byte APIs. GetByte/ReadByte return unsigned CLR byte; use unchecked((sbyte)value) for a signed Java-byte numeric domain rather than duplicate unsigned aliases. Both omitted original unsigned-byte API comments are now retained beside these methods; executable runtime tokens are unchanged. Ported 69 original declared fixture methods (56 scalar get/set/read-after-release, 12 absolute getter boundaries, one exhausted ReadByte) across heap/native/mixed composite/pooled heap/pooled native (345 cases). Ten additional provider cases check nine raw integer operations with five bit patterns at offset 15 across a composite split at 16, full wire/prefix/cursor/mark checks, insufficient readable widths and all 256 byte values. All 355 pass against existing runtime. Fresh byte-checked pinned Java Unsafe/NIO each execute 69 original test bodies plus releasedBuffer helper verbatim and pass 355 cases, with explicit unsigned-byte representation normalization. Java pool uses default maxOrder=9; supported CLR test pool uses maxOrder=1; geometry/performance is not compared. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11267/11267 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956); final native reservations zero. Whole source/fixture/provider statuses remain partial. docs/buffer-porting.md#raw-integer-access-and-clr-octets; artifacts/buffer-scalar-source-validation (ignored)."
       ],
       "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining utilities still pending. Composite consumer adds bounded segment hooks, stack crossing-word access, borrowed ReadOnlySequence, and cross-component bulk/overlap/text/search/view behavior. Contiguous memory borrowing never silently copies; unsupported multi-segment Memory ranges are actual CLR representation limits. Standalone ReadBytes now follows creator allocator Buffer policy; see decoder storage/read update below. Unreleasable consumer requires transparent shared indices and marks: private ref-return access routes to the captured index owner without an extra state allocation. Ordinary owners/slices/duplicates still own independent state. Slice/retained/read-slice/duplicate conveniences and AsReadOnly are virtual so lifetime-suppressing wrappers can preserve the original derived-view contract. Full existing Buffer suite is rerun for this base change. Synchronous stream transfer update: inherited GetBytes/SetBytes/ReadBytes/WriteBytes overloads accept a borrowed System.IO.Stream. Absolute operations preserve indices, relative output advances reader only after complete success, and relative input pre-reserves the requested length then advances writer by the actual returned count. All storage kinds perform one bounded Stream.Read, returning short reads immediately and EOF as 0; this deliberately replaces the Java CompositeByteBuf fill-until-EOF loop and prevents retrying CLR EOF forever. Zero lengths validate buffer/range/permission/null without calling the stream. Pooled staging avoids native-span lifetime across callbacks, snapshots all output before a single Stream.Write, and prevents a throwing input from publishing its temporary bytes; unlike Java heap reads, input I/O failure leaves target contents unchanged. A later composite storage-commit failure can still modify earlier writable components, leaving writer unchanged, and source input can already be consumed. Streams and buffer references remain borrowed. Input staging rechecks destination permission/range after callbacks. Temporary memory is proportional to requested length plus pool bucket rounding, and copying is deliberate; no zero-copy/performance claim. Concurrent changes, release, and external mutation of the active cursor during I/O remain caller exclusions; same-buffer append with the supplied stream adapters is tested. Channel/positioned-file and async ByteBuf transfer APIs remain pending. Async stream transfer update: GetBytesAsync/SetBytesAsync/ReadBytesAsync/WriteBytesAsync are CLR counterparts of the four synchronous stream contracts, using ValueTask, CancellationToken and the stream Memory-based asynchronous operations directly. Managed pooled staging survives suspension; no native memory is borrowed across await. One bounded input read, EOF=0, borrowed lifetime and success-only index publication follow the synchronous CLR policy. Pre-cancellation follows argument/permission validation and prevents growth/I/O; started growth is not rolled back. A valid stream result commits despite late token cancellation; a thrown cancellation or failure leaves active indices unchanged and does not publish staged input. Callers must keep streams/buffers alive and exclude concurrent mutation and external active-cursor changes through completion. Full cancellation, failure, alias and partial composite-commit limits: docs/buffer-porting.md#asynchronous-stream-transfers. Channel/positioned-file APIs and broader original source remain pending. Positioned file update: SafeFileHandle plus System.IO.RandomAccess map all four FileChannel absolute/relative overloads without changing file position; four ValueTask/CancellationToken forms are CLR async extensions. Successful CLR writes complete the requested range and return length (Java permits partial write counts); one bounded read returns actual bytes with EOF=0 across all backing kinds. Closed handles throw rather than Java input -1; invalid/closed/null handles, negative ranges and signed file-end overflow are validated even for zero requests, before growth/I/O. Absolute operations preserve indices; relative indices publish only after success. Output uses a pooled snapshot; input commits managed staging after reading, with async destination revalidation and no native borrow across await. Read failures do not publish staging, but later composite commit failures can change earlier components; failed output may partially change the file while leaving reader unchanged. Input reserves requested capacity before actual I/O, preserving growth on EOF/error; pre-cancellation follows validation and prevents growth/I/O. Buffer/handle ownership is borrowed through completion, without implicit Retain/disposal; exclude concurrent buffer mutation/release and external active-cursor changes. Full semantics, limitations and evidence: docs/buffer-porting.md#positioned-file-transfers. Gathering/scattering channel consumer mapping and broader APIs remain pending. Content comparison/hash update: original equality/hash/comparison API comments are retained in ByteBuf.Comparison.cs. Native IEquatable<ByteBuf>/IComparable<ByteBuf>, Equals/GetHashCode and default sorting replace Java Object/Comparable contracts; == stays reference identity. CompareTo(null)=1 follows CLR sorting. Readable content determines values; hash keys require stable bytes/indices/lifetime. Full policy: docs/buffer-porting.md#content-comparison-and-hashing. Allocator policy update: creator IByteBufAllocator is retained through owners, derived/read-only/unreleasable views and allocator-specific empty buffers. Both writable-growth paths consult its capacity hook; heap/native copies and composite padding/consolidation/copies use its factories. Legacy explicit native reservation domains remain in effect for subsequent copies and composite allocations. Existing Unpooled heap/native defaults are preserved. Policy and limits: docs/buffer-porting.md#allocator-policy-foundation. ByteBufConvertible integration: all buffer kinds implement IByteBufConvertible through inherited AsByteBuf, which returns this without changing references or requiring accessible storage. Original conversion operation comment retained. Buffer-holder consumers inherit existing buffer content/hash/copy/lifetime policies; whole source stays partial. Policy: docs/buffer-porting.md#buffer-holders-and-conversion. Relative transfer update: default/length GetBytes append to destination WriterIndex without growing; default/length SetBytes consume source ReaderIndex without changing destination indices; default ReadBytes fills destination WritableBytes and moves both cursors; explicit-destination ReadBytes moves only source ReaderIndex; default WriteBytes consumes all readable source bytes; explicit-source WriteBytes grows destination and moves only its WriterIndex. All return the receiver, keep marks/reference counts, and delegate to the existing bounded bulk kernel. Explicit source write grows before source-range validation, as in Java. Failed copies publish no cursor changes but may leave increased capacity or partially changed composite bytes. Existing CLR snapshot/memmove overlap policy applies; Java can repeat overwritten bytes across composite self-copy boundaries. Default reads check destination lifetime before computing WritableBytes to retain IllegalReferenceCountException after native/heap storage is cleared on final release; Java reports bounds/argument errors in two such probes. Null arguments use early ArgumentNullException. Byte[] ranges remain native Span slices rather than duplicated Java array overloads. Policy: docs/buffer-porting.md#relative-buffer-transfers. Decoder storage/read update: IsContiguous is a conservative storage-topology property, false by default; MaxFastWritableBytes defaults to WritableBytes and is a capacity hint rather than write permission. Both original API comments are preserved. ReadBytes(length) now allocates through Allocator.Buffer(length, MaxCapacity), preserving creator policy, metrics and independent ownership; zero reads keep the shared empty sentinel. Failed copies release the new result before rethrowing, retaining the existing CLR cleanup beyond the pinned Java implementation. Policy: docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads. Advanced leak consumer: existing data/view/copy/transfer/text/search/memory APIs are virtual so the internal wrapper records the public operation once then delegates directly; ordinary implementations, shared index owner and storage kernels are unchanged. Async signatures remain native virtual ValueTask operations. Policy: docs/buffer-porting.md#advanced-leak-aware-buffer-access-records. Typed Equals/CompareTo are also virtual for WrappedByteBuf direct comparison forwarding; existing CLR identity/null policies are preserved. Diagnostic update: The original object-string API comment and skeletal metadata/freed/unwrapped representation are implemented in the combined CLR kernel, with invariant numbers and CLR simple class names. Whole source/fixture remains partial. Size-query update: CanRead(int) preserves original readable-index comparison, including nonpositive counts without validation; shared EmptyByteBuf always returns false. Transparent ordinary/composite/unreleasable facades forward virtual queries without leak recording. CanWrite(int) no longer rejects negative counts before its original comparison; read-only and empty-sentinel results remain false. Current CLR fixed-derived read-only policy is retained. Whole source remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Scalar-dispatch update: public absolute parent delegates are distinct from bounded relative/slice kernels. Owned pooled duplicates preserve the pinned LongLE relative public-setter path; floating/boolean/char/signed-medium relative APIs preserve their integer composition and upstream receiver-return rules. CLR byte values are unsigned wire octets; existing Span/memory hooks replace JVM per-primitive protected kernel topology, including safe-direct medium byte callbacks. docs/buffer-porting.md#derived-scalar-dispatch.",
       "comments": {
         "upstreamCount": 191,
-        "preservedCount": 167,
-        "missingCount": 24,
+        "preservedCount": 169,
+        "missingCount": 22,
         "coverage": "partial source; remaining operations not ported"
       },
       "publicApiReview": {
@@ -1470,10 +1785,10 @@
         "meaning": "Inventory of all declared public instance signatures, with only explicitly reviewed methods decided. Unreviewed signatures are not confirmed gaps. Java property-like methods and language adapters require individual decisions. No full source/fixture/provider completion is inferred.",
         "summary": {
           "declared": 192,
-          "clr-replacement": 2,
-          "implemented": 76,
+          "clr-replacement": 6,
+          "implemented": 101,
           "implementation-gap": 0,
-          "unreviewed": 114
+          "unreviewed": 85
         },
         "groups": {
           "discard-dispatch": {
@@ -1600,6 +1915,29 @@
             ],
             "validation": "115 new original-fixture cases pass against unchanged runtime across five storage providers. Fresh pinned Java Unsafe/NIO each pass 115 original cases (23 verbatim test bodies plus five helpers). Independent expected readable bytes, BE/LE aliases, reference counts, marks, failed-range non-retention and zero native reservations after pool cleanup supplement original assertions. Full Debug/Release/checked Release each pass 10912 without failures/skips.",
             "reviewResult": "No confirmed runtime gap found in this unit. Eight previously unreviewed base factory declarations now have explicit implementation/test decisions; remaining inherited/provider contracts and original fixture methods stay separate."
+          },
+          "raw-integer-access": {
+            "adaptation": "Base absolute raw integer getters/setters use capacity-bounded memory kernels and do not move indices. Relative raw integer readers validate readable width, use storage kernels independently of public absolute getters and commit the reader after successful reads. ReadWord/SetWord and bounded spans/BinaryPrimitives replace JVM _get/_set accessors, including component-crossing words, explicit BE/LE, low-bit truncation and 24-bit unsigned values. Existing CLR range/lifetime/read-only guards and failure cursor policy remain. Provider-specific overrides/low-level implementation and performance remain separate review work; this group reviews the shared public contracts.",
+            "evidence": [
+              "src/Netty.NET.Buffer/ByteBuf.cs",
+              "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufWireContractTest.cs",
+              "test/Netty.NET.Buffer.Tests/HeapByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufScalarCompositionTest.cs",
+              "docs/buffer-porting.md"
+            ],
+            "validation": "355 new cases pass against unchanged executable runtime: 345 original fixture/provider cases and ten independent wire/octet-model provider cases. Fresh pinned Java Unsafe/NIO each pass 355, including 69 verbatim original tests plus one helper. Original invalid endpoints/released-storage exceptions map to CLR argument/reference exceptions; both builds and checked overflow/leak validation pass all 11267 tests.",
+            "reviewResult": "No new runtime algorithm gap found. Recorded shared scalar contracts; original fixture/provider/implementation completion is not inferred."
+          },
+          "clr-octets": {
+            "adaptation": "Java byte is signed, and getUnsignedByte/readUnsignedByte widen octets to short. CLR byte already covers 0..255, so GetByte/ReadByte represent the wire octet and both unsigned Java operations without redundant API aliases. A signed numeric Java-byte interpretation requires unchecked((sbyte)value), including under checked builds; return-type widening to int otherwise keeps CLR unsigned semantics. The two original unsigned-operation comments are retained beside the corresponding CLR methods. Existing boolean/unsigned-short/unsigned-int/char adapters remain separately reviewed.",
+            "evidence": [
+              "src/Netty.NET.Buffer/ByteBuf.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "docs/buffer-porting.md"
+            ],
+            "validation": "All 256 octets verify CLR unsigned value, signed reinterpretation and relative boolean/reader behavior across five providers. Original signed/unsigned getter/reader released-storage tests map separately to the shared CLR methods. Fresh Java profiles validate original signed and unsigned domains explicitly; no new duplicate unsigned-byte methods are introduced."
           }
         },
         "methods": [
@@ -2460,6 +2798,325 @@
                 "member": "RetainedSlice(int,int)"
               }
             ]
+          },
+          {
+            "upstream": "getByte(int)",
+            "state": "clr-replacement",
+            "group": "clr-octets",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetByte(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedByte(int)",
+            "state": "clr-replacement",
+            "group": "clr-octets",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetByte(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readByte()",
+            "state": "clr-replacement",
+            "group": "clr-octets",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadByte()"
+              }
+            ]
+          },
+          {
+            "upstream": "readUnsignedByte()",
+            "state": "clr-replacement",
+            "group": "clr-octets",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadByte()"
+              }
+            ]
+          },
+          {
+            "upstream": "getShort(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetShort(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readShort()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadShort()"
+              }
+            ]
+          },
+          {
+            "upstream": "getShortLE(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetShortLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readShortLE()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadShortLE()"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMedium(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetUnsignedMedium(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readUnsignedMedium()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadUnsignedMedium()"
+              }
+            ]
+          },
+          {
+            "upstream": "getUnsignedMediumLE(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetUnsignedMediumLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readUnsignedMediumLE()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadUnsignedMediumLE()"
+              }
+            ]
+          },
+          {
+            "upstream": "getInt(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetInt(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readInt()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadInt()"
+              }
+            ]
+          },
+          {
+            "upstream": "getIntLE(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetIntLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readIntLE()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadIntLE()"
+              }
+            ]
+          },
+          {
+            "upstream": "getLong(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetLong(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readLong()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadLong()"
+              }
+            ]
+          },
+          {
+            "upstream": "getLongLE(int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "GetLongLE(int)"
+              }
+            ]
+          },
+          {
+            "upstream": "readLongLE()",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "ReadLongLE()"
+              }
+            ]
+          },
+          {
+            "upstream": "setByte(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetByte(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShort(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetShort(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setShortLE(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetShortLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMedium(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetMedium(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setMediumLE(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetMediumLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setInt(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetInt(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setIntLE(int,int)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetIntLE(int,int)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLong(int,long)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetLong(int,long)"
+              }
+            ]
+          },
+          {
+            "upstream": "setLongLE(int,long)",
+            "state": "implemented",
+            "group": "raw-integer-access",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "SetLongLE(int,long)"
+              }
+            ]
           }
         ],
         "unreviewedMethods": [
@@ -2492,16 +3149,6 @@
           "markWriterIndex()",
           "resetWriterIndex()",
           "discardReadBytes()",
-          "getByte(int)",
-          "getUnsignedByte(int)",
-          "getShort(int)",
-          "getShortLE(int)",
-          "getUnsignedMedium(int)",
-          "getUnsignedMediumLE(int)",
-          "getInt(int)",
-          "getIntLE(int)",
-          "getLong(int)",
-          "getLongLE(int)",
           "getBytes(int,ByteBuf,int,int)",
           "getBytes(int,byte[])",
           "getBytes(int,byte[],int,int)",
@@ -2510,15 +3157,6 @@
           "getBytes(int,GatheringByteChannel,int)",
           "getBytes(int,FileChannel,long,int)",
           "getCharSequence(int,int,Charset)",
-          "setByte(int,int)",
-          "setShort(int,int)",
-          "setShortLE(int,int)",
-          "setMedium(int,int)",
-          "setMediumLE(int,int)",
-          "setInt(int,int)",
-          "setIntLE(int,int)",
-          "setLong(int,long)",
-          "setLongLE(int,long)",
           "setBytes(int,ByteBuf,int,int)",
           "setBytes(int,byte[])",
           "setBytes(int,byte[],int,int)",
@@ -2527,16 +3165,6 @@
           "setBytes(int,ScatteringByteChannel,int)",
           "setBytes(int,FileChannel,long,int)",
           "setCharSequence(int,CharSequence,Charset)",
-          "readByte()",
-          "readUnsignedByte()",
-          "readShort()",
-          "readShortLE()",
-          "readUnsignedMedium()",
-          "readUnsignedMediumLE()",
-          "readInt()",
-          "readIntLE()",
-          "readLong()",
-          "readLongLE()",
           "readBytes(byte[])",
           "readBytes(byte[],int,int)",
           "readBytes(ByteBuffer)",
@@ -5410,7 +6038,8 @@
         "test/Netty.NET.Buffer.Tests/RetainedSlicedByteBufTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufSearchSourceTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufWritableKernelTest.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufViewFactorySourceTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufViewFactorySourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -5430,7 +6059,8 @@
         "Declared-method audit: pinned JUnit methods are partitioned into explicit caseMappings, evidence-backed methodFindings and testMethodReview.unreviewedMethods. Name similarity is not completion evidence. Mapping scope remains the stated scenarios/providers. docs/buffer-porting.md#common-fixture-method-review; tools/Update-BufferPortingManifest.ps1 -Check; artifacts/buffer-method-review-validation (ignored).",
         "Search storage/fixture unit: segmented IndexOf now reads bounded storage directly instead of invoking an independent public GetByte override, matching AbstractByteBuf/ByteBufUtil firstIndexOf/lastIndexOf low-level reads. 105 new CLR cases: five original declared search tests on heap/native/mixed composite (15), 72 modeled direction/needle/topology/optimized-view cases and 18 BytesBefore-to-IndexOf dispatch cases. Before 24 failed/81 passed, after 105/105. Fresh byte-checked pinned Java Unsafe/NIO each pass the same 105 cases; the five Java fixture bodies are executed verbatim. net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10665/10665, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves the unrelated ByteOrder.cs edit (CS8956). Four public API decisions and five declared-test mappings added; whole sources/fixture remain partial. docs/buffer-porting.md#directional-search-storage-and-original-fixtures; artifacts/buffer-search-kernel-validation (ignored).",
         "Primitive reservation unit: nine base integer writes now call private EnsureWritableCore, representing final AbstractByteBuf.ensureWritable0, instead of an independent virtual public EnsureWritable override. Explicit EnsureWritable remains virtual; bulk/zero/channel/text paths retain their own dispatch contracts. 132 new heap/native cases: 108 primitive fit/grow/max-capacity and accepting/rejecting override probes, 12 explicit public-hook probes, and six original declared fixture methods represented by 12 provider/force cases. Before 108 failed/24 passed, after 132/132. Fresh byte-checked pinned Java Unsafe/NIO each pass the same 132, executing all six original fixture bodies and three helpers verbatim. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10797/10797, no failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves the unrelated ByteOrder.cs edit (CS8956). Eleven public decisions and six original test mappings added; whole source/fixture remain partial. docs/buffer-porting.md#primitive-write-reservation-and-public-growth-hooks; artifacts/buffer-writable-kernel-validation (ignored).",
-        "View factory original-fixture unit: 23 previously unreviewed declared AbstractByteBufTest methods are ported across heap, native, mixed composite, pooled heap and pooled native providers (115 new cases). All 115 pass against the existing CLR runtime; no production source change was needed. Includes eight nested slice bounds combinations, two readable-slice bounds tests, six factories after release, shared slice release, initial slice indices, duplicate-of-slice capacities, retained readable windows before/after read, and 4096-byte sequential slicing in 128-byte blocks. Fresh byte-checked pinned Java Unsafe/NIO each execute all 23 original test bodies plus five helpers verbatim and pass 115 cases. JVM pool uses default maxOrder=9 for its run-size assertions; CLR uses supported small test chunks (maxOrder=1); pool geometry/performance is not compared. CLR uses deterministic per-runtime random streams, managed expected byte arrays and explicit BE/LE accessors instead of mutable byte-order facades. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Native reservations return to zero after root/pool cleanup. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956). Eight public API decisions and 23 original declared-test mappings added; whole sources/fixture/providers remain partial. docs/buffer-porting.md#view-factory-bounds-and-original-lifetime-fixtures; artifacts/buffer-view-factory-source-validation (ignored)."
+        "View factory original-fixture unit: 23 previously unreviewed declared AbstractByteBufTest methods are ported across heap, native, mixed composite, pooled heap and pooled native providers (115 new cases). All 115 pass against the existing CLR runtime; no production source change was needed. Includes eight nested slice bounds combinations, two readable-slice bounds tests, six factories after release, shared slice release, initial slice indices, duplicate-of-slice capacities, retained readable windows before/after read, and 4096-byte sequential slicing in 128-byte blocks. Fresh byte-checked pinned Java Unsafe/NIO each execute all 23 original test bodies plus five helpers verbatim and pass 115 cases. JVM pool uses default maxOrder=9 for its run-size assertions; CLR uses supported small test chunks (maxOrder=1); pool geometry/performance is not compared. CLR uses deterministic per-runtime random streams, managed expected byte arrays and explicit BE/LE accessors instead of mutable byte-order facades. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Native reservations return to zero after root/pool cleanup. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956). Eight public API decisions and 23 original declared-test mappings added; whole sources/fixture/providers remain partial. docs/buffer-porting.md#view-factory-bounds-and-original-lifetime-fixtures; artifacts/buffer-view-factory-source-validation (ignored).",
+        "Raw scalar source/fixture unit: reviewed 29 base raw integer get/set/read declarations, including explicit CLR adapters for Java signed/unsigned byte APIs. GetByte/ReadByte return unsigned CLR byte; use unchecked((sbyte)value) for a signed Java-byte numeric domain rather than duplicate unsigned aliases. Both omitted original unsigned-byte API comments are now retained beside these methods; executable runtime tokens are unchanged. Ported 69 original declared fixture methods (56 scalar get/set/read-after-release, 12 absolute getter boundaries, one exhausted ReadByte) across heap/native/mixed composite/pooled heap/pooled native (345 cases). Ten additional provider cases check nine raw integer operations with five bit patterns at offset 15 across a composite split at 16, full wire/prefix/cursor/mark checks, insufficient readable widths and all 256 byte values. All 355 pass against existing runtime. Fresh byte-checked pinned Java Unsafe/NIO each execute 69 original test bodies plus releasedBuffer helper verbatim and pass 355 cases, with explicit unsigned-byte representation normalization. Java pool uses default maxOrder=9; supported CLR test pool uses maxOrder=1; geometry/performance is not compared. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11267/11267 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956); final native reservations zero. Whole source/fixture/provider statuses remain partial. docs/buffer-porting.md#raw-integer-access-and-clr-octets; artifacts/buffer-scalar-source-validation (ignored)."
       ],
       "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete.",
       "comments": {
@@ -6077,16 +6707,775 @@
             }
           ],
           "adaptation": "Original CAPACITY=4096, BLOCK_SIZE=128, reseeded random write/read sequence, reader/writer positions and live slice alias mutation. Each runtime uses its own deterministic random implementation. Managed expected arrays replace temporary wrapped byte buffers; explicit BE/LE alias assertions replace mutable byte-order facade equality. Original alias comment retained. Run on heap/native/mixed composite/pooled heap/pooled native; deterministic root/pool cleanup verifies zero native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetBooleanAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=0; original releasedBuffer().getBoolean(0) maps to CLR GetBoolean(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetByteAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=1; original releasedBuffer().getByte(0) maps to CLR GetByte(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetUnsignedByteAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=2; original releasedBuffer().getUnsignedByte(0) maps to CLR GetByte(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetShortAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=3; original releasedBuffer().getShort(0) maps to CLR GetShort(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetShortLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=4; original releasedBuffer().getShortLE(0) maps to CLR GetShortLE(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetUnsignedShortAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=5; original releasedBuffer().getUnsignedShort(0) maps to CLR GetUnsignedShort(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetUnsignedShortLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=6; original releasedBuffer().getUnsignedShortLE(0) maps to CLR GetUnsignedShortLE(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetMediumAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=7; original releasedBuffer().getMedium(0) maps to CLR GetMedium(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetMediumLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=8; original releasedBuffer().getMediumLE(0) maps to CLR GetMediumLE(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetUnsignedMediumAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=9; original releasedBuffer().getUnsignedMedium(0) maps to CLR GetUnsignedMedium(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetIntAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=10; original releasedBuffer().getInt(0) maps to CLR GetInt(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetIntLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=11; original releasedBuffer().getIntLE(0) maps to CLR GetIntLE(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetUnsignedIntAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=12; original releasedBuffer().getUnsignedInt(0) maps to CLR GetUnsignedInt(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetUnsignedIntLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=13; original releasedBuffer().getUnsignedIntLE(0) maps to CLR GetUnsignedIntLE(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetLongAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=14; original releasedBuffer().getLong(0) maps to CLR GetLong(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetLongLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=15; original releasedBuffer().getLongLE(0) maps to CLR GetLongLE(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetCharAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=16; original releasedBuffer().getChar(0) maps to CLR GetChar(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetFloatAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=17; original releasedBuffer().getFloat(0) maps to CLR GetFloat(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetFloatLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=18; original releasedBuffer().getFloatLE(0) maps to CLR GetFloatLE(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetDoubleAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=19; original releasedBuffer().getDouble(0) maps to CLR GetDouble(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testGetDoubleLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=20; original releasedBuffer().getDoubleLE(0) maps to CLR GetDoubleLE(0). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetBooleanAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=21; original releasedBuffer().setBoolean(0, true) maps to CLR SetBoolean(0, true). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetByteAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=22; original releasedBuffer().setByte(0, 1) maps to CLR SetByte(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetShortAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=23; original releasedBuffer().setShort(0, 1) maps to CLR SetShort(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetShortLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=24; original releasedBuffer().setShortLE(0, 1) maps to CLR SetShortLE(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetMediumAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=25; original releasedBuffer().setMedium(0, 1) maps to CLR SetMedium(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetMediumLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=26; original releasedBuffer().setMediumLE(0, 1) maps to CLR SetMediumLE(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetIntAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=27; original releasedBuffer().setInt(0, 1) maps to CLR SetInt(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetIntLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=28; original releasedBuffer().setIntLE(0, 1) maps to CLR SetIntLE(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetLongAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=29; original releasedBuffer().setLong(0, 1) maps to CLR SetLong(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetLongLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=30; original releasedBuffer().setLongLE(0, 1) maps to CLR SetLongLE(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetCharAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=31; original releasedBuffer().setChar(0, 1) maps to CLR SetChar(0, '\\0'). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetFloatAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=32; original releasedBuffer().setFloat(0, 1) maps to CLR SetFloat(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testSetDoubleAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=33; original releasedBuffer().setDouble(0, 1) maps to CLR SetDouble(0, 1). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadBooleanAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=34; original releasedBuffer().readBoolean() maps to CLR ReadBoolean(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadByteAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=35; original releasedBuffer().readByte() maps to CLR ReadByte(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadUnsignedByteAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=36; original releasedBuffer().readUnsignedByte() maps to CLR ReadByte(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadShortAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=37; original releasedBuffer().readShort() maps to CLR ReadShort(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadShortLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=38; original releasedBuffer().readShortLE() maps to CLR ReadShortLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadUnsignedShortAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=39; original releasedBuffer().readUnsignedShort() maps to CLR ReadUnsignedShort(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadUnsignedShortLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=40; original releasedBuffer().readUnsignedShortLE() maps to CLR ReadUnsignedShortLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadMediumAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=41; original releasedBuffer().readMedium() maps to CLR ReadMedium(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadMediumLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=42; original releasedBuffer().readMediumLE() maps to CLR ReadMediumLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadUnsignedMediumAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=43; original releasedBuffer().readUnsignedMedium() maps to CLR ReadUnsignedMedium(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadUnsignedMediumLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=44; original releasedBuffer().readUnsignedMediumLE() maps to CLR ReadUnsignedMediumLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadIntAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=45; original releasedBuffer().readInt() maps to CLR ReadInt(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadIntLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=46; original releasedBuffer().readIntLE() maps to CLR ReadIntLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadUnsignedIntAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=47; original releasedBuffer().readUnsignedInt() maps to CLR ReadUnsignedInt(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadUnsignedIntLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=48; original releasedBuffer().readUnsignedIntLE() maps to CLR ReadUnsignedIntLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadLongAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=49; original releasedBuffer().readLong() maps to CLR ReadLong(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadLongLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=50; original releasedBuffer().readLongLE() maps to CLR ReadLongLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadCharAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=51; original releasedBuffer().readChar() maps to CLR ReadChar(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadFloatAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=52; original releasedBuffer().readFloat() maps to CLR ReadFloat(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadFloatLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=53; original releasedBuffer().readFloatLE() maps to CLR ReadFloatLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadDoubleAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=54; original releasedBuffer().readDouble() maps to CLR ReadDouble(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "testReadDoubleLEAfterRelease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "OriginalScalarOperationsRejectReleasedStorage"
+            }
+          ],
+          "adaptation": "operation=55; original releasedBuffer().readDoubleLE() maps to CLR ReadDoubleLE(). Clear/release the original 8-byte root, reject the scalar operation, keep count zero. Signed/unsigned Java byte API names share the explicitly documented unsigned CLR byte operation. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getBooleanBoundaryCheck1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=0, negative=true; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getBooleanBoundaryCheck2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=0, negative=false; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getByteBoundaryCheck1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=1, negative=true; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getByteBoundaryCheck2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=1, negative=false; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getShortBoundaryCheck1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=2, negative=true; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getShortBoundaryCheck2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=2, negative=false; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getMediumBoundaryCheck1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=3, negative=true; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getMediumBoundaryCheck2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=3, negative=false; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getIntBoundaryCheck1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=4, negative=true; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getIntBoundaryCheck2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=4, negative=false; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getLongBoundaryCheck1",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=5, negative=true; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "getLongBoundaryCheck2",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "AbsoluteScalarReadsValidateNegativeAndLastIncompleteIndices"
+            }
+          ],
+          "adaptation": "operation=5, negative=false; original capacity=4096, index=-1 or capacity-width+1, preserving both indices and ownership on rejection. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
+        },
+        {
+          "upstreamMethod": "readByteThrowsIndexOutOfBoundsException",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
+              "method": "ReadByteRejectsAnEmptyReadableRangeAfterTheSingleWrittenByte"
+            }
+          ],
+          "adaptation": "Original capacity=8: WriteByte(0), successful ReadByte()==0, then reject the next ReadByte without moving the reader beyond writer=1. Run heap/native/mixed composite/pooled heap/pooled native, with deterministic root/pool cleanup and zero final native reservations. Other inherited variants remain separate fixture work."
         }
       ],
       "testMethodReview": {
         "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
         "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
         "declaredCount": 408,
-        "mappedCount": 58,
+        "mappedCount": 127,
         "testGapCount": 0,
         "implementationGapCount": 0,
-        "unreviewedCount": 350,
+        "unreviewedCount": 281,
         "unreviewedMethods": [
           "comparableInterfaceNotViolated",
           "readerIndexBoundaryCheck1",
@@ -6097,18 +7486,6 @@
           "writerIndexBoundaryCheck2",
           "writerIndexBoundaryCheck3",
           "writerIndexBoundaryCheck4",
-          "getBooleanBoundaryCheck1",
-          "getBooleanBoundaryCheck2",
-          "getByteBoundaryCheck1",
-          "getByteBoundaryCheck2",
-          "getShortBoundaryCheck1",
-          "getShortBoundaryCheck2",
-          "getMediumBoundaryCheck1",
-          "getMediumBoundaryCheck2",
-          "getIntBoundaryCheck1",
-          "getIntBoundaryCheck2",
-          "getLongBoundaryCheck1",
-          "getLongBoundaryCheck2",
           "getByteArrayBoundaryCheck1",
           "getByteArrayBoundaryCheck2",
           "getByteArrayBoundaryCheck3",
@@ -6213,32 +7590,10 @@
           "testDuplicateBytesInArrayMultipleThreads",
           "testSliceBytesInArrayMultipleThreads",
           "testSetCharSequenceMultipleThreads",
-          "readByteThrowsIndexOutOfBoundsException",
           "testNioBufferExposeOnlyRegion",
           "testLittleEndianWithExpand",
           "testDiscardReadBytesAfterRelease",
           "testDiscardSomeReadBytesAfterRelease",
-          "testGetBooleanAfterRelease",
-          "testGetByteAfterRelease",
-          "testGetUnsignedByteAfterRelease",
-          "testGetShortAfterRelease",
-          "testGetShortLEAfterRelease",
-          "testGetUnsignedShortAfterRelease",
-          "testGetUnsignedShortLEAfterRelease",
-          "testGetMediumAfterRelease",
-          "testGetMediumLEAfterRelease",
-          "testGetUnsignedMediumAfterRelease",
-          "testGetIntAfterRelease",
-          "testGetIntLEAfterRelease",
-          "testGetUnsignedIntAfterRelease",
-          "testGetUnsignedIntLEAfterRelease",
-          "testGetLongAfterRelease",
-          "testGetLongLEAfterRelease",
-          "testGetCharAfterRelease",
-          "testGetFloatAfterRelease",
-          "testGetFloatLEAfterRelease",
-          "testGetDoubleAfterRelease",
-          "testGetDoubleLEAfterRelease",
           "testGetBytesAfterRelease",
           "testGetBytesAfterRelease2",
           "testGetBytesAfterRelease3",
@@ -6247,19 +7602,6 @@
           "testGetBytesAfterRelease6",
           "testGetBytesAfterRelease7",
           "testGetBytesAfterRelease8",
-          "testSetBooleanAfterRelease",
-          "testSetByteAfterRelease",
-          "testSetShortAfterRelease",
-          "testSetShortLEAfterRelease",
-          "testSetMediumAfterRelease",
-          "testSetMediumLEAfterRelease",
-          "testSetIntAfterRelease",
-          "testSetIntLEAfterRelease",
-          "testSetLongAfterRelease",
-          "testSetLongLEAfterRelease",
-          "testSetCharAfterRelease",
-          "testSetFloatAfterRelease",
-          "testSetDoubleAfterRelease",
           "testSetBytesAfterRelease",
           "testSetBytesAfterRelease2",
           "testSetBytesAfterRelease3",
@@ -6273,28 +7615,6 @@
           "testSetBytesAfterRelease7",
           "testSetBytesAfterRelease8",
           "testSetZeroAfterRelease",
-          "testReadBooleanAfterRelease",
-          "testReadByteAfterRelease",
-          "testReadUnsignedByteAfterRelease",
-          "testReadShortAfterRelease",
-          "testReadShortLEAfterRelease",
-          "testReadUnsignedShortAfterRelease",
-          "testReadUnsignedShortLEAfterRelease",
-          "testReadMediumAfterRelease",
-          "testReadMediumLEAfterRelease",
-          "testReadUnsignedMediumAfterRelease",
-          "testReadUnsignedMediumLEAfterRelease",
-          "testReadIntAfterRelease",
-          "testReadIntLEAfterRelease",
-          "testReadUnsignedIntAfterRelease",
-          "testReadUnsignedIntLEAfterRelease",
-          "testReadLongAfterRelease",
-          "testReadLongLEAfterRelease",
-          "testReadCharAfterRelease",
-          "testReadFloatAfterRelease",
-          "testReadFloatLEAfterRelease",
-          "testReadDoubleAfterRelease",
-          "testReadDoubleLEAfterRelease",
           "testReadBytesAfterRelease",
           "testReadBytesAfterRelease2",
           "testReadBytesAfterRelease3",
