@@ -4949,6 +4949,41 @@ performance comparison. AbstractByteBufTest now has 242 mapped/166 unreviewed
 methods; production/API-review and whole fixture/provider statuses are unchanged.
 Evidence: artifacts/buffer-scalar-roundtrip-source-validation (ignored).
 
+## Copies and borrowed read-only views
+
+Ported ten original declared methods over five heap/native/mixed-composite/pooled
+providers (50 cases): four Copy boundary checks, readable Copy, Duplicate, four
+slice endian windows, two Copy-after-release methods and read-only shared release.
+The pinned testCopyAfterRelease1 also calls copy(), without indices. Preserve both
+original bodies and add five separate indexed-after-release cases, each checking
+(0,0), (0,1) and (capacity,0). Explicit BE/LE byte accessors replace mutable Java
+order identities. Original copy/share and releasedBuffer comments are retained.
+
+Thirty additional indexed cases cover root/read-only sources and three capacity
+ranges, including empty-at-end, full storage and a component-crossing range beyond
+the writer index. Copy returns a writable independent owner, reader 0/writer length,
+with the source allocator and maximum; native owners copy to native storage and
+mixed composites copy to heap in these fixtures. Mutations are independent in both
+directions. Source indices, marks and reference claims remain unchanged. Ordinary
+read-only/duplicate views borrow the shared reference counter with independent
+indices; live repeated AsReadOnly returns itself. IsReadOnly is a CLR property and
+a unified sealed view replaces the JVM read-only provider classes. Existing CLR
+AsReadOnly checks accessibility even before returning an already-read-only receiver;
+Java can return that receiver without the guard. Existing native-copy failure/lease,
+read-only, empty/immortal, wrapper and pooled-view tests remain in use.
+
+All 85 new cases pass unchanged runtime and fresh pinned Java Unsafe/NIO; ten
+original bodies plus releasedBuffer execute verbatim. Full net10.0 Debug/Release/
+rebuilt checked Release with SIMPLE sampling interval 1 each pass 12065/12065,
+no failures/skips; 51 existing Common warnings, zero Buffer/test warnings and new
+provider native reservations zero. Isolated committed Common preserves the unrelated
+ByteOrder.cs edit (CS8956). Java maxOrder=9 and supported CLR test maxOrder=1 are
+not a pool geometry/performance comparison. ByteBuf has 151 reviewed/41 unreviewed
+public declarations (41 CLR adapters), AbstractByteBuf 137/12 (36 CLR adapters),
+and AbstractByteBufTest 252 mapped/156 unreviewed methods. Whole source/fixture/
+provider statuses remain partial. Evidence: artifacts/buffer-snapshot-source-validation
+(ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4971,10 +5006,10 @@ ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-metho
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
 scalar composition, directional search, primitive reservation, view factory and raw
-integer, index-state, full-discard, capacity-property, array-span, content-comparison
-and Encoding text families reviewed. ByteBuf has 148 decided/44 unreviewed declarations
-(39 CLR adapters); AbstractByteBuf has 135/14 (34 CLR adapters). Other 32
-in-progress source files have no signature inventory yet. None is assumed missing
+integer, index-state, full-discard, capacity-property, array-span, content-comparison,
+Encoding text, indexed Copy and read-only view families reviewed. ByteBuf has 151
+decided/41 unreviewed declarations (41 CLR adapters); AbstractByteBuf has 137/12
+(36 CLR adapters). Other 32 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 
 Run python tools/Check-BufferPublicApi.py to validate the pinned public signature
