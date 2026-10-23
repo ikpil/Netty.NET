@@ -4724,6 +4724,43 @@ AbstractByteBufTest has 127 mapped/281 unreviewed declared tests. Whole source,
 fixture and provider statuses are unchanged.
 Evidence: artifacts/buffer-scalar-source-validation (ignored).
 
+## Index properties, marks and skip
+
+Reviewed 19 base metadata/index/skip declarations. Ten property-accessor targets
+record Java method pairs as actual public CLR get/set accessors. Single-index
+assignment gives up Java's fluent return; SetIndex remains the paired/chainable
+operation. CanRead/CanWrite preserve count-query semantics under distinct names
+because CLR properties already occupy IsReadable/IsWritable. Byte counts are
+metadata budgets, separate from read-only write permission. Existing nonvirtual
+index properties centralize transparent-wrapper index ownership; arbitrary Java
+cursor-rewriting overrides are not reproduced.
+
+The public API checker now recognizes explicit property-accessor targets while
+retaining all Java method inventories. Twelve focused parser cases distinguish
+expression/block/auto properties, restricted accessors, static/private/nested
+members, methods and comment/string lookalikes; eight actual ByteBuf metadata
+properties also pass. The checker validates registered targets only.
+
+Ported twelve original index-boundary/skip tests across five providers (60 cases).
+Thirty additional cases check root/duplicate/slice/read-only/retained view marks:
+Clear keeps marks; failed resets keep current indices; restore writer before reader
+after Clear; metadata changes preserve bytes/reference claims and separate view
+indices. Original skip comments are retained. All 90 pass unchanged CLR runtime;
+fresh pinned Java Unsafe/NIO each pass the same cases, executing all twelve original
+test bodies verbatim. Negative Java skip argument exceptions map to CLR argument
+range exceptions. Existing size-query tests cover nonpositive/maximum counts,
+read-only permissions and the empty sentinel. No production source change needed.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 11357/11357 without failures/skips; 51 existing Common warnings, zero
+Buffer/test warnings and zero final native reservations. Isolated committed runtime
+preserves the ByteOrder.cs edit (CS8956). ByteBuf now has 126 reviewed/66 unreviewed
+public declarations; AbstractByteBuf has 118/31. Each has 18 CLR adapters.
+AbstractByteBufTest has 139 mapped/269 unreviewed declared tests. Whole source,
+fixture/provider statuses remain partial. Java pooled maxOrder=9 and CLR supported
+test maxOrder=1 are not a pool geometry/performance comparison.
+Evidence: artifacts/buffer-index-state-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4746,8 +4783,8 @@ ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-metho
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
 scalar composition, directional search, primitive reservation, view factory and raw
-integer families reviewed. ByteBuf has 107 decided/85 unreviewed declarations;
-AbstractByteBuf has 99/50, including six CLR adapters per source. Other 32
+integer and index-state families reviewed. ByteBuf has 126 decided/66 unreviewed
+declarations; AbstractByteBuf has 118/31, including 18 CLR adapters per source. Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 

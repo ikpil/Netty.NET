@@ -69,6 +69,36 @@ def declarations(source, static=True):
     return found
 
 
+def property_accessors(source):
+    """Declared public instance properties and their publicly available accessors."""
+    masked = TOKENS.sub(lambda m: re.sub(r'[^\r\n]', ' ', m.group()), source)
+    depths, depth = [], 0
+    for char in masked:
+        depths.append(depth)
+        if char == '{': depth += 1
+        elif char == '}': depth -= 1
+    properties = {}
+    pattern = re.compile(r'(?m)^[ \t]*public[ \t]+(?!static\b)'
+                         r'(?:(?:abstract|virtual|override|sealed|new|unsafe)[ \t]+)*'
+                         r'(?!class\b|struct\b|interface\b|enum\b|record\b|event\b|delegate\b)'
+                         r'[\w.<>,\[\]?]+[ \t]+(\w+)\s*(=>|\{)')
+    accessor = re.compile(r'(?:(private|protected|internal)\s+)*(get|set)\s*(?==>|\{|;)')
+    for match in pattern.finditer(masked):
+        if depths[match.start()] != 1: continue
+        name = match[1]
+        if name in properties: raise ValueError('Duplicate property declaration: ' + name)
+        if match[2] == '=>':
+            properties[name] = {'get'}
+            continue
+        opening = match.end() - 1
+        closing = next((i for i in range(opening + 1, len(masked))
+                        if masked[i] == '}' and depths[i] == 2), None)
+        if closing is None: raise ValueError('Unclosed property: ' + name)
+        properties[name] = {a[2] for a in accessor.finditer(masked, opening + 1, closing)
+                            if depths[a.start()] == 2 and a[1] is None}
+    return properties
+
+
 def check():
     manifest = json.loads((ROOT / 'docs/buffer-porting-manifest.json').read_text(encoding='utf-8-sig'))
     upstream = ROOT.parent / 'netty'
@@ -108,7 +138,13 @@ def check():
                 path = target['path']
                 if path not in entry['implementation']: raise ValueError('Unregistered CLR target: ' + path)
                 source = (ROOT / path).read_text(encoding='utf-8-sig')
-                if target['member'] not in declarations(source, static):
+                accessor = target.get('accessor')
+                if accessor is not None:
+                    if static or accessor not in {'get', 'set'}:
+                        raise ValueError('Unsupported CLR property accessor: ' + str(accessor))
+                    if accessor not in property_accessors(source).get(target['member'], set()):
+                        raise ValueError('Missing public CLR accessor: ' + path + ':' + target['member'] + '.' + accessor)
+                elif target['member'] not in declarations(source, static):
                     raise ValueError('Missing CLR declaration: ' + path + ':' + target['member'])
         summary = {'declared': len(original), **{state: counts[state] for state in sorted(STATES)}}
         if summary != review['summary']: raise ValueError('Stale API summary: ' + entry['upstream'])
