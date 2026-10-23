@@ -4918,6 +4918,37 @@ unreviewed declarations (39 CLR adapters), AbstractByteBuf 135/14 (34 CLR adapte
 and AbstractByteBufTest 206 mapped/202 unreviewed methods. Whole statuses stay partial.
 Evidence: artifacts/buffer-text-source-validation (ignored).
 
+## Random and sequential scalar original fixtures
+
+Ported 36 original declared scalar methods over five providers (180 new cases):
+20 random-access byte/short/medium/int/long/float/double methods and 16 sequential
+integer methods, including signed/unsigned and explicit BE/LE forms. Preserve the
+4096-byte capacity, reseeding, narrowing/sign extension, eight-byte float stride,
+sequential index/state assertions and one-byte medium tail. CLR signed bytes use
+unchecked sbyte interpretation of byte. Full integer bit domains come from random
+bytes; float/double inputs remain unit-interval values. Each runtime uses its own
+PRNG stream; Java/CLR random values are not equated.
+
+Added complete-byte oracles using CLR BinaryPrimitives and Java NIO, separately
+reseeded for each runtime. Unused float gaps/medium tails are initialized to zero.
+Floating tests retain the original tolerance and add exact bit checks. The pinned
+testSequentialUnsignedShortLEAccess calls its helper with true, so it actually tests
+BE. Preserve that literal original mapping and add five genuine LE cases, each
+running the full-capacity helper plus an 18-byte literal vector across a component
+split. This closes the fixture gap without changing upstream or assuming a method
+name proves coverage. Original comments remain accounted for.
+
+All 185 new cases pass unchanged runtime and fresh pinned Java Unsafe/NIO; 36
+original bodies plus 16 helpers execute verbatim, with the actual LE helper called
+separately. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling
+interval 1 each pass 11980/11980, no failures/skips; 51 existing Common warnings,
+zero Buffer/test warnings, new provider native reservations zero. Validation uses
+isolated committed Common and preserves the unrelated ByteOrder.cs edit (CS8956).
+Java maxOrder=9 versus supported CLR test maxOrder=1 is not a pool geometry or
+performance comparison. AbstractByteBufTest now has 242 mapped/166 unreviewed
+methods; production/API-review and whole fixture/provider statuses are unchanged.
+Evidence: artifacts/buffer-scalar-roundtrip-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
