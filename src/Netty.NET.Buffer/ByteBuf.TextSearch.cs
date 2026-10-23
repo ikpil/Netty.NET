@@ -40,9 +40,22 @@ public abstract partial class ByteBuf
          * character set.  This method does not modify {@code readerIndex} or
          * {@code writerIndex} of this buffer.
          */
+    /**
+     * Gets a {@link CharSequence} with the given length at the given index.
+     *
+     * @param length the length to read
+     * @param charset that should be used
+     * @return the sequence
+     * @throws IndexOutOfBoundsException
+     *         if {@code length} is greater than {@code this.readableBytes}
+     */
+    // CLR: CharSequence is represented by the same immutable string API.
     /// <summary>Decodes a capacity-bounded range without changing either index.</summary>
     public virtual string GetString(int index, int length, Encoding encoding)
     {
+        // Original single-byte CharSequence path:
+        // ByteBufUtil.getBytes(...) will return a new copy which the AsciiString uses directly
+        // CLR: Encoding and immutable strings replace the AsciiString byte-array representation.
         ArgumentNullException.ThrowIfNull(encoding);
         if (TryGetReadOnlyMemory(index, length, out var memory)) return encoding.GetString(memory.Span);
         byte[] bytes = new byte[length]; GetBytesCore(index, bytes);
@@ -59,6 +72,17 @@ public abstract partial class ByteBuf
          * @throws IndexOutOfBoundsException
          *         if {@code length} is greater than {@code this.readableBytes}
          */
+    /**
+     * Gets a {@link CharSequence} with the given length at the current {@code readerIndex}
+     * and increases the {@code readerIndex} by the given length.
+     *
+     * @param length the length to read
+     * @param charset that should be used
+     * @return the sequence
+     * @throws IndexOutOfBoundsException
+     *         if {@code length} is greater than {@code this.readableBytes}
+     */
+    // CLR: CharSequence is represented by the same immutable string API.
     /// <summary>Decodes written bytes and advances the reader only after successful decoding.</summary>
     public virtual string ReadString(int length, Encoding encoding)
     {
@@ -90,6 +114,9 @@ public abstract partial class ByteBuf
 
     private int EncodeString(int index, ReadOnlySpan<char> text, Encoding encoding, int length)
     {
+        // Original charset fallback:
+        // setBytes(...) will take care of checking the indices.
+        // CLR: the bounded memory lookup below validates the range before encoding.
         if (TryGetMemory(index, length, out var memory)) return encoding.GetBytes(text, memory.Span);
         byte[] bytes = new byte[length];
         int written = encoding.GetBytes(text, bytes);

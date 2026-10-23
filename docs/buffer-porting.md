@@ -4883,6 +4883,41 @@ geometry/performance comparison. ByteBuf has 141 reviewed/51 unreviewed declarat
 175 mapped/233 unreviewed methods. Whole source/fixture statuses remain partial.
 Evidence: artifacts/buffer-comparison-source-validation (ignored).
 
+## Strings and explicit Encoding contracts
+
+Ported 31 original declared text methods to 147 cases: 28 charset-specific methods
+over five providers, readable Latin1 String over five, and two direct-Unpooled UTF8
+bounds/growth methods on heap. Preserve eight-byte release helpers, one-byte AB
+expansion/nonexpansion, 1024-byte round trips over chars 0..127/255, Hello, World!,
+and the ÖÄÜ€ sequence. CharBuffer/CharSequence results use immutable strings; inputs
+use ReadOnlySpan<char>. Seven public declarations per source map to GetString,
+ReadString, SetString and WriteString. Two original CharSequence JavaDocs and two
+implementation comments are restored; executable runtime tokens are unchanged.
+
+Twenty literal-wire cases cross the composite split and verify complete guarded
+contents, indices, marks and claims. For Aé, Java ASCII emits 41E9 and decodes Aé;
+CLR Encoding.ASCII emits 413F and decodes A?. Java UTF16 emits FEFF004100E9; explicit
+big-endian CLR Encoding emits 004100E9 without automatically adding a preamble.
+UTF8 41C3A9 and Latin1 41E9 agree. These differences are asserted, not normalized
+away. Preamble/BOM framing belongs to callers. CLR Encoding controls fallback,
+exact reservation and immutable string representation; Netty-specific byte mapping
+remains available through existing ByteBufUtil.WriteUtf8/WriteAscii helpers.
+ReadString enforces readable bounds and advances after successful decode; current
+Java text reads use absolute decoding without an explicit readable check. Existing
+strict/custom fallback, failure-index, wrapper and alias tests remain in use.
+
+All 167 new CLR cases pass existing runtime. Fresh pinned Java Unsafe/NIO each pass
+167 scenarios with the 31 original bodies plus eight helpers verbatim; UTF16 counts
+and ASCII wire differences follow the explicit policies above. Full net10.0
+Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass
+11795/11795, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings
+and new provider native reservations zero. Isolated committed Common preserves the
+unrelated ByteOrder.cs edit (CS8956). Java maxOrder=9 versus supported CLR test
+maxOrder=1 is not a pool geometry/performance comparison. ByteBuf has 148 reviewed/44
+unreviewed declarations (39 CLR adapters), AbstractByteBuf 135/14 (34 CLR adapters),
+and AbstractByteBufTest 206 mapped/202 unreviewed methods. Whole statuses stay partial.
+Evidence: artifacts/buffer-text-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4905,9 +4940,9 @@ ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-metho
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
 scalar composition, directional search, primitive reservation, view factory and raw
-integer, index-state, full-discard, capacity-property, array-span and content-comparison
-families reviewed. ByteBuf has 141 decided/51 unreviewed declarations (32 CLR adapters);
-AbstractByteBuf has 128/21 (27 CLR adapters). Other 32
+integer, index-state, full-discard, capacity-property, array-span, content-comparison
+and Encoding text families reviewed. ByteBuf has 148 decided/44 unreviewed declarations
+(39 CLR adapters); AbstractByteBuf has 135/14 (34 CLR adapters). Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 
