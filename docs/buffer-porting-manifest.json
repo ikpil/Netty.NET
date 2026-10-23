@@ -1990,7 +1990,8 @@
         "src/Netty.NET.Buffer/ByteBuf.Diagnostics.cs",
         "src/Netty.NET.Buffer/ByteBuf.Sockets.cs",
         "test/Netty.NET.Buffer.Tests/DerivedByteBufScalarTest.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufDiscardSourceTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufDiscardSourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -2023,7 +2024,8 @@
         "View factory original-fixture unit: 23 previously unreviewed declared AbstractByteBufTest methods are ported across heap, native, mixed composite, pooled heap and pooled native providers (115 new cases). All 115 pass against the existing CLR runtime; no production source change was needed. Includes eight nested slice bounds combinations, two readable-slice bounds tests, six factories after release, shared slice release, initial slice indices, duplicate-of-slice capacities, retained readable windows before/after read, and 4096-byte sequential slicing in 128-byte blocks. Fresh byte-checked pinned Java Unsafe/NIO each execute all 23 original test bodies plus five helpers verbatim and pass 115 cases. JVM pool uses default maxOrder=9 for its run-size assertions; CLR uses supported small test chunks (maxOrder=1); pool geometry/performance is not compared. CLR uses deterministic per-runtime random streams, managed expected byte arrays and explicit BE/LE accessors instead of mutable byte-order facades. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Native reservations return to zero after root/pool cleanup. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956). Eight public API decisions and 23 original declared-test mappings added; whole sources/fixture/providers remain partial. docs/buffer-porting.md#view-factory-bounds-and-original-lifetime-fixtures; artifacts/buffer-view-factory-source-validation (ignored).",
         "Raw scalar source/fixture unit: reviewed 29 base raw integer get/set/read declarations, including explicit CLR adapters for Java signed/unsigned byte APIs. GetByte/ReadByte return unsigned CLR byte; use unchecked((sbyte)value) for a signed Java-byte numeric domain rather than duplicate unsigned aliases. Both omitted original unsigned-byte API comments are now retained beside these methods; executable runtime tokens are unchanged. Ported 69 original declared fixture methods (56 scalar get/set/read-after-release, 12 absolute getter boundaries, one exhausted ReadByte) across heap/native/mixed composite/pooled heap/pooled native (345 cases). Ten additional provider cases check nine raw integer operations with five bit patterns at offset 15 across a composite split at 16, full wire/prefix/cursor/mark checks, insufficient readable widths and all 256 byte values. All 355 pass against existing runtime. Fresh byte-checked pinned Java Unsafe/NIO each execute 69 original test bodies plus releasedBuffer helper verbatim and pass 355 cases, with explicit unsigned-byte representation normalization. Java pool uses default maxOrder=9; supported CLR test pool uses maxOrder=1; geometry/performance is not compared. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11267/11267 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956); final native reservations zero. Whole source/fixture/provider statuses remain partial. docs/buffer-porting.md#raw-integer-access-and-clr-octets; artifacts/buffer-scalar-source-validation (ignored).",
         "Index/property/mark unit: 19 base metadata/index/skip declarations now have explicit CLR decisions, including ten property-accessor targets and CanRead/CanWrite adapters required by C# property naming. Public API checker validates declared public instance property get/set accessors and rejects inaccessible/nested/static/method lookalikes; 12 focused parser cases plus eight actual ByteBuf properties pass. Twelve original JUnit index/skip methods are ported over five storage providers (60 cases). Thirty additional provider/view cases verify Clear preserves marks, reset ordering and failure state, metadata on read-only views, receiver identity, negative skip, shared/independent ownership and unchanged bytes. All 90 pass against unchanged runtime. Fresh byte-checked pinned Java Unsafe/NIO each run all 12 original fixture bodies verbatim plus matching mark probes and pass 90 cases; negative skip Java argument exception maps to CLR ArgumentOutOfRangeException. Java pool maxOrder=9 and supported CLR test maxOrder=1 are not geometry/performance comparisons. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11357/11357 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956); native reservations return to zero. docs/buffer-porting.md#index-properties-marks-and-skip; artifacts/buffer-index-state-validation (ignored). Whole source/fixture statuses remain partial.",
-        "Discard source-fixture unit: five previously unreviewed original declared tests ported over unpooled heap/native, mixed composite and pooled heap/native (25 cases). Another 80 cases model full/partial discard contents, indices, capacity and mark relocation; four heap/native copy-hook success/failure cases verify dispatch and publication after success. All 109 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO, with five original test bodies plus releasedBuffer helper verbatim. Original comments retained; CLR managed comparison arrays replace expected buffers. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11466, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). No source/fixture status promotion. docs/buffer-porting.md#discard-fixtures-and-marker-relocation; artifacts/buffer-discard-source-validation (ignored)."
+        "Discard source-fixture unit: five previously unreviewed original declared tests ported over unpooled heap/native, mixed composite and pooled heap/native (25 cases). Another 80 cases model full/partial discard contents, indices, capacity and mark relocation; four heap/native copy-hook success/failure cases verify dispatch and publication after success. All 109 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO, with five original test bodies plus releasedBuffer helper verbatim. Original comments retained; CLR managed comparison arrays replace expected buffers. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11466, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). No source/fixture status promotion. docs/buffer-porting.md#discard-fixtures-and-marker-relocation; artifacts/buffer-discard-source-validation (ignored).",
+        "Capacity/fast-space original-fixture unit: nine previously unreviewed AbstractByteBufTest methods mapped to 37 cases. Four capacity tests use heap/native/pooled heap/pooled native (16); ordinary/retained fixed slices use all five providers (10); the default fast-writable method uses unpooled heap/native (2); written-byte tracking uses four bounded owners (4); saved-writer reset validation uses all five (5). Composite bounded-max exclusions match the original assumeTrue; pooled default-fast expectations use the existing original pooled override fixture instead. All 37 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO, executing nine original bodies plus the fixed-slice helper verbatim. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11503 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). Source/fixture statuses stay partial. docs/buffer-porting.md#capacity-properties-and-original-fast-space-fixtures; artifacts/buffer-capacity-source-validation (ignored)."
       ],
       "adaptation": "Native index/primitive/view contracts plus text and search. GetString/ReadString/SetString/WriteString use Encoding/ReadOnlySpan<char>, exact reservation, no implicit preamble and caller fallback policy; Java malformed/single-byte/BOM behavior is explicitly adapted (docs/buffer-porting.md). ReadString enforces the original documented readable bound; zero-length indexed access and BytesBefore are consistently checked. Func<byte,bool> replaces ByteProcessor; callbacks reacquire storage after mutation. Remaining I/O, utility and broader APIs are pending. Read-only views add IsReadOnly/AsReadOnly and native CanWrite. Getters, source transfers, decoding, searches and copies use bounded ReadOnlyMemory/Span; mutable borrows/writes use permission guards. Read-only DiscardSomeReadBytes retains the original index-only consumed-buffer reset. I/O and remaining utilities still pending. Composite consumer adds bounded segment hooks, stack crossing-word access, borrowed ReadOnlySequence, and cross-component bulk/overlap/text/search/view behavior. Contiguous memory borrowing never silently copies; unsupported multi-segment Memory ranges are actual CLR representation limits. Standalone ReadBytes now follows creator allocator Buffer policy; see decoder storage/read update below. Unreleasable consumer requires transparent shared indices and marks: private ref-return access routes to the captured index owner without an extra state allocation. Ordinary owners/slices/duplicates still own independent state. Slice/retained/read-slice/duplicate conveniences and AsReadOnly are virtual so lifetime-suppressing wrappers can preserve the original derived-view contract. Full existing Buffer suite is rerun for this base change. Synchronous stream transfer update: inherited GetBytes/SetBytes/ReadBytes/WriteBytes overloads accept a borrowed System.IO.Stream. Absolute operations preserve indices, relative output advances reader only after complete success, and relative input pre-reserves the requested length then advances writer by the actual returned count. All storage kinds perform one bounded Stream.Read, returning short reads immediately and EOF as 0; this deliberately replaces the Java CompositeByteBuf fill-until-EOF loop and prevents retrying CLR EOF forever. Zero lengths validate buffer/range/permission/null without calling the stream. Pooled staging avoids native-span lifetime across callbacks, snapshots all output before a single Stream.Write, and prevents a throwing input from publishing its temporary bytes; unlike Java heap reads, input I/O failure leaves target contents unchanged. A later composite storage-commit failure can still modify earlier writable components, leaving writer unchanged, and source input can already be consumed. Streams and buffer references remain borrowed. Input staging rechecks destination permission/range after callbacks. Temporary memory is proportional to requested length plus pool bucket rounding, and copying is deliberate; no zero-copy/performance claim. Concurrent changes, release, and external mutation of the active cursor during I/O remain caller exclusions; same-buffer append with the supplied stream adapters is tested. Channel/positioned-file and async ByteBuf transfer APIs remain pending. Async stream transfer update: GetBytesAsync/SetBytesAsync/ReadBytesAsync/WriteBytesAsync are CLR counterparts of the four synchronous stream contracts, using ValueTask, CancellationToken and the stream Memory-based asynchronous operations directly. Managed pooled staging survives suspension; no native memory is borrowed across await. One bounded input read, EOF=0, borrowed lifetime and success-only index publication follow the synchronous CLR policy. Pre-cancellation follows argument/permission validation and prevents growth/I/O; started growth is not rolled back. A valid stream result commits despite late token cancellation; a thrown cancellation or failure leaves active indices unchanged and does not publish staged input. Callers must keep streams/buffers alive and exclude concurrent mutation and external active-cursor changes through completion. Full cancellation, failure, alias and partial composite-commit limits: docs/buffer-porting.md#asynchronous-stream-transfers. Channel/positioned-file APIs and broader original source remain pending. Positioned file update: SafeFileHandle plus System.IO.RandomAccess map all four FileChannel absolute/relative overloads without changing file position; four ValueTask/CancellationToken forms are CLR async extensions. Successful CLR writes complete the requested range and return length (Java permits partial write counts); one bounded read returns actual bytes with EOF=0 across all backing kinds. Closed handles throw rather than Java input -1; invalid/closed/null handles, negative ranges and signed file-end overflow are validated even for zero requests, before growth/I/O. Absolute operations preserve indices; relative indices publish only after success. Output uses a pooled snapshot; input commits managed staging after reading, with async destination revalidation and no native borrow across await. Read failures do not publish staging, but later composite commit failures can change earlier components; failed output may partially change the file while leaving reader unchanged. Input reserves requested capacity before actual I/O, preserving growth on EOF/error; pre-cancellation follows validation and prevents growth/I/O. Buffer/handle ownership is borrowed through completion, without implicit Retain/disposal; exclude concurrent buffer mutation/release and external active-cursor changes. Full semantics, limitations and evidence: docs/buffer-porting.md#positioned-file-transfers. Gathering/scattering channel consumer mapping and broader APIs remain pending. Content comparison/hash update: original equality/hash/comparison API comments are retained in ByteBuf.Comparison.cs. Native IEquatable<ByteBuf>/IComparable<ByteBuf>, Equals/GetHashCode and default sorting replace Java Object/Comparable contracts; == stays reference identity. CompareTo(null)=1 follows CLR sorting. Readable content determines values; hash keys require stable bytes/indices/lifetime. Full policy: docs/buffer-porting.md#content-comparison-and-hashing. Allocator policy update: creator IByteBufAllocator is retained through owners, derived/read-only/unreleasable views and allocator-specific empty buffers. Both writable-growth paths consult its capacity hook; heap/native copies and composite padding/consolidation/copies use its factories. Legacy explicit native reservation domains remain in effect for subsequent copies and composite allocations. Existing Unpooled heap/native defaults are preserved. Policy and limits: docs/buffer-porting.md#allocator-policy-foundation. ByteBufConvertible integration: all buffer kinds implement IByteBufConvertible through inherited AsByteBuf, which returns this without changing references or requiring accessible storage. Original conversion operation comment retained. Buffer-holder consumers inherit existing buffer content/hash/copy/lifetime policies; whole source stays partial. Policy: docs/buffer-porting.md#buffer-holders-and-conversion. Relative transfer update: default/length GetBytes append to destination WriterIndex without growing; default/length SetBytes consume source ReaderIndex without changing destination indices; default ReadBytes fills destination WritableBytes and moves both cursors; explicit-destination ReadBytes moves only source ReaderIndex; default WriteBytes consumes all readable source bytes; explicit-source WriteBytes grows destination and moves only its WriterIndex. All return the receiver, keep marks/reference counts, and delegate to the existing bounded bulk kernel. Explicit source write grows before source-range validation, as in Java. Failed copies publish no cursor changes but may leave increased capacity or partially changed composite bytes. Existing CLR snapshot/memmove overlap policy applies; Java can repeat overwritten bytes across composite self-copy boundaries. Default reads check destination lifetime before computing WritableBytes to retain IllegalReferenceCountException after native/heap storage is cleared on final release; Java reports bounds/argument errors in two such probes. Null arguments use early ArgumentNullException. Byte[] ranges remain native Span slices rather than duplicated Java array overloads. Policy: docs/buffer-porting.md#relative-buffer-transfers. Decoder storage/read update: IsContiguous is a conservative storage-topology property, false by default; MaxFastWritableBytes defaults to WritableBytes and is a capacity hint rather than write permission. Both original API comments are preserved. ReadBytes(length) now allocates through Allocator.Buffer(length, MaxCapacity), preserving creator policy, metrics and independent ownership; zero reads keep the shared empty sentinel. Failed copies release the new result before rethrowing, retaining the existing CLR cleanup beyond the pinned Java implementation. Policy: docs/buffer-porting.md#decoder-storage-hints-and-allocated-reads. Advanced leak consumer: existing data/view/copy/transfer/text/search/memory APIs are virtual so the internal wrapper records the public operation once then delegates directly; ordinary implementations, shared index owner and storage kernels are unchanged. Async signatures remain native virtual ValueTask operations. Policy: docs/buffer-porting.md#advanced-leak-aware-buffer-access-records. Typed Equals/CompareTo are also virtual for WrappedByteBuf direct comparison forwarding; existing CLR identity/null policies are preserved. Diagnostic update: The original object-string API comment and skeletal metadata/freed/unwrapped representation are implemented in the combined CLR kernel, with invariant numbers and CLR simple class names. Whole source/fixture remains partial. Size-query update: CanRead(int) preserves original readable-index comparison, including nonpositive counts without validation; shared EmptyByteBuf always returns false. Transparent ordinary/composite/unreleasable facades forward virtual queries without leak recording. CanWrite(int) no longer rejects negative counts before its original comparison; read-only and empty-sentinel results remain false. Current CLR fixed-derived read-only policy is retained. Whole source remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Scalar-dispatch update: public absolute parent delegates are distinct from bounded relative/slice kernels. Owned pooled duplicates preserve the pinned LongLE relative public-setter path; floating/boolean/char/signed-medium relative APIs preserve their integer composition and upstream receiver-return rules. CLR byte values are unsigned wire octets; existing Span/memory hooks replace JVM per-primitive protected kernel topology, including safe-direct medium byte callbacks. docs/buffer-porting.md#derived-scalar-dispatch.",
       "comments": {
@@ -2037,10 +2039,10 @@
         "meaning": "Inventory of all declared public instance signatures, with only explicitly reviewed methods decided. Unreviewed signatures are not confirmed gaps. Java property-like methods and language adapters require individual decisions. No full source/fixture/provider completion is inferred.",
         "summary": {
           "declared": 192,
-          "clr-replacement": 18,
+          "clr-replacement": 21,
           "implemented": 109,
           "implementation-gap": 0,
-          "unreviewed": 65
+          "unreviewed": 62
         },
         "groups": {
           "discard-dispatch": {
@@ -2226,6 +2228,22 @@
               "docs/buffer-porting.md"
             ],
             "validation": "109 new cases pass unchanged CLR runtime and pinned Java Unsafe/NIO: 25 original-fixture provider cases, 80 modeled content/mark cases and four public-copy hook success/failure cases. Full Debug/Release/checked Release each pass 11466 without failures/skips. Final native reservations zero; source/fixture status remains partial."
+          },
+          "capacity-properties": {
+            "adaptation": "capacity()/capacity(int) become the public Capacity getter/setter; maxFastWritableBytes() becomes the virtual MaxFastWritableBytes getter. Java fluent capacity setters become CLR assignments. Capacity preserves the bounded byte prefix and trims owner indices on shrink; fixed slices reject resizing. Existing duplicate capacity setters delegate to the underlying owner and do not silently trim independent duplicate cursors/marks. Ordinary owners report current writable capacity; pooled owners include available allocation slack bounded by MaxCapacity. This is a storage hint, separate from write permission. Existing CLR allocate/copy/publish ordering deliberately retains complete prior state on native allocation failure, including shrink, whereas Java unpooled shrink can trim indices before allocation. Java/CLR pool geometry and pointer/handle representations are not equated.",
+            "evidence": [
+              "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "test/Netty.NET.Buffer.Tests/HeapByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/DirectByteBufReallocationTest.cs",
+              "test/Netty.NET.Buffer.Tests/AbstractPooledByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/PooledDerivedByteBufTest.cs",
+              "test/Netty.NET.Buffer.Tests/ByteBufSizePredicateTest.cs",
+              "src/Netty.NET.Buffer/ByteBuf.cs",
+              "src/Netty.NET.Buffer/PooledByteBuf.cs",
+              "src/Netty.NET.Buffer/ByteBufView.cs",
+              "docs/buffer-porting.md"
+            ],
+            "validation": "37 new original-fixture provider cases pass unchanged CLR runtime and pinned Java Unsafe/NIO. Existing deep tests cover retained marks across shrink/grow, native peak-budget failure atomicity, pooled allocation identity/reallocation at the fast-space boundary, fixed and duplicate capacity forms, and storage hints versus read-only permission. Full Debug/Release/checked Release each pass 11503; final native reservations zero. This reviews three public declarations, not all capacity implementations or inherited fixture/provider combinations."
           }
         },
         "methods": [
@@ -3635,11 +3653,45 @@
                 "member": "DiscardReadBytes()"
               }
             ]
+          },
+          {
+            "upstream": "capacity()",
+            "state": "clr-replacement",
+            "group": "capacity-properties",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "Capacity",
+                "accessor": "get"
+              }
+            ]
+          },
+          {
+            "upstream": "capacity(int)",
+            "state": "clr-replacement",
+            "group": "capacity-properties",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "Capacity",
+                "accessor": "set"
+              }
+            ]
+          },
+          {
+            "upstream": "maxFastWritableBytes()",
+            "state": "clr-replacement",
+            "group": "capacity-properties",
+            "targets": [
+              {
+                "path": "src/Netty.NET.Buffer/ByteBuf.cs",
+                "member": "MaxFastWritableBytes",
+                "accessor": "get"
+              }
+            ]
           }
         ],
         "unreviewedMethods": [
-          "capacity()",
-          "capacity(int)",
           "alloc()",
           "order()",
           "order(ByteOrder)",
@@ -3647,7 +3699,6 @@
           "isDirect()",
           "isReadOnly()",
           "asReadOnly()",
-          "maxFastWritableBytes()",
           "getBytes(int,ByteBuf,int,int)",
           "getBytes(int,byte[])",
           "getBytes(int,byte[],int,int)",
@@ -6539,7 +6590,8 @@
         "test/Netty.NET.Buffer.Tests/ByteBufViewFactorySourceTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufScalarSourceTest.cs",
         "test/Netty.NET.Buffer.Tests/ByteBufIndexStateSourceTest.cs",
-        "test/Netty.NET.Buffer.Tests/ByteBufDiscardSourceTest.cs"
+        "test/Netty.NET.Buffer.Tests/ByteBufDiscardSourceTest.cs",
+        "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs"
       ],
       "evidence": [
         "Pinned implementation/tests reviewed; default solution includes Buffer and Buffer.Tests. Scoped contracts and validation: docs/buffer-porting.md; artifacts/buffer-foundation-validation. This does not complete buffer.",
@@ -6562,7 +6614,8 @@
         "View factory original-fixture unit: 23 previously unreviewed declared AbstractByteBufTest methods are ported across heap, native, mixed composite, pooled heap and pooled native providers (115 new cases). All 115 pass against the existing CLR runtime; no production source change was needed. Includes eight nested slice bounds combinations, two readable-slice bounds tests, six factories after release, shared slice release, initial slice indices, duplicate-of-slice capacities, retained readable windows before/after read, and 4096-byte sequential slicing in 128-byte blocks. Fresh byte-checked pinned Java Unsafe/NIO each execute all 23 original test bodies plus five helpers verbatim and pass 115 cases. JVM pool uses default maxOrder=9 for its run-size assertions; CLR uses supported small test chunks (maxOrder=1); pool geometry/performance is not compared. CLR uses deterministic per-runtime random streams, managed expected byte arrays and explicit BE/LE accessors instead of mutable byte-order facades. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 10912/10912 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Native reservations return to zero after root/pool cleanup. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956). Eight public API decisions and 23 original declared-test mappings added; whole sources/fixture/providers remain partial. docs/buffer-porting.md#view-factory-bounds-and-original-lifetime-fixtures; artifacts/buffer-view-factory-source-validation (ignored).",
         "Raw scalar source/fixture unit: reviewed 29 base raw integer get/set/read declarations, including explicit CLR adapters for Java signed/unsigned byte APIs. GetByte/ReadByte return unsigned CLR byte; use unchecked((sbyte)value) for a signed Java-byte numeric domain rather than duplicate unsigned aliases. Both omitted original unsigned-byte API comments are now retained beside these methods; executable runtime tokens are unchanged. Ported 69 original declared fixture methods (56 scalar get/set/read-after-release, 12 absolute getter boundaries, one exhausted ReadByte) across heap/native/mixed composite/pooled heap/pooled native (345 cases). Ten additional provider cases check nine raw integer operations with five bit patterns at offset 15 across a composite split at 16, full wire/prefix/cursor/mark checks, insufficient readable widths and all 256 byte values. All 355 pass against existing runtime. Fresh byte-checked pinned Java Unsafe/NIO each execute 69 original test bodies plus releasedBuffer helper verbatim and pass 355 cases, with explicit unsigned-byte representation normalization. Java pool uses default maxOrder=9; supported CLR test pool uses maxOrder=1; geometry/performance is not compared. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11267/11267 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956); final native reservations zero. Whole source/fixture/provider statuses remain partial. docs/buffer-porting.md#raw-integer-access-and-clr-octets; artifacts/buffer-scalar-source-validation (ignored).",
         "Index/property/mark unit: 19 base metadata/index/skip declarations now have explicit CLR decisions, including ten property-accessor targets and CanRead/CanWrite adapters required by C# property naming. Public API checker validates declared public instance property get/set accessors and rejects inaccessible/nested/static/method lookalikes; 12 focused parser cases plus eight actual ByteBuf properties pass. Twelve original JUnit index/skip methods are ported over five storage providers (60 cases). Thirty additional provider/view cases verify Clear preserves marks, reset ordering and failure state, metadata on read-only views, receiver identity, negative skip, shared/independent ownership and unchanged bytes. All 90 pass against unchanged runtime. Fresh byte-checked pinned Java Unsafe/NIO each run all 12 original fixture bodies verbatim plus matching mark probes and pass 90 cases; negative skip Java argument exception maps to CLR ArgumentOutOfRangeException. Java pool maxOrder=9 and supported CLR test maxOrder=1 are not geometry/performance comparisons. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11357/11357 without failures/skips; 51 existing Common warnings and zero Buffer/test warnings. Isolated committed runtime preserves unrelated Common/ByteOrder.cs edit (CS8956); native reservations return to zero. docs/buffer-porting.md#index-properties-marks-and-skip; artifacts/buffer-index-state-validation (ignored). Whole source/fixture statuses remain partial.",
-        "Discard source-fixture unit: five previously unreviewed original declared tests ported over unpooled heap/native, mixed composite and pooled heap/native (25 cases). Another 80 cases model full/partial discard contents, indices, capacity and mark relocation; four heap/native copy-hook success/failure cases verify dispatch and publication after success. All 109 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO, with five original test bodies plus releasedBuffer helper verbatim. Original comments retained; CLR managed comparison arrays replace expected buffers. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11466, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). No source/fixture status promotion. docs/buffer-porting.md#discard-fixtures-and-marker-relocation; artifacts/buffer-discard-source-validation (ignored)."
+        "Discard source-fixture unit: five previously unreviewed original declared tests ported over unpooled heap/native, mixed composite and pooled heap/native (25 cases). Another 80 cases model full/partial discard contents, indices, capacity and mark relocation; four heap/native copy-hook success/failure cases verify dispatch and publication after success. All 109 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO, with five original test bodies plus releasedBuffer helper verbatim. Original comments retained; CLR managed comparison arrays replace expected buffers. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11466, no failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). No source/fixture status promotion. docs/buffer-porting.md#discard-fixtures-and-marker-relocation; artifacts/buffer-discard-source-validation (ignored).",
+        "Capacity/fast-space original-fixture unit: nine previously unreviewed AbstractByteBufTest methods mapped to 37 cases. Four capacity tests use heap/native/pooled heap/pooled native (16); ordinary/retained fixed slices use all five providers (10); the default fast-writable method uses unpooled heap/native (2); written-byte tracking uses four bounded owners (4); saved-writer reset validation uses all five (5). Composite bounded-max exclusions match the original assumeTrue; pooled default-fast expectations use the existing original pooled override fixture instead. All 37 pass unchanged CLR runtime and fresh pinned Java Unsafe/NIO, executing nine original bodies plus the fixed-slice helper verbatim. Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1 each pass 11503 without failures/skips; 51 existing Common warnings, zero Buffer/test warnings. Isolated committed Common preserves unrelated ByteOrder.cs edit (CS8956). Source/fixture statuses stay partial. docs/buffer-porting.md#capacity-properties-and-original-fast-space-fixtures; artifacts/buffer-capacity-source-validation (ignored)."
       ],
       "adaptation": "Selected original indices, capacity, compaction, copy, duplicate and retained-slice scenarios. Ten word/order theories each preserve 100 consistency iterations. Remaining original methods are pending, not excluded. The same selected index/capacity/derived-view scenarios also execute on native storage. Selected search/clamping/processors and string index/expansion/bounds contracts now run for heap/native storage, with documented CLR Encoding differences. Remaining original cases stay pending. Unreleasable update ports all four initial/final retained combinations for slice, read-slice and duplicate scenarios across heap/native/composite owners (36 cases). Whole original AbstractByteBufTest remains partial. Stream transfer update adds selected absolute/relative block transfer, released access and independent duplicate/slice concurrent output scenarios, plus CLR short/EOF/failure/alias/ownership contracts (37 cases across the new fixture). Full scope/adaptations: docs/buffer-porting.md#synchronous-stream-transfers. Remaining original methods, pooled/channel/positioned-file tests and async transfer stay pending. Async stream update adds 49 CLR cases with genuinely delayed Memory-based I/O and forbidden synchronous fallback: pending index publication, absolute/relative transfers, short read/EOF, pre/mid/late cancellation and validation precedence, throwing staged input and partially accepted output, invalid returned counts, readonly/fixed/empty/dead buffers, slice/unreleasable indices, same-buffer adapters, callback resize/consolidation and partial storage-commit failure. These are CLR async extensions of selected original stream scenarios; Java has no matching async stream overloads. They do not complete pending original pooled/channel/positioned-file methods or the whole fixture. Positioned file update ports testReadBytesAndWriteBytesWithFileChannel and testGetBytesAndSetBytesWithFileChannel (including both original channel-position comments) across heap/native/composite and CLR sync/async modes. 38 cases cover real file position/content, short read/EOF/large offsets, zero/range/overflow/null/closed/invalid handles, pre-cancellation and validation precedence, access errors/growth, readonly/fixed/empty/dead buffers, view/shared indices, partial composite commit and 128 concurrent independent views writing disjoint offsets. Real-file async tests do not claim deterministic mid-I/O cancellation or injected kernel partial-write coverage. Whole original fixture and remaining pooled/channel APIs stay pending. Content comparison/hash update: selected testEquals/testCompareTo/testCompareTo2/testHashCode scenarios cover seven storage/view layouts and native HashSet copy/lookup/removal/default sorting. Java order facades are replaced by explicit-endian access; CLR null sorting and released-access guards are explicit. Original Fill/Prevent comments remain. Full scope: docs/buffer-porting.md#content-comparison-and-hashing. Whole fixture remains partial. Relative transfer update adapts random heap/direct and sequential heap/direct transfer contracts plus released-buffer cases, with deterministic byte models. Added eight source and six destination backing/view/wrapper kinds, all eight new overloads, source capacity beyond WriterIndex, complete destination writable ranges, exact return identity, marks, reference ownership, readonly/null/dead/empty failures, 48 self-copy cases, growth/source-range failures, partial composite writes and native aliases during growth. The inherited original fixture remains incomplete; no new original method/fixture completion is inferred. Decoder storage/read update: Selected testReadBytes, testMaxFastWritableBytes and testMaxFastWritableBytesTracksWrittenBytes contracts are adapted, including the original default-fast-writable comment. Additional topology, views, transparent overrides, allocator policy/metrics/independent lifetime, zero/invalid reads, extra reservation and failure cleanup scenarios cover 43 new CLR cases. This does not complete the inherited fixture. Diagnostic update: Supplemental diagnostic cases cover original object-string behavior, independently of charset-decoding testToString overload scenarios. Content-free/freed guards, marks/indices/ownership, culture, views, wrappers and leak records are checked. Whole source/fixture remains partial. Size-query update: supplemental tests cover exact/insufficient/zero/negative/extreme counts, independent and retained view indices, capacity rather than growth maximum, empty sentinel versus owned zero/read-only empty views, virtual forwarding, no storage/reference access or leak recording and readable metadata after release. The original fixture remains partial. Pooled-derived update: selected original testMultipleLevelRetainedSliceWithNonRetained scenarios and their applicable comments are ported over both storage kinds. Supplemental hierarchy/sibling/borrowed/retained-coordinate/mark/copy/capacity/zero/range/overflow/concurrent-counter/native-pin/forced-tracker/factory-rollback cases verify the new independent-count contract. Full original fixture remains partial. Socket channel update: connected Socket overloads preserve absolute cursors and publish relative cursors only by successful actual counts. Send/Receive execute once; synchronous WouldBlock becomes zero, EOF becomes zero, other socket errors propagate. Empty ranges validate buffer/null/permissions but skip socket I/O, including disposed sockets. Composite input uses one staged receive instead of Java repeated component reads. Snapshots/staging use O(length) pooled managed storage, not zero-copy gather/scatter; caller excludes concurrent mutation/release/external cursor changes. Failed input I/O publishes no staging; later composite commit may change a prefix. Async directly awaits Socket Memory-based operations; pre-cancellation follows validation and precedes growth, successful results commit despite late cancellation, growth survives failure/EOF, and async readiness waits rather than returning sync WouldBlock. Socket ownership/reference counts are borrowed. New unrelated-reference overloads require typed nulls to disambiguate from Stream; five existing stream null tests now specify Stream. Four original public Java comments and licenses are retained. This covers connected network channel I/O, not arbitrary custom Java channels or provider-specific native I/O. Duplicate fixture update ports the 13 caseMappings below through ordinary and retained-returning factories over five storage paths. Expected comparison buffers become independent literal byte-array expectations; no expected-buffer lifetime claim is needed. Shared/independent reference counts are both allowed, and only final deallocation is required. Other inherited tests remain incomplete. Retained-slice fixture update maps ten further methods below: ordinary/retained child contents and both four-way original-release/repeated-child handoff groups. Managed literal expectations replace separately allocated expected buffers. Only final deallocation is required across shared/independent counters. Other inherited methods remain incomplete.",
       "comments": {
@@ -8155,16 +8208,115 @@
             }
           ],
           "adaptation": "scenario=4; execute original CAPACITY=4096 setup/indices, full unread suffix comparisons and the original strict writable-region check except on CompositeByteBuf, matching AbstractCompositeByteBufTest. Managed expected byte arrays replace copied comparison buffers and borrowing slices. Released cases retain the helper clear/release comments and use an eight-byte provider root without an unused fixture allocation. All five storage providers assert final deallocation/native cleanup. Extra independent models and copy-hook failure probes cover full/partial mark relocation."
+        },
+        {
+          "upstreamMethod": "testCapacityEnforceMaxCapacity",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=0; four bounded heap/native/pooled heap/pooled native owners. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
+        },
+        {
+          "upstreamMethod": "testCapacityNegative",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=1; four bounded heap/native/pooled heap/pooled native owners. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
+        },
+        {
+          "upstreamMethod": "testCapacityDecrease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=2; four bounded heap/native/pooled heap/pooled native owners. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
+        },
+        {
+          "upstreamMethod": "testCapacityIncrease",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=3; four bounded heap/native/pooled heap/pooled native owners. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
+        },
+        {
+          "upstreamMethod": "testSliceCapacityChange",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=4; all five providers. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
+        },
+        {
+          "upstreamMethod": "testRetainedSliceCapacityChange",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=5; all five providers. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
+        },
+        {
+          "upstreamMethod": "testMaxFastWritableBytes",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=6; unpooled heap/native only, with original pooled override retained in existing AbstractPooledByteBufTest. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
+        },
+        {
+          "upstreamMethod": "testMaxFastWritableBytesTracksWrittenBytes",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=7; four bounded heap/native/pooled heap/pooled native owners. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
+        },
+        {
+          "upstreamMethod": "testReaderIndexLargerThanWriterIndex",
+          "disposition": "clr-adaptation",
+          "clrTests": [
+            {
+              "path": "test/Netty.NET.Buffer.Tests/ByteBufCapacitySourceTest.cs",
+              "method": "OriginalCapacityAndFastWritableFixtures"
+            }
+          ],
+          "adaptation": "scenario=8; all five providers. Preserve original 3/13, slice offset/length 1/3 and target 10, fast-space 150/500/100, tracking 4/10, and hello/world mark-reset setups as applicable. Capacity and metadata methods become CLR properties; ASCII CharSequence writes use WriteString with Encoding.ASCII. Composite bounded maximum cases follow the original assumption and are absent from data, not reported as passing. Pooled default-fast behavior is covered by its existing original override. Additional assertions check unchanged failed indices/capacities/reference counts, final deallocation and zero native reservations. Original default-fast comment retained."
         }
       ],
       "testMethodReview": {
         "scope": "Declared JUnit test methods only; inherited provider variants are not counted. A mapping records its stated scenarios, not whole-method/provider completion.",
         "unreviewedMeaning": "No individual decision yet; this does not mean the implementation or all equivalent CLR tests are missing.",
         "declaredCount": 408,
-        "mappedCount": 144,
+        "mappedCount": 153,
         "testGapCount": 0,
         "implementationGapCount": 0,
-        "unreviewedCount": 264,
+        "unreviewedCount": 255,
         "unreviewedMethods": [
           "comparableInterfaceNotViolated",
           "getByteArrayBoundaryCheck1",
@@ -8380,8 +8532,6 @@
           "testMultipleLevelRetainedSlice2",
           "testMultipleLevelRetainedSlice3",
           "testMultipleLevelRetainedSlice4",
-          "testSliceCapacityChange",
-          "testRetainedSliceCapacityChange",
           "testRetainedSliceUnreleasable1",
           "testRetainedSliceUnreleasable2",
           "testRetainedSliceUnreleasable3",
@@ -8406,12 +8556,6 @@
           "testForEachByteDesc2",
           "testForEachByte2",
           "testGetBytesByteBuffer",
-          "testCapacityEnforceMaxCapacity",
-          "testCapacityNegative",
-          "testCapacityDecrease",
-          "testCapacityIncrease",
-          "testReaderIndexLargerThanWriterIndex",
-          "testMaxFastWritableBytes",
           "explicitLittleEndianReadMethodsMustAlwaysUseLittleEndianByteOrder",
           "explicitLittleEndianWriteMethodsMustAlwaysUseLittleEndianByteOrder",
           "testReadyOnlyNioBuffer",
@@ -8426,7 +8570,6 @@
           "testReadyOnlyNioBuffersWithPositionLength",
           "testReadyOnlySliceNioBuffersWithPositionLength",
           "testReadyOnlyDuplicateNioBuffersWithPositionLength",
-          "testMaxFastWritableBytesTracksWrittenBytes",
           "testSetCharSequenceWithTooLongSequence",
           "testWriteCharSequence",
           "test_internalNioBuffer"

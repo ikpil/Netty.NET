@@ -4787,6 +4787,37 @@ AbstractByteBuf 119/30, and AbstractByteBufTest 144 mapped/264 unreviewed method
 Whole source/fixture statuses remain partial.
 Evidence: artifacts/buffer-discard-source-validation (ignored).
 
+## Capacity properties and original fast-space fixtures
+
+Ported nine original AbstractByteBufTest methods to 37 provider cases: four bounded
+capacity tests (16), ordinary/retained fixed-slice resize rejection (10), default
+fast-space query (2), tracking written bytes (4), and saved-writer reset validation
+with hello/world ASCII writes (5). Composite bounded-maximum cases follow the
+original fixture assumption. The default fast-space test runs on unpooled owners;
+the existing AbstractPooledByteBufTest already ports the original pooled override,
+including allocation identity before/after crossing the fast-space boundary.
+Original constants/order/comments are retained; Charset/CharSequence use
+Encoding.ASCII and WriteString. Existing deeper resize/failure/view tests remain.
+
+Reviewed three ByteBuf declarations as CLR properties: Capacity getter/setter and
+virtual MaxFastWritableBytes getter. Fluent Java capacity setters become assignment.
+The fast-space value is a storage budget, separate from read-only permission.
+Native allocate/copy/publish retains the existing deliberate CLR failure atomicity;
+Java unpooled shrink may trim indices before allocation. Duplicate capacity changes
+continue to delegate without silently rewriting independent view cursors/marks.
+
+All 37 pass unchanged runtime and fresh pinned Java Unsafe/NIO; nine original bodies
+plus the fixed-slice helper execute verbatim. No production source change needed.
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 11503/11503, no failures/skips; 51 existing Common warnings, zero Buffer/test
+warnings, final native reservations zero. Isolated committed Common preserves the
+unrelated ByteOrder.cs edit (CS8956). Java maxOrder=9 versus supported CLR test
+maxOrder=1 is not a pool geometry/performance comparison. ByteBuf now has 130
+reviewed/62 unreviewed public declarations (21 CLR adapters); AbstractByteBuf stays
+119/30 (18 CLR adapters). AbstractByteBufTest has 153 mapped/255 unreviewed methods.
+Whole sources, fixtures and provider combinations remain partial.
+Evidence: artifacts/buffer-capacity-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4809,8 +4840,9 @@ ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-metho
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
 scalar composition, directional search, primitive reservation, view factory and raw
-integer, index-state and full-discard families reviewed. ByteBuf has 127 decided/65 unreviewed
-declarations; AbstractByteBuf has 119/30, including 18 CLR adapters per source. Other 32
+integer, index-state, full-discard and capacity-property families reviewed. ByteBuf
+has 130 decided/62 unreviewed declarations (21 CLR adapters); AbstractByteBuf has
+119/30 (18 CLR adapters). Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 
