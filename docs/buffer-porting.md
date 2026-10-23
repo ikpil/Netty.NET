@@ -4761,6 +4761,32 @@ fixture/provider statuses remain partial. Java pooled maxOrder=9 and CLR support
 test maxOrder=1 are not a pool geometry/performance comparison.
 Evidence: artifacts/buffer-index-state-validation (ignored).
 
+## Discard fixtures and marker relocation
+
+Ported five original AbstractByteBufTest methods: both full-discard byte patterns,
+all bytes consumed, and full/partial discard after release. Five heap/native/mixed
+composite/pooled providers give 25 cases. Managed byte arrays replace original copied
+comparison buffers and borrowed comparison slices. Original comments are retained,
+including AbstractCompositeByteBufTest's relaxed writable-region comparison.
+
+Another 80 cases independently model unread bytes, unchanged writable tails,
+capacity and all marker relocation branches for full/partial discard. Composite
+storage trims prefixes/components; contiguous buffers move only unread bytes.
+Four heap/native cases verify the public SetBytes hook and unchanged indices/marks
+when it throws before copying. All 109 pass the existing runtime; no production
+change was required. Fresh pinned Java Unsafe/NIO each pass 109 cases, executing
+all five original fixture bodies and releasedBuffer helper verbatim.
+
+Full net10.0 Debug/Release/rebuilt checked Release with SIMPLE sampling interval 1
+each pass 11466/11466, no failures/skips; 51 existing Common warnings and zero
+Buffer/test warnings. Native reservations return to zero. Validation uses committed
+Common in an isolated workspace; the unrelated ByteOrder.cs edit (CS8956) is kept.
+Java pool maxOrder=9 versus supported CLR test maxOrder=1 is not a pool geometry or
+performance comparison. ByteBuf has 127 reviewed/65 unreviewed public declarations,
+AbstractByteBuf 119/30, and AbstractByteBufTest 144 mapped/264 unreviewed methods.
+Whole source/fixture statuses remain partial.
+Evidence: artifacts/buffer-discard-source-validation (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -4783,8 +4809,8 @@ ByteBufUtil remains in-progress. ByteBuf/AbstractByteBuf now have instance-metho
 inventories, with partial discard, ten relative/absolute ByteBuf transfers, two
 zero-fill operations, allocated reads, whole Copy, four iteration operations and the
 scalar composition, directional search, primitive reservation, view factory and raw
-integer and index-state families reviewed. ByteBuf has 126 decided/66 unreviewed
-declarations; AbstractByteBuf has 118/31, including 18 CLR adapters per source. Other 32
+integer, index-state and full-discard families reviewed. ByteBuf has 127 decided/65 unreviewed
+declarations; AbstractByteBuf has 119/30, including 18 CLR adapters per source. Other 32
 in-progress source files have no signature inventory yet. None is assumed missing
 or complete.
 
