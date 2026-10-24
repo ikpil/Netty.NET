@@ -51,6 +51,7 @@ internal class AdaptiveChunk : IDisposable
     internal bool IsDirect { get; }
     internal bool IsPooled { get; }
     internal int OwnerReferenceCount => ReferenceCountUpdater.GetCount(ref _references);
+    internal ByteBuf Root => Storage;
     internal IByteBufAllocator Allocator => Storage.Allocator;
     internal ByteBuf Copy(int index, int length) => Storage.Copy(index, length);
     internal bool IsDeallocated => Volatile.Read(ref _storage) == null;

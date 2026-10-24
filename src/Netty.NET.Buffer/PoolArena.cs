@@ -172,6 +172,8 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
             return chunk.AllocateSmall(sizeIdx, out owner);
         }
         owner = chunk;
+        // normal
+        // runSize must be multiple of pageSize
         return chunk.AllocateRun(normalized);
     }
 
@@ -221,6 +223,8 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         catch { owner?.Dispose(); throw; }
     }
 
+    /** Creates a special chunk that is not pooled. */
+    // CLR: a dedicated ChunkStorage has no PoolChunk run/subpage bookkeeping.
     private Allocation AllocateHuge(int capacity)
     {
         /* unpooled buffers are never allocated out of the thread-local cache */

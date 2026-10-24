@@ -32,6 +32,10 @@ internal abstract partial class PoolArena
     // We need to use the LongCounter here as this is not guarded via synchronized block.
     private long _smallAllocations, _normalAllocations, _hugeAllocations;
     private long _smallDeallocations, _normalDeallocations, _hugeDeallocations;
+    /**
+     * Accounting of pinned memory – memory that is currently in use by ByteBuf instances.
+     */
+    // CLR: aggregate the original per-chunk pinned accounting at the owning arena.
     private long _chunkAllocations, _chunkDeallocations, _activeBytesHuge, _pinnedBytes;
     // Huge chunks are exact-sized for the buffers they were allocated to.
     // CLR: huge reservations include normalized size, excluding native alignment headroom.

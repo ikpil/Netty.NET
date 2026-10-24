@@ -5364,6 +5364,82 @@ to verified; composite and pooled/adaptive internal source closure remain incomp
 Existing progress JSON records the completed units; no new Markdown file is added.
 Evidence: artifacts/buffer-allocation-ownership-validation (ignored).
 
+## Pooled storage source closure and adaptive kernels
+
+Completed the source/consumer review for PoolArena, PoolChunk, PoolChunkList,
+PoolSubpage and PoolThreadCache. Existing implementations cover their allocation,
+placement, split/coalescing, bitmap/list, FIFO/trim, metric/tracing and ownership
+contracts. Each now has a sourceClosureReview mapping its outer/nested responsibilities
+to CLR implementation files, existing tests and explicit replacement policies.
+This completes these five source reviews; it does not mark every original fixture
+or downstream heap/native/derived provider source complete.
+
+PoolArena's shared Memory-based heap/native storage replaces generic JVM arenas and
+Unsafe/Cleaner variants. It preserves cache-before-arena lock ordering, available
+small-head preference, utilization-list order, aligned/un-aligned huge allocation,
+full-prefix reallocation, original-cache return and counter/pinned-byte distinctions.
+Explicit Dispose stops allocation and retains live regions/operation claims; raw
+native pins independently retain physical storage. PoolChunk retains page-run bucket
+ordering, packed handles, split/coalescence and subpage ownership. Pinned accounting
+is aggregated at the arena; dedicated ChunkStorage replaces an unpooled PoolChunk.
+Portable comments describing these moved responsibilities now sit beside those CLR
+kernels. Duplicate NIO cursor caches and finalizer-specific class-loading/counter
+exceptions are retained verbatim as JVM-only references.
+
+PoolChunkList retains thresholds, per-list gates, intrusive head order, promotion/
+demotion, initial-list retention and retirement. IEnumerable snapshots membership
+under the arena lock while metrics remain live. PoolSubpage retains bitmap/last-hole
+selection, single-element handling, one empty-run retention and synchronized metrics;
+its head is retained directly and sentinel PageSize is explicitly 0. PoolThreadCache
+uses bounded FIFO Queue value records, direct class lookup, hit/attempt trim quotas,
+physical-thread cleanup and close/late-return rules. Private JVM recycler/finalizer/
+log2 infrastructure is retired; structured events and metrics replace the private
+cache-free debug log format. All 168 comments across the five sources are accounted
+for as implementation comments or explicit references.
+
+Reviewing the larger AdaptivePoolingAllocator source found an implementation gap in
+its nested AdaptiveByteBuf. Its original protected scalar operations, public byte
+reads, indexed iteration and zero fill delegate to the raw chunk root using startIndex.
+The port instead accessed the region's physical Memory in those paths, bypassing
+observable root storage kernels and public operations. The adaptive buffer now forwards
+byte/word kernels, Span/ByteBuf reads and zero fill with the region offset; IsContiguous
+also follows the root. Indexed forward/reverse iteration preserves the processor
+identity and translates stop indices. Inherited readable iteration retains its own
+scalar loop, independently of the indexed public override.
+
+CLR indexed iteration holds an operation claim through callbacks. Returning or resizing
+the adaptive buffer cannot recycle its old slot while the raw-root scan is active,
+and result coordinates use the captured region. This is an explicit CLR lifetime/
+coordinate policy; no JVM callback-time reclamation equivalence is claimed. Public
+Memory/Sequence borrows still use the allocation MemoryManager and invalidate when
+the logical buffer returns; pins retain their reservation and copied pin handles
+release it once. No raw-root Memory escapes in place of that gated borrow.
+
+Added 360 cases: 140 root-kernel failure/coordinate/peer/cursor cases (all fail the
+committed runtime), 40 readable/indexed stop cases, 80 synthetic root-result cases,
+10 metadata/borrow/pin cases, 40 callback return/resize cases, 40 alias copies and
+10 scalar/bulk/zero success cases. Shared/local fixed classes, buddy chunks and
+normal/low-memory dedicated allocations cover heap/native storage and nonzero offsets.
+A test-only storage binding targets the adaptive buffer/region kernels; existing
+production allocator/cache/event/concurrency fixtures validate the real magazines.
+
+All 93 original Buffer sources are byte-checked and freshly compiled against the pin.
+Original Unsafe/NIO each match 140 selected dispatch/coordinate/peer/exception/cursor
+cases, including real cleanup-scoped local magazine execution. The Java heap/direct
+probe metadata uses its final provider capability; the CLR conservative custom-root
+IsContiguous=false probe is an additional local propagation check, not a cross-runtime
+capability-value comparison. Java production sources remain unchanged.
+
+Full net10.0 Debug, Release and rebuilt checked Release with SIMPLE sampling interval 1
+each pass 14842/14842, with no failures/skips. Common has its 51 existing warnings;
+Buffer/test warnings are zero. Native reservations return to zero and Common is
+unchanged. All original test-method mappings and public API inventories stay unchanged.
+Five pooled sources advance to verified. AdaptivePoolingAllocator remains in progress:
+its full 164 comments are retained, while remaining nested-buffer provider metadata,
+Encoding/bulk/I/O and source-specialization decisions remain separate. Existing JSON
+records the completed unit and residual work; no new Markdown document is added.
+Evidence: artifacts/buffer-allocator-source-closure (ignored).
+
 ## Remaining work
 
 Source in-progress counts describe incomplete review, not a count of confirmed
@@ -5390,9 +5466,11 @@ ByteBufUtil has no unreviewed public static methods; its remaining private/sourc
 review is separate. CompositeByteBuf now has all 114 declared public methods and three public constructor
 shapes accounted for; specialized iteration/search is reviewed, while remaining
 nonpublic strategy/comment and structural failure review is separate. PooledByteBufAllocator now accounts for its 17 declared public instance methods;
-its nonpublic arena/cache/configuration review remains separate. UnpooledByteBufAllocator
-is verified under its CLR provider/instrumentation policies. The other 29 in-progress
-source files have no signature inventory yet. Finish composite source closure alongside allocator/cache lifecycle, then provider/
+its remaining static/default/constructor source review remains separate. The pooled
+arena, chunk, list, subpage and thread-cache sources are now verified under their CLR
+ownership/representation policies; adaptive nested-buffer source closure remains separate. UnpooledByteBufAllocator
+is verified under its CLR provider/instrumentation policies. The other 24 in-progress
+source files have no public signature inventory yet. Finish composite source closure alongside allocator/cache lifecycle, then provider/
 facade specializations. No remaining test-method count is
 used as a count of missing runtime features or as the sole completion criterion.
 

@@ -33,6 +33,10 @@ internal sealed unsafe class AdaptiveChunkAllocation : MemoryManager<byte>
     private int _disposed;
     internal int Offset { get; }
     internal int Length { get; }
+    internal ByteBuf Root
+    {
+        get { ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this); return _chunk.Root; }
+    }
     internal IByteBufAllocator Allocator => _chunk.Allocator;
     internal bool IsDirect => _chunk.IsDirect;
     internal bool IsPooled => _chunk.IsPooled;

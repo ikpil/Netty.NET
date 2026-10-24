@@ -22,7 +22,7 @@ namespace Netty.NET.Buffer;
 // .NET stream/file access. The allocation callback binds the owning pool's magazine
 // selection and fallback while preserving buffer identity during reallocation.
 // Each wrapper is fresh; recycling a released CLR object could resurrect stale references.
-internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
+internal sealed partial class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
 {
     // We need the top-level allocator so ByteBuf.capacity(int) can call reallocate()
     // CLR: the pool reservation callback replaces the chunk's allocator back-reference.
@@ -69,7 +69,7 @@ internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
     {
         get { EnsureAccessible(); return _allocation.IsDirect; }
     }
-    public override bool IsContiguous { get { EnsureAccessible(); return true; } }
+    public override bool IsContiguous { get { EnsureAccessible(); return _allocation.Root.IsContiguous; } }
     public override int MaxFastWritableBytes => Math.Min(_maxFastCapacity, MaxCapacity) - WriterIndex;
 
     // setBytes(...) will take care of checking the indices.
